@@ -1,15 +1,14 @@
-#include "math_autodiff.hpp"
+#include "ft_dual_number.hpp"
 
 #include <cmath>
 #include <new>
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 
-thread_local int ft_dual_number::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t ft_dual_number::_last_error = FT_ERR_SUCCESS;
 
 static void math_autodiff_sleep_backoff()
 {
@@ -20,32 +19,23 @@ static void math_autodiff_sleep_backoff()
 void ft_dual_number::abort_lifecycle_error(const char *method_name,
     const char *reason) const noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_dual_number lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
+    errno_abort_lifecycle(this->_initialised_state, method_name, reason);
     return ;
 }
 
-void ft_dual_number::abort_if_not_initialized(const char *method_name) const noexcept
+void ft_dual_number::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_dual_number::_state_initialized)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+    errno_abort_if_uninitialised(this->_initialised_state, method_name);
     return ;
 }
 
-int ft_dual_number::set_last_operation_error(int error_code) noexcept
+uint32_t ft_dual_number::set_error(uint32_t error_code) noexcept
 {
     ft_dual_number::_last_error = error_code;
     return (error_code);
 }
 
-int ft_dual_number::lock_pair(const ft_dual_number &first,
+int32_t ft_dual_number::lock_pair(const ft_dual_number &first,
     const ft_dual_number &second,
     const ft_dual_number *&lower,
     const ft_dual_number *&upper)
@@ -71,10 +61,10 @@ int ft_dual_number::lock_pair(const ft_dual_number &first,
     }
     lower = ordered_first;
     upper = ordered_second;
-    while (true)
+    while (FT_TRUE)
     {
-        int lower_error;
-        int upper_error;
+        int32_t lower_error;
+        int32_t upper_error;
 
         lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
@@ -84,10 +74,10 @@ int ft_dual_number::lock_pair(const ft_dual_number &first,
             return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+            (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
         math_autodiff_sleep_backoff();
     }
 }
@@ -96,9 +86,9 @@ void ft_dual_number::unlock_pair(const ft_dual_number *lower,
     const ft_dual_number *upper)
 {
     if (upper != ft_nullptr)
-        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -106,7 +96,7 @@ ft_dual_number::ft_dual_number() noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_dual_number::_state_uninitialized)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _operation_error(FT_ERR_SUCCESS)
 {
     return ;
@@ -116,14 +106,13 @@ ft_dual_number::ft_dual_number(double value, double derivative) noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_dual_number::_state_uninitialized)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _operation_error(FT_ERR_SUCCESS)
 {
     this->_operation_error = this->initialize(value, derivative);
     if (this->_operation_error != FT_ERR_SUCCESS
-        && this->_initialized_state == ft_dual_number::_state_uninitialized)
-        this->_initialized_state = ft_dual_number::_state_destroyed;
-    ft_dual_number::set_last_operation_error(this->_operation_error);
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -131,16 +120,15 @@ ft_dual_number::ft_dual_number(const ft_dual_number &other) noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_dual_number::_state_uninitialized)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _operation_error(FT_ERR_SUCCESS)
 {
     this->_operation_error = this->initialize(other);
     if (this->_operation_error == FT_ERR_SUCCESS)
         this->_operation_error = other._operation_error;
     if (this->_operation_error != FT_ERR_SUCCESS
-        && this->_initialized_state == ft_dual_number::_state_uninitialized)
-        this->_initialized_state = ft_dual_number::_state_destroyed;
-    ft_dual_number::set_last_operation_error(this->_operation_error);
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -148,7 +136,7 @@ ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_dual_number::_state_uninitialized)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _operation_error(FT_ERR_SUCCESS)
 {
     this->_operation_error = this->initialize(static_cast<ft_dual_number &&>(other));
@@ -158,30 +146,29 @@ ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept
         other._operation_error = FT_ERR_SUCCESS;
     }
     if (this->_operation_error != FT_ERR_SUCCESS
-        && this->_initialized_state == ft_dual_number::_state_uninitialized)
-        this->_initialized_state = ft_dual_number::_state_destroyed;
-    ft_dual_number::set_last_operation_error(this->_operation_error);
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-int ft_dual_number::initialize() noexcept
+uint32_t ft_dual_number::initialize() noexcept
 {
-    if (this->_initialized_state == ft_dual_number::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         this->abort_lifecycle_error("ft_dual_number::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_value = 0.0;
     this->_derivative = 0.0;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = ft_dual_number::_state_initialized;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dual_number::initialize(double value, double derivative) noexcept
+uint32_t ft_dual_number::initialize(double value, double derivative) noexcept
 {
-    int initialize_error;
+    int32_t initialize_error;
 
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -192,17 +179,16 @@ int ft_dual_number::initialize(double value, double derivative) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dual_number::initialize(const ft_dual_number &other) noexcept
+uint32_t ft_dual_number::initialize(const ft_dual_number &other) noexcept
 {
-    int initialize_error;
-    int lock_error;
-    int unlock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
 
-    if (other._initialized_state != ft_dual_number::_state_initialized)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        if (other._initialized_state == ft_dual_number::_state_uninitialized)
+        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
             other.abort_lifecycle_error("ft_dual_number::initialize(const ft_dual_number &) source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         else
             other.abort_lifecycle_error("ft_dual_number::initialize(const ft_dual_number &) source",
                 "called with destroyed source object");
@@ -222,27 +208,22 @@ int ft_dual_number::initialize(const ft_dual_number &other) noexcept
     this->_value = other._value;
     this->_derivative = other._derivative;
     this->_operation_error = other._operation_error;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->destroy();
-        return (unlock_error);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dual_number::move(ft_dual_number &other) noexcept
+int32_t ft_dual_number::move(ft_dual_number &other) noexcept
 {
     const ft_dual_number *lower;
     const ft_dual_number *upper;
-    int initialize_error;
-    int lock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
 
-    if (other._initialized_state != ft_dual_number::_state_initialized)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        if (other._initialized_state == ft_dual_number::_state_uninitialized)
+        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
             other.abort_lifecycle_error("ft_dual_number::move source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         else
             other.abort_lifecycle_error("ft_dual_number::move source",
                 "called with destroyed source object");
@@ -250,7 +231,7 @@ int ft_dual_number::move(ft_dual_number &other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state != ft_dual_number::_state_initialized)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -269,16 +250,16 @@ int ft_dual_number::move(ft_dual_number &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dual_number::initialize(ft_dual_number &&other) noexcept
+uint32_t ft_dual_number::initialize(ft_dual_number &&other) noexcept
 {
-    int initialize_error;
-    int move_error;
+    int32_t initialize_error;
+    int32_t move_error;
 
-    if (other._initialized_state != ft_dual_number::_state_initialized)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        if (other._initialized_state == ft_dual_number::_state_uninitialized)
+        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
             other.abort_lifecycle_error("ft_dual_number::initialize(ft_dual_number &&) source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         else
             other.abort_lifecycle_error("ft_dual_number::initialize(ft_dual_number &&) source",
                 "called with destroyed source object");
@@ -298,135 +279,56 @@ int ft_dual_number::initialize(ft_dual_number &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dual_number::destroy() noexcept
+int32_t ft_dual_number::destroy() noexcept
 {
-    int disable_error;
+    int32_t disable_error;
 
-    if (this->_initialized_state != ft_dual_number::_state_initialized)
-        return (FT_ERR_INVALID_STATE);
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
     {
         this->_operation_error = disable_error;
-        ft_dual_number::set_last_operation_error(this->_operation_error);
+        ft_dual_number::set_error(this->_operation_error);
         return (disable_error);
     }
     this->_value = 0.0;
     this->_derivative = 0.0;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = ft_dual_number::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 
 ft_dual_number::~ft_dual_number() noexcept
 {
-    if (this->_initialized_state == ft_dual_number::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         this->destroy();
     return ;
 }
 
-ft_dual_number &ft_dual_number::operator=(const ft_dual_number &other) noexcept
-{
-    int assignment_error;
-
-    if (this == &other)
-    {
-        this->_operation_error = FT_ERR_SUCCESS;
-        ft_dual_number::set_last_operation_error(this->_operation_error);
-        return (*this);
-    }
-    if (other._initialized_state != ft_dual_number::_state_initialized)
-    {
-        if (other._initialized_state == ft_dual_number::_state_uninitialized)
-            other.abort_lifecycle_error("ft_dual_number::operator=(const ft_dual_number &) source",
-                "called with uninitialized source object");
-        else
-            other.abort_lifecycle_error("ft_dual_number::operator=(const ft_dual_number &) source",
-                "called with destroyed source object");
-        this->_operation_error = FT_ERR_INVALID_STATE;
-        ft_dual_number::set_last_operation_error(this->_operation_error);
-        return (*this);
-    }
-    if (this->_initialized_state == ft_dual_number::_state_initialized)
-    {
-        assignment_error = this->destroy();
-        if (assignment_error != FT_ERR_SUCCESS)
-        {
-            this->_operation_error = assignment_error;
-            ft_dual_number::set_last_operation_error(this->_operation_error);
-            return (*this);
-        }
-    }
-    assignment_error = this->initialize(other);
-    if (assignment_error == FT_ERR_SUCCESS)
-        this->_operation_error = other._operation_error;
-    else
-        this->_operation_error = assignment_error;
-    ft_dual_number::set_last_operation_error(this->_operation_error);
-    return (*this);
-}
-
-ft_dual_number &ft_dual_number::operator=(ft_dual_number &&other) noexcept
-{
-    int assignment_error;
-
-    if (other._initialized_state != ft_dual_number::_state_initialized)
-    {
-        if (other._initialized_state == ft_dual_number::_state_uninitialized)
-            other.abort_lifecycle_error("ft_dual_number::operator=(ft_dual_number &&) source",
-                "called with uninitialized source object");
-        else
-            other.abort_lifecycle_error("ft_dual_number::operator=(ft_dual_number &&) source",
-                "called with destroyed source object");
-        this->_operation_error = FT_ERR_INVALID_STATE;
-        ft_dual_number::set_last_operation_error(this->_operation_error);
-        return (*this);
-    }
-    if (this == &other)
-    {
-        this->_operation_error = FT_ERR_SUCCESS;
-        ft_dual_number::set_last_operation_error(this->_operation_error);
-        return (*this);
-    }
-    if (this->_initialized_state == ft_dual_number::_state_initialized)
-    {
-        assignment_error = this->destroy();
-        if (assignment_error != FT_ERR_SUCCESS)
-        {
-            this->_operation_error = assignment_error;
-            ft_dual_number::set_last_operation_error(this->_operation_error);
-            return (*this);
-        }
-    }
-    assignment_error = this->initialize(static_cast<ft_dual_number &&>(other));
-    if (assignment_error == FT_ERR_SUCCESS)
-    {
-        this->_operation_error = other._operation_error;
-        other._operation_error = FT_ERR_SUCCESS;
-    }
-    else
-        this->_operation_error = assignment_error;
-    ft_dual_number::set_last_operation_error(this->_operation_error);
-    return (*this);
-}
-
 ft_dual_number ft_dual_number::constant(double value) noexcept
 {
-    return (ft_dual_number(value, 0.0));
+    ft_dual_number result(value, 0.0);
+
+    ft_dual_number::set_error(static_cast<uint32_t>(result._operation_error));
+    return (result);
 }
 
 ft_dual_number ft_dual_number::variable(double value) noexcept
 {
-    return (ft_dual_number(value, 1.0));
+    ft_dual_number result(value, 1.0);
+
+    ft_dual_number::set_error(static_cast<uint32_t>(result._operation_error));
+    return (result);
 }
 
-int ft_dual_number::enable_thread_safety() noexcept
+int32_t ft_dual_number::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int enable_error;
-    int mutex_error;
+    int32_t enable_error;
+    int32_t mutex_error;
 
-    this->abort_if_not_initialized("ft_dual_number::enable_thread_safety");
+    this->abort_if_not_initialised("ft_dual_number::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         enable_error = FT_ERR_SUCCESS;
     else
@@ -450,115 +352,105 @@ int ft_dual_number::enable_thread_safety() noexcept
         }
     }
     this->_operation_error = enable_error;
-    ft_dual_number::set_last_operation_error(this->_operation_error);
+    ft_dual_number::set_error(this->_operation_error);
     return (enable_error);
 }
 
-int ft_dual_number::disable_thread_safety() noexcept
+int32_t ft_dual_number::disable_thread_safety() noexcept
 {
-    int mutex_error;
+    int32_t mutex_error;
 
-    this->abort_if_not_initialized("ft_dual_number::disable_thread_safety");
+    this->abort_if_not_initialised("ft_dual_number::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
         if (mutex_error != FT_ERR_SUCCESS)
         {
             this->_operation_error = mutex_error;
-            ft_dual_number::set_last_operation_error(this->_operation_error);
+            ft_dual_number::set_error(this->_operation_error);
             return (mutex_error);
         }
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
     this->_operation_error = FT_ERR_SUCCESS;
-    ft_dual_number::set_last_operation_error(this->_operation_error);
+    ft_dual_number::set_error(this->_operation_error);
     return (FT_ERR_SUCCESS);
 }
 
-bool ft_dual_number::is_thread_safe() const noexcept
+ft_bool ft_dual_number::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_dual_number::is_thread_safe");
-    ft_dual_number::set_last_operation_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialised("ft_dual_number::is_thread_safe");
+    ft_dual_number::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
 
 double ft_dual_number::value() const noexcept
 {
-    int lock_error;
-    int unlock_error;
+    int32_t lock_error;
     double result;
 
+    this->abort_if_not_initialised("ft_dual_number::value");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(lock_error);
+        ft_dual_number::set_error(lock_error);
         return (0.0);
     }
     result = this->_value;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_dual_number::set_last_operation_error(unlock_error);
-        return (result);
-    }
-    ft_dual_number::set_last_operation_error(FT_ERR_SUCCESS);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    ft_dual_number::set_error(FT_ERR_SUCCESS);
     return (result);
 }
 
 double ft_dual_number::derivative() const noexcept
 {
-    int lock_error;
-    int unlock_error;
+    int32_t lock_error;
     double result;
 
+    this->abort_if_not_initialised("ft_dual_number::derivative");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(lock_error);
+        ft_dual_number::set_error(lock_error);
         return (0.0);
     }
     result = this->_derivative;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_dual_number::set_last_operation_error(unlock_error);
-        return (result);
-    }
-    ft_dual_number::set_last_operation_error(FT_ERR_SUCCESS);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    ft_dual_number::set_error(FT_ERR_SUCCESS);
     return (result);
 }
 
 ft_dual_number_proxy::ft_dual_number_proxy() noexcept
     : _value(0.0, 0.0)
-    , _last_error(FT_ERR_SUCCESS)
+    , _operation_error(FT_ERR_SUCCESS)
 {
     return ;
 }
 
-ft_dual_number_proxy::ft_dual_number_proxy(int error_code) noexcept
+ft_dual_number_proxy::ft_dual_number_proxy(int32_t error_code) noexcept
     : _value(0.0, 0.0)
-    , _last_error(error_code)
+    , _operation_error(error_code)
 {
     this->_value._operation_error = error_code;
-    ft_dual_number::set_last_operation_error(error_code);
+    ft_dual_number::set_error(error_code);
     return ;
 }
 
 ft_dual_number_proxy::ft_dual_number_proxy(const ft_dual_number &value,
-    int error_code) noexcept
+    int32_t error_code) noexcept
     : _value(value)
-    , _last_error(error_code)
+    , _operation_error(error_code)
 {
     this->_value._operation_error = error_code;
-    ft_dual_number::set_last_operation_error(error_code);
+    ft_dual_number::set_error(error_code);
     return ;
 }
 
 ft_dual_number_proxy::ft_dual_number_proxy(
     const ft_dual_number_proxy &other) noexcept
     : _value(other._value)
-    , _last_error(other._last_error)
+    , _operation_error(other._operation_error)
 {
     return ;
 }
@@ -566,34 +458,15 @@ ft_dual_number_proxy::ft_dual_number_proxy(
 ft_dual_number_proxy::ft_dual_number_proxy(
     ft_dual_number_proxy &&other) noexcept
     : _value(static_cast<ft_dual_number &&>(other._value))
-    , _last_error(other._last_error)
+    , _operation_error(other._operation_error)
 {
-    other._last_error = FT_ERR_SUCCESS;
+    other._operation_error = FT_ERR_SUCCESS;
     return ;
 }
 
 ft_dual_number_proxy::~ft_dual_number_proxy()
 {
     return ;
-}
-
-ft_dual_number_proxy &ft_dual_number_proxy::operator=(
-    const ft_dual_number_proxy &other) noexcept
-{
-    this->_value = other._value;
-    this->_last_error = other._last_error;
-    this->_value._operation_error = this->_last_error;
-    return (*this);
-}
-
-ft_dual_number_proxy &ft_dual_number_proxy::operator=(
-    ft_dual_number_proxy &&other) noexcept
-{
-    this->_value = static_cast<ft_dual_number &&>(other._value);
-    this->_last_error = other._last_error;
-    this->_value._operation_error = this->_last_error;
-    other._last_error = FT_ERR_SUCCESS;
-    return (*this);
 }
 
 ft_dual_number_proxy ft_dual_number_proxy::operator+(
@@ -624,14 +497,14 @@ ft_dual_number_proxy::operator ft_dual_number() const noexcept
 {
     ft_dual_number result(this->_value);
 
-    result._operation_error = this->_last_error;
-    ft_dual_number::set_last_operation_error(this->_last_error);
+    result._operation_error = this->_operation_error;
+    ft_dual_number::set_error(this->_operation_error);
     return (result);
 }
 
-int ft_dual_number_proxy::get_error() const noexcept
+int32_t ft_dual_number_proxy::get_error() const noexcept
 {
-    return (this->_last_error);
+    return (this->_operation_error);
 }
 
 ft_dual_number_proxy ft_dual_number::operator+(const ft_dual_number &other) const noexcept
@@ -639,38 +512,40 @@ ft_dual_number_proxy ft_dual_number::operator+(const ft_dual_number &other) cons
     ft_dual_number result;
     const ft_dual_number *lower;
     const ft_dual_number *upper;
-    int initialize_error;
-    int lock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
 
+    this->abort_if_not_initialised("ft_dual_number::operator+");
+    other.abort_if_not_initialised("ft_dual_number::operator+ source");
     if (this->_operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(this->_operation_error);
+        ft_dual_number::set_error(this->_operation_error);
         return (ft_dual_number_proxy(this->_operation_error));
     }
     if (other._operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(other._operation_error);
+        ft_dual_number::set_error(other._operation_error);
         return (ft_dual_number_proxy(other._operation_error));
     }
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     lock_error = ft_dual_number::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     result._value = this->_value + other._value;
     result._derivative = this->_derivative + other._derivative;
     result._operation_error = FT_ERR_SUCCESS;
     ft_dual_number::unlock_pair(lower, upper);
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (ft_dual_number_proxy(result, result._operation_error));
 }
 
@@ -679,38 +554,40 @@ ft_dual_number_proxy ft_dual_number::operator-(const ft_dual_number &other) cons
     ft_dual_number result;
     const ft_dual_number *lower;
     const ft_dual_number *upper;
-    int initialize_error;
-    int lock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
 
+    this->abort_if_not_initialised("ft_dual_number::operator-");
+    other.abort_if_not_initialised("ft_dual_number::operator- source");
     if (this->_operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(this->_operation_error);
+        ft_dual_number::set_error(this->_operation_error);
         return (ft_dual_number_proxy(this->_operation_error));
     }
     if (other._operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(other._operation_error);
+        ft_dual_number::set_error(other._operation_error);
         return (ft_dual_number_proxy(other._operation_error));
     }
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     lock_error = ft_dual_number::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     result._value = this->_value - other._value;
     result._derivative = this->_derivative - other._derivative;
     result._operation_error = FT_ERR_SUCCESS;
     ft_dual_number::unlock_pair(lower, upper);
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (ft_dual_number_proxy(result, result._operation_error));
 }
 
@@ -719,31 +596,33 @@ ft_dual_number_proxy ft_dual_number::operator*(const ft_dual_number &other) cons
     ft_dual_number result;
     const ft_dual_number *lower;
     const ft_dual_number *upper;
-    int initialize_error;
-    int lock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
 
+    this->abort_if_not_initialised("ft_dual_number::operator*");
+    other.abort_if_not_initialised("ft_dual_number::operator* source");
     if (this->_operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(this->_operation_error);
+        ft_dual_number::set_error(this->_operation_error);
         return (ft_dual_number_proxy(this->_operation_error));
     }
     if (other._operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(other._operation_error);
+        ft_dual_number::set_error(other._operation_error);
         return (ft_dual_number_proxy(other._operation_error));
     }
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     lock_error = ft_dual_number::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     result._value = this->_value * other._value;
@@ -751,7 +630,7 @@ ft_dual_number_proxy ft_dual_number::operator*(const ft_dual_number &other) cons
         + this->_derivative * other._value;
     result._operation_error = FT_ERR_SUCCESS;
     ft_dual_number::unlock_pair(lower, upper);
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (ft_dual_number_proxy(result, result._operation_error));
 }
 
@@ -760,33 +639,35 @@ ft_dual_number_proxy ft_dual_number::operator/(const ft_dual_number &other) cons
     ft_dual_number result;
     const ft_dual_number *lower;
     const ft_dual_number *upper;
-    int initialize_error;
-    int lock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
     double denominator;
     double epsilon;
 
+    this->abort_if_not_initialised("ft_dual_number::operator/");
+    other.abort_if_not_initialised("ft_dual_number::operator/ source");
     if (this->_operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(this->_operation_error);
+        ft_dual_number::set_error(this->_operation_error);
         return (ft_dual_number_proxy(this->_operation_error));
     }
     if (other._operation_error != FT_ERR_SUCCESS)
     {
-        ft_dual_number::set_last_operation_error(other._operation_error);
+        ft_dual_number::set_error(other._operation_error);
         return (ft_dual_number_proxy(other._operation_error));
     }
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     lock_error = ft_dual_number::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     denominator = other._value;
@@ -795,7 +676,7 @@ ft_dual_number_proxy ft_dual_number::operator/(const ft_dual_number &other) cons
     {
         result._operation_error = FT_ERR_DIVIDE_BY_ZERO;
         ft_dual_number::unlock_pair(lower, upper);
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (ft_dual_number_proxy(result, result._operation_error));
     }
     result._value = this->_value / denominator;
@@ -803,171 +684,147 @@ ft_dual_number_proxy ft_dual_number::operator/(const ft_dual_number &other) cons
         / (denominator * denominator);
     result._operation_error = FT_ERR_SUCCESS;
     ft_dual_number::unlock_pair(lower, upper);
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (ft_dual_number_proxy(result, result._operation_error));
 }
 
 ft_dual_number ft_dual_number::apply_sin() const noexcept
 {
     ft_dual_number result;
-    int initialize_error;
-    int lock_error;
-    int unlock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
     double value;
     double derivative_value;
 
+    this->abort_if_not_initialised("ft_dual_number::apply_sin");
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        result._operation_error = unlock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
-        return (result);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     result._value = std::sin(value);
     result._derivative = std::cos(value) * derivative_value;
     result._operation_error = FT_ERR_SUCCESS;
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (result);
 }
 
 ft_dual_number ft_dual_number::apply_cos() const noexcept
 {
     ft_dual_number result;
-    int initialize_error;
-    int lock_error;
-    int unlock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
     double value;
     double derivative_value;
 
+    this->abort_if_not_initialised("ft_dual_number::apply_cos");
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        result._operation_error = unlock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
-        return (result);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     result._value = std::cos(value);
     result._derivative = -std::sin(value) * derivative_value;
     result._operation_error = FT_ERR_SUCCESS;
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (result);
 }
 
 ft_dual_number ft_dual_number::apply_exp() const noexcept
 {
     ft_dual_number result;
-    int initialize_error;
-    int lock_error;
-    int unlock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
     double value;
     double derivative_value;
     double exponential;
 
+    this->abort_if_not_initialised("ft_dual_number::apply_exp");
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        result._operation_error = unlock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
-        return (result);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     exponential = std::exp(value);
     result._value = exponential;
     result._derivative = exponential * derivative_value;
     result._operation_error = FT_ERR_SUCCESS;
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (result);
 }
 
 ft_dual_number ft_dual_number::apply_log() const noexcept
 {
     ft_dual_number result;
-    int initialize_error;
-    int lock_error;
-    int unlock_error;
+    int32_t initialize_error;
+    int32_t lock_error;
     double value;
     double derivative_value;
 
+    this->abort_if_not_initialised("ft_dual_number::apply_log");
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         result._operation_error = initialize_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        result._operation_error = unlock_error;
-        ft_dual_number::set_last_operation_error(result._operation_error);
-        return (result);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (value <= 0.0)
     {
         result._operation_error = FT_ERR_INVALID_ARGUMENT;
-        ft_dual_number::set_last_operation_error(result._operation_error);
+        ft_dual_number::set_error(result._operation_error);
         return (result);
     }
     result._value = std::log(value);
     result._derivative = derivative_value / value;
     result._operation_error = FT_ERR_SUCCESS;
-    ft_dual_number::set_last_operation_error(result._operation_error);
+    ft_dual_number::set_error(result._operation_error);
     return (result);
 }
 
@@ -975,9 +832,9 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
 pt_recursive_mutex *ft_dual_number::get_mutex_for_validation() const noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
+    int32_t mutex_error;
 
-    if (this->_initialized_state != ft_dual_number::_state_initialized)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (ft_nullptr);
     if (this->_mutex == ft_nullptr)
     {
@@ -996,21 +853,24 @@ pt_recursive_mutex *ft_dual_number::get_mutex_for_validation() const noexcept
 }
 #endif
 
-int ft_dual_number::last_operation_error() noexcept
+uint32_t ft_dual_number::get_error() const noexcept
 {
+    this->abort_if_not_initialised("ft_dual_number::get_error");
     return (ft_dual_number::_last_error);
 }
 
-const char *ft_dual_number::last_operation_error_str() noexcept
+const char *ft_dual_number::get_error_str() const noexcept
 {
-    return (ft_strerror(ft_dual_number::last_operation_error()));
+    this->abort_if_not_initialised("ft_dual_number::get_error_str");
+    return (ft_strerror(this->get_error()));
 }
 
-static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
-    size_t active_index, ft_vector<ft_dual_number> &dual_inputs) noexcept
+static int32_t math_autodiff_prepare_inputs(const ft_vector<double> &point,
+    uint64_t active_index, ft_vector<ft_dual_number> &dual_inputs) noexcept
 {
-    size_t dimension;
-    size_t index;
+    uint64_t dimension;
+    uint64_t index;
+    int32_t initialize_error;
 
     dual_inputs.clear();
     dimension = point.size();
@@ -1023,88 +883,91 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
 
         value = point[index];
         if (index == active_index)
-            variable = ft_dual_number::variable(value);
+            initialize_error = variable.initialize(value, 1.0);
         else
-            variable = ft_dual_number::constant(value);
-        if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
-            return (-1);
+            initialize_error = variable.initialize(value, 0.0);
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (FT_ERR_INITIALIZATION_FAILED);
         dual_inputs.push_back(variable);
         index++;
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int math_autodiff_univariate(math_autodiff_univariate_function function,
+int32_t math_autodiff_univariate(math_autodiff_univariate_function function,
     double point, double *value, double *derivative, void *user_data) noexcept
 {
     ft_dual_number variable;
     ft_dual_number result;
+    int32_t initialize_error;
+    int32_t result_error;
 
     if (function == ft_nullptr || value == ft_nullptr || derivative == ft_nullptr)
-        return (-1);
-    variable = ft_dual_number::variable(point);
-    if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (-1);
-    result = function(variable, user_data);
-    if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
+    initialize_error = variable.initialize(point, 1.0);
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    result_error = result.initialize(function(variable, user_data));
+    if (result_error != FT_ERR_SUCCESS)
+        return (result_error);
     *value = result.value();
-    if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (-1);
+    if (result.get_error() != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     *derivative = result.derivative();
-    if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (-1);
-    return (0);
+    if (result.get_error() != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
+    return (FT_ERR_SUCCESS);
 }
 
-int math_autodiff_gradient(math_autodiff_multivariate_function function,
+int32_t math_autodiff_gradient(math_autodiff_multivariate_function function,
     const ft_vector<double> &point, ft_vector<double> &gradient,
     double *value, void *user_data) noexcept
 {
-    size_t dimension;
-    size_t index;
-    bool value_set;
+    uint64_t dimension;
+    uint64_t index;
+    ft_bool value_set;
 
     if (function == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     dimension = point.size();
     gradient.clear();
     gradient.reserve(dimension);
     index = 0;
-    value_set = false;
+    value_set = FT_FALSE;
     while (index < dimension)
     {
         ft_vector<ft_dual_number> dual_inputs;
         ft_dual_number result;
+        int32_t result_error;
 
-        if (math_autodiff_prepare_inputs(point, index, dual_inputs) != 0)
+        if (math_autodiff_prepare_inputs(point, index, dual_inputs) != FT_ERR_SUCCESS)
         {
             gradient.clear();
-            return (-1);
+            return (FT_ERR_INITIALIZATION_FAILED);
         }
-        result = function(dual_inputs, user_data);
-        if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
+        result_error = result.initialize(function(dual_inputs, user_data));
+        if (result_error != FT_ERR_SUCCESS)
         {
             gradient.clear();
-            return (-1);
+            return (result_error);
         }
         if (!value_set && value != ft_nullptr)
         {
             *value = result.value();
-            if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
+            if (result.get_error() != FT_ERR_SUCCESS)
             {
                 gradient.clear();
-                return (-1);
+                return (FT_ERR_INTERNAL);
             }
-            value_set = true;
+            value_set = FT_TRUE;
         }
         gradient.push_back(result.derivative());
-        if (ft_dual_number::last_operation_error() != FT_ERR_SUCCESS)
+        if (result.get_error() != FT_ERR_SUCCESS)
         {
             gradient.clear();
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
         index++;
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }

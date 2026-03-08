@@ -9,7 +9,7 @@ thread_local int ft_price_definition::_last_error = FT_ERR_SUCCESS;
 ft_price_definition::ft_price_definition() noexcept
     : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0),
       _maximum_value(0), _mutex(ft_nullptr),
-      _initialized_state(ft_price_definition::_state_uninitialized)
+      _initialised_state(ft_price_definition::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -17,9 +17,9 @@ ft_price_definition::ft_price_definition() noexcept
 
 ft_price_definition::~ft_price_definition() noexcept
 {
-    if (this->_initialized_state == ft_price_definition::_state_uninitialized)
+    if (this->_initialised_state == ft_price_definition::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_price_definition::_state_initialized)
+    if (this->_initialised_state == ft_price_definition::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -43,21 +43,21 @@ void ft_price_definition::set_error(int error_code) const noexcept
     return ;
 }
 
-void ft_price_definition::abort_if_not_initialized(const char *method_name) const
+void ft_price_definition::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_price_definition::_state_initialized)
+    if (this->_initialised_state == ft_price_definition::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_price_definition::initialize() noexcept
 {
-    if (this->_initialized_state == ft_price_definition::_state_initialized)
+    if (this->_initialised_state == ft_price_definition::_state_initialised)
     {
         this->abort_lifecycle_error("ft_price_definition::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_item_id = 0;
@@ -65,7 +65,7 @@ int ft_price_definition::initialize() noexcept
     this->_base_value = 0;
     this->_minimum_value = 0;
     this->_maximum_value = 0;
-    this->_initialized_state = ft_price_definition::_state_initialized;
+    this->_initialised_state = ft_price_definition::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -74,10 +74,10 @@ int ft_price_definition::initialize(const ft_price_definition &other) noexcept
 {
     int initialize_error;
 
-    if (other._initialized_state != ft_price_definition::_state_initialized)
+    if (other._initialised_state != ft_price_definition::_state_initialised)
     {
         other.abort_lifecycle_error("ft_price_definition::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -129,7 +129,7 @@ int ft_price_definition::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_price_definition::_state_initialized)
+    if (this->_initialised_state != ft_price_definition::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -140,7 +140,7 @@ int ft_price_definition::destroy() noexcept
     this->_base_value = 0;
     this->_minimum_value = 0;
     this->_maximum_value = 0;
-    this->_initialized_state = ft_price_definition::_state_destroyed;
+    this->_initialised_state = ft_price_definition::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -150,7 +150,7 @@ int ft_price_definition::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_price_definition::enable_thread_safety");
+    this->abort_if_not_initialised("ft_price_definition::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -227,7 +227,7 @@ int ft_price_definition::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_price_definition::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::lock");
+    this->abort_if_not_initialised("ft_price_definition::lock");
     const int lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -235,7 +235,7 @@ int ft_price_definition::lock(bool *lock_acquired) const noexcept
 
 void ft_price_definition::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::unlock");
+    this->abort_if_not_initialised("ft_price_definition::unlock");
     const int unlock_result = this->unlock_internal(lock_acquired);
     this->set_error(unlock_result);
     return ;
@@ -243,14 +243,14 @@ void ft_price_definition::unlock(bool lock_acquired) const noexcept
 
 int ft_price_definition::get_item_id() const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::get_item_id");
+    this->abort_if_not_initialised("ft_price_definition::get_item_id");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_item_id);
 }
 
 void ft_price_definition::set_item_id(int item_id) noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::set_item_id");
+    this->abort_if_not_initialised("ft_price_definition::set_item_id");
     this->_item_id = item_id;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -258,14 +258,14 @@ void ft_price_definition::set_item_id(int item_id) noexcept
 
 int ft_price_definition::get_rarity() const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::get_rarity");
+    this->abort_if_not_initialised("ft_price_definition::get_rarity");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_rarity);
 }
 
 void ft_price_definition::set_rarity(int rarity) noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::set_rarity");
+    this->abort_if_not_initialised("ft_price_definition::set_rarity");
     this->_rarity = rarity;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -273,14 +273,14 @@ void ft_price_definition::set_rarity(int rarity) noexcept
 
 int ft_price_definition::get_base_value() const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::get_base_value");
+    this->abort_if_not_initialised("ft_price_definition::get_base_value");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_base_value);
 }
 
 void ft_price_definition::set_base_value(int base_value) noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::set_base_value");
+    this->abort_if_not_initialised("ft_price_definition::set_base_value");
     this->_base_value = base_value;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -288,14 +288,14 @@ void ft_price_definition::set_base_value(int base_value) noexcept
 
 int ft_price_definition::get_minimum_value() const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::get_minimum_value");
+    this->abort_if_not_initialised("ft_price_definition::get_minimum_value");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_minimum_value);
 }
 
 void ft_price_definition::set_minimum_value(int minimum_value) noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::set_minimum_value");
+    this->abort_if_not_initialised("ft_price_definition::set_minimum_value");
     this->_minimum_value = minimum_value;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -303,14 +303,14 @@ void ft_price_definition::set_minimum_value(int minimum_value) noexcept
 
 int ft_price_definition::get_maximum_value() const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::get_maximum_value");
+    this->abort_if_not_initialised("ft_price_definition::get_maximum_value");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_maximum_value);
 }
 
 void ft_price_definition::set_maximum_value(int maximum_value) noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::set_maximum_value");
+    this->abort_if_not_initialised("ft_price_definition::set_maximum_value");
     this->_maximum_value = maximum_value;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -319,7 +319,7 @@ void ft_price_definition::set_maximum_value(int maximum_value) noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_price_definition::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_price_definition::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_price_definition::get_mutex_for_validation");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_mutex);
 }

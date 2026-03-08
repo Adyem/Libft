@@ -39,7 +39,7 @@ int32_t cma_disable_thread_safety(void)
     return (result);
 }
 
-bool cma_is_thread_safe_enabled(void)
+ft_bool cma_is_thread_safe_enabled(void)
 {
     return (g_cma_allocator_mutex != ft_nullptr);
 }
@@ -54,37 +54,37 @@ static pt_recursive_mutex *cma_allocator_mutex(void)
     return (g_cma_allocator_mutex);
 }
 
-int32_t cma_lock_allocator(bool *lock_acquired)
+int32_t cma_lock_allocator(ft_bool *lock_acquired)
 {
     if (!lock_acquired)
         return (FT_ERR_INVALID_ARGUMENT);
-    *lock_acquired = false;
+    *lock_acquired = FT_FALSE;
     pt_recursive_mutex *mutex_pointer = cma_allocator_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INITIALIZATION_FAILED);
     int32_t mutex_error = pt_recursive_mutex_lock_if_not_null(mutex_pointer);
     if (mutex_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
-    if (cma_metadata_make_writable() != 0)
+    if (cma_metadata_make_writable() != FT_ERR_SUCCESS)
     {
         (void)pt_recursive_mutex_unlock_if_not_null(mutex_pointer);
         return (FT_ERR_INVALID_STATE);
     }
-    bool guard_incremented = cma_metadata_guard_increment();
+    ft_bool guard_incremented = cma_metadata_guard_increment();
     if (!guard_incremented)
     {
         (void)pt_recursive_mutex_unlock_if_not_null(mutex_pointer);
         return (FT_ERR_INVALID_STATE);
     }
-    *lock_acquired = true;
+    *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-int32_t cma_unlock_allocator(bool lock_acquired)
+int32_t cma_unlock_allocator(ft_bool lock_acquired)
 {
     if (!lock_acquired)
         return (FT_ERR_SUCCESS);
-    bool guard_decremented = cma_metadata_guard_decrement();
+    ft_bool guard_decremented = cma_metadata_guard_decrement();
     pt_recursive_mutex *mutex_pointer = cma_allocator_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INITIALIZATION_FAILED);

@@ -19,11 +19,11 @@ void ft_ofstream::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_ofstream::abort_if_not_initialized(const char *method_name) const noexcept
+void ft_ofstream::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_ofstream::_state_initialized)
+    if (this->_initialised_state == ft_ofstream::_state_initialised)
         return ;
-    ft_ofstream::abort_lifecycle_error(method_name, "called while object is not initialized");
+    ft_ofstream::abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -38,14 +38,14 @@ int ft_ofstream::unlock_mutex(void) const noexcept
 }
 
 ft_ofstream::ft_ofstream() noexcept
-    : _file(), _mutex(ft_nullptr), _initialized_state(ft_ofstream::_state_uninitialized)
+    : _file(), _mutex(ft_nullptr), _initialised_state(ft_ofstream::_state_uninitialised)
 {
     return ;
 }
 
 ft_ofstream::~ft_ofstream() noexcept
 {
-    if (this->_initialized_state != ft_ofstream::_state_initialized)
+    if (this->_initialised_state != ft_ofstream::_state_initialised)
         return ;
     (void)this->destroy();
     return ;
@@ -53,13 +53,13 @@ ft_ofstream::~ft_ofstream() noexcept
 
 int ft_ofstream::initialize() noexcept
 {
-    if (this->_initialized_state == ft_ofstream::_state_initialized)
+    if (this->_initialised_state == ft_ofstream::_state_initialised)
     {
         ft_ofstream::abort_lifecycle_error("ft_ofstream::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_initialized_state = ft_ofstream::_state_initialized;
+    this->_initialised_state = ft_ofstream::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -67,10 +67,10 @@ int ft_ofstream::destroy() noexcept
 {
     int destroy_error;
 
-    if (this->_initialized_state != ft_ofstream::_state_initialized)
+    if (this->_initialised_state != ft_ofstream::_state_initialised)
     {
         ft_ofstream::abort_lifecycle_error("ft_ofstream::destroy",
-            "called while object is not initialized");
+            "called while object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_file.close();
@@ -81,7 +81,7 @@ int ft_ofstream::destroy() noexcept
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    this->_initialized_state = ft_ofstream::_state_destroyed;
+    this->_initialised_state = ft_ofstream::_state_destroyed;
     return (destroy_error);
 }
 
@@ -90,7 +90,7 @@ int ft_ofstream::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_ofstream::enable_thread_safety");
+    this->abort_if_not_initialised("ft_ofstream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -108,7 +108,7 @@ int ft_ofstream::enable_thread_safety(void) noexcept
 
 int ft_ofstream::disable_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("ft_ofstream::disable_thread_safety");
+    this->abort_if_not_initialised("ft_ofstream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     int destroy_error = this->_mutex->destroy();
@@ -119,7 +119,7 @@ int ft_ofstream::disable_thread_safety(void) noexcept
 
 bool ft_ofstream::is_thread_safe(void) const noexcept
 {
-    this->abort_if_not_initialized("ft_ofstream::is_thread_safe");
+    this->abort_if_not_initialised("ft_ofstream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -128,7 +128,7 @@ int ft_ofstream::open(const char *filename) noexcept
     int open_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_ofstream::open");
+    this->abort_if_not_initialised("ft_ofstream::open");
     if (filename == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     open_error = this->lock_mutex();
@@ -148,7 +148,7 @@ ssize_t ft_ofstream::write(const char *string) noexcept
     ssize_t bytes_written;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_ofstream::write");
+    this->abort_if_not_initialised("ft_ofstream::write");
     if (string == ft_nullptr)
         return (-1);
     if (this->lock_mutex() != FT_ERR_SUCCESS)
@@ -165,7 +165,7 @@ int ft_ofstream::close() noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_ofstream::close");
+    this->abort_if_not_initialised("ft_ofstream::close");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);

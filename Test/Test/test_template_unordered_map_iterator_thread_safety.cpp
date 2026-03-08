@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Template/unordered_map.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include <csignal>
 #include <sys/wait.h>
@@ -34,7 +34,7 @@ static int unordered_map_iterator_expect_sigabrt(void (*operation)())
     return (WTERMSIG(child_status) == SIGABRT);
 }
 
-static void unordered_map_iterator_uninitialized_destructor_aborts_operation()
+static void unordered_map_iterator_uninitialised_destructor_aborts_operation()
 {
     unordered_map_iterator iterator_instance;
 
@@ -42,7 +42,7 @@ static void unordered_map_iterator_uninitialized_destructor_aborts_operation()
     return ;
 }
 
-static void unordered_map_iterator_destroy_uninitialized_aborts_operation()
+static void unordered_map_iterator_destroy_uninitialised_aborts_operation()
 {
     unordered_map_iterator iterator_instance;
 
@@ -73,7 +73,7 @@ static void unordered_map_iterator_destroy_twice_aborts_operation()
     return ;
 }
 
-static void unordered_map_iterator_move_self_uninitialized_aborts_operation()
+static void unordered_map_iterator_move_self_uninitialised_aborts_operation()
 {
     unordered_map_iterator iterator_instance;
 
@@ -81,7 +81,7 @@ static void unordered_map_iterator_move_self_uninitialized_aborts_operation()
     return ;
 }
 
-static void unordered_map_const_iterator_uninitialized_destructor_aborts_operation()
+static void unordered_map_const_iterator_uninitialised_destructor_aborts_operation()
 {
     unordered_map_const_iterator iterator_instance;
 
@@ -89,7 +89,7 @@ static void unordered_map_const_iterator_uninitialized_destructor_aborts_operati
     return ;
 }
 
-static void unordered_map_const_iterator_destroy_uninitialized_aborts_operation()
+static void unordered_map_const_iterator_destroy_uninitialised_aborts_operation()
 {
     unordered_map_const_iterator iterator_instance;
 
@@ -120,7 +120,7 @@ static void unordered_map_const_iterator_destroy_twice_aborts_operation()
     return ;
 }
 
-static void unordered_map_const_iterator_move_self_uninitialized_aborts_operation()
+static void unordered_map_const_iterator_move_self_uninitialised_aborts_operation()
 {
     unordered_map_const_iterator iterator_instance;
 
@@ -268,24 +268,24 @@ FT_TEST(test_unordered_map_const_iterator_end_arrow_reports_out_of_range,
     return (1);
 }
 
-FT_TEST(test_unordered_map_iterator_uninitialized_destructor_aborts,
-    "unordered_map iterator destructor aborts on uninitialized instance")
+FT_TEST(test_unordered_map_iterator_uninitialised_destructor_aborts,
+    "unordered_map iterator destructor aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
-        unordered_map_iterator_uninitialized_destructor_aborts_operation));
+        unordered_map_iterator_uninitialised_destructor_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_unordered_map_iterator_destroy_uninitialized_aborts,
-    "unordered_map iterator destroy aborts on uninitialized instance")
+FT_TEST(test_unordered_map_iterator_destroy_uninitialised_aborts,
+    "unordered_map iterator destroy aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
-        unordered_map_iterator_destroy_uninitialized_aborts_operation));
+        unordered_map_iterator_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
 FT_TEST(test_unordered_map_iterator_initialize_twice_aborts,
-    "unordered_map iterator initialize aborts when called while initialized")
+    "unordered_map iterator initialize aborts when called while initialised")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
         unordered_map_iterator_initialize_twice_aborts_operation));
@@ -300,32 +300,32 @@ FT_TEST(test_unordered_map_iterator_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_unordered_map_iterator_move_self_uninitialized_aborts,
-    "unordered_map iterator move(self) aborts on uninitialized instance")
+FT_TEST(test_unordered_map_iterator_move_self_uninitialised_aborts,
+    "unordered_map iterator move(self) aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
-        unordered_map_iterator_move_self_uninitialized_aborts_operation));
+        unordered_map_iterator_move_self_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_unordered_map_const_iterator_uninitialized_destructor_aborts,
-    "unordered_map const_iterator destructor aborts on uninitialized instance")
+FT_TEST(test_unordered_map_const_iterator_uninitialised_destructor_aborts,
+    "unordered_map const_iterator destructor aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
-        unordered_map_const_iterator_uninitialized_destructor_aborts_operation));
+        unordered_map_const_iterator_uninitialised_destructor_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_unordered_map_const_iterator_destroy_uninitialized_aborts,
-    "unordered_map const_iterator destroy aborts on uninitialized instance")
+FT_TEST(test_unordered_map_const_iterator_destroy_uninitialised_aborts,
+    "unordered_map const_iterator destroy aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
-        unordered_map_const_iterator_destroy_uninitialized_aborts_operation));
+        unordered_map_const_iterator_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
 FT_TEST(test_unordered_map_const_iterator_initialize_twice_aborts,
-    "unordered_map const_iterator initialize aborts when called while initialized")
+    "unordered_map const_iterator initialize aborts when called while initialised")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
         unordered_map_const_iterator_initialize_twice_aborts_operation));
@@ -340,10 +340,10 @@ FT_TEST(test_unordered_map_const_iterator_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_unordered_map_const_iterator_move_self_uninitialized_aborts,
-    "unordered_map const_iterator move(self) aborts on uninitialized instance")
+FT_TEST(test_unordered_map_const_iterator_move_self_uninitialised_aborts,
+    "unordered_map const_iterator move(self) aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
-        unordered_map_const_iterator_move_self_uninitialized_aborts_operation));
+        unordered_map_const_iterator_move_self_uninitialised_aborts_operation));
     return (1);
 }

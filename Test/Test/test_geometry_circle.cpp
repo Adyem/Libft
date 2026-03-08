@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Geometry/geometry.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
 #include <atomic>
@@ -44,7 +44,7 @@ static void circle_initialize_twice_aborts_operation()
     return ;
 }
 
-static void circle_destroy_uninitialized_aborts_operation()
+static void circle_destroy_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -52,7 +52,7 @@ static void circle_destroy_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_set_radius_uninitialized_aborts_operation()
+static void circle_set_radius_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -69,7 +69,7 @@ static void circle_destroy_twice_aborts_operation()
     return ;
 }
 
-static void circle_destructor_uninitialized_aborts_operation()
+static void circle_destructor_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -77,7 +77,7 @@ static void circle_destructor_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_move_self_uninitialized_aborts_operation()
+static void circle_move_self_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -85,7 +85,7 @@ static void circle_move_self_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_initialize_copy_from_uninitialized_source_aborts_operation()
+static void circle_initialize_copy_from_uninitialised_source_aborts_operation()
 {
     circle source;
     circle destination(0.0, 0.0, 1.0);
@@ -95,7 +95,7 @@ static void circle_initialize_copy_from_uninitialized_source_aborts_operation()
     return ;
 }
 
-static void circle_initialize_move_from_uninitialized_source_aborts_operation()
+static void circle_initialize_move_from_uninitialised_source_aborts_operation()
 {
     circle source;
     circle destination(0.0, 0.0, 1.0);
@@ -129,7 +129,7 @@ static void circle_initialize_move_from_destroyed_source_aborts_operation()
     return ;
 }
 
-static void circle_get_center_x_uninitialized_aborts_operation()
+static void circle_get_center_x_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -146,7 +146,7 @@ static void circle_enable_thread_safety_destroyed_aborts_operation()
     return ;
 }
 
-static void circle_initialize_copy_destination_initialized_aborts_operation()
+static void circle_initialize_copy_destination_initialised_aborts_operation()
 {
     circle source(0.0, 0.0, 1.0);
     circle destination(2.0, 2.0, 3.0);
@@ -155,7 +155,7 @@ static void circle_initialize_copy_destination_initialized_aborts_operation()
     return ;
 }
 
-static void circle_initialize_move_destination_initialized_aborts_operation()
+static void circle_initialize_move_destination_initialised_aborts_operation()
 {
     circle source(0.0, 0.0, 1.0);
     circle destination(2.0, 2.0, 3.0);
@@ -182,7 +182,7 @@ static void circle_is_thread_safe_enabled_destroyed_aborts_operation()
     return ;
 }
 
-static void circle_set_center_x_uninitialized_aborts_operation()
+static void circle_set_center_x_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -190,7 +190,7 @@ static void circle_set_center_x_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_get_center_y_uninitialized_aborts_operation()
+static void circle_get_center_y_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -198,7 +198,7 @@ static void circle_get_center_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_set_center_uninitialized_aborts_operation()
+static void circle_set_center_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -206,7 +206,7 @@ static void circle_set_center_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_get_radius_uninitialized_aborts_operation()
+static void circle_get_radius_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -214,7 +214,7 @@ static void circle_get_radius_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_enable_thread_safety_uninitialized_aborts_operation()
+static void circle_enable_thread_safety_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -222,7 +222,7 @@ static void circle_enable_thread_safety_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_set_center_y_uninitialized_aborts_operation()
+static void circle_set_center_y_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -230,7 +230,7 @@ static void circle_set_center_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_get_center_x_second_uninitialized_aborts_operation()
+static void circle_get_center_x_second_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -238,7 +238,7 @@ static void circle_get_center_x_second_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_disable_thread_safety_uninitialized_aborts_operation()
+static void circle_disable_thread_safety_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -246,7 +246,7 @@ static void circle_disable_thread_safety_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_is_thread_safe_enabled_uninitialized_aborts_operation()
+static void circle_is_thread_safe_enabled_uninitialised_aborts_operation()
 {
     circle shape;
 
@@ -254,7 +254,7 @@ static void circle_is_thread_safe_enabled_uninitialized_aborts_operation()
     return ;
 }
 
-static void circle_move_two_uninitialized_aborts_operation()
+static void circle_move_two_uninitialised_aborts_operation()
 {
     circle source;
     circle destination;
@@ -355,7 +355,7 @@ static int circle_move_destroyed_destination_succeeds_operation()
     return (1);
 }
 
-static void circle_move_uninitialized_source_aborts_operation()
+static void circle_move_uninitialised_source_aborts_operation()
 {
     circle source;
     circle destination(2.0, 2.0, 3.0);
@@ -364,7 +364,7 @@ static void circle_move_uninitialized_source_aborts_operation()
     return ;
 }
 
-static void circle_set_center_y_uninitialized_second_aborts_operation()
+static void circle_set_center_y_uninitialised_second_aborts_operation()
 {
     circle shape;
 
@@ -372,7 +372,7 @@ static void circle_set_center_y_uninitialized_second_aborts_operation()
     return ;
 }
 
-static void intersect_circle_uninitialized_first_aborts_operation()
+static void intersect_circle_uninitialised_first_aborts_operation()
 {
     circle first;
     circle second(0.0, 0.0, 1.0);
@@ -381,7 +381,7 @@ static void intersect_circle_uninitialized_first_aborts_operation()
     return ;
 }
 
-static void intersect_circle_uninitialized_second_aborts_operation()
+static void intersect_circle_uninitialised_second_aborts_operation()
 {
     circle first(0.0, 0.0, 1.0);
     circle second;
@@ -390,7 +390,7 @@ static void intersect_circle_uninitialized_second_aborts_operation()
     return ;
 }
 
-static void intersect_circle_uninitialized_both_aborts_operation()
+static void intersect_circle_uninitialised_both_aborts_operation()
 {
     circle first;
     circle second;
@@ -430,7 +430,7 @@ static void intersect_circle_destroyed_both_aborts_operation()
     return ;
 }
 
-static void intersect_circle_destroyed_and_uninitialized_aborts_operation()
+static void intersect_circle_destroyed_and_uninitialised_aborts_operation()
 {
     circle first(0.0, 0.0, 1.0);
     circle second;
@@ -441,7 +441,7 @@ static void intersect_circle_destroyed_and_uninitialized_aborts_operation()
 }
 
 FT_TEST(test_circle_initialize_setters_and_getters,
-    "circle initialize, setters, and getters work in initialized lifecycle")
+    "circle initialize, setters, and getters work in initialised lifecycle")
 {
     circle shape;
 
@@ -458,7 +458,7 @@ FT_TEST(test_circle_initialize_setters_and_getters,
 }
 
 FT_TEST(test_circle_reinitialize_after_destroy,
-    "circle can be initialized again after destroy")
+    "circle can be initialised again after destroy")
 {
     circle shape;
 
@@ -567,7 +567,7 @@ FT_TEST(test_circle_set_center_large_values,
 }
 
 FT_TEST(test_circle_reinitialize_with_infinite_radius,
-    "circle can be reinitialized with infinite radius after destroy")
+    "circle can be reinitialised with infinite radius after destroy")
 {
     circle shape;
     double infinity_value;
@@ -1839,8 +1839,8 @@ FT_TEST(test_circle_initialize_from_destroyed_source_aborts,
     return (1);
 }
 
-FT_TEST(test_circle_move_self_initialized_is_noop,
-    "circle move(self) returns success and keeps values when initialized")
+FT_TEST(test_circle_move_self_initialised_is_noop,
+    "circle move(self) returns success and keeps values when initialised")
 {
     circle shape;
 
@@ -1887,23 +1887,23 @@ FT_TEST(test_circle_enable_thread_safety_allocation_failure,
 }
 
 FT_TEST(test_circle_initialize_twice_aborts,
-    "circle initialize aborts when called while already initialized")
+    "circle initialize aborts when called while already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_destroy_uninitialized_aborts,
-    "circle destroy aborts when object is uninitialized")
+FT_TEST(test_circle_destroy_uninitialised_aborts,
+    "circle destroy aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_destroy_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_set_radius_uninitialized_aborts,
-    "circle set_radius aborts when object is uninitialized")
+FT_TEST(test_circle_set_radius_uninitialised_aborts,
+    "circle set_radius aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_set_radius_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_set_radius_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -1914,41 +1914,41 @@ FT_TEST(test_circle_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_circle_uninitialized_destructor_aborts,
-    "circle destructor aborts when object is left uninitialized")
+FT_TEST(test_circle_uninitialised_destructor_aborts,
+    "circle destructor aborts when object is left uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_destructor_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_destructor_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_self_move_uninitialized_aborts,
-    "circle move(self) aborts when object is uninitialized")
+FT_TEST(test_circle_self_move_uninitialised_aborts,
+    "circle move(self) aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_move_self_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(circle_move_self_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_initialize_copy_from_uninitialized_source_aborts,
-    "circle initialize(copy) aborts when source object is uninitialized")
+FT_TEST(test_circle_initialize_copy_from_uninitialised_source_aborts,
+    "circle initialize(copy) aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_initialize_copy_from_uninitialized_source_aborts_operation));
+            circle_initialize_copy_from_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_initialize_move_from_uninitialized_source_aborts,
-    "circle initialize(move) aborts when source object is uninitialized")
+FT_TEST(test_circle_initialize_move_from_uninitialised_source_aborts,
+    "circle initialize(move) aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_initialize_move_from_uninitialized_source_aborts_operation));
+            circle_initialize_move_from_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_get_center_x_uninitialized_aborts,
-    "circle get_center_x aborts when object is uninitialized")
+FT_TEST(test_circle_get_center_x_uninitialised_aborts,
+    "circle get_center_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_get_center_x_uninitialized_aborts_operation));
+            circle_get_center_x_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -1960,19 +1960,19 @@ FT_TEST(test_circle_enable_thread_safety_destroyed_aborts,
     return (1);
 }
 
-FT_TEST(test_circle_initialize_copy_destination_initialized_aborts,
-    "circle initialize(copy) aborts when destination is already initialized")
+FT_TEST(test_circle_initialize_copy_destination_initialised_aborts,
+    "circle initialize(copy) aborts when destination is already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_initialize_copy_destination_initialized_aborts_operation));
+            circle_initialize_copy_destination_initialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_initialize_move_destination_initialized_aborts,
-    "circle initialize(move) aborts when destination is already initialized")
+FT_TEST(test_circle_initialize_move_destination_initialised_aborts,
+    "circle initialize(move) aborts when destination is already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_initialize_move_destination_initialized_aborts_operation));
+            circle_initialize_move_destination_initialised_aborts_operation));
     return (1);
 }
 
@@ -1992,83 +1992,83 @@ FT_TEST(test_circle_is_thread_safe_enabled_destroyed_aborts,
     return (1);
 }
 
-FT_TEST(test_circle_set_center_x_uninitialized_aborts,
-    "circle set_center_x aborts when object is uninitialized")
+FT_TEST(test_circle_set_center_x_uninitialised_aborts,
+    "circle set_center_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_set_center_x_uninitialized_aborts_operation));
+            circle_set_center_x_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_get_center_y_uninitialized_aborts,
-    "circle get_center_y aborts when object is uninitialized")
+FT_TEST(test_circle_get_center_y_uninitialised_aborts,
+    "circle get_center_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_get_center_y_uninitialized_aborts_operation));
+            circle_get_center_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_set_center_uninitialized_aborts,
-    "circle set_center aborts when object is uninitialized")
+FT_TEST(test_circle_set_center_uninitialised_aborts,
+    "circle set_center aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_set_center_uninitialized_aborts_operation));
+            circle_set_center_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_get_radius_uninitialized_aborts,
-    "circle get_radius aborts when object is uninitialized")
+FT_TEST(test_circle_get_radius_uninitialised_aborts,
+    "circle get_radius aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_get_radius_uninitialized_aborts_operation));
+            circle_get_radius_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_enable_thread_safety_uninitialized_aborts,
-    "circle enable_thread_safety aborts when object is uninitialized")
+FT_TEST(test_circle_enable_thread_safety_uninitialised_aborts,
+    "circle enable_thread_safety aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_enable_thread_safety_uninitialized_aborts_operation));
+            circle_enable_thread_safety_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_set_center_y_uninitialized_aborts,
-    "circle set_center_y aborts when object is uninitialized")
+FT_TEST(test_circle_set_center_y_uninitialised_aborts,
+    "circle set_center_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_set_center_y_uninitialized_aborts_operation));
+            circle_set_center_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_get_center_x_uninitialized_aborts_additional,
-    "circle get_center_x aborts when object is uninitialized")
+FT_TEST(test_circle_get_center_x_uninitialised_aborts_additional,
+    "circle get_center_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_get_center_x_second_uninitialized_aborts_operation));
+            circle_get_center_x_second_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_disable_thread_safety_uninitialized_aborts,
-    "circle disable_thread_safety aborts when object is uninitialized")
+FT_TEST(test_circle_disable_thread_safety_uninitialised_aborts,
+    "circle disable_thread_safety aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_disable_thread_safety_uninitialized_aborts_operation));
+            circle_disable_thread_safety_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_is_thread_safe_enabled_uninitialized_aborts,
-    "circle is_thread_safe_enabled aborts when object is uninitialized")
+FT_TEST(test_circle_is_thread_safe_enabled_uninitialised_aborts,
+    "circle is_thread_safe_enabled aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_is_thread_safe_enabled_uninitialized_aborts_operation));
+            circle_is_thread_safe_enabled_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_move_two_uninitialized_aborts,
-    "circle move aborts when both objects are uninitialized")
+FT_TEST(test_circle_move_two_uninitialised_aborts,
+    "circle move aborts when both objects are uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_move_two_uninitialized_aborts_operation));
+            circle_move_two_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2143,43 +2143,43 @@ FT_TEST(test_circle_move_destroyed_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_circle_move_uninitialized_source_aborts,
-    "circle move aborts when source object is uninitialized")
+FT_TEST(test_circle_move_uninitialised_source_aborts,
+    "circle move aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_move_uninitialized_source_aborts_operation));
+            circle_move_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_circle_set_center_y_uninitialized_second_aborts,
-    "circle set_center_y aborts when object is uninitialized")
+FT_TEST(test_circle_set_center_y_uninitialised_second_aborts,
+    "circle set_center_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            circle_set_center_y_uninitialized_second_aborts_operation));
+            circle_set_center_y_uninitialised_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_circle_uninitialized_first_aborts,
-    "intersect_circle aborts when first circle is uninitialized")
+FT_TEST(test_intersect_circle_uninitialised_first_aborts,
+    "intersect_circle aborts when first circle is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_circle_uninitialized_first_aborts_operation));
+            intersect_circle_uninitialised_first_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_circle_uninitialized_second_aborts,
-    "intersect_circle aborts when second circle is uninitialized")
+FT_TEST(test_intersect_circle_uninitialised_second_aborts,
+    "intersect_circle aborts when second circle is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_circle_uninitialized_second_aborts_operation));
+            intersect_circle_uninitialised_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_circle_uninitialized_both_aborts,
-    "intersect_circle aborts when both circles are uninitialized")
+FT_TEST(test_intersect_circle_uninitialised_both_aborts,
+    "intersect_circle aborts when both circles are uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_circle_uninitialized_both_aborts_operation));
+            intersect_circle_uninitialised_both_aborts_operation));
     return (1);
 }
 
@@ -2207,11 +2207,11 @@ FT_TEST(test_intersect_circle_destroyed_both_aborts,
     return (1);
 }
 
-FT_TEST(test_intersect_circle_destroyed_and_uninitialized_aborts,
-    "intersect_circle aborts when first is destroyed and second uninitialized")
+FT_TEST(test_intersect_circle_destroyed_and_uninitialised_aborts,
+    "intersect_circle aborts when first is destroyed and second uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_circle_destroyed_and_uninitialized_aborts_operation));
+            intersect_circle_destroyed_and_uninitialised_aborts_operation));
     return (1);
 }
 

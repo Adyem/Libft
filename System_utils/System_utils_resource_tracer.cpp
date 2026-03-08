@@ -24,17 +24,17 @@ static void su_log_resource_tracing_event(const char *reason)
     return ;
 }
 
-int su_register_resource_tracer(t_su_resource_tracer tracer)
+int32_t su_register_resource_tracer(t_su_resource_tracer tracer)
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
     if (tracer == ft_nullptr)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     g_su_resource_tracers_mutex.lock();
-    lock_acquired = true;
-    size_t index = 0;
-    size_t count = g_su_resource_tracers.size();
+    lock_acquired = FT_TRUE;
+    ft_size_t index = 0;
+    ft_size_t count = g_su_resource_tracers.size();
     while (index < count)
     {
         if (g_su_resource_tracers[index] == tracer)
@@ -60,17 +60,17 @@ int su_register_resource_tracer(t_su_resource_tracer tracer)
     return (0);
 }
 
-int su_unregister_resource_tracer(t_su_resource_tracer tracer)
+int32_t su_unregister_resource_tracer(t_su_resource_tracer tracer)
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
     if (tracer == ft_nullptr)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     g_su_resource_tracers_mutex.lock();
-    lock_acquired = true;
-    size_t index = 0;
-    size_t count = g_su_resource_tracers.size();
+    lock_acquired = FT_TRUE;
+    ft_size_t index = 0;
+    ft_size_t count = g_su_resource_tracers.size();
     while (index < count)
     {
         if (g_su_resource_tracers[index] == tracer)
@@ -98,13 +98,13 @@ void su_clear_resource_tracers(void)
 void su_run_resource_tracers(const char *reason)
 {
     t_tracer_vector local_tracers;
-    bool lock_acquired;
-    size_t count;
-    size_t index;
+    ft_bool lock_acquired;
+    ft_size_t count;
+    ft_size_t index;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     g_su_resource_tracers_mutex.lock();
-    lock_acquired = true;
+    lock_acquired = FT_TRUE;
     count = g_su_resource_tracers.size();
     try
     {
@@ -134,8 +134,8 @@ void su_run_resource_tracers(const char *reason)
     if (lock_acquired)
         g_su_resource_tracers_mutex.unlock();
     su_log_resource_tracing_event(reason);
-    size_t run_index = 0;
-    size_t total = local_tracers.size();
+    ft_size_t run_index = 0;
+    ft_size_t total = local_tracers.size();
     while (run_index < total)
     {
         t_su_resource_tracer tracer = local_tracers[run_index];

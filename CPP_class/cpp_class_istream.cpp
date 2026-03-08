@@ -18,11 +18,11 @@ void ft_istream::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_istream::abort_if_not_initialized(const char *method_name) const noexcept
+void ft_istream::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_istream::_state_initialized)
+    if (this->_initialised_state == ft_istream::_state_initialised)
         return ;
-    ft_istream::abort_lifecycle_error(method_name, "called while object is not initialized");
+    ft_istream::abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -38,33 +38,33 @@ int ft_istream::unlock_mutex(void) const noexcept
 
 ft_istream::ft_istream() noexcept
     : _gcount(0), _is_valid(true), _mutex(ft_nullptr),
-      _initialized_state(ft_istream::_state_uninitialized)
+      _initialised_state(ft_istream::_state_uninitialised)
 {
     return ;
 }
 
 ft_istream::~ft_istream() noexcept
 {
-    if (this->_initialized_state == ft_istream::_state_initialized)
+    if (this->_initialised_state == ft_istream::_state_initialised)
     {
         (void)this->destroy();
         return ;
     }
-    this->_initialized_state = ft_istream::_state_destroyed;
+    this->_initialised_state = ft_istream::_state_destroyed;
     return ;
 }
 
 int ft_istream::initialize() noexcept
 {
-    if (this->_initialized_state == ft_istream::_state_initialized)
+    if (this->_initialised_state == ft_istream::_state_initialised)
     {
         ft_istream::abort_lifecycle_error("ft_istream::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_gcount = 0;
     this->_is_valid = true;
-    this->_initialized_state = ft_istream::_state_initialized;
+    this->_initialised_state = ft_istream::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -72,9 +72,9 @@ int ft_istream::destroy() noexcept
 {
     int destroy_error;
 
-    if (this->_initialized_state != ft_istream::_state_initialized)
+    if (this->_initialised_state != ft_istream::_state_initialised)
     {
-        this->_initialized_state = ft_istream::_state_destroyed;
+        this->_initialised_state = ft_istream::_state_destroyed;
         return (FT_ERR_INVALID_STATE);
     }
     this->_gcount = 0;
@@ -86,7 +86,7 @@ int ft_istream::destroy() noexcept
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    this->_initialized_state = ft_istream::_state_destroyed;
+    this->_initialised_state = ft_istream::_state_destroyed;
     return (destroy_error);
 }
 
@@ -95,7 +95,7 @@ int ft_istream::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_istream::enable_thread_safety");
+    this->abort_if_not_initialised("ft_istream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -113,7 +113,7 @@ int ft_istream::enable_thread_safety(void) noexcept
 
 int ft_istream::disable_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("ft_istream::disable_thread_safety");
+    this->abort_if_not_initialised("ft_istream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     int destroy_error = this->_mutex->destroy();
@@ -124,7 +124,7 @@ int ft_istream::disable_thread_safety(void) noexcept
 
 bool ft_istream::is_thread_safe(void) const noexcept
 {
-    this->abort_if_not_initialized("ft_istream::is_thread_safe");
+    this->abort_if_not_initialised("ft_istream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -133,7 +133,7 @@ ssize_t ft_istream::read(char *buffer, std::size_t count) noexcept
     ssize_t bytes_read;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_istream::read");
+    this->abort_if_not_initialised("ft_istream::read");
     if (buffer == ft_nullptr && count > 0)
     {
         this->_is_valid = false;
@@ -171,7 +171,7 @@ std::size_t ft_istream::gcount() const noexcept
 {
     std::size_t count_value;
 
-    this->abort_if_not_initialized("ft_istream::gcount");
+    this->abort_if_not_initialised("ft_istream::gcount");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return (0);
     count_value = this->_gcount;
@@ -184,7 +184,7 @@ bool ft_istream::is_valid() const noexcept
 {
     bool result;
 
-    this->abort_if_not_initialized("ft_istream::is_valid");
+    this->abort_if_not_initialised("ft_istream::is_valid");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return (false);
     result = this->_is_valid;

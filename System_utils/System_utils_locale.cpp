@@ -8,7 +8,7 @@
 #include <typeinfo>
 #include <new>
 
-static int assign_locale(const char *locale_name, std::locale &locale_object)
+static int32_t assign_locale(const char *locale_name, std::locale &locale_object)
 {
     const char *name_pointer;
 
@@ -40,13 +40,13 @@ static int assign_locale(const char *locale_name, std::locale &locale_object)
     return (0);
 }
 
-int su_locale_compare(const char *left, const char *right, const char *locale_name, int *result)
+int32_t su_locale_compare(const char *left, const char *right, const char *locale_name, int32_t *result)
 {
     std::locale locale_object;
     const std::collate<char> *collate_facet;
-    size_t left_length;
-    size_t right_length;
-    int comparison_value;
+    ft_size_t left_length;
+    ft_size_t right_length;
+    int32_t comparison_value;
 
     if (left == ft_nullptr || right == ft_nullptr || result == ft_nullptr)
         return (-1);
@@ -71,14 +71,14 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     return (0);
 }
 
-int su_locale_casefold(const char *input, const char *locale_name, ft_string &output)
+int32_t su_locale_casefold(const char *input, const char *locale_name, ft_string &output)
 {
     std::locale locale_object;
     const std::ctype<char> *ctype_facet;
-    size_t input_length;
+    ft_size_t input_length;
     std::string transformed_string;
-    size_t index;
-    int output_error;
+    ft_size_t index;
+    int32_t output_error;
 
     if (input == ft_nullptr)
         return (-1);

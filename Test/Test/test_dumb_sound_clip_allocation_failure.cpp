@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../DUMB/dumb_sound_clip.hpp"
-#include "../../DUMB/dumb_sound.hpp"
+#include "../../DUMB/sound_clip.hpp"
+#include "../../DUMB/sound_device.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -17,10 +17,10 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static int dumb_prepare_sparse_wav_file(char *path_buffer, size_t path_buffer_size)
+static int32_t dumb_prepare_sparse_wav_file(char *path_buffer, ft_size_t path_buffer_size)
 {
-    int file_descriptor;
-    int truncate_status;
+    int32_t file_descriptor;
+    int32_t truncate_status;
 
     if (path_buffer == ft_nullptr || path_buffer_size < 32)
         return (0);
@@ -38,12 +38,12 @@ static int dumb_prepare_sparse_wav_file(char *path_buffer, size_t path_buffer_si
     return (1);
 }
 
-static int dumb_expect_load_wav_allocation_failure_child(void)
+static int32_t dumb_expect_load_wav_allocation_failure_child(void)
 {
     struct rlimit limit_data;
     ft_sound_clip sound_clip_instance;
     char temporary_path[64];
-    int result_code;
+    int32_t result_code;
 
     limit_data.rlim_cur = 8 * 1024 * 1024;
     limit_data.rlim_max = 8 * 1024 * 1024;
@@ -59,7 +59,7 @@ static int dumb_expect_load_wav_allocation_failure_child(void)
     result_code = sound_clip_instance.load_wav(temporary_path);
     (void)sound_clip_instance.destroy();
     unlink(temporary_path);
-    if (result_code != ft_sound_error_platform_failure)
+    if (result_code != FT_ERR_IO)
         return (0);
     return (1);
 }
@@ -68,7 +68,7 @@ FT_TEST(test_dumb_sound_clip_load_wav_reports_failure_when_allocation_is_constra
     "dumb sound clip load_wav reports platform failure when file read allocation fails")
 {
     pid_t child_process_id;
-    int child_status;
+    int32_t child_status;
 
     child_process_id = fork();
     if (child_process_id == 0)

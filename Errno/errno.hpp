@@ -8,6 +8,15 @@
 # include <cstdint>
 
 typedef uint64_t ft_size_t;
+typedef uint8_t ft_bool;
+
+# ifndef FT_FALSE
+#  define FT_FALSE static_cast<ft_bool>(0U)
+# endif
+
+# ifndef FT_TRUE
+#  define FT_TRUE static_cast<ft_bool>(1U)
+# endif
 
 #endif
 
@@ -33,7 +42,7 @@ enum PTErrorCode : int32_t
     FT_ERR_INTERNAL = 17,
     FT_ERR_CONFIGURATION = 18,
     FT_ERR_UNSUPPORTED_TYPE = 19,
-    FT_ERR_ALREADY_INITIALIZED = 20,
+    FT_ERR_ALREADY_INITIALISED = 20,
     FT_ERR_INITIALIZATION_FAILED = 21,
     FT_ERR_END_OF_FILE = 22,
     FT_ERR_DIVIDE_BY_ZERO = 23,
@@ -80,10 +89,15 @@ enum PTErrorCode : int32_t
     FT_ERR_SYS_MUTEX_NOT_OWNER = 64,
     FT_ERR_SYS_MUTEX_UNLOCK_FAILED = 65,
     FT_ERR_SYS_INTERNAL = 66,
+    FT_ERR_NOT_INITIALISED = 67,
     FT_ERR_SSL_SYSCALL_ERROR = 2005,
     FT_ERR_HTTP_PROTOCOL_MISMATCH = 2006,
     FT_ERR_API_CIRCUIT_OPEN = 2007,
 };
+
+#define FT_CLASS_STATE_UNINITIALISED static_cast<uint8_t>(0U)
+#define FT_CLASS_STATE_DESTROYED static_cast<uint8_t>(1U)
+#define FT_CLASS_STATE_INITIALISED static_cast<uint8_t>(2U)
 
 #define FT_SYS_ERR_SUCCESS FT_ERR_SUCCESS
 #define FT_SYS_ERR_NO_MEMORY FT_ERR_SYS_NO_MEMORY

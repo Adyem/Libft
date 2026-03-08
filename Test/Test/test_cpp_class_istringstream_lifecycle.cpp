@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../CPP_class/class_istringstream.hpp"
 #include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
@@ -34,7 +34,7 @@ FT_TEST(test_ft_istringstream_lifecycle_read_then_destroy,
 }
 
 FT_TEST(test_ft_istringstream_destroy_then_initialize_reuses_stream,
-    "ft_istringstream can be reinitialized after destroy")
+    "ft_istringstream can be reinitialised after destroy")
 {
     ft_string source_value;
     ft_string initial_value;

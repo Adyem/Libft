@@ -1,0 +1,58 @@
+#ifndef GEOMETRY_SPHERE_HPP
+# define GEOMETRY_SPHERE_HPP
+
+#include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
+
+class sphere
+{
+    private:
+        double                    _center_x;
+        double                    _center_y;
+        double                    _center_z;
+        double                    _radius;
+        mutable pt_recursive_mutex *_mutex;
+        uint8_t                   _initialised_state;
+
+        uint32_t lock_pair(const sphere &other, const sphere *&lower,
+                    const sphere *&upper) const;
+        static void unlock_pair(const sphere *lower, const sphere *upper);
+
+    public:
+        sphere() noexcept;
+        sphere(double center_x, double center_y, double center_z,
+                double radius) noexcept;
+        sphere(const sphere &other) noexcept;
+        sphere(sphere &&other) noexcept;
+        ~sphere() noexcept;
+
+        sphere &operator=(const sphere &other) = delete;
+        sphere &operator=(sphere &&other) noexcept = delete;
+
+        uint32_t initialize() noexcept;
+        uint32_t initialize(double center_x, double center_y, double center_z,
+                double radius) noexcept;
+        uint32_t initialize(const sphere &other) noexcept;
+        uint32_t initialize(sphere &&other) noexcept;
+        uint32_t destroy() noexcept;
+        uint32_t move(sphere &other) noexcept;
+
+        uint32_t set_center(double center_x, double center_y,
+                double center_z);
+        uint32_t set_center_x(double center_x);
+        uint32_t set_center_y(double center_y);
+        uint32_t set_center_z(double center_z);
+        uint32_t set_radius(double radius);
+        double  get_center_x() const;
+        double  get_center_y() const;
+        double  get_center_z() const;
+        double  get_radius() const;
+        uint32_t enable_thread_safety() noexcept;
+        uint32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+
+        friend ft_bool intersect_sphere(const sphere &first,
+                const sphere &second);
+};
+
+#endif

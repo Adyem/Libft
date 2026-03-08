@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../DUMB/dumb_sound_clip.hpp"
+#include "../../DUMB/sound_clip.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
@@ -14,17 +14,17 @@ typedef ft_sound_clip sound_clip_type;
 static sigjmp_buf g_sound_clip_jump_buffer;
 static volatile sig_atomic_t g_sound_clip_signal;
 
-static void sound_clip_sigabrt_handler(int signal_number)
+static void sound_clip_sigabrt_handler(int32_t signal_number)
 {
     g_sound_clip_signal = signal_number;
     siglongjmp(g_sound_clip_jump_buffer, 1);
 }
 
-static int sound_clip_expect_sigabrt_uninitialized(void (*operation)(sound_clip_type &))
+static int32_t sound_clip_expect_sigabrt_uninitialised(void (*operation)(sound_clip_type &))
 {
     struct sigaction new_action;
     struct sigaction old_action;
-    int result;
+    int32_t result;
 
     std::memset(&new_action, 0, sizeof(new_action));
     std::memset(&old_action, 0, sizeof(old_action));
@@ -105,25 +105,19 @@ static void sound_clip_call_disable_thread_safety(sound_clip_type &sound_clip_in
 
 static void sound_clip_call_is_thread_safe(sound_clip_type &sound_clip_instance)
 {
-    (void)sound_clip_instance.is_thread_safe_enabled();
+    (void)sound_clip_instance.is_thread_safe();
     return ;
 }
 
-static void sound_clip_call_runtime_mutex(sound_clip_type &sound_clip_instance)
+FT_TEST(test_dumb_sound_clip_uninitialised_destructor_tolerates_object,
+    "dumb sound clip destructor tolerates uninitialised instance")
 {
-    (void)sound_clip_instance.runtime_mutex();
-    return ;
-}
-
-FT_TEST(test_dumb_sound_clip_uninitialized_destructor_tolerates_object,
-    "dumb sound clip destructor tolerates uninitialized instance")
-{
-    FT_ASSERT_EQ(0, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_destructor));
+    FT_ASSERT_EQ(0, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_destructor));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_destroy_returns_invalid_state,
-    "dumb sound clip destroy returns invalid state on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_destroy_returns_invalid_state,
+    "dumb sound clip destroy returns invalid state on uninitialised instance")
 {
     sound_clip_type clip;
 
@@ -131,65 +125,58 @@ FT_TEST(test_dumb_sound_clip_uninitialized_destroy_returns_invalid_state,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_move_aborts,
-    "dumb sound clip move aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_move_aborts,
+    "dumb sound clip move aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_move));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_move));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_load_wav_aborts,
-    "dumb sound clip load_wav aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_load_wav_aborts,
+    "dumb sound clip load_wav aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_load_wav));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_load_wav));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_get_data_aborts,
-    "dumb sound clip get_data aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_get_data_aborts,
+    "dumb sound clip get_data aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_get_data));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_get_data));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_get_size_aborts,
-    "dumb sound clip get_size aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_get_size_aborts,
+    "dumb sound clip get_size aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_get_size));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_get_size));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_get_spec_aborts,
-    "dumb sound clip get_spec aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_get_spec_aborts,
+    "dumb sound clip get_spec aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_get_spec));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_get_spec));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_enable_thread_safety_aborts,
-    "dumb sound clip enable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_enable_thread_safety_aborts,
+    "dumb sound clip enable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_enable_thread_safety));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_enable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_disable_thread_safety_aborts,
-    "dumb sound clip disable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_disable_thread_safety_aborts,
+    "dumb sound clip disable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_disable_thread_safety));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_disable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_is_thread_safe_aborts,
-    "dumb sound clip is_thread_safe_enabled aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialised_is_thread_safe_aborts,
+    "dumb sound clip is_thread_safe_enabled aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_is_thread_safe));
-    return (1);
-}
-
-FT_TEST(test_dumb_sound_clip_uninitialized_runtime_mutex_aborts,
-    "dumb sound clip runtime_mutex aborts on uninitialized instance")
-{
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_runtime_mutex));
+    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialised(sound_clip_call_is_thread_safe));
     return (1);
 }

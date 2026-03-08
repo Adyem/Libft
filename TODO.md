@@ -62,7 +62,7 @@ Review and update these tests for changed function behavior as needed:
 - [ ] Test/Test/test_game_lifecycle_copy_move_additional.cpp
 - [ ] Test/Test/test_game_lifecycle_destination_state_additional.cpp
 - [ ] Test/Test/test_game_lifecycle_destroyed_state_aborts_additional.cpp
-- [ ] Test/Test/test_game_lifecycle_initialized_destination_aborts_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_initialised_destination_aborts_additional.cpp
 - [ ] Test/Test/test_game_lifecycle_locking_additional.cpp
 - [ ] Test/Test/test_game_lifecycle_source_state_aborts_additional.cpp
 - [ ] Test/Test/test_game_lifecycle_state_transitions_additional.cpp
@@ -87,7 +87,7 @@ Review and update these tests for changed function behavior as needed:
 - [ ] Test/Test/test_game_state_characters.cpp
 - [ ] Test/Test/test_game_status_effects.cpp
 - [ ] Test/Test/test_game_thread_safety.cpp
-- [ ] Test/Test/test_game_uninitialized_destroy_behavior.cpp
+- [ ] Test/Test/test_game_uninitialised_destroy_behavior.cpp
 - [ ] Test/Test/test_game_value_components.cpp
 - [ ] Test/Test/test_game_vendor_profile.cpp
 - [ ] Test/Test/test_game_vendor_profile_copy.cpp
@@ -113,7 +113,7 @@ Review and update these tests for changed function behavior as needed:
 - [ ] Test/Test/test_gnl_stream_lifecycle.cpp
 - [ ] Test/Test/test_gnl_stream_lock_failure.cpp
 - [ ] Test/Test/test_gnl_stream_mutex.cpp
-- [ ] Test/Test/test_gnl_stream_uninitialized_abort.cpp
+- [ ] Test/Test/test_gnl_stream_uninitialised_abort.cpp
 - [ ] Test/Test/test_html.cpp
 - [ ] Test/Test/test_html_attr_thread_safety.cpp
 - [ ] Test/Test/test_html_document_thread_safety.cpp
@@ -204,7 +204,7 @@ Review and update these tests for changed function behavior as needed:
 - [ ] Test/Test/test_memdup.cpp
 - [ ] Test/Test/test_memmove.cpp
 - [ ] Test/Test/test_memset.cpp
-- [ ] Test/Test/test_move_self_uninitialized_abort.cpp
+- [ ] Test/Test/test_move_self_uninitialised_abort.cpp
 - [ ] Test/Test/test_networking.cpp
 - [ ] Test/Test/test_networking_dns_resolver.cpp
 - [ ] Test/Test/test_networking_event_loop.cpp
@@ -259,7 +259,7 @@ Review and update these tests for changed function behavior as needed:
 - [ ] Test/Test/test_scma_accessor.cpp
 - [ ] Test/Test/test_scma_accessor_lifecycle.cpp
 - [ ] Test/Test/test_scma_accessor_proxy_chain_errors.cpp
-- [ ] Test/Test/test_scma_accessor_uninitialized_abort.cpp
+- [ ] Test/Test/test_scma_accessor_uninitialised_abort.cpp
 - [ ] Test/Test/test_scma_integrity_stress.cpp
 - [ ] Test/Test/test_scma_lifecycle.cpp
 - [ ] Test/Test/test_scma_memory.cpp
@@ -367,7 +367,7 @@ Review and update these tests for changed function behavior as needed:
 - [ ] Test/Test/test_template_unordered_map_iterator_thread_safety.cpp
 - [ ] Test/Test/test_template_unordered_map_mapped_proxy.cpp
 - [ ] Test/Test/test_template_unordered_map_recursive_mutex.cpp
-- [ ] Test/Test/test_template_unordered_map_uninitialized_abort.cpp
+- [ ] Test/Test/test_template_unordered_map_uninitialised_abort.cpp
 - [ ] Test/Test/test_template_variant_move.cpp
 - [ ] Test/Test/test_template_variant_thread_safety.cpp
 - [ ] Test/Test/test_template_vector.cpp

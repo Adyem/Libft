@@ -3,16 +3,17 @@
 
 #include "../Template/move.hpp"
 #include "../Template/vector.hpp"
+#include <cstdint>
 
-int     math_fft(const ft_vector<double> &input_real,
+int32_t     math_fft(const ft_vector<double> &input_real,
             const ft_vector<double> &input_imag,
             ft_vector<double> &output_real,
             ft_vector<double> &output_imag) noexcept;
-int     math_ifft(const ft_vector<double> &input_real,
+int32_t     math_ifft(const ft_vector<double> &input_real,
             const ft_vector<double> &input_imag,
             ft_vector<double> &output_real,
             ft_vector<double> &output_imag) noexcept;
-int     math_convolution(const ft_vector<double> &first,
+int32_t     math_convolution(const ft_vector<double> &first,
             const ft_vector<double> &second,
             ft_vector<double> &result) noexcept;
 

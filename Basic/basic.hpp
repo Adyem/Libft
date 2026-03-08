@@ -9,6 +9,15 @@
 # define FT_TYPES_HPP
 
 typedef uint64_t ft_size_t;
+typedef uint8_t ft_bool;
+
+#ifndef FT_FALSE
+# define FT_FALSE static_cast<ft_bool>(0U)
+#endif
+
+#ifndef FT_TRUE
+# define FT_TRUE static_cast<ft_bool>(1U)
+#endif
 
 #endif
 
@@ -18,7 +27,7 @@ typedef uint64_t ft_size_t;
 #include <stdarg.h>
 #include "limits.hpp"
 
- class ft_string;
+class ft_string;
 static constexpr ft_size_t ft_strlen_raw(const char *string)
 {
     const char *string_pointer = string;
@@ -35,17 +44,17 @@ constexpr ft_size_t ft_strlen_size_t(const char *string)
     return (ft_strlen_raw(string));
 }
 
-constexpr int ft_strlen(const char *string)
+constexpr int32_t ft_strlen(const char *string)
 {
     if (!string)
         return (0);
     ft_size_t length = ft_strlen_raw(string);
     if (length > static_cast<ft_size_t>(FT_INT32_MAX))
         return (FT_INT32_MAX);
-    return (static_cast<int>(length));
+    return (static_cast<int32_t>(length));
 }
 
-char            *ft_strchr(const char *string, int char_to_find);
+char            *ft_strchr(const char *string, int32_t char_to_find);
 int32_t         ft_atoi(const char *string);
 int32_t         ft_validate_int(const char *input);
 void            ft_bzero(void *string, ft_size_t size);
@@ -95,10 +104,10 @@ char            *ft_span_dup(const char *buffer, ft_size_t length);
 char            *ft_strtok(char *string, const char *delimiters);
 int32_t         ft_locale_compare(const char *left, const char *right,
                     const char *locale_name);
-void            *ft_memset(void *destination, int value, ft_size_t number_of_bytes);
+void            *ft_memset(void *destination, int32_t value, ft_size_t number_of_bytes);
 int32_t         ft_isspace(int32_t character);
-char            *ft_strmapi(const char *string, char (*function)(unsigned int, char));
-void            ft_striteri(char *string, void (*function)(unsigned int, char *));
+char            *ft_strmapi(const char *string, char (*function)(uint32_t, char));
+void            ft_striteri(char *string, void (*function)(uint32_t, char *));
 ft_size_t          ft_wstrlen(const wchar_t *string);
 char16_t        *ft_utf8_to_utf16(const char *input, ft_size_t input_length,
                     ft_size_t *output_length_pointer);

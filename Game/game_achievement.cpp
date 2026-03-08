@@ -40,7 +40,7 @@ const char *ft_achievement::get_error_str() const noexcept
 
 ft_goal::ft_goal() noexcept
     : _target(0), _progress(0), _mutex(ft_nullptr),
-      _initialized_state(ft_goal::_state_uninitialized)
+      _initialised_state(ft_goal::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -48,7 +48,7 @@ ft_goal::ft_goal() noexcept
 
 ft_goal::~ft_goal() noexcept
 {
-    if (this->_initialized_state == ft_goal::_state_initialized)
+    if (this->_initialised_state == ft_goal::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -65,27 +65,27 @@ void ft_goal::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_goal::abort_if_not_initialized(const char *method_name) const
+void ft_goal::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_goal::_state_initialized)
+    if (this->_initialised_state == ft_goal::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_goal::initialize() noexcept
 {
-    if (this->_initialized_state == ft_goal::_state_initialized)
+    if (this->_initialised_state == ft_goal::_state_initialised)
     {
         this->abort_lifecycle_error("ft_goal::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     this->_target = 0;
     this->_progress = 0;
-    this->_initialized_state = ft_goal::_state_initialized;
+    this->_initialised_state = ft_goal::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -94,10 +94,10 @@ int ft_goal::initialize(const ft_goal &other) noexcept
 {
     int initialize_error;
 
-    if (other._initialized_state != ft_goal::_state_initialized)
+    if (other._initialised_state != ft_goal::_state_initialised)
     {
         other.abort_lifecycle_error("ft_goal::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -129,7 +129,7 @@ int ft_goal::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_goal::_state_initialized)
+    if (this->_initialised_state != ft_goal::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -137,7 +137,7 @@ int ft_goal::destroy() noexcept
     this->_target = 0;
     this->_progress = 0;
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_goal::_state_destroyed;
+    this->_initialised_state = ft_goal::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -147,7 +147,7 @@ int ft_goal::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_goal::enable_thread_safety");
+    this->abort_if_not_initialised("ft_goal::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -196,7 +196,7 @@ int ft_goal::lock_internal(bool *lock_acquired) const noexcept
 {
     int lock_error;
 
-    this->abort_if_not_initialized("ft_goal::lock_internal");
+    this->abort_if_not_initialised("ft_goal::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -225,7 +225,7 @@ int ft_goal::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_goal::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_goal::lock");
+    this->abort_if_not_initialised("ft_goal::lock");
     const int lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -233,7 +233,7 @@ int ft_goal::lock(bool *lock_acquired) const noexcept
 
 void ft_goal::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_goal::unlock");
+    this->abort_if_not_initialised("ft_goal::unlock");
     const int unlock_result = this->unlock_internal(lock_acquired);
     this->set_error(unlock_result);
     return ;
@@ -245,7 +245,7 @@ int ft_goal::get_target() const noexcept
     int lock_error;
     int target_value;
 
-    this->abort_if_not_initialized("ft_goal::get_target");
+    this->abort_if_not_initialised("ft_goal::get_target");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -268,7 +268,7 @@ void ft_goal::set_target(int target) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_goal::set_target");
+    this->abort_if_not_initialised("ft_goal::set_target");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -292,7 +292,7 @@ int ft_goal::get_progress() const noexcept
     int lock_error;
     int progress_value;
 
-    this->abort_if_not_initialized("ft_goal::get_progress");
+    this->abort_if_not_initialised("ft_goal::get_progress");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -315,7 +315,7 @@ void ft_goal::set_progress(int value) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_goal::set_progress");
+    this->abort_if_not_initialised("ft_goal::set_progress");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -338,7 +338,7 @@ void ft_goal::add_progress(int delta) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_goal::add_progress");
+    this->abort_if_not_initialised("ft_goal::add_progress");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -359,14 +359,14 @@ void ft_goal::add_progress(int delta) noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_goal::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_goal::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_goal::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif
 
 ft_achievement::ft_achievement() noexcept
     : _id(0), _goals(), _mutex(ft_nullptr),
-      _initialized_state(ft_achievement::_state_uninitialized)
+      _initialised_state(ft_achievement::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -374,9 +374,9 @@ ft_achievement::ft_achievement() noexcept
 
 ft_achievement::~ft_achievement() noexcept
 {
-    if (this->_initialized_state == ft_achievement::_state_uninitialized)
+    if (this->_initialised_state == ft_achievement::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_achievement::_state_initialized)
+    if (this->_initialised_state == ft_achievement::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -394,12 +394,12 @@ void ft_achievement::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_achievement::abort_if_not_initialized(const char *method_name) const
+void ft_achievement::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_achievement::_state_initialized)
+    if (this->_initialised_state == ft_achievement::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -407,10 +407,10 @@ int ft_achievement::initialize() noexcept
 {
     int goals_initialize_error;
 
-    if (this->_initialized_state == ft_achievement::_state_initialized)
+    if (this->_initialised_state == ft_achievement::_state_initialised)
     {
         this->abort_lifecycle_error("ft_achievement::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -422,7 +422,7 @@ int ft_achievement::initialize() noexcept
         return (goals_initialize_error);
     }
     this->_goals.clear();
-    this->_initialized_state = ft_achievement::_state_initialized;
+    this->_initialised_state = ft_achievement::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -436,10 +436,10 @@ int ft_achievement::initialize(const ft_achievement &other) noexcept
     size_t                    goals_count;
     size_t                    index;
 
-    if (other._initialized_state != ft_achievement::_state_initialized)
+    if (other._initialised_state != ft_achievement::_state_initialised)
     {
         other.abort_lifecycle_error("ft_achievement::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -462,7 +462,7 @@ int ft_achievement::initialize(const ft_achievement &other) noexcept
     {
         if (new_goal.initialize() != FT_ERR_SUCCESS)
         {
-            this->_initialized_state = ft_achievement::_state_destroyed;
+            this->_initialised_state = ft_achievement::_state_destroyed;
             this->set_error(FT_ERR_INVALID_STATE);
             return (FT_ERR_INVALID_STATE);
         }
@@ -486,10 +486,10 @@ int ft_achievement::initialize(ft_achievement &&other) noexcept
     size_t                    goals_count;
     size_t                    index;
 
-    if (other._initialized_state != ft_achievement::_state_initialized)
+    if (other._initialised_state != ft_achievement::_state_initialised)
     {
         other.abort_lifecycle_error("ft_achievement::initialize(move)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -512,7 +512,7 @@ int ft_achievement::initialize(ft_achievement &&other) noexcept
     {
         if (new_goal.initialize() != FT_ERR_SUCCESS)
         {
-            this->_initialized_state = ft_achievement::_state_destroyed;
+            this->_initialised_state = ft_achievement::_state_destroyed;
             this->set_error(FT_ERR_INVALID_STATE);
             return (FT_ERR_INVALID_STATE);
         }
@@ -531,7 +531,7 @@ int ft_achievement::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_achievement::_state_initialized)
+    if (this->_initialised_state != ft_achievement::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -540,7 +540,7 @@ int ft_achievement::destroy() noexcept
     this->_goals.clear();
     (void)this->_goals.destroy();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_achievement::_state_destroyed;
+    this->_initialised_state = ft_achievement::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -550,7 +550,7 @@ int ft_achievement::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_achievement::enable_thread_safety");
+    this->abort_if_not_initialised("ft_achievement::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -599,7 +599,7 @@ int ft_achievement::lock_internal(bool *lock_acquired) const noexcept
 {
     int lock_error;
 
-    this->abort_if_not_initialized("ft_achievement::lock_internal");
+    this->abort_if_not_initialised("ft_achievement::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -628,7 +628,7 @@ int ft_achievement::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_achievement::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_achievement::lock");
+    this->abort_if_not_initialised("ft_achievement::lock");
     const int lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -636,7 +636,7 @@ int ft_achievement::lock(bool *lock_acquired) const noexcept
 
 void ft_achievement::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_achievement::unlock");
+    this->abort_if_not_initialised("ft_achievement::unlock");
     const int unlock_result = this->unlock_internal(lock_acquired);
     this->set_error(unlock_result);
     return ;
@@ -648,7 +648,7 @@ int ft_achievement::get_id() const noexcept
     int lock_error;
     int identifier;
 
-    this->abort_if_not_initialized("ft_achievement::get_id");
+    this->abort_if_not_initialised("ft_achievement::get_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -671,7 +671,7 @@ void ft_achievement::set_id(int id) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_achievement::set_id");
+    this->abort_if_not_initialised("ft_achievement::set_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -694,7 +694,7 @@ ft_map<int, ft_goal> &ft_achievement::get_goals() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_achievement::get_goals");
+    this->abort_if_not_initialised("ft_achievement::get_goals");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -716,7 +716,7 @@ const ft_map<int, ft_goal> &ft_achievement::get_goals() const noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_achievement::get_goals const");
+    this->abort_if_not_initialised("ft_achievement::get_goals const");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -744,7 +744,7 @@ void ft_achievement::set_goals(const ft_map<int, ft_goal> &goals) noexcept
     int                       lock_error;
     int                       unlock_error;
 
-    this->abort_if_not_initialized("ft_achievement::set_goals");
+    this->abort_if_not_initialised("ft_achievement::set_goals");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -766,7 +766,7 @@ void ft_achievement::set_goals(const ft_map<int, ft_goal> &goals) noexcept
                 this->set_error(FT_ERR_INVALID_STATE);
             else
                 this->set_error(unlock_error);
-            this->_initialized_state = ft_achievement::_state_destroyed;
+            this->_initialised_state = ft_achievement::_state_destroyed;
             return ;
         }
         new_goal.set_target(goal_entry->value.get_target());
@@ -794,7 +794,7 @@ int ft_achievement::get_goal(int id) const noexcept
     int unlock_error;
     int target_value;
 
-    this->abort_if_not_initialized("ft_achievement::get_goal");
+    this->abort_if_not_initialised("ft_achievement::get_goal");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -838,7 +838,7 @@ void ft_achievement::set_goal(int id, int goal) noexcept
     int                 lock_error;
     int                 unlock_error;
 
-    this->abort_if_not_initialized("ft_achievement::set_goal");
+    this->abort_if_not_initialised("ft_achievement::set_goal");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -897,7 +897,7 @@ int ft_achievement::get_progress(int id) const noexcept
     int                        unlock_error;
     int                        progress_value;
 
-    this->abort_if_not_initialized("ft_achievement::get_progress");
+    this->abort_if_not_initialised("ft_achievement::get_progress");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -941,7 +941,7 @@ void ft_achievement::set_progress(int id, int progress) noexcept
     int                 lock_error;
     int                 unlock_error;
 
-    this->abort_if_not_initialized("ft_achievement::set_progress");
+    this->abort_if_not_initialised("ft_achievement::set_progress");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1000,7 +1000,7 @@ void ft_achievement::add_progress(int id, int value) noexcept
     int                 lock_error;
     int                 unlock_error;
 
-    this->abort_if_not_initialized("ft_achievement::add_progress");
+    this->abort_if_not_initialised("ft_achievement::add_progress");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1060,7 +1060,7 @@ bool ft_achievement::is_goal_complete(int id) const noexcept
     int unlock_error;
     bool is_complete_flag;
 
-    this->abort_if_not_initialized("ft_achievement::is_goal_complete");
+    this->abort_if_not_initialised("ft_achievement::is_goal_complete");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1106,7 +1106,7 @@ bool ft_achievement::is_complete() const noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_achievement::is_complete");
+    this->abort_if_not_initialised("ft_achievement::is_complete");
     goals_count = this->_goals.size();
     goals_end = this->_goals.end();
     if (goals_count == 0)
@@ -1152,7 +1152,7 @@ bool ft_achievement::is_complete() const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_achievement::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_achievement::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_achievement::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

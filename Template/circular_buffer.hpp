@@ -24,11 +24,11 @@ class ft_circular_buffer
         size_t                     _tail;
         size_t                     _size;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                    _initialized_state;
+        uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -50,12 +50,12 @@ class ft_circular_buffer
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -117,7 +117,7 @@ class ft_circular_buffer
     public:
         explicit ft_circular_buffer(size_t capacity)
             : _buffer(ft_nullptr), _configured_capacity(capacity), _head(0), _tail(0),
-              _size(0), _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+              _size(0), _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -125,7 +125,7 @@ class ft_circular_buffer
 
         ~ft_circular_buffer()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -139,10 +139,10 @@ class ft_circular_buffer
 
         int initialize()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_circular_buffer::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_buffer = ft_nullptr;
@@ -155,11 +155,11 @@ class ft_circular_buffer
                         * this->_configured_capacity));
                 if (this->_buffer == ft_nullptr)
                 {
-                    this->_initialized_state = _state_destroyed;
+                    this->_initialised_state = _state_destroyed;
                     return (set_last_operation_error(FT_ERR_NO_MEMORY));
                 }
             }
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -169,7 +169,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -183,7 +183,7 @@ class ft_circular_buffer
             unlock_error = this->unlock_internal(lock_acquired);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -193,7 +193,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::push(copy)");
+            this->abort_if_not_initialised("ft_circular_buffer::push(copy)");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -230,7 +230,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::push(move)");
+            this->abort_if_not_initialised("ft_circular_buffer::push(move)");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -268,7 +268,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::pop");
+            this->abort_if_not_initialised("ft_circular_buffer::pop");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -307,7 +307,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::is_full");
+            this->abort_if_not_initialised("ft_circular_buffer::is_full");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -333,7 +333,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::is_empty");
+            this->abort_if_not_initialised("ft_circular_buffer::is_empty");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -359,7 +359,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::size");
+            this->abort_if_not_initialised("ft_circular_buffer::size");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -385,7 +385,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::capacity");
+            this->abort_if_not_initialised("ft_circular_buffer::capacity");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -409,7 +409,7 @@ class ft_circular_buffer
             pt_recursive_mutex *new_mutex;
             int initialize_result;
 
-            this->abort_if_not_initialized("ft_circular_buffer::enable_thread_safety");
+            this->abort_if_not_initialised("ft_circular_buffer::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -430,8 +430,8 @@ class ft_circular_buffer
             pt_recursive_mutex *mutex_pointer;
             int destroy_result;
 
-            if (this->_initialized_state != _state_initialized
-                && this->_initialized_state != _state_destroyed)
+            if (this->_initialised_state != _state_initialised
+                && this->_initialised_state != _state_destroyed)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
@@ -446,7 +446,7 @@ class ft_circular_buffer
 
         bool is_thread_safe() const
         {
-            this->abort_if_not_initialized("ft_circular_buffer::is_thread_safe");
+            this->abort_if_not_initialised("ft_circular_buffer::is_thread_safe");
             set_last_operation_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
@@ -455,7 +455,7 @@ class ft_circular_buffer
         {
             int lock_result;
 
-            this->abort_if_not_initialized("ft_circular_buffer::lock");
+            this->abort_if_not_initialised("ft_circular_buffer::lock");
             lock_result = this->lock_internal(lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (-1);
@@ -475,7 +475,7 @@ class ft_circular_buffer
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_circular_buffer::clear");
+            this->abort_if_not_initialised("ft_circular_buffer::clear");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)

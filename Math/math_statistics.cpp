@@ -1,9 +1,10 @@
 #include "math.hpp"
 #include <cfloat>
 
-static void copy_array(double *destination, const double *source, int array_size)
+static void copy_array(double *destination, const double *source,
+    int32_t array_size)
 {
-    int array_index;
+    int32_t array_index;
 
     array_index = 0;
     while (array_index < array_size)
@@ -14,10 +15,10 @@ static void copy_array(double *destination, const double *source, int array_size
     return ;
 }
 
-static void sort_array(double *array, int array_size)
+static void sort_array(double *array, int32_t array_size)
 {
-    int outer_index;
-    int inner_index;
+    int32_t outer_index;
+    int32_t inner_index;
     double temporary_value;
 
     outer_index = 0;
@@ -39,9 +40,9 @@ static void sort_array(double *array, int array_size)
     return ;
 }
 
-double ft_mean(const double *values, int array_size)
+double ft_mean(const double *values, int32_t array_size)
 {
-    int array_index;
+    int32_t array_index;
     double sum;
 
     if (array_size <= 0)
@@ -56,7 +57,7 @@ double ft_mean(const double *values, int array_size)
     return (sum / array_size);
 }
 
-double ft_median(const double *values, int array_size)
+double ft_median(const double *values, int32_t array_size)
 {
     double *sorted_values;
     double median_value;
@@ -79,12 +80,12 @@ double ft_median(const double *values, int array_size)
     return (median_value);
 }
 
-double ft_mode(const double *values, int array_size)
+double ft_mode(const double *values, int32_t array_size)
 {
     double *sorted_values;
-    int array_index;
-    int current_count;
-    int best_count;
+    int32_t array_index;
+    int32_t current_count;
+    int32_t best_count;
     double mode_value;
     double epsilon;
 
@@ -118,9 +119,9 @@ double ft_mode(const double *values, int array_size)
     return (mode_value);
 }
 
-double ft_variance(const double *values, int array_size)
+double ft_variance(const double *values, int32_t array_size)
 {
-    int array_index;
+    int32_t array_index;
     double mean_value;
     double sum;
     double difference;
@@ -139,7 +140,7 @@ double ft_variance(const double *values, int array_size)
     return (sum / array_size);
 }
 
-double ft_stddev(const double *values, int array_size)
+double ft_stddev(const double *values, int32_t array_size)
 {
     double variance_value;
 
@@ -147,9 +148,9 @@ double ft_stddev(const double *values, int array_size)
     return (math_sqrt(variance_value));
 }
 
-double ft_geometric_mean(const double *values, int array_size)
+double ft_geometric_mean(const double *values, int32_t array_size)
 {
-    int array_index;
+    int32_t array_index;
     double log_sum;
 
     if (array_size <= 0)
@@ -166,9 +167,9 @@ double ft_geometric_mean(const double *values, int array_size)
     return (math_exp(log_sum / array_size));
 }
 
-double ft_harmonic_mean(const double *values, int array_size)
+double ft_harmonic_mean(const double *values, int32_t array_size)
 {
-    int array_index;
+    int32_t array_index;
     double reciprocal_sum;
 
     if (array_size <= 0)

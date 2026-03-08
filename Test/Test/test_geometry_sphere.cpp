@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Geometry/geometry.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
 #include <atomic>
@@ -44,7 +44,7 @@ static void sphere_initialize_twice_aborts_operation()
     return ;
 }
 
-static void sphere_destroy_uninitialized_aborts_operation()
+static void sphere_destroy_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -52,7 +52,7 @@ static void sphere_destroy_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_set_radius_uninitialized_aborts_operation()
+static void sphere_set_radius_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -69,7 +69,7 @@ static void sphere_destroy_twice_aborts_operation()
     return ;
 }
 
-static void sphere_destructor_uninitialized_aborts_operation()
+static void sphere_destructor_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -77,7 +77,7 @@ static void sphere_destructor_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_move_self_uninitialized_aborts_operation()
+static void sphere_move_self_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -85,7 +85,7 @@ static void sphere_move_self_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_initialize_copy_from_uninitialized_source_aborts_operation()
+static void sphere_initialize_copy_from_uninitialised_source_aborts_operation()
 {
     sphere source;
     sphere destination(0.0, 0.0, 0.0, 1.0);
@@ -95,7 +95,7 @@ static void sphere_initialize_copy_from_uninitialized_source_aborts_operation()
     return ;
 }
 
-static void sphere_initialize_move_from_uninitialized_source_aborts_operation()
+static void sphere_initialize_move_from_uninitialised_source_aborts_operation()
 {
     sphere source;
     sphere destination(0.0, 0.0, 0.0, 1.0);
@@ -129,7 +129,7 @@ static void sphere_initialize_move_from_destroyed_source_aborts_operation()
     return ;
 }
 
-static void sphere_get_center_x_uninitialized_aborts_operation()
+static void sphere_get_center_x_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -146,7 +146,7 @@ static void sphere_enable_thread_safety_destroyed_aborts_operation()
     return ;
 }
 
-static void sphere_initialize_copy_destination_initialized_aborts_operation()
+static void sphere_initialize_copy_destination_initialised_aborts_operation()
 {
     sphere source(0.0, 0.0, 0.0, 1.0);
     sphere destination(2.0, 2.0, 2.0, 3.0);
@@ -155,7 +155,7 @@ static void sphere_initialize_copy_destination_initialized_aborts_operation()
     return ;
 }
 
-static void sphere_initialize_move_destination_initialized_aborts_operation()
+static void sphere_initialize_move_destination_initialised_aborts_operation()
 {
     sphere source(0.0, 0.0, 0.0, 1.0);
     sphere destination(2.0, 2.0, 2.0, 3.0);
@@ -182,7 +182,7 @@ static void sphere_is_thread_safe_enabled_destroyed_aborts_operation()
     return ;
 }
 
-static void sphere_set_center_z_uninitialized_aborts_operation()
+static void sphere_set_center_z_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -190,7 +190,7 @@ static void sphere_set_center_z_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_get_radius_uninitialized_aborts_operation()
+static void sphere_get_radius_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -198,7 +198,7 @@ static void sphere_get_radius_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_set_center_uninitialized_aborts_operation()
+static void sphere_set_center_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -206,7 +206,7 @@ static void sphere_set_center_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_get_center_z_uninitialized_aborts_operation()
+static void sphere_get_center_z_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -214,7 +214,7 @@ static void sphere_get_center_z_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_enable_thread_safety_uninitialized_aborts_operation()
+static void sphere_enable_thread_safety_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -222,7 +222,7 @@ static void sphere_enable_thread_safety_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_set_center_x_uninitialized_aborts_operation()
+static void sphere_set_center_x_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -230,7 +230,7 @@ static void sphere_set_center_x_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_get_center_y_uninitialized_aborts_operation()
+static void sphere_get_center_y_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -238,7 +238,7 @@ static void sphere_get_center_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_disable_thread_safety_uninitialized_aborts_operation()
+static void sphere_disable_thread_safety_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -246,7 +246,7 @@ static void sphere_disable_thread_safety_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_is_thread_safe_enabled_uninitialized_aborts_operation()
+static void sphere_is_thread_safe_enabled_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -254,7 +254,7 @@ static void sphere_is_thread_safe_enabled_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_set_center_y_uninitialized_aborts_operation()
+static void sphere_set_center_y_uninitialised_aborts_operation()
 {
     sphere shape;
 
@@ -262,7 +262,7 @@ static void sphere_set_center_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void sphere_move_two_uninitialized_aborts_operation()
+static void sphere_move_two_uninitialised_aborts_operation()
 {
     sphere source;
     sphere destination;
@@ -381,7 +381,7 @@ static int sphere_move_destroyed_destination_succeeds_operation()
     return (1);
 }
 
-static void sphere_move_uninitialized_source_aborts_operation()
+static void sphere_move_uninitialised_source_aborts_operation()
 {
     sphere source;
     sphere destination(2.0, 2.0, 2.0, 3.0);
@@ -390,7 +390,7 @@ static void sphere_move_uninitialized_source_aborts_operation()
     return ;
 }
 
-static void intersect_sphere_uninitialized_first_aborts_operation()
+static void intersect_sphere_uninitialised_first_aborts_operation()
 {
     sphere first;
     sphere second(0.0, 0.0, 0.0, 1.0);
@@ -399,7 +399,7 @@ static void intersect_sphere_uninitialized_first_aborts_operation()
     return ;
 }
 
-static void intersect_sphere_uninitialized_second_aborts_operation()
+static void intersect_sphere_uninitialised_second_aborts_operation()
 {
     sphere first(0.0, 0.0, 0.0, 1.0);
     sphere second;
@@ -408,7 +408,7 @@ static void intersect_sphere_uninitialized_second_aborts_operation()
     return ;
 }
 
-static void intersect_sphere_uninitialized_both_aborts_operation()
+static void intersect_sphere_uninitialised_both_aborts_operation()
 {
     sphere first;
     sphere second;
@@ -448,7 +448,7 @@ static void intersect_sphere_destroyed_both_aborts_operation()
     return ;
 }
 
-static void intersect_sphere_destroyed_and_uninitialized_aborts_operation()
+static void intersect_sphere_destroyed_and_uninitialised_aborts_operation()
 {
     sphere first(0.0, 0.0, 0.0, 1.0);
     sphere second;
@@ -459,7 +459,7 @@ static void intersect_sphere_destroyed_and_uninitialized_aborts_operation()
 }
 
 FT_TEST(test_sphere_initialize_setters_and_getters,
-    "sphere initialize, setters, and getters work in initialized lifecycle")
+    "sphere initialize, setters, and getters work in initialised lifecycle")
 {
     sphere shape;
 
@@ -478,7 +478,7 @@ FT_TEST(test_sphere_initialize_setters_and_getters,
 }
 
 FT_TEST(test_sphere_reinitialize_after_destroy,
-    "sphere can be initialized again after destroy")
+    "sphere can be initialised again after destroy")
 {
     sphere shape;
 
@@ -591,7 +591,7 @@ FT_TEST(test_sphere_set_center_large_values,
 }
 
 FT_TEST(test_sphere_reinitialize_with_infinite_radius,
-    "sphere can be reinitialized with infinite radius after destroy")
+    "sphere can be reinitialised with infinite radius after destroy")
 {
     sphere shape;
     double infinity_value;
@@ -1879,8 +1879,8 @@ FT_TEST(test_sphere_initialize_from_destroyed_source_aborts,
     return (1);
 }
 
-FT_TEST(test_sphere_move_self_initialized_is_noop,
-    "sphere move(self) returns success and keeps values when initialized")
+FT_TEST(test_sphere_move_self_initialised_is_noop,
+    "sphere move(self) returns success and keeps values when initialised")
 {
     sphere shape;
 
@@ -1928,23 +1928,23 @@ FT_TEST(test_sphere_enable_thread_safety_allocation_failure,
 }
 
 FT_TEST(test_sphere_initialize_twice_aborts,
-    "sphere initialize aborts when called while already initialized")
+    "sphere initialize aborts when called while already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_destroy_uninitialized_aborts,
-    "sphere destroy aborts when object is uninitialized")
+FT_TEST(test_sphere_destroy_uninitialised_aborts,
+    "sphere destroy aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_destroy_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_set_radius_uninitialized_aborts,
-    "sphere set_radius aborts when object is uninitialized")
+FT_TEST(test_sphere_set_radius_uninitialised_aborts,
+    "sphere set_radius aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_set_radius_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_set_radius_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -1955,41 +1955,41 @@ FT_TEST(test_sphere_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_sphere_uninitialized_destructor_aborts,
-    "sphere destructor aborts when object is left uninitialized")
+FT_TEST(test_sphere_uninitialised_destructor_aborts,
+    "sphere destructor aborts when object is left uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_destructor_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_destructor_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_self_move_uninitialized_aborts,
-    "sphere move(self) aborts when object is uninitialized")
+FT_TEST(test_sphere_self_move_uninitialised_aborts,
+    "sphere move(self) aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_move_self_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_move_self_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_initialize_copy_from_uninitialized_source_aborts,
-    "sphere initialize(copy) aborts when source object is uninitialized")
+FT_TEST(test_sphere_initialize_copy_from_uninitialised_source_aborts,
+    "sphere initialize(copy) aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_initialize_copy_from_uninitialized_source_aborts_operation));
+            sphere_initialize_copy_from_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_initialize_move_from_uninitialized_source_aborts,
-    "sphere initialize(move) aborts when source object is uninitialized")
+FT_TEST(test_sphere_initialize_move_from_uninitialised_source_aborts,
+    "sphere initialize(move) aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_initialize_move_from_uninitialized_source_aborts_operation));
+            sphere_initialize_move_from_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_get_center_x_uninitialized_aborts,
-    "sphere get_center_x aborts when object is uninitialized")
+FT_TEST(test_sphere_get_center_x_uninitialised_aborts,
+    "sphere get_center_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_get_center_x_uninitialized_aborts_operation));
+            sphere_get_center_x_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2001,19 +2001,19 @@ FT_TEST(test_sphere_enable_thread_safety_destroyed_aborts,
     return (1);
 }
 
-FT_TEST(test_sphere_initialize_copy_destination_initialized_aborts,
-    "sphere initialize(copy) aborts when destination is already initialized")
+FT_TEST(test_sphere_initialize_copy_destination_initialised_aborts,
+    "sphere initialize(copy) aborts when destination is already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_initialize_copy_destination_initialized_aborts_operation));
+            sphere_initialize_copy_destination_initialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_initialize_move_destination_initialized_aborts,
-    "sphere initialize(move) aborts when destination is already initialized")
+FT_TEST(test_sphere_initialize_move_destination_initialised_aborts,
+    "sphere initialize(move) aborts when destination is already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_initialize_move_destination_initialized_aborts_operation));
+            sphere_initialize_move_destination_initialised_aborts_operation));
     return (1);
 }
 
@@ -2033,91 +2033,91 @@ FT_TEST(test_sphere_is_thread_safe_enabled_destroyed_aborts,
     return (1);
 }
 
-FT_TEST(test_sphere_set_center_z_uninitialized_aborts,
-    "sphere set_center_z aborts when object is uninitialized")
+FT_TEST(test_sphere_set_center_z_uninitialised_aborts,
+    "sphere set_center_z aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_set_center_z_uninitialized_aborts_operation));
+            sphere_set_center_z_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_get_radius_uninitialized_aborts,
-    "sphere get_radius aborts when object is uninitialized")
+FT_TEST(test_sphere_get_radius_uninitialised_aborts,
+    "sphere get_radius aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_get_radius_uninitialized_aborts_operation));
+            sphere_get_radius_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_set_center_uninitialized_aborts,
-    "sphere set_center aborts when object is uninitialized")
+FT_TEST(test_sphere_set_center_uninitialised_aborts,
+    "sphere set_center aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_set_center_uninitialized_aborts_operation));
+            sphere_set_center_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_get_center_z_uninitialized_aborts,
-    "sphere get_center_z aborts when object is uninitialized")
+FT_TEST(test_sphere_get_center_z_uninitialised_aborts,
+    "sphere get_center_z aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_get_center_z_uninitialized_aborts_operation));
+            sphere_get_center_z_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_enable_thread_safety_uninitialized_aborts,
-    "sphere enable_thread_safety aborts when object is uninitialized")
+FT_TEST(test_sphere_enable_thread_safety_uninitialised_aborts,
+    "sphere enable_thread_safety aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_enable_thread_safety_uninitialized_aborts_operation));
+            sphere_enable_thread_safety_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_set_center_x_uninitialized_aborts,
-    "sphere set_center_x aborts when object is uninitialized")
+FT_TEST(test_sphere_set_center_x_uninitialised_aborts,
+    "sphere set_center_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_set_center_x_uninitialized_aborts_operation));
+            sphere_set_center_x_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_get_center_y_uninitialized_aborts,
-    "sphere get_center_y aborts when object is uninitialized")
+FT_TEST(test_sphere_get_center_y_uninitialised_aborts,
+    "sphere get_center_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_get_center_y_uninitialized_aborts_operation));
+            sphere_get_center_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_disable_thread_safety_uninitialized_aborts,
-    "sphere disable_thread_safety aborts when object is uninitialized")
+FT_TEST(test_sphere_disable_thread_safety_uninitialised_aborts,
+    "sphere disable_thread_safety aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_disable_thread_safety_uninitialized_aborts_operation));
+            sphere_disable_thread_safety_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_is_thread_safe_enabled_uninitialized_aborts,
-    "sphere is_thread_safe_enabled aborts when object is uninitialized")
+FT_TEST(test_sphere_is_thread_safe_enabled_uninitialised_aborts,
+    "sphere is_thread_safe_enabled aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_is_thread_safe_enabled_uninitialized_aborts_operation));
+            sphere_is_thread_safe_enabled_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_set_center_y_uninitialized_aborts,
-    "sphere set_center_y aborts when object is uninitialized")
+FT_TEST(test_sphere_set_center_y_uninitialised_aborts,
+    "sphere set_center_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_set_center_y_uninitialized_aborts_operation));
+            sphere_set_center_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_move_two_uninitialized_aborts,
-    "sphere move aborts when both objects are uninitialized")
+FT_TEST(test_sphere_move_two_uninitialised_aborts,
+    "sphere move aborts when both objects are uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_move_two_uninitialized_aborts_operation));
+            sphere_move_two_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2208,35 +2208,35 @@ FT_TEST(test_sphere_move_destroyed_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_sphere_move_uninitialized_source_aborts,
-    "sphere move aborts when source object is uninitialized")
+FT_TEST(test_sphere_move_uninitialised_source_aborts,
+    "sphere move aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            sphere_move_uninitialized_source_aborts_operation));
+            sphere_move_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_uninitialized_first_aborts,
-    "intersect_sphere aborts when first sphere is uninitialized")
+FT_TEST(test_intersect_sphere_uninitialised_first_aborts,
+    "intersect_sphere aborts when first sphere is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_sphere_uninitialized_first_aborts_operation));
+            intersect_sphere_uninitialised_first_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_uninitialized_second_aborts,
-    "intersect_sphere aborts when second sphere is uninitialized")
+FT_TEST(test_intersect_sphere_uninitialised_second_aborts,
+    "intersect_sphere aborts when second sphere is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_sphere_uninitialized_second_aborts_operation));
+            intersect_sphere_uninitialised_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_uninitialized_both_aborts,
-    "intersect_sphere aborts when both spheres are uninitialized")
+FT_TEST(test_intersect_sphere_uninitialised_both_aborts,
+    "intersect_sphere aborts when both spheres are uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_sphere_uninitialized_both_aborts_operation));
+            intersect_sphere_uninitialised_both_aborts_operation));
     return (1);
 }
 
@@ -2264,11 +2264,11 @@ FT_TEST(test_intersect_sphere_destroyed_both_aborts,
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_destroyed_and_uninitialized_aborts,
-    "intersect_sphere aborts when first is destroyed and second uninitialized")
+FT_TEST(test_intersect_sphere_destroyed_and_uninitialised_aborts,
+    "intersect_sphere aborts when first is destroyed and second uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_sphere_destroyed_and_uninitialized_aborts_operation));
+            intersect_sphere_destroyed_and_uninitialised_aborts_operation));
     return (1);
 }
 

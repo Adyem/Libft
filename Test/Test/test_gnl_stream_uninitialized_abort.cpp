@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../GetNextLine/gnl_stream.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
@@ -11,7 +11,7 @@
 
 typedef gnl_stream gnl_stream_type;
 
-static int gnl_stream_expect_sigabrt_uninitialized(void (*operation)(gnl_stream_type &))
+static int gnl_stream_expect_sigabrt_uninitialised(void (*operation)(gnl_stream_type &))
 {
     pid_t child_process_id;
     int child_status;
@@ -82,52 +82,52 @@ static void gnl_stream_call_read(gnl_stream_type &stream_instance)
     return ;
 }
 
-FT_TEST(test_gnl_stream_uninitialized_destructor_allows_deletion,
-    "gnl_stream destructor tolerates uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialised_destructor_allows_deletion,
+    "gnl_stream destructor tolerates uninitialised instance")
 {
-    FT_ASSERT_EQ(0, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_destructor));
+    FT_ASSERT_EQ(0, gnl_stream_expect_sigabrt_uninitialised(gnl_stream_call_destructor));
     return (1);
 }
 
-FT_TEST(test_gnl_stream_uninitialized_destroy_returns_invalid_state,
-    "gnl_stream destroy reports invalid state on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialised_destroy_returns_invalid_state,
+    "gnl_stream destroy reports invalid state on uninitialised instance")
 {
     gnl_stream_type stream_instance;
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, stream_instance.destroy());
     return (1);
 }
 
-FT_TEST(test_gnl_stream_uninitialized_init_from_fd_aborts,
-    "gnl_stream init_from_fd aborts on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialised_init_from_fd_aborts,
+    "gnl_stream init_from_fd aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_init_from_fd));
+    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialised(gnl_stream_call_init_from_fd));
     return (1);
 }
 
-FT_TEST(test_gnl_stream_uninitialized_init_from_file_aborts,
-    "gnl_stream init_from_file aborts on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialised_init_from_file_aborts,
+    "gnl_stream init_from_file aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_init_from_file));
+    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialised(gnl_stream_call_init_from_file));
     return (1);
 }
 
-FT_TEST(test_gnl_stream_uninitialized_init_from_callback_aborts,
-    "gnl_stream init_from_callback aborts on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialised_init_from_callback_aborts,
+    "gnl_stream init_from_callback aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_init_from_callback));
+    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialised(gnl_stream_call_init_from_callback));
     return (1);
 }
 
-FT_TEST(test_gnl_stream_uninitialized_reset_aborts,
-    "gnl_stream reset aborts on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialised_reset_aborts,
+    "gnl_stream reset aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_reset));
+    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialised(gnl_stream_call_reset));
     return (1);
 }
 
-FT_TEST(test_gnl_stream_uninitialized_read_aborts,
-    "gnl_stream read aborts on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialised_read_aborts,
+    "gnl_stream read aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_read));
+    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialised(gnl_stream_call_read));
     return (1);
 }

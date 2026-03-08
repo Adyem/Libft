@@ -7,8 +7,8 @@
 #include <errno.h>
 
 typedef FILE *(*t_pf_tmpfile_function)(void);
-typedef int (*t_pf_fflush_function)(FILE *);
-typedef long (*t_pf_ftell_function)(FILE *);
+typedef int32_t (*t_pf_fflush_function)(FILE *);
+typedef int64_t (*t_pf_ftell_function)(FILE *);
 
 static t_pf_tmpfile_function g_pf_tmpfile_function = tmpfile;
 static t_pf_fflush_function g_pf_fflush_function = fflush;
@@ -44,10 +44,10 @@ void pf_reset_fflush_function(void)
     return ;
 }
 
-int pf_flush_stream(FILE *stream)
+int32_t pf_flush_stream(FILE *stream)
 {
-    int flush_status;
-    int saved_errno;
+    int32_t flush_status;
+    int32_t saved_errno;
 
     if (stream == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -78,9 +78,9 @@ void pf_reset_ftell_function(void)
     return ;
 }
 
-int pf_vsnprintf(char *string, size_t size, const char *format, va_list argument_list)
+int32_t pf_vsnprintf(char *string, ft_size_t size, const char *format, va_list argument_list)
 {
-    int error_code;
+    int32_t error_code;
 
     if (format == ft_nullptr || (string == ft_nullptr && size > 0))
         return (-1);
@@ -93,7 +93,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list argument
     }
     va_list copy;
     va_copy(copy, argument_list);
-    int printed = ft_vfprintf(stream, format, copy);
+    int32_t printed = ft_vfprintf(stream, format, copy);
     va_end(copy);
     if (printed < 0)
     {
@@ -110,7 +110,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list argument
             string[0] = '\0';
         return (-1);
     }
-    long position = g_pf_ftell_function(stream);
+    int64_t position = g_pf_ftell_function(stream);
     if (position < 0)
     {
         fclose(stream);
@@ -121,10 +121,10 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list argument
     rewind(stream);
     if (string != ft_nullptr && size > 0)
     {
-        size_t copy_length = static_cast<size_t>(position);
+        ft_size_t copy_length = static_cast<ft_size_t>(position);
         if (copy_length >= size)
             copy_length = size - 1;
-        size_t read_bytes = 0;
+        ft_size_t read_bytes = 0;
         if (copy_length > 0)
             read_bytes = fread(string, 1, copy_length, stream);
         string[read_bytes] = '\0';

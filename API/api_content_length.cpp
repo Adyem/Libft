@@ -9,7 +9,7 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     size_t index;
     int request_error;
 
-    if (!request.is_initialized())
+    if (!request.is_initialised())
     {
         if (request.initialize() != FT_ERR_SUCCESS)
             return (false);

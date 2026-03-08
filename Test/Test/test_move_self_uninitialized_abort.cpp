@@ -3,7 +3,7 @@
 #include "../../GetNextLine/gnl_stream.hpp"
 #include "../../SCMA/SCMA.hpp"
 #include "../../Template/unordered_map.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 #include <sys/wait.h>
@@ -36,7 +36,7 @@ static int expect_sigabrt_for_void_operation(void (*operation)(void))
     return (WTERMSIG(child_status) == SIGABRT);
 }
 
-static void string_uninitialized_self_move_assignment_operation(void)
+static void string_uninitialised_self_move_assignment_operation(void)
 {
     alignas(ft_string) unsigned char storage[sizeof(ft_string)];
     ft_string *string_pointer;
@@ -47,7 +47,7 @@ static void string_uninitialized_self_move_assignment_operation(void)
     return ;
 }
 
-static void unordered_map_uninitialized_self_move_assignment_operation(void)
+static void unordered_map_uninitialised_self_move_assignment_operation(void)
 {
     alignas(unordered_map_int_int) unsigned char storage[sizeof(unordered_map_int_int)];
     unordered_map_int_int *map_pointer;
@@ -58,7 +58,7 @@ static void unordered_map_uninitialized_self_move_assignment_operation(void)
     return ;
 }
 
-static void scma_proxy_uninitialized_self_move_assignment_operation(void)
+static void scma_proxy_uninitialised_self_move_assignment_operation(void)
 {
     typedef scma_handle_accessor_element_proxy<int> scma_proxy_type;
     alignas(scma_proxy_type) unsigned char storage[sizeof(scma_proxy_type)];
@@ -70,27 +70,27 @@ static void scma_proxy_uninitialized_self_move_assignment_operation(void)
     return ;
 }
 
-FT_TEST(test_string_uninitialized_self_move_assignment_aborts,
-    "ft_string move assignment self-move aborts when object is uninitialized")
+FT_TEST(test_string_uninitialised_self_move_assignment_aborts,
+    "ft_string move assignment self-move aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, expect_sigabrt_for_void_operation(
-        string_uninitialized_self_move_assignment_operation));
+        string_uninitialised_self_move_assignment_operation));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_self_move_assignment_aborts,
-    "unordered_map move assignment self-move aborts when object is uninitialized")
+FT_TEST(test_unordered_map_uninitialised_self_move_assignment_aborts,
+    "unordered_map move assignment self-move aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, expect_sigabrt_for_void_operation(
-        unordered_map_uninitialized_self_move_assignment_operation));
+        unordered_map_uninitialised_self_move_assignment_operation));
     return (1);
 }
 
-FT_TEST(test_scma_proxy_uninitialized_self_move_assignment_aborts,
-    "scma accessor proxy move assignment self-move aborts when proxy is uninitialized")
+FT_TEST(test_scma_proxy_uninitialised_self_move_assignment_aborts,
+    "scma accessor proxy move assignment self-move aborts when proxy is uninitialised")
 {
     FT_ASSERT_EQ(1, expect_sigabrt_for_void_operation(
-        scma_proxy_uninitialized_self_move_assignment_operation));
+        scma_proxy_uninitialised_self_move_assignment_operation));
     return (1);
 }
 

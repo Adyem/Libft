@@ -65,7 +65,7 @@ int kv_store::lock_replication(bool *lock_acquired) const noexcept
 {
     bool has_mutex;
 
-    this->abort_if_not_initialized("kv_store::lock_replication");
+    this->abort_if_not_initialised("kv_store::lock_replication");
     if (lock_acquired == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *lock_acquired = false;
@@ -79,7 +79,7 @@ int kv_store::lock_replication(bool *lock_acquired) const noexcept
 
 int kv_store::dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const
 {
-    this->abort_if_not_initialized("kv_store::dispatch_snapshot_to_sink");
+    this->abort_if_not_initialised("kv_store::dispatch_snapshot_to_sink");
     ft_vector<kv_store_snapshot_entry> snapshot_entries;
     kv_store *mutable_this;
     int callback_error;
@@ -108,7 +108,7 @@ int kv_store::dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback s
 
 int kv_store::notify_replication_listeners(const ft_vector<kv_store_operation> &operations) const
 {
-    this->abort_if_not_initialized("kv_store::notify_replication_listeners");
+    this->abort_if_not_initialised("kv_store::notify_replication_listeners");
     kv_store *mutable_this;
     bool lock_acquired = false;
     ft_vector<kv_store_replication_sink> listeners_copy;
@@ -200,7 +200,7 @@ int kv_store::register_replication_sink(kv_store_replication_operations_callback
         kv_store_replication_snapshot_callback snapshot_callback, void *user_data,
         bool ship_initial_snapshot)
 {
-    this->abort_if_not_initialized("kv_store::register_replication_sink");
+    this->abort_if_not_initialised("kv_store::register_replication_sink");
     bool lock_acquired = false;
     kv_store_replication_sink sink_entry;
     size_t listener_count;
@@ -260,7 +260,7 @@ int kv_store::register_replication_sink(kv_store_replication_operations_callback
 int kv_store::unregister_replication_sink(kv_store_replication_operations_callback operations_callback,
         kv_store_replication_snapshot_callback snapshot_callback, void *user_data)
 {
-    this->abort_if_not_initialized("kv_store::unregister_replication_sink");
+    this->abort_if_not_initialised("kv_store::unregister_replication_sink");
     bool lock_acquired = false;
     size_t listener_count;
     size_t listener_index;
@@ -313,13 +313,13 @@ int kv_store::unregister_replication_sink(kv_store_replication_operations_callba
 
 int kv_store::ship_replication_snapshot(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const
 {
-    this->abort_if_not_initialized("kv_store::ship_replication_snapshot");
+    this->abort_if_not_initialised("kv_store::ship_replication_snapshot");
     return (this->dispatch_snapshot_to_sink(snapshot_callback, user_data));
 }
 
 int kv_store::assign_backend_location(const char *location)
 {
-    this->abort_if_not_initialized("kv_store::assign_backend_location");
+    this->abort_if_not_initialised("kv_store::assign_backend_location");
     if (location == ft_nullptr)
     {
         this->_file_path.clear();
@@ -331,7 +331,7 @@ int kv_store::assign_backend_location(const char *location)
 
 int kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    this->abort_if_not_initialized("kv_store::parse_json_groups");
+    this->abort_if_not_initialised("kv_store::parse_json_groups");
     json_group *store_group;
     json_item *item_pointer;
     ft_map<ft_string, long long> ttl_metadata;
@@ -496,7 +496,7 @@ int kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_snaps
 
 int kv_store::load_json_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    this->abort_if_not_initialized("kv_store::load_json_entries");
+    this->abort_if_not_initialised("kv_store::load_json_entries");
     json_group *group_head;
 
     if (location == ft_nullptr)
@@ -525,7 +525,7 @@ int kv_store::load_json_entries(const char *location, ft_vector<kv_store_snapsho
 
 int kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    this->abort_if_not_initialized("kv_store::flush_json_entries");
+    this->abort_if_not_initialised("kv_store::flush_json_entries");
     json_group *store_group;
     json_group *head_group;
     kv_store *mutable_this;
@@ -653,7 +653,7 @@ int kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &entri
 
 int kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    this->abort_if_not_initialized("kv_store::flush_json_lines_entries");
+    this->abort_if_not_initialised("kv_store::flush_json_lines_entries");
     su_file *file_handle;
     kv_store *mutable_this;
     const kv_store_snapshot_entry *entry_begin;
@@ -864,7 +864,7 @@ int kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_entry> 
 
 int kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    this->abort_if_not_initialized("kv_store::load_json_lines_entries");
+    this->abort_if_not_initialised("kv_store::load_json_lines_entries");
     ft_vector<ft_string> lines;
     size_t line_count;
     size_t line_index;
@@ -1034,7 +1034,7 @@ int kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_s
 #if SQLITE3_AVAILABLE
 int kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    this->abort_if_not_initialized("kv_store::flush_sqlite_entries");
+    this->abort_if_not_initialised("kv_store::flush_sqlite_entries");
     sqlite3 *database_handle;
     kv_store *mutable_this;
     char *error_message;
@@ -1240,7 +1240,7 @@ int kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &ent
 #if SQLITE3_AVAILABLE
 int kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    this->abort_if_not_initialized("kv_store::load_sqlite_entries");
+    this->abort_if_not_initialised("kv_store::load_sqlite_entries");
     sqlite3 *database_handle;
     sqlite3_stmt *metadata_statement;
     sqlite3_stmt *select_statement;
@@ -1386,7 +1386,7 @@ int kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_snaps
 
 int kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    this->abort_if_not_initialized("kv_store::flush_memory_mapped_entries");
+    this->abort_if_not_initialised("kv_store::flush_memory_mapped_entries");
     kv_store *mutable_this;
     json_group *store_group;
     json_group *head_group;
@@ -1607,7 +1607,7 @@ int kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_entr
 
 int kv_store::load_memory_mapped_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    this->abort_if_not_initialized("kv_store::load_memory_mapped_entries");
+    this->abort_if_not_initialised("kv_store::load_memory_mapped_entries");
 #ifdef _WIN32
     HANDLE file_handle;
     LARGE_INTEGER size_value;
@@ -1731,7 +1731,7 @@ int kv_store::load_memory_mapped_entries(const char *location, ft_vector<kv_stor
 
 int kv_store::flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    this->abort_if_not_initialized("kv_store::flush_backend_entries");
+    this->abort_if_not_initialised("kv_store::flush_backend_entries");
     if (this->_backend_type == KV_STORE_BACKEND_JSON)
         return (this->flush_json_entries(entries));
     if (this->_backend_type == KV_STORE_BACKEND_JSON_LINES)
@@ -1747,7 +1747,7 @@ int kv_store::flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &en
 
 int kv_store::load_backend_entries(kv_store_backend_type backend_type, const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    this->abort_if_not_initialized("kv_store::load_backend_entries");
+    this->abort_if_not_initialised("kv_store::load_backend_entries");
     if (backend_type == KV_STORE_BACKEND_JSON)
         return (this->load_json_entries(location, out_entries));
     if (backend_type == KV_STORE_BACKEND_JSON_LINES)
@@ -1763,7 +1763,7 @@ int kv_store::load_backend_entries(kv_store_backend_type backend_type, const cha
 
 int kv_store::set_backend(kv_store_backend_type backend_type, const char *location)
 {
-    this->abort_if_not_initialized("kv_store::set_backend");
+    this->abort_if_not_initialised("kv_store::set_backend");
     ft_vector<kv_store_snapshot_entry> loaded_entries;
     ft_string location_copy;
     int load_result;
@@ -1833,13 +1833,13 @@ int kv_store::set_backend(kv_store_backend_type backend_type, const char *locati
 
 kv_store_backend_type kv_store::get_backend() const
 {
-    this->abort_if_not_initialized("kv_store::get_backend");
+    this->abort_if_not_initialised("kv_store::get_backend");
     return (this->_backend_type);
 }
 
 int kv_store::write_snapshot(ft_document_sink &sink) const
 {
-    this->abort_if_not_initialized("kv_store::write_snapshot");
+    this->abort_if_not_initialised("kv_store::write_snapshot");
     kv_store *mutable_this;
     ft_vector<kv_store_snapshot_entry> entries;
     json_group *store_group;
@@ -1987,7 +1987,7 @@ int kv_store::write_snapshot(ft_document_sink &sink) const
 
 int kv_store::read_snapshot(ft_document_source &source)
 {
-    this->abort_if_not_initialized("kv_store::read_snapshot");
+    this->abort_if_not_initialised("kv_store::read_snapshot");
     ft_string content;
     int read_result;
     json_group *group_head;
@@ -2089,7 +2089,7 @@ int kv_store::lock_store(bool *lock_acquired) const noexcept
 {
     bool has_mutex;
 
-    this->abort_if_not_initialized("kv_store::lock_store");
+    this->abort_if_not_initialised("kv_store::lock_store");
     if (lock_acquired == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *lock_acquired = false;
@@ -2103,7 +2103,7 @@ int kv_store::lock_store(bool *lock_acquired) const noexcept
 
 void kv_store::unlock_store_guard(bool lock_acquired, int) const noexcept
 {
-    this->abort_if_not_initialized("kv_store::unlock_store_guard");
+    this->abort_if_not_initialised("kv_store::unlock_store_guard");
     if (lock_acquired)
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
@@ -2111,7 +2111,7 @@ void kv_store::unlock_store_guard(bool lock_acquired, int) const noexcept
 
 long long kv_store::current_time_seconds() const
 {
-    this->abort_if_not_initialized("kv_store::current_time_seconds");
+    this->abort_if_not_initialised("kv_store::current_time_seconds");
     t_time current_time;
 
     current_time = time_now();
@@ -2120,7 +2120,7 @@ long long kv_store::current_time_seconds() const
 
 int kv_store::compute_expiration(long long ttl_seconds, bool &has_expiration, long long &expiration_timestamp) const
 {
-    this->abort_if_not_initialized("kv_store::compute_expiration");
+    this->abort_if_not_initialised("kv_store::compute_expiration");
     long long current_time;
 
     has_expiration = false;
@@ -2142,7 +2142,7 @@ int kv_store::compute_expiration(long long ttl_seconds, bool &has_expiration, lo
 
 int kv_store::parse_expiration_timestamp(const char *value_string, long long &expiration_timestamp) const
 {
-    this->abort_if_not_initialized("kv_store::parse_expiration_timestamp");
+    this->abort_if_not_initialised("kv_store::parse_expiration_timestamp");
     char *end_pointer;
     long long parsed_value;
 
@@ -2162,35 +2162,35 @@ int kv_store::parse_expiration_timestamp(const char *value_string, long long &ex
 
 void kv_store::record_set_operation() const noexcept
 {
-    this->abort_if_not_initialized("kv_store::record_set_operation");
+    this->abort_if_not_initialised("kv_store::record_set_operation");
     this->_metrics_set_operations = this->_metrics_set_operations + 1;
     return ;
 }
 
 void kv_store::record_delete_operation() const noexcept
 {
-    this->abort_if_not_initialized("kv_store::record_delete_operation");
+    this->abort_if_not_initialised("kv_store::record_delete_operation");
     this->_metrics_delete_operations = this->_metrics_delete_operations + 1;
     return ;
 }
 
 void kv_store::record_get_hit() const noexcept
 {
-    this->abort_if_not_initialized("kv_store::record_get_hit");
+    this->abort_if_not_initialised("kv_store::record_get_hit");
     this->_metrics_get_hits = this->_metrics_get_hits + 1;
     return ;
 }
 
 void kv_store::record_get_miss() const noexcept
 {
-    this->abort_if_not_initialized("kv_store::record_get_miss");
+    this->abort_if_not_initialised("kv_store::record_get_miss");
     this->_metrics_get_misses = this->_metrics_get_misses + 1;
     return ;
 }
 
 void kv_store::record_prune_metrics(long long removed_entries, long long duration_ms) const noexcept
 {
-    this->abort_if_not_initialized("kv_store::record_prune_metrics");
+    this->abort_if_not_initialised("kv_store::record_prune_metrics");
     long long normalized_duration;
 
     normalized_duration = duration_ms;
@@ -2207,7 +2207,7 @@ int kv_store::lock_background(bool *lock_acquired) const noexcept
 {
     bool has_mutex;
 
-    this->abort_if_not_initialized("kv_store::lock_background");
+    this->abort_if_not_initialised("kv_store::lock_background");
     if (lock_acquired == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *lock_acquired = false;
@@ -2221,7 +2221,7 @@ int kv_store::lock_background(bool *lock_acquired) const noexcept
 
 int kv_store::start_background_thread_locked(long long interval_seconds) noexcept
 {
-    this->abort_if_not_initialized("kv_store::start_background_thread_locked");
+    this->abort_if_not_initialised("kv_store::start_background_thread_locked");
     ft_thread background_instance;
 
     if (interval_seconds <= 0)
@@ -2247,7 +2247,7 @@ int kv_store::start_background_thread_locked(long long interval_seconds) noexcep
 
 void kv_store::stop_background_thread_locked(ft_thread &thread_holder) noexcept
 {
-    this->abort_if_not_initialized("kv_store::stop_background_thread_locked");
+    this->abort_if_not_initialised("kv_store::stop_background_thread_locked");
     if (this->_background_thread_active == false)
     {
         return ;
@@ -2295,7 +2295,7 @@ void kv_store::background_compaction_worker(kv_store *store) noexcept
 
 int kv_store::prune_expired()
 {
-    this->abort_if_not_initialized("kv_store::prune_expired");
+    this->abort_if_not_initialised("kv_store::prune_expired");
     bool lock_acquired = false;
     int lock_error;
     int prune_result;
@@ -2315,7 +2315,7 @@ int kv_store::prune_expired()
 
 int kv_store::prune_expired_locked()
 {
-    this->abort_if_not_initialized("kv_store::prune_expired_locked");
+    this->abort_if_not_initialised("kv_store::prune_expired_locked");
     size_t map_size;
     long long current_time;
     size_t map_index;
@@ -2404,7 +2404,7 @@ int kv_store::prune_expired_locked()
 
 int kv_store::kv_set(const char *key_string, const char *value_string, long long ttl_seconds)
 {
-    this->abort_if_not_initialized("kv_store::kv_set");
+    this->abort_if_not_initialised("kv_store::kv_set");
     ft_vector<kv_store_operation> operations;
     kv_store_operation operation;
 
@@ -2431,7 +2431,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
 
 const char *kv_store::kv_get(const char *key_string) const
 {
-    this->abort_if_not_initialized("kv_store::kv_get");
+    this->abort_if_not_initialised("kv_store::kv_get");
     ft_string key_storage;
     const Pair<ft_string, kv_store_entry> *map_pair;
     const Pair<ft_string, kv_store_entry> *map_end;
@@ -2489,7 +2489,7 @@ const char *kv_store::kv_get(const char *key_string) const
 
 int kv_store::kv_delete(const char *key_string)
 {
-    this->abort_if_not_initialized("kv_store::kv_delete");
+    this->abort_if_not_initialised("kv_store::kv_delete");
     ft_vector<kv_store_operation> operations;
     kv_store_operation operation;
 
@@ -2516,7 +2516,7 @@ int kv_store::kv_delete(const char *key_string)
 
 int kv_store::kv_flush() const
 {
-    this->abort_if_not_initialized("kv_store::kv_flush");
+    this->abort_if_not_initialised("kv_store::kv_flush");
     kv_store *mutable_this;
     bool lock_acquired = false;
     int lock_error;
@@ -2553,7 +2553,7 @@ int kv_store::kv_flush() const
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *kv_store::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("kv_store::get_mutex_for_validation");
+    this->abort_if_not_initialised("kv_store::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif
@@ -2564,7 +2564,7 @@ int kv_store::get_metrics(kv_store_metrics &out_metrics) const
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("kv_store::get_metrics");
+    this->abort_if_not_initialised("kv_store::get_metrics");
     mutable_this = const_cast<kv_store *>(this);
     lock_acquired = false;
     lock_error = mutable_this->lock_store(&lock_acquired);
@@ -2590,7 +2590,7 @@ int kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) c
     size_t entry_count;
     size_t entry_index;
 
-    this->abort_if_not_initialized("kv_store::export_snapshot");
+    this->abort_if_not_initialised("kv_store::export_snapshot");
     mutable_this = const_cast<kv_store *>(this);
     lock_acquired = false;
     lock_error = mutable_this->lock_store(&lock_acquired);
@@ -2650,7 +2650,7 @@ int kv_store::export_snapshot_to_file(const char *file_path) const
 {
     ft_file_document_sink file_sink(file_path);
 
-    this->abort_if_not_initialized("kv_store::export_snapshot_to_file");
+    this->abort_if_not_initialised("kv_store::export_snapshot_to_file");
     if (file_path == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
     return (this->write_snapshot(file_sink));
@@ -2658,7 +2658,7 @@ int kv_store::export_snapshot_to_file(const char *file_path) const
 
 int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 {
-    this->abort_if_not_initialized("kv_store::kv_apply");
+    this->abort_if_not_initialised("kv_store::kv_apply");
     bool lock_acquired = false;
     size_t operation_count;
     size_t operation_index;
@@ -2775,7 +2775,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 
 int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, long long ttl_seconds)
 {
-    this->abort_if_not_initialized("kv_store::kv_compare_and_swap");
+    this->abort_if_not_initialised("kv_store::kv_compare_and_swap");
     ft_string key_storage;
     Pair<ft_string, kv_store_entry> *existing_pair;
     Pair<ft_string, kv_store_entry> *map_end;
@@ -2852,7 +2852,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
 
 int kv_store::apply_snapshot_locked(const ft_vector<kv_store_snapshot_entry> &entries)
 {
-    this->abort_if_not_initialized("kv_store::apply_snapshot_locked");
+    this->abort_if_not_initialised("kv_store::apply_snapshot_locked");
     const kv_store_snapshot_entry *entry_begin;
     const kv_store_snapshot_entry *entry_end;
     const kv_store_snapshot_entry *entry_cursor;
@@ -2889,7 +2889,7 @@ int kv_store::apply_snapshot_locked(const ft_vector<kv_store_snapshot_entry> &en
 
 int kv_store::import_snapshot(const ft_vector<kv_store_snapshot_entry> &entries)
 {
-    this->abort_if_not_initialized("kv_store::import_snapshot");
+    this->abort_if_not_initialised("kv_store::import_snapshot");
     bool lock_acquired = false;
     int lock_error;
     int operation_error;
@@ -2916,7 +2916,7 @@ int kv_store::import_snapshot(const ft_vector<kv_store_snapshot_entry> &entries)
 
 int kv_store::start_background_compaction(long long interval_seconds)
 {
-    this->abort_if_not_initialized("kv_store::start_background_compaction");
+    this->abort_if_not_initialised("kv_store::start_background_compaction");
     bool lock_acquired = false;
     kv_store *mutable_this;
     int lock_error;
@@ -2940,7 +2940,7 @@ int kv_store::start_background_compaction(long long interval_seconds)
 
 int kv_store::stop_background_compaction()
 {
-    this->abort_if_not_initialized("kv_store::stop_background_compaction");
+    this->abort_if_not_initialised("kv_store::stop_background_compaction");
     bool lock_acquired = false;
     kv_store *mutable_this;
     ft_thread thread_holder;

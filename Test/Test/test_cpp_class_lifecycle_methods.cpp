@@ -3,7 +3,7 @@
 #include "../../CPP_class/class_ofstream.hpp"
 #include "../../CPP_class/class_stringbuf.hpp"
 #include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csetjmp>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -44,7 +44,7 @@ static int lifecycle_expect_sigabrt_signal_handler(void (*operation)(void))
     return (result);
 }
 
-static void data_buffer_initialize_copy_uninitialized_source_aborts(void)
+static void data_buffer_initialize_copy_uninitialised_source_aborts(void)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -53,7 +53,7 @@ static void data_buffer_initialize_copy_uninitialized_source_aborts(void)
     return ;
 }
 
-static void data_buffer_initialize_move_uninitialized_source_aborts(void)
+static void data_buffer_initialize_move_uninitialised_source_aborts(void)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -85,8 +85,8 @@ static void ofstream_initialize_twice_aborts(void)
     return ;
 }
 
-FT_TEST(test_data_buffer_initialize_copy_into_uninitialized_destination,
-    "DataBuffer initialize(copy) succeeds with uninitialized destination")
+FT_TEST(test_data_buffer_initialize_copy_into_uninitialised_destination,
+    "DataBuffer initialize(copy) succeeds with uninitialised destination")
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -115,8 +115,8 @@ FT_TEST(test_data_buffer_initialize_copy_into_destroyed_destination,
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_into_uninitialized_destination,
-    "DataBuffer initialize_move succeeds with uninitialized destination")
+FT_TEST(test_data_buffer_initialize_move_into_uninitialised_destination,
+    "DataBuffer initialize_move succeeds with uninitialised destination")
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -156,19 +156,19 @@ FT_TEST(test_data_buffer_initialize_move_self_is_noop_success,
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_copy_uninitialized_source_aborts,
-    "DataBuffer initialize(copy) aborts for uninitialized source")
+FT_TEST(test_data_buffer_initialize_copy_uninitialised_source_aborts,
+    "DataBuffer initialize(copy) aborts for uninitialised source")
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
-        data_buffer_initialize_copy_uninitialized_source_aborts));
+        data_buffer_initialize_copy_uninitialised_source_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_uninitialized_source_aborts,
-    "DataBuffer initialize_move aborts for uninitialized source")
+FT_TEST(test_data_buffer_initialize_move_uninitialised_source_aborts,
+    "DataBuffer initialize_move aborts for uninitialised source")
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
-        data_buffer_initialize_move_uninitialized_source_aborts));
+        data_buffer_initialize_move_uninitialised_source_aborts));
     return (1);
 }
 
@@ -198,7 +198,7 @@ FT_TEST(test_ft_stringbuf_initialize_destroy_cycle,
 }
 
 FT_TEST(test_ft_stringbuf_initialize_twice_aborts,
-    "ft_stringbuf initialize aborts while already initialized")
+    "ft_stringbuf initialize aborts while already initialised")
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         stringbuf_initialize_twice_aborts));
@@ -216,7 +216,7 @@ FT_TEST(test_ft_ofstream_initialize_destroy_cycle,
 }
 
 FT_TEST(test_ft_ofstream_initialize_twice_aborts,
-    "ft_ofstream initialize aborts while already initialized")
+    "ft_ofstream initialize aborts while already initialised")
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         ofstream_initialize_twice_aborts));

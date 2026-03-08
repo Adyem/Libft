@@ -20,7 +20,7 @@ struct ft_render_x11_state
     int32_t         width;
     int32_t         height;
 
-    bool        is_fullscreen;
+    ft_bool        is_fullscreen;
 
     Atom        wm_delete_window;
     Atom        net_wm_state;
@@ -42,7 +42,7 @@ static ft_render_platform_result ft_render_x11_create_image(
     data = static_cast<char *>(malloc(static_cast<ft_size_t>(bytes_per_row * state->height)));
     if (data == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
+        return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
     }
 
     state->image = XCreateImage(
@@ -61,14 +61,14 @@ static ft_render_platform_result ft_render_x11_create_image(
     if (state->image == NULL)
     {
         free(data);
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, errno });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
     }
 
     out_framebuffer->width = state->width;
     out_framebuffer->height = state->height;
     out_framebuffer->pixels = reinterpret_cast<uint32_t *>(state->image->data);
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_screen_size *out_size)
@@ -78,7 +78,7 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
 
     if (out_size == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     out_size->width = 0;
@@ -87,7 +87,7 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
     display = XOpenDisplay(NULL);
     if (display == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, errno });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
     }
 
     screen = DefaultScreen(display);
@@ -99,10 +99,10 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
 
     if (out_size->width <= 0 || out_size->height <= 0)
     {
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, errno });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_create_window(
@@ -116,26 +116,26 @@ ft_render_platform_result ft_render_platform_create_window(
 
     if (out_platform_state == NULL || out_framebuffer == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = static_cast<ft_render_x11_state *>(calloc(1, sizeof(ft_render_x11_state)));
     if (state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
+        return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
     }
 
     state->display = XOpenDisplay(NULL);
     if (state->display == NULL)
     {
         free(state);
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, errno });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
     }
 
     state->screen = DefaultScreen(state->display);
     state->width = desc.width;
     state->height = desc.height;
-    state->is_fullscreen = false;
+    state->is_fullscreen = FT_FALSE;
 
     event_mask = ExposureMask | StructureNotifyMask;
 
@@ -167,7 +167,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result img_result;
 
         img_result = ft_render_x11_create_image(state, out_framebuffer);
-        if (img_result.error_code != ft_render_ok)
+        if (img_result.error_code != FT_ERR_SUCCESS)
         {
             XDestroyWindow(state->display, state->window);
             XCloseDisplay(state->display);
@@ -177,7 +177,7 @@ ft_render_platform_result ft_render_platform_create_window(
     }
 
     *out_platform_state = state;
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_destroy_window(
@@ -189,7 +189,7 @@ ft_render_platform_result ft_render_platform_destroy_window(
 
     if (platform_state == NULL || *platform_state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_ok, 0 });
+        return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
     }
 
     state = static_cast<ft_render_x11_state *>(*platform_state);
@@ -218,12 +218,12 @@ ft_render_platform_result ft_render_platform_destroy_window(
         framebuffer->pixels = NULL;
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_poll_events(
     void *platform_state,
-    bool *out_should_close
+    ft_bool *out_should_close
 )
 {
     ft_render_x11_state  *state;
@@ -231,11 +231,11 @@ ft_render_platform_result ft_render_platform_poll_events(
 
     if (platform_state == NULL || out_should_close == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = static_cast<ft_render_x11_state *>(platform_state);
-    *out_should_close = false;
+    *out_should_close = FT_FALSE;
 
     while (XPending(state->display) > 0)
     {
@@ -245,12 +245,12 @@ ft_render_platform_result ft_render_platform_poll_events(
         {
             if (static_cast<Atom>(event.xclient.data.l[0]) == state->wm_delete_window)
             {
-                *out_should_close = true;
+                *out_should_close = FT_TRUE;
             }
         }
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_present(
@@ -262,7 +262,7 @@ ft_render_platform_result ft_render_platform_present(
 
     if (platform_state == NULL || framebuffer == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = static_cast<ft_render_x11_state *>(platform_state);
@@ -281,10 +281,10 @@ ft_render_platform_result ft_render_platform_present(
     );
 
     XFlush(state->display);
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
-static void ft_render_x11_send_fullscreen_message(ft_render_x11_state *state, bool enabled)
+static void ft_render_x11_send_fullscreen_message(ft_render_x11_state *state, ft_bool enabled)
 {
     XEvent event;
 
@@ -295,7 +295,7 @@ static void ft_render_x11_send_fullscreen_message(ft_render_x11_state *state, bo
     event.xclient.window = state->window;
     event.xclient.message_type = state->net_wm_state;
     event.xclient.format = 32;
-    if (enabled)
+    if (enabled == FT_TRUE)
         event.xclient.data.l[0] = 1;
     else
         event.xclient.data.l[0] = 0;
@@ -317,30 +317,30 @@ static void ft_render_x11_send_fullscreen_message(ft_render_x11_state *state, bo
 
 ft_render_platform_result ft_render_platform_set_fullscreen(
     void *platform_state,
-    bool enabled
+    ft_bool enabled
 )
 {
     ft_render_x11_state  *state;
 
     if (platform_state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = static_cast<ft_render_x11_state *>(platform_state);
 
-    if (enabled == true && state->is_fullscreen == false)
+    if (enabled == FT_TRUE && state->is_fullscreen == FT_FALSE)
     {
-        ft_render_x11_send_fullscreen_message(state, true);
-        state->is_fullscreen = true;
+        ft_render_x11_send_fullscreen_message(state, FT_TRUE);
+        state->is_fullscreen = FT_TRUE;
     }
-    else if (enabled == false && state->is_fullscreen == true)
+    else if (enabled == FT_FALSE && state->is_fullscreen == FT_TRUE)
     {
-        ft_render_x11_send_fullscreen_message(state, false);
-        state->is_fullscreen = false;
+        ft_render_x11_send_fullscreen_message(state, FT_FALSE);
+        state->is_fullscreen = FT_FALSE;
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 #endif

@@ -11,10 +11,10 @@
 
 struct api_request_metrics_guard
 {
-    uint8_t _initialized_state;
-    static const uint8_t _state_uninitialized = 0;
+    uint8_t _initialised_state;
+    static const uint8_t _state_uninitialised = 0;
     static const uint8_t _state_destroyed = 1;
-    static const uint8_t _state_initialized = 2;
+    static const uint8_t _state_initialised = 2;
     t_monotonic_time_point _start_time;
     ft_string _endpoint;
     const char *_method;
@@ -35,7 +35,7 @@ struct api_request_metrics_guard
     }
 
     api_request_metrics_guard() noexcept
-        : _initialized_state(_state_uninitialized),
+        : _initialised_state(_state_uninitialised),
           _start_time(),
           _endpoint(),
           _method(ft_nullptr),
@@ -58,9 +58,9 @@ struct api_request_metrics_guard
         const char *method, const char *resource, size_t request_bytes,
         char **result_body, int *status_pointer, int *error_pointer) noexcept
     {
-        if (this->_initialized_state == _state_initialized)
+        if (this->_initialised_state == _state_initialised)
             this->abort_lifecycle_error("api_request_metrics_guard::initialize",
-                "called while object is already initialized");
+                "called while object is already initialised");
         _start_time = time_monotonic_point_now();
         this->_method = method;
         this->_resource = resource;
@@ -69,17 +69,17 @@ struct api_request_metrics_guard
         this->_status_pointer = status_pointer;
         this->_error_pointer = error_pointer;
         this->_enabled = true;
-        this->_initialized_state = _state_initialized;
+        this->_initialised_state = _state_initialised;
         if (this->_endpoint.initialize() != FT_ERR_SUCCESS)
         {
             this->_enabled = false;
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (ft_string::get_error());
         }
         if (this->_endpoint.clear() != FT_ERR_SUCCESS)
         {
             this->_enabled = false;
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (ft_string::get_error());
         }
         if (host)
@@ -89,7 +89,7 @@ struct api_request_metrics_guard
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             this->_enabled = false;
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (ft_string::get_error());
         }
         if (port != 0)
@@ -102,21 +102,21 @@ struct api_request_metrics_guard
             if (write_result < 0)
             {
                 this->_enabled = false;
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (FT_ERR_IO);
             }
             this->_endpoint.append(':');
             if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 this->_enabled = false;
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (ft_string::get_error());
             }
             this->_endpoint.append(port_string);
             if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 this->_enabled = false;
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (ft_string::get_error());
             }
         }
@@ -125,11 +125,11 @@ struct api_request_metrics_guard
 
     int destroy() noexcept
     {
-        if (this->_initialized_state != _state_initialized)
+        if (this->_initialised_state != _state_initialised)
             return (FT_ERR_INVALID_STATE);
         (void)this->_endpoint.destroy();
         this->_enabled = false;
-        this->_initialized_state = _state_destroyed;
+        this->_initialised_state = _state_destroyed;
         return (FT_ERR_SUCCESS);
     }
 
@@ -143,7 +143,7 @@ struct api_request_metrics_guard
         ft_networking_observability_sample sample;
         const char *operation_label;
 
-        if (this->_initialized_state != _state_initialized)
+        if (this->_initialised_state != _state_initialised)
             return ;
         if (!this->_enabled)
         {

@@ -7,10 +7,10 @@
 
 struct pf_fd_writer_context
 {
-    int file_descriptor;
+    int32_t file_descriptor;
 };
 
-static int pf_fd_writer(const char *data_pointer, size_t data_length, void *context, size_t *written_count)
+static int32_t pf_fd_writer(const char *data_pointer, ft_size_t data_length, void *context, ft_size_t *written_count)
 {
     pf_fd_writer_context *writer_context;
 
@@ -24,9 +24,9 @@ static int pf_fd_writer(const char *data_pointer, size_t data_length, void *cont
         *written_count = SIZE_MAX;
         return (FT_ERR_OUT_OF_RANGE);
     }
-    ssize_t written_result;
+    int64_t written_result;
     written_result = su_write(writer_context->file_descriptor, data_pointer, data_length);
-    if (written_result != static_cast<ssize_t>(data_length))
+    if (written_result != static_cast<int64_t>(data_length))
     {
         *written_count = SIZE_MAX;
         return (FT_ERR_IO);
@@ -35,15 +35,15 @@ static int pf_fd_writer(const char *data_pointer, size_t data_length, void *cont
     return (FT_ERR_SUCCESS);
 }
 
-int pf_printf_fd_v(int file_descriptor, const char *format, va_list argument_list)
+int32_t pf_printf_fd_v(int32_t file_descriptor, const char *format, va_list argument_list)
 {
-    int error_code;
+    int32_t error_code;
 
     if (file_descriptor < 0 || format == ft_nullptr)
         return (-1);
     pf_fd_writer_context context;
     context.file_descriptor = file_descriptor;
-    size_t written_count;
+    ft_size_t written_count;
     written_count = 0;
     va_list current_args;
     va_copy(current_args, argument_list);
@@ -54,7 +54,7 @@ int pf_printf_fd_v(int file_descriptor, const char *format, va_list argument_lis
         return (-1);
     }
     va_end(current_args);
-    if (written_count > static_cast<size_t>(INT_MAX))
+    if (written_count > static_cast<ft_size_t>(INT_MAX))
         return (-1);
-    return (static_cast<int>(written_count));
+    return (static_cast<int32_t>(written_count));
 }

@@ -27,11 +27,11 @@
 
 #if __has_include(<valgrind/memcheck.h>)
 #include <valgrind/memcheck.h>
-#define PROTECT_METADATA(ptr, size) VALGRIND_MAKE_MEM_NOACCESS(ptr, size)
-#define UNPROTECT_METADATA(ptr, size) VALGRIND_MAKE_MEM_DEFINED(ptr, size)
+#define PROTECT_METADATA(memory_pointer, size) VALGRIND_MAKE_MEM_NOACCESS(memory_pointer, size)
+#define UNPROTECT_METADATA(memory_pointer, size) VALGRIND_MAKE_MEM_DEFINED(memory_pointer, size)
 #else
-#define PROTECT_METADATA(ptr, size) ((void)0)
-#define UNPROTECT_METADATA(ptr, size) ((void)0)
+#define PROTECT_METADATA(memory_pointer, size) ((void)0)
+#define UNPROTECT_METADATA(memory_pointer, size) ((void)0)
 #endif
 
 extern ft_size_t    g_cma_alloc_limit;
@@ -46,7 +46,7 @@ struct Block
 {
     uint32_t            magic;
     ft_size_t           size;
-    bool                free;
+    ft_bool            free;
     Block               *next;
     Block               *prev;
     unsigned char       *payload;
@@ -63,7 +63,7 @@ struct Page
     Page                *next;
     Page                *prev;
     Block               *blocks;
-    bool                heap;
+    ft_bool                heap;
     int8_t              alloc_size_type;
 } __attribute__ ((aligned(16)));
 
@@ -77,13 +77,13 @@ Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
 void    cma_validate_block(Block *block, const char *context, void *user_pointer);
 Block    *cma_find_block_for_pointer(const void *memory_pointer);
-int32_t cma_lock_allocator(bool *lock_acquired);
-int32_t cma_unlock_allocator(bool lock_acquired);
+int32_t cma_lock_allocator(ft_bool *lock_acquired);
+int32_t cma_unlock_allocator(ft_bool lock_acquired);
 int32_t cma_enable_thread_safety(void);
 int32_t cma_disable_thread_safety(void);
-bool    cma_is_thread_safe_enabled(void);
-int32_t cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
-int32_t cma_backend_owns_pointer(const void *memory_pointer)
+ft_bool cma_is_thread_safe_enabled(void);
+ft_bool cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
+ft_bool cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));
 void    *cma_backend_allocate(ft_size_t size, int32_t *error_code)
             __attribute__ ((warn_unused_result, hot));
@@ -104,8 +104,8 @@ int32_t cma_backend_checked_block_size(const void *memory_pointer,
 
 int32_t cma_metadata_make_writable(void);
 void    cma_metadata_make_inaccessible(void);
-bool    cma_metadata_guard_increment(void);
-bool    cma_metadata_guard_decrement(void);
+ft_bool    cma_metadata_guard_increment(void);
+ft_bool    cma_metadata_guard_decrement(void);
 Block    *cma_metadata_allocate_block(void) __attribute__ ((warn_unused_result));
 void    cma_metadata_release_block(Block *block);
 void    cma_metadata_reset(void);
@@ -182,20 +182,20 @@ inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
     return ((size + 15) & ~static_cast<ft_size_t>(15));
 }
 
-inline __attribute__((always_inline, hot)) bool cma_block_is_free(const Block *block)
+inline __attribute__((always_inline, hot)) ft_bool cma_block_is_free(const Block *block)
 {
     if (!block)
-        return (false);
+        return (FT_FALSE);
     if (block->magic == MAGIC_NUMBER_FREE)
-        return (true);
-    return (false);
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
 inline __attribute__((always_inline, hot)) void cma_mark_block_free(Block *block)
 {
     if (!block)
         return ;
-    block->free = true;
+    block->free = FT_TRUE;
     block->magic = MAGIC_NUMBER_FREE;
     return ;
 }
@@ -204,7 +204,7 @@ inline __attribute__((always_inline, hot)) void cma_mark_block_allocated(Block *
 {
     if (!block)
         return ;
-    block->free = false;
+    block->free = FT_FALSE;
     block->magic = MAGIC_NUMBER_ALLOCATED;
     return ;
 }

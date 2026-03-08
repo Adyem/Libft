@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../DUMB/dumb_sound.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../DUMB/sound_device.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
@@ -11,56 +11,84 @@
 class test_sound_device_impl : public ft_sound_device
 {
     public:
-        test_sound_device_impl(void)
-        {
-            return ;
-        }
+        test_sound_device_impl(void);
+        test_sound_device_impl(const test_sound_device_impl &other);
+        test_sound_device_impl(test_sound_device_impl &&other);
+        test_sound_device_impl &operator=(const test_sound_device_impl &other) = delete;
+        test_sound_device_impl &operator=(test_sound_device_impl &&other) = delete;
+        ~test_sound_device_impl(void);
 
-        ~test_sound_device_impl(void)
-        {
-            return ;
-        }
-
-        int open(const ft_sound_spec *)
-        {
-            return (ft_sound_ok);
-        }
-
-        void close(void)
-        {
-            return ;
-        }
-
-        void pause(int)
-        {
-            return ;
-        }
-
-        void play(const ft_sound_clip *)
-        {
-            return ;
-        }
-
-        void stop(void)
-        {
-            return ;
-        }
+        int32_t open(const ft_sound_spec *spec);
+        void close(void);
+        void pause(int32_t pause_on);
+        void play(const ft_sound_clip *clip);
+        void stop(void);
 };
+
+test_sound_device_impl::test_sound_device_impl(void)
+{
+    return ;
+}
+
+test_sound_device_impl::test_sound_device_impl(const test_sound_device_impl &other)
+    : ft_sound_device(other)
+{
+    return ;
+}
+
+test_sound_device_impl::test_sound_device_impl(test_sound_device_impl &&other)
+    : ft_sound_device(static_cast<ft_sound_device &&>(other))
+{
+    return ;
+}
+
+test_sound_device_impl::~test_sound_device_impl(void)
+{
+    return ;
+}
+
+int32_t test_sound_device_impl::open(const ft_sound_spec *spec)
+{
+    (void)spec;
+    return (FT_ERR_SUCCESS);
+}
+
+void test_sound_device_impl::close(void)
+{
+    return ;
+}
+
+void test_sound_device_impl::pause(int32_t pause_on)
+{
+    (void)pause_on;
+    return ;
+}
+
+void test_sound_device_impl::play(const ft_sound_clip *clip)
+{
+    (void)clip;
+    return ;
+}
+
+void test_sound_device_impl::stop(void)
+{
+    return ;
+}
 
 static sigjmp_buf g_sound_device_jump_buffer;
 static volatile sig_atomic_t g_sound_device_signal;
 
-static void sound_device_sigabrt_handler(int signal_number)
+static void sound_device_sigabrt_handler(int32_t signal_number)
 {
     g_sound_device_signal = signal_number;
     siglongjmp(g_sound_device_jump_buffer, 1);
 }
 
-static int sound_device_expect_sigabrt_uninitialized(void (*operation)(test_sound_device_impl &))
+static int32_t sound_device_expect_sigabrt_uninitialised(void (*operation)(test_sound_device_impl &))
 {
     struct sigaction new_action;
     struct sigaction old_action;
-    int result;
+    int32_t result;
 
     std::memset(&new_action, 0, sizeof(new_action));
     std::memset(&old_action, 0, sizeof(old_action));
@@ -110,18 +138,12 @@ static void sound_device_call_disable_thread_safety(test_sound_device_impl &soun
 
 static void sound_device_call_is_thread_safe(test_sound_device_impl &sound_device_instance)
 {
-    (void)sound_device_instance.is_thread_safe_enabled();
+    (void)sound_device_instance.is_thread_safe();
     return ;
 }
 
-static void sound_device_call_runtime_mutex(test_sound_device_impl &sound_device_instance)
-{
-    (void)sound_device_instance.runtime_mutex();
-    return ;
-}
-
-FT_TEST(test_dumb_sound_device_uninitialized_destroy_returns_invalid_state,
-    "dumb sound device destroy returns invalid state on uninitialized instance")
+FT_TEST(test_dumb_sound_device_uninitialised_destroy_returns_invalid_state,
+    "dumb sound device destroy returns invalid state on uninitialised instance")
 {
     test_sound_device_impl device;
 
@@ -129,37 +151,30 @@ FT_TEST(test_dumb_sound_device_uninitialized_destroy_returns_invalid_state,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialized_move_aborts,
-    "dumb sound device move aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_device_uninitialised_move_aborts,
+    "dumb sound device move aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialized(sound_device_call_move));
+    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_move));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialized_enable_thread_safety_aborts,
-    "dumb sound device enable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_device_uninitialised_enable_thread_safety_aborts,
+    "dumb sound device enable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialized(sound_device_call_enable_thread_safety));
+    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_enable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialized_disable_thread_safety_aborts,
-    "dumb sound device disable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_device_uninitialised_disable_thread_safety_aborts,
+    "dumb sound device disable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialized(sound_device_call_disable_thread_safety));
+    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_disable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialized_is_thread_safe_aborts,
-    "dumb sound device is_thread_safe_enabled aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_device_uninitialised_is_thread_safe_aborts,
+    "dumb sound device is_thread_safe_enabled aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialized(sound_device_call_is_thread_safe));
-    return (1);
-}
-
-FT_TEST(test_dumb_sound_device_uninitialized_runtime_mutex_aborts,
-    "dumb sound device runtime_mutex aborts on uninitialized instance")
-{
-    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialized(sound_device_call_runtime_mutex));
+    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_is_thread_safe));
     return (1);
 }

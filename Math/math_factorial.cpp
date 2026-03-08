@@ -2,10 +2,10 @@
 #include "../Errno/errno.hpp"
 #include <climits>
 
-int math_factorial(int number)
+int32_t math_factorial(int32_t number)
 {
-    int result;
-    int current_number;
+    int32_t result;
+    int32_t current_number;
 
     if (number < 0)
     {
@@ -25,33 +25,10 @@ int math_factorial(int number)
     return (result);
 }
 
-long math_factorial(long number)
+int64_t math_factorial(int64_t number)
 {
-    long result;
-    long current_number;
-
-    if (number < 0)
-    {
-        return (0);
-    }
-    result = 1;
-    current_number = 2;
-    while (current_number <= number)
-    {
-        if (result > LONG_MAX / current_number)
-        {
-            return (0);
-        }
-        result *= current_number;
-        current_number += 1;
-    }
-    return (result);
-}
-
-long long math_factorial(long long number)
-{
-    long long result;
-    long long current_number;
+    int64_t result;
+    int64_t current_number;
 
     if (number < 0)
     {

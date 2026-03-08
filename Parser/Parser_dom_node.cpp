@@ -11,14 +11,14 @@
 ft_dom_node::ft_dom_node() noexcept
     : _type(FT_DOM_NODE_NULL), _name(), _value(), _children(),
       _attribute_keys(), _attribute_values(), _mutex(ft_nullptr),
-      _initialized_state(ft_dom_node::_state_uninitialized)
+      _initialised_state(ft_dom_node::_state_uninitialised)
 {
     return ;
 }
 
 ft_dom_node::~ft_dom_node() noexcept
 {
-    if (this->_initialized_state == ft_dom_node::_state_initialized)
+    if (this->_initialised_state == ft_dom_node::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -35,21 +35,21 @@ void ft_dom_node::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_dom_node::abort_if_not_initialized(const char *method_name) const
+void ft_dom_node::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_dom_node::_state_initialized)
+    if (this->_initialised_state == ft_dom_node::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_dom_node::initialize() noexcept
 {
-    if (this->_initialized_state == ft_dom_node::_state_initialized)
+    if (this->_initialised_state == ft_dom_node::_state_initialised)
     {
         this->abort_lifecycle_error("ft_dom_node::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_type = FT_DOM_NODE_NULL;
@@ -59,16 +59,16 @@ int ft_dom_node::initialize() noexcept
     this->_name = "";
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_dom_node::_state_destroyed;
+        this->_initialised_state = ft_dom_node::_state_destroyed;
         return (ft_string::get_error());
     }
     this->_value = "";
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_dom_node::_state_destroyed;
+        this->_initialised_state = ft_dom_node::_state_destroyed;
         return (ft_string::get_error());
     }
-    this->_initialized_state = ft_dom_node::_state_initialized;
+    this->_initialised_state = ft_dom_node::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -78,7 +78,7 @@ int ft_dom_node::destroy() noexcept
     size_t child_count;
     int disable_error;
 
-    if (this->_initialized_state != ft_dom_node::_state_initialized)
+    if (this->_initialised_state != ft_dom_node::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     child_index = 0;
     child_count = this->_children.size();
@@ -94,7 +94,7 @@ int ft_dom_node::destroy() noexcept
     this->_value = "";
     this->_type = FT_DOM_NODE_NULL;
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_dom_node::_state_destroyed;
+    this->_initialised_state = ft_dom_node::_state_destroyed;
     return (disable_error);
 }
 
@@ -103,7 +103,7 @@ int ft_dom_node::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_dom_node::enable_thread_safety");
+    this->abort_if_not_initialised("ft_dom_node::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -159,13 +159,13 @@ int ft_dom_node::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_dom_node::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::lock");
+    this->abort_if_not_initialised("ft_dom_node::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_dom_node::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::unlock");
+    this->abort_if_not_initialised("ft_dom_node::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -176,7 +176,7 @@ ft_dom_node_type ft_dom_node::get_type() const noexcept
     int lock_error;
     ft_dom_node_type type;
 
-    this->abort_if_not_initialized("ft_dom_node::get_type");
+    this->abort_if_not_initialised("ft_dom_node::get_type");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -191,7 +191,7 @@ void ft_dom_node::set_type(ft_dom_node_type type) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_node::set_type");
+    this->abort_if_not_initialised("ft_dom_node::set_type");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -206,7 +206,7 @@ int ft_dom_node::set_name(const ft_string &name) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_node::set_name(ft_string)");
+    this->abort_if_not_initialised("ft_dom_node::set_name(ft_string)");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -222,7 +222,7 @@ int ft_dom_node::set_name(const char *name) noexcept
 {
     ft_string name_string;
 
-    this->abort_if_not_initialized("ft_dom_node::set_name(const char *)");
+    this->abort_if_not_initialised("ft_dom_node::set_name(const char *)");
     if (name == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     name_string = name;
@@ -233,7 +233,7 @@ int ft_dom_node::set_name(const char *name) noexcept
 
 const ft_string &ft_dom_node::get_name() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::get_name");
+    this->abort_if_not_initialised("ft_dom_node::get_name");
     return (this->_name);
 }
 
@@ -242,7 +242,7 @@ int ft_dom_node::set_value(const ft_string &value) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_node::set_value(ft_string)");
+    this->abort_if_not_initialised("ft_dom_node::set_value(ft_string)");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -258,7 +258,7 @@ int ft_dom_node::set_value(const char *value) noexcept
 {
     ft_string value_string;
 
-    this->abort_if_not_initialized("ft_dom_node::set_value(const char *)");
+    this->abort_if_not_initialised("ft_dom_node::set_value(const char *)");
     if (value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     value_string = value;
@@ -269,7 +269,7 @@ int ft_dom_node::set_value(const char *value) noexcept
 
 const ft_string &ft_dom_node::get_value() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::get_value");
+    this->abort_if_not_initialised("ft_dom_node::get_value");
     return (this->_value);
 }
 
@@ -278,7 +278,7 @@ int ft_dom_node::add_child(ft_dom_node *child) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_node::add_child");
+    this->abort_if_not_initialised("ft_dom_node::add_child");
     if (child == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
@@ -292,7 +292,7 @@ int ft_dom_node::add_child(ft_dom_node *child) noexcept
 
 const ft_vector<ft_dom_node*> &ft_dom_node::get_children() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::get_children");
+    this->abort_if_not_initialised("ft_dom_node::get_children");
     return (this->_children);
 }
 
@@ -303,7 +303,7 @@ int ft_dom_node::add_attribute(const ft_string &key, const ft_string &value) noe
     size_t key_index;
     size_t key_count;
 
-    this->abort_if_not_initialized("ft_dom_node::add_attribute(ft_string,ft_string)");
+    this->abort_if_not_initialised("ft_dom_node::add_attribute(ft_string,ft_string)");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -336,7 +336,7 @@ int ft_dom_node::add_attribute(const char *key, const char *value) noexcept
     ft_string key_string;
     ft_string value_string;
 
-    this->abort_if_not_initialized("ft_dom_node::add_attribute(const char *,const char *)");
+    this->abort_if_not_initialised("ft_dom_node::add_attribute(const char *,const char *)");
     if (key == ft_nullptr || value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     key_string = key;
@@ -355,7 +355,7 @@ bool ft_dom_node::has_attribute(const ft_string &key) const noexcept
     size_t key_index;
     size_t key_count;
 
-    this->abort_if_not_initialized("ft_dom_node::has_attribute");
+    this->abort_if_not_initialised("ft_dom_node::has_attribute");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -383,7 +383,7 @@ ft_string ft_dom_node::get_attribute(const ft_string &key) const noexcept
     size_t key_count;
     ft_string value;
 
-    this->abort_if_not_initialized("ft_dom_node::get_attribute");
+    this->abort_if_not_initialised("ft_dom_node::get_attribute");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -406,13 +406,13 @@ ft_string ft_dom_node::get_attribute(const ft_string &key) const noexcept
 
 const ft_vector<ft_string> &ft_dom_node::get_attribute_keys() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::get_attribute_keys");
+    this->abort_if_not_initialised("ft_dom_node::get_attribute_keys");
     return (this->_attribute_keys);
 }
 
 const ft_vector<ft_string> &ft_dom_node::get_attribute_values() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::get_attribute_values");
+    this->abort_if_not_initialised("ft_dom_node::get_attribute_values");
     return (this->_attribute_values);
 }
 
@@ -424,7 +424,7 @@ ft_dom_node *ft_dom_node::find_child(const ft_string &name) const noexcept
     size_t child_count;
     ft_dom_node *child;
 
-    this->abort_if_not_initialized("ft_dom_node::find_child");
+    this->abort_if_not_initialised("ft_dom_node::find_child");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -448,7 +448,7 @@ ft_dom_node *ft_dom_node::find_child(const ft_string &name) const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_dom_node::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_node::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_dom_node::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

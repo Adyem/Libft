@@ -1,16 +1,16 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 
-static int math_is_infinite_internal(double number)
+static int32_t math_is_infinite_internal(double number)
 {
     union
     {
         double double_value;
-        unsigned long long integer_value;
+        uint64_t integer_value;
     } converter;
 
-    unsigned long long exponent_bits;
-    unsigned long long mantissa_bits;
+    uint64_t exponent_bits;
+    uint64_t mantissa_bits;
 
     converter.double_value = number;
     exponent_bits = converter.integer_value & 0x7ff0000000000000ULL;
@@ -28,7 +28,7 @@ double math_acos(double dot)
     double middle_value;
     double cosine_middle;
     double tolerance;
-    int    iteration_count;
+    int32_t    iteration_count;
 
     if (math_isnan(dot))
     {

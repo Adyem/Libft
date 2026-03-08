@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_scripting_bridge.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include <cstring>
 

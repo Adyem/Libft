@@ -10,7 +10,7 @@
 
 int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const
 {
-    this->abort_if_not_initialized("kv_store::encrypt_value");
+    this->abort_if_not_initialised("kv_store::encrypt_value");
     std::vector<uint8_t> output_buffer;
     const char *plain_c_string;
     std::size_t plain_size;
@@ -95,7 +95,7 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
 
 int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const
 {
-    this->abort_if_not_initialized("kv_store::decrypt_value");
+    this->abort_if_not_initialised("kv_store::decrypt_value");
     unsigned char *decoded_buffer;
     std::size_t decoded_size;
     uint8_t header_plain[16];
@@ -187,7 +187,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
 
 int kv_store::configure_encryption(const char *encryption_key, bool enable_encryption)
 {
-    this->abort_if_not_initialized("kv_store::configure_encryption");
+    this->abort_if_not_initialised("kv_store::configure_encryption");
     if (enable_encryption)
     {
         if (encryption_key == ft_nullptr)

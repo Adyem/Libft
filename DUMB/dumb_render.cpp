@@ -1,15 +1,14 @@
 #include "dumb_render_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include <new>
 
-static int create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
+static int32_t create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
 {
     pt_recursive_mutex *created_mutex;
-    int initialize_error;
+    int32_t initialize_error;
 
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -26,29 +25,56 @@ static int create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
     return (FT_ERR_SUCCESS);
 }
 
-static void destroy_recursive_mutex(pt_recursive_mutex **mutex_pointer)
+static uint32_t destroy_recursive_mutex(pt_recursive_mutex **mutex_pointer)
 {
-    int destroy_error;
+    uint32_t destroy_error;
 
     if (mutex_pointer == ft_nullptr || *mutex_pointer == ft_nullptr)
-        return ;
+        return (FT_ERR_SUCCESS);
     destroy_error = (*mutex_pointer)->destroy();
-    if (destroy_error == FT_ERR_SUCCESS)
+    delete *mutex_pointer;
+    *mutex_pointer = ft_nullptr;
+    return (destroy_error);
+}
+
+static int32_t lock_ordered_mutexes(pt_recursive_mutex *mutex_left,
+    pt_recursive_mutex *mutex_right, pt_recursive_mutex **first_mutex,
+    pt_recursive_mutex **second_mutex)
+{
+    int32_t lock_error;
+
+    if (reinterpret_cast<uintptr_t>(mutex_left)
+        <= reinterpret_cast<uintptr_t>(mutex_right))
     {
-        delete *mutex_pointer;
-        *mutex_pointer = ft_nullptr;
+        *first_mutex = mutex_left;
+        *second_mutex = mutex_right;
     }
+    else
+    {
+        *first_mutex = mutex_right;
+        *second_mutex = mutex_left;
+    }
+    lock_error = pt_recursive_mutex_lock_if_not_null(*first_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (*second_mutex == *first_mutex)
+        return (FT_ERR_SUCCESS);
+    lock_error = pt_recursive_mutex_lock_if_not_null(*second_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(*first_mutex);
+        return (lock_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static void unlock_ordered_mutexes(pt_recursive_mutex *first_mutex,
+    pt_recursive_mutex *second_mutex)
+{
+    if (second_mutex != first_mutex)
+        (void)pt_recursive_mutex_unlock_if_not_null(second_mutex);
+    (void)pt_recursive_mutex_unlock_if_not_null(first_mutex);
     return ;
-}
-
-static int lock_recursive_mutex_if_valid(pt_recursive_mutex *mutex_pointer)
-{
-    return (pt_recursive_mutex_lock_if_not_null(mutex_pointer));
-}
-
-static int unlock_recursive_mutex_if_valid(pt_recursive_mutex *mutex_pointer)
-{
-    return (pt_recursive_mutex_unlock_if_not_null(mutex_pointer));
 }
 
 ft_render_screen_size ft_render_get_primary_screen_size(void)
@@ -60,7 +86,7 @@ ft_render_screen_size ft_render_get_primary_screen_size(void)
     size.height = 0;
 
     platform_result = ft_render_platform_get_primary_screen_size(&size);
-    if (platform_result.error_code != ft_render_ok)
+    if (platform_result.error_code != FT_ERR_SUCCESS)
         return (size);
     
     return (size);
@@ -70,109 +96,206 @@ ft_render_window::ft_render_window(void)
 {
     this->_framebuffer.width = 0;
     this->_framebuffer.height = 0;
-    this->_framebuffer.pixels = NULL;
+    this->_framebuffer.pixels = ft_nullptr;
 
-    this->_is_initialized = false;
-    this->_should_close = false;
-    this->_platform_state = NULL;
-    this->_initialized_state = ft_render_window::_state_uninitialized;
+    this->_is_initialised = FT_FALSE;
+    this->_should_close = FT_FALSE;
+    this->_platform_state = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    return ;
+}
+
+ft_render_window::ft_render_window(const ft_render_window &other)
+{
+    this->_framebuffer.width = 0;
+    this->_framebuffer.height = 0;
+    this->_framebuffer.pixels = ft_nullptr;
+    this->_is_initialised = FT_FALSE;
+    this->_should_close = FT_FALSE;
+    this->_platform_state = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_render_window::ft_render_window(const ft_render_window &)",
+            "called with uninitialised source object");
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_render_window::ft_render_window(ft_render_window &&other)
+{
+    this->_framebuffer.width = 0;
+    this->_framebuffer.height = 0;
+    this->_framebuffer.pixels = ft_nullptr;
+    this->_is_initialised = FT_FALSE;
+    this->_should_close = FT_FALSE;
+    this->_platform_state = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_render_window::ft_render_window(ft_render_window &&)",
+            "called with uninitialised source object");
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(static_cast<ft_render_window &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 ft_render_window::~ft_render_window(void)
 {
-    if (this->_initialized_state == ft_render_window::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-void ft_render_window::abort_lifecycle_error(const char *method_name,
-    const char *reason) const noexcept
+uint32_t ft_render_window::initialize(void)
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_render_window lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_render_window::abort_if_not_initialized(const char *method_name) const noexcept
-{
-    if (this->_initialized_state == ft_render_window::_state_initialized)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
-    return ;
-}
-
-int ft_render_window::initialize(void)
-{
-    if (this->_initialized_state == ft_render_window::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_render_window::initialize",
-            "called while object is already initialized");
+        errno_abort_lifecycle(this->_initialised_state, "ft_render_window::initialize",
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_framebuffer.width = 0;
     this->_framebuffer.height = 0;
-    this->_framebuffer.pixels = NULL;
-    this->_is_initialized = false;
-    this->_should_close = false;
-    this->_platform_state = NULL;
-    this->_initialized_state = ft_render_window::_state_initialized;
+    this->_framebuffer.pixels = ft_nullptr;
+    this->_is_initialised = FT_FALSE;
+    this->_should_close = FT_FALSE;
+    this->_platform_state = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_render_window::initialize(const ft_render_window &other)
+uint32_t ft_render_window::initialize(const ft_render_window &other)
 {
-    if (other._initialized_state == ft_render_window::_state_uninitialized)
+    uint32_t destroy_error;
+    int32_t lock_error;
+    pt_recursive_mutex *first_mutex;
+    pt_recursive_mutex *second_mutex;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error(
+        errno_abort_lifecycle(other._initialised_state,
             "ft_render_window::initialize(const ft_render_window &) source",
-            "called with uninitialized source object");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (other._initialized_state != ft_render_window::_state_initialized)
-    {
-        other.abort_lifecycle_error(
-            "ft_render_window::initialize(const ft_render_window &) source",
-            "called with source object that is not initialized");
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (other._is_initialized == true)
-        return (FT_ERR_INVALID_OPERATION);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (destroy_error);
+        }
+        this->_framebuffer.width = 0;
+        this->_framebuffer.height = 0;
+        this->_framebuffer.pixels = ft_nullptr;
+        this->_is_initialised = FT_FALSE;
+        this->_should_close = FT_FALSE;
+        this->_platform_state = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_render_window::initialize(const ft_render_window &) source",
+            "called with source object that is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     if (this->initialize() != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_INVALID_STATE);
+    }
+    lock_error = lock_ordered_mutexes(this->_mutex, other._mutex,
+        &first_mutex, &second_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (lock_error);
+    }
+    if (other._is_initialised == FT_TRUE)
+    {
+        unlock_ordered_mutexes(first_mutex, second_mutex);
+        (void)this->destroy();
+        return (FT_ERR_INVALID_OPERATION);
+    }
     this->_should_close = other._should_close;
+    unlock_ordered_mutexes(first_mutex, second_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_render_window::initialize(ft_render_window &&other)
+uint32_t ft_render_window::initialize(ft_render_window &&other)
 {
-    int initialization_error;
-    int move_error;
+    uint32_t initialization_error;
+    uint32_t move_error;
+    uint32_t destroy_error;
 
-    if (other._initialized_state == ft_render_window::_state_uninitialized)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error(
+        errno_abort_lifecycle(other._initialised_state,
             "ft_render_window::initialize(ft_render_window &&) source",
-            "called with uninitialized source object");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (other._initialized_state != ft_render_window::_state_initialized)
-    {
-        other.abort_lifecycle_error(
-            "ft_render_window::initialize(ft_render_window &&) source",
-            "called with source object that is not initialized");
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (destroy_error);
+        }
+        this->_framebuffer.width = 0;
+        this->_framebuffer.height = 0;
+        this->_framebuffer.pixels = ft_nullptr;
+        this->_is_initialised = FT_FALSE;
+        this->_should_close = FT_FALSE;
+        this->_platform_state = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_render_window::initialize(ft_render_window &&) source",
+            "called with source object that is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
@@ -185,368 +308,352 @@ int ft_render_window::initialize(ft_render_window &&other)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_render_window::destroy(void)
+int32_t ft_render_window::destroy(void)
 {
-    if (this->_initialized_state != ft_render_window::_state_initialized)
-        return (FT_ERR_INVALID_STATE);
-    if (this->_is_initialized == true)
+    uint32_t disable_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    disable_error = this->disable_thread_safety();
+    if (this->_is_initialised == FT_TRUE)
         this->shutdown();
-    this->disable_thread_safety();
-    this->_initialized_state = ft_render_window::_state_destroyed;
-    return (FT_ERR_SUCCESS);
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (disable_error);
 }
 
-int ft_render_window::move(ft_render_window &other)
+int32_t ft_render_window::move(ft_render_window &other)
 {
-    if (other._initialized_state == ft_render_window::_state_uninitialized)
+    int32_t lock_error;
+    pt_recursive_mutex *first_mutex;
+    pt_recursive_mutex *second_mutex;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error("ft_render_window::move source",
-            "called with uninitialized source object");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (other._initialized_state != ft_render_window::_state_initialized)
-    {
-        other.abort_lifecycle_error("ft_render_window::move source",
-            "called with source object that is not initialized");
+        errno_abort_lifecycle(other._initialised_state, "ft_render_window::move source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state != ft_render_window::_state_initialized)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+            return (this->destroy());
+        this->_framebuffer.width = 0;
+        this->_framebuffer.height = 0;
+        this->_framebuffer.pixels = ft_nullptr;
+        this->_is_initialised = FT_FALSE;
+        this->_should_close = FT_FALSE;
+        this->_platform_state = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_render_window::move source",
+            "called with source object that is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         if (this->initialize() != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_STATE);
     }
+    lock_error = lock_ordered_mutexes(this->_mutex, other._mutex,
+        &first_mutex, &second_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (lock_error);
+    }
     this->_framebuffer = other._framebuffer;
-    this->_is_initialized = other._is_initialized;
+    this->_is_initialised = other._is_initialised;
     this->_should_close = other._should_close;
     this->_platform_state = other._platform_state;
     other._framebuffer.width = 0;
     other._framebuffer.height = 0;
     other._framebuffer.pixels = ft_nullptr;
-    other._is_initialized = false;
-    other._should_close = false;
+    other._is_initialised = FT_FALSE;
+    other._should_close = FT_FALSE;
     other._platform_state = ft_nullptr;
+    unlock_ordered_mutexes(first_mutex, second_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_render_window::runtime_mutex(void)
+uint32_t ft_render_window::initialize(const ft_render_window_desc &desc)
 {
-    this->abort_if_not_initialized("ft_render_window::runtime_mutex");
-    if (!this->_mutex)
-        this->prepare_thread_safety();
-    return (this->_mutex);
-}
-#endif
-
-int ft_render_window::initialize(const ft_render_window_desc &desc)
-{
-    int                       lock_status;
-    int                       unlock_status;
+    int32_t                   lock_status;
     ft_render_platform_result platform_result;
 
-    this->abort_if_not_initialized("ft_render_window::initialize(desc)");
-    lock_status = lock_recursive_mutex_if_valid(this->_mutex);
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::initialize(desc)");
+    lock_status = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_status != FT_ERR_SUCCESS)
         return (lock_status);
-    if (this->_is_initialized == true)
+    if (this->_is_initialised == FT_TRUE)
     {
-        this->abort_lifecycle_error("ft_render_window::initialize(desc)",
-            "called while render window is already initialized");
-        unlock_status = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_status != FT_ERR_SUCCESS)
-            return (unlock_status);
+        errno_abort_lifecycle(this->_initialised_state, "ft_render_window::initialize(desc)",
+            "called while render window is already initialised");
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_STATE);
     }
-    if (desc.width <= 0 || desc.height <= 0 || desc.title == NULL)
+    if (desc.width <= 0 || desc.height <= 0 || desc.title == ft_nullptr)
     {
-        unlock_status = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_status != FT_ERR_SUCCESS)
-            return (unlock_status);
-        return (ft_render_error_invalid_argument);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     platform_result = ft_render_platform_create_window(
         &this->_platform_state,
         &this->_framebuffer,
         desc
     );
-    if (platform_result.error_code != ft_render_ok)
+    if (platform_result.error_code != FT_ERR_SUCCESS)
     {
-        unlock_status = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_status != FT_ERR_SUCCESS)
-            return (unlock_status);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (platform_result.error_code);
     }
-    this->_is_initialized = true;
-    this->_should_close = false;
-    unlock_status = unlock_recursive_mutex_if_valid(this->_mutex);
-    if (unlock_status != FT_ERR_SUCCESS)
-        return (unlock_status);
-    return (ft_render_ok);
+    this->_is_initialised = FT_TRUE;
+    this->_should_close = FT_FALSE;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_render_window::shutdown(void)
 {
-    int                        lock_error;
-    int                        unlock_error;
-
-    this->abort_if_not_initialized("ft_render_window::shutdown");
-    lock_error = lock_recursive_mutex_if_valid(this->_mutex);
+    int32_t                    lock_error;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::shutdown");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
-    if (this->_is_initialized != false)
+    if (this->_is_initialised != FT_FALSE)
     {
         (void)ft_render_platform_destroy_window(
             &this->_platform_state,
             &this->_framebuffer
         );
 
-        this->_platform_state = NULL;
+        this->_platform_state = ft_nullptr;
         this->_framebuffer.width = 0;
         this->_framebuffer.height = 0;
-        this->_framebuffer.pixels = NULL;
+        this->_framebuffer.pixels = ft_nullptr;
 
-        this->_is_initialized = false;
-        this->_should_close = true;
+        this->_is_initialised = FT_FALSE;
+        this->_should_close = FT_TRUE;
     }
-    unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return ;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
-int ft_render_window::poll_events(void)
+int32_t ft_render_window::poll_events(void)
 {
     ft_render_platform_result  platform_result;
-    int                        lock_error;
-    int                        unlock_error;
-
-    this->abort_if_not_initialized("ft_render_window::poll_events");
-    lock_error = lock_recursive_mutex_if_valid(this->_mutex);
+    int32_t                    lock_error;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::poll_events");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (this->_is_initialized == false)
+    if (this->_is_initialised == FT_FALSE)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
-        return (ft_render_error_not_initialized);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_NOT_INITIALISED);
     }
     platform_result = ft_render_platform_poll_events(
         this->_platform_state,
         &this->_should_close
     );
-    if (platform_result.error_code != ft_render_ok)
+    if (platform_result.error_code != FT_ERR_SUCCESS)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (platform_result.error_code);
     }
-    unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
-    return (ft_render_ok);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_render_window::present(void)
+int32_t ft_render_window::present(void)
 {
     ft_render_platform_result  platform_result;
-    int                        lock_error;
-    int                        unlock_error;
-
-    this->abort_if_not_initialized("ft_render_window::present");
-    lock_error = lock_recursive_mutex_if_valid(this->_mutex);
+    int32_t                    lock_error;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::present");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (this->_is_initialized == false)
+    if (this->_is_initialised == FT_FALSE)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
-        return (ft_render_error_not_initialized);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_NOT_INITIALISED);
     }
     platform_result = ft_render_platform_present(
         this->_platform_state,
         &this->_framebuffer
     );
-    if (platform_result.error_code != ft_render_ok)
+    if (platform_result.error_code != FT_ERR_SUCCESS)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (platform_result.error_code);
     }
-    unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
-    return (ft_render_ok);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 ft_render_framebuffer &ft_render_window::framebuffer(void)
 {
-    this->abort_if_not_initialized("ft_render_window::framebuffer");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::framebuffer");
     return (this->_framebuffer);
 }
 
-int ft_render_window::clear(uint32_t color)
+int32_t ft_render_window::clear(uint32_t color)
 {
-    int                          x;
-    int                          y;
-    int                          width;
-    int                          height;
+    int32_t                      index_width;
+    int32_t                      index_height;
+    int32_t                      width;
+    int32_t                      height;
     uint32_t                     *pixels;
-    int                          index;
-    int                          lock_error;
-    int                          unlock_error;
-
-    this->abort_if_not_initialized("ft_render_window::clear");
-    lock_error = lock_recursive_mutex_if_valid(this->_mutex);
+    int32_t                      index;
+    int32_t                      lock_error;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::clear");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
-    if (this->_is_initialized == false)
+    if (this->_is_initialised == FT_FALSE)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
-        return (ft_render_error_not_initialized);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_NOT_INITIALISED);
     }
     width = this->_framebuffer.width;
     height = this->_framebuffer.height;
     pixels = this->_framebuffer.pixels;
 
-    y = 0;
-    while (y < height)
+    index_height = 0;
+    while (index_height < height)
     {
-        x = 0;
-        while (x < width)
+        index_width = 0;
+        while (index_width < width)
         {
-            index = (y * width) + x;
+            index = (index_height * width) + index_width;
             pixels[index] = color;
-            x = x + 1;
+            index_width = index_width + 1;
         }
-        y = y + 1;
+        index_height = index_height + 1;
     }
-    unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
-    return (ft_render_ok);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_render_window::put_pixel(int x, int y, uint32_t color)
+int32_t ft_render_window::put_pixel(int32_t coordinate_x, int32_t coordinate_y,
+    uint32_t color)
 {
-    int lock_error;
-    int unlock_error;
-    int width;
-    int height;
-    int index;
+    int32_t lock_error;
+    int32_t width;
+    int32_t height;
+    int32_t index;
 
-    this->abort_if_not_initialized("ft_render_window::put_pixel");
-    lock_error = lock_recursive_mutex_if_valid(this->_mutex);
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::put_pixel");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (this->_is_initialized == false)
+    if (this->_is_initialised == FT_FALSE)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
-        return (ft_render_error_not_initialized);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_NOT_INITIALISED);
     }
     width = this->_framebuffer.width;
     height = this->_framebuffer.height;
-    if (x < 0 || y < 0 || x >= width || y >= height)
+    if (coordinate_x < 0 || coordinate_y < 0
+        || coordinate_x >= width || coordinate_y >= height)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
-        return (ft_render_error_invalid_argument);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    index = (y * width) + x;
+    index = (coordinate_y * width) + coordinate_x;
     this->_framebuffer.pixels[index] = color;
-    unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
-    return (ft_render_ok);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_render_window::set_fullscreen(bool enabled)
+int32_t ft_render_window::set_fullscreen(ft_bool enabled)
 {
     ft_render_platform_result  platform_result;
-    int                        lock_error;
-    int                        unlock_error;
-
-    this->abort_if_not_initialized("ft_render_window::set_fullscreen");
-    lock_error = lock_recursive_mutex_if_valid(this->_mutex);
+    int32_t                    lock_error;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::set_fullscreen");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (this->_is_initialized == false)
+    if (this->_is_initialised == FT_FALSE)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
-        return (ft_render_error_not_initialized);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_NOT_INITIALISED);
     }
     platform_result = ft_render_platform_set_fullscreen(
         this->_platform_state,
         enabled
     );
-    if (platform_result.error_code != ft_render_ok)
+    if (platform_result.error_code != FT_ERR_SUCCESS)
     {
-        unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (platform_result.error_code);
     }
-    unlock_error = unlock_recursive_mutex_if_valid(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
-    return (ft_render_ok);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_render_window::should_close(void) const
+ft_bool ft_render_window::should_close(void) const
 {
-    this->abort_if_not_initialized("ft_render_window::should_close");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::should_close");
     return (this->_should_close);
 }
 
-int ft_render_window::prepare_thread_safety(void) noexcept
+int32_t ft_render_window::prepare_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("ft_render_window::prepare_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::prepare_thread_safety");
     if (this->_mutex)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = create_recursive_mutex(&mutex_pointer);
+    int32_t mutex_error;
+
+    mutex_error = create_recursive_mutex(&mutex_pointer);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     this->_mutex = mutex_pointer;
     return (FT_ERR_SUCCESS);
 }
 
-void ft_render_window::teardown_thread_safety(void) noexcept
+uint32_t ft_render_window::teardown_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("ft_render_window::teardown_thread_safety");
-    destroy_recursive_mutex(&this->_mutex);
-    return ;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::teardown_thread_safety");
+    return (destroy_recursive_mutex(&this->_mutex));
 }
 
-int ft_render_window::enable_thread_safety() noexcept
+uint32_t ft_render_window::enable_thread_safety() noexcept
 {
-    this->abort_if_not_initialized("ft_render_window::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::enable_thread_safety");
     return (this->prepare_thread_safety());
 }
 
-void ft_render_window::disable_thread_safety() noexcept
+uint32_t ft_render_window::disable_thread_safety() noexcept
 {
-    this->abort_if_not_initialized("ft_render_window::disable_thread_safety");
-    this->teardown_thread_safety();
-    return ;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::disable_thread_safety");
+    return (this->teardown_thread_safety());
 }
 
-bool ft_render_window::is_thread_safe_enabled() const noexcept
+ft_bool ft_render_window::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_render_window::is_thread_safe_enabled");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_render_window::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }

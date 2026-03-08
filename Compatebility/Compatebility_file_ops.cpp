@@ -17,14 +17,14 @@ static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
-static bool global_force_cross_device_move = false;
+static ft_bool global_force_cross_device_move = FT_FALSE;
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move)
 {
     if (force_cross_device_move != 0)
-        global_force_cross_device_move = true;
+        global_force_cross_device_move = FT_TRUE;
     else
-        global_force_cross_device_move = false;
+        global_force_cross_device_move = FT_FALSE;
     return ;
 }
 
@@ -103,7 +103,7 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (global_force_cross_device_move == false)
+    if (global_force_cross_device_move == FT_FALSE)
     {
         if (MoveFileExA(source_path, destination_path,
                 MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
@@ -275,14 +275,14 @@ int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
-static bool global_force_cross_device_move = false;
+static ft_bool global_force_cross_device_move = FT_FALSE;
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move)
 {
     if (force_cross_device_move != 0)
-        global_force_cross_device_move = true;
+        global_force_cross_device_move = FT_TRUE;
     else
-        global_force_cross_device_move = false;
+        global_force_cross_device_move = FT_FALSE;
     return ;
 }
 
@@ -343,7 +343,7 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
     std::error_code copy_error_code;
     std::error_code directory_error_code;
     int32_t delete_errno;
-    bool destination_is_directory;
+    ft_bool destination_is_directory;
 
     try
     {
@@ -352,9 +352,9 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
             cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
             return (FT_ERR_INVALID_ARGUMENT);
         }
-        if (global_force_cross_device_move != false)
+        if (global_force_cross_device_move != FT_FALSE)
             errno = EXDEV;
-        if (global_force_cross_device_move == false)
+        if (global_force_cross_device_move == FT_FALSE)
         {
             if (rename(source_path, destination_path) == 0)
             {
@@ -378,7 +378,7 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
                 cmp_map_system_error_to_ft(directory_error_code.value()));
             return (cmp_map_system_error_to_ft(directory_error_code.value()));
         }
-        if (destination_is_directory != false)
+        if (destination_is_directory != FT_FALSE)
         {
             cmp_set_error_code(error_code_out, FT_ERR_INVALID_OPERATION);
             return (FT_ERR_INVALID_OPERATION);

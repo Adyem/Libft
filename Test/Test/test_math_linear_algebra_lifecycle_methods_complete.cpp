@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
 #include "../../Math/math.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_vector2_initialize_default_on_uninitialized,
+FT_TEST(test_vector2_initialize_default_on_uninitialised,
     "vector2 initialize() sets default zero state")
 {
     vector2 vector_value;
@@ -17,7 +17,7 @@ FT_TEST(test_vector2_initialize_default_on_uninitialized,
     return (1);
 }
 
-FT_TEST(test_vector3_initialize_default_on_uninitialized,
+FT_TEST(test_vector3_initialize_default_on_uninitialised,
     "vector3 initialize() sets default zero state")
 {
     vector3 vector_value;
@@ -30,7 +30,7 @@ FT_TEST(test_vector3_initialize_default_on_uninitialized,
     return (1);
 }
 
-FT_TEST(test_vector4_initialize_default_on_uninitialized,
+FT_TEST(test_vector4_initialize_default_on_uninitialised,
     "vector4 initialize() sets default zero state")
 {
     vector4 vector_value;
@@ -44,7 +44,7 @@ FT_TEST(test_vector4_initialize_default_on_uninitialized,
     return (1);
 }
 
-FT_TEST(test_matrix2_initialize_default_on_uninitialized,
+FT_TEST(test_matrix2_initialize_default_on_uninitialised,
     "matrix2 initialize() sets identity state")
 {
     matrix2 matrix_value;
@@ -59,7 +59,7 @@ FT_TEST(test_matrix2_initialize_default_on_uninitialized,
     return (1);
 }
 
-FT_TEST(test_matrix3_initialize_default_on_uninitialized,
+FT_TEST(test_matrix3_initialize_default_on_uninitialised,
     "matrix3 initialize() sets identity state")
 {
     matrix3 matrix_value;
@@ -75,7 +75,7 @@ FT_TEST(test_matrix3_initialize_default_on_uninitialized,
     return (1);
 }
 
-FT_TEST(test_matrix4_initialize_default_on_uninitialized,
+FT_TEST(test_matrix4_initialize_default_on_uninitialised,
     "matrix4 initialize() sets identity state")
 {
     matrix4 matrix_value;
@@ -92,7 +92,7 @@ FT_TEST(test_matrix4_initialize_default_on_uninitialized,
     return (1);
 }
 
-FT_TEST(test_quaternion_initialize_default_on_uninitialized,
+FT_TEST(test_quaternion_initialize_default_on_uninitialised,
     "quaternion initialize() sets identity state")
 {
     quaternion quaternion_value;

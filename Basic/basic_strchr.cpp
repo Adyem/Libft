@@ -1,7 +1,7 @@
 #include "basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-char    *ft_strchr(const char *string, int char_to_find)
+char    *ft_strchr(const char *string, int32_t char_to_find)
 {
     if (!string)
         return (ft_nullptr);

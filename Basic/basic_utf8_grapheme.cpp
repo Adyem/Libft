@@ -4,7 +4,7 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static int ft_utf8_code_point_in_range(uint32_t code_point, uint32_t start_value,
+static int32_t ft_utf8_code_point_in_range(uint32_t code_point, uint32_t start_value,
         uint32_t end_value)
 {
     if (code_point >= start_value && code_point <= end_value)
@@ -12,7 +12,7 @@ static int ft_utf8_code_point_in_range(uint32_t code_point, uint32_t start_value
     return (0);
 }
 
-int ft_utf8_is_combining_code_point(uint32_t code_point)
+int32_t ft_utf8_is_combining_code_point(uint32_t code_point)
 {
     if (ft_utf8_code_point_in_range(code_point, 0x0300, 0x036F))
         return (1);
@@ -27,7 +27,7 @@ int ft_utf8_is_combining_code_point(uint32_t code_point)
     return (0);
 }
 
-int ft_utf8_next_grapheme(const char *string, ft_size_t string_length,
+int32_t ft_utf8_next_grapheme(const char *string, ft_size_t string_length,
         ft_size_t *index_pointer, ft_size_t *grapheme_length_pointer)
 {
     if (!string || !index_pointer || !grapheme_length_pointer)
@@ -40,7 +40,7 @@ int ft_utf8_next_grapheme(const char *string, ft_size_t string_length,
     if (ft_utf8_next(string, string_length, &local_index, &code_point, &sequence_length) != FT_SUCCESS)
         return (FT_FAILURE);
     ft_size_t grapheme_end = local_index;
-    while (true)
+    while (FT_TRUE)
     {
         if (grapheme_end >= string_length)
             break ;
@@ -59,7 +59,7 @@ int ft_utf8_next_grapheme(const char *string, ft_size_t string_length,
     return (FT_SUCCESS);
 }
 
-int ft_utf8_duplicate_grapheme(const char *string, ft_size_t string_length,
+int32_t ft_utf8_duplicate_grapheme(const char *string, ft_size_t string_length,
         ft_size_t *index_pointer, char **grapheme_pointer)
 {
     if (!string || !index_pointer || !grapheme_pointer)

@@ -11,7 +11,7 @@ thread_local int ft_game_state::_last_error = FT_ERR_SUCCESS;
 
 ft_game_state::ft_game_state() noexcept
     : _worlds(), _characters(), _variables(), _hooks(), _mutex(ft_nullptr),
-      _initialized_state(ft_game_state::_state_uninitialized)
+      _initialised_state(ft_game_state::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -19,7 +19,7 @@ ft_game_state::ft_game_state() noexcept
 
 ft_game_state::~ft_game_state() noexcept
 {
-    if (this->_initialized_state == ft_game_state::_state_initialized)
+    if (this->_initialised_state == ft_game_state::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -37,12 +37,12 @@ void ft_game_state::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_game_state::abort_if_not_initialized(const char *method_name) const
+void ft_game_state::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_game_state::_state_initialized)
+    if (this->_initialised_state == ft_game_state::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -53,17 +53,17 @@ int ft_game_state::initialize() noexcept
     int characters_error;
     int variables_error;
 
-    if (this->_initialized_state == ft_game_state::_state_initialized)
+    if (this->_initialised_state == ft_game_state::_state_initialised)
     {
         this->abort_lifecycle_error("ft_game_state::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     worlds_error = this->_worlds.initialize();
     if (worlds_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_game_state::_state_destroyed;
+        this->_initialised_state = ft_game_state::_state_destroyed;
         this->set_error(worlds_error);
         return (worlds_error);
     }
@@ -71,7 +71,7 @@ int ft_game_state::initialize() noexcept
     if (characters_error != FT_ERR_SUCCESS)
     {
         (void)this->_worlds.destroy();
-        this->_initialized_state = ft_game_state::_state_destroyed;
+        this->_initialised_state = ft_game_state::_state_destroyed;
         this->set_error(characters_error);
         return (characters_error);
     }
@@ -80,7 +80,7 @@ int ft_game_state::initialize() noexcept
     {
         (void)this->_worlds.destroy();
         (void)this->_characters.destroy();
-        this->_initialized_state = ft_game_state::_state_destroyed;
+        this->_initialised_state = ft_game_state::_state_destroyed;
         this->set_error(variables_error);
         return (variables_error);
     }
@@ -90,7 +90,7 @@ int ft_game_state::initialize() noexcept
         (void)this->_worlds.destroy();
         (void)this->_characters.destroy();
         (void)this->_variables.destroy();
-        this->_initialized_state = ft_game_state::_state_destroyed;
+        this->_initialised_state = ft_game_state::_state_destroyed;
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
@@ -99,13 +99,13 @@ int ft_game_state::initialize() noexcept
         (void)this->_worlds.destroy();
         (void)this->_characters.destroy();
         (void)this->_variables.destroy();
-        this->_initialized_state = ft_game_state::_state_destroyed;
+        this->_initialised_state = ft_game_state::_state_destroyed;
         this->set_error(world->get_error());
         return (world->get_error());
     }
     this->_worlds.push_back(world);
     this->_hooks = ft_sharedptr<ft_game_hooks>();
-    this->_initialized_state = ft_game_state::_state_initialized;
+    this->_initialised_state = ft_game_state::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -118,7 +118,7 @@ int ft_game_state::destroy() noexcept
     int disable_error;
     int final_error;
 
-    if (this->_initialized_state != ft_game_state::_state_initialized)
+    if (this->_initialised_state != ft_game_state::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -128,7 +128,7 @@ int ft_game_state::destroy() noexcept
     variables_error = this->_variables.destroy();
     this->_hooks = ft_sharedptr<ft_game_hooks>();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_game_state::_state_destroyed;
+    this->_initialised_state = ft_game_state::_state_destroyed;
     final_error = worlds_error;
     if (final_error == FT_ERR_SUCCESS && characters_error != FT_ERR_SUCCESS)
         final_error = characters_error;
@@ -144,7 +144,7 @@ int ft_game_state::lock_internal(bool *lock_acquired) const noexcept
 {
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::lock_internal");
+    this->abort_if_not_initialised("ft_game_state::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -159,7 +159,7 @@ void ft_game_state::unlock_internal(bool lock_acquired) const noexcept
 {
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_game_state::unlock_internal");
+    this->abort_if_not_initialised("ft_game_state::unlock_internal");
     if (lock_acquired == false)
         return ;
     unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
@@ -173,7 +173,7 @@ ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::get_worlds");
+    this->abort_if_not_initialised("ft_game_state::get_worlds");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -189,7 +189,7 @@ ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::get_characters");
+    this->abort_if_not_initialised("ft_game_state::get_characters");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -206,7 +206,7 @@ void ft_game_state::set_variable(const ft_string &key, const ft_string &value) n
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::set_variable");
+    this->abort_if_not_initialised("ft_game_state::set_variable");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -230,7 +230,7 @@ const ft_string *ft_game_state::get_variable(const ft_string &key) const noexcep
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::get_variable");
+    this->abort_if_not_initialised("ft_game_state::get_variable");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -255,7 +255,7 @@ void ft_game_state::remove_variable(const ft_string &key) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::remove_variable");
+    this->abort_if_not_initialised("ft_game_state::remove_variable");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -274,7 +274,7 @@ void ft_game_state::clear_variables() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::clear_variables");
+    this->abort_if_not_initialised("ft_game_state::clear_variables");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -293,7 +293,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::add_character");
+    this->abort_if_not_initialised("ft_game_state::add_character");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -325,7 +325,7 @@ void ft_game_state::remove_character(size_t index) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::remove_character");
+    this->abort_if_not_initialised("ft_game_state::remove_character");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -350,7 +350,7 @@ void ft_game_state::set_hooks(const ft_sharedptr<ft_game_hooks> &hooks) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::set_hooks");
+    this->abort_if_not_initialised("ft_game_state::set_hooks");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -370,7 +370,7 @@ ft_sharedptr<ft_game_hooks> ft_game_state::get_hooks() const noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::get_hooks");
+    this->abort_if_not_initialised("ft_game_state::get_hooks");
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
@@ -391,7 +391,7 @@ void ft_game_state::reset_hooks() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::reset_hooks");
+    this->abort_if_not_initialised("ft_game_state::reset_hooks");
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
@@ -414,7 +414,7 @@ void ft_game_state::dispatch_item_crafted(ft_character &character, ft_item &item
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::dispatch_item_crafted");
+    this->abort_if_not_initialised("ft_game_state::dispatch_item_crafted");
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
@@ -437,7 +437,7 @@ void ft_game_state::dispatch_character_damaged(ft_character &character, int dama
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::dispatch_character_damaged");
+    this->abort_if_not_initialised("ft_game_state::dispatch_character_damaged");
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
@@ -460,7 +460,7 @@ void ft_game_state::dispatch_event_triggered(ft_world &world, ft_event &event) c
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_game_state::dispatch_event_triggered");
+    this->abort_if_not_initialised("ft_game_state::dispatch_event_triggered");
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
@@ -492,7 +492,7 @@ int ft_game_state::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_game_state::enable_thread_safety");
+    this->abort_if_not_initialised("ft_game_state::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -517,7 +517,7 @@ int ft_game_state::disable_thread_safety() noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("ft_game_state::disable_thread_safety");
+    this->abort_if_not_initialised("ft_game_state::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -529,7 +529,7 @@ int ft_game_state::disable_thread_safety() noexcept
 
 bool ft_game_state::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_game_state::is_thread_safe");
+    this->abort_if_not_initialised("ft_game_state::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 

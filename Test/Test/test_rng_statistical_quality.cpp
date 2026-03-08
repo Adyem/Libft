@@ -8,7 +8,7 @@
 #endif
 
 #include "../../RNG/rng.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "rng_test_utils.hpp"
 
 FT_TEST(test_rng_uniform_chi_squared,

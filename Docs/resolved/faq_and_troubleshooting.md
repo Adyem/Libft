@@ -8,7 +8,7 @@ This guide consolidates high-signal answers to recurring questions from issue re
 All modules propagate failures through `ft_errno`. Always read the error code immediately after a helper returns a failure indicator so subsequent calls do not overwrite it. When wrapping the library in higher-level abstractions, bubble both the code and the string returned by `ft_strerror(ft_errno)` to preserve context.
 
 ### Why do I see `FT_EINVAL` after calling a helper with seemingly valid data?
-Most helpers validate preconditions aggressively to protect downstream code. Review the module overview for the helper you called and confirm every documented invariant: buffer sizes must match the documented length semantics, null terminators must be present for string helpers, and configuration structs must be zero-initialized before use. Violations of these preconditions translate to `FT_EINVAL` by design.
+Most helpers validate preconditions aggressively to protect downstream code. Review the module overview for the helper you called and confirm every documented invariant: buffer sizes must match the documented length semantics, null terminators must be present for string helpers, and configuration structs must be zero-initialised before use. Violations of these preconditions translate to `FT_EINVAL` by design.
 
 ### What is the fastest way to determine which module set `ft_errno`?
 Trace the call stack and correlate it with the error-code registry published in `Errno/errno.hpp`. Each entry documents the module responsible for the code. When in doubt, enable the optional logging hooks described in the module overviews; they emit a tagged message whenever `_error_code` changes, making it trivial to identify the originating module during debugging sessions.

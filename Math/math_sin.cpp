@@ -6,7 +6,7 @@ double ft_sin(double value)
     double angle;
     double term;
     double result;
-    int    iteration;
+    int32_t    iteration;
     double sign;
 
     angle = value;

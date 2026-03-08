@@ -10,14 +10,14 @@
 
 ft_dom_document::ft_dom_document() noexcept
     : _root(ft_nullptr), _mutex(ft_nullptr),
-      _initialized_state(ft_dom_document::_state_uninitialized)
+      _initialised_state(ft_dom_document::_state_uninitialised)
 {
     return ;
 }
 
 ft_dom_document::~ft_dom_document() noexcept
 {
-    if (this->_initialized_state == ft_dom_document::_state_initialized)
+    if (this->_initialised_state == ft_dom_document::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -34,25 +34,25 @@ void ft_dom_document::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_dom_document::abort_if_not_initialized(const char *method_name) const
+void ft_dom_document::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_dom_document::_state_initialized)
+    if (this->_initialised_state == ft_dom_document::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_dom_document::initialize() noexcept
 {
-    if (this->_initialized_state == ft_dom_document::_state_initialized)
+    if (this->_initialised_state == ft_dom_document::_state_initialised)
     {
         this->abort_lifecycle_error("ft_dom_document::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_root = ft_nullptr;
-    this->_initialized_state = ft_dom_document::_state_initialized;
+    this->_initialised_state = ft_dom_document::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -60,11 +60,11 @@ int ft_dom_document::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_dom_document::_state_initialized)
+    if (this->_initialised_state != ft_dom_document::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->clear();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_dom_document::_state_destroyed;
+    this->_initialised_state = ft_dom_document::_state_destroyed;
     return (disable_error);
 }
 
@@ -73,7 +73,7 @@ int ft_dom_document::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_dom_document::enable_thread_safety");
+    this->abort_if_not_initialised("ft_dom_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -129,13 +129,13 @@ int ft_dom_document::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_dom_document::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_document::lock");
+    this->abort_if_not_initialised("ft_dom_document::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_dom_document::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_document::unlock");
+    this->abort_if_not_initialised("ft_dom_document::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -145,7 +145,7 @@ void ft_dom_document::set_root(ft_dom_node *root) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_document::set_root");
+    this->abort_if_not_initialised("ft_dom_document::set_root");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -163,7 +163,7 @@ ft_dom_node *ft_dom_document::get_root() const noexcept
     int lock_error;
     ft_dom_node *root_pointer;
 
-    this->abort_if_not_initialized("ft_dom_document::get_root");
+    this->abort_if_not_initialised("ft_dom_document::get_root");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -178,7 +178,7 @@ void ft_dom_document::clear() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_document::clear");
+    this->abort_if_not_initialised("ft_dom_document::clear");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -195,7 +195,7 @@ void ft_dom_document::clear() noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_dom_document::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_document::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_dom_document::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

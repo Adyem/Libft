@@ -34,17 +34,6 @@ endif
 OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
 DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
 
-ifeq ($(OS),Windows_NT)
-    SRCS += dumb_sound_win32.cpp
-else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Darwin)
-        SRCS += dumb_sound_macos_coreaudio.cpp
-    else
-        SRCS += dumb_sound_linux_alsa.cpp
-    endif
-endif
-
 CPP_OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
 DEBUG_CPP_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
 
@@ -125,4 +114,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

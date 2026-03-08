@@ -4,7 +4,7 @@
 
 void su_internal_set_abort_reason(const char *reason);
 
-void su_assert(bool condition, const char *message)
+void su_assert(ft_bool condition, const char *message)
 {
     if (condition)
         return ;

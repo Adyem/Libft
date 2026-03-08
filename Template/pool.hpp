@@ -18,11 +18,11 @@ class Pool
         ft_vector<T*>              _slots;
         ft_vector<size_t>          _free_indices;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                    _initialized_state;
+        uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -43,12 +43,12 @@ class Pool
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -121,7 +121,7 @@ class Pool
                 size_t                     _index;
                 T                         *_pointer;
                 mutable pt_recursive_mutex *_mutex;
-                uint8_t                    _initialized_state;
+                uint8_t                    _initialised_state;
 
                 static thread_local int32_t _last_error;
 
@@ -164,7 +164,7 @@ class Pool
             public:
                 Object() noexcept
                     : _pool(ft_nullptr), _index(0), _pointer(ft_nullptr),
-                      _mutex(ft_nullptr), _initialized_state(2)
+                      _mutex(ft_nullptr), _initialised_state(2)
                 {
                     set_last_operation_error(FT_ERR_SUCCESS);
                     return ;
@@ -172,7 +172,7 @@ class Pool
 
                 Object(Pool<T>* pool, size_t index, T* pointer) noexcept
                     : _pool(pool), _index(index), _pointer(pointer), _mutex(ft_nullptr),
-                      _initialized_state(2)
+                      _initialised_state(2)
                 {
                     set_last_operation_error(FT_ERR_SUCCESS);
                     return ;
@@ -180,7 +180,7 @@ class Pool
 
                 ~Object() noexcept
                 {
-                    if (this->_initialized_state != 2)
+                    if (this->_initialised_state != 2)
                         return ;
                     if (this->_pointer != ft_nullptr)
                     {
@@ -193,7 +193,7 @@ class Pool
                     this->_pool = ft_nullptr;
                     this->_pointer = ft_nullptr;
                     this->_index = 0;
-                    this->_initialized_state = 1;
+                    this->_initialised_state = 1;
                     return ;
                 }
 
@@ -202,13 +202,13 @@ class Pool
 
                 Object(Object&& other) noexcept
                     : _pool(other._pool), _index(other._index), _pointer(other._pointer),
-                      _mutex(other._mutex), _initialized_state(other._initialized_state)
+                      _mutex(other._mutex), _initialised_state(other._initialised_state)
                 {
                     other._pool = ft_nullptr;
                     other._index = 0;
                     other._pointer = ft_nullptr;
                     other._mutex = ft_nullptr;
-                    other._initialized_state = 1;
+                    other._initialised_state = 1;
                     set_last_operation_error(FT_ERR_SUCCESS);
                     return ;
                 }
@@ -229,12 +229,12 @@ class Pool
                     this->_index = other._index;
                     this->_pointer = other._pointer;
                     this->_mutex = other._mutex;
-                    this->_initialized_state = other._initialized_state;
+                    this->_initialised_state = other._initialised_state;
                     other._pool = ft_nullptr;
                     other._index = 0;
                     other._pointer = ft_nullptr;
                     other._mutex = ft_nullptr;
-                    other._initialized_state = 1;
+                    other._initialised_state = 1;
                     set_last_operation_error(FT_ERR_SUCCESS);
                     return (*this);
                 }
@@ -340,7 +340,7 @@ class Pool
 
         Pool()
             : _slots(), _free_indices(), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -348,7 +348,7 @@ class Pool
 
         ~Pool()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -362,15 +362,15 @@ class Pool
 
         int initialize()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("Pool::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_slots.clear();
             this->_free_indices.clear();
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -380,7 +380,7 @@ class Pool
             int lock_error;
             int unlock_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -404,7 +404,7 @@ class Pool
             unlock_error = this->unlock_internal(lock_acquired);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -415,7 +415,7 @@ class Pool
             int unlock_error;
             size_t index;
 
-            this->abort_if_not_initialized("Pool::resize");
+            this->abort_if_not_initialised("Pool::resize");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -454,7 +454,7 @@ class Pool
             T *constructed_pointer;
             Object result;
 
-            this->abort_if_not_initialized("Pool::acquire");
+            this->abort_if_not_initialised("Pool::acquire");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -501,7 +501,7 @@ class Pool
             pt_recursive_mutex *new_mutex;
             int initialize_result;
 
-            this->abort_if_not_initialized("Pool::enable_thread_safety");
+            this->abort_if_not_initialised("Pool::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -522,8 +522,8 @@ class Pool
             pt_recursive_mutex *mutex_pointer;
             int destroy_result;
 
-            if (this->_initialized_state != _state_initialized
-                && this->_initialized_state != _state_destroyed)
+            if (this->_initialised_state != _state_initialised
+                && this->_initialised_state != _state_destroyed)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
@@ -538,7 +538,7 @@ class Pool
 
         bool is_thread_safe() const
         {
-            this->abort_if_not_initialized("Pool::is_thread_safe");
+            this->abort_if_not_initialised("Pool::is_thread_safe");
             set_last_operation_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
@@ -547,7 +547,7 @@ class Pool
         {
             int lock_result;
 
-            this->abort_if_not_initialized("Pool::lock");
+            this->abort_if_not_initialised("Pool::lock");
             lock_result = this->lock_internal(lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (-1);

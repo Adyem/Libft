@@ -10,7 +10,7 @@
 #include "../../PThread/mutex.hpp"
 #include "../../PThread/pthread_lock_tracking.hpp"
 #include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 static sigjmp_buf g_sigabrt_jump_buffer;
 static std::atomic<int> g_sigabrt_received;

@@ -48,14 +48,14 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
 }
 
 ft_websocket_client::ft_websocket_client()
-    : _initialized_state(_state_uninitialized), _socket(), _mutex(ft_nullptr)
+    : _initialised_state(_state_uninitialised), _socket(), _mutex(ft_nullptr)
 {
     return ;
 }
 
 ft_websocket_client::~ft_websocket_client()
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -73,19 +73,19 @@ void ft_websocket_client::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_websocket_client::abort_if_not_initialized(const char *method_name) const
+void ft_websocket_client::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int ft_websocket_client::initialize()
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("ft_websocket_client::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     pt_recursive_mutex *mutex_pointer;
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
@@ -106,13 +106,13 @@ int ft_websocket_client::initialize()
         }
         return (FT_ERR_INVALID_OPERATION);
     }
-    this->_initialized_state = _state_initialized;
+    this->_initialised_state = _state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_client::destroy()
 {
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         return (FT_ERR_INVALID_STATE);
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -125,7 +125,7 @@ int ft_websocket_client::destroy()
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    this->_initialized_state = _state_destroyed;
+    this->_initialised_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -140,7 +140,7 @@ void ft_websocket_client::close()
 {
     int lock_error;
 
-    this->abort_if_not_initialized("ft_websocket_client::close");
+    this->abort_if_not_initialised("ft_websocket_client::close");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -261,7 +261,7 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
 
     if (host == ft_nullptr || path == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
-    this->abort_if_not_initialized("ft_websocket_client::connect");
+    this->abort_if_not_initialised("ft_websocket_client::connect");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -407,7 +407,7 @@ int ft_websocket_client::send_text(const ft_string &message)
     int lock_error;
     int send_result;
 
-    this->abort_if_not_initialized("ft_websocket_client::send_text");
+    this->abort_if_not_initialised("ft_websocket_client::send_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -516,7 +516,7 @@ int ft_websocket_client::receive_text(ft_string &message)
     int lock_error;
     int receive_result;
 
-    this->abort_if_not_initialized("ft_websocket_client::receive_text");
+    this->abort_if_not_initialised("ft_websocket_client::receive_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);

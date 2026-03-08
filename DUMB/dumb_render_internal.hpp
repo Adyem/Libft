@@ -1,11 +1,11 @@
 #pragma once
 
-#include "dumb_render.hpp"
+#include "render_window.hpp"
 
 struct ft_render_platform_result
 {
-    int error_code;
-    int system_error_code;
+    int32_t error_code;
+    int32_t system_error_code;
 };
 
 ft_render_platform_result ft_render_platform_create_window(
@@ -21,7 +21,7 @@ ft_render_platform_result ft_render_platform_destroy_window(
 
 ft_render_platform_result ft_render_platform_poll_events(
     void *platform_state,
-    bool *should_close
+    ft_bool *should_close
 );
 
 ft_render_platform_result ft_render_platform_present(
@@ -31,7 +31,7 @@ ft_render_platform_result ft_render_platform_present(
 
 ft_render_platform_result ft_render_platform_set_fullscreen(
     void *platform_state,
-    bool enabled
+    ft_bool enabled
 );
 
 ft_render_platform_result ft_render_platform_get_primary_screen_size(

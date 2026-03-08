@@ -2,7 +2,7 @@
 #include "../../Game/game_behavior_table.hpp"
 #include "../../Game/game_behavior_profile.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

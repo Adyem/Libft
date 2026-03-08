@@ -2,7 +2,7 @@
 #include "../../Template/algorithm.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "rng_test_utils.hpp"
 #include <vector>
 #include <array>

@@ -2,13 +2,13 @@
 #include "../Errno/errno.hpp"
 #include <cfloat>
 
-double math_pow(double base_value, int exponent)
+double math_pow(double base_value, int32_t exponent)
 {
     double      result;
-    long long   exponent_value;
+    int64_t   exponent_value;
 
     result = 1.0;
-    exponent_value = static_cast<long long>(exponent);
+    exponent_value = static_cast<int64_t>(exponent);
     if (exponent_value < 0)
     {
         if (math_fabs(base_value) <= DBL_MIN)

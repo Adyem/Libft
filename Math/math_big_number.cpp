@@ -1,6 +1,6 @@
 #include "math.hpp"
 
-static ft_big_number math_big_error_result(int error_code)
+static ft_big_number math_big_error_result(int32_t error_code)
 {
     return (ft_big_number_proxy(error_code));
 }
@@ -8,7 +8,7 @@ static ft_big_number math_big_error_result(int error_code)
 static ft_big_number math_big_absolute_value(const ft_big_number &number)
 {
     ft_big_number zero_number;
-    int zero_initialization_error;
+    int32_t zero_initialization_error;
 
     zero_initialization_error = zero_number.initialize();
     if (zero_initialization_error != FT_ERR_SUCCESS)
@@ -16,7 +16,7 @@ static ft_big_number math_big_absolute_value(const ft_big_number &number)
     if (!number.is_negative())
     {
         ft_big_number positive_number;
-        int positive_initialization_error = positive_number.initialize(number);
+        int32_t positive_initialization_error = positive_number.initialize(number);
 
         if (positive_initialization_error != FT_ERR_SUCCESS)
             return (math_big_error_result(positive_initialization_error));
@@ -41,7 +41,7 @@ static ft_big_number math_big_gcd_normalized(const ft_big_number &first_input,
     ft_big_number first_value;
     ft_big_number second_value;
     ft_big_number zero_number;
-    int initialization_error;
+    int32_t initialization_error;
 
     initialization_error = zero_number.initialize();
     if (initialization_error != FT_ERR_SUCCESS)
@@ -76,7 +76,7 @@ ft_big_number math_big_gcd(const ft_big_number &first_number, const ft_big_numbe
 {
     ft_big_number first_value = math_big_absolute_value(first_number);
     ft_big_number zero_number;
-    int zero_initialization_error;
+    int32_t zero_initialization_error;
 
     zero_initialization_error = zero_number.initialize();
     if (zero_initialization_error != FT_ERR_SUCCESS)
@@ -105,7 +105,7 @@ ft_big_number math_big_lcm(const ft_big_number &first_number, const ft_big_numbe
     if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
         return (math_big_error_result(ft_big_number::last_operation_error()));
     ft_big_number zero_number;
-    int zero_initialization_error;
+    int32_t zero_initialization_error;
 
     zero_initialization_error = zero_number.initialize();
     if (zero_initialization_error != FT_ERR_SUCCESS)
@@ -114,7 +114,7 @@ ft_big_number math_big_lcm(const ft_big_number &first_number, const ft_big_numbe
     if (first_value == zero_number || second_value == zero_number)
     {
         ft_big_number zero_result;
-        int zero_result_initialization_error = zero_result.initialize();
+        int32_t zero_result_initialization_error = zero_result.initialize();
 
         if (zero_result_initialization_error != FT_ERR_SUCCESS)
             return (math_big_error_result(zero_result_initialization_error));

@@ -3,10 +3,10 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
-int    *math_eval(const char *expression)
+int32_t    *math_eval(const char *expression)
 {
-    int     index;
-    int     *result;
+    int32_t     index;
+    int32_t     *result;
 
     if (!expression)
         return (ft_nullptr);

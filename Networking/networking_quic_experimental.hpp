@@ -38,13 +38,13 @@ bool    networking_quic_is_experimental_enabled() noexcept;
 class quic_experimental_session
 {
     private:
-        uint8_t                     _initialized_state;
-        static const uint8_t        _state_uninitialized = 0;
+        uint8_t                     _initialised_state;
+        static const uint8_t        _state_uninitialised = 0;
         static const uint8_t        _state_destroyed = 1;
-        static const uint8_t        _state_initialized = 2;
+        static const uint8_t        _state_initialised = 2;
         void                        abort_lifecycle_error(const char *method_name,
                                         const char *reason) const noexcept;
-        void                        abort_if_not_initialized(const char *method_name) const noexcept;
+        void                        abort_if_not_initialised(const char *method_name) const noexcept;
         void        clear_key_material() noexcept;
         bool        ensure_feature_enabled() const noexcept;
         bool        ensure_configured() const noexcept;

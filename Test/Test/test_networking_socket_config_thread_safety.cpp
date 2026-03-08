@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Networking/networking.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -13,7 +13,7 @@ FT_TEST(test_socket_config_prepare_rejects_null,
 }
 
 FT_TEST(test_socket_config_prepare_accepts_valid_config,
-    "socket_config_prepare_thread_safety succeeds for initialized config")
+    "socket_config_prepare_thread_safety succeeds for initialised config")
 {
     SocketConfig config;
 
@@ -48,7 +48,7 @@ FT_TEST(test_socket_config_lock_sets_lock_acquired,
 }
 
 FT_TEST(test_socket_config_teardown_accepts_valid_config,
-    "socket_config_teardown_thread_safety is safe for initialized config")
+    "socket_config_teardown_thread_safety is safe for initialised config")
 {
     SocketConfig config;
 

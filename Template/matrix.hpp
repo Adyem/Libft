@@ -25,11 +25,11 @@ class ft_matrix
         size_t                     _rows;
         size_t                     _cols;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                    _initialized_state;
+        uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -51,12 +51,12 @@ class ft_matrix
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -147,7 +147,7 @@ class ft_matrix
         ft_matrix(size_t rows = 0, size_t cols = 0)
             : _data(ft_nullptr), _configured_rows(rows), _configured_cols(cols),
               _rows(0), _cols(0), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -155,7 +155,7 @@ class ft_matrix
 
         ~ft_matrix()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -168,7 +168,7 @@ class ft_matrix
             : _data(other._data), _configured_rows(other._configured_rows),
               _configured_cols(other._configured_cols), _rows(other._rows),
               _cols(other._cols), _mutex(other._mutex),
-              _initialized_state(other._initialized_state)
+              _initialised_state(other._initialised_state)
         {
             other._data = ft_nullptr;
             other._configured_rows = 0;
@@ -176,7 +176,7 @@ class ft_matrix
             other._rows = 0;
             other._cols = 0;
             other._mutex = ft_nullptr;
-            other._initialized_state = _state_destroyed;
+            other._initialised_state = _state_destroyed;
             return ;
         }
 
@@ -184,7 +184,7 @@ class ft_matrix
         {
             if (this == &other)
                 return (*this);
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -194,23 +194,23 @@ class ft_matrix
             this->_rows = other._rows;
             this->_cols = other._cols;
             this->_mutex = other._mutex;
-            this->_initialized_state = other._initialized_state;
+            this->_initialised_state = other._initialised_state;
             other._data = ft_nullptr;
             other._configured_rows = 0;
             other._configured_cols = 0;
             other._rows = 0;
             other._cols = 0;
             other._mutex = ft_nullptr;
-            other._initialized_state = _state_destroyed;
+            other._initialised_state = _state_destroyed;
             return (*this);
         }
 
         int initialize()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_matrix::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_data = ft_nullptr;
@@ -219,10 +219,10 @@ class ft_matrix
             if (this->init_unlocked(this->_configured_rows, this->_configured_cols)
                 == false)
             {
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (set_last_operation_error(FT_ERR_NO_MEMORY));
             }
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -240,7 +240,7 @@ class ft_matrix
             int unlock_error;
             int disable_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -251,7 +251,7 @@ class ft_matrix
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
             disable_error = this->disable_thread_safety();
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             if (disable_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(disable_error));
             return (set_last_operation_error(FT_ERR_SUCCESS));
@@ -262,7 +262,7 @@ class ft_matrix
             pt_recursive_mutex *mutex_pointer;
             int mutex_error;
 
-            this->abort_if_not_initialized("ft_matrix::enable_thread_safety");
+            this->abort_if_not_initialised("ft_matrix::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -282,8 +282,8 @@ class ft_matrix
         {
             int destroy_error;
 
-            if (this->_initialized_state == _state_initialized)
-                this->abort_if_not_initialized("ft_matrix::disable_thread_safety");
+            if (this->_initialised_state == _state_initialised)
+                this->abort_if_not_initialised("ft_matrix::disable_thread_safety");
             if (this->_mutex == ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             destroy_error = this->_mutex->destroy();
@@ -294,7 +294,7 @@ class ft_matrix
 
         bool is_thread_safe() const
         {
-            this->abort_if_not_initialized("ft_matrix::is_thread_safe");
+            this->abort_if_not_initialised("ft_matrix::is_thread_safe");
             set_last_operation_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
@@ -303,7 +303,7 @@ class ft_matrix
         {
             int lock_error;
 
-            this->abort_if_not_initialized("ft_matrix::lock");
+            this->abort_if_not_initialised("ft_matrix::lock");
             lock_error = this->lock_internal(lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(lock_error));
@@ -314,7 +314,7 @@ class ft_matrix
         {
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_matrix::unlock");
+            this->abort_if_not_initialised("ft_matrix::unlock");
             unlock_error = this->unlock_internal(lock_acquired);
             set_last_operation_error(unlock_error);
             return ;
@@ -327,7 +327,7 @@ class ft_matrix
             int unlock_error;
             bool init_result;
 
-            this->abort_if_not_initialized("ft_matrix::init");
+            this->abort_if_not_initialised("ft_matrix::init");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -356,7 +356,7 @@ class ft_matrix
             int unlock_error;
             ElementType *element_pointer;
 
-            this->abort_if_not_initialized("ft_matrix::at");
+            this->abort_if_not_initialised("ft_matrix::at");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -393,7 +393,7 @@ class ft_matrix
             int unlock_error;
             const ElementType *element_pointer;
 
-            this->abort_if_not_initialized("ft_matrix::at const");
+            this->abort_if_not_initialised("ft_matrix::at const");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -429,7 +429,7 @@ class ft_matrix
             int unlock_error;
             size_t current_rows;
 
-            this->abort_if_not_initialized("ft_matrix::rows");
+            this->abort_if_not_initialised("ft_matrix::rows");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -455,7 +455,7 @@ class ft_matrix
             int unlock_error;
             size_t current_cols;
 
-            this->abort_if_not_initialized("ft_matrix::cols");
+            this->abort_if_not_initialised("ft_matrix::cols");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -486,8 +486,8 @@ class ft_matrix
             size_t total;
             size_t index;
 
-            this->abort_if_not_initialized("ft_matrix::add");
-            other.abort_if_not_initialized("ft_matrix::add(other)");
+            this->abort_if_not_initialised("ft_matrix::add");
+            other.abort_if_not_initialised("ft_matrix::add(other)");
             if (result.initialize() != FT_ERR_SUCCESS)
                 return (result);
             this_lock_acquired = false;
@@ -543,8 +543,8 @@ class ft_matrix
             size_t column_index;
             size_t inner_index;
 
-            this->abort_if_not_initialized("ft_matrix::multiply");
-            other.abort_if_not_initialized("ft_matrix::multiply(other)");
+            this->abort_if_not_initialised("ft_matrix::multiply");
+            other.abort_if_not_initialised("ft_matrix::multiply(other)");
             if (result.initialize() != FT_ERR_SUCCESS)
                 return (result);
             this_lock_acquired = false;
@@ -606,7 +606,7 @@ class ft_matrix
             size_t row_index;
             size_t column_index;
 
-            this->abort_if_not_initialized("ft_matrix::transpose");
+            this->abort_if_not_initialised("ft_matrix::transpose");
             if (result.initialize() != FT_ERR_SUCCESS)
                 return (result);
             lock_acquired = false;
@@ -647,7 +647,7 @@ class ft_matrix
             size_t index;
             size_t pivot_row;
 
-            this->abort_if_not_initialized("ft_matrix::determinant");
+            this->abort_if_not_initialised("ft_matrix::determinant");
             determinant_value = ElementType();
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -757,7 +757,7 @@ class ft_matrix
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_matrix::clear");
+            this->abort_if_not_initialised("ft_matrix::clear");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)

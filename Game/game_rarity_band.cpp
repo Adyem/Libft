@@ -8,7 +8,7 @@ thread_local int ft_rarity_band::_last_error = FT_ERR_SUCCESS;
 
 ft_rarity_band::ft_rarity_band() noexcept
     : _rarity(0), _value_multiplier(1.0), _mutex(ft_nullptr),
-      _initialized_state(ft_rarity_band::_state_uninitialized)
+      _initialised_state(ft_rarity_band::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -16,9 +16,9 @@ ft_rarity_band::ft_rarity_band() noexcept
 
 ft_rarity_band::~ft_rarity_band() noexcept
 {
-    if (this->_initialized_state == ft_rarity_band::_state_uninitialized)
+    if (this->_initialised_state == ft_rarity_band::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_rarity_band::_state_initialized)
+    if (this->_initialised_state == ft_rarity_band::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -36,12 +36,12 @@ void ft_rarity_band::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_rarity_band::abort_if_not_initialized(const char *method_name) const
+void ft_rarity_band::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_rarity_band::_state_initialized)
+    if (this->_initialised_state == ft_rarity_band::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -53,15 +53,15 @@ void ft_rarity_band::set_error(int error_code) const noexcept
 
 int ft_rarity_band::initialize() noexcept
 {
-    if (this->_initialized_state == ft_rarity_band::_state_initialized)
+    if (this->_initialised_state == ft_rarity_band::_state_initialised)
     {
         this->abort_lifecycle_error("ft_rarity_band::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_rarity = 0;
     this->_value_multiplier = 1.0;
-    this->_initialized_state = ft_rarity_band::_state_initialized;
+    this->_initialised_state = ft_rarity_band::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -70,10 +70,10 @@ int ft_rarity_band::initialize(const ft_rarity_band &other) noexcept
 {
     int initialize_error;
 
-    if (other._initialized_state != ft_rarity_band::_state_initialized)
+    if (other._initialised_state != ft_rarity_band::_state_initialised)
     {
         other.abort_lifecycle_error("ft_rarity_band::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -81,7 +81,7 @@ int ft_rarity_band::initialize(const ft_rarity_band &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialized_state == ft_rarity_band::_state_initialized)
+    if (this->_initialised_state == ft_rarity_band::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -111,7 +111,7 @@ int ft_rarity_band::initialize(int rarity, double value_multiplier) noexcept
 {
     int initialize_error;
 
-    if (this->_initialized_state == ft_rarity_band::_state_initialized)
+    if (this->_initialised_state == ft_rarity_band::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -136,7 +136,7 @@ int ft_rarity_band::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_rarity_band::_state_initialized)
+    if (this->_initialised_state != ft_rarity_band::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -144,7 +144,7 @@ int ft_rarity_band::destroy() noexcept
     disable_error = this->disable_thread_safety();
     this->_rarity = 0;
     this->_value_multiplier = 1.0;
-    this->_initialized_state = ft_rarity_band::_state_destroyed;
+    this->_initialised_state = ft_rarity_band::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -154,7 +154,7 @@ int ft_rarity_band::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_rarity_band::enable_thread_safety");
+    this->abort_if_not_initialised("ft_rarity_band::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -228,7 +228,7 @@ int ft_rarity_band::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_rarity_band::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_rarity_band::lock");
+    this->abort_if_not_initialised("ft_rarity_band::lock");
     const int lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -236,7 +236,7 @@ int ft_rarity_band::lock(bool *lock_acquired) const noexcept
 
 void ft_rarity_band::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_rarity_band::unlock");
+    this->abort_if_not_initialised("ft_rarity_band::unlock");
     const int unlock_result = this->unlock_internal(lock_acquired);
     this->set_error(unlock_result);
     return ;
@@ -244,14 +244,14 @@ void ft_rarity_band::unlock(bool lock_acquired) const noexcept
 
 int ft_rarity_band::get_rarity() const noexcept
 {
-    this->abort_if_not_initialized("ft_rarity_band::get_rarity");
+    this->abort_if_not_initialised("ft_rarity_band::get_rarity");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_rarity);
 }
 
 void ft_rarity_band::set_rarity(int rarity) noexcept
 {
-    this->abort_if_not_initialized("ft_rarity_band::set_rarity");
+    this->abort_if_not_initialised("ft_rarity_band::set_rarity");
     this->_rarity = rarity;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -259,14 +259,14 @@ void ft_rarity_band::set_rarity(int rarity) noexcept
 
 double ft_rarity_band::get_value_multiplier() const noexcept
 {
-    this->abort_if_not_initialized("ft_rarity_band::get_value_multiplier");
+    this->abort_if_not_initialised("ft_rarity_band::get_value_multiplier");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_value_multiplier);
 }
 
 void ft_rarity_band::set_value_multiplier(double value_multiplier) noexcept
 {
-    this->abort_if_not_initialized("ft_rarity_band::set_value_multiplier");
+    this->abort_if_not_initialised("ft_rarity_band::set_value_multiplier");
     this->_value_multiplier = value_multiplier;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -275,7 +275,7 @@ void ft_rarity_band::set_value_multiplier(double value_multiplier) noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_rarity_band::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_rarity_band::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_rarity_band::get_mutex_for_validation");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_mutex);
 }

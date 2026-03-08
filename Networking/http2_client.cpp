@@ -19,14 +19,14 @@ static void http2_append_raw_byte(ft_string &target, unsigned char value)
 }
 
 http2_header_field::http2_header_field() noexcept
-    : _initialized_state(_state_uninitialized), _name(), _value(), _mutex(ft_nullptr)
+    : _initialised_state(_state_uninitialised), _name(), _value(), _mutex(ft_nullptr)
 {
     return ;
 }
 
 http2_header_field::~http2_header_field() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -44,19 +44,19 @@ void http2_header_field::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void http2_header_field::abort_if_not_initialized(const char *method_name) const noexcept
+void http2_header_field::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int http2_header_field::initialize() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("http2_header_field::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     int name_error = this->_name.initialize();
     if (name_error != FT_ERR_SUCCESS)
         return (name_error);
@@ -66,7 +66,7 @@ int http2_header_field::initialize() noexcept
         this->_name.destroy();
         return (value_error);
     }
-    this->_initialized_state = _state_initialized;
+    this->_initialised_state = _state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -74,7 +74,7 @@ int http2_header_field::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         return (FT_ERR_INVALID_STATE);
     int name_error = this->_name.destroy();
     int value_error = this->_value.destroy();
@@ -85,7 +85,7 @@ int http2_header_field::destroy() noexcept
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
-    this->_initialized_state = _state_destroyed;
+    this->_initialised_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -95,7 +95,7 @@ int http2_header_field::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    this->abort_if_not_initialized("http2_header_field::enable_thread_safety");
+    this->abort_if_not_initialised("http2_header_field::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
@@ -117,7 +117,7 @@ int http2_header_field::disable_thread_safety() noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("http2_header_field::disable_thread_safety");
+    this->abort_if_not_initialised("http2_header_field::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         destroy_error = this->_mutex->destroy();
@@ -142,7 +142,7 @@ int http2_header_field::lock(bool *lock_acquired) const noexcept
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     mutable_field = const_cast<http2_header_field *>(this);
-    mutable_field->abort_if_not_initialized("http2_header_field::lock");
+    mutable_field->abort_if_not_initialised("http2_header_field::lock");
     has_mutex = (mutable_field->_mutex != ft_nullptr);
     if (pt_recursive_mutex_lock_if_not_null(mutable_field->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -339,7 +339,7 @@ void http2_header_field::clear() noexcept
 }
 
 http2_frame::http2_frame() noexcept
-    : _initialized_state(_state_uninitialized), _type(0), _flags(0),
+    : _initialised_state(_state_uninitialised), _type(0), _flags(0),
       _stream_identifier(0), _payload(), _mutex(ft_nullptr)
 {
     return ;
@@ -347,7 +347,7 @@ http2_frame::http2_frame() noexcept
 
 http2_frame::~http2_frame() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -364,19 +364,19 @@ void http2_frame::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void http2_frame::abort_if_not_initialized(const char *method_name) const noexcept
+void http2_frame::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int http2_frame::initialize() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("http2_frame::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     this->_type = 0;
     this->_flags = 0;
     this->_stream_identifier = 0;
@@ -387,7 +387,7 @@ int http2_frame::initialize() noexcept
         return (payload_error);
     }
     this->_mutex = ft_nullptr;
-    this->_initialized_state = _state_initialized;
+    this->_initialised_state = _state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -396,7 +396,7 @@ int http2_frame::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         return (FT_ERR_INVALID_STATE);
     int payload_error = this->_payload.destroy();
     if (payload_error != FT_ERR_SUCCESS)
@@ -408,7 +408,7 @@ int http2_frame::destroy() noexcept
         this->_type = 0;
         this->_flags = 0;
         this->_stream_identifier = 0;
-        this->_initialized_state = _state_destroyed;
+        this->_initialised_state = _state_destroyed;
         return (payload_error);
     }
     disable_error = this->disable_thread_safety();
@@ -420,7 +420,7 @@ int http2_frame::destroy() noexcept
     this->_type = 0;
     this->_flags = 0;
     this->_stream_identifier = 0;
-    this->_initialized_state = _state_destroyed;
+    this->_initialised_state = _state_destroyed;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -498,7 +498,7 @@ int http2_frame::enable_thread_safety() noexcept
     void *memory_pointer;
     pt_recursive_mutex *mutex_pointer;
 
-    this->abort_if_not_initialized("http2_frame::enable_thread_safety");
+    this->abort_if_not_initialised("http2_frame::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
@@ -520,7 +520,7 @@ int http2_frame::disable_thread_safety() noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("http2_frame::disable_thread_safety");
+    this->abort_if_not_initialised("http2_frame::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -543,7 +543,7 @@ int http2_frame::lock(bool *lock_acquired) const noexcept
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     mutable_frame = const_cast<http2_frame *>(this);
-    mutable_frame->abort_if_not_initialized("http2_frame::lock");
+    mutable_frame->abort_if_not_initialised("http2_frame::lock");
     has_mutex = (mutable_frame->_mutex != ft_nullptr);
     if (pt_recursive_mutex_lock_if_not_null(mutable_frame->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -715,7 +715,7 @@ http2_stream_state::~http2_stream_state() noexcept
 }
 
 http2_stream_manager::http2_stream_manager() noexcept
-    : _initialized_state(_state_uninitialized), _streams(), _stream_identifiers(),
+    : _initialised_state(_state_uninitialised), _streams(), _stream_identifiers(),
       _initial_remote_window(65535),
       _initial_local_window(65535), _connection_remote_window(65535),
       _connection_local_window(65535), _mutex(ft_nullptr)
@@ -725,7 +725,7 @@ http2_stream_manager::http2_stream_manager() noexcept
 
 http2_stream_manager::~http2_stream_manager() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -743,37 +743,37 @@ void http2_stream_manager::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void http2_stream_manager::abort_if_not_initialized(const char *method_name) const noexcept
+void http2_stream_manager::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int http2_stream_manager::initialize() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("http2_stream_manager::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     int streams_error = this->_streams.initialize();
     if (streams_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = _state_uninitialized;
+        this->_initialised_state = _state_uninitialised;
         return (streams_error);
     }
     int identifiers_error = this->_stream_identifiers.initialize();
     if (identifiers_error != FT_ERR_SUCCESS)
     {
         this->_streams.destroy();
-        this->_initialized_state = _state_uninitialized;
+        this->_initialised_state = _state_uninitialised;
         return (identifiers_error);
     }
     this->_initial_remote_window = 65535;
     this->_initial_local_window = 65535;
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
-    this->_initialized_state = _state_initialized;
+    this->_initialised_state = _state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -781,7 +781,7 @@ int http2_stream_manager::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->_streams.destroy();
     this->_stream_identifiers.destroy();
@@ -792,7 +792,7 @@ int http2_stream_manager::destroy() noexcept
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
-    this->_initialized_state = _state_destroyed;
+    this->_initialised_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -802,7 +802,7 @@ int http2_stream_manager::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    this->abort_if_not_initialized("http2_stream_manager::enable_thread_safety");
+    this->abort_if_not_initialised("http2_stream_manager::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         return (FT_ERR_SUCCESS);
@@ -833,7 +833,7 @@ int http2_stream_manager::lock(bool *lock_acquired) const noexcept
     if (lock_acquired)
         *lock_acquired = false;
     mutable_manager = const_cast<http2_stream_manager *>(this);
-    mutable_manager->abort_if_not_initialized("http2_stream_manager::lock");
+    mutable_manager->abort_if_not_initialised("http2_stream_manager::lock");
     has_mutex = (this->_mutex != ft_nullptr);
     lock_error = pt_recursive_mutex_lock_if_not_null(mutable_manager->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -858,7 +858,7 @@ int http2_stream_manager::disable_thread_safety() noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("http2_stream_manager::disable_thread_safety");
+    this->abort_if_not_initialised("http2_stream_manager::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -1647,7 +1647,7 @@ bool http2_settings_state::apply_single_setting(uint16_t identifier, uint32_t va
 }
 
 http2_settings_state::http2_settings_state() noexcept
-    : _initialized_state(_state_uninitialized), _header_table_size(4096),
+    : _initialised_state(_state_uninitialised), _header_table_size(4096),
       _enable_push(true), _max_concurrent_streams(0xFFFFFFFFu),
       _initial_local_window(65535), _initial_remote_window(65535),
       _max_frame_size(16384), _max_header_list_size(0)
@@ -1657,7 +1657,7 @@ http2_settings_state::http2_settings_state() noexcept
 
 http2_settings_state::~http2_settings_state() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -1675,19 +1675,19 @@ void http2_settings_state::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void http2_settings_state::abort_if_not_initialized(const char *method_name) const noexcept
+void http2_settings_state::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int http2_settings_state::initialize() noexcept
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("http2_settings_state::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     this->_header_table_size = 4096;
     this->_enable_push = true;
     this->_max_concurrent_streams = 0xFFFFFFFFu;
@@ -1695,15 +1695,15 @@ int http2_settings_state::initialize() noexcept
     this->_initial_remote_window = 65535;
     this->_max_frame_size = 16384;
     this->_max_header_list_size = 0;
-    this->_initialized_state = _state_initialized;
+    this->_initialised_state = _state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int http2_settings_state::destroy() noexcept
 {
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         return (FT_ERR_INVALID_STATE);
-    this->_initialized_state = _state_destroyed;
+    this->_initialised_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -1717,7 +1717,7 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
     uint8_t frame_flags;
     ft_string payload_copy;
 
-    this->abort_if_not_initialized("http2_settings_state::apply_remote_settings");
+    this->abort_if_not_initialised("http2_settings_state::apply_remote_settings");
     if (!frame.get_type(frame_type))
     {
         return (false);
@@ -1778,7 +1778,7 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
 bool http2_settings_state::update_local_initial_window(uint32_t new_window,
     http2_stream_manager &streams) noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::update_local_initial_window");
+    this->abort_if_not_initialised("http2_settings_state::update_local_initial_window");
     if (new_window > 0x7FFFFFFFu)
     {
         return (false);
@@ -1794,7 +1794,7 @@ bool http2_settings_state::update_local_initial_window(uint32_t new_window,
 bool http2_settings_state::update_remote_initial_window(uint32_t new_window,
     http2_stream_manager &streams) noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::update_remote_initial_window");
+    this->abort_if_not_initialised("http2_settings_state::update_remote_initial_window");
     if (new_window > 0x7FFFFFFFu)
     {
         return (false);
@@ -1809,43 +1809,43 @@ bool http2_settings_state::update_remote_initial_window(uint32_t new_window,
 
 uint32_t http2_settings_state::get_header_table_size() const noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::get_header_table_size");
+    this->abort_if_not_initialised("http2_settings_state::get_header_table_size");
     return (this->_header_table_size);
 }
 
 bool http2_settings_state::get_enable_push() const noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::get_enable_push");
+    this->abort_if_not_initialised("http2_settings_state::get_enable_push");
     return (this->_enable_push);
 }
 
 uint32_t http2_settings_state::get_max_concurrent_streams() const noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::get_max_concurrent_streams");
+    this->abort_if_not_initialised("http2_settings_state::get_max_concurrent_streams");
     return (this->_max_concurrent_streams);
 }
 
 uint32_t http2_settings_state::get_initial_local_window() const noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::get_initial_local_window");
+    this->abort_if_not_initialised("http2_settings_state::get_initial_local_window");
     return (this->_initial_local_window);
 }
 
 uint32_t http2_settings_state::get_initial_remote_window() const noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::get_initial_remote_window");
+    this->abort_if_not_initialised("http2_settings_state::get_initial_remote_window");
     return (this->_initial_remote_window);
 }
 
 uint32_t http2_settings_state::get_max_frame_size() const noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::get_max_frame_size");
+    this->abort_if_not_initialised("http2_settings_state::get_max_frame_size");
     return (this->_max_frame_size);
 }
 
 uint32_t http2_settings_state::get_max_header_list_size() const noexcept
 {
-    this->abort_if_not_initialized("http2_settings_state::get_max_header_list_size");
+    this->abort_if_not_initialised("http2_settings_state::get_max_header_list_size");
     return (this->_max_header_list_size);
 }
 

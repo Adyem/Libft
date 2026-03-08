@@ -72,13 +72,11 @@ def build_module_source(name: str) -> str:
     )
 
 
-def build_test_source(name: str, description: str) -> str:
+def build_test_source(name: str) -> str:
     return (
-        "#include \"../../System_utils/test_runner.hpp\"\n#include \"../../Errno/errno.hpp\"\n\nFT_TEST("
+        "#include \"../../System_utils/test_system_utils_runner.hpp\"\n#include \"../../Errno/errno.hpp\"\n\nFT_TEST("
         + name
-        + ", \""
-        + description
-        + "\")\n{\n    FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);\n    return (1);\n}\n"
+        + ")\n{\n    FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);\n    return (1);\n}\n"
     )
 
 
@@ -99,7 +97,7 @@ def handle_module(args: argparse.Namespace) -> int:
 def handle_test(args: argparse.Namespace) -> int:
     directory = Path(args.directory)
     test_path = directory / ("test_" + args.name + ".cpp")
-    written = write_file(test_path, build_test_source(args.test_name, args.description), args.force)
+    written = write_file(test_path, build_test_source(args.test_name), args.force)
     if not written:
         sys.stderr.write("Skipped existing files. Use --force to overwrite.\n")
         return 1
@@ -118,7 +116,6 @@ def parse_arguments() -> argparse.Namespace:
     test_parser = subparsers.add_parser("test", help=TEST_HELP)
     test_parser.add_argument("name", help="Short identifier appended to the test file name.")
     test_parser.add_argument("--test-name", default="test_placeholder_case", help="FT_TEST identifier.")
-    test_parser.add_argument("--description", default="replace with description", help="FT_TEST description string.")
     test_parser.add_argument("--directory", default="Test/Test", help="Destination directory.")
     test_parser.add_argument("--force", action="store_true", help="Overwrite existing files.")
 

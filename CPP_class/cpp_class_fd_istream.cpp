@@ -18,11 +18,11 @@ void ft_fd_istream::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_fd_istream::abort_if_not_initialized(const char *method_name) const noexcept
+void ft_fd_istream::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_fd_istream::_state_initialized)
+    if (this->_initialised_state == ft_fd_istream::_state_initialised)
         return ;
-    ft_fd_istream::abort_lifecycle_error(method_name, "called while object is not initialized");
+    ft_fd_istream::abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -41,7 +41,7 @@ int ft_fd_istream::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_fd_istream::enable_thread_safety");
+    this->abort_if_not_initialised("ft_fd_istream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -59,7 +59,7 @@ int ft_fd_istream::enable_thread_safety(void) noexcept
 
 int ft_fd_istream::disable_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("ft_fd_istream::disable_thread_safety");
+    this->abort_if_not_initialised("ft_fd_istream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     int destroy_error = this->_mutex->destroy();
@@ -70,29 +70,29 @@ int ft_fd_istream::disable_thread_safety(void) noexcept
 
 bool ft_fd_istream::is_thread_safe(void) const noexcept
 {
-    this->abort_if_not_initialized("ft_fd_istream::is_thread_safe");
+    this->abort_if_not_initialised("ft_fd_istream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 ft_fd_istream::ft_fd_istream(int file_descriptor) noexcept
     : ft_istream(), _file_descriptor(file_descriptor), _mutex(ft_nullptr),
-      _initialized_state(ft_fd_istream::_state_uninitialized)
+      _initialised_state(ft_fd_istream::_state_uninitialised)
 {
     int initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_fd_istream::_state_destroyed;
+        this->_initialised_state = ft_fd_istream::_state_destroyed;
         return ;
     }
-    this->_initialized_state = ft_fd_istream::_state_initialized;
+    this->_initialised_state = ft_fd_istream::_state_initialised;
     return ;
 }
 
 ft_fd_istream::~ft_fd_istream() noexcept
 {
-    if (this->_initialized_state != ft_fd_istream::_state_initialized)
+    if (this->_initialised_state != ft_fd_istream::_state_initialised)
     {
-        this->_initialized_state = ft_fd_istream::_state_destroyed;
+        this->_initialised_state = ft_fd_istream::_state_destroyed;
         return ;
     }
     (void)this->destroy();
@@ -101,7 +101,7 @@ ft_fd_istream::~ft_fd_istream() noexcept
 
 void ft_fd_istream::set_file_descriptor(int file_descriptor) noexcept
 {
-    this->abort_if_not_initialized("ft_fd_istream::set_file_descriptor");
+    this->abort_if_not_initialised("ft_fd_istream::set_file_descriptor");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return ;
     this->_file_descriptor = file_descriptor;
@@ -113,7 +113,7 @@ int ft_fd_istream::get_file_descriptor() const noexcept
 {
     int file_descriptor;
 
-    this->abort_if_not_initialized("ft_fd_istream::get_file_descriptor");
+    this->abort_if_not_initialised("ft_fd_istream::get_file_descriptor");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return (-1);
     file_descriptor = this->_file_descriptor;
@@ -128,7 +128,7 @@ ssize_t ft_fd_istream::do_read(char *buffer, std::size_t count)
     int unlock_error;
     ssize_t result;
 
-    this->abort_if_not_initialized("ft_fd_istream::do_read");
+    this->abort_if_not_initialised("ft_fd_istream::do_read");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return (-1);
     file_descriptor = this->_file_descriptor;

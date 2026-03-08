@@ -8,10 +8,10 @@
 #include <limits.h>
 #include <stddef.h>
 
-int pf_printf_fd(int file_descriptor, const char *format, ...)
+int32_t pf_printf_fd(int32_t file_descriptor, const char *format, ...)
 {
     va_list argument_list;
-    int printed_chars;
+    int32_t printed_chars;
 
     if (!format)
         return (-1);
@@ -21,10 +21,10 @@ int pf_printf_fd(int file_descriptor, const char *format, ...)
     return (printed_chars);
 }
 
-int pf_printf(const char *format, ...)
+int32_t pf_printf(const char *format, ...)
 {
     va_list argument_list;
-    int printed_chars;
+    int32_t printed_chars;
 
     if (!format)
         return (-1);

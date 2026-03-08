@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_economy_table.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstdlib>
@@ -17,8 +17,8 @@ static struct sigaction g_economy_table_old_action_iot;
 static struct sigaction g_economy_table_new_action_abort;
 static struct sigaction g_economy_table_new_action_iot;
 static sigset_t g_economy_table_signal_mask;
-static void *g_economy_table_uninitialized_storage = ft_nullptr;
-static int g_economy_table_uninitialized_operation_error = FT_ERR_SUCCESS;
+static void *g_economy_table_uninitialised_storage = ft_nullptr;
+static int g_economy_table_uninitialised_operation_error = FT_ERR_SUCCESS;
 
 static void economy_table_signal_handler(int signal_value)
 {
@@ -26,7 +26,7 @@ static void economy_table_signal_handler(int signal_value)
     siglongjmp(g_economy_table_signal_jump_buffer, 1);
 }
 
-static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_table &))
+static int expect_sigabrt_on_uninitialised_table(void (*operation)(ft_economy_table &))
 {
     std::memset(&g_economy_table_old_action_abort, 0,
         sizeof(g_economy_table_old_action_abort));
@@ -56,8 +56,8 @@ static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_ta
         (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
         return (0);
     }
-    g_economy_table_uninitialized_storage = std::malloc(sizeof(ft_economy_table));
-    if (g_economy_table_uninitialized_storage == ft_nullptr)
+    g_economy_table_uninitialised_storage = std::malloc(sizeof(ft_economy_table));
+    if (g_economy_table_uninitialised_storage == ft_nullptr)
     {
         (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
         if (SIGIOT != SIGABRT)
@@ -65,21 +65,21 @@ static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_ta
         return (0);
     }
     g_economy_table_signal_caught = 0;
-    g_economy_table_uninitialized_operation_error = FT_ERR_SUCCESS;
+    g_economy_table_uninitialised_operation_error = FT_ERR_SUCCESS;
     if (sigsetjmp(g_economy_table_signal_jump_buffer, 1) == 0)
     {
         ft_economy_table *table_pointer;
 
-        std::memset(g_economy_table_uninitialized_storage, 0,
+        std::memset(g_economy_table_uninitialised_storage, 0,
             sizeof(ft_economy_table));
         table_pointer = reinterpret_cast<ft_economy_table *>(
-            g_economy_table_uninitialized_storage);
+            g_economy_table_uninitialised_storage);
         operation(*table_pointer);
     }
-    if (g_economy_table_uninitialized_storage != ft_nullptr)
+    if (g_economy_table_uninitialised_storage != ft_nullptr)
     {
-        std::free(g_economy_table_uninitialized_storage);
-        g_economy_table_uninitialized_storage = ft_nullptr;
+        std::free(g_economy_table_uninitialised_storage);
+        g_economy_table_uninitialised_storage = ft_nullptr;
     }
     (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
     if (SIGIOT != SIGABRT)
@@ -88,10 +88,10 @@ static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_ta
         return (1);
     if (g_economy_table_signal_caught == SIGIOT)
         return (1);
-    return (g_economy_table_uninitialized_operation_error == FT_ERR_SUCCESS);
+    return (g_economy_table_uninitialised_operation_error == FT_ERR_SUCCESS);
 }
 
-static void uninitialized_table_register_price_operation(ft_economy_table &table)
+static void uninitialised_table_register_price_operation(ft_economy_table &table)
 {
     void *storage;
     ft_price_definition *definition;
@@ -100,26 +100,26 @@ static void uninitialized_table_register_price_operation(ft_economy_table &table
     storage = std::malloc(sizeof(ft_price_definition));
     if (storage == ft_nullptr)
     {
-        g_economy_table_uninitialized_operation_error = FT_ERR_NO_MEMORY;
+        g_economy_table_uninitialised_operation_error = FT_ERR_NO_MEMORY;
         return ;
     }
     definition = new (storage) ft_price_definition();
     result = definition->initialize(10, 3, 500, 300, 800);
     if (result != FT_ERR_SUCCESS)
     {
-        g_economy_table_uninitialized_operation_error = result;
+        g_economy_table_uninitialised_operation_error = result;
         definition->~ft_price_definition();
         std::free(storage);
         return ;
     }
-    g_economy_table_uninitialized_operation_error =
+    g_economy_table_uninitialised_operation_error =
         table.register_price_definition(*definition);
     definition->~ft_price_definition();
     std::free(storage);
     return ;
 }
 
-static void uninitialized_table_fetch_price_operation(ft_economy_table &table)
+static void uninitialised_table_fetch_price_operation(ft_economy_table &table)
 {
     void *storage;
     ft_price_definition *fetched;
@@ -128,19 +128,19 @@ static void uninitialized_table_fetch_price_operation(ft_economy_table &table)
     storage = std::malloc(sizeof(ft_price_definition));
     if (storage == ft_nullptr)
     {
-        g_economy_table_uninitialized_operation_error = FT_ERR_NO_MEMORY;
+        g_economy_table_uninitialised_operation_error = FT_ERR_NO_MEMORY;
         return ;
     }
     fetched = new (storage) ft_price_definition();
     result = fetched->initialize();
     if (result != FT_ERR_SUCCESS)
     {
-        g_economy_table_uninitialized_operation_error = result;
+        g_economy_table_uninitialised_operation_error = result;
         fetched->~ft_price_definition();
         std::free(storage);
         return ;
     }
-    g_economy_table_uninitialized_operation_error =
+    g_economy_table_uninitialised_operation_error =
         table.fetch_price_definition(10, *fetched);
     fetched->~ft_price_definition();
     std::free(storage);
@@ -246,18 +246,18 @@ FT_TEST(test_economy_vendor_and_currency_profiles,
     return (1);
 }
 
-FT_TEST(test_economy_register_price_uninitialized_aborts,
-    "economy table register aborts when table is uninitialized")
+FT_TEST(test_economy_register_price_uninitialised_aborts,
+    "economy table register aborts when table is uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(
-        uninitialized_table_register_price_operation));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(
+        uninitialised_table_register_price_operation));
     return (1);
 }
 
-FT_TEST(test_economy_fetch_price_uninitialized_aborts,
-    "economy table fetch aborts when table is uninitialized")
+FT_TEST(test_economy_fetch_price_uninitialised_aborts,
+    "economy table fetch aborts when table is uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(
-        uninitialized_table_fetch_price_operation));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(
+        uninitialised_table_fetch_price_operation));
     return (1);
 }

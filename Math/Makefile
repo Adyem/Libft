@@ -48,17 +48,17 @@ SRCS := math_abs.cpp \
         math_fft.cpp \
         math_interval.cpp \
         math_polynomial.cpp \
-        linear_algebra.cpp \
-        linear_algebra_constructors.cpp \
-        linear_algebra_vector2.cpp \
-        linear_algebra_vector3.cpp \
-        linear_algebra_vector4.cpp \
-        linear_algebra_quaternion.cpp
+        math_linear_algebra.cpp \
+        math_linear_algebra_constructors.cpp \
+        math_linear_algebra_vector2.cpp \
+        math_linear_algebra_vector3.cpp \
+        math_linear_algebra_vector4.cpp \
+        math_linear_algebra_quaternion.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp linear_algebra_quaternion.hpp math_autodiff.hpp math_fft.hpp math_interval.hpp math_polynomial.hpp
+HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp vector2.hpp vector3.hpp vector4.hpp matrix2.hpp matrix3.hpp matrix4.hpp quaternion.hpp ft_dual_number.hpp math_fft.hpp math_interval.hpp ft_cubic_spline.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -159,5 +159,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-
-

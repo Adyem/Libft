@@ -2,9 +2,9 @@
 #include "math_internal.hpp"
 #include "../Printf/printf.hpp"
 
-int math_roll_excecute_md(char *string, int *index, int string_boundary)
+int32_t math_roll_excecute_md(char *string, int32_t *index, int32_t string_boundary)
 {
-    int error = 0;
+    int32_t error = 0;
 
     while (*index < string_boundary)
     {

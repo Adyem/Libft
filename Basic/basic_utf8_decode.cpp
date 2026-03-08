@@ -2,14 +2,14 @@
 #include "basic.hpp"
 #include "utf8.hpp"
 
-static int ft_utf8_is_trailing_byte(unsigned char byte_value)
+static int32_t ft_utf8_is_trailing_byte(unsigned char byte_value)
 {
     if ((byte_value & 0xC0) == 0x80)
         return (1);
     return (0);
 }
 
-static int ft_utf8_detect_sequence(unsigned char first_byte, ft_size_t *expected_length,
+static int32_t ft_utf8_detect_sequence(unsigned char first_byte, ft_size_t *expected_length,
         uint32_t *initial_value, uint32_t *minimum_value)
 {
     if (first_byte <= 0x7F)
@@ -43,7 +43,7 @@ static int ft_utf8_detect_sequence(unsigned char first_byte, ft_size_t *expected
     return (FT_FAILURE);
 }
 
-int ft_utf8_next(const char *string, ft_size_t string_length,
+int32_t ft_utf8_next(const char *string, ft_size_t string_length,
         ft_size_t *index_pointer, uint32_t *code_point_pointer,
         ft_size_t *sequence_length_pointer)
 {

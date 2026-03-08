@@ -2,14 +2,14 @@
 #include "../../Template/future.hpp"
 #include "../../Template/promise.hpp"
 #include "../../Template/move.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_ft_future_initialize_copy_from_uninitialized_rebuilds_mutex,
-        "ft_future initialize(copy) from uninitialized rebuilds mutex for shared promise")
+FT_TEST(test_ft_future_initialize_copy_from_uninitialised_rebuilds_mutex,
+        "ft_future initialize(copy) from uninitialised rebuilds mutex for shared promise")
 {
     ft_promise<int> promise;
     ft_future<int> original_future(promise);
@@ -64,8 +64,8 @@ FT_TEST(test_ft_future_initialize_copy_recreates_mutex,
     return (1);
 }
 
-FT_TEST(test_ft_future_initialize_move_from_uninitialized_rebuilds_mutex,
-        "ft_future initialize(move) from uninitialized recreates mutex and keeps moved-from reusable")
+FT_TEST(test_ft_future_initialize_move_from_uninitialised_rebuilds_mutex,
+        "ft_future initialize(move) from uninitialised recreates mutex and keeps moved-from reusable")
 {
     ft_promise<int> promise;
     ft_future<int> original_future(promise);

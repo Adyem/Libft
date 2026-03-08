@@ -11,7 +11,7 @@ struct hmac_sha256_stream
 {
     EVP_MAC     *mac;
     EVP_MAC_CTX *context;
-    bool        initialized;
+    bool        initialised;
     bool        finished;
 };
 

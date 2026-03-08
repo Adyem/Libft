@@ -30,7 +30,7 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_INTERNAL, "Internal error"},
     {FT_ERR_CONFIGURATION, "Invalid configuration"},
     {FT_ERR_UNSUPPORTED_TYPE, "Unsupported type"},
-    {FT_ERR_ALREADY_INITIALIZED, "Already initialized"},
+    {FT_ERR_ALREADY_INITIALISED, "Already initialised"},
     {FT_ERR_INITIALIZATION_FAILED, "Initialization failed"},
     {FT_ERR_END_OF_FILE, "End of file reached"},
     {FT_ERR_DIVIDE_BY_ZERO, "Division by zero"},
@@ -77,6 +77,7 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_SYS_MUTEX_NOT_OWNER, "Thread is not the owner of the mutex"},
     {FT_ERR_SYS_MUTEX_UNLOCK_FAILED, "Mutex unlock failed"},
     {FT_ERR_SYS_INTERNAL, "Internal system error"},
+    {FT_ERR_NOT_INITIALISED, "Object not initialised"},
     {FT_ERR_SSL_SYSCALL_ERROR, "SSL system call error"},
     {FT_ERR_HTTP_PROTOCOL_MISMATCH, "HTTP protocol mismatch"},
     {FT_ERR_API_CIRCUIT_OPEN, "API circuit breaker is open"}
@@ -91,7 +92,7 @@ static const char *ft_find_custom_error(int32_t error_code)
     error_index = 0;
     while (error_index < error_count)
     {
-    if (g_error_strings[error_index].error_code == error_code)
+        if (g_error_strings[error_index].error_code == error_code)
             return (g_error_strings[error_index].error_message);
         error_index++;
     }

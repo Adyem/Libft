@@ -11,7 +11,7 @@ static void hmac_sha256_stream_reset_state(hmac_sha256_stream &stream)
 {
     stream.mac = NULL;
     stream.context = NULL;
-    stream.initialized = false;
+    stream.initialised = false;
     stream.finished = false;
     return ;
 }
@@ -60,7 +60,7 @@ int hmac_sha256_stream_init(hmac_sha256_stream &stream, const unsigned char *key
         hmac_sha256_stream_release(stream);
         return (-1);
     }
-    stream.initialized = true;
+    stream.initialised = true;
     stream.finished = false;
     return (0);
 }
@@ -68,7 +68,7 @@ int hmac_sha256_stream_init(hmac_sha256_stream &stream, const unsigned char *key
 int hmac_sha256_stream_update(hmac_sha256_stream &stream, const void *data,
     size_t length)
 {
-    if (stream.initialized == false || stream.context == NULL)
+    if (stream.initialised == false || stream.context == NULL)
         return (-1);
     if (stream.finished != false)
         return (-1);
@@ -87,7 +87,7 @@ int hmac_sha256_stream_final(hmac_sha256_stream &stream, unsigned char *digest,
 {
     size_t output_length;
 
-    if (stream.initialized == false || stream.context == NULL)
+    if (stream.initialised == false || stream.context == NULL)
         return (-1);
     if (stream.finished != false)
         return (-1);
@@ -101,7 +101,7 @@ int hmac_sha256_stream_final(hmac_sha256_stream &stream, unsigned char *digest,
     if (output_length != 32)
         return (-1);
     hmac_sha256_stream_release(stream);
-    stream.initialized = false;
+    stream.initialised = false;
     stream.finished = true;
     return (0);
 }
@@ -109,7 +109,7 @@ int hmac_sha256_stream_final(hmac_sha256_stream &stream, unsigned char *digest,
 void hmac_sha256_stream_cleanup(hmac_sha256_stream &stream)
 {
     hmac_sha256_stream_release(stream);
-    stream.initialized = false;
+    stream.initialised = false;
     stream.finished = true;
     return ;
 }

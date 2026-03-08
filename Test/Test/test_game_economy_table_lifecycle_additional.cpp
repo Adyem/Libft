@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_economy_table.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
@@ -18,7 +18,7 @@ static void lifecycle_signal_handler(int signal_value)
     return ;
 }
 
-static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_table &))
+static int expect_sigabrt_on_uninitialised_table(void (*operation)(ft_economy_table &))
 {
     struct sigaction old_action_abort;
     struct sigaction new_action_abort;
@@ -212,122 +212,122 @@ static void operation_unlock(ft_economy_table &table)
     return ;
 }
 
-FT_TEST(test_economy_lifecycle_register_price_uninitialized_aborts, "economy table lifecycle aborts for register price while uninitialized")
+FT_TEST(test_economy_lifecycle_register_price_uninitialised_aborts, "economy table lifecycle aborts for register price while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_register_price));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_register_price));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_register_rarity_uninitialized_aborts, "economy table lifecycle aborts for register rarity while uninitialized")
+FT_TEST(test_economy_lifecycle_register_rarity_uninitialised_aborts, "economy table lifecycle aborts for register rarity while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_register_rarity));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_register_rarity));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_register_vendor_uninitialized_aborts, "economy table lifecycle aborts for register vendor while uninitialized")
+FT_TEST(test_economy_lifecycle_register_vendor_uninitialised_aborts, "economy table lifecycle aborts for register vendor while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_register_vendor));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_register_vendor));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_register_currency_uninitialized_aborts, "economy table lifecycle aborts for register currency while uninitialized")
+FT_TEST(test_economy_lifecycle_register_currency_uninitialised_aborts, "economy table lifecycle aborts for register currency while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_register_currency));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_register_currency));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_fetch_price_uninitialized_aborts, "economy table lifecycle aborts for fetch price while uninitialized")
+FT_TEST(test_economy_lifecycle_fetch_price_uninitialised_aborts, "economy table lifecycle aborts for fetch price while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_fetch_price));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_fetch_price));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_fetch_rarity_uninitialized_aborts, "economy table lifecycle aborts for fetch rarity while uninitialized")
+FT_TEST(test_economy_lifecycle_fetch_rarity_uninitialised_aborts, "economy table lifecycle aborts for fetch rarity while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_fetch_rarity));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_fetch_rarity));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_fetch_vendor_uninitialized_aborts, "economy table lifecycle aborts for fetch vendor while uninitialized")
+FT_TEST(test_economy_lifecycle_fetch_vendor_uninitialised_aborts, "economy table lifecycle aborts for fetch vendor while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_fetch_vendor));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_fetch_vendor));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_fetch_currency_uninitialized_aborts, "economy table lifecycle aborts for fetch currency while uninitialized")
+FT_TEST(test_economy_lifecycle_fetch_currency_uninitialised_aborts, "economy table lifecycle aborts for fetch currency while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_fetch_currency));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_fetch_currency));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_get_price_definitions_uninitialized_aborts, "economy table lifecycle aborts for get price definitions while uninitialized")
+FT_TEST(test_economy_lifecycle_get_price_definitions_uninitialised_aborts, "economy table lifecycle aborts for get price definitions while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_get_price_definitions));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_get_price_definitions));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_get_rarity_bands_uninitialized_aborts, "economy table lifecycle aborts for get rarity bands while uninitialized")
+FT_TEST(test_economy_lifecycle_get_rarity_bands_uninitialised_aborts, "economy table lifecycle aborts for get rarity bands while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_get_rarity_bands));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_get_rarity_bands));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_get_vendor_profiles_uninitialized_aborts, "economy table lifecycle aborts for get vendor profiles while uninitialized")
+FT_TEST(test_economy_lifecycle_get_vendor_profiles_uninitialised_aborts, "economy table lifecycle aborts for get vendor profiles while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_get_vendor_profiles));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_get_vendor_profiles));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_get_currency_rates_uninitialized_aborts, "economy table lifecycle aborts for get currency rates while uninitialized")
+FT_TEST(test_economy_lifecycle_get_currency_rates_uninitialised_aborts, "economy table lifecycle aborts for get currency rates while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_get_currency_rates));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_get_currency_rates));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_set_price_definitions_uninitialized_aborts, "economy table lifecycle aborts for set price definitions while uninitialized")
+FT_TEST(test_economy_lifecycle_set_price_definitions_uninitialised_aborts, "economy table lifecycle aborts for set price definitions while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_set_price_definitions));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_set_price_definitions));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_set_rarity_bands_uninitialized_aborts, "economy table lifecycle aborts for set rarity bands while uninitialized")
+FT_TEST(test_economy_lifecycle_set_rarity_bands_uninitialised_aborts, "economy table lifecycle aborts for set rarity bands while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_set_rarity_bands));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_set_rarity_bands));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_set_vendor_profiles_uninitialized_aborts, "economy table lifecycle aborts for set vendor profiles while uninitialized")
+FT_TEST(test_economy_lifecycle_set_vendor_profiles_uninitialised_aborts, "economy table lifecycle aborts for set vendor profiles while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_set_vendor_profiles));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_set_vendor_profiles));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_set_currency_rates_uninitialized_aborts, "economy table lifecycle aborts for set currency rates while uninitialized")
+FT_TEST(test_economy_lifecycle_set_currency_rates_uninitialised_aborts, "economy table lifecycle aborts for set currency rates while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_set_currency_rates));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_set_currency_rates));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_enable_thread_safety_uninitialized_aborts, "economy table lifecycle aborts for enable_thread_safety while uninitialized")
+FT_TEST(test_economy_lifecycle_enable_thread_safety_uninitialised_aborts, "economy table lifecycle aborts for enable_thread_safety while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_enable_thread_safety));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_enable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_is_thread_safe_uninitialized_aborts, "economy table lifecycle aborts for is_thread_safe while uninitialized")
+FT_TEST(test_economy_lifecycle_is_thread_safe_uninitialised_aborts, "economy table lifecycle aborts for is_thread_safe while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_is_thread_safe));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_is_thread_safe));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_lock_uninitialized_aborts, "economy table lifecycle aborts for lock while uninitialized")
+FT_TEST(test_economy_lifecycle_lock_uninitialised_aborts, "economy table lifecycle aborts for lock while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_lock));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_lock));
     return (1);
 }
 
-FT_TEST(test_economy_lifecycle_unlock_uninitialized_aborts, "economy table lifecycle aborts for unlock while uninitialized")
+FT_TEST(test_economy_lifecycle_unlock_uninitialised_aborts, "economy table lifecycle aborts for unlock while uninitialised")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialized_table(operation_unlock));
+    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_unlock));
     return (1);
 }

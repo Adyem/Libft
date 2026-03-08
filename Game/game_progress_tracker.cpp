@@ -24,7 +24,7 @@ const char *ft_progress_tracker::get_error_str() const noexcept
 
 ft_progress_tracker::ft_progress_tracker() noexcept
     : _achievements(), _quests(), _mutex(ft_nullptr),
-      _initialized_state(ft_progress_tracker::_state_uninitialized)
+      _initialised_state(ft_progress_tracker::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -32,9 +32,9 @@ ft_progress_tracker::ft_progress_tracker() noexcept
 
 ft_progress_tracker::~ft_progress_tracker() noexcept
 {
-    if (this->_initialized_state == ft_progress_tracker::_state_uninitialized)
+    if (this->_initialised_state == ft_progress_tracker::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_progress_tracker::_state_initialized)
+    if (this->_initialised_state == ft_progress_tracker::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -52,12 +52,12 @@ void ft_progress_tracker::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_progress_tracker::abort_if_not_initialized(const char *method_name) const
+void ft_progress_tracker::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_progress_tracker::_state_initialized)
+    if (this->_initialised_state == ft_progress_tracker::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -65,10 +65,10 @@ int ft_progress_tracker::initialize() noexcept
 {
     int error;
 
-    if (this->_initialized_state == ft_progress_tracker::_state_initialized)
+    if (this->_initialised_state == ft_progress_tracker::_state_initialised)
     {
         this->abort_lifecycle_error("ft_progress_tracker::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -87,7 +87,7 @@ int ft_progress_tracker::initialize() noexcept
     }
     this->_achievements.clear();
     this->_quests.clear();
-    this->_initialized_state = ft_progress_tracker::_state_initialized;
+    this->_initialised_state = ft_progress_tracker::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -102,10 +102,10 @@ int ft_progress_tracker::initialize(const ft_progress_tracker &other) noexcept
     const Pair<int, ft_quest> *quest_entry;
     const Pair<int, ft_quest> *quest_end;
 
-    if (other._initialized_state != ft_progress_tracker::_state_initialized)
+    if (other._initialised_state != ft_progress_tracker::_state_initialised)
     {
         other.abort_lifecycle_error("ft_progress_tracker::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -148,7 +148,7 @@ int ft_progress_tracker::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_progress_tracker::_state_initialized)
+    if (this->_initialised_state != ft_progress_tracker::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -158,7 +158,7 @@ int ft_progress_tracker::destroy() noexcept
     (void)this->_achievements.destroy();
     (void)this->_quests.destroy();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_progress_tracker::_state_destroyed;
+    this->_initialised_state = ft_progress_tracker::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -168,7 +168,7 @@ int ft_progress_tracker::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_progress_tracker::enable_thread_safety");
+    this->abort_if_not_initialised("ft_progress_tracker::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -252,13 +252,13 @@ int ft_progress_tracker::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_progress_tracker::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_progress_tracker::lock");
+    this->abort_if_not_initialised("ft_progress_tracker::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_progress_tracker::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_progress_tracker::unlock");
+    this->abort_if_not_initialised("ft_progress_tracker::unlock");
     int unlock_error;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
@@ -268,25 +268,25 @@ void ft_progress_tracker::unlock(bool lock_acquired) const noexcept
 
 ft_map<int, ft_achievement> &ft_progress_tracker::get_achievements() noexcept
 {
-    this->abort_if_not_initialized("ft_progress_tracker::get_achievements");
+    this->abort_if_not_initialised("ft_progress_tracker::get_achievements");
     return (this->_achievements);
 }
 
 const ft_map<int, ft_achievement> &ft_progress_tracker::get_achievements() const noexcept
 {
-    this->abort_if_not_initialized("ft_progress_tracker::get_achievements const");
+    this->abort_if_not_initialised("ft_progress_tracker::get_achievements const");
     return (this->_achievements);
 }
 
 ft_map<int, ft_quest> &ft_progress_tracker::get_quests() noexcept
 {
-    this->abort_if_not_initialized("ft_progress_tracker::get_quests");
+    this->abort_if_not_initialised("ft_progress_tracker::get_quests");
     return (this->_quests);
 }
 
 const ft_map<int, ft_quest> &ft_progress_tracker::get_quests() const noexcept
 {
-    this->abort_if_not_initialized("ft_progress_tracker::get_quests const");
+    this->abort_if_not_initialised("ft_progress_tracker::get_quests const");
     return (this->_quests);
 }
 
@@ -299,7 +299,7 @@ void ft_progress_tracker::set_achievements(
     const Pair<int, ft_achievement> *entry;
     const Pair<int, ft_achievement> *entry_end;
 
-    this->abort_if_not_initialized("ft_progress_tracker::set_achievements");
+    this->abort_if_not_initialised("ft_progress_tracker::set_achievements");
     int lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -336,7 +336,7 @@ void ft_progress_tracker::set_quests(const ft_map<int, ft_quest> &quests) noexce
     const Pair<int, ft_quest> *entry;
     const Pair<int, ft_quest> *entry_end;
 
-    this->abort_if_not_initialized("ft_progress_tracker::set_quests");
+    this->abort_if_not_initialised("ft_progress_tracker::set_quests");
     int lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -370,7 +370,7 @@ int ft_progress_tracker::register_achievement(
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_progress_tracker::register_achievement");
+    this->abort_if_not_initialised("ft_progress_tracker::register_achievement");
     int lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -393,7 +393,7 @@ int ft_progress_tracker::register_quest(const ft_quest &quest) noexcept
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_progress_tracker::register_quest");
+    this->abort_if_not_initialised("ft_progress_tracker::register_quest");
     int lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -417,7 +417,7 @@ int ft_progress_tracker::update_goal_target(int achievement_id, int goal_id,
 {
     Pair<int, ft_achievement> *achievement_entry;
 
-    this->abort_if_not_initialized("ft_progress_tracker::update_goal_target");
+    this->abort_if_not_initialised("ft_progress_tracker::update_goal_target");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
     {
@@ -434,7 +434,7 @@ int ft_progress_tracker::update_goal_progress(int achievement_id, int goal_id,
 {
     Pair<int, ft_achievement> *achievement_entry;
 
-    this->abort_if_not_initialized("ft_progress_tracker::update_goal_progress");
+    this->abort_if_not_initialised("ft_progress_tracker::update_goal_progress");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
     {
@@ -451,7 +451,7 @@ int ft_progress_tracker::add_goal_progress(int achievement_id, int goal_id,
 {
     Pair<int, ft_achievement> *achievement_entry;
 
-    this->abort_if_not_initialized("ft_progress_tracker::add_goal_progress");
+    this->abort_if_not_initialised("ft_progress_tracker::add_goal_progress");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
     {
@@ -467,7 +467,7 @@ bool ft_progress_tracker::is_achievement_complete(int achievement_id) const noex
 {
     const Pair<int, ft_achievement> *achievement_entry;
 
-    this->abort_if_not_initialized("ft_progress_tracker::is_achievement_complete");
+    this->abort_if_not_initialised("ft_progress_tracker::is_achievement_complete");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
         return (false);
@@ -478,7 +478,7 @@ int ft_progress_tracker::set_quest_phase(int quest_id, int phase) noexcept
 {
     Pair<int, ft_quest> *quest_entry;
 
-    this->abort_if_not_initialized("ft_progress_tracker::set_quest_phase");
+    this->abort_if_not_initialised("ft_progress_tracker::set_quest_phase");
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
         return (FT_ERR_NOT_FOUND);
@@ -490,7 +490,7 @@ int ft_progress_tracker::advance_quest_phase(int quest_id) noexcept
 {
     Pair<int, ft_quest> *quest_entry;
 
-    this->abort_if_not_initialized("ft_progress_tracker::advance_quest_phase");
+    this->abort_if_not_initialised("ft_progress_tracker::advance_quest_phase");
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
     {
@@ -511,7 +511,7 @@ bool ft_progress_tracker::is_quest_complete(int quest_id) const noexcept
 {
     const Pair<int, ft_quest> *quest_entry;
 
-    this->abort_if_not_initialized("ft_progress_tracker::is_quest_complete");
+    this->abort_if_not_initialised("ft_progress_tracker::is_quest_complete");
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
         return (false);
@@ -521,7 +521,7 @@ bool ft_progress_tracker::is_quest_complete(int quest_id) const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_progress_tracker::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_progress_tracker::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_progress_tracker::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

@@ -8,7 +8,7 @@ thread_local int ft_buff::_last_error = FT_ERR_SUCCESS;
 ft_buff::ft_buff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _mutex(ft_nullptr),
-      _initialized_state(ft_buff::_state_uninitialized)
+      _initialised_state(ft_buff::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -16,9 +16,9 @@ ft_buff::ft_buff() noexcept
 
 ft_buff::~ft_buff() noexcept
 {
-    if (this->_initialized_state == ft_buff::_state_uninitialized)
+    if (this->_initialised_state == ft_buff::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_buff::_state_initialized)
+    if (this->_initialised_state == ft_buff::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -35,21 +35,21 @@ void ft_buff::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_buff::abort_if_not_initialized(const char *method_name) const
+void ft_buff::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_buff::_state_initialized)
+    if (this->_initialised_state == ft_buff::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_buff::initialize() noexcept
 {
-    if (this->_initialized_state == ft_buff::_state_initialized)
+    if (this->_initialised_state == ft_buff::_state_initialised)
     {
         this->abort_lifecycle_error("ft_buff::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_id = 0;
@@ -58,7 +58,7 @@ int ft_buff::initialize() noexcept
     this->_modifier2 = 0;
     this->_modifier3 = 0;
     this->_modifier4 = 0;
-    this->_initialized_state = ft_buff::_state_initialized;
+    this->_initialised_state = ft_buff::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -91,7 +91,7 @@ int ft_buff::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_buff::_state_initialized)
+    if (this->_initialised_state != ft_buff::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -103,7 +103,7 @@ int ft_buff::destroy() noexcept
     this->_modifier2 = 0;
     this->_modifier3 = 0;
     this->_modifier4 = 0;
-    this->_initialized_state = ft_buff::_state_destroyed;
+    this->_initialised_state = ft_buff::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -113,7 +113,7 @@ int ft_buff::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_buff::enable_thread_safety");
+    this->abort_if_not_initialised("ft_buff::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -181,13 +181,13 @@ int ft_buff::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_buff::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_buff::lock");
+    this->abort_if_not_initialised("ft_buff::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_buff::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_buff::unlock");
+    this->abort_if_not_initialised("ft_buff::unlock");
     int unlock_error;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
@@ -217,7 +217,7 @@ int ft_buff::get_id() const noexcept
     int lock_error;
     int value;
 
-    this->abort_if_not_initialized("ft_buff::get_id");
+    this->abort_if_not_initialised("ft_buff::get_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -235,7 +235,7 @@ void ft_buff::set_id(int id) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::set_id");
+    this->abort_if_not_initialised("ft_buff::set_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -255,7 +255,7 @@ int ft_buff::get_duration() const noexcept
     int lock_error;
     int value;
 
-    this->abort_if_not_initialized("ft_buff::get_duration");
+    this->abort_if_not_initialised("ft_buff::get_duration");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -277,7 +277,7 @@ void ft_buff::set_duration(int duration) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::set_duration");
+    this->abort_if_not_initialised("ft_buff::set_duration");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -300,7 +300,7 @@ void ft_buff::add_duration(int duration) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::add_duration");
+    this->abort_if_not_initialised("ft_buff::add_duration");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -323,7 +323,7 @@ void ft_buff::sub_duration(int duration) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::sub_duration");
+    this->abort_if_not_initialised("ft_buff::sub_duration");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -347,7 +347,7 @@ int ft_buff::get_modifier1() const noexcept
     int lock_error;
     int value;
 
-    this->abort_if_not_initialized("ft_buff::get_modifier1");
+    this->abort_if_not_initialised("ft_buff::get_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -365,7 +365,7 @@ void ft_buff::set_modifier1(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::set_modifier1");
+    this->abort_if_not_initialised("ft_buff::set_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -383,7 +383,7 @@ void ft_buff::add_modifier1(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::add_modifier1");
+    this->abort_if_not_initialised("ft_buff::add_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -401,7 +401,7 @@ void ft_buff::sub_modifier1(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::sub_modifier1");
+    this->abort_if_not_initialised("ft_buff::sub_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -420,7 +420,7 @@ int ft_buff::get_modifier2() const noexcept
     int lock_error;
     int value;
 
-    this->abort_if_not_initialized("ft_buff::get_modifier2");
+    this->abort_if_not_initialised("ft_buff::get_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -438,7 +438,7 @@ void ft_buff::set_modifier2(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::set_modifier2");
+    this->abort_if_not_initialised("ft_buff::set_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -456,7 +456,7 @@ void ft_buff::add_modifier2(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::add_modifier2");
+    this->abort_if_not_initialised("ft_buff::add_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -474,7 +474,7 @@ void ft_buff::sub_modifier2(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::sub_modifier2");
+    this->abort_if_not_initialised("ft_buff::sub_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -493,7 +493,7 @@ int ft_buff::get_modifier3() const noexcept
     int lock_error;
     int value;
 
-    this->abort_if_not_initialized("ft_buff::get_modifier3");
+    this->abort_if_not_initialised("ft_buff::get_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -511,7 +511,7 @@ void ft_buff::set_modifier3(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::set_modifier3");
+    this->abort_if_not_initialised("ft_buff::set_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -529,7 +529,7 @@ void ft_buff::add_modifier3(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::add_modifier3");
+    this->abort_if_not_initialised("ft_buff::add_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -547,7 +547,7 @@ void ft_buff::sub_modifier3(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::sub_modifier3");
+    this->abort_if_not_initialised("ft_buff::sub_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -566,7 +566,7 @@ int ft_buff::get_modifier4() const noexcept
     int lock_error;
     int value;
 
-    this->abort_if_not_initialized("ft_buff::get_modifier4");
+    this->abort_if_not_initialised("ft_buff::get_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -584,7 +584,7 @@ void ft_buff::set_modifier4(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::set_modifier4");
+    this->abort_if_not_initialised("ft_buff::set_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -602,7 +602,7 @@ void ft_buff::add_modifier4(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::add_modifier4");
+    this->abort_if_not_initialised("ft_buff::add_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -620,7 +620,7 @@ void ft_buff::sub_modifier4(int mod) noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_buff::sub_modifier4");
+    this->abort_if_not_initialised("ft_buff::sub_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

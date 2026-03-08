@@ -3,12 +3,12 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cerrno>
-#include <ctime>
 #include <cstddef>
 
 static t_su_write_syscall_hook    g_su_write_syscall_hook = ft_nullptr;
 
-static ssize_t    su_default_write_syscall(int file_descriptor, const void *buffer, size_t count)
+static int64_t su_default_write_syscall(int32_t file_descriptor,
+    const void *buffer, ft_size_t count)
 {
     int64_t bytes_written;
     int32_t error_code;
@@ -37,13 +37,13 @@ void    su_reset_write_syscall_hook(void)
     return ;
 }
 
-ssize_t su_read(int file_descriptor, void *buffer, size_t count)
+int64_t su_read(int32_t file_descriptor, void *buffer, ft_size_t count)
 {
-    int retry_attempts;
+    int32_t retry_attempts;
     int64_t bytes_read_value;
 
     retry_attempts = 0;
-    while (true)
+    while (1)
     {
         int32_t error_code;
 
@@ -51,7 +51,6 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         error_code = cmp_read(file_descriptor, buffer, count, &bytes_read_value);
         if (error_code == FT_ERR_SUCCESS)
             return (bytes_read_value);
-#if defined(__linux__) || defined(__APPLE__)
         const int32_t max_retries = 10;
         const int32_t retry_delay_ms = 500;
         if (error_code == cmp_map_system_error_to_ft(EINTR))
@@ -59,27 +58,22 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         else if (error_code == cmp_map_system_error_to_ft(EAGAIN)
             || error_code == cmp_map_system_error_to_ft(EWOULDBLOCK))
         {
-            if (retry_attempts < static_cast<int>(max_retries))
-            {
-                retry_attempts++;
-                struct timespec delay = {0, retry_delay_ms * 1000000L};
-                nanosleep(&delay, ft_nullptr);
-                continue ;
-            }
+                if (retry_attempts < static_cast<int32_t>(max_retries))
+                {
+                    retry_attempts++;
+                    (void)cmp_thread_sleep(static_cast<uint32_t>(retry_delay_ms));
+                    continue ;
+                }
             return (-1);
         }
         return (-1);
-#else
-        (void)error_code;
-        return (-1);
-#endif
     }
 }
 
-ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
+int64_t su_write(int32_t file_descriptor, const void *buffer, ft_size_t count)
 {
-    size_t total_written;
-    int retry_attempts;
+    ft_size_t total_written;
+    int32_t retry_attempts;
     const char *byte_buffer;
     t_su_write_syscall_hook write_function;
     int64_t bytes_written_value;
@@ -92,7 +86,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
         write_function = su_default_write_syscall;
     while (total_written < count)
     {
-        ssize_t write_result;
+        int64_t write_result;
         int32_t error_code;
 
         if (write_function == su_default_write_syscall)
@@ -117,12 +111,11 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
             }
         }
         if (write_result > 0)
-            total_written += static_cast<size_t>(write_result);
+            total_written += static_cast<ft_size_t>(write_result);
         else
         {
             if (write_result == 0)
                 return (-1);
-#if defined(__linux__) || defined(__APPLE__)
             const int32_t max_retries = 10;
             const int32_t retry_delay_ms = 500;
             if (error_code == cmp_map_system_error_to_ft(EINTR))
@@ -130,28 +123,23 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
             else if (error_code == cmp_map_system_error_to_ft(EAGAIN)
                 || error_code == cmp_map_system_error_to_ft(EWOULDBLOCK))
             {
-                if (retry_attempts < static_cast<int>(max_retries))
+                if (retry_attempts < static_cast<int32_t>(max_retries))
                 {
                     retry_attempts++;
-                    struct timespec delay = {0, retry_delay_ms * 1000000L};
-                    nanosleep(&delay, ft_nullptr);
+                    (void)cmp_thread_sleep(static_cast<uint32_t>(retry_delay_ms));
                     continue ;
                 }
                 return (-1);
             }
             return (-1);
-#else
-            (void)error_code;
-            return (-1);
-#endif
         }
     }
-    return (total_written);
+    return (static_cast<int64_t>(total_written));
 }
 
-int su_close(int file_descriptor)
+int32_t su_close(int32_t file_descriptor)
 {
-    int close_result;
+    int32_t close_result;
 
     close_result = cmp_close(file_descriptor);
     if (close_result != 0)

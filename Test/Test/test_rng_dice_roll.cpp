@@ -2,7 +2,7 @@
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Basic/basic.hpp"
 #include "rng_test_utils.hpp"
 #include <limits>

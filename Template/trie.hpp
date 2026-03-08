@@ -27,11 +27,11 @@ class ft_trie
         node_value                                  *_data;
         ft_unordered_map<char, ft_trie<ValueType>*> _children;
         mutable pt_recursive_mutex                  *_mutex;
-        uint8_t                                      _initialized_state;
+        uint8_t                                      _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -52,12 +52,12 @@ class ft_trie
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -173,7 +173,7 @@ class ft_trie
     public:
         ft_trie()
             : _data(ft_nullptr), _children(), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -181,7 +181,7 @@ class ft_trie
 
         ~ft_trie()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -195,14 +195,14 @@ class ft_trie
 
         int initialize()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_trie::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_data = ft_nullptr;
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -212,7 +212,7 @@ class ft_trie
             int lock_error;
             int unlock_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -227,7 +227,7 @@ class ft_trie
             unlock_error = this->unlock_internal(lock_acquired);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -238,7 +238,7 @@ class ft_trie
             int insert_result;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_trie::insert");
+            this->abort_if_not_initialised("ft_trie::insert");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -258,7 +258,7 @@ class ft_trie
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_trie::search");
+            this->abort_if_not_initialised("ft_trie::search");
             if (key == ft_nullptr)
             {
                 set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
@@ -305,7 +305,7 @@ class ft_trie
             int initialize_result;
             typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator(this->_children.begin());
 
-            this->abort_if_not_initialized("ft_trie::enable_thread_safety");
+            this->abort_if_not_initialised("ft_trie::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -337,8 +337,8 @@ class ft_trie
             int destroy_result;
             typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator(this->_children.begin());
 
-            if (this->_initialized_state != _state_initialized
-                && this->_initialized_state != _state_destroyed)
+            if (this->_initialised_state != _state_initialised
+                && this->_initialised_state != _state_destroyed)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             while (child_iterator != this->_children.end())
             {
@@ -359,7 +359,7 @@ class ft_trie
 
         bool is_thread_safe() const
         {
-            this->abort_if_not_initialized("ft_trie::is_thread_safe");
+            this->abort_if_not_initialised("ft_trie::is_thread_safe");
             set_last_operation_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
@@ -368,7 +368,7 @@ class ft_trie
         {
             int lock_result;
 
-            this->abort_if_not_initialized("ft_trie::lock");
+            this->abort_if_not_initialised("ft_trie::lock");
             lock_result = this->lock_internal(lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (-1);

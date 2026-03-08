@@ -2,7 +2,7 @@
 #include "basic.hpp"
 #include "utf8.hpp"
 
-int ft_utf8_count(const char *string, ft_size_t *code_point_count_pointer)
+int32_t ft_utf8_count(const char *string, ft_size_t *code_point_count_pointer)
 {
     if (!string || !code_point_count_pointer)
         return (FT_FAILURE);

@@ -8,12 +8,12 @@
 #include <new>
 #include <limits>
 
-static bool g_force_file_stream_allocation_failure = false;
+static ft_bool g_force_file_stream_allocation_failure = FT_FALSE;
 
-int su_file_prepare_thread_safety(su_file *stream)
+int32_t su_file_prepare_thread_safety(su_file *stream)
 {
     pt_mutex    *mutex_pointer;
-    int         mutex_error;
+    int32_t         mutex_error;
 
     if (stream == ft_nullptr)
         return (-1);
@@ -44,43 +44,43 @@ void su_file_teardown_thread_safety(su_file *stream)
     return ;
 }
 
-void su_force_file_stream_allocation_failure(bool should_fail)
+void su_force_file_stream_allocation_failure(ft_bool should_fail)
 {
     g_force_file_stream_allocation_failure = should_fail;
     return ;
 }
 
-int su_file_lock(su_file *stream, bool *lock_acquired)
+int32_t su_file_lock(su_file *stream, ft_bool *lock_acquired)
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (stream == ft_nullptr || lock_acquired == ft_nullptr)
         return (-1);
-    *lock_acquired = false;
+    *lock_acquired = FT_FALSE;
     lock_error = pt_mutex_lock_if_not_null(stream->mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    *lock_acquired = true;
+    *lock_acquired = FT_TRUE;
     return (0);
 }
 
-void su_file_unlock(su_file *stream, bool lock_acquired)
+void su_file_unlock(su_file *stream, ft_bool lock_acquired)
 {
     if (stream == ft_nullptr)
         return ;
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return ;
     (void)pt_mutex_unlock_if_not_null(stream->mutex);
     return ;
 }
 
-static su_file *create_file_stream(int file_descriptor)
+static su_file *create_file_stream(int32_t file_descriptor)
 {
     su_file  *file_stream;
 
     if (file_descriptor < 0)
         return (ft_nullptr);
-    if (g_force_file_stream_allocation_failure == true)
+    if (g_force_file_stream_allocation_failure == FT_TRUE)
     {
         (void)cmp_close(file_descriptor);
         return (ft_nullptr);
@@ -92,7 +92,7 @@ static su_file *create_file_stream(int file_descriptor)
         return (ft_nullptr);
     }
     file_stream->mutex = ft_nullptr;
-    file_stream->closed = false;
+    file_stream->closed = FT_FALSE;
     file_stream->_descriptor = file_descriptor;
     if (su_file_prepare_thread_safety(file_stream) != 0)
     {
@@ -105,7 +105,7 @@ static su_file *create_file_stream(int file_descriptor)
 
 su_file *su_fopen(const char *path_name)
 {
-    int file_descriptor;
+    int32_t file_descriptor;
 
     if (path_name == ft_nullptr)
         return (ft_nullptr);
@@ -115,9 +115,9 @@ su_file *su_fopen(const char *path_name)
     return (create_file_stream(file_descriptor));
 }
 
-su_file *su_fopen(const char *path_name, int flags)
+su_file *su_fopen(const char *path_name, int32_t flags)
 {
-    int file_descriptor;
+    int32_t file_descriptor;
 
     if (path_name == ft_nullptr)
         return (ft_nullptr);
@@ -127,9 +127,9 @@ su_file *su_fopen(const char *path_name, int flags)
     return (create_file_stream(file_descriptor));
 }
 
-su_file *su_fopen(const char *path_name, int flags, mode_t mode)
+su_file *su_fopen(const char *path_name, int32_t flags, mode_t mode)
 {
-    int file_descriptor;
+    int32_t file_descriptor;
 
     if (path_name == ft_nullptr)
         return (ft_nullptr);
@@ -139,25 +139,25 @@ su_file *su_fopen(const char *path_name, int flags, mode_t mode)
     return (create_file_stream(file_descriptor));
 }
 
-int su_fclose(su_file *stream)
+int32_t su_fclose(su_file *stream)
 {
-    bool    lock_acquired;
-    int     close_result;
+    ft_bool    lock_acquired;
+    int32_t     close_result;
 
     if (stream == ft_nullptr)
         return (-1);
     if (su_file_lock(stream, &lock_acquired) != 0)
         return (-1);
-    if (stream->closed == true)
+    if (stream->closed == FT_TRUE)
     {
         su_file_unlock(stream, lock_acquired);
         return (-1);
     }
-    stream->closed = true;
+    stream->closed = FT_TRUE;
     close_result = cmp_close(stream->_descriptor);
     if (close_result != 0)
     {
-        stream->closed = false;
+        stream->closed = FT_FALSE;
         su_file_unlock(stream, lock_acquired);
         return (-1);
     }
@@ -167,14 +167,14 @@ int su_fclose(su_file *stream)
     return (0);
 }
 
-size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
+ft_size_t su_fread(void *buffer, ft_size_t size, ft_size_t count, su_file *stream)
 {
-    size_t      total_size;
-    size_t      total_read;
+    ft_size_t   total_size;
+    ft_size_t   total_read;
     char        *byte_buffer;
-    ssize_t     bytes_read;
-    size_t      maximum_size;
-    bool        lock_acquired;
+    int64_t     bytes_read;
+    ft_size_t   maximum_size;
+    ft_bool        lock_acquired;
 
     if (buffer == ft_nullptr || stream == ft_nullptr)
         return (0);
@@ -182,12 +182,12 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
         return (0);
     if (su_file_lock(stream, &lock_acquired) != 0)
         return (0);
-    if (stream->closed == true)
+    if (stream->closed == FT_TRUE)
     {
         su_file_unlock(stream, lock_acquired);
         return (0);
     }
-    maximum_size = std::numeric_limits<size_t>::max();
+    maximum_size = std::numeric_limits<ft_size_t>::max();
     if (count > maximum_size / size)
     {
         su_file_unlock(stream, lock_acquired);
@@ -202,18 +202,18 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
             byte_buffer + total_read, total_size - total_read);
         if (bytes_read <= 0)
             break ;
-        total_read += static_cast<size_t>(bytes_read);
+        total_read += static_cast<ft_size_t>(bytes_read);
     }
     su_file_unlock(stream, lock_acquired);
     return (total_read / size);
 }
 
-size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
+ft_size_t su_fwrite(const void *buffer, ft_size_t size, ft_size_t count, su_file *stream)
 {
-    size_t      total_size;
-    size_t      maximum_size;
-    bool        lock_acquired;
-    ssize_t     bytes_written;
+    ft_size_t   total_size;
+    ft_size_t   maximum_size;
+    ft_bool        lock_acquired;
+    int64_t     bytes_written;
 
     if (buffer == ft_nullptr || stream == ft_nullptr)
         return (0);
@@ -221,12 +221,12 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
         return (0);
     if (su_file_lock(stream, &lock_acquired) != 0)
         return (0);
-    if (stream->closed == true)
+    if (stream->closed == FT_TRUE)
     {
         su_file_unlock(stream, lock_acquired);
         return (0);
     }
-    maximum_size = std::numeric_limits<size_t>::max();
+    maximum_size = std::numeric_limits<ft_size_t>::max();
     if (count > maximum_size / size)
     {
         su_file_unlock(stream, lock_acquired);
@@ -237,19 +237,19 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
     su_file_unlock(stream, lock_acquired);
     if (bytes_written < 0)
         return (0);
-    return (static_cast<size_t>(bytes_written) / size);
+    return (static_cast<ft_size_t>(bytes_written) / size);
 }
 
-int su_fseek(su_file *stream, long offset, int origin)
+int32_t su_fseek(su_file *stream, int64_t offset, int32_t origin)
 {
     off_t   result;
-    bool    lock_acquired;
+    ft_bool    lock_acquired;
 
     if (stream == ft_nullptr)
         return (-1);
     if (su_file_lock(stream, &lock_acquired) != 0)
         return (-1);
-    if (stream->closed == true)
+    if (stream->closed == FT_TRUE)
     {
         su_file_unlock(stream, lock_acquired);
         return (-1);
@@ -261,16 +261,16 @@ int su_fseek(su_file *stream, long offset, int origin)
     return (0);
 }
 
-long su_ftell(su_file *stream)
+int64_t su_ftell(su_file *stream)
 {
     off_t   position;
-    bool    lock_acquired;
+    ft_bool    lock_acquired;
 
     if (stream == ft_nullptr)
         return (-1L);
     if (su_file_lock(stream, &lock_acquired) != 0)
         return (-1L);
-    if (stream->closed == true)
+    if (stream->closed == FT_TRUE)
     {
         su_file_unlock(stream, lock_acquired);
         return (-1L);

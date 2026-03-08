@@ -33,15 +33,15 @@ class ft_dom_node
         ft_vector<ft_string> _attribute_keys;
         ft_vector<ft_string> _attribute_values;
         pt_recursive_mutex *_mutex;
-        uint8_t _initialized_state;
+        uint8_t _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const;
-        void abort_if_not_initialized(const char *method_name) const;
+        void abort_if_not_initialised(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
@@ -90,15 +90,15 @@ class ft_dom_document
     private:
         ft_dom_node *_root;
         pt_recursive_mutex *_mutex;
-        uint8_t _initialized_state;
+        uint8_t _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const;
-        void abort_if_not_initialized(const char *method_name) const;
+        void abort_if_not_initialised(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
@@ -154,15 +154,15 @@ class ft_dom_validation_report
         bool _valid;
         ft_vector<ft_dom_validation_error> _errors;
         pt_recursive_mutex *_mutex;
-        uint8_t _initialized_state;
+        uint8_t _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const;
-        void abort_if_not_initialized(const char *method_name) const;
+        void abort_if_not_initialised(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
@@ -198,15 +198,15 @@ class ft_dom_schema
     private:
         ft_vector<ft_dom_schema_rule> _rules;
         pt_recursive_mutex *_mutex;
-        uint8_t _initialized_state;
+        uint8_t _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const;
-        void abort_if_not_initialized(const char *method_name) const;
+        void abort_if_not_initialised(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
         int validate_rule(const ft_dom_schema_rule &rule, const ft_dom_node *node,

@@ -1,0 +1,88 @@
+#pragma once
+
+#include "../Basic/basic.hpp"
+#include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
+
+enum ft_render_window_flags
+{
+    FT_RENDER_WINDOW_FLAG_NONE = 0,
+    FT_RENDER_WINDOW_FLAG_RESIZABLE = 1 << 0,
+    FT_RENDER_WINDOW_FLAG_FULLSCREEN = 1 << 1
+};
+
+struct ft_render_window_desc
+{
+    int32_t         width;
+    int32_t         height;
+    const char      *title;
+    uint32_t        flags;
+};
+
+struct ft_render_framebuffer
+{
+    int32_t         width;
+    int32_t         height;
+    uint32_t        *pixels;
+};
+
+struct ft_render_screen_size
+{
+    int32_t         width;
+    int32_t         height;
+};
+
+ft_render_screen_size  ft_render_get_primary_screen_size(void);
+
+class ft_render_window
+{
+ #ifdef LIBFT_TEST_BUILD
+    public:
+ #else
+    private:
+ #endif
+
+        pt_recursive_mutex           *_mutex = ft_nullptr;
+        uint8_t                      _initialised_state;
+
+        ft_render_framebuffer        _framebuffer;
+        ft_bool                      _is_initialised;
+        ft_bool                      _should_close;
+
+        void                         *_platform_state;
+        int32_t                      prepare_thread_safety(void) noexcept;
+        uint32_t                     teardown_thread_safety(void) noexcept;
+
+    public:
+        ft_render_window(void);
+        ft_render_window(const ft_render_window &other);
+        ft_render_window(ft_render_window &&other);
+        ft_render_window &operator=(const ft_render_window &other) = delete;
+        ft_render_window &operator=(ft_render_window &&other) = delete;
+        ~ft_render_window(void);
+
+        uint32_t                     initialize(void);
+        uint32_t                     initialize(const ft_render_window_desc &desc);
+        uint32_t                     initialize(const ft_render_window &other);
+        uint32_t                     initialize(ft_render_window &&other);
+        int32_t                      destroy(void);
+        int32_t                      move(ft_render_window &other);
+        void                         shutdown(void);
+
+        int32_t                      poll_events(void);
+        int32_t                      present(void);
+
+        ft_render_framebuffer        &framebuffer(void);
+        int32_t                      clear(uint32_t color);
+        int32_t                      put_pixel(int32_t coordinate_x,
+            int32_t coordinate_y, uint32_t color);
+
+        int32_t                      set_fullscreen(ft_bool enabled);
+
+        uint32_t                     enable_thread_safety() noexcept;
+        uint32_t                     disable_thread_safety() noexcept;
+        ft_bool                      is_thread_safe() const noexcept;
+
+        ft_bool                      should_close(void) const;
+};

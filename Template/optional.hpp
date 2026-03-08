@@ -21,11 +21,11 @@ class ft_optional
     private:
         ElementType               *_value;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                    _initialized_state;
+        uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -46,12 +46,12 @@ class ft_optional
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -175,7 +175,7 @@ class ft_optional
 
         ft_optional()
             : _value(ft_nullptr), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -183,7 +183,7 @@ class ft_optional
 
         ft_optional(const ElementType& value)
             : _value(ft_nullptr), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             (void)this->initialize(value);
             return ;
@@ -191,7 +191,7 @@ class ft_optional
 
         ft_optional(ElementType&& value)
             : _value(ft_nullptr), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             (void)this->initialize(ft_move(value));
             return ;
@@ -199,7 +199,7 @@ class ft_optional
 
         ~ft_optional()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -213,52 +213,52 @@ class ft_optional
 
         int initialize()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_optional::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_value = ft_nullptr;
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
         int initialize(const ElementType& value)
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_optional::initialize(copy)",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_value = static_cast<ElementType*>(cma_malloc(sizeof(ElementType)));
             if (this->_value == ft_nullptr)
             {
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (set_last_operation_error(FT_ERR_NO_MEMORY));
             }
             construct_at(this->_value, value);
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
         int initialize(ElementType&& value)
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_optional::initialize(move)",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_value = static_cast<ElementType*>(cma_malloc(sizeof(ElementType)));
             if (this->_value == ft_nullptr)
             {
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (set_last_operation_error(FT_ERR_NO_MEMORY));
             }
             construct_at(this->_value, ft_move(value));
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -268,7 +268,7 @@ class ft_optional
             int lock_error;
             int unlock_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -278,7 +278,7 @@ class ft_optional
             unlock_error = this->unlock_internal(lock_acquired);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -289,7 +289,7 @@ class ft_optional
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_optional::has_value");
+            this->abort_if_not_initialised("ft_optional::has_value");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -316,7 +316,7 @@ class ft_optional
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_optional::value");
+            this->abort_if_not_initialised("ft_optional::value");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -352,7 +352,7 @@ class ft_optional
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_optional::value const");
+            this->abort_if_not_initialised("ft_optional::value const");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -382,7 +382,7 @@ class ft_optional
 
         value_proxy operator*() noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (value_proxy(ft_nullptr,
                     set_last_operation_error(FT_ERR_INVALID_STATE)));
             if (this->_value == ft_nullptr)
@@ -394,7 +394,7 @@ class ft_optional
 
         const_value_proxy operator*() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (const_value_proxy(ft_nullptr,
                     set_last_operation_error(FT_ERR_INVALID_STATE)));
             if (this->_value == ft_nullptr)
@@ -406,7 +406,7 @@ class ft_optional
 
         ElementType *operator->() noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
@@ -422,7 +422,7 @@ class ft_optional
 
         const ElementType *operator->() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
@@ -438,7 +438,7 @@ class ft_optional
 
         explicit operator bool() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (false);
@@ -453,7 +453,7 @@ class ft_optional
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_optional::reset");
+            this->abort_if_not_initialised("ft_optional::reset");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -477,7 +477,7 @@ class ft_optional
             pt_recursive_mutex *new_mutex;
             int initialize_result;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
@@ -499,8 +499,8 @@ class ft_optional
             pt_recursive_mutex *mutex_pointer;
             int destroy_result;
 
-            if (this->_initialized_state != _state_initialized
-                && this->_initialized_state != _state_destroyed)
+            if (this->_initialised_state != _state_initialised
+                && this->_initialised_state != _state_destroyed)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)

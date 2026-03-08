@@ -4,7 +4,7 @@
 #include <climits>
 #include <cassert>
 
-static void math_print_overflow_error(int error_code)
+static void math_print_overflow_error(int32_t error_code)
 {
     if (DEBUG == 1)
     {
@@ -13,9 +13,9 @@ static void math_print_overflow_error(int error_code)
     return ;
 }
 
-int math_is_unary_sign(const char *string, int index)
+int32_t math_is_unary_sign(const char *string, int32_t index)
 {
-    int scan;
+    int32_t scan;
 
     if (index == 0)
         return (1);
@@ -34,8 +34,8 @@ int math_is_unary_sign(const char *string, int index)
     return (1);
 }
 
-static int math_check_add_sub_overflow(int first_number, int second_number,
-                                      int error_code, int is_addition)
+static int32_t math_check_add_sub_overflow(int32_t first_number, int32_t second_number,
+                                      int32_t error_code, int32_t is_addition)
 {
     if (is_addition) 
     {
@@ -58,7 +58,7 @@ static int math_check_add_sub_overflow(int first_number, int second_number,
     return (0);
 }
 
-static int math_check_mul_overflow(int first_number, int second_number)
+static int32_t math_check_mul_overflow(int32_t first_number, int32_t second_number)
 {
     if (first_number != 0 && second_number != 0)
     {
@@ -72,7 +72,7 @@ static int math_check_mul_overflow(int first_number, int second_number)
     return (0);
 }
 
-static int math_check_div_overflow(int first_number, int second_number)
+static int32_t math_check_div_overflow(int32_t first_number, int32_t second_number)
 {
     if (second_number == 0)
     {
@@ -90,7 +90,7 @@ static int math_check_div_overflow(int first_number, int second_number)
     return (0);
 }
 
-static int math_check_overflow(int first_number, int second_number, char sign)
+static int32_t math_check_overflow(int32_t first_number, int32_t second_number, char sign)
 {
     assert(sign == '+' || sign == '-' || sign == '*' || sign == '/');
 
@@ -105,7 +105,7 @@ static int math_check_overflow(int first_number, int second_number, char sign)
     return (0);
 }
 
-static int math_calculate_result(int first_number, int second_number, char sign)
+static int32_t math_calculate_result(int32_t first_number, int32_t second_number, char sign)
 {
     assert(sign == '+' || sign == '-' || sign == '*' || sign == '/');
 
@@ -120,7 +120,7 @@ static int math_calculate_result(int first_number, int second_number, char sign)
     return (0);
 }
 
-static void math_update_string(char *string, int *index, int read_index)
+static void math_update_string(char *string, int32_t *index, int32_t read_index)
 {
     if (string[read_index] == '-' || string[read_index] == '+')
         read_index++;
@@ -142,13 +142,13 @@ static void math_update_string(char *string, int *index, int read_index)
     return ;
 }
 
-int math_process_sign(char *string, int *index, int string_boundary, int *error)
+int32_t math_process_sign(char *string, int32_t *index, int32_t string_boundary, int32_t *error)
 {
     char sign;
-    int result;
-    int first_number;
-    int second_number;
-    int second_number_index;
+    int32_t result;
+    int32_t first_number;
+    int32_t second_number;
+    int32_t second_number_index;
 
     sign = string[*index];
     second_number_index = *index;

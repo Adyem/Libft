@@ -5,7 +5,7 @@
 #include <new>
 
 api_streaming_handler::api_streaming_handler() noexcept
-    : _initialized_state(api_streaming_handler::_state_uninitialized),
+    : _initialised_state(api_streaming_handler::_state_uninitialised),
       _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
       _user_data(ft_nullptr), _mutex(ft_nullptr)
 {
@@ -14,7 +14,7 @@ api_streaming_handler::api_streaming_handler() noexcept
 
 api_streaming_handler::~api_streaming_handler()
 {
-    if (this->_initialized_state == api_streaming_handler::_state_initialized)
+    if (this->_initialised_state == api_streaming_handler::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -32,12 +32,12 @@ void api_streaming_handler::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void api_streaming_handler::abort_if_not_initialized(const char *method_name) const noexcept
+void api_streaming_handler::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == api_streaming_handler::_state_initialized)
+    if (this->_initialised_state == api_streaming_handler::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -46,7 +46,7 @@ int api_streaming_handler::enable_thread_safety() noexcept
     pt_recursive_mutex *new_mutex;
     int initialize_result;
 
-    this->abort_if_not_initialized("api_streaming_handler::enable_thread_safety");
+    this->abort_if_not_initialised("api_streaming_handler::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -67,7 +67,7 @@ int api_streaming_handler::disable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int destroy_result;
 
-    this->abort_if_not_initialized("api_streaming_handler::disable_thread_safety");
+    this->abort_if_not_initialised("api_streaming_handler::disable_thread_safety");
     mutex_pointer = this->_mutex;
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -86,25 +86,25 @@ bool api_streaming_handler::is_thread_safe() const noexcept
 
 int api_streaming_handler::initialize() noexcept
 {
-    if (this->_initialized_state == api_streaming_handler::_state_initialized)
+    if (this->_initialised_state == api_streaming_handler::_state_initialised)
         this->abort_lifecycle_error("api_streaming_handler::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     this->_headers_callback = ft_nullptr;
     this->_body_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
-    this->_initialized_state = api_streaming_handler::_state_initialized;
+    this->_initialised_state = api_streaming_handler::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int api_streaming_handler::destroy() noexcept
 {
-    if (this->_initialized_state != api_streaming_handler::_state_initialized)
+    if (this->_initialised_state != api_streaming_handler::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->_headers_callback = ft_nullptr;
     this->_body_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
     (void)this->disable_thread_safety();
-    this->_initialized_state = api_streaming_handler::_state_destroyed;
+    this->_initialised_state = api_streaming_handler::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -190,7 +190,7 @@ bool api_streaming_handler::invoke_body_callback(const char *chunk_data,
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *api_streaming_handler::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("api_streaming_handler::get_mutex_for_validation");
+    this->abort_if_not_initialised("api_streaming_handler::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

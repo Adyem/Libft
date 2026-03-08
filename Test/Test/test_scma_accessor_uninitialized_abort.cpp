@@ -12,25 +12,25 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static sigjmp_buf g_scma_accessor_uninitialized_jump;
+static sigjmp_buf g_scma_accessor_uninitialised_jump;
 
-static void scma_accessor_uninitialized_handler(int /*signal*/)
+static void scma_accessor_uninitialised_handler(int /*signal*/)
 {
-    siglongjmp(g_scma_accessor_uninitialized_jump, 1);
+    siglongjmp(g_scma_accessor_uninitialised_jump, 1);
 }
 
-static int scma_expect_sigabrt_uninitialized(void (*operation)(scma_handle_accessor<int>&))
+static int scma_expect_sigabrt_uninitialised(void (*operation)(scma_handle_accessor<int>&))
 {
     struct sigaction action;
     struct sigaction backup;
     memset(&action, 0, sizeof(action));
-    action.sa_handler = scma_accessor_uninitialized_handler;
+    action.sa_handler = scma_accessor_uninitialised_handler;
     sigemptyset(&action.sa_mask);
     int result = 0;
 
     if (sigaction(SIGABRT, &action, &backup) != 0)
         return (0);
-    if (sigsetjmp(g_scma_accessor_uninitialized_jump, 1) == 0)
+    if (sigsetjmp(g_scma_accessor_uninitialised_jump, 1) == 0)
     {
         alignas(scma_handle_accessor<int>) unsigned char storage[
             sizeof(scma_handle_accessor<int>)];
@@ -49,9 +49,9 @@ static int scma_expect_sigabrt_uninitialized(void (*operation)(scma_handle_acces
     return (result);
 }
 
-static void scma_call_is_initialized(scma_handle_accessor<int> &accessor)
+static void scma_call_is_initialised(scma_handle_accessor<int> &accessor)
 {
-    (void)accessor.is_initialized();
+    (void)accessor.is_initialised();
     return ;
 }
 
@@ -88,43 +88,43 @@ static void scma_call_noop(scma_handle_accessor<int> &accessor)
     (void)accessor;
     return ;
 }
-FT_TEST(test_scma_accessor_uninitialized_is_initialized_aborts,
-    "scma accessor is_initialized aborts on uninitialized instance")
+FT_TEST(test_scma_accessor_uninitialised_is_initialised_aborts,
+    "scma accessor is_initialised aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialized(scma_call_is_initialized));
+    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialised(scma_call_is_initialised));
     return (1);
 }
 
-FT_TEST(test_scma_accessor_uninitialized_bind_aborts,
-    "scma accessor bind aborts on uninitialized instance")
+FT_TEST(test_scma_accessor_uninitialised_bind_aborts,
+    "scma accessor bind aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialized(scma_call_bind));
+    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialised(scma_call_bind));
     return (1);
 }
 
-FT_TEST(test_scma_accessor_uninitialized_is_bound_aborts,
-    "scma accessor is_bound aborts on uninitialized instance")
+FT_TEST(test_scma_accessor_uninitialised_is_bound_aborts,
+    "scma accessor is_bound aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialized(scma_call_is_bound));
+    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialised(scma_call_is_bound));
     return (1);
 }
 
-FT_TEST(test_scma_accessor_uninitialized_get_handle_aborts,
-    "scma accessor get_handle aborts on uninitialized instance")
+FT_TEST(test_scma_accessor_uninitialised_get_handle_aborts,
+    "scma accessor get_handle aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialized(scma_call_get_handle));
+    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialised(scma_call_get_handle));
     return (1);
 }
 
-FT_TEST(test_scma_accessor_uninitialized_get_error_aborts,
-    "scma accessor get_error aborts on uninitialized instance")
+FT_TEST(test_scma_accessor_uninitialised_get_error_aborts,
+    "scma accessor get_error aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialized(scma_call_get_error));
+    FT_ASSERT_EQ(1, scma_expect_sigabrt_uninitialised(scma_call_get_error));
     return (1);
 }
 
-FT_TEST(test_scma_accessor_uninitialized_destroy_returns_invalid_state,
-    "scma accessor destroy returns invalid state on uninitialized instance")
+FT_TEST(test_scma_accessor_uninitialised_destroy_returns_invalid_state,
+    "scma accessor destroy returns invalid state on uninitialised instance")
 {
     scma_handle_accessor<int> accessor;
 
@@ -132,10 +132,10 @@ FT_TEST(test_scma_accessor_uninitialized_destroy_returns_invalid_state,
     return (1);
 }
 
-FT_TEST(test_scma_accessor_uninitialized_destructor_tolerates_object,
-    "scma accessor destructor tolerates uninitialized instance")
+FT_TEST(test_scma_accessor_uninitialised_destructor_tolerates_object,
+    "scma accessor destructor tolerates uninitialised instance")
 {
-    FT_ASSERT_EQ(0, scma_expect_sigabrt_uninitialized(scma_call_noop));
+    FT_ASSERT_EQ(0, scma_expect_sigabrt_uninitialised(scma_call_noop));
     return (1);
 }
 

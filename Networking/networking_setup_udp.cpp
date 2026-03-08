@@ -80,7 +80,7 @@ static int set_timeout_send(int file_descriptor, int timeout_milliseconds)
 #endif
 
 udp_socket::udp_socket()
-    : _initialized_state(_state_uninitialized), _address(), _socket_fd(-1), _mutex()
+    : _initialised_state(_state_uninitialised), _address(), _socket_fd(-1), _mutex()
 {
     ft_bzero(&this->_address, sizeof(this->_address));
     return ;
@@ -88,17 +88,17 @@ udp_socket::udp_socket()
 
 udp_socket::~udp_socket()
 {
-    if (this->_initialized_state == _state_uninitialized)
+    if (this->_initialised_state == _state_uninitialised)
     {
         pf_printf_fd(2, "udp_socket lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
+            "destructor called on uninitialised instance");
         su_abort();
     }
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
     {
         (void)this->close_socket();
         (void)this->_mutex.destroy();
-        this->_initialized_state = _state_destroyed;
+        this->_initialised_state = _state_destroyed;
     }
     return ;
 }
@@ -114,11 +114,11 @@ void udp_socket::abort_lifecycle_error(const char *method_name, const char *reas
     return ;
 }
 
-void udp_socket::abort_if_not_initialized(const char *method_name) const
+void udp_socket::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -209,14 +209,14 @@ int udp_socket::initialize(const SocketConfig &config)
     int lock_error;
     int step_error;
 
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("udp_socket::initialize",
-            "initialize called on initialized instance");
-    if (this->_initialized_state != _state_initialized)
+            "initialize called on initialised instance");
+    if (this->_initialised_state != _state_initialised)
     {
         if (this->_mutex.initialize() != FT_ERR_SUCCESS)
             return (FT_ERR_INITIALIZATION_FAILED);
-        this->_initialized_state = _state_initialized;
+        this->_initialised_state = _state_initialised;
     }
     lock_error = this->_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -224,7 +224,7 @@ int udp_socket::initialize(const SocketConfig &config)
     if (this->_socket_fd >= 0)
     {
         (void)this->_mutex.unlock();
-        return (FT_ERR_ALREADY_INITIALIZED);
+        return (FT_ERR_ALREADY_INITIALISED);
     }
     step_error = this->create_socket(config);
     if (step_error == FT_ERR_SUCCESS)
@@ -255,7 +255,7 @@ ssize_t udp_socket::send_to(const void *data, size_t size, int flags,
     int lock_error;
     ssize_t send_result;
 
-    this->abort_if_not_initialized("udp_socket::send_to");
+    this->abort_if_not_initialised("udp_socket::send_to");
     lock_error = this->_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -275,7 +275,7 @@ ssize_t udp_socket::receive_from(void *buffer, size_t size, int flags,
     int lock_error;
     ssize_t receive_result;
 
-    this->abort_if_not_initialized("udp_socket::receive_from");
+    this->abort_if_not_initialised("udp_socket::receive_from");
     lock_error = this->_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -293,7 +293,7 @@ bool udp_socket::close_socket()
 {
     int lock_error;
 
-    this->abort_if_not_initialized("udp_socket::close_socket");
+    this->abort_if_not_initialised("udp_socket::close_socket");
     lock_error = this->_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
@@ -314,12 +314,12 @@ bool udp_socket::close_socket()
 
 int udp_socket::get_fd() const
 {
-    this->abort_if_not_initialized("udp_socket::get_fd");
+    this->abort_if_not_initialised("udp_socket::get_fd");
     return (this->_socket_fd);
 }
 
 const struct sockaddr_storage &udp_socket::get_address() const
 {
-    this->abort_if_not_initialized("udp_socket::get_address");
+    this->abort_if_not_initialised("udp_socket::get_address");
     return (this->_address);
 }

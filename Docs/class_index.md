@@ -452,11 +452,11 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `ft_world_replay_session`
 
-## Geometry/geometry_aabb.hpp
+## Geometry/aabb.hpp
 
 - `aabb`
 
-## Geometry/geometry_circle.hpp
+## Geometry/circle.hpp
 
 - `circle`
 
@@ -464,7 +464,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `s_geometry_wait_record`
 
-## Geometry/geometry_sphere.hpp
+## Geometry/sphere.hpp
 
 - `sphere`
 
@@ -560,11 +560,11 @@ Each entry lists the class or struct name introduced in that translation unit.
 - `vector3`
 - `vector4`
 
-## Math/linear_algebra_quaternion.hpp
+## Math/quaternion.hpp
 
 - `quaternion`
 
-## Math/math_autodiff.hpp
+## Math/ft_dual_number.hpp
 
 - `ft_dual_number`
 
@@ -572,7 +572,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `s_ft_interval`
 
-## Math/math_polynomial.hpp
+## Math/ft_cubic_spline.hpp
 
 - `ft_cubic_spline`
 
@@ -850,7 +850,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 - `s_su_health_check_result`
 - `su_file`
 
-## System_utils/test_runner.cpp
+## System_utils/test_system_utils_runner.cpp
 
 - `s_test_case`
 

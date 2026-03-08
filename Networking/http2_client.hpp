@@ -14,13 +14,13 @@
 class http2_header_field
 {
     private:
-        uint8_t             _initialized_state;
-        static const uint8_t _state_uninitialized = 0;
+        uint8_t             _initialised_state;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         void    abort_lifecycle_error(const char *method_name,
                     const char *reason) const noexcept;
-        void    abort_if_not_initialized(const char *method_name) const noexcept;
+        void    abort_if_not_initialised(const char *method_name) const noexcept;
         ft_string           _name;
         ft_string           _value;
         mutable pt_recursive_mutex   *_mutex;
@@ -64,13 +64,13 @@ class http2_header_field
 class http2_frame
 {
     private:
-        uint8_t             _initialized_state;
-        static const uint8_t _state_uninitialized = 0;
+        uint8_t             _initialised_state;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         void    abort_lifecycle_error(const char *method_name,
                     const char *reason) const noexcept;
-        void    abort_if_not_initialized(const char *method_name) const noexcept;
+        void    abort_if_not_initialised(const char *method_name) const noexcept;
         uint8_t             _type;
         uint8_t             _flags;
         uint32_t            _stream_identifier;
@@ -130,13 +130,13 @@ struct http2_stream_state
 class http2_stream_manager
 {
     private:
-        uint8_t                                     _initialized_state;
-        static const uint8_t                        _state_uninitialized = 0;
+        uint8_t                                     _initialised_state;
+        static const uint8_t                        _state_uninitialised = 0;
         static const uint8_t                        _state_destroyed = 1;
-        static const uint8_t                        _state_initialized = 2;
+        static const uint8_t                        _state_initialised = 2;
         void        abort_lifecycle_error(const char *method_name,
                         const char *reason) const noexcept;
-        void        abort_if_not_initialized(const char *method_name) const noexcept;
+        void        abort_if_not_initialised(const char *method_name) const noexcept;
         bool        validate_receive_window(uint32_t stream_identifier,
                         uint32_t length) noexcept;
         bool        record_received_data(uint32_t stream_identifier,
@@ -202,13 +202,13 @@ class http2_stream_manager
 class http2_settings_state
 {
     private:
-        uint8_t     _initialized_state;
-        static const uint8_t _state_uninitialized = 0;
+        uint8_t     _initialised_state;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         void        abort_lifecycle_error(const char *method_name,
                         const char *reason) const noexcept;
-        void        abort_if_not_initialized(const char *method_name) const noexcept;
+        void        abort_if_not_initialised(const char *method_name) const noexcept;
         bool        apply_single_setting(uint16_t identifier, uint32_t value,
                         http2_stream_manager &streams) noexcept;
 

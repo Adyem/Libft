@@ -140,10 +140,10 @@ class ft_task_scheduler
             unsigned long long _trace_id;
             unsigned long long _parent_id;
             const char *_label;
-            uint8_t _initialized_state;
-            static const uint8_t _state_uninitialized = 0;
+            uint8_t _initialised_state;
+            static const uint8_t _state_uninitialised = 0;
             static const uint8_t _state_destroyed = 1;
-            static const uint8_t _state_initialized = 2;
+            static const uint8_t _state_initialised = 2;
 
             scheduled_task();
             ~scheduled_task();
@@ -155,7 +155,7 @@ class ft_task_scheduler
             int initialize(const scheduled_task &other);
             int initialize_move(scheduled_task &other);
             int destroy();
-            int is_initialized() const;
+            int is_initialised() const;
         };
 
         ft_blocking_queue<task_queue_entry> _queue;
@@ -174,10 +174,10 @@ class ft_task_scheduler
         size_t _worker_total_count;
         size_t _configured_thread_count;
         mutable pt_recursive_mutex *_state_mutex;
-        mutable uint8_t _initialized_state;
-        static const uint8_t _state_uninitialized = 0;
+        mutable uint8_t _initialised_state;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
 
         bool cancel_task_state(const ft_sharedptr<ft_scheduled_task_state> &state);
         bool scheduled_remove_index(size_t index);
@@ -198,7 +198,7 @@ class ft_task_scheduler
         void teardown_thread_safety();
         void abort_lifecycle_error(const char *method_name,
                 const char *reason) const;
-        void abort_if_not_initialized(const char *method_name) const;
+        void abort_if_not_initialised(const char *method_name) const;
 
     public:
         friend class ft_scheduled_task_handle;
@@ -609,7 +609,7 @@ template <typename FunctionType, typename... Args>
 auto ft_task_scheduler::submit(FunctionType function, Args... args)
     -> ft_future<typename std::invoke_result<FunctionType, Args...>::type>
 {
-    this->abort_if_not_initialized("ft_task_scheduler::submit");
+    this->abort_if_not_initialised("ft_task_scheduler::submit");
     using return_type = typename std::invoke_result<FunctionType, Args...>::type;
     using promise_type = ft_promise<return_type>;
 
@@ -694,7 +694,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     -> Pair<ft_future<typename std::invoke_result<FunctionType, Args...>::type>,
             ft_scheduled_task_handle>
 {
-    this->abort_if_not_initialized("ft_task_scheduler::schedule_after");
+    this->abort_if_not_initialised("ft_task_scheduler::schedule_after");
     using return_type = typename std::invoke_result<FunctionType, Args...>::type;
     using promise_type = ft_promise<return_type>;
 
@@ -829,7 +829,7 @@ template <typename Rep, typename Period, typename FunctionType, typename... Args
 ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interval,
         FunctionType function, Args... args)
 {
-    this->abort_if_not_initialized("ft_task_scheduler::schedule_every");
+    this->abort_if_not_initialised("ft_task_scheduler::schedule_every");
     ft_scheduled_task_handle handle_result;
     scheduled_task task_entry;
     std::chrono::milliseconds interval_duration;

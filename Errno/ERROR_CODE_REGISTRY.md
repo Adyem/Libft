@@ -11,7 +11,7 @@ This registry enumerates every error code defined in [`Errno/errno.hpp`](errno.h
 | `FT_ERR_INVALID_POINTER` | 4 | Pointer values were malformed or not owned by the caller. | Libft memory helpers, CMA guard checks |
 | `FT_ERR_INVALID_HANDLE` | 5 | Handle-based API received an invalid descriptor/object. | File module, Networking sockets, System_utils handles |
 | `FT_ERR_INVALID_OPERATION` | 6 | Requested action violates API preconditions or invariants. | Libft algorithms, CMA stateful helpers |
-| `FT_ERR_INVALID_STATE` | 7 | Component was not initialized or is already shut down. | CMA allocator toggles, Logger, Template task utilities |
+| `FT_ERR_INVALID_STATE` | 7 | Component was not initialised or is already shut down. | CMA allocator toggles, Logger, Template task utilities |
 | `FT_ERR_NOT_FOUND` | 8 | Item lookup failed. | Storage KV store, Template containers, JSON/YAML lookups |
 | `FT_ERR_ALREADY_EXISTS` | 9 | Resource already present, preventing creation. | Filesystem helpers, Storage, Networking |
 | `FT_ERR_OUT_OF_RANGE` | 10 | Index or numeric value outside accepted range. | Math utilities, Template containers, Libft parsing |
@@ -24,7 +24,7 @@ This registry enumerates every error code defined in [`Errno/errno.hpp`](errno.h
 | `FT_ERR_INTERNAL` | 17 | Internal invariant violated (should not happen). | All modules (guarded assertions) |
 | `FT_ERR_CONFIGURATION` | 18 | Configuration invalid or missing required fields. | Config module, Logger, Networking setup |
 | `FT_ERR_UNSUPPORTED_TYPE` | 19 | Requested type or algorithm not supported. | Serialization helpers, Compression |
-| `FT_ERR_ALREADY_INITIALIZED` | 20 | Component already initialized. | CMA allocator toggles, Logger, Networking sockets |
+| `FT_ERR_ALREADY_INITIALISED` | 20 | Component already initialised. | CMA allocator toggles, Logger, Networking sockets |
 | `FT_ERR_INITIALIZATION_FAILED` | 21 | Initialization routine failed. | Logger, Networking, RNG |
 | `FT_ERR_END_OF_FILE` | 22 | Reached end-of-file or stream. | File and ReadLine modules |
 | `FT_ERR_DIVIDE_BY_ZERO` | 23 | Division by zero attempted. | Math helpers |

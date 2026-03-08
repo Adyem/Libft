@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cinttypes>
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
@@ -11,23 +12,23 @@ int32_t    scma_get_stats(scma_stats *out_stats)
     ft_size_t &used_size = scma_used_size_ref();
     ft_size_t &heap_capacity = scma_heap_capacity_ref();
 
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
-        return (0);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
-    if (!scma_initialized_ref())
+    if (!scma_initialised_ref())
     {
-        return (scma_unlock_and_return_int(0));
+        return (scma_unlock_and_return_int(FT_ERR_NOT_INITIALISED));
     }
     if (!out_stats)
     {
-        return (scma_unlock_and_return_int(0));
+        return (scma_unlock_and_return_int(FT_ERR_INVALID_ARGUMENT));
     }
     stats.block_count = block_count;
     stats.used_size = used_size;
     stats.heap_capacity = heap_capacity;
     *out_stats = stats;
-    return (scma_unlock_and_return_int(1));
+    return (scma_unlock_and_return_int(FT_ERR_SUCCESS));
 }
 
 void    scma_debug_dump(void)
@@ -40,13 +41,13 @@ void    scma_debug_dump(void)
     uint64_t used_size_print;
     uint64_t heap_capacity_print;
 
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         return ;
     }
-    if (!scma_initialized_ref())
+    if (!scma_initialised_ref())
     {
-        std::printf("[scma] not initialized\n");
+        std::printf("[scma] not initialised\n");
         scma_unlock_and_return_void();
         return ;
     }

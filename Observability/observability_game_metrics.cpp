@@ -6,7 +6,7 @@
 #include "../Basic/basic.hpp"
 
 static pt_mutex *g_observability_game_mutex = ft_nullptr;
-static bool g_observability_game_initialized = false;
+static bool g_observability_game_initialised = false;
 static ft_game_observability_exporter g_observability_game_exporter = ft_nullptr;
 
 int observability_game_metrics_enable_thread_safety(void)
@@ -56,7 +56,7 @@ int observability_game_metrics_initialize(ft_game_observability_exporter exporte
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_game_exporter = exporter;
-    g_observability_game_initialized = true;
+    g_observability_game_initialised = true;
     unlock_result = pt_mutex_unlock_if_not_null(g_observability_game_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
         result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
@@ -73,7 +73,7 @@ int observability_game_metrics_shutdown(void)
     lock_result = pt_mutex_lock_if_not_null(g_observability_game_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    g_observability_game_initialized = false;
+    g_observability_game_initialised = false;
     g_observability_game_exporter = ft_nullptr;
     unlock_result = pt_mutex_unlock_if_not_null(g_observability_game_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
@@ -103,7 +103,7 @@ void observability_game_metrics_record(const ft_game_observability_sample &sampl
     lock_result = pt_mutex_lock_if_not_null(g_observability_game_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
-    if (g_observability_game_initialized && g_observability_game_exporter != ft_nullptr)
+    if (g_observability_game_initialised && g_observability_game_exporter != ft_nullptr)
     {
         exporter_copy = g_observability_game_exporter;
         should_emit = true;

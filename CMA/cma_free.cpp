@@ -9,44 +9,44 @@
 #include "../Logger/logger.hpp"
 #include "../System_utils/system_utils.hpp"
 
-void cma_free(void* ptr)
+void cma_free(void* memory_pointer)
 {
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
 
     if (OFFSWITCH == 1)
     {
-        std::free(ptr);
+        std::free(memory_pointer);
         g_cma_free_count++;
         if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_free %p", ptr);
+            ft_log_debug("cma_free %p", memory_pointer);
         return ;
     }
-    if (!ptr)
+    if (!memory_pointer)
         return ;
-    if (cma_backend_is_enabled() && cma_backend_owns_pointer(ptr))
+    if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
     {
-        cma_backend_deallocate(ptr);
+        cma_backend_deallocate(memory_pointer);
         return ;
     }
     if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    Block* block = cma_find_block_for_pointer(ptr);
+    Block* block = cma_find_block_for_pointer(memory_pointer);
     if (!block)
     {
         cma_unlock_allocator(lock_acquired);
-        lock_acquired = false;
+        lock_acquired = FT_FALSE;
         return ;
     }
     ft_size_t freed_size = 0;
-    cma_validate_block(block, "cma_free", ptr);
+    cma_validate_block(block, "cma_free", memory_pointer);
     if (cma_block_is_free(block))
     {
         cma_unlock_allocator(lock_acquired);
-        lock_acquired = false;
+        lock_acquired = FT_FALSE;
         su_sigabrt();
     }
     freed_size = block->size;
-    cma_debug_release_allocation(block, "cma_free", ptr);
+    cma_debug_release_allocation(block, "cma_free", memory_pointer);
     cma_mark_block_free(block);
     block = merge_block(block);
     cma_debug_initialize_block(block);
@@ -58,8 +58,8 @@ void cma_free(void* ptr)
         g_cma_current_bytes = 0;
     g_cma_free_count++;
     cma_unlock_allocator(lock_acquired);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (ft_log_get_alloc_logging())
-        ft_log_debug("cma_free %p", ptr);
+        ft_log_debug("cma_free %p", memory_pointer);
     return ;
 }

@@ -13,7 +13,7 @@
 #endif
 
 SocketConfig::SocketConfig()
-    : _initialized_state(SocketConfig::_state_uninitialized),
+    : _initialised_state(SocketConfig::_state_uninitialised),
       _type(SocketType::SERVER),
       _ip(),
       _port(0),
@@ -43,19 +43,19 @@ void SocketConfig::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void SocketConfig::abort_if_not_initialized(const char *method_name) const noexcept
+void SocketConfig::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == SocketConfig::_state_initialized)
+    if (this->_initialised_state == SocketConfig::_state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int SocketConfig::initialize() noexcept
 {
-    if (this->_initialized_state == SocketConfig::_state_initialized)
+    if (this->_initialised_state == SocketConfig::_state_initialised)
         this->abort_lifecycle_error("SocketConfig::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     this->_type = SocketType::SERVER;
     std::strncpy(this->_ip, "127.0.0.1", sizeof(this->_ip) - 1);
     this->_ip[sizeof(this->_ip) - 1] = '\0';
@@ -69,13 +69,13 @@ int SocketConfig::initialize() noexcept
     this->_send_timeout = 5000;
     this->_multicast_group[0] = '\0';
     this->_multicast_interface[0] = '\0';
-    this->_initialized_state = SocketConfig::_state_initialized;
+    this->_initialised_state = SocketConfig::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int SocketConfig::destroy() noexcept
 {
-    if (this->_initialized_state != SocketConfig::_state_initialized)
+    if (this->_initialised_state != SocketConfig::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->_ip[0] = '\0';
     this->_port = 0;
@@ -88,13 +88,13 @@ int SocketConfig::destroy() noexcept
     this->_send_timeout = 0;
     this->_multicast_group[0] = '\0';
     this->_multicast_interface[0] = '\0';
-    this->_initialized_state = SocketConfig::_state_destroyed;
+    this->_initialised_state = SocketConfig::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
 SocketConfig::~SocketConfig()
 {
-    if (this->_initialized_state == SocketConfig::_state_initialized)
+    if (this->_initialised_state == SocketConfig::_state_initialised)
         (void)this->destroy();
     return ;
 }

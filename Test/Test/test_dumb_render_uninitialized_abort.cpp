@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../DUMB/dumb_render.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../DUMB/render_window.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
@@ -13,17 +13,17 @@ typedef ft_render_window render_window_type;
 static sigjmp_buf g_render_jump_buffer;
 static volatile sig_atomic_t g_render_signal;
 
-static void render_sigabrt_handler(int signal_number)
+static void render_sigabrt_handler(int32_t signal_number)
 {
     g_render_signal = signal_number;
     siglongjmp(g_render_jump_buffer, 1);
 }
 
-static int render_expect_sigabrt_uninitialized(void (*operation)(render_window_type &))
+static int32_t render_expect_sigabrt_uninitialised(void (*operation)(render_window_type &))
 {
     struct sigaction new_action;
     struct sigaction old_action;
-    int result;
+    int32_t result;
 
     std::memset(&new_action, 0, sizeof(new_action));
     std::memset(&old_action, 0, sizeof(old_action));
@@ -66,7 +66,7 @@ static void render_call_initialize_desc(render_window_type &render_window_instan
     description.width = 1;
     description.height = 1;
     description.title = "x";
-    description.flags = ft_render_window_flag_none;
+    description.flags = FT_RENDER_WINDOW_FLAG_NONE;
     (void)render_window_instance.initialize(description);
     return ;
 }
@@ -109,7 +109,7 @@ static void render_call_put_pixel(render_window_type &render_window_instance)
 
 static void render_call_set_fullscreen(render_window_type &render_window_instance)
 {
-    (void)render_window_instance.set_fullscreen(false);
+    (void)render_window_instance.set_fullscreen(FT_FALSE);
     return ;
 }
 
@@ -127,7 +127,7 @@ static void render_call_disable_thread_safety(render_window_type &render_window_
 
 static void render_call_is_thread_safe(render_window_type &render_window_instance)
 {
-    (void)render_window_instance.is_thread_safe_enabled();
+    (void)render_window_instance.is_thread_safe();
     return ;
 }
 
@@ -137,21 +137,15 @@ static void render_call_should_close(render_window_type &render_window_instance)
     return ;
 }
 
-static void render_call_runtime_mutex(render_window_type &render_window_instance)
+FT_TEST(test_dumb_render_uninitialised_destructor_tolerates_object,
+    "dumb render destructor tolerates uninitialised instance")
 {
-    (void)render_window_instance.runtime_mutex();
-    return ;
-}
-
-FT_TEST(test_dumb_render_uninitialized_destructor_tolerates_object,
-    "dumb render destructor tolerates uninitialized instance")
-{
-    FT_ASSERT_EQ(0, render_expect_sigabrt_uninitialized(render_call_destructor));
+    FT_ASSERT_EQ(0, render_expect_sigabrt_uninitialised(render_call_destructor));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_destroy_returns_invalid_state,
-    "dumb render destroy returns invalid state on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_destroy_returns_invalid_state,
+    "dumb render destroy returns invalid state on uninitialised instance")
 {
     render_window_type window_instance;
 
@@ -159,93 +153,86 @@ FT_TEST(test_dumb_render_uninitialized_destroy_returns_invalid_state,
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_initialize_desc_aborts,
-    "dumb render initialize(desc) aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_initialize_desc_aborts,
+    "dumb render initialize(desc) aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_initialize_desc));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_initialize_desc));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_shutdown_aborts,
-    "dumb render shutdown aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_shutdown_aborts,
+    "dumb render shutdown aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_shutdown));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_shutdown));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_poll_events_aborts,
-    "dumb render poll_events aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_poll_events_aborts,
+    "dumb render poll_events aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_poll_events));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_poll_events));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_present_aborts,
-    "dumb render present aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_present_aborts,
+    "dumb render present aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_present));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_present));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_framebuffer_aborts,
-    "dumb render framebuffer aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_framebuffer_aborts,
+    "dumb render framebuffer aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_framebuffer));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_framebuffer));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_clear_aborts,
-    "dumb render clear aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_clear_aborts,
+    "dumb render clear aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_clear));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_clear));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_put_pixel_aborts,
-    "dumb render put_pixel aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_put_pixel_aborts,
+    "dumb render put_pixel aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_put_pixel));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_put_pixel));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_set_fullscreen_aborts,
-    "dumb render set_fullscreen aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_set_fullscreen_aborts,
+    "dumb render set_fullscreen aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_set_fullscreen));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_set_fullscreen));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_enable_thread_safety_aborts,
-    "dumb render enable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_enable_thread_safety_aborts,
+    "dumb render enable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_enable_thread_safety));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_enable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_disable_thread_safety_aborts,
-    "dumb render disable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_disable_thread_safety_aborts,
+    "dumb render disable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_disable_thread_safety));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_disable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_is_thread_safe_aborts,
-    "dumb render is_thread_safe_enabled aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_is_thread_safe_aborts,
+    "dumb render is_thread_safe_enabled aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_is_thread_safe));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_is_thread_safe));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_should_close_aborts,
-    "dumb render should_close aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialised_should_close_aborts,
+    "dumb render should_close aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_should_close));
-    return (1);
-}
-
-FT_TEST(test_dumb_render_uninitialized_runtime_mutex_aborts,
-    "dumb render runtime_mutex aborts on uninitialized instance")
-{
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_runtime_mutex));
+    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialised(render_call_should_close));
     return (1);
 }

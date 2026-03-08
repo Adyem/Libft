@@ -17,8 +17,8 @@ class pt_condition_variable
     private:
         pthread_cond_t _condition;
         pthread_mutex_t _mutex;
-        bool _condition_initialized;
-        bool _mutex_initialized;
+        bool _condition_initialised;
+        bool _mutex_initialised;
         mutable pt_mutex *_state_mutex;
 
         int lock_internal(bool *lock_acquired) const;

@@ -1,10 +1,10 @@
 #include "basic.hpp"
 
-void ft_striteri(char *string, void (*function)(unsigned int, char *))
+void ft_striteri(char *string, void (*function)(uint32_t, char *))
 {
     if (!string || !function)
         return ;
-    unsigned int index = 0;
+    uint32_t index = 0;
     while (string[index] != '\0')
     {
         function(index, &string[index]);

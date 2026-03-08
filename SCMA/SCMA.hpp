@@ -3,7 +3,9 @@
 
 #include <cstdint>
 #include <type_traits>
+#include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/limits.hpp"
 #include "../PThread/recursive_mutex.hpp"
@@ -19,19 +21,19 @@ struct scma_handle
 
 scma_handle    scma_invalid_handle(void);
 
-int32_t     scma_initialize(ft_size_t initial_capacity);
+uint32_t    scma_initialize(ft_size_t initial_capacity);
 void    scma_shutdown(void);
-int32_t     scma_is_initialized(void);
+int32_t     scma_is_initialised(void);
 
 scma_handle    scma_allocate(ft_size_t size);
-int32_t     scma_free(scma_handle handle);
-int32_t     scma_resize(scma_handle handle, ft_size_t new_size);
+uint32_t    scma_free(scma_handle handle);
+uint32_t    scma_resize(scma_handle handle, ft_size_t new_size);
 ft_size_t    scma_get_size(scma_handle handle);
 int32_t     scma_handle_is_valid(scma_handle handle);
 
-int32_t     scma_write(scma_handle handle, ft_size_t offset,
+uint32_t    scma_write(scma_handle handle, ft_size_t offset,
             const void *source, ft_size_t size);
-int32_t     scma_read(scma_handle handle, ft_size_t offset,
+uint32_t    scma_read(scma_handle handle, ft_size_t offset,
             void *destination, ft_size_t size);
 
 struct scma_stats
@@ -48,7 +50,7 @@ void    scma_debug_dump(void);
 pt_recursive_mutex    *scma_runtime_mutex(void);
 int32_t     scma_enable_thread_safety(void);
 int32_t     scma_disable_thread_safety(void);
-bool    scma_is_thread_safe_enabled(void);
+ft_bool    scma_is_thread_safe_enabled(void);
 int32_t     scma_mutex_lock(void);
 int32_t     scma_mutex_unlock(void);
 int32_t     scma_mutex_close(void);
@@ -63,33 +65,33 @@ class scma_handle_accessor_const_element_proxy;
 template <typename TValue>
 class scma_handle_accessor
 {
+ #ifdef LIBFT_TEST_BUILD
+    public:
+ #else
     private:
+ #endif
         scma_handle _handle;
         uint8_t _initialized_state;
-        static thread_local int32_t _last_error;
-        static const uint8_t _state_uninitialized = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
-
-        void    abort_lifecycle_error(const char *method_name,
-                    const char *reason) const;
-        void    abort_if_not_initialized(const char *method_name) const;
-
+        static thread_local uint32_t _last_error;
+        uint32_t    set_error(uint32_t error_code) const;
 
     public:
         scma_handle_accessor(void);
         scma_handle_accessor(scma_handle handle) = delete;
-        scma_handle_accessor(const scma_handle_accessor &other) = delete;
-        scma_handle_accessor(scma_handle_accessor &&other) = delete;
+        scma_handle_accessor(const scma_handle_accessor &other);
+        scma_handle_accessor(scma_handle_accessor &&other);
         ~scma_handle_accessor(void);
+        scma_handle_accessor &operator=(const scma_handle_accessor &other) = delete;
+        scma_handle_accessor &operator=(scma_handle_accessor &&other) = delete;
 
-        int32_t     initialize(void);
-        int32_t     initialize(scma_handle handle);
+        uint32_t    initialize(void);
+        uint32_t    initialize(scma_handle handle);
+        uint32_t    move(scma_handle_accessor &other);
         int32_t     destroy(void);
         int32_t     enable_thread_safety(void);
         int32_t     disable_thread_safety(void);
-        bool        is_thread_safe(void) const;
-        int32_t     is_initialized(void) const;
+        ft_bool        is_thread_safe(void) const;
+        int32_t     is_initialised(void) const;
         int32_t     bind(scma_handle handle);
         int32_t     is_bound(void) const;
         scma_handle    get_handle(void) const;
@@ -108,96 +110,120 @@ class scma_handle_accessor
         int32_t     read_at(TValue &destination, ft_size_t element_index) const;
         int32_t     write_at(const TValue &source, ft_size_t element_index) const;
         ft_size_t    get_count(void) const;
-        void        set_error(int32_t error_code) const;
-        int32_t     get_error(void) const;
+        uint32_t    get_error(void) const;
         const char  *get_error_str(void) const;
 
 };
 
 template <typename TValue>
-thread_local int32_t scma_handle_accessor<TValue>::_last_error = FT_ERR_INVALID_STATE;
+thread_local uint32_t scma_handle_accessor<TValue>::_last_error = FT_ERR_SUCCESS;
 
 template <typename TValue>
 inline scma_handle_accessor<TValue>::scma_handle_accessor(void)
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_initialized_state = scma_handle_accessor<TValue>::_state_uninitialized;
-    this->set_error(FT_ERR_INVALID_STATE);
+    this->_initialized_state = FT_CLASS_STATE_UNINITIALISED;
     return ;
 }
 
 template <typename TValue>
 inline scma_handle_accessor<TValue>::~scma_handle_accessor(void)
 {
-    if (this->_initialized_state == scma_handle_accessor<TValue>::_state_initialized)
+    if (this->_initialized_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->_initialized_state = scma_handle_accessor<TValue>::_state_destroyed;
-        this->_handle = scma_invalid_handle();
+        uint32_t previous_error;
+
+        previous_error = scma_handle_accessor<TValue>::_last_error;
+        (void)this->destroy();
+        scma_handle_accessor<TValue>::_last_error = previous_error;
     }
     return ;
 }
 
 template <typename TValue>
-inline void    scma_handle_accessor<TValue>::abort_lifecycle_error(
-            const char *method_name, const char *reason) const
+inline scma_handle_accessor<TValue>::scma_handle_accessor(
+        const scma_handle_accessor &other)
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "scma_handle_accessor lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-template <typename TValue>
-inline void    scma_handle_accessor<TValue>::abort_if_not_initialized(
-            const char *method_name) const
-{
-    if (this->_initialized_state == scma_handle_accessor<TValue>::_state_initialized)
+    this->_handle = scma_invalid_handle();
+    this->_initialized_state = FT_CLASS_STATE_UNINITIALISED;
+    if (other._initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialized_state,
+            "scma_handle_accessor::copy_constructor",
+            "source object is uninitialised");
         return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+    }
+    if (other._initialized_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    this->_handle = other._handle;
+    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
+    this->set_error(other.get_error());
     return ;
 }
 
 template <typename TValue>
-inline int32_t    scma_handle_accessor<TValue>::initialize(void)
+inline scma_handle_accessor<TValue>::scma_handle_accessor(
+        scma_handle_accessor &&other)
+{
+    this->_handle = scma_invalid_handle();
+    this->_initialized_state = FT_CLASS_STATE_UNINITIALISED;
+    if (other._initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialized_state,
+            "scma_handle_accessor::move_constructor",
+            "source object is uninitialised");
+        return ;
+    }
+    if (other._initialized_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    this->_handle = other._handle;
+    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
+    this->set_error(other.get_error());
+    other._handle = scma_invalid_handle();
+    other._initialized_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+template <typename TValue>
+inline uint32_t    scma_handle_accessor<TValue>::initialize(void)
 {
     int32_t lock_result;
 
-    if (this->_initialized_state == scma_handle_accessor<TValue>::_state_initialized)
+    if (this->_initialized_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("scma_handle_accessor::initialize",
-            "called while object is already initialized");
+        errno_abort_lifecycle(this->_initialized_state,
+            "scma_handle_accessor::initialize",
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     lock_result = scma_mutex_lock();
-    if (lock_result != 0)
+    if (lock_result != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = scma_handle_accessor<TValue>::_state_destroyed;
+        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_initialized_state = scma_handle_accessor<TValue>::_state_initialized;
+    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
-    if (scma_mutex_unlock() != 0)
-    {
-        this->_initialized_state = scma_handle_accessor<TValue>::_state_destroyed;
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-    }
+    (void)scma_mutex_unlock();
     return (FT_ERR_SUCCESS);
 }
 
 template <typename TValue>
-inline int32_t    scma_handle_accessor<TValue>::initialize(scma_handle handle)
+inline uint32_t    scma_handle_accessor<TValue>::initialize(scma_handle handle)
 {
-    int32_t initialization_error;
+    uint32_t initialization_error;
 
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
@@ -206,65 +232,127 @@ inline int32_t    scma_handle_accessor<TValue>::initialize(scma_handle handle)
         return (FT_ERR_SUCCESS);
     int32_t bind_error = this->get_error();
     (void)this->destroy();
-    this->set_error(FT_ERR_INVALID_STATE);
-    return (bind_error);
+    this->set_error(static_cast<uint32_t>(bind_error));
+    return (static_cast<uint32_t>(bind_error));
+}
+
+template <typename TValue>
+inline uint32_t    scma_handle_accessor<TValue>::move(
+        scma_handle_accessor &other)
+{
+    int32_t destroy_result;
+    uint32_t source_error;
+
+    if (this == &other)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialized_state,
+            "scma_handle_accessor::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    source_error = other.get_error();
+    if (this->_initialized_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+        {
+            this->set_error(static_cast<uint32_t>(destroy_result));
+            return (static_cast<uint32_t>(destroy_result));
+        }
+    }
+    this->_handle = scma_invalid_handle();
+    if (other._initialized_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(source_error);
+        return (FT_ERR_SUCCESS);
+    }
+    this->_handle = other._handle;
+    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
+    other._handle = scma_invalid_handle();
+    other._initialized_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(source_error);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::destroy(void)
 {
-    if (this->_initialized_state != scma_handle_accessor<TValue>::_state_initialized)
+    if (this->_initialized_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_initialized_state = scma_handle_accessor<TValue>::_state_destroyed;
+    this->_initialized_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(FT_ERR_SUCCESS);
-    if (scma_mutex_unlock() != 0)
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+    (void)scma_mutex_unlock();
     return (this->get_error());
 }
 
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::enable_thread_safety(void)
 {
-    this->abort_if_not_initialized("scma_handle_accessor::enable_thread_safety");
-    return (scma_enable_thread_safety());
+    int32_t operation_error;
+
+    errno_abort_if_uninitialised(this->_initialized_state,
+        "scma_handle_accessor::enable_thread_safety");
+    operation_error = scma_enable_thread_safety();
+    this->set_error(static_cast<uint32_t>(operation_error));
+    return (operation_error);
 }
 
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::disable_thread_safety(void)
 {
-    this->abort_if_not_initialized("scma_handle_accessor::disable_thread_safety");
-    return (scma_disable_thread_safety());
+    int32_t operation_error;
+
+    errno_abort_if_uninitialised(this->_initialized_state,
+        "scma_handle_accessor::disable_thread_safety");
+    operation_error = scma_disable_thread_safety();
+    this->set_error(static_cast<uint32_t>(operation_error));
+    return (operation_error);
 }
 
 template <typename TValue>
-inline bool    scma_handle_accessor<TValue>::is_thread_safe(void) const
+inline ft_bool    scma_handle_accessor<TValue>::is_thread_safe(void) const
 {
-    this->abort_if_not_initialized("scma_handle_accessor::is_thread_safe");
-    return (scma_is_thread_safe_enabled());
+    ft_bool is_enabled;
+
+    errno_abort_if_uninitialised(this->_initialized_state,
+        "scma_handle_accessor::is_thread_safe");
+    is_enabled = scma_is_thread_safe_enabled();
+    this->set_error(FT_ERR_SUCCESS);
+    return (is_enabled);
 }
 
 template <typename TValue>
-inline int32_t    scma_handle_accessor<TValue>::is_initialized(void) const
+inline int32_t    scma_handle_accessor<TValue>::is_initialised(void) const
 {
-    this->abort_if_not_initialized("scma_handle_accessor::is_initialized");
+    errno_abort_if_uninitialised(this->_initialized_state,
+        "scma_handle_accessor::is_initialised");
+    this->set_error(FT_ERR_SUCCESS);
     return (1);
 }
 
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::bind(scma_handle handle)
 {
-    this->abort_if_not_initialized("scma_handle_accessor::bind");
-    if (scma_mutex_lock() != 0)
+    errno_abort_if_uninitialised(this->_initialized_state,
+        "scma_handle_accessor::bind");
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
@@ -272,17 +360,12 @@ inline int32_t    scma_handle_accessor<TValue>::bind(scma_handle handle)
     if (!scma_handle_is_valid(handle))
     {
         this->set_error(FT_ERR_INVALID_HANDLE);
-        if (scma_mutex_unlock() != 0)
-            this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+        (void)scma_mutex_unlock();
         return (0);
     }
     this->_handle = handle;
     this->set_error(FT_ERR_SUCCESS);
-    if (scma_mutex_unlock() != 0)
-    {
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        return (0);
-    }
+    (void)scma_mutex_unlock();
     return (1);
 }
 
@@ -291,18 +374,22 @@ inline int32_t    scma_handle_accessor<TValue>::is_bound(void) const
 {
     int32_t is_bound_result;
 
-    this->abort_if_not_initialized("scma_handle_accessor::is_bound");
+    errno_abort_if_uninitialised(this->_initialized_state,
+        "scma_handle_accessor::is_bound");
     is_bound_result = 0;
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
+    {
+        this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
+    }
     if (this->_handle.index == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
         is_bound_result = 0;
     else if (this->_handle.generation == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
         is_bound_result = 0;
     else
         is_bound_result = 1;
-    if (scma_mutex_unlock() != 0)
-        return (0);
+    (void)scma_mutex_unlock();
+    this->set_error(FT_ERR_SUCCESS);
     return (is_bound_result);
 }
 
@@ -311,18 +398,18 @@ inline scma_handle    scma_handle_accessor<TValue>::get_handle(void) const
 {
     scma_handle handle;
 
-    this->abort_if_not_initialized("scma_handle_accessor::get_handle");
+    errno_abort_if_uninitialised(this->_initialized_state,
+        "scma_handle_accessor::get_handle");
     handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    if (scma_mutex_lock() != 0)
-        return (handle);
-    handle = this->_handle;
-    if (scma_mutex_unlock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
-        handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-        handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
+        this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (handle);
     }
+    handle = this->_handle;
+    (void)scma_mutex_unlock();
+    this->set_error(FT_ERR_SUCCESS);
     return (handle);
 }
 
@@ -371,12 +458,12 @@ inline int32_t    scma_handle_accessor<TValue>::read_struct(TValue &destination)
     ft_size_t block_size;
 
     read_result = 0;
-    if (!this->is_initialized())
+    if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (0);
     }
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
@@ -418,11 +505,7 @@ inline int32_t    scma_handle_accessor<TValue>::read_struct(TValue &destination)
     read_result = 1;
 
 cleanup:
-    if (scma_mutex_unlock() != 0)
-    {
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        read_result = 0;
-    }
+    (void)scma_mutex_unlock();
     return (read_result);
 }
 
@@ -435,12 +518,12 @@ inline int32_t    scma_handle_accessor<TValue>::write_struct(const TValue &sourc
     ft_size_t block_size;
 
     write_result = 0;
-    if (!this->is_initialized())
+    if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (0);
     }
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
@@ -477,11 +560,7 @@ inline int32_t    scma_handle_accessor<TValue>::write_struct(const TValue &sourc
     write_result = 1;
 
 cleanup:
-    if (scma_mutex_unlock() != 0)
-    {
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        write_result = 0;
-    }
+    (void)scma_mutex_unlock();
     return (write_result);
 }
 
@@ -497,12 +576,12 @@ inline int32_t    scma_handle_accessor<TValue>::read_at
     ft_size_t block_size;
 
     read_result = 0;
-    if (!this->is_initialized())
+    if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (0);
     }
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
@@ -557,11 +636,7 @@ inline int32_t    scma_handle_accessor<TValue>::read_at
     read_result = 1;
 
 cleanup:
-    if (scma_mutex_unlock() != 0)
-    {
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        read_result = 0;
-    }
+    (void)scma_mutex_unlock();
     return (read_result);
 }
 
@@ -577,12 +652,12 @@ inline int32_t    scma_handle_accessor<TValue>::write_at
     ft_size_t block_size;
 
     write_result = 0;
-    if (!this->is_initialized())
+    if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (0);
     }
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
@@ -637,11 +712,7 @@ inline int32_t    scma_handle_accessor<TValue>::write_at
     write_result = 1;
 
 cleanup:
-    if (scma_mutex_unlock() != 0)
-    {
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        write_result = 0;
-    }
+    (void)scma_mutex_unlock();
     return (write_result);
 }
 
@@ -654,12 +725,12 @@ inline ft_size_t    scma_handle_accessor<TValue>::get_count(void) const
     ft_size_t host_size;
 
     element_count = 0;
-    if (!this->is_initialized())
+    if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (0);
     }
-    if (scma_mutex_lock() != 0)
+    if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
@@ -691,60 +762,72 @@ inline ft_size_t    scma_handle_accessor<TValue>::get_count(void) const
     element_count = block_size / element_size;
 
 cleanup:
-    if (scma_mutex_unlock() != 0)
-    {
-        this->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        element_count = 0;
-    }
+    (void)scma_mutex_unlock();
     return (element_count);
 }
 
 template <typename TValue>
-inline void    scma_handle_accessor<TValue>::set_error(int32_t error_code) const
+inline uint32_t    scma_handle_accessor<TValue>::set_error(uint32_t error_code) const
 {
     scma_handle_accessor<TValue>::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
 template <typename TValue>
-inline int32_t    scma_handle_accessor<TValue>::get_error(void) const
+inline uint32_t    scma_handle_accessor<TValue>::get_error(void) const
 {
+    if (this->_initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialized_state,
+            "scma_handle_accessor::get_error",
+            "called while object is uninitialised");
+    }
     return (scma_handle_accessor<TValue>::_last_error);
 }
 
 template <typename TValue>
 inline const char *scma_handle_accessor<TValue>::get_error_str(void) const
 {
-    this->abort_if_not_initialized("scma_handle_accessor::get_error_str");
+    if (this->_initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialized_state,
+            "scma_handle_accessor::get_error_str",
+            "called while object is uninitialised");
+    }
     return (ft_strerror(scma_handle_accessor<TValue>::_last_error));
 }
 
 template <typename TValue>
 class scma_handle_accessor_element_proxy
 {
+ #ifdef LIBFT_TEST_BUILD
+    public:
+ #else
     private:
+ #endif
         scma_handle_accessor<TValue> *_parent;
         ft_size_t _index;
         TValue _value;
         int32_t _should_write_back;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
         int32_t _is_valid;
-
+        uint32_t set_error(uint32_t error_code);
 
     public:
+        scma_handle_accessor_element_proxy(void);
         scma_handle_accessor_element_proxy(scma_handle_accessor<TValue> *parent, ft_size_t element_index);
-        scma_handle_accessor_element_proxy(const scma_handle_accessor_element_proxy &other) = delete;
+        scma_handle_accessor_element_proxy(const scma_handle_accessor_element_proxy &other);
         scma_handle_accessor_element_proxy    &operator=(const scma_handle_accessor_element_proxy &other) = delete;
         scma_handle_accessor_element_proxy(scma_handle_accessor_element_proxy &&other);
-        scma_handle_accessor_element_proxy    &operator=(scma_handle_accessor_element_proxy &&other);
+        scma_handle_accessor_element_proxy    &operator=(scma_handle_accessor_element_proxy &&other) = delete;
         ~scma_handle_accessor_element_proxy(void);
 
         TValue    *operator->(void);
         TValue    &operator*(void);
+        /* Required for proxy write-back semantics: *proxy = value. */
         scma_handle_accessor_element_proxy    &operator=(const TValue &source);
         operator TValue(void) const;
-        void set_error(int32_t error_code);
-        int32_t get_error(void) const;
+        uint32_t get_error(void) const;
         const char *get_error_str(void) const;
         int32_t is_valid(void) const;
 
@@ -753,30 +836,46 @@ class scma_handle_accessor_element_proxy
 template <typename TValue>
 class scma_handle_accessor_const_element_proxy
 {
+ #ifdef LIBFT_TEST_BUILD
+    public:
+ #else
     private:
+ #endif
         const scma_handle_accessor<TValue> *_parent;
         ft_size_t _index;
         mutable TValue _value;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
         int32_t _is_valid;
-
+        uint32_t set_error(uint32_t error_code) const;
 
     public:
+        scma_handle_accessor_const_element_proxy(void);
         scma_handle_accessor_const_element_proxy(const scma_handle_accessor<TValue> *parent, ft_size_t element_index);
-        scma_handle_accessor_const_element_proxy(const scma_handle_accessor_const_element_proxy &other) = delete;
+        scma_handle_accessor_const_element_proxy(const scma_handle_accessor_const_element_proxy &other);
         scma_handle_accessor_const_element_proxy    &operator=(const scma_handle_accessor_const_element_proxy &other) = delete;
         scma_handle_accessor_const_element_proxy(scma_handle_accessor_const_element_proxy &&other);
-        scma_handle_accessor_const_element_proxy    &operator=(scma_handle_accessor_const_element_proxy &&other);
+        scma_handle_accessor_const_element_proxy    &operator=(scma_handle_accessor_const_element_proxy &&other) = delete;
         ~scma_handle_accessor_const_element_proxy(void);
 
         const TValue    *operator->(void) const;
         const TValue    &operator*(void) const;
         operator TValue(void) const;
-        void set_error(int32_t error_code) const;
-        int32_t get_error(void) const;
+        uint32_t get_error(void) const;
         const char *get_error_str(void) const;
         int32_t is_valid(void) const;
 };
+
+template <typename TValue>
+inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_proxy(void)
+{
+    this->_parent = ft_nullptr;
+    this->_index = 0;
+    this->_value = TValue();
+    this->_should_write_back = 0;
+    this->_is_valid = 0;
+    this->set_error(FT_ERR_INVALID_STATE);
+    return ;
+}
 
 template <typename TValue>
 inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_proxy(scma_handle_accessor<TValue> *parent, ft_size_t element_index)
@@ -804,6 +903,19 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
 }
 
 template <typename TValue>
+inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_proxy(
+        const scma_handle_accessor_element_proxy &other)
+{
+    this->_parent = other._parent;
+    this->_index = other._index;
+    this->_value = other._value;
+    this->_should_write_back = 0;
+    this->_is_valid = other._is_valid;
+    this->set_error(other.get_error());
+    return ;
+}
+
+template <typename TValue>
 inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_proxy(scma_handle_accessor_element_proxy &&other)
 {
     this->_parent = other._parent;
@@ -817,33 +929,6 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
     other.set_error(FT_ERR_INVALID_STATE);
     other._is_valid = 0;
     return ;
-}
-
-template <typename TValue>
-inline scma_handle_accessor_element_proxy<TValue>    &scma_handle_accessor_element_proxy<TValue>::operator=(scma_handle_accessor_element_proxy &&other)
-{
-    if (this == &other)
-    {
-        if (!this->_is_valid)
-        {
-            pf_printf_fd(2,
-                "scma_handle_accessor_element_proxy lifecycle error: operator=(move): "
-                "self-move while proxy is not initialized\n");
-            su_abort();
-        }
-        return (*this);
-    }
-    this->_parent = other._parent;
-    this->_index = other._index;
-    this->_value = other._value;
-    this->_should_write_back = other._should_write_back;
-    this->set_error(other.get_error());
-    this->_is_valid = other._is_valid;
-    other._parent = ft_nullptr;
-    other._should_write_back = 0;
-    other.set_error(FT_ERR_INVALID_STATE);
-    other._is_valid = 0;
-    return (*this);
 }
 
 template <typename TValue>
@@ -863,7 +948,7 @@ inline scma_handle_accessor_element_proxy<TValue>::~scma_handle_accessor_element
 }
 
 template <typename TValue>
-thread_local int32_t scma_handle_accessor_element_proxy<TValue>::_last_error = FT_ERR_INVALID_STATE;
+thread_local uint32_t scma_handle_accessor_element_proxy<TValue>::_last_error = FT_ERR_SUCCESS;
 
 template <typename TValue>
 inline TValue    *scma_handle_accessor_element_proxy<TValue>::operator->(void)
@@ -926,16 +1011,16 @@ inline scma_handle_accessor_element_proxy<TValue>::operator TValue(void) const
 }
 
 template <typename TValue>
-inline int32_t scma_handle_accessor_element_proxy<TValue>::get_error(void) const
+inline uint32_t scma_handle_accessor_element_proxy<TValue>::get_error(void) const
 {
     return (this->_last_error);
 }
 
 template <typename TValue>
-inline void scma_handle_accessor_element_proxy<TValue>::set_error(int32_t error_code)
+inline uint32_t scma_handle_accessor_element_proxy<TValue>::set_error(uint32_t error_code)
 {
     this->_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
 template <typename TValue>
@@ -948,6 +1033,17 @@ template <typename TValue>
 inline int32_t scma_handle_accessor_element_proxy<TValue>::is_valid(void) const
 {
     return (this->_is_valid);
+}
+
+template <typename TValue>
+inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_const_element_proxy(void)
+{
+    this->_parent = ft_nullptr;
+    this->_index = 0;
+    this->_value = TValue();
+    this->_is_valid = 0;
+    this->set_error(FT_ERR_INVALID_STATE);
+    return ;
 }
 
 template <typename TValue>
@@ -975,6 +1071,18 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
 }
 
 template <typename TValue>
+inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_const_element_proxy(
+        const scma_handle_accessor_const_element_proxy &other)
+{
+    this->_parent = other._parent;
+    this->_index = other._index;
+    this->_value = other._value;
+    this->_is_valid = other._is_valid;
+    this->set_error(other.get_error());
+    return ;
+}
+
+template <typename TValue>
 inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_const_element_proxy(scma_handle_accessor_const_element_proxy &&other)
 {
     this->_parent = other._parent;
@@ -986,31 +1094,6 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
     other.set_error(FT_ERR_INVALID_STATE);
     other._is_valid = 0;
     return ;
-}
-
-template <typename TValue>
-inline scma_handle_accessor_const_element_proxy<TValue>    &scma_handle_accessor_const_element_proxy<TValue>::operator=(scma_handle_accessor_const_element_proxy &&other)
-{
-    if (this == &other)
-    {
-        if (!this->_is_valid)
-        {
-            pf_printf_fd(2,
-                "scma_handle_accessor_const_element_proxy lifecycle error: "
-                "operator=(move): self-move while proxy is not initialized\n");
-            su_abort();
-        }
-        return (*this);
-    }
-    this->_parent = other._parent;
-    this->_index = other._index;
-    this->_value = other._value;
-    this->set_error(other.get_error());
-    this->_is_valid = other._is_valid;
-    other._parent = ft_nullptr;
-    other.set_error(FT_ERR_INVALID_STATE);
-    other._is_valid = 0;
-    return (*this);
 }
 
 template <typename TValue>
@@ -1058,23 +1141,21 @@ inline scma_handle_accessor_const_element_proxy<TValue>::operator TValue(void) c
 }
 
 template <typename TValue>
-inline int32_t scma_handle_accessor_const_element_proxy<TValue>::get_error(void) const
+inline uint32_t scma_handle_accessor_const_element_proxy<TValue>::get_error(void) const
 {
-    this->set_error(scma_handle_accessor_const_element_proxy<TValue>::_last_error);
     return (this->_last_error);
 }
 
 template <typename TValue>
-inline void scma_handle_accessor_const_element_proxy<TValue>::set_error(int32_t error_code) const
+inline uint32_t scma_handle_accessor_const_element_proxy<TValue>::set_error(uint32_t error_code) const
 {
     scma_handle_accessor_const_element_proxy<TValue>::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
 template <typename TValue>
 inline const char *scma_handle_accessor_const_element_proxy<TValue>::get_error_str(void) const
 {
-    this->set_error(scma_handle_accessor_const_element_proxy<TValue>::_last_error);
     return (ft_strerror(this->_last_error));
 }
 
@@ -1089,6 +1170,6 @@ inline int32_t scma_handle_accessor_const_element_proxy<TValue>::is_valid(void) 
 }
 
 template <typename TValue>
-thread_local int32_t scma_handle_accessor_const_element_proxy<TValue>::_last_error = FT_ERR_INVALID_STATE;
+thread_local uint32_t scma_handle_accessor_const_element_proxy<TValue>::_last_error = FT_ERR_SUCCESS;
 
 #endif

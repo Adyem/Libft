@@ -178,7 +178,7 @@ bool    time_trace_begin_session(const char *file_path)
 
     if (g_trace_session_active)
     {
-        (void)(FT_ERR_ALREADY_INITIALIZED);
+        (void)(FT_ERR_ALREADY_INITIALISED);
         return (false);
     }
     if (file_path == ft_nullptr)

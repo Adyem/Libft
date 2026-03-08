@@ -4,7 +4,7 @@
 #include "../../Game/ft_vendor_profile.hpp"
 #include "../../Game/ft_currency_rate.hpp"
 #include "../../Game/game_economy_table.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -20,7 +20,7 @@ FT_TEST(test_price_lifecycle_initialize_destroy_success, "price definition initi
     return (1);
 }
 
-FT_TEST(test_price_lifecycle_destroy_uninitialized_invalid_state, "price definition destroy on uninitialized returns invalid state")
+FT_TEST(test_price_lifecycle_destroy_uninitialised_invalid_state, "price definition destroy on uninitialised returns invalid state")
 {
     ft_price_definition definition;
 
@@ -42,7 +42,7 @@ FT_TEST(test_price_lifecycle_reinitialize_after_destroy_success, "price definiti
     return (1);
 }
 
-FT_TEST(test_price_lifecycle_disable_thread_safety_uninitialized_success, "price definition disable_thread_safety on uninitialized succeeds")
+FT_TEST(test_price_lifecycle_disable_thread_safety_uninitialised_success, "price definition disable_thread_safety on uninitialised succeeds")
 {
     ft_price_definition definition;
 
@@ -62,7 +62,7 @@ FT_TEST(test_rarity_lifecycle_initialize_destroy_success, "rarity band initializ
     return (1);
 }
 
-FT_TEST(test_rarity_lifecycle_destroy_uninitialized_invalid_state, "rarity band destroy on uninitialized returns invalid state")
+FT_TEST(test_rarity_lifecycle_destroy_uninitialised_invalid_state, "rarity band destroy on uninitialised returns invalid state")
 {
     ft_rarity_band band;
 
@@ -84,7 +84,7 @@ FT_TEST(test_rarity_lifecycle_reinitialize_after_destroy_success, "rarity band c
     return (1);
 }
 
-FT_TEST(test_rarity_lifecycle_disable_thread_safety_uninitialized_success, "rarity band disable_thread_safety on uninitialized succeeds")
+FT_TEST(test_rarity_lifecycle_disable_thread_safety_uninitialised_success, "rarity band disable_thread_safety on uninitialised succeeds")
 {
     ft_rarity_band band;
 
@@ -104,7 +104,7 @@ FT_TEST(test_vendor_lifecycle_initialize_destroy_success, "vendor profile initia
     return (1);
 }
 
-FT_TEST(test_vendor_lifecycle_destroy_uninitialized_invalid_state, "vendor profile destroy on uninitialized returns invalid state")
+FT_TEST(test_vendor_lifecycle_destroy_uninitialised_invalid_state, "vendor profile destroy on uninitialised returns invalid state")
 {
     ft_vendor_profile profile;
 
@@ -126,7 +126,7 @@ FT_TEST(test_vendor_lifecycle_reinitialize_after_destroy_success, "vendor profil
     return (1);
 }
 
-FT_TEST(test_vendor_lifecycle_disable_thread_safety_uninitialized_success, "vendor profile disable_thread_safety on uninitialized succeeds")
+FT_TEST(test_vendor_lifecycle_disable_thread_safety_uninitialised_success, "vendor profile disable_thread_safety on uninitialised succeeds")
 {
     ft_vendor_profile profile;
 
@@ -146,7 +146,7 @@ FT_TEST(test_currency_lifecycle_initialize_destroy_success, "currency rate initi
     return (1);
 }
 
-FT_TEST(test_currency_lifecycle_destroy_uninitialized_invalid_state, "currency rate destroy on uninitialized returns invalid state")
+FT_TEST(test_currency_lifecycle_destroy_uninitialised_invalid_state, "currency rate destroy on uninitialised returns invalid state")
 {
     ft_currency_rate rate;
 
@@ -168,7 +168,7 @@ FT_TEST(test_currency_lifecycle_reinitialize_after_destroy_success, "currency ra
     return (1);
 }
 
-FT_TEST(test_currency_lifecycle_disable_thread_safety_uninitialized_success, "currency rate disable_thread_safety on uninitialized succeeds")
+FT_TEST(test_currency_lifecycle_disable_thread_safety_uninitialised_success, "currency rate disable_thread_safety on uninitialised succeeds")
 {
     ft_currency_rate rate;
 
@@ -188,7 +188,7 @@ FT_TEST(test_economy_table_lifecycle_initialize_destroy_success, "economy table 
     return (1);
 }
 
-FT_TEST(test_economy_table_lifecycle_destroy_uninitialized_invalid_state, "economy table destroy on uninitialized returns invalid state")
+FT_TEST(test_economy_table_lifecycle_destroy_uninitialised_invalid_state, "economy table destroy on uninitialised returns invalid state")
 {
     ft_economy_table table;
 
@@ -210,7 +210,7 @@ FT_TEST(test_economy_table_lifecycle_reinitialize_after_destroy_success, "econom
     return (1);
 }
 
-FT_TEST(test_economy_table_lifecycle_disable_thread_safety_uninitialized_success, "economy table disable_thread_safety on uninitialized succeeds")
+FT_TEST(test_economy_table_lifecycle_disable_thread_safety_uninitialised_success, "economy table disable_thread_safety on uninitialised succeeds")
 {
     ft_economy_table table;
 

@@ -1,15 +1,15 @@
 #include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../CMA/CMA.hpp"
 #include "test_cpp_class_string_lifecycle_helpers.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_ft_string_operator_assign_char_initializes_uninitialized_destination,
-    "ft_string operator=(char) initializes uninitialized destination")
+FT_TEST(test_ft_string_operator_assign_char_initializes_uninitialised_destination,
+    "ft_string operator=(char) initializes uninitialised destination")
 {
     ft_string destination;
 

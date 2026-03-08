@@ -1,21 +1,14 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 
-int math_max(int first_number, int second_number)
+int32_t math_max(int32_t first_number, int32_t second_number)
 {
     if (first_number > second_number)
         return (first_number);
     return (second_number);
 }
 
-long math_max(long first_number, long second_number)
-{
-    if (first_number > second_number)
-        return (first_number);
-    return (second_number);
-}
-
-long long math_max(long long first_number, long long second_number)
+int64_t math_max(int64_t first_number, int64_t second_number)
 {
     if (first_number > second_number)
         return (first_number);

@@ -16,15 +16,15 @@ class ft_big_number
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable pt_recursive_mutex *_mutex;
-        mutable uint8_t            _initialized_state;
+        mutable uint8_t            _initialised_state;
         int             _operation_error;
-        static const uint8_t       _state_uninitialized = 0;
+        static const uint8_t       _state_uninitialised = 0;
         static const uint8_t       _state_destroyed = 1;
-        static const uint8_t       _state_initialized = 2;
+        static const uint8_t       _state_initialised = 2;
         static thread_local int _last_error;
 
         void    abort_lifecycle_error(const char *method_name, const char *reason) const noexcept;
-        void    abort_if_not_initialized(const char *method_name) const noexcept;
+        void    abort_if_not_initialised(const char *method_name) const noexcept;
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
                 int     lock_mutex(void) const noexcept;

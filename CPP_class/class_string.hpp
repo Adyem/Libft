@@ -19,16 +19,16 @@ class ft_string
         ft_size_t                _length;
         ft_size_t                _capacity;
         mutable pt_recursive_mutex *_mutex;
-        mutable uint8_t            _initialized_state;
+        mutable uint8_t            _initialised_state;
         int32_t                    _operation_error;
-        static const uint8_t       _state_uninitialized = 0;
+        static const uint8_t       _state_uninitialised = 0;
         static const uint8_t       _state_destroyed = 1;
-        static const uint8_t       _state_initialized = 2;
+        static const uint8_t       _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         void        abort_lifecycle_error(const char *method_name,
                     const char *reason) const noexcept;
-        void        abort_if_not_initialized(const char *method_name) const noexcept;
+        void        abort_if_not_initialised(const char *method_name) const noexcept;
         static int32_t set_error(int32_t error_code) noexcept;
         friend class ft_string_proxy;
 
@@ -93,7 +93,7 @@ class ft_string
         char*       print() noexcept;
         ft_size_t   size() const noexcept;
         bool        empty() const noexcept;
-        bool        is_initialized() const noexcept;
+        bool        is_initialised() const noexcept;
         int32_t     move(ft_string& other) noexcept;
         int32_t     erase(ft_size_t index, ft_size_t count) noexcept;
         int32_t     push_back(char character) noexcept;

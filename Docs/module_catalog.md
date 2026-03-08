@@ -5720,7 +5720,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_operation_error_stack *aabb::get_operation_error_stack_for_validation() const noexcept`
   - `pt_recursive_mutex *aabb::get_mutex_for_testing() noexcept`
 
-### Geometry/geometry_aabb.hpp
+### Geometry/aabb.hpp
 
 - Declares:
   - `void record_operation_error(int error_code) const noexcept`
@@ -5771,7 +5771,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_operation_error_stack *circle::get_operation_error_stack_for_validation() const noexcept`
   - `pt_recursive_mutex *circle::get_mutex_for_testing() noexcept`
 
-### Geometry/geometry_circle.hpp
+### Geometry/circle.hpp
 
 - Declares:
   - `void record_operation_error(int error_code) const noexcept`
@@ -5840,7 +5840,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_operation_error_stack *sphere::get_operation_error_stack_for_validation() const noexcept`
   - `pt_recursive_mutex *sphere::get_mutex_for_testing() noexcept`
 
-### Geometry/geometry_sphere.hpp
+### Geometry/sphere.hpp
 
 - Declares:
   - `void record_operation_error(int error_code) const noexcept`
@@ -6634,7 +6634,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_environment_enable_thread_safety(void)`
   - `void ft_environment_disable_thread_safety(void)`
 
-### Basic/basic_environment_lock.hpp
+### Basic/basic_System_utils_environment_lock.hpp
 
 - Declares:
   - `int ft_environment_lock(void)`
@@ -7711,7 +7711,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `#if defined(__SSE2__) static double quaternion_compute_dot(double first_w, double first_x, double first_y, double first_z, double second_w, double second_x, double second_y, double second_z)`
   - `static double quaternion_compute_dot(double first_w, double first_x, double first_y, double first_z, double second_w, double second_x, double second_y, double second_z)`
 
-### Math/linear_algebra_quaternion.hpp
+### Math/quaternion.hpp
 
 - Declares:
   - `void record_operation_error(int error_code) const noexcept`
@@ -7943,7 +7943,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int math_autodiff_univariate(math_autodiff_univariate_function function, double point, double *value, double *derivative, void *user_data) noexcept`
   - `int math_autodiff_gradient(math_autodiff_multivariate_function function, const ft_vector<double> &point, ft_vector<double> &gradient, double *value, void *user_data) noexcept`
 
-### Math/math_autodiff.hpp
+### Math/ft_dual_number.hpp
 
 - Declares:
   - `void record_operation_error(int error_code) const noexcept`
@@ -8242,7 +8242,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static int math_integrate_simpson_estimate(math_unary_function function, void *user_data, double lower_bound, double upper_bound, size_t subdivisions, double &result) noexcept`
   - `int math_integrate_simpson(math_unary_function function, void *user_data, double lower_bound, double upper_bound, double tolerance, double &result) noexcept`
 
-### Math/math_polynomial.hpp
+### Math/ft_cubic_spline.hpp
 
 - Declares:
   - `void record_operation_error(int error_code) const noexcept`
@@ -9060,7 +9060,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static std::mutex &ft_socket_runtime_mutex()`
   - `static int &ft_socket_runtime_reference_count()`
-  - `static bool &ft_socket_runtime_initialized()`
+  - `static bool &ft_socket_runtime_initialised()`
   - `void ft_socket_handle::set_error(int error_code) const noexcept`
   - `ft_socket_handle::ft_socket_handle() : _socket_fd(-1), _error_code(FT_ERR_SUCCESS)`
   - `ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1), _error_code(FT_ERR_SUCCESS)`
@@ -9425,7 +9425,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `static bool compute_wait_deadline(const struct timespec &relative_time, struct timespec *absolute_time, int *error_code)`
-  - `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialised(false), _mutex_initialised(false), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `pt_condition_variable::~pt_condition_variable()`
   - `void pt_condition_variable::set_error(int error) const`
   - `int pt_condition_variable::lock_internal(bool *lock_acquired) const`
@@ -9467,7 +9467,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void pt_lock_tracking::record_error(ft_operation_error_stack *error_stack, int error_code, bool push_global)`
   - `void pt_lock_tracking::set_error(int error_code)`
   - `std::mutex *pt_lock_tracking::get_registry_mutex(void)`
-  - `bool pt_lock_tracking::ensure_registry_mutex_initialized(int *error_code)`
+  - `bool pt_lock_tracking::ensure_registry_mutex_initialised(int *error_code)`
   - `std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *pt_lock_tracking::get_thread_infos(int *error_code)`
   - `pt_lock_tracking::pt_lock_tracking()`
   - `pt_lock_tracking::~pt_lock_tracking()`
@@ -9490,7 +9490,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void deallocate(t_type *pointer, std::size_t count)`
   - `static std::mutex *get_registry_mutex(void)`
   - `static std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *get_thread_infos(int *error_code)`
-  - `static bool ensure_registry_mutex_initialized(int *error_code)`
+  - `static bool ensure_registry_mutex_initialised(int *error_code)`
   - `static s_pt_thread_lock_info *find_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
   - `static s_pt_thread_lock_info *lookup_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
   - `static bool vector_contains_mutex(const pt_mutex_vector &mutexes, const pt_mutex *mutex_pointer)`
@@ -9520,7 +9520,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_size_t pt_mutex::operation_error_find_by_id(unsigned long long operation_id) const`
   - `const char *pt_mutex::operation_error_error_str_at(ft_size_t index) const`
   - `const char *pt_mutex::operation_error_last_error_str() const`
-  - `pt_mutex::pt_mutex() : _owner(0), _lock(false), _native_initialized(false), _state_mutex(ft_nullptr), _operation_errors(`
+  - `pt_mutex::pt_mutex() : _owner(0), _lock(false), _native_initialised(false), _state_mutex(ft_nullptr), _operation_errors(`
   - `pt_mutex::~pt_mutex()`
   - `bool pt_mutex::ensure_native_mutex() const`
   - `bool pt_mutex::lockState() const`
@@ -9554,7 +9554,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_size_t pt_recursive_mutex::operation_error_find_by_id(unsigned long long operation_id) const`
   - `const char *pt_recursive_mutex::operation_error_error_str_at(ft_size_t index) const`
   - `const char *pt_recursive_mutex::operation_error_last_error_str() const`
-  - `pt_recursive_mutex::pt_recursive_mutex() : _owner(0), _lock(false), _lock_depth(0), _native_initialized(false), _state_mutex(ft_nullptr)`
+  - `pt_recursive_mutex::pt_recursive_mutex() : _owner(0), _lock(false), _lock_depth(0), _native_initialised(false), _state_mutex(ft_nullptr)`
   - `pt_recursive_mutex::~pt_recursive_mutex()`
   - `bool pt_recursive_mutex::ensure_native_mutex() const`
   - `bool pt_recursive_mutex::lockState() const`
@@ -10965,7 +10965,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int scma_pop_operation_error(void)`
   - `int scma_initialize(ft_size_t initial_capacity)`
   - `void scma_shutdown(void)`
-  - `int scma_is_initialized(void)`
+  - `int scma_is_initialised(void)`
   - `scma_handle scma_allocate(ft_size_t size)`
   - `int scma_free(scma_handle handle)`
   - `int scma_resize(scma_handle handle, ft_size_t new_size)`
@@ -11051,7 +11051,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `int scma_initialize(ft_size_t initial_capacity)`
   - `void scma_shutdown(void)`
-  - `int scma_is_initialized(void)`
+  - `int scma_is_initialised(void)`
   - `scma_handle scma_allocate(ft_size_t size)`
   - `int scma_free(scma_handle handle)`
   - `int scma_resize(scma_handle handle, ft_size_t new_size)`
@@ -11081,7 +11081,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_size_t &scma_block_capacity_ref(void)`
   - `ft_size_t &scma_block_count_ref(void)`
   - `ft_size_t &scma_used_size_ref(void)`
-  - `int &scma_initialized_ref(void)`
+  - `int &scma_initialised_ref(void)`
   - `scma_block_span scma_get_block_span(void)`
   - `unsigned char *scma_get_heap_data(void)`
   - `scma_handle scma_invalid_handle(void)`
@@ -11129,7 +11129,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_size_t &scma_block_capacity_ref(void)`
   - `ft_size_t &scma_block_count_ref(void)`
   - `ft_size_t &scma_used_size_ref(void)`
-  - `int &scma_initialized_ref(void)`
+  - `int &scma_initialised_ref(void)`
   - `scma_block_span scma_get_block_span(void)`
   - `unsigned char *scma_get_heap_data(void)`
   - `scma_handle scma_invalid_handle(void)`
@@ -11593,7 +11593,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int su_health_run_check(const char *name, t_su_health_check_result *result)`
 - Defines: _None_
 
-### System_utils/test_runner.cpp
+### System_utils/test_system_utils_runner.cpp
 
 - Declares: _None_
 - Defines:
@@ -11610,7 +11610,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_test_fail(const char *expression, const char *file, int line)`
   - `int ft_run_registered_tests(void)`
 
-### System_utils/test_runner.hpp
+### System_utils/test_system_utils_runner.hpp
 
 - Declares:
   - `int ft_register_test(t_test_func func, const char *description, const char *module, const char *name)`
@@ -11713,7 +11713,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_cancellation_token get_token() const noexcept`
 - Defines:
   - `inline void ft_cancellation_state::set_error(int error_code) const`
-  - `inline ft_cancellation_state::ft_cancellation_state() noexcept : _error_code(FT_ERR_SUCCESS), _cancelled(false), _callbacks(), _mutex(), _mutex_initialized(false)`
+  - `inline ft_cancellation_state::ft_cancellation_state() noexcept : _error_code(FT_ERR_SUCCESS), _cancelled(false), _callbacks(), _mutex(), _mutex_initialised(false)`
   - `inline ft_cancellation_state::~ft_cancellation_state() noexcept`
   - `inline int ft_cancellation_state::register_callback(const ft_function<void()> &callback) noexcept`
   - `inline void ft_cancellation_state::request_cancel() noexcept`
@@ -12823,7 +12823,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `inline void ft_thread_pool::worker()`
   - `inline void ft_thread_pool::set_error(int error) const`
-  - `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialised(false), _cond_initialised(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `inline ft_thread_pool::~ft_thread_pool()`
   - `inline void ft_thread_pool::submit(Function &&function)`
   - `inline void ft_thread_pool::submit(Function &&function, const ft_cancellation_token &token)`
@@ -17389,7 +17389,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares:
   - `FT_ASSERT_EQ(1, scma_initialize(64) )`
   - `FT_ASSERT_EQ(0, scma_initialize(64) )`
-  - `FT_ASSERT_EQ(0, scma_is_initialized() )`
+  - `FT_ASSERT_EQ(0, scma_is_initialised() )`
   - `FT_ASSERT_EQ(1, scma_test_initialize(32) )`
   - `FT_ASSERT_EQ(0, scma_handle_is_valid(handle) )`
   - `FT_ASSERT_EQ(1, scma_test_initialize(static_cast<ft_size_t>(sizeof(int) * 2)) )`

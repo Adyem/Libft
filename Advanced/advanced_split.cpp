@@ -6,18 +6,18 @@
 static ft_size_t count_words(const char *string, char delimiter)
 {
     ft_size_t count = 0;
-    bool in_word = false;
+    ft_bool in_word = FT_FALSE;
     ft_size_t index = 0;
     while (string[index] != '\0')
     {
-        if (string[index] != delimiter && !in_word)
+        if (string[index] != delimiter && in_word == FT_FALSE)
         {
-            in_word = true;
+            in_word = FT_TRUE;
             ++count;
         }
         else if (string[index] == delimiter)
         {
-            in_word = false;
+            in_word = FT_FALSE;
         }
         ++index;
     }

@@ -5,7 +5,9 @@
 # define DEBUG 0
 #endif
 
-int     *math_roll(const char *expression);
-int     *math_eval(const char *expression);
+#include <cstdint>
+
+int32_t     *math_roll(const char *expression);
+int32_t     *math_eval(const char *expression);
 
 #endif

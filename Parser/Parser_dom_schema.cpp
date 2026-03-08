@@ -10,14 +10,14 @@
 
 ft_dom_schema::ft_dom_schema() noexcept
     : _rules(), _mutex(ft_nullptr),
-      _initialized_state(ft_dom_schema::_state_uninitialized)
+      _initialised_state(ft_dom_schema::_state_uninitialised)
 {
     return ;
 }
 
 ft_dom_schema::~ft_dom_schema() noexcept
 {
-    if (this->_initialized_state == ft_dom_schema::_state_initialized)
+    if (this->_initialised_state == ft_dom_schema::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -35,25 +35,25 @@ void ft_dom_schema::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_dom_schema::abort_if_not_initialized(const char *method_name) const
+void ft_dom_schema::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_dom_schema::_state_initialized)
+    if (this->_initialised_state == ft_dom_schema::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_dom_schema::initialize() noexcept
 {
-    if (this->_initialized_state == ft_dom_schema::_state_initialized)
+    if (this->_initialised_state == ft_dom_schema::_state_initialised)
     {
         this->abort_lifecycle_error("ft_dom_schema::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_rules.clear();
-    this->_initialized_state = ft_dom_schema::_state_initialized;
+    this->_initialised_state = ft_dom_schema::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -61,11 +61,11 @@ int ft_dom_schema::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_dom_schema::_state_initialized)
+    if (this->_initialised_state != ft_dom_schema::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->_rules.clear();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_dom_schema::_state_destroyed;
+    this->_initialised_state = ft_dom_schema::_state_destroyed;
     return (disable_error);
 }
 
@@ -74,7 +74,7 @@ int ft_dom_schema::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_dom_schema::enable_thread_safety");
+    this->abort_if_not_initialised("ft_dom_schema::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -130,13 +130,13 @@ int ft_dom_schema::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_dom_schema::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_schema::lock");
+    this->abort_if_not_initialised("ft_dom_schema::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_dom_schema::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_schema::unlock");
+    this->abort_if_not_initialised("ft_dom_schema::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -147,7 +147,7 @@ int ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, bool r
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_schema::add_rule");
+    this->abort_if_not_initialised("ft_dom_schema::add_rule");
     rule.path = path;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
@@ -188,7 +188,7 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
     const ft_dom_node *target_node;
     int find_error;
 
-    this->abort_if_not_initialized("ft_dom_schema::validate_rule");
+    this->abort_if_not_initialised("ft_dom_schema::validate_rule");
     full_path = ft_dom_build_path(base_path, rule.path);
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
@@ -250,7 +250,7 @@ int ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validation_r
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_schema::validate");
+    this->abort_if_not_initialised("ft_dom_schema::validate");
     report.mark_valid();
     root = document.get_root();
     if (!root)
@@ -301,7 +301,7 @@ int ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validation_r
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_dom_schema::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_schema::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_dom_schema::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

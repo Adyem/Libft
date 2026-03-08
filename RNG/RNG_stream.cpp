@@ -28,18 +28,18 @@ void rng_stream::abort_lifecycle_error(const char *method_name, const char *reas
     return ;
 }
 
-void rng_stream::abort_if_not_initialized(const char *method_name) const
+void rng_stream::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == rng_stream::_state_initialized)
+    if (this->_initialised_state == rng_stream::_state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 rng_stream::rng_stream()
     : _engine()
     , _mutex(ft_nullptr)
-    , _initialized_state(rng_stream::_state_uninitialized)
+    , _initialised_state(rng_stream::_state_uninitialised)
 {
     std::random_device random_device;
 
@@ -50,7 +50,7 @@ rng_stream::rng_stream()
 rng_stream::rng_stream(uint32_t seed_value)
     : _engine()
     , _mutex(ft_nullptr)
-    , _initialized_state(rng_stream::_state_uninitialized)
+    , _initialised_state(rng_stream::_state_uninitialised)
 {
     this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
     return ;
@@ -59,7 +59,7 @@ rng_stream::rng_stream(uint32_t seed_value)
 
 rng_stream::~rng_stream()
 {
-    if (this->_initialized_state == rng_stream::_state_initialized)
+    if (this->_initialised_state == rng_stream::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -69,7 +69,7 @@ int rng_stream::enable_thread_safety()
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("rng_stream::enable_thread_safety");
+    this->abort_if_not_initialised("rng_stream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -89,7 +89,7 @@ int rng_stream::disable_thread_safety()
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("rng_stream::disable_thread_safety");
+    this->abort_if_not_initialised("rng_stream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -105,13 +105,13 @@ bool rng_stream::is_thread_safe() const
 
 int rng_stream::initialize()
 {
-    if (this->_initialized_state == rng_stream::_state_initialized)
+    if (this->_initialised_state == rng_stream::_state_initialised)
     {
         this->abort_lifecycle_error("rng_stream::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_initialized_state = rng_stream::_state_initialized;
+    this->_initialised_state = rng_stream::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -124,15 +124,15 @@ int rng_stream::initialize(const rng_stream &other)
     int other_unlock_error;
     int final_error;
 
-    if (other._initialized_state != rng_stream::_state_initialized)
+    if (other._initialised_state != rng_stream::_state_initialised)
     {
         other.abort_lifecycle_error("rng_stream::initialize(const rng_stream &) source",
-            "source is not initialized");
+            "source is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state == rng_stream::_state_initialized)
+    if (this->_initialised_state == rng_stream::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -196,15 +196,15 @@ int rng_stream::initialize(rng_stream &&other)
     int final_error;
     std::mt19937 default_engine;
 
-    if (other._initialized_state != rng_stream::_state_initialized)
+    if (other._initialised_state != rng_stream::_state_initialised)
     {
         other.abort_lifecycle_error("rng_stream::initialize(rng_stream &&) source",
-            "source is not initialized");
+            "source is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state == rng_stream::_state_initialized)
+    if (this->_initialised_state == rng_stream::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -263,10 +263,10 @@ int rng_stream::destroy()
 {
     int disable_error;
 
-    if (this->_initialized_state != rng_stream::_state_initialized)
+    if (this->_initialised_state != rng_stream::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = rng_stream::_state_destroyed;
+    this->_initialised_state = rng_stream::_state_destroyed;
     return (disable_error);
 }
 
@@ -275,7 +275,7 @@ int rng_stream::reseed(uint32_t seed_value)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::reseed");
+    this->abort_if_not_initialised("rng_stream::reseed");
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
@@ -289,7 +289,7 @@ int rng_stream::reseed_from_string(const char *seed_string)
 {
     uint32_t derived_seed;
 
-    this->abort_if_not_initialized("rng_stream::reseed_from_string");
+    this->abort_if_not_initialised("rng_stream::reseed_from_string");
     if (seed_string == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     derived_seed = ft_random_seed(seed_string);
@@ -320,7 +320,7 @@ Pair<int, int> rng_stream::random_int()
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_int");
+    this->abort_if_not_initialised("rng_stream::random_int");
     value = 0;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
@@ -339,7 +339,7 @@ Pair<int, int> rng_stream::dice_roll(int number, int faces)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::dice_roll");
+    this->abort_if_not_initialised("rng_stream::dice_roll");
     if (faces == 0 && number == 0)
         return (Pair<int, int>(FT_ERR_SUCCESS, 0));
     if (faces < 1 || number < 1)
@@ -381,7 +381,7 @@ Pair<int, float> rng_stream::random_float()
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_float");
+    this->abort_if_not_initialised("rng_stream::random_float");
     value = 0.0f;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
@@ -403,7 +403,7 @@ Pair<int, float> rng_stream::random_normal()
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_normal");
+    this->abort_if_not_initialised("rng_stream::random_normal");
     uniform_one = 0.0f;
     uniform_two = 0.0f;
     radius = 0.0f;
@@ -443,7 +443,7 @@ Pair<int, float> rng_stream::random_exponential(float lambda_value)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_exponential");
+    this->abort_if_not_initialised("rng_stream::random_exponential");
     if (lambda_value <= 0.0f)
         return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     uniform_value = 0.0f;
@@ -473,7 +473,7 @@ Pair<int, int> rng_stream::random_poisson(double lambda_value)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_poisson");
+    this->abort_if_not_initialised("rng_stream::random_poisson");
     if (lambda_value <= 0.0)
         return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
     limit_value = math_exp(-lambda_value);
@@ -507,7 +507,7 @@ Pair<int, int> rng_stream::random_binomial(int trial_count, double success_proba
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_binomial");
+    this->abort_if_not_initialised("rng_stream::random_binomial");
     if (trial_count < 0)
         return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
     if (success_probability < 0.0)
@@ -550,7 +550,7 @@ Pair<int, int> rng_stream::random_geometric(double success_probability)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_geometric");
+    this->abort_if_not_initialised("rng_stream::random_geometric");
     if (success_probability <= 0.0)
         return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
     if (success_probability > 1.0)
@@ -592,7 +592,7 @@ Pair<int, float> rng_stream::random_gamma(float shape, float scale)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_gamma");
+    this->abort_if_not_initialised("rng_stream::random_gamma");
     if (shape <= 0.0f || scale <= 0.0f)
         return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;
@@ -616,7 +616,7 @@ Pair<int, float> rng_stream::random_beta(float alpha, float beta)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_beta");
+    this->abort_if_not_initialised("rng_stream::random_beta");
     if (alpha <= 0.0f || beta <= 0.0f)
         return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     alpha_sample = 0.0f;
@@ -652,7 +652,7 @@ Pair<int, float> rng_stream::random_chi_squared(float degrees_of_freedom)
     int operation_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("rng_stream::random_chi_squared");
+    this->abort_if_not_initialised("rng_stream::random_chi_squared");
     if (degrees_of_freedom <= 0.0f)
         return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;

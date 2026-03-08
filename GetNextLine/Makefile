@@ -2,7 +2,7 @@ include ../compiler_flags.mk
 TARGET := GetNextLine.a
 DEBUG_TARGET := GetNextLine_debug.a
 
-SRCS := get_next_line.cpp gnl_stream.cpp get_next_line_stream_helpers.cpp
+SRCS := get_next_line.cpp get_next_line_stream.cpp get_next_line_stream_helpers.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -108,4 +108,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

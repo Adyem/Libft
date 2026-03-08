@@ -18,10 +18,10 @@ class ft_sharedptr
         size_t                      _array_size;
         bool                        _is_array_type;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                     _initialized_state;
-        static const uint8_t        _state_uninitialized = 0;
+        uint8_t                     _initialised_state;
+        static const uint8_t        _state_uninitialised = 0;
         static const uint8_t        _state_destroyed = 1;
-        static const uint8_t        _state_initialized = 2;
+        static const uint8_t        _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -167,7 +167,7 @@ class ft_sharedptr
         ft_sharedptr() noexcept
             : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
               _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -177,7 +177,7 @@ class ft_sharedptr
                 size_t array_size = 1) noexcept
             : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
               _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
         {
             (void)this->initialize(pointer, array_type, array_size);
             return ;
@@ -186,7 +186,7 @@ class ft_sharedptr
         explicit ft_sharedptr(size_t size) noexcept
             : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
               _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
         {
             (void)this->initialize(size);
             return ;
@@ -195,15 +195,15 @@ class ft_sharedptr
         ft_sharedptr(const ft_sharedptr &other) noexcept
             : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
               _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
         {
-            if (other._initialized_state == _state_initialized)
+            if (other._initialised_state == _state_initialised)
             {
                 this->_managed_pointer = other._managed_pointer;
                 this->_reference_count = other._reference_count;
                 this->_array_size = other._array_size;
                 this->_is_array_type = other._is_array_type;
-                this->_initialized_state = _state_initialized;
+                this->_initialised_state = _state_initialised;
                 if (this->_reference_count != ft_nullptr)
                     *this->_reference_count = *this->_reference_count + 1;
             }
@@ -214,20 +214,20 @@ class ft_sharedptr
         ft_sharedptr(ft_sharedptr &&other) noexcept
             : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
               _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
         {
-            if (other._initialized_state == _state_initialized)
+            if (other._initialised_state == _state_initialised)
             {
                 this->_managed_pointer = other._managed_pointer;
                 this->_reference_count = other._reference_count;
                 this->_array_size = other._array_size;
                 this->_is_array_type = other._is_array_type;
-                this->_initialized_state = _state_initialized;
+                this->_initialised_state = _state_initialised;
                 other._managed_pointer = ft_nullptr;
                 other._reference_count = ft_nullptr;
                 other._array_size = 0;
                 other._is_array_type = false;
-                other._initialized_state = _state_destroyed;
+                other._initialised_state = _state_destroyed;
             }
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -237,10 +237,10 @@ class ft_sharedptr
         {
             if (this == &other)
                 return (*this);
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 (void)this->initialize();
             this->destroy_storage();
-            if (other._initialized_state != _state_initialized)
+            if (other._initialised_state != _state_initialised)
                 return (*this);
             this->_managed_pointer = other._managed_pointer;
             this->_reference_count = other._reference_count;
@@ -256,7 +256,7 @@ class ft_sharedptr
         {
             if (this == &other)
                 return (*this);
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 (void)this->initialize();
             this->destroy_storage();
             this->_managed_pointer = other._managed_pointer;
@@ -273,7 +273,7 @@ class ft_sharedptr
 
         ~ft_sharedptr()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -282,20 +282,20 @@ class ft_sharedptr
 
         int32_t initialize() noexcept
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             this->_managed_pointer = ft_nullptr;
             this->_reference_count = ft_nullptr;
             this->_array_size = 0;
             this->_is_array_type = false;
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
         int32_t initialize(ManagedType *pointer, bool array_type = false,
                 size_t array_size = 1) noexcept
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             this->_managed_pointer = pointer;
             this->_reference_count = ft_nullptr;
@@ -304,7 +304,7 @@ class ft_sharedptr
                 this->_reference_count = new (std::nothrow) size_t(1);
                 if (this->_reference_count == ft_nullptr)
                 {
-                    this->_initialized_state = _state_destroyed;
+                    this->_initialised_state = _state_destroyed;
                     return (set_last_operation_error(FT_ERR_NO_MEMORY));
                 }
             }
@@ -315,13 +315,13 @@ class ft_sharedptr
             else
                 this->_array_size = 1;
             this->_is_array_type = array_type;
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
         int32_t initialize(size_t size) noexcept
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             this->_managed_pointer = ft_nullptr;
             this->_reference_count = ft_nullptr;
@@ -332,7 +332,7 @@ class ft_sharedptr
                 this->_managed_pointer = new (std::nothrow) ManagedType[size];
                 if (this->_managed_pointer == ft_nullptr)
                 {
-                    this->_initialized_state = _state_destroyed;
+                    this->_initialised_state = _state_destroyed;
                     return (set_last_operation_error(FT_ERR_NO_MEMORY));
                 }
             }
@@ -345,11 +345,11 @@ class ft_sharedptr
                     delete[] this->_managed_pointer;
                     this->_managed_pointer = ft_nullptr;
                     this->_array_size = 0;
-                    this->_initialized_state = _state_destroyed;
+                    this->_initialised_state = _state_destroyed;
                     return (set_last_operation_error(FT_ERR_NO_MEMORY));
                 }
             }
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -358,21 +358,21 @@ class ft_sharedptr
             bool lock_acquired;
             int32_t lock_result;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (lock_result);
             this->destroy_storage();
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             this->unlock_internal(lock_acquired);
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
         reference_proxy operator*() noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (reference_proxy(ft_nullptr,
                         set_last_operation_error(FT_ERR_INVALID_STATE)));
             if (this->_managed_pointer == ft_nullptr)
@@ -384,7 +384,7 @@ class ft_sharedptr
 
         const_reference_proxy operator*() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (const_reference_proxy(ft_nullptr,
                         set_last_operation_error(FT_ERR_INVALID_STATE)));
             if (this->_managed_pointer == ft_nullptr)
@@ -396,7 +396,7 @@ class ft_sharedptr
 
         ManagedType *operator->() noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
@@ -412,7 +412,7 @@ class ft_sharedptr
 
         const ManagedType *operator->() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
@@ -428,7 +428,7 @@ class ft_sharedptr
 
         reference_proxy operator[](size_t index) noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (reference_proxy(ft_nullptr,
                         set_last_operation_error(FT_ERR_INVALID_STATE)));
             if (this->_is_array_type == false || this->_managed_pointer == ft_nullptr)
@@ -443,7 +443,7 @@ class ft_sharedptr
 
         const_reference_proxy operator[](size_t index) const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (const_reference_proxy(ft_nullptr,
                         set_last_operation_error(FT_ERR_INVALID_STATE)));
             if (this->_is_array_type == false || this->_managed_pointer == ft_nullptr)
@@ -458,7 +458,7 @@ class ft_sharedptr
 
         ManagedType *get() noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
@@ -469,7 +469,7 @@ class ft_sharedptr
 
         const ManagedType *get() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
@@ -480,7 +480,7 @@ class ft_sharedptr
 
         int use_count() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (0);
@@ -498,7 +498,7 @@ class ft_sharedptr
 
         bool unique() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (false);
@@ -510,7 +510,7 @@ class ft_sharedptr
         void reset(ManagedType *pointer = ft_nullptr, size_t size = 1,
                 bool array_type = false) noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return ;
@@ -547,8 +547,8 @@ class ft_sharedptr
             size_t array_size_value;
             bool is_array_type_value;
 
-            if (this->_initialized_state != _state_initialized
-                || other._initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised
+                || other._initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return ;
@@ -572,7 +572,7 @@ class ft_sharedptr
 
         explicit operator bool() const noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (false);

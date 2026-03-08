@@ -69,12 +69,12 @@ void    ft_big_number::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void    ft_big_number::abort_if_not_initialized(const char *method_name) const noexcept
+void    ft_big_number::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_big_number::_state_initialized)
+    if (this->_initialised_state == ft_big_number::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -100,7 +100,7 @@ static char ft_big_number_digit_symbol(int value) noexcept
 
 int ft_big_number::lock_mutex(void) const noexcept
 {
-    this->abort_if_not_initialized("ft_big_number::lock_mutex");
+    this->abort_if_not_initialised("ft_big_number::lock_mutex");
     return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
@@ -167,7 +167,7 @@ int ft_big_number::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    this->abort_if_not_initialized("enable thread safety");
+    this->abort_if_not_initialised("enable thread safety");
     if (this->_mutex != ft_nullptr)
     {
         ft_big_number::set_error(FT_ERR_SUCCESS);
@@ -190,7 +190,7 @@ int ft_big_number::disable_thread_safety(void) noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("disable thread safety");
+    this->abort_if_not_initialised("disable thread safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -201,7 +201,7 @@ int ft_big_number::disable_thread_safety(void) noexcept
 
 bool ft_big_number::is_thread_safe(void) const noexcept
 {
-    this->abort_if_not_initialized("is thread safe");
+    this->abort_if_not_initialised("is thread safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -354,7 +354,7 @@ ft_big_number::ft_big_number() noexcept
     , _capacity(0)
     , _is_negative(false)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_big_number::_state_uninitialized)
+    , _initialised_state(ft_big_number::_state_uninitialised)
     , _operation_error(FT_ERR_SUCCESS)
 {
     return ;
@@ -362,10 +362,10 @@ ft_big_number::ft_big_number() noexcept
 
 int ft_big_number::initialize() noexcept
 {
-    if (this->_initialized_state == ft_big_number::_state_initialized)
+    if (this->_initialised_state == ft_big_number::_state_initialised)
     {
         this->abort_lifecycle_error("ft_big_number::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_digits = ft_nullptr;
@@ -373,7 +373,7 @@ int ft_big_number::initialize() noexcept
     this->_capacity = 0;
     this->_is_negative = false;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = ft_big_number::_state_initialized;
+    this->_initialised_state = ft_big_number::_state_initialised;
     ft_big_number::set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -382,13 +382,13 @@ int ft_big_number::initialize(const ft_big_number& other) noexcept
 {
     int destroy_error;
 
-    if (other._initialized_state != ft_big_number::_state_initialized)
+    if (other._initialised_state != ft_big_number::_state_initialised)
     {
-        if (other._initialized_state == ft_big_number::_state_uninitialized)
+        if (other._initialised_state == ft_big_number::_state_uninitialised)
         {
             other.abort_lifecycle_error(
                 "ft_big_number::initialize(const ft_big_number &) source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         }
         else
         {
@@ -400,7 +400,7 @@ int ft_big_number::initialize(const ft_big_number& other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state == ft_big_number::_state_initialized)
+    if (this->_initialised_state == ft_big_number::_state_initialised)
     {
         destroy_error = this->destroy();
         if (destroy_error != FT_ERR_SUCCESS)
@@ -411,7 +411,7 @@ int ft_big_number::initialize(const ft_big_number& other) noexcept
     this->_capacity = 0;
     this->_is_negative = false;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = ft_big_number::_state_initialized;
+    this->_initialised_state = ft_big_number::_state_initialised;
     *this = other;
     return (FT_ERR_SUCCESS);
 }
@@ -421,13 +421,13 @@ int ft_big_number::initialize(ft_big_number&& other) noexcept
     int destroy_error;
     int move_error;
 
-    if (other._initialized_state != ft_big_number::_state_initialized)
+    if (other._initialised_state != ft_big_number::_state_initialised)
     {
-        if (other._initialized_state == ft_big_number::_state_uninitialized)
+        if (other._initialised_state == ft_big_number::_state_uninitialised)
         {
             other.abort_lifecycle_error(
                 "ft_big_number::initialize(ft_big_number &&) source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         }
         else
         {
@@ -439,7 +439,7 @@ int ft_big_number::initialize(ft_big_number&& other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state == ft_big_number::_state_initialized)
+    if (this->_initialised_state == ft_big_number::_state_initialised)
     {
         destroy_error = this->destroy();
         if (destroy_error != FT_ERR_SUCCESS)
@@ -450,7 +450,7 @@ int ft_big_number::initialize(ft_big_number&& other) noexcept
     this->_capacity = 0;
     this->_is_negative = false;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = ft_big_number::_state_initialized;
+    this->_initialised_state = ft_big_number::_state_initialised;
     move_error = this->move(other);
     if (move_error != FT_ERR_SUCCESS)
     {
@@ -462,9 +462,9 @@ int ft_big_number::initialize(ft_big_number&& other) noexcept
 
 int ft_big_number::destroy() noexcept
 {
-    if (this->_initialized_state != ft_big_number::_state_initialized)
+    if (this->_initialised_state != ft_big_number::_state_initialised)
     {
-        this->_initialized_state = ft_big_number::_state_destroyed;
+        this->_initialised_state = ft_big_number::_state_destroyed;
         return (FT_ERR_INVALID_STATE);
     }
     (void)this->disable_thread_safety();
@@ -474,17 +474,17 @@ int ft_big_number::destroy() noexcept
     this->_capacity = 0;
     this->_is_negative = false;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = ft_big_number::_state_destroyed;
+    this->_initialised_state = ft_big_number::_state_destroyed;
     ft_big_number::set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 ft_big_number::~ft_big_number() noexcept
 {
-    if (this->_initialized_state != ft_big_number::_state_initialized)
+    if (this->_initialised_state != ft_big_number::_state_initialised)
     {
-        if (this->_initialized_state == ft_big_number::_state_uninitialized)
-            this->_initialized_state = ft_big_number::_state_destroyed;
+        if (this->_initialised_state == ft_big_number::_state_uninitialised)
+            this->_initialised_state = ft_big_number::_state_destroyed;
         return ;
     }
     (void)this->destroy();
@@ -538,12 +538,12 @@ int ft_big_number::move(ft_big_number& other) noexcept
     int lock_error;
     int unlock_error;
 
-    if (other._initialized_state != ft_big_number::_state_initialized)
+    if (other._initialised_state != ft_big_number::_state_initialised)
     {
-        if (other._initialized_state == ft_big_number::_state_uninitialized)
+        if (other._initialised_state == ft_big_number::_state_uninitialised)
         {
             other.abort_lifecycle_error("ft_big_number::move source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         }
         else
         {
@@ -554,7 +554,7 @@ int ft_big_number::move(ft_big_number& other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state != ft_big_number::_state_initialized)
+    if (this->_initialised_state != ft_big_number::_state_initialised)
     {
         int initialization_error = this->initialize();
         if (initialization_error != FT_ERR_SUCCESS)
@@ -2532,7 +2532,7 @@ ft_big_number_proxy::operator ft_big_number() const noexcept
         ft_big_number::set_error(this->_last_error);
         return (result);
     }
-    if (this->_value._initialized_state != ft_big_number::_state_initialized)
+    if (this->_value._initialised_state != ft_big_number::_state_initialised)
     {
         initialization_error = result.initialize();
         if (initialization_error != FT_ERR_SUCCESS)

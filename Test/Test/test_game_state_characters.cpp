@@ -2,7 +2,7 @@
 #include "../../Game/game_state.hpp"
 #include "../../Game/game_character.hpp"
 #include "../../Template/shared_ptr.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD

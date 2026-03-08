@@ -482,7 +482,7 @@ static void tls_log_handshake_diagnostics(
 }
 
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
-: _initialized_state(api_tls_client::_state_uninitialized), _ctx(ft_nullptr),
+: _initialised_state(api_tls_client::_state_uninitialised), _ctx(ft_nullptr),
   _ssl(ft_nullptr), _sock(-1), _host(), _port(port), _timeout(timeout_ms),
   _mutex(ft_nullptr), _is_shutting_down(false), _async_workers(),
   _handshake_diagnostics()
@@ -497,7 +497,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
 
 api_tls_client::~api_tls_client()
 {
-    if (this->_initialized_state == api_tls_client::_state_initialized)
+    if (this->_initialised_state == api_tls_client::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -515,12 +515,12 @@ void api_tls_client::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void api_tls_client::abort_if_not_initialized(const char *method_name) const noexcept
+void api_tls_client::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == api_tls_client::_state_initialized)
+    if (this->_initialised_state == api_tls_client::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -529,7 +529,7 @@ int api_tls_client::enable_thread_safety() noexcept
     pt_recursive_mutex *new_mutex;
     int initialize_result;
 
-    this->abort_if_not_initialized("api_tls_client::enable_thread_safety");
+    this->abort_if_not_initialised("api_tls_client::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -550,7 +550,7 @@ int api_tls_client::disable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int destroy_result;
 
-    this->abort_if_not_initialized("api_tls_client::disable_thread_safety");
+    this->abort_if_not_initialised("api_tls_client::disable_thread_safety");
     mutex_pointer = this->_mutex;
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -569,36 +569,36 @@ bool api_tls_client::is_thread_safe() const noexcept
 
 int api_tls_client::initialize() noexcept
 {
-    if (this->_initialized_state == api_tls_client::_state_initialized)
+    if (this->_initialised_state == api_tls_client::_state_initialised)
         this->abort_lifecycle_error("api_tls_client::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     this->_ctx = ft_nullptr;
     this->_ssl = ft_nullptr;
     this->_sock = -1;
     this->_is_shutting_down = false;
     this->_async_workers.clear();
-    this->_initialized_state = api_tls_client::_state_initialized;
+    this->_initialised_state = api_tls_client::_state_initialised;
     if (this->_host.empty())
     {
-        this->_initialized_state = api_tls_client::_state_destroyed;
+        this->_initialised_state = api_tls_client::_state_destroyed;
         return (FT_ERR_INVALID_ARGUMENT);
     }
     if (!OPENSSL_init_ssl(0, ft_nullptr))
     {
-        this->_initialized_state = api_tls_client::_state_destroyed;
+        this->_initialised_state = api_tls_client::_state_destroyed;
         return (FT_ERR_TERMINATED);
     }
     this->_ctx = SSL_CTX_new(TLS_client_method());
     if (this->_ctx == ft_nullptr)
     {
-        this->_initialized_state = api_tls_client::_state_destroyed;
+        this->_initialised_state = api_tls_client::_state_destroyed;
         return (FT_ERR_NO_MEMORY);
     }
     if (SSL_CTX_set_default_verify_paths(this->_ctx) != 1)
     {
         SSL_CTX_free(this->_ctx);
         this->_ctx = ft_nullptr;
-        this->_initialized_state = api_tls_client::_state_destroyed;
+        this->_initialised_state = api_tls_client::_state_destroyed;
         return (FT_ERR_CONFIGURATION);
     }
     SSL_CTX_set_verify(this->_ctx, SSL_VERIFY_PEER, ft_nullptr);
@@ -611,7 +611,7 @@ int api_tls_client::destroy() noexcept
     SSL_CTX *ctx_pointer;
     int socket_fd;
 
-    if (this->_initialized_state != api_tls_client::_state_initialized)
+    if (this->_initialised_state != api_tls_client::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
@@ -643,7 +643,7 @@ int api_tls_client::destroy() noexcept
     if (ctx_pointer != ft_nullptr)
         SSL_CTX_free(ctx_pointer);
     (void)this->disable_thread_safety();
-    this->_initialized_state = api_tls_client::_state_destroyed;
+    this->_initialised_state = api_tls_client::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -651,7 +651,7 @@ bool api_tls_client::is_valid() const
 {
     bool is_valid_value;
 
-    this->abort_if_not_initialized("api_tls_client::is_valid");
+    this->abort_if_not_initialised("api_tls_client::is_valid");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     is_valid_value = (this->_ssl != ft_nullptr);
@@ -663,7 +663,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                               const char *headers, int *status)
 {
 
-    this->abort_if_not_initialized("api_tls_client::request");
+    this->abort_if_not_initialised("api_tls_client::request");
     if (method == ft_nullptr || path == ft_nullptr)
         return (ft_nullptr);
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
@@ -974,7 +974,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
                                    void *user_data)
 {
 
-    this->abort_if_not_initialized("api_tls_client::request_async");
+    this->abort_if_not_initialised("api_tls_client::request_async");
     if (!callback)
         return (false);
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
@@ -1030,7 +1030,7 @@ bool api_tls_client::populate_handshake_diagnostics()
     X509 *certificate;
     X509 *leaf_certificate;
 
-    this->abort_if_not_initialized("api_tls_client::populate_handshake_diagnostics");
+    this->abort_if_not_initialised("api_tls_client::populate_handshake_diagnostics");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     if (this->_is_shutting_down)
@@ -1130,7 +1130,7 @@ bool api_tls_client::populate_handshake_diagnostics()
 bool api_tls_client::refresh_handshake_diagnostics()
 {
 
-    this->abort_if_not_initialized("api_tls_client::refresh_handshake_diagnostics");
+    this->abort_if_not_initialised("api_tls_client::refresh_handshake_diagnostics");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     if (this->_is_shutting_down)
@@ -1146,14 +1146,14 @@ bool api_tls_client::refresh_handshake_diagnostics()
 
 const api_tls_handshake_diagnostics &api_tls_client::get_handshake_diagnostics() const noexcept
 {
-    this->abort_if_not_initialized("api_tls_client::get_handshake_diagnostics");
+    this->abort_if_not_initialised("api_tls_client::get_handshake_diagnostics");
     return (this->_handshake_diagnostics);
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *api_tls_client::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("api_tls_client::get_mutex_for_validation");
+    this->abort_if_not_initialised("api_tls_client::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

@@ -53,15 +53,15 @@ class kv_store_entry
         ft_string _value;
         bool _has_expiration;
         long long _expiration_timestamp;
-        uint8_t _initialized_state;
-        static const uint8_t _state_uninitialized = 0;
+        uint8_t _initialised_state;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         mutable pt_recursive_mutex *_mutex;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const noexcept;
-        void abort_if_not_initialized(const char *method_name) const noexcept;
+        void abort_if_not_initialised(const char *method_name) const noexcept;
     public:
         kv_store_entry() noexcept;
         kv_store_entry(const kv_store_entry &other) noexcept = delete;
@@ -117,10 +117,10 @@ typedef struct s_kv_store_replication_sink
 class kv_store
 {
     private:
-        uint8_t _initialized_state;
-        static const uint8_t _state_uninitialized = 0;
+        uint8_t _initialised_state;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         ft_map<ft_string, kv_store_entry> _data;
         ft_string _file_path;
         ft_string _encryption_key;
@@ -145,7 +145,7 @@ class kv_store
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const noexcept;
-        void abort_if_not_initialized(const char *method_name) const noexcept;
+        void abort_if_not_initialised(const char *method_name) const noexcept;
         int lock_store(bool *lock_acquired) const noexcept;
         void unlock_store_guard(bool lock_acquired, int error_code) const noexcept;
         int encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const;
@@ -181,8 +181,8 @@ class kv_store
         int lock_replication(bool *lock_acquired) const noexcept;
         int notify_replication_listeners(const ft_vector<kv_store_operation> &operations) const;
         int dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const;
-        int cleanup_partial_initialization(bool data_initialized, bool file_path_initialized,
-            bool encryption_key_initialized, bool replication_sinks_initialized, int error_code) noexcept;
+        int cleanup_partial_initialization(bool data_initialised, bool file_path_initialised,
+            bool encryption_key_initialised, bool replication_sinks_initialised, int error_code) noexcept;
 
     public:
         kv_store(const char *file_path, const char *encryption_key = ft_nullptr, bool enable_encryption = false);

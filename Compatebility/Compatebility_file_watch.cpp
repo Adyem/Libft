@@ -23,7 +23,7 @@
 
 struct cmp_file_watch_context
 {
-    std::atomic<bool>    running;
+    std::atomic<ft_bool>    running;
 #if defined(__linux__)
     int32_t                  file_descriptor;
     int32_t                  watch_descriptor;
@@ -92,7 +92,7 @@ cmp_file_watch_context *cmp_file_watch_create(void)
 {
     cmp_file_watch_context *context = new cmp_file_watch_context();
 
-    context->running.store(false);
+    context->running.store(FT_FALSE);
 #if defined(__linux__)
     context->file_descriptor = -1;
     context->watch_descriptor = -1;
@@ -182,7 +182,7 @@ int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
     context->buffer_offset = 0;
     context->buffer_size = 0;
 #endif
-    context->running.store(true);
+    context->running.store(FT_TRUE);
     return (FT_ERR_SUCCESS);
 }
 
@@ -190,7 +190,7 @@ void cmp_file_watch_stop(cmp_file_watch_context *context)
 {
     if (!context)
         return ;
-    context->running.store(false);
+    context->running.store(FT_FALSE);
 #if defined(__linux__)
     if (context->watch_descriptor >= 0 && context->file_descriptor >= 0)
         inotify_rm_watch(context->file_descriptor, context->watch_descriptor);
@@ -220,13 +220,13 @@ void cmp_file_watch_stop(cmp_file_watch_context *context)
     return ;
 }
 
-bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
+ft_bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
     cmp_file_watch_event *event)
 {
     if (!context || !event)
-        return (false);
+        return (FT_FALSE);
     if (!context->running.load())
-        return (false);
+        return (FT_FALSE);
 #if defined(__linux__)
     while (context->running.load())
     {
@@ -255,14 +255,14 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             {
                 event->name[0] = '\0';
             }
-            return (true);
+            return (FT_TRUE);
         }
         int64_t read_result = ::read(context->file_descriptor, context->buffer,
                 sizeof(context->buffer));
         if (read_result <= 0)
         {
-            context->running.store(false);
-            return (false);
+            context->running.store(FT_FALSE);
+            return (FT_FALSE);
         }
         context->buffer_size = static_cast<ft_size_t>(read_result);
         context->buffer_offset = 0;
@@ -274,13 +274,13 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
         int32_t event_count = kevent(context->kqueue_fd, ft_nullptr, 0, &observed_event, 1, ft_nullptr);
         if (event_count <= 0)
         {
-            context->running.store(false);
-            return (false);
+            context->running.store(FT_FALSE);
+            return (FT_FALSE);
         }
         event->event_type = cmp_file_watch_translate_bsd_flags(observed_event.fflags);
-        event->has_name = false;
+        event->has_name = FT_FALSE;
         event->name[0] = '\0';
-        return (true);
+        return (FT_TRUE);
     }
 #elif defined(_WIN32)
     while (context->running.load())
@@ -302,20 +302,20 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
                 if (converted > 0)
                 {
                     event->name[converted] = '\0';
-                    event->has_name = true;
+                    event->has_name = FT_TRUE;
                 }
                 else
                 {
                     event->name[0] = '\0';
-                    event->has_name = false;
+                    event->has_name = FT_FALSE;
                 }
             }
             else
             {
                 event->name[0] = '\0';
-                event->has_name = false;
+                event->has_name = FT_FALSE;
             }
-            return (true);
+            return (FT_TRUE);
         }
         DWORD bytes_returned = 0;
         BOOL success = ReadDirectoryChangesW(context->directory, context->buffer,
@@ -324,8 +324,8 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             &bytes_returned, ft_nullptr, ft_nullptr);
         if (success == FALSE)
         {
-            context->running.store(false);
-            return (false);
+            context->running.store(FT_FALSE);
+            return (FT_FALSE);
         }
         if (bytes_returned == 0)
             continue ;
@@ -333,5 +333,5 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
         context->buffer_offset = 0;
     }
 #endif
-    return (false);
+    return (FT_FALSE);
 }

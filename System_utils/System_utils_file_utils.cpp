@@ -5,23 +5,22 @@
 #include "../Errno/errno.hpp"
 #include "../File/open_dir.hpp"
 #include <fcntl.h>
-#include <sys/stat.h>
 
-static bool su_should_skip_directory_entry(const char *entry_name)
+static ft_bool su_should_skip_directory_entry(const char *entry_name)
 {
     if (entry_name == ft_nullptr)
-        return (true);
+        return (FT_TRUE);
     if (entry_name[0] == '.' && entry_name[1] == '\0')
-        return (true);
+        return (FT_TRUE);
     if (entry_name[0] == '.' && entry_name[1] == '.' && entry_name[2] == '\0')
-        return (true);
-    return (false);
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
-static int su_join_paths(const char *left_path, const char *right_path, ft_string *joined)
+static int32_t su_join_paths(const char *left_path, const char *right_path, ft_string *joined)
 {
     char    separator;
-    size_t  index;
+    ft_size_t  index;
     int32_t string_error;
 
     if (left_path == ft_nullptr || right_path == ft_nullptr || joined == ft_nullptr)
@@ -48,13 +47,13 @@ static int su_join_paths(const char *left_path, const char *right_path, ft_strin
     return (FT_ERR_SUCCESS);
 }
 
-static int su_copy_file_streams(su_file *source_stream, su_file *destination_stream)
+static int32_t su_copy_file_streams(su_file *source_stream, su_file *destination_stream)
 {
     char    buffer[8192];
-    size_t  bytes_read;
-    size_t  bytes_written;
+    ft_size_t  bytes_read;
+    ft_size_t  bytes_written;
 
-    while (true)
+    while (1)
     {
         bytes_read = su_fread(buffer, 1, sizeof(buffer), source_stream);
         if (bytes_read == 0)
@@ -65,11 +64,11 @@ static int su_copy_file_streams(su_file *source_stream, su_file *destination_str
     }
 }
 
-int su_copy_file(const char *source_path, const char *destination_path)
+int32_t su_copy_file(const char *source_path, const char *destination_path)
 {
     su_file *source_stream;
     su_file *destination_stream;
-    int     result;
+    int32_t     result;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
         return (-1);
@@ -90,11 +89,11 @@ int su_copy_file(const char *source_path, const char *destination_path)
     return (result);
 }
 
-static int su_ensure_directory_exists(const char *path)
+static int32_t su_ensure_directory_exists(const char *path)
 {
-    int directory_status;
-    int directory_exists;
-    int error_code;
+    int32_t directory_status;
+    int32_t directory_exists;
+    int32_t error_code;
 
     directory_exists = 0;
     directory_status = cmp_directory_exists(path, &directory_exists, &error_code);
@@ -105,18 +104,18 @@ static int su_ensure_directory_exists(const char *path)
     return (0);
 }
 
-static int su_copy_directory_contents(const char *source_path, const char *destination_path)
+static int32_t su_copy_directory_contents(const char *source_path, const char *destination_path)
 {
     file_dir     *directory_stream;
     file_dirent  *directory_entry;
-    int          error_code;
-    int          child_is_directory;
-    int          child_status;
+    int32_t          error_code;
+    int32_t          child_is_directory;
+    int32_t          child_status;
 
     directory_stream = cmp_dir_open(source_path, &error_code);
     if (directory_stream == ft_nullptr)
         return (-1);
-    while (true)
+    while (1)
     {
         directory_entry = cmp_dir_read(directory_stream, &error_code);
         if (directory_entry == ft_nullptr)
@@ -157,11 +156,11 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
     return (-1);
 }
 
-int su_copy_directory_recursive(const char *source_path, const char *destination_path)
+int32_t su_copy_directory_recursive(const char *source_path, const char *destination_path)
 {
-    int source_is_directory;
-    int source_status;
-    int error_code;
+    int32_t source_is_directory;
+    int32_t source_status;
+    int32_t error_code;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
         return (-1);
@@ -176,10 +175,10 @@ int su_copy_directory_recursive(const char *source_path, const char *destination
     return (0);
 }
 
-int su_inspect_permissions(const char *path, mode_t *permissions_out)
+int32_t su_inspect_permissions(const char *path, mode_t *permissions_out)
 {
     mode_t  permissions;
-    int     error_code;
+    int32_t     error_code;
 
     if (path == ft_nullptr || permissions_out == ft_nullptr)
         return (-1);
@@ -189,10 +188,10 @@ int su_inspect_permissions(const char *path, mode_t *permissions_out)
     return (0);
 }
 
-int su_chmod(const char *path, int owner_permissions, int group_permissions,
-    int other_permissions)
+int32_t su_chmod(const char *path, int32_t owner_permissions, int32_t group_permissions,
+    int32_t other_permissions)
 {
-    int error_code;
+    int32_t error_code;
 
     if (path == ft_nullptr)
         return (-1);

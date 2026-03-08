@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Math/math_autodiff.hpp"
+#include "../../Math/ft_dual_number.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CMA/CMA.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <cmath>
 #include <csignal>
 #include <cstring>
@@ -87,7 +87,7 @@ static void dual_number_call_initialize_twice(void)
     return ;
 }
 
-static void dual_number_call_destroy_uninitialized(void)
+static void dual_number_call_destroy_uninitialised(void)
 {
     ft_dual_number dual_number_value;
 
@@ -95,7 +95,7 @@ static void dual_number_call_destroy_uninitialized(void)
     return ;
 }
 
-static void dual_number_call_enable_thread_safety_uninitialized(void)
+static void dual_number_call_enable_thread_safety_uninitialised(void)
 {
     ft_dual_number dual_number_value;
 
@@ -103,7 +103,7 @@ static void dual_number_call_enable_thread_safety_uninitialized(void)
     return ;
 }
 
-static void dual_number_call_disable_thread_safety_uninitialized(void)
+static void dual_number_call_disable_thread_safety_uninitialised(void)
 {
     ft_dual_number dual_number_value;
 
@@ -111,7 +111,7 @@ static void dual_number_call_disable_thread_safety_uninitialized(void)
     return ;
 }
 
-static void dual_number_call_is_thread_safe_enabled_uninitialized(void)
+static void dual_number_call_is_thread_safe_enabled_uninitialised(void)
 {
     ft_dual_number dual_number_value;
 
@@ -119,7 +119,7 @@ static void dual_number_call_is_thread_safe_enabled_uninitialized(void)
     return ;
 }
 
-static void dual_number_call_value_uninitialized(void)
+static void dual_number_call_value_uninitialised(void)
 {
     ft_dual_number dual_number_value;
 
@@ -127,7 +127,7 @@ static void dual_number_call_value_uninitialized(void)
     return ;
 }
 
-static void dual_number_call_derivative_uninitialized(void)
+static void dual_number_call_derivative_uninitialised(void)
 {
     ft_dual_number dual_number_value;
 
@@ -135,7 +135,7 @@ static void dual_number_call_derivative_uninitialized(void)
     return ;
 }
 
-static void dual_number_call_move_uninitialized(void)
+static void dual_number_call_move_uninitialised(void)
 {
     ft_dual_number dual_number_value;
 
@@ -143,7 +143,7 @@ static void dual_number_call_move_uninitialized(void)
     return ;
 }
 
-static void dual_number_call_copy_from_uninitialized_source(void)
+static void dual_number_call_copy_from_uninitialised_source(void)
 {
     ft_dual_number destination_value;
     ft_dual_number source_value;
@@ -153,7 +153,7 @@ static void dual_number_call_copy_from_uninitialized_source(void)
     return ;
 }
 
-static void dual_number_call_move_from_uninitialized_source(void)
+static void dual_number_call_move_from_uninitialised_source(void)
 {
     ft_dual_number destination_value;
     ft_dual_number source_value;
@@ -187,7 +187,7 @@ static void dual_number_call_move_from_destroyed_source(void)
     return ;
 }
 
-static void dual_number_call_move_assignment_from_uninitialized_source(void)
+static void dual_number_call_move_assignment_from_uninitialised_source(void)
 {
     ft_dual_number destination_value;
     alignas(ft_dual_number) unsigned char storage[sizeof(ft_dual_number)];
@@ -200,7 +200,7 @@ static void dual_number_call_move_assignment_from_uninitialized_source(void)
     return ;
 }
 
-static void dual_number_call_copy_assignment_from_uninitialized_source(void)
+static void dual_number_call_copy_assignment_from_uninitialised_source(void)
 {
     ft_dual_number destination_value;
     alignas(ft_dual_number) unsigned char storage[sizeof(ft_dual_number)];
@@ -237,7 +237,7 @@ static void dual_number_call_move_assignment_from_destroyed_source(void)
     return ;
 }
 
-static void dual_number_call_destructor_uninitialized_raw_memory(void)
+static void dual_number_call_destructor_uninitialised_raw_memory(void)
 {
     alignas(ft_dual_number) unsigned char storage[sizeof(ft_dual_number)];
     ft_dual_number *dual_number_pointer;
@@ -273,75 +273,75 @@ static ft_dual_number dual_number_multivariate_sample(
 }
 
 FT_TEST(test_dual_number_initialize_twice_aborts,
-    "ft_dual_number initialize aborts on already initialized object")
+    "ft_dual_number initialize aborts on already initialised object")
 {
     FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_initialize_twice));
     return (1);
 }
 
-FT_TEST(test_dual_number_destroy_uninitialized_aborts,
-    "ft_dual_number destroy aborts on uninitialized object")
+FT_TEST(test_dual_number_destroy_uninitialised_aborts,
+    "ft_dual_number destroy aborts on uninitialised object")
 {
-    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_destroy_uninitialized));
+    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_destroy_uninitialised));
     return (1);
 }
 
-FT_TEST(test_dual_number_enable_thread_safety_uninitialized_aborts,
-    "ft_dual_number enable_thread_safety aborts on uninitialized object")
+FT_TEST(test_dual_number_enable_thread_safety_uninitialised_aborts,
+    "ft_dual_number enable_thread_safety aborts on uninitialised object")
 {
     FT_ASSERT_EQ(1,
-        dual_number_expect_sigabrt(dual_number_call_enable_thread_safety_uninitialized));
+        dual_number_expect_sigabrt(dual_number_call_enable_thread_safety_uninitialised));
     return (1);
 }
 
-FT_TEST(test_dual_number_disable_thread_safety_uninitialized_aborts,
-    "ft_dual_number disable_thread_safety aborts on uninitialized object")
+FT_TEST(test_dual_number_disable_thread_safety_uninitialised_aborts,
+    "ft_dual_number disable_thread_safety aborts on uninitialised object")
 {
     FT_ASSERT_EQ(1,
-        dual_number_expect_sigabrt(dual_number_call_disable_thread_safety_uninitialized));
+        dual_number_expect_sigabrt(dual_number_call_disable_thread_safety_uninitialised));
     return (1);
 }
 
-FT_TEST(test_dual_number_is_thread_safe_uninitialized_aborts,
-    "ft_dual_number is_thread_safe_enabled aborts on uninitialized object")
+FT_TEST(test_dual_number_is_thread_safe_uninitialised_aborts,
+    "ft_dual_number is_thread_safe_enabled aborts on uninitialised object")
 {
     FT_ASSERT_EQ(1,
-        dual_number_expect_sigabrt(dual_number_call_is_thread_safe_enabled_uninitialized));
+        dual_number_expect_sigabrt(dual_number_call_is_thread_safe_enabled_uninitialised));
     return (1);
 }
 
-FT_TEST(test_dual_number_value_uninitialized_aborts,
-    "ft_dual_number value aborts on uninitialized object")
+FT_TEST(test_dual_number_value_uninitialised_aborts,
+    "ft_dual_number value aborts on uninitialised object")
 {
-    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_value_uninitialized));
+    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_value_uninitialised));
     return (1);
 }
 
-FT_TEST(test_dual_number_derivative_uninitialized_aborts,
-    "ft_dual_number derivative aborts on uninitialized object")
+FT_TEST(test_dual_number_derivative_uninitialised_aborts,
+    "ft_dual_number derivative aborts on uninitialised object")
 {
-    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_derivative_uninitialized));
+    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_derivative_uninitialised));
     return (1);
 }
 
-FT_TEST(test_dual_number_move_uninitialized_aborts,
-    "ft_dual_number move aborts on uninitialized object")
+FT_TEST(test_dual_number_move_uninitialised_aborts,
+    "ft_dual_number move aborts on uninitialised object")
 {
-    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_move_uninitialized));
+    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_move_uninitialised));
     return (1);
 }
 
-FT_TEST(test_dual_number_initialize_copy_uninitialized_source_aborts,
-    "ft_dual_number initialize(copy) aborts with uninitialized source")
+FT_TEST(test_dual_number_initialize_copy_uninitialised_source_aborts,
+    "ft_dual_number initialize(copy) aborts with uninitialised source")
 {
-    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_dual_number_initialize_move_uninitialized_source_aborts,
-    "ft_dual_number initialize(move) aborts with uninitialized source")
+FT_TEST(test_dual_number_initialize_move_uninitialised_source_aborts,
+    "ft_dual_number initialize(move) aborts with uninitialised source")
 {
-    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_move_from_uninitialized_source));
+    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_move_from_uninitialised_source));
     return (1);
 }
 
@@ -359,19 +359,19 @@ FT_TEST(test_dual_number_initialize_move_destroyed_source_aborts,
     return (1);
 }
 
-FT_TEST(test_dual_number_copy_assignment_uninitialized_source_aborts,
-    "ft_dual_number copy assignment aborts with uninitialized source")
+FT_TEST(test_dual_number_copy_assignment_uninitialised_source_aborts,
+    "ft_dual_number copy assignment aborts with uninitialised source")
 {
     FT_ASSERT_EQ(1,
-        dual_number_expect_sigabrt(dual_number_call_copy_assignment_from_uninitialized_source));
+        dual_number_expect_sigabrt(dual_number_call_copy_assignment_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_dual_number_move_assignment_uninitialized_source_aborts,
-    "ft_dual_number move assignment aborts with uninitialized source")
+FT_TEST(test_dual_number_move_assignment_uninitialised_source_aborts,
+    "ft_dual_number move assignment aborts with uninitialised source")
 {
     FT_ASSERT_EQ(1,
-        dual_number_expect_sigabrt(dual_number_call_move_assignment_from_uninitialized_source));
+        dual_number_expect_sigabrt(dual_number_call_move_assignment_from_uninitialised_source));
     return (1);
 }
 
@@ -391,10 +391,10 @@ FT_TEST(test_dual_number_move_assignment_destroyed_source_aborts,
     return (1);
 }
 
-FT_TEST(test_dual_number_uninitialized_raw_destructor_aborts,
-    "ft_dual_number destructor aborts on raw uninitialized memory")
+FT_TEST(test_dual_number_uninitialised_raw_destructor_aborts,
+    "ft_dual_number destructor aborts on raw uninitialised memory")
 {
-    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_destructor_uninitialized_raw_memory));
+    FT_ASSERT_EQ(1, dual_number_expect_sigabrt(dual_number_call_destructor_uninitialised_raw_memory));
     return (1);
 }
 
@@ -549,7 +549,7 @@ FT_TEST(test_dual_number_thread_safety_toggle_and_validation_mutex,
 }
 
 FT_TEST(test_dual_number_get_mutex_validation_lifecycle,
-    "ft_dual_number validation mutex getter is null when not initialized and lazy when initialized")
+    "ft_dual_number validation mutex getter is null when not initialised and lazy when initialised")
 {
     ft_dual_number dual_number_value;
     pt_recursive_mutex *mutex_pointer;

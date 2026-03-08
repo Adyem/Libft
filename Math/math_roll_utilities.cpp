@@ -1,5 +1,6 @@
 #include "roll.hpp"
 #include "math_internal.hpp"
+#include <cstdint>
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
@@ -7,15 +8,15 @@
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
 
-static int math_check_value_roll(const char *string_pointer)
+static int32_t math_check_value_roll(const char *string_pointer)
 {
-    int                    sign;
-    unsigned long long    result;
-    unsigned long long    limit;
+    int32_t                    sign;
+    uint64_t            result;
+    uint64_t            limit;
 
     sign = 1;
     result = 0;
-    limit = static_cast<unsigned long long>(INT_MAX) + 1;
+    limit = static_cast<uint64_t>(INT_MAX) + 1;
     while (*string_pointer == ' ' || (*string_pointer >= 9 && *string_pointer <= 13))
         string_pointer++;
     if (*string_pointer == '-' || *string_pointer == '+')
@@ -26,7 +27,7 @@ static int math_check_value_roll(const char *string_pointer)
     }
     while (*string_pointer && ft_isdigit(*string_pointer))
     {
-        result = result * 10 + (static_cast<unsigned long long>(*string_pointer) - '0');
+        result = result * 10 + (static_cast<uint64_t>(*string_pointer) - '0');
         string_pointer++;
         if ((sign == 1 && result > INT_MAX) || (sign == -1 && result > limit))
             return (1);
@@ -38,9 +39,9 @@ static int math_check_value_roll(const char *string_pointer)
     return (0);
 }
 
-int    math_check_string_number(char *string)
+int32_t    math_check_string_number(char *string)
 {
-    int    index;
+    int32_t    index;
 
     index = 0;
     if (string[index] == '+' || string[index] == '-')
@@ -59,7 +60,7 @@ int    math_check_string_number(char *string)
 
 void    math_free_parse(char **to_parse)
 {
-    int    index = 0;
+    int32_t    index = 0;
 
     if (to_parse)
     {
@@ -73,10 +74,10 @@ void    math_free_parse(char **to_parse)
     return ;
 }
 
-int math_roll_convert_previous(char *string, int *index, int *error)
+int32_t math_roll_convert_previous(char *string, int32_t *index, int32_t *error)
 {
-    int result;
-    int    check;
+    int32_t result;
+    int32_t    check;
 
     while (*index > 0 && (string[*index] >= '0' && string[*index] <= '9'))
         (*index)--;
@@ -106,10 +107,10 @@ int math_roll_convert_previous(char *string, int *index, int *error)
     return (result);
 }
 
-int    math_roll_convert_next(char *string, int index, int *error)
+int32_t    math_roll_convert_next(char *string, int32_t index, int32_t *error)
 {
-    int    result;
-    int    check;
+    int32_t    result;
+    int32_t    check;
 
     check = math_check_value_roll(&string[index]);
     if (check != 0)
@@ -127,11 +128,11 @@ int    math_roll_convert_next(char *string, int index, int *error)
     return (result);
 }
 
-int    math_roll_itoa(int result, int *index, char *string)
+int32_t    math_roll_itoa(int32_t result, int32_t *index, char *string)
 {
     char    temp[32];
-    int     temp_index;
-    int     written_count;
+    int32_t     temp_index;
+    int32_t     written_count;
 
     if (DEBUG == 1)
         pf_printf("roll itoa: the value of i=%d\n", *index);

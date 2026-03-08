@@ -69,11 +69,11 @@ void DataBuffer::abort_lifecycle_error(const char *method_name, const char *reas
     return ;
 }
 
-void DataBuffer::abort_if_not_initialized(const char *method_name) const noexcept
+void DataBuffer::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == DataBuffer::_state_initialized)
+    if (this->_initialised_state == DataBuffer::_state_initialised)
         return ;
-    DataBuffer::abort_lifecycle_error(method_name, "called while object is not initialized");
+    DataBuffer::abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -128,16 +128,16 @@ int DataBuffer::read_length_locked(size_t &length) noexcept
 
 DataBuffer::DataBuffer() noexcept
     : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr),
-      _initialized_state(DataBuffer::_state_uninitialized), _operation_error(FT_ERR_SUCCESS)
+      _initialised_state(DataBuffer::_state_uninitialised), _operation_error(FT_ERR_SUCCESS)
 {
     return ;
 }
 
 DataBuffer::~DataBuffer() noexcept
 {
-    if (this->_initialized_state != DataBuffer::_state_initialized)
+    if (this->_initialised_state != DataBuffer::_state_initialised)
     {
-        this->_initialized_state = DataBuffer::_state_destroyed;
+        this->_initialised_state = DataBuffer::_state_destroyed;
         return ;
     }
     int destroy_error = this->destroy();
@@ -148,27 +148,27 @@ DataBuffer::~DataBuffer() noexcept
 
 int DataBuffer::initialize() noexcept
 {
-    if (this->_initialized_state == DataBuffer::_state_initialized)
+    if (this->_initialised_state == DataBuffer::_state_initialised)
     {
         DataBuffer::abort_lifecycle_error("DataBuffer::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_buffer.clear();
     this->_read_pos = 0;
     this->_ok = true;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = DataBuffer::_state_initialized;
+    this->_initialised_state = DataBuffer::_state_initialised;
     DataBuffer::set_last_operation_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int DataBuffer::initialize(const DataBuffer &other) noexcept
 {
-    if (other._initialized_state != DataBuffer::_state_initialized)
+    if (other._initialised_state != DataBuffer::_state_initialised)
     {
         DataBuffer::abort_lifecycle_error("DataBuffer::initialize(const DataBuffer &)",
-            "source is not initialized");
+            "source is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -176,7 +176,7 @@ int DataBuffer::initialize(const DataBuffer &other) noexcept
         this->set_operation_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialized_state == DataBuffer::_state_initialized)
+    if (this->_initialised_state == DataBuffer::_state_initialised)
     {
         int destroy_error = this->destroy();
         if (destroy_error != FT_ERR_SUCCESS)
@@ -185,7 +185,7 @@ int DataBuffer::initialize(const DataBuffer &other) noexcept
     this->_read_pos = 0;
     this->_ok = true;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = DataBuffer::_state_initialized;
+    this->_initialised_state = DataBuffer::_state_initialised;
     int self_lock_error = this->lock_mutex();
     if (self_lock_error != FT_ERR_SUCCESS)
         return (self_lock_error);
@@ -221,10 +221,10 @@ int DataBuffer::initialize(const DataBuffer &other) noexcept
 
 int DataBuffer::initialize_move(DataBuffer &other) noexcept
 {
-    if (other._initialized_state != DataBuffer::_state_initialized)
+    if (other._initialised_state != DataBuffer::_state_initialised)
     {
         DataBuffer::abort_lifecycle_error("DataBuffer::initialize_move(DataBuffer &)",
-            "source is not initialized");
+            "source is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -232,7 +232,7 @@ int DataBuffer::initialize_move(DataBuffer &other) noexcept
         this->set_operation_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialized_state == DataBuffer::_state_initialized)
+    if (this->_initialised_state == DataBuffer::_state_initialised)
     {
         int destroy_error = this->destroy();
         if (destroy_error != FT_ERR_SUCCESS)
@@ -241,7 +241,7 @@ int DataBuffer::initialize_move(DataBuffer &other) noexcept
     this->_read_pos = 0;
     this->_ok = true;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = DataBuffer::_state_initialized;
+    this->_initialised_state = DataBuffer::_state_initialised;
     int self_lock_error = this->lock_mutex();
     if (self_lock_error != FT_ERR_SUCCESS)
         return (self_lock_error);
@@ -283,9 +283,9 @@ int DataBuffer::initialize_move(DataBuffer &other) noexcept
 
 int DataBuffer::destroy() noexcept
 {
-    if (this->_initialized_state != DataBuffer::_state_initialized)
+    if (this->_initialised_state != DataBuffer::_state_initialised)
     {
-        this->_initialized_state = DataBuffer::_state_destroyed;
+        this->_initialised_state = DataBuffer::_state_destroyed;
         return (FT_ERR_INVALID_STATE);
     }
     this->_buffer.clear();
@@ -300,14 +300,14 @@ int DataBuffer::destroy() noexcept
         this->_mutex = ft_nullptr;
     }
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = DataBuffer::_state_destroyed;
+    this->_initialised_state = DataBuffer::_state_destroyed;
     DataBuffer::set_last_operation_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void DataBuffer::clear() noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::clear");
+    this->abort_if_not_initialised("DataBuffer::clear");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -323,7 +323,7 @@ void DataBuffer::clear() noexcept
 
 size_t DataBuffer::size() const noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::size");
+    this->abort_if_not_initialised("DataBuffer::size");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -338,14 +338,14 @@ size_t DataBuffer::size() const noexcept
 
 const ft_vector<uint8_t>& DataBuffer::data() const noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::data");
+    this->abort_if_not_initialised("DataBuffer::data");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_buffer);
 }
 
 size_t DataBuffer::tell() const noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::tell");
+    this->abort_if_not_initialised("DataBuffer::tell");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -360,7 +360,7 @@ size_t DataBuffer::tell() const noexcept
 
 bool DataBuffer::seek(size_t position) noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::seek");
+    this->abort_if_not_initialised("DataBuffer::seek");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -381,28 +381,28 @@ bool DataBuffer::seek(size_t position) noexcept
 
 DataBuffer::operator bool() const noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::operator bool");
+    this->abort_if_not_initialised("DataBuffer::operator bool");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_ok);
 }
 
 bool DataBuffer::good() const noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::good");
+    this->abort_if_not_initialised("DataBuffer::good");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_ok);
 }
 
 bool DataBuffer::bad() const noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::bad");
+    this->abort_if_not_initialised("DataBuffer::bad");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (!this->_ok);
 }
 
 int DataBuffer::enable_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::enable_thread_safety");
+    this->abort_if_not_initialised("DataBuffer::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_operation_error(FT_ERR_SUCCESS);
@@ -428,7 +428,7 @@ int DataBuffer::enable_thread_safety(void) noexcept
 
 int DataBuffer::disable_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::disable_thread_safety");
+    this->abort_if_not_initialised("DataBuffer::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         int destroy_error = this->_mutex->destroy();
@@ -443,7 +443,7 @@ int DataBuffer::disable_thread_safety(void) noexcept
 
 bool DataBuffer::is_thread_safe(void) const noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::is_thread_safe");
+    this->abort_if_not_initialised("DataBuffer::is_thread_safe");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }

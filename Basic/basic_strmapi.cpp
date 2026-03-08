@@ -2,7 +2,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
-char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
+char *ft_strmapi(const char *string, char (*function)(uint32_t, char))
 {
     if (!string || !function)
         return (ft_nullptr);
@@ -10,7 +10,7 @@ char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
     char *result = static_cast<char*>(cma_malloc(length + 1));
     if (!result)
         return (ft_nullptr);
-    unsigned int index = 0;
+    uint32_t index = 0;
     while (index < length)
     {
         result[index] = function(index, string[index]);

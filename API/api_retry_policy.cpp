@@ -5,7 +5,7 @@
 #include <new>
 
 api_retry_policy::api_retry_policy() noexcept
-    : _initialized_state(api_retry_policy::_state_uninitialized),
+    : _initialised_state(api_retry_policy::_state_uninitialised),
       _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0),
       _backoff_multiplier(0), _circuit_breaker_threshold(0),
       _circuit_breaker_cooldown_ms(0),
@@ -16,7 +16,7 @@ api_retry_policy::api_retry_policy() noexcept
 
 api_retry_policy::~api_retry_policy()
 {
-    if (this->_initialized_state == api_retry_policy::_state_initialized)
+    if (this->_initialised_state == api_retry_policy::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -34,12 +34,12 @@ void api_retry_policy::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void api_retry_policy::abort_if_not_initialized(const char *method_name) const noexcept
+void api_retry_policy::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == api_retry_policy::_state_initialized)
+    if (this->_initialised_state == api_retry_policy::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -48,7 +48,7 @@ int api_retry_policy::enable_thread_safety() noexcept
     pt_recursive_mutex *new_mutex;
     int initialize_result;
 
-    this->abort_if_not_initialized("api_retry_policy::enable_thread_safety");
+    this->abort_if_not_initialised("api_retry_policy::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -69,7 +69,7 @@ int api_retry_policy::disable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int destroy_result;
 
-    this->abort_if_not_initialized("api_retry_policy::disable_thread_safety");
+    this->abort_if_not_initialised("api_retry_policy::disable_thread_safety");
     mutex_pointer = this->_mutex;
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -88,9 +88,9 @@ bool api_retry_policy::is_thread_safe() const noexcept
 
 int api_retry_policy::initialize() noexcept
 {
-    if (this->_initialized_state == api_retry_policy::_state_initialized)
+    if (this->_initialised_state == api_retry_policy::_state_initialised)
         this->abort_lifecycle_error("api_retry_policy::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     this->_max_attempts = 0;
     this->_initial_delay_ms = 0;
     this->_max_delay_ms = 0;
@@ -98,13 +98,13 @@ int api_retry_policy::initialize() noexcept
     this->_circuit_breaker_threshold = 0;
     this->_circuit_breaker_cooldown_ms = 0;
     this->_circuit_breaker_half_open_successes = 0;
-    this->_initialized_state = api_retry_policy::_state_initialized;
+    this->_initialised_state = api_retry_policy::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int api_retry_policy::destroy() noexcept
 {
-    if (this->_initialized_state != api_retry_policy::_state_initialized)
+    if (this->_initialised_state != api_retry_policy::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->_max_attempts = 0;
     this->_initial_delay_ms = 0;
@@ -114,7 +114,7 @@ int api_retry_policy::destroy() noexcept
     this->_circuit_breaker_cooldown_ms = 0;
     this->_circuit_breaker_half_open_successes = 0;
     (void)this->disable_thread_safety();
-    this->_initialized_state = api_retry_policy::_state_destroyed;
+    this->_initialised_state = api_retry_policy::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -283,7 +283,7 @@ int api_retry_policy::get_circuit_breaker_half_open_successes() const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *api_retry_policy::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("api_retry_policy::get_mutex_for_validation");
+    this->abort_if_not_initialised("api_retry_policy::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

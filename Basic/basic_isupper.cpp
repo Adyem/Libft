@@ -1,6 +1,6 @@
 #include "basic.hpp"
 
-int ft_isupper(int32_t character)
+int32_t ft_isupper(int32_t character)
 {
     if (character >= 'A' && character <= 'Z')
         return (1);

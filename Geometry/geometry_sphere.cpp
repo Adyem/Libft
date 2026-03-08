@@ -1,9 +1,8 @@
-#include "geometry_sphere.hpp"
+#include "sphere.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
 static void sphere_sleep_backoff()
@@ -12,76 +11,88 @@ static void sphere_sleep_backoff()
     return ;
 }
 
-void sphere::abort_lifecycle_error(const char *method_name,
-    const char *reason) const noexcept
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "sphere lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
-
-void sphere::abort_if_not_initialized(const char *method_name) const noexcept
-{
-    if (this->_initialized_state == sphere::_state_initialized)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
-    return ;
-}
-
-sphere::sphere()
+sphere::sphere() noexcept
     : _center_x(0.0)
     , _center_y(0.0)
     , _center_z(0.0)
     , _radius(0.0)
     , _mutex(ft_nullptr)
-    , _initialized_state(sphere::_state_uninitialized)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     return ;
 }
 
 sphere::sphere(double center_x, double center_y, double center_z,
-    double radius)
+    double radius) noexcept
     : _center_x(0.0)
     , _center_y(0.0)
     , _center_z(0.0)
     , _radius(0.0)
     , _mutex(ft_nullptr)
-    , _initialized_state(sphere::_state_uninitialized)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    int initialize_error;
+    uint32_t initialize_error;
 
     initialize_error = this->initialize(center_x, center_y, center_z, radius);
     if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialized_state == sphere::_state_uninitialized)
-        this->_initialized_state = sphere::_state_destroyed;
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-int sphere::initialize() noexcept
+sphere::sphere(const sphere &other) noexcept
+    : _center_x(0.0)
+    , _center_y(0.0)
+    , _center_z(0.0)
+    , _radius(0.0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    if (this->_initialized_state == sphere::_state_initialized)
+    uint32_t initialize_error;
+
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+sphere::sphere(sphere &&other) noexcept
+    : _center_x(0.0)
+    , _center_y(0.0)
+    , _center_z(0.0)
+    , _radius(0.0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    uint32_t initialize_error;
+
+    initialize_error = this->initialize(static_cast<sphere &&>(other));
+    if (initialize_error != FT_ERR_SUCCESS
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+uint32_t sphere::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("sphere::initialize",
-            "called while object is already initialized");
+        errno_abort_lifecycle(this->_initialised_state, "sphere::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_center_x = 0.0;
     this->_center_y = 0.0;
     this->_center_z = 0.0;
     this->_radius = 0.0;
-    this->_initialized_state = sphere::_state_initialized;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::initialize(double center_x, double center_y, double center_z,
+uint32_t sphere::initialize(double center_x, double center_y, double center_z,
     double radius) noexcept
 {
-    int initialize_error;
+    uint32_t initialize_error;
 
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -93,74 +104,86 @@ int sphere::initialize(double center_x, double center_y, double center_z,
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::initialize(const sphere &other) noexcept
+uint32_t sphere::initialize(const sphere &other) noexcept
 {
-    int initialize_error;
-    int lock_error;
-    int unlock_error;
+    uint32_t destroy_error;
+    uint32_t lock_error;
 
-    if (other._initialized_state != sphere::_state_initialized)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialized_state == sphere::_state_uninitialized)
-            other.abort_lifecycle_error("sphere::initialize(const sphere &) source",
-                "called with uninitialized source object");
-        else
-            other.abort_lifecycle_error("sphere::initialize(const sphere &) source",
-                "called with destroyed source object");
+        errno_abort_lifecycle(other._initialised_state,
+            "sphere::initialize(const sphere &) source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-        return (initialize_error);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    this->_center_x = 0.0;
+    this->_center_y = 0.0;
+    this->_center_z = 0.0;
+    this->_radius = 0.0;
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
     lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (lock_error);
     }
     this->_center_x = other._center_x;
     this->_center_y = other._center_y;
     this->_center_z = other._center_z;
     this->_radius = other._radius;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        return (unlock_error);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::move(sphere &other) noexcept
+uint32_t sphere::move(sphere &other) noexcept
 {
     const sphere *lower;
     const sphere *upper;
-    int initialize_error;
-    int lock_error;
+    uint32_t destroy_error;
+    uint32_t lock_error;
 
-    if (other._initialized_state != sphere::_state_initialized)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialized_state == sphere::_state_uninitialized)
-            other.abort_lifecycle_error("sphere::move source",
-                "called with uninitialized source object");
-        else
-            other.abort_lifecycle_error("sphere::move source",
-                "called with destroyed source object");
+        errno_abort_lifecycle(other._initialised_state, "sphere::move source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state != sphere::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        initialize_error = this->initialize();
-        if (initialize_error != FT_ERR_SUCCESS)
-            return (initialize_error);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    this->_center_x = 0.0;
+    this->_center_y = 0.0;
+    this->_center_z = 0.0;
+    this->_radius = 0.0;
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
     }
     lock_error = this->lock_pair(other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (lock_error);
+    }
     this->_center_x = other._center_x;
     this->_center_y = other._center_y;
     this->_center_z = other._center_z;
@@ -169,218 +192,174 @@ int sphere::move(sphere &other) noexcept
     other._center_y = 0.0;
     other._center_z = 0.0;
     other._radius = 0.0;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->unlock_pair(lower, upper);
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::initialize(sphere &&other) noexcept
+uint32_t sphere::initialize(sphere &&other) noexcept
 {
-    int initialize_error;
-    int move_error;
-
-    if (other._initialized_state != sphere::_state_initialized)
-    {
-        if (other._initialized_state == sphere::_state_uninitialized)
-            other.abort_lifecycle_error("sphere::initialize(sphere &&) source",
-                "called with uninitialized source object");
-        else
-            other.abort_lifecycle_error("sphere::initialize(sphere &&) source",
-                "called with destroyed source object");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (this == &other)
-        return (FT_ERR_SUCCESS);
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-        return (initialize_error);
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        return (move_error);
-    }
-    return (FT_ERR_SUCCESS);
+    return (this->move(other));
 }
 
-int sphere::destroy() noexcept
+uint32_t sphere::destroy() noexcept
 {
-    int disable_error;
+    uint32_t disable_error;
 
-    if (this->_initialized_state != sphere::_state_initialized)
-        return (FT_ERR_INVALID_STATE);
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
     disable_error = this->disable_thread_safety();
-    if (disable_error != FT_ERR_SUCCESS)
-        return (disable_error);
+    if (disable_error != FT_ERR_SUCCESS
+        && this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->_center_x = 0.0;
     this->_center_y = 0.0;
     this->_center_z = 0.0;
     this->_radius = 0.0;
-    this->_initialized_state = sphere::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     return (FT_ERR_SUCCESS);
 }
 
-sphere::~sphere()
+sphere::~sphere() noexcept
 {
-    if (this->_initialized_state == sphere::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-int sphere::set_center(double center_x, double center_y, double center_z)
+uint32_t sphere::set_center(double center_x, double center_y, double center_z)
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
 
-    this->abort_if_not_initialized("sphere::set_center");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::set_center");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_center_x = center_x;
     this->_center_y = center_y;
     this->_center_z = center_z;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::set_center_x(double center_x)
+uint32_t sphere::set_center_x(double center_x)
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
 
-    this->abort_if_not_initialized("sphere::set_center_x");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::set_center_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_center_x = center_x;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::set_center_y(double center_y)
+uint32_t sphere::set_center_y(double center_y)
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
 
-    this->abort_if_not_initialized("sphere::set_center_y");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::set_center_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_center_y = center_y;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::set_center_z(double center_z)
+uint32_t sphere::set_center_z(double center_z)
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
 
-    this->abort_if_not_initialized("sphere::set_center_z");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::set_center_z");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_center_z = center_z;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::set_radius(double radius)
+uint32_t sphere::set_radius(double radius)
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
 
-    this->abort_if_not_initialized("sphere::set_radius");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::set_radius");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_radius = radius;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
 double sphere::get_center_x() const
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
     double value;
 
-    this->abort_if_not_initialized("sphere::get_center_x");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::get_center_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_center_x;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (value);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (value);
 }
 
 double sphere::get_center_y() const
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
     double value;
 
-    this->abort_if_not_initialized("sphere::get_center_y");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::get_center_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_center_y;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (value);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (value);
 }
 
 double sphere::get_center_z() const
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
     double value;
 
-    this->abort_if_not_initialized("sphere::get_center_z");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::get_center_z");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_center_z;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (value);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (value);
 }
 
 double sphere::get_radius() const
 {
-    int lock_error;
-    int unlock_error;
+    uint32_t lock_error;
     double value;
 
-    this->abort_if_not_initialized("sphere::get_radius");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::get_radius");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_radius;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (value);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (value);
 }
 
-int sphere::lock_pair(const sphere &other, const sphere *&lower,
+uint32_t sphere::lock_pair(const sphere &other, const sphere *&lower,
     const sphere *&upper) const
 {
     const sphere *ordered_first;
     const sphere *ordered_second;
+    uint32_t attempt_count;
 
     ordered_first = this;
     ordered_second = &other;
@@ -397,42 +376,51 @@ int sphere::lock_pair(const sphere &other, const sphere *&lower,
     }
     lower = ordered_first;
     upper = ordered_second;
-    while (true)
+    attempt_count = 0;
+    while (attempt_count < 8192)
     {
-        int lower_error;
-        int upper_error;
+        uint32_t lower_error;
+        uint32_t upper_error;
 
         lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
+        if (lower_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            attempt_count = attempt_count + 1;
+            sphere_sleep_backoff();
+            continue;
+        }
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
         upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
-        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
+        (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+        if (upper_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
-            return (upper_error);
+            attempt_count = attempt_count + 1;
+            sphere_sleep_backoff();
+            continue;
         }
-        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
-        sphere_sleep_backoff();
+        return (upper_error);
     }
+    return (FT_ERR_MUTEX_ALREADY_LOCKED);
 }
 
 void sphere::unlock_pair(const sphere *lower, const sphere *upper)
 {
     if (upper != ft_nullptr)
-        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
-int sphere::enable_thread_safety() noexcept
+uint32_t sphere::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
+    uint32_t mutex_error;
 
-    this->abort_if_not_initialized("sphere::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -448,37 +436,26 @@ int sphere::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int sphere::disable_thread_safety() noexcept
+uint32_t sphere::disable_thread_safety() noexcept
 {
-    int mutex_error;
+    uint32_t mutex_error;
+    pt_recursive_mutex *mutex_pointer;
 
-    this->abort_if_not_initialized("sphere::disable_thread_safety");
-    if (this->_mutex != ft_nullptr)
-    {
-        mutex_error = this->_mutex->destroy();
-        if (mutex_error != FT_ERR_SUCCESS)
-            return (mutex_error);
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
-    }
+    errno_abort_if_uninitialised(this->_initialised_state, "sphere::disable_thread_safety");
+    mutex_pointer = this->_mutex;
+    this->_mutex = ft_nullptr;
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_error = mutex_pointer->destroy();
+    delete mutex_pointer;
+    if (mutex_error != FT_ERR_SUCCESS)
+        return (mutex_error);
     return (FT_ERR_SUCCESS);
 }
 
-bool sphere::is_thread_safe() const noexcept
+ft_bool sphere::is_thread_safe() const noexcept
 {
-    return (this->_mutex != ft_nullptr);
-}
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *sphere::get_mutex_for_testing() noexcept
-{
-    if (this->_initialized_state != sphere::_state_initialized)
-        return (ft_nullptr);
     if (this->_mutex == ft_nullptr)
-    {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
-            return (ft_nullptr);
-    }
-    return (this->_mutex);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
-#endif

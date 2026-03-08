@@ -4,12 +4,12 @@
 #include "../../Game/ft_vendor_profile.hpp"
 #include "../../Game/ft_currency_rate.hpp"
 #include "../../Game/game_economy_table.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_price_copy_into_uninitialized_destination_succeeds, "price definition copy initialize succeeds for uninitialized destination")
+FT_TEST(test_price_copy_into_uninitialised_destination_succeeds, "price definition copy initialize succeeds for uninitialised destination")
 {
     ft_price_definition source;
     ft_price_definition destination;
@@ -20,7 +20,7 @@ FT_TEST(test_price_copy_into_uninitialized_destination_succeeds, "price definiti
     return (1);
 }
 
-FT_TEST(test_price_move_into_uninitialized_destination_succeeds, "price definition move initialize succeeds for uninitialized destination")
+FT_TEST(test_price_move_into_uninitialised_destination_succeeds, "price definition move initialize succeeds for uninitialised destination")
 {
     ft_price_definition source;
     ft_price_definition destination;
@@ -57,7 +57,7 @@ FT_TEST(test_price_move_into_destroyed_destination_succeeds, "price definition m
     return (1);
 }
 
-FT_TEST(test_rarity_copy_into_uninitialized_destination_succeeds, "rarity band copy initialize succeeds for uninitialized destination")
+FT_TEST(test_rarity_copy_into_uninitialised_destination_succeeds, "rarity band copy initialize succeeds for uninitialised destination")
 {
     ft_rarity_band source;
     ft_rarity_band destination;
@@ -68,7 +68,7 @@ FT_TEST(test_rarity_copy_into_uninitialized_destination_succeeds, "rarity band c
     return (1);
 }
 
-FT_TEST(test_rarity_move_into_uninitialized_destination_succeeds, "rarity band move initialize succeeds for uninitialized destination")
+FT_TEST(test_rarity_move_into_uninitialised_destination_succeeds, "rarity band move initialize succeeds for uninitialised destination")
 {
     ft_rarity_band source;
     ft_rarity_band destination;
@@ -105,7 +105,7 @@ FT_TEST(test_rarity_move_into_destroyed_destination_succeeds, "rarity band move 
     return (1);
 }
 
-FT_TEST(test_vendor_copy_into_uninitialized_destination_succeeds, "vendor profile copy initialize succeeds for uninitialized destination")
+FT_TEST(test_vendor_copy_into_uninitialised_destination_succeeds, "vendor profile copy initialize succeeds for uninitialised destination")
 {
     ft_vendor_profile source;
     ft_vendor_profile destination;
@@ -116,7 +116,7 @@ FT_TEST(test_vendor_copy_into_uninitialized_destination_succeeds, "vendor profil
     return (1);
 }
 
-FT_TEST(test_vendor_move_into_uninitialized_destination_succeeds, "vendor profile move initialize succeeds for uninitialized destination")
+FT_TEST(test_vendor_move_into_uninitialised_destination_succeeds, "vendor profile move initialize succeeds for uninitialised destination")
 {
     ft_vendor_profile source;
     ft_vendor_profile destination;
@@ -153,7 +153,7 @@ FT_TEST(test_vendor_move_into_destroyed_destination_succeeds, "vendor profile mo
     return (1);
 }
 
-FT_TEST(test_currency_copy_into_uninitialized_destination_succeeds, "currency rate copy initialize succeeds for uninitialized destination")
+FT_TEST(test_currency_copy_into_uninitialised_destination_succeeds, "currency rate copy initialize succeeds for uninitialised destination")
 {
     ft_currency_rate source;
     ft_currency_rate destination;
@@ -164,7 +164,7 @@ FT_TEST(test_currency_copy_into_uninitialized_destination_succeeds, "currency ra
     return (1);
 }
 
-FT_TEST(test_currency_move_into_uninitialized_destination_succeeds, "currency rate move initialize succeeds for uninitialized destination")
+FT_TEST(test_currency_move_into_uninitialised_destination_succeeds, "currency rate move initialize succeeds for uninitialised destination")
 {
     ft_currency_rate source;
     ft_currency_rate destination;
@@ -201,7 +201,7 @@ FT_TEST(test_currency_move_into_destroyed_destination_succeeds, "currency rate m
     return (1);
 }
 
-FT_TEST(test_table_copy_into_uninitialized_destination_succeeds, "economy table copy initialize succeeds for uninitialized destination")
+FT_TEST(test_table_copy_into_uninitialised_destination_succeeds, "economy table copy initialize succeeds for uninitialised destination")
 {
     ft_economy_table source;
     ft_economy_table destination;
@@ -211,7 +211,7 @@ FT_TEST(test_table_copy_into_uninitialized_destination_succeeds, "economy table 
     return (1);
 }
 
-FT_TEST(test_table_move_into_uninitialized_destination_succeeds, "economy table move initialize succeeds for uninitialized destination")
+FT_TEST(test_table_move_into_uninitialised_destination_succeeds, "economy table move initialize succeeds for uninitialised destination")
 {
     ft_economy_table source;
     ft_economy_table destination;

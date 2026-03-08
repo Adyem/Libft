@@ -3908,7 +3908,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void aabb::record_operation_error(int error_code) const noexcept`
 - `void aabb::unlock_pair(const aabb *lower, const aabb *upper)`
 
-### Geometry/geometry_aabb.hpp
+### Geometry/aabb.hpp
 
 - `double get_maximum_x() const;`
 - `double get_maximum_y() const;`
@@ -3947,7 +3947,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void circle::record_operation_error(int error_code) const noexcept`
 - `void circle::unlock_pair(const circle *lower, const circle *upper)`
 
-### Geometry/geometry_circle.hpp
+### Geometry/circle.hpp
 
 - `double get_center_x() const;`
 - `double get_center_y() const;`
@@ -3993,7 +3993,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void sphere::record_operation_error(int error_code) const noexcept`
 - `void sphere::unlock_pair(const sphere *lower, const sphere *upper)`
 
-### Geometry/geometry_sphere.hpp
+### Geometry/sphere.hpp
 
 - `double get_center_x() const;`
 - `double get_center_y() const;`
@@ -4602,7 +4602,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int ft_environment_enable_thread_safety(void)`
 - `void ft_environment_disable_thread_safety(void)`
 
-### Basic/basic_environment_lock.hpp
+### Basic/basic_System_utils_environment_lock.hpp
 
 - `int ft_environment_lock(void);`
 - `int ft_environment_unlock(void);`
@@ -5113,7 +5113,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void quaternion::pop_operation_errors() noexcept`
 - `void quaternion::record_operation_error(int error_code) const noexcept`
 
-### Math/linear_algebra_quaternion.hpp
+### Math/quaternion.hpp
 
 - `const char *last_operation_error_str() const noexcept;`
 - `const char *operation_error_str_at(ft_size_t index) const noexcept;`
@@ -5292,7 +5292,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void ft_dual_number::record_operation_error(int error_code) const noexcept`
 - `void ft_dual_number::set_error(int error_code) const noexcept`
 
-### Math/math_autodiff.hpp
+### Math/ft_dual_number.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `double derivative() const noexcept;`
@@ -5472,7 +5472,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void ft_cubic_spline::record_operation_error(int error_code) const noexcept`
 - `void ft_cubic_spline::set_error(int error_code) const noexcept`
 
-### Math/math_polynomial.hpp
+### Math/ft_cubic_spline.hpp
 
 - `double ft_cubic_spline_evaluate(const ft_cubic_spline &spline, double x) noexcept;`
 - `ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept;`
@@ -6012,7 +6012,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int ft_socket_handle::get() const`
 - `int ft_socket_handle::get_error() const`
 - `int ft_socket_runtime_acquire()`
-- `static bool &ft_socket_runtime_initialized()`
+- `static bool &ft_socket_runtime_initialised()`
 - `static int &ft_socket_runtime_reference_count()`
 - `void ft_socket_runtime_release()`
 
@@ -6274,7 +6274,7 @@ The catalog lists the function declarations and definitions that appear in the C
 ### PThread/pthread_lock_tracking.cpp
 
 - `bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, const pt_mutex *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)`
-- `bool pt_lock_tracking::ensure_registry_mutex_initialized(int *error_code)`
+- `bool pt_lock_tracking::ensure_registry_mutex_initialised(int *error_code)`
 - `bool pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier, s_pt_lock_tracking_thread_state &state)`
 - `bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pt_mutex *requested_mutex, const pt_mutex_vector &owned_mutexes)`
 - `bool pt_lock_tracking::snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot)`
@@ -7259,7 +7259,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int scma_get_stats(scma_stats *out_stats);`
 - `int scma_handle_is_valid(scma_handle handle);`
 - `int scma_initialize(ft_size_t initial_capacity);`
-- `int scma_is_initialized(void);`
+- `int scma_is_initialised(void);`
 - `int scma_mutex_close(void);`
 - `int scma_mutex_lock(void);`
 - `int scma_mutex_unlock(void);`
@@ -7309,7 +7309,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_size_t scma_get_size(scma_handle handle)`
 - `int scma_free(scma_handle handle)`
 - `int scma_handle_is_valid(scma_handle handle)`
-- `int scma_is_initialized(void)`
+- `int scma_is_initialised(void)`
 - `int scma_resize(scma_handle handle, ft_size_t new_size)`
 - `scma_handle scma_allocate(ft_size_t size)`
 - `void scma_shutdown(void)`
@@ -7331,7 +7331,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_size_t &scma_used_size_ref(void);`
 - `ft_size_t scma_next_generation(ft_size_t generation);`
 - `ft_size_t scma_unlock_and_return_size(ft_size_t value);`
-- `int &scma_initialized_ref(void);`
+- `int &scma_initialised_ref(void);`
 - `int scma_ensure_block_capacity(ft_size_t required_count);`
 - `int scma_ensure_capacity(ft_size_t required_size);`
 - `int scma_handle_is_invalid(scma_handle handle);`
@@ -7370,7 +7370,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_size_t &scma_used_size_ref(void)`
 - `ft_size_t scma_next_generation(ft_size_t generation)`
 - `ft_size_t scma_unlock_and_return_size(ft_size_t value)`
-- `int &scma_initialized_ref(void)`
+- `int &scma_initialised_ref(void)`
 - `int scma_ensure_block_capacity(ft_size_t required_count)`
 - `int scma_ensure_capacity(ft_size_t required_size)`
 - `int scma_handle_is_invalid(scma_handle handle)`
@@ -7663,7 +7663,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void su_sigsegv(void);`
 - `void su_sigterm(void);`
 
-### System_utils/test_runner.cpp
+### System_utils/test_system_utils_runner.cpp
 
 - `int ft_register_test(t_test_func func, const char *description, const char *module, const char *name)`
 - `int ft_run_registered_tests(void)`
@@ -7677,7 +7677,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `static void swap_test_cases(s_test_case *left, s_test_case *right)`
 - `void ft_test_fail(const char *expression, const char *file, int line)`
 
-### System_utils/test_runner.hpp
+### System_utils/test_system_utils_runner.hpp
 
 - `\ (stream).read((buffer), (count));`
 - `\ FT_ASSERT_EQ(false, ft_stream_bad_result__);`
@@ -11282,7 +11282,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `aabb::aabb(const aabb &other) : _minimum_x(0.0), _minimum_y(0.0), _maximum_x(0.0), _maximum_y(0.0)`
 - `aabb::aabb(double minimum_x, double minimum_y, double maximum_x, double maximum_y)`
 
-### Geometry/geometry_aabb.hpp
+### Geometry/aabb.hpp
 
 - `aabb();`
 - `aabb(aabb &&other) noexcept;`
@@ -11296,7 +11296,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `circle::circle(const circle &other) : _center_x(0.0), _center_y(0.0), _radius(0.0)`
 - `circle::circle(double center_x, double center_y, double radius)`
 
-### Geometry/geometry_circle.hpp
+### Geometry/circle.hpp
 
 - `circle();`
 - `circle(circle &&other) noexcept;`
@@ -11310,7 +11310,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `sphere::sphere(double center_x, double center_y, double center_z, double radius)`
 - `sphere::sphere(sphere &&other) noexcept : _center_x(0.0), _center_y(0.0), _center_z(0.0), _radius(0.0)`
 
-### Geometry/geometry_sphere.hpp
+### Geometry/sphere.hpp
 
 - `sphere();`
 - `sphere(const sphere &other);`
@@ -11409,7 +11409,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `quaternion::quaternion(double w, double x, double y, double z)`
 - `quaternion::quaternion(quaternion &&other) noexcept`
 
-### Math/linear_algebra_quaternion.hpp
+### Math/quaternion.hpp
 
 - `quaternion();`
 - `quaternion(const quaternion &other);`
@@ -11438,7 +11438,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_dual_number::ft_dual_number(double value, double derivative) noexcept : _value(value) , _derivative(derivative) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
 - `ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
 
-### Math/math_autodiff.hpp
+### Math/ft_dual_number.hpp
 
 - `ft_dual_number (*math_autodiff_multivariate_function)(const ft_vector<ft_dual_number> &input, void *user_data);`
 - `ft_dual_number (*math_autodiff_univariate_function)(const ft_dual_number &input, void *user_data);`
@@ -11452,7 +11452,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_cubic_spline::ft_cubic_spline() noexcept : _error_code(FT_ERR_SUCCESS) , _operation_errors(`
 - `ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept : _error_code(FT_ERR_SUCCESS) , _operation_errors(`
 
-### Math/math_polynomial.hpp
+### Math/ft_cubic_spline.hpp
 
 - `ft_cubic_spline() noexcept;`
 - `ft_cubic_spline(const ft_cubic_spline &other) = delete;`
@@ -11571,7 +11571,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### PThread/pthread_condition_variable.cpp
 
-- `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialised(false), _mutex_initialised(false), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### PThread/pthread_errno_guard.hpp
 
@@ -11591,11 +11591,11 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### PThread/pthread_mutex.cpp
 
-- `pt_mutex::pt_mutex() : _owner(0), _lock(false), _native_initialized(false), _state_mutex(ft_nullptr), _operation_errors(`
+- `pt_mutex::pt_mutex() : _owner(0), _lock(false), _native_initialised(false), _state_mutex(ft_nullptr), _operation_errors(`
 
 ### PThread/pthread_recursive_mutex.cpp
 
-- `pt_recursive_mutex::pt_recursive_mutex() : _owner(0), _lock(false), _lock_depth(0), _native_initialized(false), _state_mutex(ft_nullptr)`
+- `pt_recursive_mutex::pt_recursive_mutex() : _owner(0), _lock(false), _lock_depth(0), _native_initialised(false), _state_mutex(ft_nullptr)`
 
 ### PThread/pthread_task_scheduler.cpp
 
@@ -11984,8 +11984,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_thread_pool(const ft_thread_pool&) = delete;`
 - `ft_thread_pool(ft_thread_pool&&) = delete;`
 - `ft_thread_pool(size_t thread_count = 0, size_t max_tasks = 0);`
-- `ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false) {`
-- `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialised(false), _cond_initialised(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialised(false), _cond_initialised(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### Template/trie.hpp
 
@@ -13064,7 +13064,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_dual_number ft_dual_number::operator-(const ft_dual_number &other) const noexcept`
 - `ft_dual_number ft_dual_number::operator/(const ft_dual_number &other) const noexcept`
 
-### Math/math_autodiff.hpp
+### Math/ft_dual_number.hpp
 
 - `ft_dual_number operator*(const ft_dual_number &other) const noexcept;`
 - `ft_dual_number operator+(const ft_dual_number &other) const noexcept;`

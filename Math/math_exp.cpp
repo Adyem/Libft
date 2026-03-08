@@ -5,7 +5,7 @@ double math_exp(double value)
 {
     double current_term;
     double result;
-    int    iteration;
+    int32_t    iteration;
 
     current_term = 1.0;
     result = 1.0;

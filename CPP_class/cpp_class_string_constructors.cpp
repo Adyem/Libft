@@ -10,7 +10,7 @@ ft_string::ft_string() noexcept
     , _length(0)
     , _capacity(0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_string::_state_uninitialized)
+    , _initialised_state(ft_string::_state_uninitialised)
     , _operation_error(FT_ERR_SUCCESS)
 {
     return ;
@@ -21,7 +21,7 @@ ft_string::ft_string(const ft_string &other) noexcept
     , _length(0)
     , _capacity(0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_string::_state_uninitialized)
+    , _initialised_state(ft_string::_state_uninitialised)
     , _operation_error(FT_ERR_SUCCESS)
 {
     this->_operation_error = this->initialize(other);
@@ -36,7 +36,7 @@ ft_string::ft_string(ft_string &&other) noexcept
     , _length(0)
     , _capacity(0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_string::_state_uninitialized)
+    , _initialised_state(ft_string::_state_uninitialised)
     , _operation_error(FT_ERR_SUCCESS)
 {
     this->_operation_error = this->initialize(static_cast<ft_string &&>(other));
@@ -54,7 +54,7 @@ ft_string::ft_string(int32_t error_code) noexcept
     , _length(0)
     , _capacity(0)
     , _mutex(ft_nullptr)
-    , _initialized_state(ft_string::_state_uninitialized)
+    , _initialised_state(ft_string::_state_uninitialised)
     , _operation_error(error_code)
 {
     int32_t initialization_error;
@@ -75,17 +75,17 @@ ft_string::ft_string(int32_t error_code) noexcept
 
 int ft_string::initialize() noexcept
 {
-    if (this->_initialized_state == ft_string::_state_initialized)
+    if (this->_initialised_state == ft_string::_state_initialised)
     {
         this->abort_lifecycle_error("ft_string::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_data = ft_nullptr;
     this->_length = 0;
     this->_capacity = 0;
     this->_operation_error = FT_ERR_SUCCESS;
-    this->_initialized_state = ft_string::_state_initialized;
+    this->_initialised_state = ft_string::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -126,13 +126,13 @@ int ft_string::initialize(size_t count, char character) noexcept
 
 int ft_string::initialize(const ft_string &other) noexcept
 {
-    if (other._initialized_state == ft_string::_state_uninitialized)
+    if (other._initialised_state == ft_string::_state_uninitialised)
     {
         other.abort_lifecycle_error("ft_string::initialize(const ft_string &) source",
-            "called with uninitialized source object");
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
-    if (other._initialized_state != ft_string::_state_initialized)
+    if (other._initialised_state != ft_string::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     if (this == &other)
         return (FT_ERR_SUCCESS);
@@ -178,13 +178,13 @@ int ft_string::initialize(const ft_string &other) noexcept
 
 int ft_string::initialize(ft_string &&other) noexcept
 {
-    if (other._initialized_state == ft_string::_state_uninitialized)
+    if (other._initialised_state == ft_string::_state_uninitialised)
     {
         other.abort_lifecycle_error("ft_string::initialize(ft_string &&) source",
-            "called with uninitialized source object");
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
-    if (other._initialized_state != ft_string::_state_initialized)
+    if (other._initialised_state != ft_string::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     if (this == &other)
         return (FT_ERR_SUCCESS);
@@ -202,9 +202,9 @@ int ft_string::initialize(ft_string &&other) noexcept
 
 int ft_string::destroy() noexcept
 {
-    if (this->_initialized_state != ft_string::_state_initialized)
+    if (this->_initialised_state != ft_string::_state_initialised)
     {
-        this->_initialized_state = ft_string::_state_destroyed;
+        this->_initialised_state = ft_string::_state_destroyed;
         return (FT_ERR_SUCCESS);
     }
     cma_free(this->_data);
@@ -212,15 +212,15 @@ int ft_string::destroy() noexcept
     this->_length = 0;
     this->_capacity = 0;
     (void)this->disable_thread_safety();
-    this->_initialized_state = ft_string::_state_destroyed;
+    this->_initialised_state = ft_string::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
 ft_string::~ft_string()
 {
-    if (this->_initialized_state != ft_string::_state_initialized)
+    if (this->_initialised_state != ft_string::_state_initialised)
     {
-        this->_initialized_state = ft_string::_state_destroyed;
+        this->_initialised_state = ft_string::_state_destroyed;
         return ;
     }
     (void)this->destroy();
@@ -236,19 +236,19 @@ ft_string &ft_string::operator=(const ft_string &other) noexcept
         ft_string::set_error(FT_ERR_SUCCESS);
         return (*this);
     }
-    if (other._initialized_state == ft_string::_state_uninitialized)
+    if (other._initialised_state == ft_string::_state_uninitialised)
     {
         other.abort_lifecycle_error("ft_string::operator=(const ft_string &) source",
-            "called with uninitialized source object");
+            "called with uninitialised source object");
         ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
     }
-    if (other._initialized_state != ft_string::_state_initialized)
+    if (other._initialised_state != ft_string::_state_initialised)
     {
         ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
     }
-    if (this->_initialized_state == ft_string::_state_initialized)
+    if (this->_initialised_state == ft_string::_state_initialised)
     {
         assignment_error = this->destroy();
         if (assignment_error != FT_ERR_SUCCESS)
@@ -270,14 +270,14 @@ ft_string &ft_string::operator=(ft_string &&other) noexcept
 {
     int32_t assignment_error;
 
-    if (other._initialized_state == ft_string::_state_uninitialized)
+    if (other._initialised_state == ft_string::_state_uninitialised)
     {
         other.abort_lifecycle_error("ft_string::operator=(ft_string &&) source",
-            "called with uninitialized source object");
+            "called with uninitialised source object");
         ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
     }
-    if (other._initialized_state != ft_string::_state_initialized)
+    if (other._initialised_state != ft_string::_state_initialised)
     {
         ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
@@ -287,7 +287,7 @@ ft_string &ft_string::operator=(ft_string &&other) noexcept
         ft_string::set_error(FT_ERR_SUCCESS);
         return (*this);
     }
-    if (this->_initialized_state == ft_string::_state_initialized)
+    if (this->_initialised_state == ft_string::_state_initialised)
     {
         assignment_error = this->destroy();
         if (assignment_error != FT_ERR_SUCCESS)
@@ -312,7 +312,7 @@ ft_string &ft_string::operator=(const char *string) noexcept
 {
     int32_t assignment_error;
 
-    if (this->_initialized_state != ft_string::_state_initialized)
+    if (this->_initialised_state != ft_string::_state_initialised)
     {
         assignment_error = this->initialize();
         if (assignment_error != FT_ERR_SUCCESS)

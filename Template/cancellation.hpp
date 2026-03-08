@@ -18,11 +18,11 @@ class ft_cancellation_state
         std::atomic<bool>          _cancelled;
         ft_vector<ft_function<void()> > _callbacks;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                    _initialized_state;
+        uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -44,12 +44,12 @@ class ft_cancellation_state
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -86,7 +86,7 @@ class ft_cancellation_state
     public:
         ft_cancellation_state() noexcept
             : _cancelled(false), _callbacks(), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -94,7 +94,7 @@ class ft_cancellation_state
 
         ~ft_cancellation_state() noexcept
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -108,15 +108,15 @@ class ft_cancellation_state
 
         int initialize() noexcept
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_cancellation_state::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_cancelled.store(false, std::memory_order_release);
             this->_callbacks.clear();
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -126,7 +126,7 @@ class ft_cancellation_state
             int lock_error;
             int unlock_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -137,7 +137,7 @@ class ft_cancellation_state
             unlock_error = this->unlock_internal(lock_acquired);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -148,7 +148,7 @@ class ft_cancellation_state
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_cancellation_state::register_callback");
+            this->abort_if_not_initialised("ft_cancellation_state::register_callback");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -172,7 +172,7 @@ class ft_cancellation_state
             int unlock_error;
             size_t index;
 
-            this->abort_if_not_initialized("ft_cancellation_state::request_cancel");
+            this->abort_if_not_initialised("ft_cancellation_state::request_cancel");
             if (this->_cancelled.exchange(true, std::memory_order_acq_rel))
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             lock_acquired = false;
@@ -202,7 +202,7 @@ class ft_cancellation_state
         {
             bool cancelled;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);
                 return (true);
@@ -217,7 +217,7 @@ class ft_cancellation_state
             pt_recursive_mutex *new_mutex;
             int initialize_result;
 
-            this->abort_if_not_initialized("ft_cancellation_state::enable_thread_safety");
+            this->abort_if_not_initialised("ft_cancellation_state::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -238,8 +238,8 @@ class ft_cancellation_state
             pt_recursive_mutex *mutex_pointer;
             int destroy_result;
 
-            if (this->_initialized_state != _state_initialized
-                && this->_initialized_state != _state_destroyed)
+            if (this->_initialised_state != _state_initialised
+                && this->_initialised_state != _state_destroyed)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
@@ -306,11 +306,11 @@ class ft_cancellation_source
 {
     private:
         ft_cancellation_state *_state;
-        uint8_t                _initialized_state;
+        uint8_t                _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const
@@ -325,25 +325,25 @@ class ft_cancellation_source
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
     public:
         ft_cancellation_source() noexcept
-            : _state(ft_nullptr), _initialized_state(_state_uninitialized)
+            : _state(ft_nullptr), _initialised_state(_state_uninitialised)
         {
             return ;
         }
 
         ~ft_cancellation_source() noexcept
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             return ;
         }
@@ -358,42 +358,42 @@ class ft_cancellation_source
             this->_state = new (std::nothrow) ft_cancellation_state();
             if (this->_state == ft_nullptr)
             {
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (FT_ERR_NO_MEMORY);
             }
             if (this->_state->initialize() != FT_ERR_SUCCESS)
             {
                 delete this->_state;
                 this->_state = ft_nullptr;
-                this->_initialized_state = _state_destroyed;
+                this->_initialised_state = _state_destroyed;
                 return (FT_ERR_INVALID_STATE);
             }
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (FT_ERR_SUCCESS);
         }
 
         int destroy() noexcept
         {
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (FT_ERR_INVALID_STATE);
             if (this->_state != ft_nullptr)
             {
                 delete this->_state;
                 this->_state = ft_nullptr;
             }
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (FT_ERR_SUCCESS);
         }
 
         ft_cancellation_token get_token() const noexcept
         {
-            this->abort_if_not_initialized("ft_cancellation_source::get_token");
+            this->abort_if_not_initialised("ft_cancellation_source::get_token");
             return (ft_cancellation_token(this->_state));
         }
 
         int request_cancel() noexcept
         {
-            this->abort_if_not_initialized("ft_cancellation_source::request_cancel");
+            this->abort_if_not_initialised("ft_cancellation_source::request_cancel");
             if (this->_state == ft_nullptr)
                 return (FT_ERR_INVALID_STATE);
             return (this->_state->request_cancel());
@@ -401,7 +401,7 @@ class ft_cancellation_source
 
         bool is_cancellation_requested() const noexcept
         {
-            this->abort_if_not_initialized("ft_cancellation_source::is_cancellation_requested");
+            this->abort_if_not_initialised("ft_cancellation_source::is_cancellation_requested");
             if (this->_state == ft_nullptr)
                 return (true);
             return (this->_state->is_cancelled());

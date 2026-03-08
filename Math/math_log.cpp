@@ -6,17 +6,17 @@ double math_log(double value)
     union
     {
         double double_value;
-        unsigned long long bit_pattern;
+        uint64_t bit_pattern;
     } converter;
-    unsigned long long exponent_bits;
-    unsigned long long mantissa_bits;
-    int    exponent;
+    uint64_t exponent_bits;
+    uint64_t mantissa_bits;
+    int32_t    exponent;
     double mantissa;
     double mantissa_offset;
     double term;
     double result;
     double sign;
-    int    iteration;
+    int32_t    iteration;
 
     if (value <= 0.0)
     {
@@ -27,7 +27,7 @@ double math_log(double value)
     mantissa_bits = converter.bit_pattern & 0x000fffffffffffffULL;
     if (exponent_bits == 0)
     {
-        int shift_count;
+        int32_t shift_count;
 
         shift_count = 0;
         while ((mantissa_bits & 0x0010000000000000ULL) == 0)
@@ -41,7 +41,7 @@ double math_log(double value)
     }
     else
     {
-        exponent = static_cast<int>(exponent_bits) - 1023;
+        exponent = static_cast<int32_t>(exponent_bits) - 1023;
         converter.bit_pattern = mantissa_bits | 0x3ff0000000000000ULL;
     }
     mantissa = converter.double_value;

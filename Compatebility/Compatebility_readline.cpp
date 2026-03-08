@@ -5,7 +5,7 @@
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 static DWORD g_orig_mode;
-static bool g_raw_mode_active;
+static ft_bool g_raw_mode_active;
 
 static int32_t cmp_map_last_error_to_ft_error()
 {
@@ -32,7 +32,7 @@ int32_t cmp_readline_enable_raw_mode()
 
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
-            g_raw_mode_active = false;
+            g_raw_mode_active = FT_FALSE;
             return (FT_ERR_SUCCESS);
         }
         return (error_code);
@@ -43,7 +43,7 @@ int32_t cmp_readline_enable_raw_mode()
 
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
-            g_raw_mode_active = false;
+            g_raw_mode_active = FT_FALSE;
             return (FT_ERR_SUCCESS);
         }
         return (error_code);
@@ -56,12 +56,12 @@ int32_t cmp_readline_enable_raw_mode()
 
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
-            g_raw_mode_active = false;
+            g_raw_mode_active = FT_FALSE;
             return (FT_ERR_SUCCESS);
         }
         return (error_code);
     }
-    g_raw_mode_active = true;
+    g_raw_mode_active = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
@@ -69,7 +69,7 @@ int32_t cmp_readline_disable_raw_mode()
 {
     HANDLE handle;
 
-    if (g_raw_mode_active == false)
+    if (g_raw_mode_active == FT_FALSE)
     {
         return (FT_ERR_SUCCESS);
     }
@@ -82,7 +82,7 @@ int32_t cmp_readline_disable_raw_mode()
     {
         return (cmp_map_last_error_to_ft_error());
     }
-    g_raw_mode_active = false;
+    g_raw_mode_active = FT_FALSE;
     return (FT_ERR_SUCCESS);
 }
 
@@ -138,7 +138,7 @@ int32_t cmp_readline_terminal_width(int32_t *width_out)
 # include <sys/ioctl.h>
 # include <errno.h>
 static termios g_orig_termios;
-static bool g_raw_mode_active;
+static ft_bool g_raw_mode_active;
 
 static int32_t cmp_map_errno_to_ft_error()
 {
@@ -153,7 +153,7 @@ int32_t cmp_readline_enable_raw_mode()
 
     if (isatty(STDIN_FILENO) == 0)
     {
-        g_raw_mode_active = false;
+        g_raw_mode_active = FT_FALSE;
         return (FT_ERR_SUCCESS);
     }
     if (tcgetattr(STDIN_FILENO, &raw) == -1)
@@ -166,19 +166,19 @@ int32_t cmp_readline_enable_raw_mode()
     {
         return (cmp_map_errno_to_ft_error());
     }
-    g_raw_mode_active = true;
+    g_raw_mode_active = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_readline_disable_raw_mode()
 {
-    if (g_raw_mode_active == false)
+    if (g_raw_mode_active == FT_FALSE)
         return (FT_ERR_SUCCESS);
     if (tcsetattr(STDIN_FILENO, TCSANOW, &g_orig_termios) == -1)
     {
         return (cmp_map_errno_to_ft_error());
     }
-    g_raw_mode_active = false;
+    g_raw_mode_active = FT_FALSE;
     return (FT_ERR_SUCCESS);
 }
 

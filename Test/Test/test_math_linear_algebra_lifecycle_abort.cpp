@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Math/math.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
@@ -91,49 +91,49 @@ static void quaternion_call_initialize_twice()
 }
 
 FT_TEST(test_vector2_initialize_twice_aborts,
-    "vector2 initialize aborts when called on initialized object")
+    "vector2 initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, math_expect_sigabrt(vector2_call_initialize_twice));
     return (1);
 }
 
 FT_TEST(test_vector3_initialize_twice_aborts,
-    "vector3 initialize aborts when called on initialized object")
+    "vector3 initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, math_expect_sigabrt(vector3_call_initialize_twice));
     return (1);
 }
 
 FT_TEST(test_vector4_initialize_twice_aborts,
-    "vector4 initialize aborts when called on initialized object")
+    "vector4 initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, math_expect_sigabrt(vector4_call_initialize_twice));
     return (1);
 }
 
 FT_TEST(test_matrix2_initialize_twice_aborts,
-    "matrix2 initialize aborts when called on initialized object")
+    "matrix2 initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, math_expect_sigabrt(matrix2_call_initialize_twice));
     return (1);
 }
 
 FT_TEST(test_matrix3_initialize_twice_aborts,
-    "matrix3 initialize aborts when called on initialized object")
+    "matrix3 initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, math_expect_sigabrt(matrix3_call_initialize_twice));
     return (1);
 }
 
 FT_TEST(test_matrix4_initialize_twice_aborts,
-    "matrix4 initialize aborts when called on initialized object")
+    "matrix4 initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, math_expect_sigabrt(matrix4_call_initialize_twice));
     return (1);
 }
 
 FT_TEST(test_quaternion_initialize_twice_aborts,
-    "quaternion initialize aborts when called on initialized object")
+    "quaternion initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, math_expect_sigabrt(quaternion_call_initialize_twice));
     return (1);

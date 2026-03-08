@@ -9,12 +9,12 @@
 class ft_http_server
 {
     private:
-        uint8_t _initialized_state;
-        static const uint8_t _state_uninitialized = 0;
+        uint8_t _initialised_state;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         void abort_lifecycle_error(const char *method_name, const char *reason) const;
-        void abort_if_not_initialized(const char *method_name) const;
+        void abort_if_not_initialised(const char *method_name) const;
         ft_socket _server_socket;
         bool _non_blocking;
         mutable pt_recursive_mutex *_mutex;

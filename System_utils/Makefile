@@ -4,10 +4,10 @@ DEBUG_TARGET := System_utils_debug.a
 
 SRCS := System_utils_assert.cpp \
         System_utils_env.cpp \
-        system_utils_environment_lock.cpp \
-        system_utils_getenv.cpp \
-        system_utils_setenv.cpp \
-        system_utils_unsetenv.cpp \
+        System_utils_environment_lock.cpp \
+        System_utils_getenv.cpp \
+        System_utils_setenv.cpp \
+        System_utils_unsetenv.cpp \
         System_utils_abort.cpp \
         System_utils_sigabrt.cpp \
         System_utils_sigfpe.cpp \
@@ -25,12 +25,12 @@ SRCS := System_utils_assert.cpp \
         System_utils_service.cpp \
         System_utils_home.cpp \
         System_utils_locale.cpp \
-        test_runner.cpp
+        test_system_utils_runner.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := system_utils.hpp test_runner.hpp
+HEADERS := system_utils.hpp test_system_utils_runner.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

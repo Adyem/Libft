@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Template/unordered_map.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
@@ -12,7 +12,7 @@
 
 typedef ft_unordered_map<int, int> unordered_map_int_int;
 
-static int unordered_map_expect_sigabrt_uninitialized(void (*operation)(unordered_map_int_int&))
+static int unordered_map_expect_sigabrt_uninitialised(void (*operation)(unordered_map_int_int&))
 {
     pid_t child_process_id;
     int child_status;
@@ -191,163 +191,163 @@ static void unordered_map_call_operator_index(unordered_map_int_int& map_instanc
     return ;
 }
 
-FT_TEST(test_unordered_map_uninitialized_destructor_aborts,
-    "unordered_map destructor aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_destructor_aborts,
+    "unordered_map destructor aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_destructor));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_destructor));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_destroy_aborts,
-    "unordered_map destroy aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_destroy_aborts,
+    "unordered_map destroy aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_destroy));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_destroy));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_enable_thread_safety_aborts,
-    "unordered_map enable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_enable_thread_safety_aborts,
+    "unordered_map enable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_enable_thread_safety));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_enable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_disable_thread_safety_aborts,
-    "unordered_map disable_thread_safety aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_disable_thread_safety_aborts,
+    "unordered_map disable_thread_safety aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_disable_thread_safety));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_disable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_is_thread_safe_aborts,
-    "unordered_map is_thread_safe aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_is_thread_safe_aborts,
+    "unordered_map is_thread_safe aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_is_thread_safe));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_is_thread_safe));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_lock_aborts,
-    "unordered_map lock aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_lock_aborts,
+    "unordered_map lock aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_lock));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_lock));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_unlock_aborts,
-    "unordered_map unlock aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_unlock_aborts,
+    "unordered_map unlock aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_unlock));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_unlock));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_insert_aborts,
-    "unordered_map insert aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_insert_aborts,
+    "unordered_map insert aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_insert));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_insert));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_find_aborts,
-    "unordered_map find aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_find_aborts,
+    "unordered_map find aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_find));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_find));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_find_const_aborts,
-    "unordered_map const find aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_find_const_aborts,
+    "unordered_map const find aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_find_const));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_find_const));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_erase_aborts,
-    "unordered_map erase aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_erase_aborts,
+    "unordered_map erase aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_erase));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_erase));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_empty_aborts,
-    "unordered_map empty aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_empty_aborts,
+    "unordered_map empty aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_empty));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_empty));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_clear_aborts,
-    "unordered_map clear aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_clear_aborts,
+    "unordered_map clear aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_clear));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_clear));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_size_aborts,
-    "unordered_map size aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_size_aborts,
+    "unordered_map size aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_size));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_size));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_bucket_count_aborts,
-    "unordered_map bucket_count aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_bucket_count_aborts,
+    "unordered_map bucket_count aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_bucket_count));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_bucket_count));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_has_valid_storage_aborts,
-    "unordered_map has_valid_storage aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_has_valid_storage_aborts,
+    "unordered_map has_valid_storage aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_has_valid_storage));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_has_valid_storage));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_begin_aborts,
-    "unordered_map begin aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_begin_aborts,
+    "unordered_map begin aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_begin));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_begin));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_end_aborts,
-    "unordered_map end aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_end_aborts,
+    "unordered_map end aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_end));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_end));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_begin_const_aborts,
-    "unordered_map const begin aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_begin_const_aborts,
+    "unordered_map const begin aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_begin_const));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_begin_const));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_end_const_aborts,
-    "unordered_map const end aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_end_const_aborts,
+    "unordered_map const end aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_end_const));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_end_const));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_at_aborts,
-    "unordered_map at aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_at_aborts,
+    "unordered_map at aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_at));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_at));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_at_const_aborts,
-    "unordered_map const at aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_at_const_aborts,
+    "unordered_map const at aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_at_const));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_at_const));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialized_operator_index_aborts,
-    "unordered_map operator[] aborts on uninitialized instance")
+FT_TEST(test_unordered_map_uninitialised_operator_index_aborts,
+    "unordered_map operator[] aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialized(unordered_map_call_operator_index));
+    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_operator_index));
     return (1);
 }

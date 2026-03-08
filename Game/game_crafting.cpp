@@ -52,14 +52,14 @@ ft_crafting_ingredient::~ft_crafting_ingredient() noexcept
 }
 
 ft_crafting::ft_crafting() noexcept
-    : _recipes(), _initialized_state(ft_crafting::_state_uninitialized), _mutex(ft_nullptr)
+    : _recipes(), _initialised_state(ft_crafting::_state_uninitialised), _mutex(ft_nullptr)
 {
     return ;
 }
 
 ft_crafting::~ft_crafting() noexcept
 {
-    if (this->_initialized_state == ft_crafting::_state_initialized)
+    if (this->_initialised_state == ft_crafting::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -76,38 +76,38 @@ void ft_crafting::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_crafting::abort_if_not_initialized(const char *method_name) const noexcept
+void ft_crafting::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_crafting::_state_initialized)
+    if (this->_initialised_state == ft_crafting::_state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int ft_crafting::initialize() noexcept
 {
-    if (this->_initialized_state == ft_crafting::_state_initialized)
+    if (this->_initialised_state == ft_crafting::_state_initialised)
         this->abort_lifecycle_error("ft_crafting::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     int recipes_error = this->_recipes.initialize();
     if (recipes_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_crafting::_state_destroyed;
+        this->_initialised_state = ft_crafting::_state_destroyed;
         this->set_error(recipes_error);
         return (recipes_error);
     }
-    this->_initialized_state = ft_crafting::_state_initialized;
+    this->_initialised_state = ft_crafting::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_crafting::destroy() noexcept
 {
-    if (this->_initialized_state != ft_crafting::_state_initialized)
+    if (this->_initialised_state != ft_crafting::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     int recipes_error = this->_recipes.destroy();
     int disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_crafting::_state_destroyed;
+    this->_initialised_state = ft_crafting::_state_destroyed;
     if (recipes_error != FT_ERR_SUCCESS)
     {
         this->set_error(recipes_error);
@@ -412,7 +412,7 @@ int ft_crafting::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    this->abort_if_not_initialized("ft_crafting::enable_thread_safety");
+    this->abort_if_not_initialised("ft_crafting::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -466,14 +466,14 @@ bool ft_crafting::is_thread_safe() const noexcept
 
 ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept
 {
-    this->abort_if_not_initialized("ft_crafting::get_recipes");
+    this->abort_if_not_initialised("ft_crafting::get_recipes");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
 
 const ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() const noexcept
 {
-    this->abort_if_not_initialized("ft_crafting::get_recipes");
+    this->abort_if_not_initialised("ft_crafting::get_recipes");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
@@ -488,7 +488,7 @@ int ft_crafting::register_recipe(int recipe_id,
     int lock_error;
 
     lock_acquired = false;
-    this->abort_if_not_initialized("ft_crafting::register_recipe");
+    this->abort_if_not_initialised("ft_crafting::register_recipe");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -529,7 +529,7 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    this->abort_if_not_initialized("ft_crafting::craft_item");
+    this->abort_if_not_initialised("ft_crafting::craft_item");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

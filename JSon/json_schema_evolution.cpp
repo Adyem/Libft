@@ -29,13 +29,13 @@ static int json_schema_registry_lock(pt_mutex &mutex, bool *lock_acquired) noexc
 {
     if (lock_acquired)
         *lock_acquired = false;
-    static bool mutex_initialized = false;
-    if (!mutex_initialized)
+    static bool mutex_initialised = false;
+    if (!mutex_initialised)
     {
         int initialize_error = mutex.initialize();
         if (initialize_error != FT_ERR_SUCCESS)
             return (initialize_error);
-        mutex_initialized = true;
+        mutex_initialised = true;
     }
     int lock_error = mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)

@@ -2,9 +2,9 @@
 #include "math_internal.hpp"
 #include "../Printf/printf.hpp"
 
-int math_roll_excecute_pm(char *string, int *index, int string_boundary)
+int32_t math_roll_excecute_pm(char *string, int32_t *index, int32_t string_boundary)
 {
-    int error = 0;
+    int32_t error = 0;
 
     if (DEBUG == 1)
         pf_printf_fd(1, "CHECKING PM\n");

@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../GetNextLine/gnl_stream.hpp"
 #include "../../PThread/recursive_mutex.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 
 #ifndef LIBFT_TEST_BUILD

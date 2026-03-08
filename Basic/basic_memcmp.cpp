@@ -13,8 +13,8 @@ int32_t    ft_memcmp(const void *pointer1, const void *pointer2, ft_size_t size)
     while (index < size)
     {
         if (string1[index] != string2[index])
-            return (static_cast<int>(string1[index])
-                    - static_cast<int>(string2[index]));
+            return (static_cast<int32_t>(string1[index])
+                    - static_cast<int32_t>(string2[index]));
         ++index;
     }
     return (0);

@@ -4,18 +4,15 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Template/move.hpp"
-#if defined(_WIN32) || defined(_WIN64)
-# include <winsock2.h>
-#endif
 #include <cerrno>
 #include <cstdlib>
 #include <utility>
 
 static pthread_mutex_t *g_env_mutex = ft_nullptr;
 
-static int su_environment_lock_mutex(void)
+static int32_t su_environment_lock_mutex(void)
 {
-    int pthread_error;
+    int32_t pthread_error;
 
     if (g_env_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -25,9 +22,9 @@ static int su_environment_lock_mutex(void)
     return (FT_ERR_SUCCESS);
 }
 
-static int su_environment_unlock_mutex(void)
+static int32_t su_environment_unlock_mutex(void)
 {
-    int pthread_error;
+    int32_t pthread_error;
 
     if (g_env_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -37,10 +34,10 @@ static int su_environment_unlock_mutex(void)
     return (FT_ERR_SUCCESS);
 }
 
-int su_environment_enable_thread_safety(void)
+int32_t su_environment_enable_thread_safety(void)
 {
     pthread_mutex_t  *mutex_pointer;
-    int             pthread_error;
+    int32_t             pthread_error;
 
     if (g_env_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -68,22 +65,18 @@ void su_environment_disable_thread_safety(void)
     return ;
 }
 
-static int g_environment_thread_safety_initializer = su_environment_enable_thread_safety();
+static int32_t g_environment_thread_safety_initializer = su_environment_enable_thread_safety();
 
 static char **su_environment_entries(void)
 {
-#if defined(_WIN32) || defined(_WIN64)
-    return (_environ);
-#else
-    return (environ);
-#endif
+    return (cmp_get_environ_entries());
 }
 
-static int su_environment_split_entry(
+static int32_t su_environment_split_entry(
     const char *entry,
     ft_string &name,
     ft_string &value,
-    int *has_value)
+    int32_t *has_value)
 {
     const char  *equals_location;
     ft_size_t   name_length;
@@ -121,8 +114,8 @@ static int su_environment_split_entry(
 char *su_getenv(const char *name)
 {
     char    *result;
-    int     lock_error;
-    int     unlock_error;
+    int32_t     lock_error;
+    int32_t     unlock_error;
 
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
@@ -134,11 +127,11 @@ char *su_getenv(const char *name)
     return (result);
 }
 
-int su_setenv(const char *name, const char *value, int overwrite)
+int32_t su_setenv(const char *name, const char *value, int32_t overwrite)
 {
-    int result;
-    int lock_error;
-    int unlock_error;
+    int32_t result;
+    int32_t lock_error;
+    int32_t unlock_error;
 
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
@@ -150,11 +143,11 @@ int su_setenv(const char *name, const char *value, int overwrite)
     return (result);
 }
 
-int su_putenv(char *string)
+int32_t su_putenv(char *string)
 {
-    int result;
-    int lock_error;
-    int unlock_error;
+    int32_t result;
+    int32_t lock_error;
+    int32_t unlock_error;
 
     if (string == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -168,10 +161,10 @@ int su_putenv(char *string)
     return (result);
 }
 
-int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
+int32_t su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
 {
-    int     lock_error;
-    int     unlock_error;
+    int32_t     lock_error;
+    int32_t     unlock_error;
     char    **entries;
     ft_size_t   index;
     ft_string   entry_copy;
@@ -205,15 +198,15 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
     return (FT_ERR_SUCCESS);
 }
 
-int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
+int32_t su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
 {
-    int         lock_error;
-    int         unlock_error;
+    int32_t         lock_error;
+    int32_t         unlock_error;
     char        **entries;
     ft_string   name;
     ft_string   value;
-    int         has_value;
-    int         error_code;
+    int32_t         has_value;
+    int32_t         error_code;
     ft_size_t   index;
 
     if (snapshot == ft_nullptr)
@@ -284,14 +277,14 @@ void su_environment_snapshot_dispose(t_su_environment_snapshot *snapshot)
     return ;
 }
 
-int su_environment_sandbox_begin(t_su_environment_snapshot *snapshot)
+int32_t su_environment_sandbox_begin(t_su_environment_snapshot *snapshot)
 {
     return (su_environment_snapshot_capture(snapshot));
 }
 
-int su_environment_sandbox_end(t_su_environment_snapshot *snapshot)
+int32_t su_environment_sandbox_end(t_su_environment_snapshot *snapshot)
 {
-    int restore_error;
+    int32_t restore_error;
 
     restore_error = su_environment_snapshot_restore(snapshot);
     su_environment_snapshot_dispose(snapshot);

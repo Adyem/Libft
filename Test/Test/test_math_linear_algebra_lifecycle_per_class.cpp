@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Math/math.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
@@ -29,7 +29,7 @@ static int math_expect_sigabrt_per_class(void (*operation)())
     return (WTERMSIG(child_status) == SIGABRT);
 }
 
-static void vector2_copy_from_uninitialized_source()
+static void vector2_copy_from_uninitialised_source()
 {
     vector2 destination_value(1.0, 2.0);
     vector2 source_value;
@@ -38,7 +38,7 @@ static void vector2_copy_from_uninitialized_source()
     return ;
 }
 
-static void vector3_copy_from_uninitialized_source()
+static void vector3_copy_from_uninitialised_source()
 {
     vector3 destination_value(1.0, 2.0, 3.0);
     vector3 source_value;
@@ -47,7 +47,7 @@ static void vector3_copy_from_uninitialized_source()
     return ;
 }
 
-static void vector4_copy_from_uninitialized_source()
+static void vector4_copy_from_uninitialised_source()
 {
     vector4 destination_value(1.0, 2.0, 3.0, 4.0);
     vector4 source_value;
@@ -56,7 +56,7 @@ static void vector4_copy_from_uninitialized_source()
     return ;
 }
 
-static void matrix2_copy_from_uninitialized_source()
+static void matrix2_copy_from_uninitialised_source()
 {
     matrix2 destination_value(1.0, 0.0, 0.0, 1.0);
     matrix2 source_value;
@@ -65,7 +65,7 @@ static void matrix2_copy_from_uninitialized_source()
     return ;
 }
 
-static void matrix3_copy_from_uninitialized_source()
+static void matrix3_copy_from_uninitialised_source()
 {
     matrix3 destination_value(1.0, 0.0, 0.0,
                               0.0, 1.0, 0.0,
@@ -76,7 +76,7 @@ static void matrix3_copy_from_uninitialized_source()
     return ;
 }
 
-static void matrix4_copy_from_uninitialized_source()
+static void matrix4_copy_from_uninitialised_source()
 {
     matrix4 destination_value(1.0, 0.0, 0.0, 0.0,
                               0.0, 1.0, 0.0, 0.0,
@@ -88,7 +88,7 @@ static void matrix4_copy_from_uninitialized_source()
     return ;
 }
 
-static void quaternion_copy_from_uninitialized_source()
+static void quaternion_copy_from_uninitialised_source()
 {
     quaternion destination_value(1.0, 0.0, 0.0, 0.0);
     quaternion source_value;
@@ -97,52 +97,52 @@ static void quaternion_copy_from_uninitialized_source()
     return ;
 }
 
-FT_TEST(test_vector2_copy_from_uninitialized_source_aborts,
-    "vector2 initialize(copy) aborts on uninitialized source")
+FT_TEST(test_vector2_copy_from_uninitialised_source_aborts,
+    "vector2 initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(vector2_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(vector2_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_vector3_copy_from_uninitialized_source_aborts,
-    "vector3 initialize(copy) aborts on uninitialized source")
+FT_TEST(test_vector3_copy_from_uninitialised_source_aborts,
+    "vector3 initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(vector3_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(vector3_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_vector4_copy_from_uninitialized_source_aborts,
-    "vector4 initialize(copy) aborts on uninitialized source")
+FT_TEST(test_vector4_copy_from_uninitialised_source_aborts,
+    "vector4 initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(vector4_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(vector4_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_matrix2_copy_from_uninitialized_source_aborts,
-    "matrix2 initialize(copy) aborts on uninitialized source")
+FT_TEST(test_matrix2_copy_from_uninitialised_source_aborts,
+    "matrix2 initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(matrix2_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(matrix2_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_matrix3_copy_from_uninitialized_source_aborts,
-    "matrix3 initialize(copy) aborts on uninitialized source")
+FT_TEST(test_matrix3_copy_from_uninitialised_source_aborts,
+    "matrix3 initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(matrix3_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(matrix3_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_matrix4_copy_from_uninitialized_source_aborts,
-    "matrix4 initialize(copy) aborts on uninitialized source")
+FT_TEST(test_matrix4_copy_from_uninitialised_source_aborts,
+    "matrix4 initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(matrix4_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(matrix4_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_quaternion_copy_from_uninitialized_source_aborts,
-    "quaternion initialize(copy) aborts on uninitialized source")
+FT_TEST(test_quaternion_copy_from_uninitialised_source_aborts,
+    "quaternion initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(quaternion_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_per_class(quaternion_copy_from_uninitialised_source));
     return (1);
 }
 

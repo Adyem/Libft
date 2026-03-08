@@ -10,13 +10,13 @@ struct ft_render_macos_state
 {
     NSWindow        *window;
 
-    int             width;
-    int             height;
+    int32_t         width;
+    int32_t         height;
 
     uint32_t        *pixels;
 
-    bool            is_fullscreen;
-    bool            should_close;
+    ft_bool         is_fullscreen;
+    ft_bool         should_close;
 };
 
 ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_screen_size *out_size)
@@ -26,7 +26,7 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
 
     if (out_size == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     screen = [NSScreen mainScreen];
@@ -34,20 +34,20 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
     {
         out_size->width = 0;
         out_size->height = 0;
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
     }
 
     frame = [screen frame];
 
-    out_size->width = (int)frame.size.width;
-    out_size->height = (int)frame.size.height;
+    out_size->width = static_cast<int32_t>(frame.size.width);
+    out_size->height = static_cast<int32_t>(frame.size.height);
 
     if (out_size->width <= 0 || out_size->height <= 0)
     {
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_create_window(
@@ -61,13 +61,13 @@ ft_render_platform_result ft_render_platform_create_window(
 
     if (out_platform_state == NULL || out_framebuffer == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = (ft_render_macos_state *)calloc(1, sizeof(ft_render_macos_state));
     if (state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
+        return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
     }
 
     [NSApplication sharedApplication];
@@ -75,14 +75,14 @@ ft_render_platform_result ft_render_platform_create_window(
 
     state->width = desc.width;
     state->height = desc.height;
-    state->is_fullscreen = false;
-    state->should_close = false;
+    state->is_fullscreen = FT_FALSE;
+    state->should_close = FT_FALSE;
 
     state->pixels = (uint32_t *)malloc((size_t)(state->width * state->height * 4));
     if (state->pixels == NULL)
     {
         free(state);
-        return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
+        return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
     }
 
     rect = NSMakeRect(100, 100, desc.width, desc.height);
@@ -97,7 +97,7 @@ ft_render_platform_result ft_render_platform_create_window(
     {
         free(state->pixels);
         free(state);
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
     }
 
     [state->window setTitle:[NSString stringWithUTF8String:desc.title]];
@@ -109,7 +109,7 @@ ft_render_platform_result ft_render_platform_create_window(
     out_framebuffer->pixels = state->pixels;
 
     *out_platform_state = state;
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_destroy_window(
@@ -121,7 +121,7 @@ ft_render_platform_result ft_render_platform_destroy_window(
 
     if (platform_state == NULL || *platform_state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_ok, 0 });
+        return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
     }
 
     state = (ft_render_macos_state *)(*platform_state);
@@ -148,12 +148,12 @@ ft_render_platform_result ft_render_platform_destroy_window(
         framebuffer->pixels = NULL;
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_poll_events(
     void *platform_state,
-    bool *out_should_close
+    ft_bool *out_should_close
 )
 {
     ft_render_macos_state *state;
@@ -161,7 +161,7 @@ ft_render_platform_result ft_render_platform_poll_events(
 
     if (platform_state == NULL || out_should_close == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = (ft_render_macos_state *)platform_state;
@@ -187,7 +187,7 @@ ft_render_platform_result ft_render_platform_poll_events(
     }
 
     *out_should_close = state->should_close;
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_present(
@@ -203,7 +203,7 @@ ft_render_platform_result ft_render_platform_present(
 
     if (platform_state == NULL || framebuffer == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = (ft_render_macos_state *)platform_state;
@@ -224,7 +224,7 @@ ft_render_platform_result ft_render_platform_present(
     if (context == NULL)
     {
         CGColorSpaceRelease(color_space);
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
     }
 
     image = CGBitmapContextCreateImage(context);
@@ -240,35 +240,35 @@ ft_render_platform_result ft_render_platform_present(
     CGContextRelease(context);
     CGColorSpaceRelease(color_space);
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_set_fullscreen(
     void *platform_state,
-    bool enabled
+    ft_bool enabled
 )
 {
     ft_render_macos_state *state;
 
     if (platform_state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = (ft_render_macos_state *)platform_state;
 
-    if (enabled == true && state->is_fullscreen == false)
+    if (enabled == FT_TRUE && state->is_fullscreen == FT_FALSE)
     {
         [state->window toggleFullScreen:nil];
-        state->is_fullscreen = true;
+        state->is_fullscreen = FT_TRUE;
     }
-    else if (enabled == false && state->is_fullscreen == true)
+    else if (enabled == FT_FALSE && state->is_fullscreen == FT_TRUE)
     {
         [state->window toggleFullScreen:nil];
-        state->is_fullscreen = false;
+        state->is_fullscreen = FT_FALSE;
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 #endif

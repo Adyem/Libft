@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Math/math.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
@@ -39,7 +39,7 @@ static void vector2_call_destroy_twice()
     return ;
 }
 
-static void matrix3_call_destroy_while_uninitialized()
+static void matrix3_call_destroy_while_uninitialised()
 {
     matrix3 matrix_value;
 
@@ -47,7 +47,7 @@ static void matrix3_call_destroy_while_uninitialized()
     return ;
 }
 
-static void quaternion_call_self_move_uninitialized()
+static void quaternion_call_self_move_uninitialised()
 {
     alignas(quaternion) unsigned char storage[sizeof(quaternion)];
     quaternion *quaternion_pointer;
@@ -209,16 +209,16 @@ FT_TEST(test_vector2_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_matrix3_destroy_uninitialized_aborts,
-    "matrix3 destroy aborts when called on uninitialized object")
+FT_TEST(test_matrix3_destroy_uninitialised_aborts,
+    "matrix3 destroy aborts when called on uninitialised object")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_additional(matrix3_call_destroy_while_uninitialized));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_additional(matrix3_call_destroy_while_uninitialised));
     return (1);
 }
 
-FT_TEST(test_quaternion_self_move_uninitialized_aborts,
-    "quaternion move self aborts when object is uninitialized")
+FT_TEST(test_quaternion_self_move_uninitialised_aborts,
+    "quaternion move self aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_additional(quaternion_call_self_move_uninitialized));
+    FT_ASSERT_EQ(1, math_expect_sigabrt_additional(quaternion_call_self_move_uninitialised));
     return (1);
 }

@@ -43,7 +43,7 @@ class pt_lock_tracking
     private:
         static std::mutex *get_registry_mutex(void);
         static pt_buffer<s_pt_thread_lock_info> *get_thread_infos(int *error_code);
-        static bool ensure_registry_mutex_initialized(int *error_code);
+        static bool ensure_registry_mutex_initialised(int *error_code);
 
         static s_pt_thread_lock_info *find_thread_info
             (pt_thread_id_type thread_identifier, int *error_code);

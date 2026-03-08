@@ -10,20 +10,20 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 
-static int32_t reallocate_block(void *ptr, ft_size_t aligned_size, ft_size_t user_size)
+static ft_bool reallocate_block(void *memory_pointer, ft_size_t aligned_size, ft_size_t user_size)
 {
-    if (!ptr)
-        return (-1);
-    Block *block = cma_find_block_for_pointer(ptr);
+    if (!memory_pointer)
+        return (FT_FALSE);
+    Block *block = cma_find_block_for_pointer(memory_pointer);
     if (!block)
-        return (-1);
-    cma_validate_block(block, "cma_realloc resize", ptr);
+        return (FT_FALSE);
+    cma_validate_block(block, "cma_realloc resize", memory_pointer);
     if (block->size >= aligned_size)
     {
         split_block(block, aligned_size);
-        cma_validate_block(block, "cma_realloc split in place", ptr);
+        cma_validate_block(block, "cma_realloc split in place", memory_pointer);
         cma_debug_prepare_allocation(block, user_size);
-        return (0);
+        return (FT_TRUE);
     }
     if (block->next && cma_block_is_free(block->next) &&
         (block->size + block->next->size) >= aligned_size)
@@ -37,11 +37,11 @@ static int32_t reallocate_block(void *ptr, ft_size_t aligned_size, ft_size_t use
             block->next->prev = block;
         }
         split_block(block, aligned_size);
-        cma_validate_block(block, "cma_realloc split after merge", ptr);
+        cma_validate_block(block, "cma_realloc split after merge", memory_pointer);
         cma_debug_prepare_allocation(block, user_size);
-        return (0);
+        return (FT_TRUE);
     }
-    return (-1);
+    return (FT_FALSE);
 }
 
 static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
@@ -98,7 +98,7 @@ static void release_block_locked(Block *block)
     return ;
 }
 
-void *cma_realloc(void* ptr, ft_size_t new_size)
+void *cma_realloc(void* memory_pointer, ft_size_t new_size)
 {
     if (new_size > FT_SYSTEM_SIZE_MAX)
         return (ft_nullptr);
@@ -106,25 +106,25 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         return (ft_nullptr);
     if (cma_backend_is_enabled())
     {
-        if (!ptr || cma_backend_owns_pointer(ptr))
-            return (cma_backend_reallocate(ptr, new_size, ft_nullptr));
+        if (!memory_pointer || cma_backend_owns_pointer(memory_pointer))
+            return (cma_backend_reallocate(memory_pointer, new_size, ft_nullptr));
     }
     if (OFFSWITCH == 1)
     {
-        void *result = std::realloc(ptr, new_size);
+        void *result = std::realloc(memory_pointer, new_size);
 
-        if (!ptr && result)
+        if (!memory_pointer && result)
             g_cma_allocation_count++;
-        else if (ptr && new_size == 0)
+        else if (memory_pointer && new_size == 0)
             g_cma_free_count++;
         return (result);
     }
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
-    if (!ptr)
+    if (!memory_pointer)
     {
         if (lock_acquired)
             cma_unlock_allocator(lock_acquired);
@@ -134,7 +134,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     {
         if (lock_acquired)
             cma_unlock_allocator(lock_acquired);
-        cma_free(ptr);
+        cma_free(memory_pointer);
         return (ft_nullptr);
     }
     ft_size_t instrumented_size = cma_debug_allocation_size(new_size);
@@ -145,17 +145,17 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         return (ft_nullptr);
     }
     ft_size_t aligned_size = align16(instrumented_size);
-    Block *block = cma_find_block_for_pointer(ptr);
+    Block *block = cma_find_block_for_pointer(memory_pointer);
     if (!block)
     {
         if (lock_acquired)
             cma_unlock_allocator(lock_acquired);
         return (ft_nullptr);
     }
-    cma_validate_block(block, "cma_realloc header", ptr);
+    cma_validate_block(block, "cma_realloc header", memory_pointer);
     ft_size_t previous_size = block->size;
-    int32_t error = reallocate_block(ptr, aligned_size, new_size);
-    if (error == 0)
+    ft_bool resize_succeeded = reallocate_block(memory_pointer, aligned_size, new_size);
+    if (resize_succeeded == FT_TRUE)
     {
         if (g_cma_current_bytes >= previous_size)
             g_cma_current_bytes -= previous_size;
@@ -171,7 +171,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         return (user_pointer);
     }
     Block *old_block = block;
-    cma_validate_block(old_block, "cma_realloc copy source", ptr);
+    cma_validate_block(old_block, "cma_realloc copy source", memory_pointer);
     ft_size_t old_user_size = cma_block_user_size(old_block);
     ft_size_t copy_size;
 
@@ -186,7 +186,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
             cma_unlock_allocator(lock_acquired);
         return (ft_nullptr);
     }
-    ft_memcpy(new_ptr, ptr, copy_size);
+    ft_memcpy(new_ptr, memory_pointer, copy_size);
     release_block_locked(old_block);
     if (lock_acquired)
         cma_unlock_allocator(lock_acquired);

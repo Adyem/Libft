@@ -17,7 +17,7 @@
 void* cma_malloc(ft_size_t size)
 {
     void *result = ft_nullptr;
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
     ft_size_t request_size = size;
     ft_size_t instrumented_size = 0;
     ft_size_t aligned_size = 0;
@@ -72,7 +72,7 @@ void* cma_malloc(ft_size_t size)
     if (!cma_block_is_free(block))
     {
         cma_unlock_allocator(lock_acquired);
-        lock_acquired = false;
+        lock_acquired = FT_FALSE;
         su_sigabrt();
     }
     block = split_block(block, aligned_size);
@@ -85,7 +85,7 @@ void* cma_malloc(ft_size_t size)
     cma_debug_prepare_allocation(block, size);
     result = static_cast<void *>(cma_block_user_pointer(block));
     cma_unlock_allocator(lock_acquired);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (ft_log_get_alloc_logging())
     {
         if (request_size == size)

@@ -85,17 +85,17 @@ static ft_size_t test_backend_get_allocation_size(const void *memory_pointer,
     return (iterator->second);
 }
 
-static int test_backend_owns_allocation(const void *memory_pointer,
+static ft_bool test_backend_owns_allocation(const void *memory_pointer,
         void *user_data)
 {
     test_backend_state *state = static_cast<test_backend_state*>(user_data);
     if (!memory_pointer)
-        return (0);
+        return (FT_FALSE);
     std::unordered_map<void*, ft_size_t>::iterator iterator =
         state->allocation_sizes.find(const_cast<void*>(memory_pointer));
     if (iterator == state->allocation_sizes.end())
-        return (0);
-    return (1);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
 int test_cma_backend_hooks(void)

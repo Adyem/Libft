@@ -31,7 +31,7 @@ namespace
 
     int api_request_signing_ensure_string(ft_string &target) noexcept
     {
-        if (target.is_initialized())
+        if (target.is_initialised())
             return (FT_ERR_SUCCESS);
         int initialization_error = target.initialize();
         if (initialization_error != FT_ERR_SUCCESS)

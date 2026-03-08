@@ -4,10 +4,10 @@
 #include "../RNG/rng.hpp"
 #include <climits>
 
-static int math_handle_dice_roll(char *string, int *index, int *next_number_index, int *error)
+static int32_t math_handle_dice_roll(char *string, int32_t *index, int32_t *next_number_index, int32_t *error)
 {
-    int first_number;
-    int second_number;
+    int32_t first_number;
+    int32_t second_number;
 
     if (DEBUG == 1)
         pf_printf("The value of x = %d\n", *next_number_index);
@@ -35,10 +35,10 @@ static int math_handle_dice_roll(char *string, int *index, int *next_number_inde
         }
         return (1);
     }
-    return ft_dice_roll(first_number, second_number);
+    return (ft_dice_roll(first_number, second_number));
 }
 
-static int math_handle_result_replacement(char *string, int *index, int read_index, int result)
+static int32_t math_handle_result_replacement(char *string, int32_t *index, int32_t read_index, int32_t result)
 {
     if (math_roll_itoa(result, index, string))
         return (1);
@@ -61,11 +61,11 @@ static int math_handle_result_replacement(char *string, int *index, int read_ind
     return (0);
 }
 
-int math_roll_excecute_droll(char *string, int *index, int string_boundary)
+int32_t math_roll_excecute_droll(char *string, int32_t *index, int32_t string_boundary)
 {
-    int result;
-    int next_number_index;
-    int error = 0;
+    int32_t result;
+    int32_t next_number_index;
+    int32_t error = 0;
 
     while (*index < string_boundary)
     {

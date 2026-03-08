@@ -21,18 +21,18 @@ void    time_fps::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void    time_fps::abort_if_not_initialized(const char *method_name) const noexcept
+void    time_fps::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == time_fps::_state_initialized)
+    if (this->_initialised_state == time_fps::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int     time_fps::lock_mutex(void) const noexcept
 {
-    this->abort_if_not_initialized("time_fps::lock_mutex");
+    this->abort_if_not_initialised("time_fps::lock_mutex");
     return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
@@ -44,7 +44,7 @@ int     time_fps::unlock_mutex(void) const noexcept
 time_fps::time_fps(void) noexcept
 {
     this->_mutex = ft_nullptr;
-    this->_initialized_state = time_fps::_state_uninitialized;
+    this->_initialised_state = time_fps::_state_uninitialised;
     this->_frame_duration_ms = 0.0;
     this->_frames_per_second = 0;
     this->_last_frame_time = std::chrono::steady_clock::time_point();
@@ -53,17 +53,17 @@ time_fps::time_fps(void) noexcept
 
 time_fps::~time_fps() noexcept
 {
-    if (this->_initialized_state == time_fps::_state_initialized)
+    if (this->_initialised_state == time_fps::_state_initialised)
         (void)this->destroy();
     return ;
 }
 
 int     time_fps::initialize(long frames_per_second) noexcept
 {
-    if (this->_initialized_state == time_fps::_state_initialized)
+    if (this->_initialised_state == time_fps::_state_initialised)
     {
         this->abort_lifecycle_error("time_fps::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_frame_duration_ms = 0.0;
@@ -74,7 +74,7 @@ int     time_fps::initialize(long frames_per_second) noexcept
         this->_frames_per_second = frames_per_second;
         this->_frame_duration_ms = 1000.0 / static_cast<double>(frames_per_second);
     }
-    this->_initialized_state = time_fps::_state_initialized;
+    this->_initialised_state = time_fps::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -82,7 +82,7 @@ int     time_fps::destroy(void) noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != time_fps::_state_initialized)
+    if (this->_initialised_state != time_fps::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
@@ -90,7 +90,7 @@ int     time_fps::destroy(void) noexcept
     this->_frame_duration_ms = 0.0;
     this->_frames_per_second = 0;
     this->_last_frame_time = std::chrono::steady_clock::time_point();
-    this->_initialized_state = time_fps::_state_destroyed;
+    this->_initialised_state = time_fps::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -100,7 +100,7 @@ long    time_fps::get_frames_per_second(void) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("time_fps::get_frames_per_second");
+    this->abort_if_not_initialised("time_fps::get_frames_per_second");
     frames_per_second_value = 0;
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
@@ -118,7 +118,7 @@ int     time_fps::set_frames_per_second(long frames_per_second) noexcept
     int unlock_error;
     int result;
 
-    this->abort_if_not_initialized("time_fps::set_frames_per_second");
+    this->abort_if_not_initialised("time_fps::set_frames_per_second");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -147,7 +147,7 @@ void    time_fps::sleep_to_next_frame(void) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("time_fps::sleep_to_next_frame");
+    this->abort_if_not_initialised("time_fps::sleep_to_next_frame");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -174,7 +174,7 @@ int     time_fps::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    this->abort_if_not_initialized("time_fps::enable_thread_safety");
+    this->abort_if_not_initialised("time_fps::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -194,7 +194,7 @@ int     time_fps::disable_thread_safety(void) noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("time_fps::disable_thread_safety");
+    this->abort_if_not_initialised("time_fps::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         destroy_error = this->_mutex->destroy();
@@ -213,7 +213,7 @@ bool    time_fps::is_thread_safe(void) const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *time_fps::get_mutex_for_validation(void) const noexcept
 {
-    this->abort_if_not_initialized("time_fps::get_mutex_for_validation");
+    this->abort_if_not_initialised("time_fps::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

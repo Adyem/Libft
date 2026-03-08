@@ -15,7 +15,7 @@ typedef struct s_su_health_check_entry
 static std::vector<s_su_health_check_entry> g_su_health_checks;
 static std::mutex                           g_su_health_checks_mutex;
 
-static int su_health_copy_entry(const s_su_health_check_entry &source,
+static int32_t su_health_copy_entry(const s_su_health_check_entry &source,
     s_su_health_check_entry &destination)
 {
     destination.name = source.name;
@@ -24,19 +24,19 @@ static int su_health_copy_entry(const s_su_health_check_entry &source,
     return (FT_ERR_SUCCESS);
 }
 
-static int su_health_execute_entry(const s_su_health_check_entry &entry,
+static int32_t su_health_execute_entry(const s_su_health_check_entry &entry,
     t_su_health_check_result *result)
 {
     ft_string    detail;
-    bool         healthy;
-    int          callback_result;
-    int          error_code;
+    ft_bool         healthy;
+    int32_t          callback_result;
+    int32_t          error_code;
 
-    healthy = true;
+    healthy = FT_TRUE;
     error_code = FT_ERR_SUCCESS;
     if (entry.callback == ft_nullptr)
     {
-        healthy = false;
+        healthy = FT_FALSE;
         error_code = FT_ERR_INVALID_POINTER;
     }
     else
@@ -44,7 +44,7 @@ static int su_health_execute_entry(const s_su_health_check_entry &entry,
         callback_result = entry.callback(entry.context, detail);
         if (callback_result != 0)
         {
-            healthy = false;
+            healthy = FT_FALSE;
             error_code = FT_ERR_INTERNAL;
         }
     }
@@ -55,24 +55,24 @@ static int su_health_execute_entry(const s_su_health_check_entry &entry,
         result->detail = detail;
         result->error_code = error_code;
     }
-    if (healthy == false)
+    if (healthy == FT_FALSE)
         return (error_code);
     return (FT_ERR_SUCCESS);
 }
 
-int su_health_register_check(const char *name, t_su_health_check check, void *context)
+int32_t su_health_register_check(const char *name, t_su_health_check check, void *context)
 {
-    size_t                   index;
+    ft_size_t                index;
     s_su_health_check_entry  stored_entry;
-    bool                     lock_acquired;
+    ft_bool                     lock_acquired;
 
     if (name == ft_nullptr || name[0] == '\0')
         return (-1);
     if (check == ft_nullptr)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     g_su_health_checks_mutex.lock();
-    lock_acquired = true;
+    lock_acquired = FT_TRUE;
     index = 0;
     while (index < g_su_health_checks.size())
     {
@@ -102,16 +102,16 @@ int su_health_register_check(const char *name, t_su_health_check check, void *co
     return (0);
 }
 
-int su_health_unregister_check(const char *name)
+int32_t su_health_unregister_check(const char *name)
 {
-    size_t index;
-    bool   lock_acquired;
+    ft_size_t index;
+    ft_bool   lock_acquired;
 
     if (name == ft_nullptr)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     g_su_health_checks_mutex.lock();
-    lock_acquired = true;
+    lock_acquired = FT_TRUE;
     index = 0;
     while (index < g_su_health_checks.size())
     {
@@ -137,18 +137,19 @@ void su_health_clear_checks(void)
     return ;
 }
 
-int su_health_run_checks(t_su_health_check_result *results, size_t capacity, size_t *count)
+int32_t su_health_run_checks(t_su_health_check_result *results,
+    ft_size_t capacity, ft_size_t *count)
 {
     std::vector<s_su_health_check_entry> local_checks;
-    size_t                               index;
-    int                                  execution_result;
-    bool                                 lock_acquired;
+    ft_size_t                            index;
+    int32_t                                  execution_result;
+    ft_bool                                 lock_acquired;
 
     if (count == ft_nullptr)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     g_su_health_checks_mutex.lock();
-    lock_acquired = true;
+    lock_acquired = FT_TRUE;
     try
     {
         local_checks.reserve(g_su_health_checks.size());
@@ -203,19 +204,19 @@ int su_health_run_checks(t_su_health_check_result *results, size_t capacity, siz
     return (0);
 }
 
-int su_health_run_check(const char *name, t_su_health_check_result *result)
+int32_t su_health_run_check(const char *name, t_su_health_check_result *result)
 {
     s_su_health_check_entry found_entry;
-    size_t                  index;
-    bool                    found;
-    bool                    lock_acquired;
+    ft_size_t               index;
+    ft_bool                    found;
+    ft_bool                    lock_acquired;
 
     if (name == ft_nullptr)
         return (-1);
-    found = false;
-    lock_acquired = false;
+    found = FT_FALSE;
+    lock_acquired = FT_FALSE;
     g_su_health_checks_mutex.lock();
-    lock_acquired = true;
+    lock_acquired = FT_TRUE;
     index = 0;
     while (index < g_su_health_checks.size())
     {
@@ -227,14 +228,14 @@ int su_health_run_check(const char *name, t_su_health_check_result *result)
                     g_su_health_checks_mutex.unlock();
                 return (-1);
             }
-            found = true;
+            found = FT_TRUE;
             break ;
         }
         index += 1;
     }
     if (lock_acquired)
         g_su_health_checks_mutex.unlock();
-    if (found == false)
+    if (found == FT_FALSE)
         return (-1);
     if (su_health_execute_entry(found_entry, result) != FT_ERR_SUCCESS)
         return (-1);

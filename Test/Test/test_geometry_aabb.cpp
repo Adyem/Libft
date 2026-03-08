@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Geometry/geometry.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
 #include <atomic>
@@ -44,7 +44,7 @@ static void aabb_initialize_twice_aborts_operation()
     return ;
 }
 
-static void aabb_destroy_uninitialized_aborts_operation()
+static void aabb_destroy_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -52,7 +52,7 @@ static void aabb_destroy_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_set_bounds_uninitialized_aborts_operation()
+static void aabb_set_bounds_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -69,7 +69,7 @@ static void aabb_destroy_twice_aborts_operation()
     return ;
 }
 
-static void aabb_destructor_uninitialized_aborts_operation()
+static void aabb_destructor_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -77,7 +77,7 @@ static void aabb_destructor_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_move_self_uninitialized_aborts_operation()
+static void aabb_move_self_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -85,7 +85,7 @@ static void aabb_move_self_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_initialize_copy_from_uninitialized_source_aborts_operation()
+static void aabb_initialize_copy_from_uninitialised_source_aborts_operation()
 {
     aabb source;
     aabb destination(0.0, 0.0, 1.0, 1.0);
@@ -95,7 +95,7 @@ static void aabb_initialize_copy_from_uninitialized_source_aborts_operation()
     return ;
 }
 
-static void aabb_initialize_move_from_uninitialized_source_aborts_operation()
+static void aabb_initialize_move_from_uninitialised_source_aborts_operation()
 {
     aabb source;
     aabb destination(0.0, 0.0, 1.0, 1.0);
@@ -129,7 +129,7 @@ static void aabb_initialize_move_from_destroyed_source_aborts_operation()
     return ;
 }
 
-static void aabb_get_minimum_x_uninitialized_aborts_operation()
+static void aabb_get_minimum_x_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -146,7 +146,7 @@ static void aabb_enable_thread_safety_destroyed_aborts_operation()
     return ;
 }
 
-static void aabb_initialize_copy_destination_initialized_aborts_operation()
+static void aabb_initialize_copy_destination_initialised_aborts_operation()
 {
     aabb source(0.0, 0.0, 1.0, 1.0);
     aabb destination(2.0, 2.0, 3.0, 3.0);
@@ -155,7 +155,7 @@ static void aabb_initialize_copy_destination_initialized_aborts_operation()
     return ;
 }
 
-static void aabb_initialize_move_destination_initialized_aborts_operation()
+static void aabb_initialize_move_destination_initialised_aborts_operation()
 {
     aabb source(0.0, 0.0, 1.0, 1.0);
     aabb destination(2.0, 2.0, 3.0, 3.0);
@@ -182,7 +182,7 @@ static void aabb_is_thread_safe_enabled_destroyed_aborts_operation()
     return ;
 }
 
-static void aabb_set_minimum_x_uninitialized_aborts_operation()
+static void aabb_set_minimum_x_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -190,7 +190,7 @@ static void aabb_set_minimum_x_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_get_maximum_y_uninitialized_aborts_operation()
+static void aabb_get_maximum_y_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -198,7 +198,7 @@ static void aabb_get_maximum_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_set_maximum_x_uninitialized_aborts_operation()
+static void aabb_set_maximum_x_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -206,7 +206,7 @@ static void aabb_set_maximum_x_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_get_minimum_y_uninitialized_aborts_operation()
+static void aabb_get_minimum_y_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -214,7 +214,7 @@ static void aabb_get_minimum_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_enable_thread_safety_uninitialized_aborts_operation()
+static void aabb_enable_thread_safety_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -222,7 +222,7 @@ static void aabb_enable_thread_safety_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_set_maximum_y_uninitialized_aborts_operation()
+static void aabb_set_maximum_y_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -230,7 +230,7 @@ static void aabb_set_maximum_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_get_maximum_x_uninitialized_aborts_operation()
+static void aabb_get_maximum_x_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -238,7 +238,7 @@ static void aabb_get_maximum_x_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_disable_thread_safety_uninitialized_aborts_operation()
+static void aabb_disable_thread_safety_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -246,7 +246,7 @@ static void aabb_disable_thread_safety_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_is_thread_safe_enabled_uninitialized_aborts_operation()
+static void aabb_is_thread_safe_enabled_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -254,7 +254,7 @@ static void aabb_is_thread_safe_enabled_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_set_minimum_uninitialized_aborts_operation()
+static void aabb_set_minimum_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -262,7 +262,7 @@ static void aabb_set_minimum_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_set_minimum_y_uninitialized_aborts_operation()
+static void aabb_set_minimum_y_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -270,7 +270,7 @@ static void aabb_set_minimum_y_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_set_maximum_uninitialized_aborts_operation()
+static void aabb_set_maximum_uninitialised_aborts_operation()
 {
     aabb box;
 
@@ -278,7 +278,7 @@ static void aabb_set_maximum_uninitialized_aborts_operation()
     return ;
 }
 
-static void aabb_move_two_uninitialized_aborts_operation()
+static void aabb_move_two_uninitialised_aborts_operation()
 {
     aabb source;
     aabb destination;
@@ -415,7 +415,7 @@ static int aabb_move_destroyed_destination_succeeds_operation()
     return (1);
 }
 
-static void aabb_move_uninitialized_source_aborts_operation()
+static void aabb_move_uninitialised_source_aborts_operation()
 {
     aabb source;
     aabb destination(2.0, 2.0, 3.0, 3.0);
@@ -424,7 +424,7 @@ static void aabb_move_uninitialized_source_aborts_operation()
     return ;
 }
 
-static void intersect_aabb_uninitialized_first_aborts_operation()
+static void intersect_aabb_uninitialised_first_aborts_operation()
 {
     aabb first;
     aabb second(0.0, 0.0, 1.0, 1.0);
@@ -433,7 +433,7 @@ static void intersect_aabb_uninitialized_first_aborts_operation()
     return ;
 }
 
-static void intersect_aabb_uninitialized_second_aborts_operation()
+static void intersect_aabb_uninitialised_second_aborts_operation()
 {
     aabb first(0.0, 0.0, 1.0, 1.0);
     aabb second;
@@ -442,7 +442,7 @@ static void intersect_aabb_uninitialized_second_aborts_operation()
     return ;
 }
 
-static void intersect_aabb_uninitialized_both_aborts_operation()
+static void intersect_aabb_uninitialised_both_aborts_operation()
 {
     aabb first;
     aabb second;
@@ -482,7 +482,7 @@ static void intersect_aabb_destroyed_both_aborts_operation()
     return ;
 }
 
-static void intersect_aabb_destroyed_and_uninitialized_aborts_operation()
+static void intersect_aabb_destroyed_and_uninitialised_aborts_operation()
 {
     aabb first(0.0, 0.0, 1.0, 1.0);
     aabb second;
@@ -493,7 +493,7 @@ static void intersect_aabb_destroyed_and_uninitialized_aborts_operation()
 }
 
 FT_TEST(test_aabb_initialize_setters_and_getters,
-    "aabb initialize, setters, and getters work in initialized lifecycle")
+    "aabb initialize, setters, and getters work in initialised lifecycle")
 {
     aabb box;
 
@@ -548,7 +548,7 @@ FT_TEST(test_aabb_invalid_minimum_maximum_setters_preserve_state,
 }
 
 FT_TEST(test_aabb_reinitialize_after_destroy,
-    "aabb can be initialized again after destroy")
+    "aabb can be initialised again after destroy")
 {
     aabb box;
 
@@ -2015,8 +2015,8 @@ FT_TEST(test_aabb_initialize_from_destroyed_source_aborts,
     return (1);
 }
 
-FT_TEST(test_aabb_move_self_initialized_is_noop,
-    "aabb move(self) returns success and keeps values when initialized")
+FT_TEST(test_aabb_move_self_initialised_is_noop,
+    "aabb move(self) returns success and keeps values when initialised")
 {
     aabb box;
 
@@ -2064,23 +2064,23 @@ FT_TEST(test_aabb_enable_thread_safety_allocation_failure,
 }
 
 FT_TEST(test_aabb_initialize_twice_aborts,
-    "aabb initialize aborts when called while already initialized")
+    "aabb initialize aborts when called while already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_destroy_uninitialized_aborts,
-    "aabb destroy aborts when object is uninitialized")
+FT_TEST(test_aabb_destroy_uninitialised_aborts,
+    "aabb destroy aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_destroy_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_set_bounds_uninitialized_aborts,
-    "aabb set_bounds aborts when object is uninitialized")
+FT_TEST(test_aabb_set_bounds_uninitialised_aborts,
+    "aabb set_bounds aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_set_bounds_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_set_bounds_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2091,41 +2091,41 @@ FT_TEST(test_aabb_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_aabb_uninitialized_destructor_aborts,
-    "aabb destructor aborts when object is left uninitialized")
+FT_TEST(test_aabb_uninitialised_destructor_aborts,
+    "aabb destructor aborts when object is left uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_destructor_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_destructor_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_self_move_uninitialized_aborts,
-    "aabb move(self) aborts when object is uninitialized")
+FT_TEST(test_aabb_self_move_uninitialised_aborts,
+    "aabb move(self) aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_move_self_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_move_self_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_initialize_copy_from_uninitialized_source_aborts,
-    "aabb initialize(copy) aborts when source object is uninitialized")
+FT_TEST(test_aabb_initialize_copy_from_uninitialised_source_aborts,
+    "aabb initialize(copy) aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_initialize_copy_from_uninitialized_source_aborts_operation));
+            aabb_initialize_copy_from_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_initialize_move_from_uninitialized_source_aborts,
-    "aabb initialize(move) aborts when source object is uninitialized")
+FT_TEST(test_aabb_initialize_move_from_uninitialised_source_aborts,
+    "aabb initialize(move) aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_initialize_move_from_uninitialized_source_aborts_operation));
+            aabb_initialize_move_from_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_get_minimum_x_uninitialized_aborts,
-    "aabb get_minimum_x aborts when object is uninitialized")
+FT_TEST(test_aabb_get_minimum_x_uninitialised_aborts,
+    "aabb get_minimum_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_get_minimum_x_uninitialized_aborts_operation));
+            aabb_get_minimum_x_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2137,19 +2137,19 @@ FT_TEST(test_aabb_enable_thread_safety_destroyed_aborts,
     return (1);
 }
 
-FT_TEST(test_aabb_initialize_copy_destination_initialized_aborts,
-    "aabb initialize(copy) aborts when destination is already initialized")
+FT_TEST(test_aabb_initialize_copy_destination_initialised_aborts,
+    "aabb initialize(copy) aborts when destination is already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_initialize_copy_destination_initialized_aborts_operation));
+            aabb_initialize_copy_destination_initialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_initialize_move_destination_initialized_aborts,
-    "aabb initialize(move) aborts when destination is already initialized")
+FT_TEST(test_aabb_initialize_move_destination_initialised_aborts,
+    "aabb initialize(move) aborts when destination is already initialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_initialize_move_destination_initialized_aborts_operation));
+            aabb_initialize_move_destination_initialised_aborts_operation));
     return (1);
 }
 
@@ -2169,107 +2169,107 @@ FT_TEST(test_aabb_is_thread_safe_enabled_destroyed_aborts,
     return (1);
 }
 
-FT_TEST(test_aabb_set_minimum_x_uninitialized_aborts,
-    "aabb set_minimum_x aborts when object is uninitialized")
+FT_TEST(test_aabb_set_minimum_x_uninitialised_aborts,
+    "aabb set_minimum_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_set_minimum_x_uninitialized_aborts_operation));
+            aabb_set_minimum_x_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_get_maximum_y_uninitialized_aborts,
-    "aabb get_maximum_y aborts when object is uninitialized")
+FT_TEST(test_aabb_get_maximum_y_uninitialised_aborts,
+    "aabb get_maximum_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_get_maximum_y_uninitialized_aborts_operation));
+            aabb_get_maximum_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_set_maximum_x_uninitialized_aborts,
-    "aabb set_maximum_x aborts when object is uninitialized")
+FT_TEST(test_aabb_set_maximum_x_uninitialised_aborts,
+    "aabb set_maximum_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_set_maximum_x_uninitialized_aborts_operation));
+            aabb_set_maximum_x_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_get_minimum_y_uninitialized_aborts,
-    "aabb get_minimum_y aborts when object is uninitialized")
+FT_TEST(test_aabb_get_minimum_y_uninitialised_aborts,
+    "aabb get_minimum_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_get_minimum_y_uninitialized_aborts_operation));
+            aabb_get_minimum_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_enable_thread_safety_uninitialized_aborts,
-    "aabb enable_thread_safety aborts when object is uninitialized")
+FT_TEST(test_aabb_enable_thread_safety_uninitialised_aborts,
+    "aabb enable_thread_safety aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_enable_thread_safety_uninitialized_aborts_operation));
+            aabb_enable_thread_safety_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_set_maximum_y_uninitialized_aborts,
-    "aabb set_maximum_y aborts when object is uninitialized")
+FT_TEST(test_aabb_set_maximum_y_uninitialised_aborts,
+    "aabb set_maximum_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_set_maximum_y_uninitialized_aborts_operation));
+            aabb_set_maximum_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_get_maximum_x_uninitialized_aborts,
-    "aabb get_maximum_x aborts when object is uninitialized")
+FT_TEST(test_aabb_get_maximum_x_uninitialised_aborts,
+    "aabb get_maximum_x aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_get_maximum_x_uninitialized_aborts_operation));
+            aabb_get_maximum_x_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_disable_thread_safety_uninitialized_aborts,
-    "aabb disable_thread_safety aborts when object is uninitialized")
+FT_TEST(test_aabb_disable_thread_safety_uninitialised_aborts,
+    "aabb disable_thread_safety aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_disable_thread_safety_uninitialized_aborts_operation));
+            aabb_disable_thread_safety_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_is_thread_safe_enabled_uninitialized_aborts,
-    "aabb is_thread_safe_enabled aborts when object is uninitialized")
+FT_TEST(test_aabb_is_thread_safe_enabled_uninitialised_aborts,
+    "aabb is_thread_safe_enabled aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_is_thread_safe_enabled_uninitialized_aborts_operation));
+            aabb_is_thread_safe_enabled_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_set_minimum_uninitialized_aborts,
-    "aabb set_minimum aborts when object is uninitialized")
+FT_TEST(test_aabb_set_minimum_uninitialised_aborts,
+    "aabb set_minimum aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_set_minimum_uninitialized_aborts_operation));
+            aabb_set_minimum_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_set_minimum_y_uninitialized_aborts,
-    "aabb set_minimum_y aborts when object is uninitialized")
+FT_TEST(test_aabb_set_minimum_y_uninitialised_aborts,
+    "aabb set_minimum_y aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_set_minimum_y_uninitialized_aborts_operation));
+            aabb_set_minimum_y_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_set_maximum_uninitialized_aborts,
-    "aabb set_maximum aborts when object is uninitialized")
+FT_TEST(test_aabb_set_maximum_uninitialised_aborts,
+    "aabb set_maximum aborts when object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_set_maximum_uninitialized_aborts_operation));
+            aabb_set_maximum_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_move_two_uninitialized_aborts,
-    "aabb move aborts when both objects are uninitialized")
+FT_TEST(test_aabb_move_two_uninitialised_aborts,
+    "aabb move aborts when both objects are uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_move_two_uninitialized_aborts_operation));
+            aabb_move_two_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2376,35 +2376,35 @@ FT_TEST(test_aabb_move_destroyed_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_aabb_move_uninitialized_source_aborts,
-    "aabb move aborts when source object is uninitialized")
+FT_TEST(test_aabb_move_uninitialised_source_aborts,
+    "aabb move aborts when source object is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            aabb_move_uninitialized_source_aborts_operation));
+            aabb_move_uninitialised_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_uninitialized_first_aborts,
-    "intersect_aabb aborts when first box is uninitialized")
+FT_TEST(test_intersect_aabb_uninitialised_first_aborts,
+    "intersect_aabb aborts when first box is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_aabb_uninitialized_first_aborts_operation));
+            intersect_aabb_uninitialised_first_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_uninitialized_second_aborts,
-    "intersect_aabb aborts when second box is uninitialized")
+FT_TEST(test_intersect_aabb_uninitialised_second_aborts,
+    "intersect_aabb aborts when second box is uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_aabb_uninitialized_second_aborts_operation));
+            intersect_aabb_uninitialised_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_uninitialized_both_aborts,
-    "intersect_aabb aborts when both boxes are uninitialized")
+FT_TEST(test_intersect_aabb_uninitialised_both_aborts,
+    "intersect_aabb aborts when both boxes are uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_aabb_uninitialized_both_aborts_operation));
+            intersect_aabb_uninitialised_both_aborts_operation));
     return (1);
 }
 
@@ -2432,11 +2432,11 @@ FT_TEST(test_intersect_aabb_destroyed_both_aborts,
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_destroyed_and_uninitialized_aborts,
-    "intersect_aabb aborts when first is destroyed and second uninitialized")
+FT_TEST(test_intersect_aabb_destroyed_and_uninitialised_aborts,
+    "intersect_aabb aborts when first is destroyed and second uninitialised")
 {
     FT_ASSERT_EQ(1, geometry_expect_sigabrt(
-            intersect_aabb_destroyed_and_uninitialized_aborts_operation));
+            intersect_aabb_destroyed_and_uninitialised_aborts_operation));
     return (1);
 }
 

@@ -11,7 +11,7 @@ class ft_unique_lock
     private:
         MutexType *_mutex;
         bool _owns_lock;
-        bool _initialized;
+        bool _initialised;
         int32_t _last_error;
 
     public:
@@ -34,7 +34,7 @@ class ft_unique_lock
         int32_t unlock();
 
         bool owns_lock() const noexcept;
-        bool is_initialized() const noexcept;
+        bool is_initialised() const noexcept;
         MutexType *mutex() const noexcept;
         int32_t last_operation_error() const noexcept;
         int32_t get_error() const noexcept;
@@ -44,7 +44,7 @@ template <typename MutexType>
 ft_unique_lock<MutexType>::ft_unique_lock() noexcept
     : _mutex(ft_nullptr)
     , _owns_lock(false)
-    , _initialized(false)
+    , _initialised(false)
     , _last_error(FT_ERR_SUCCESS)
 {
     return ;
@@ -54,7 +54,7 @@ template <typename MutexType>
 ft_unique_lock<MutexType>::ft_unique_lock(MutexType &mutex) noexcept
     : _mutex(ft_nullptr)
     , _owns_lock(false)
-    , _initialized(false)
+    , _initialised(false)
     , _last_error(FT_ERR_SUCCESS)
 {
     this->_last_error = this->initialize(mutex);
@@ -74,16 +74,16 @@ template <typename MutexType>
 ft_unique_lock<MutexType>::ft_unique_lock(ft_unique_lock &&other) noexcept
     : _mutex(ft_nullptr)
     , _owns_lock(false)
-    , _initialized(false)
+    , _initialised(false)
     , _last_error(FT_ERR_SUCCESS)
 {
     this->_mutex = other._mutex;
     this->_owns_lock = other._owns_lock;
-    this->_initialized = other._initialized;
+    this->_initialised = other._initialised;
     this->_last_error = other._last_error;
     other._mutex = ft_nullptr;
     other._owns_lock = false;
-    other._initialized = false;
+    other._initialised = false;
     other._last_error = FT_ERR_SUCCESS;
     return ;
 }
@@ -96,11 +96,11 @@ ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &
     (void)this->destroy();
     this->_mutex = other._mutex;
     this->_owns_lock = other._owns_lock;
-    this->_initialized = other._initialized;
+    this->_initialised = other._initialised;
     this->_last_error = other._last_error;
     other._mutex = ft_nullptr;
     other._owns_lock = false;
-    other._initialized = false;
+    other._initialised = false;
     other._last_error = FT_ERR_SUCCESS;
     return (*this);
 }
@@ -109,13 +109,13 @@ ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &
 template <typename MutexType>
 int32_t ft_unique_lock<MutexType>::initialize(MutexType &mutex)
 {
-    if (this->_initialized)
+    if (this->_initialised)
     {
         this->_last_error = FT_ERR_INVALID_STATE;
         return (this->_last_error);
     }
     this->_mutex = &mutex;
-    this->_initialized = true;
+    this->_initialised = true;
     this->_last_error = FT_ERR_SUCCESS;
     return (this->_last_error);
 }
@@ -123,7 +123,7 @@ int32_t ft_unique_lock<MutexType>::initialize(MutexType &mutex)
 template <typename MutexType>
 int32_t ft_unique_lock<MutexType>::destroy()
 {
-    if (!this->_initialized)
+    if (!this->_initialised)
     {
         this->_last_error = FT_ERR_SUCCESS;
         return (this->_last_error);
@@ -132,7 +132,7 @@ int32_t ft_unique_lock<MutexType>::destroy()
         (void)this->unlock();
     this->_mutex = ft_nullptr;
     this->_owns_lock = false;
-    this->_initialized = false;
+    this->_initialised = false;
     this->_last_error = FT_ERR_SUCCESS;
     return (this->_last_error);
 }
@@ -140,7 +140,7 @@ int32_t ft_unique_lock<MutexType>::destroy()
 template <typename MutexType>
 int32_t ft_unique_lock<MutexType>::lock()
 {
-    if (!this->_initialized || this->_mutex == ft_nullptr)
+    if (!this->_initialised || this->_mutex == ft_nullptr)
     {
         this->_last_error = FT_ERR_INVALID_ARGUMENT;
         return (this->_last_error);
@@ -159,7 +159,7 @@ int32_t ft_unique_lock<MutexType>::lock()
 template <typename MutexType>
 int32_t ft_unique_lock<MutexType>::unlock()
 {
-    if (!this->_initialized || this->_mutex == ft_nullptr)
+    if (!this->_initialised || this->_mutex == ft_nullptr)
     {
         this->_last_error = FT_ERR_INVALID_ARGUMENT;
         return (this->_last_error);
@@ -182,9 +182,9 @@ bool ft_unique_lock<MutexType>::owns_lock() const noexcept
 }
 
 template <typename MutexType>
-bool ft_unique_lock<MutexType>::is_initialized() const noexcept
+bool ft_unique_lock<MutexType>::is_initialised() const noexcept
 {
-    return (this->_initialized);
+    return (this->_initialised);
 }
 
 template <typename MutexType>

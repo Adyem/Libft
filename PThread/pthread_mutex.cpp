@@ -9,7 +9,7 @@
 #include "../System_utils/system_utils.hpp"
 
 pt_mutex::pt_mutex()
-    : _owner(0), _lock(false), _native_mutex(ft_nullptr), _initialized_state(pt_mutex::_state_uninitialized),
+    : _owner(0), _lock(false), _native_mutex(ft_nullptr), _initialised_state(pt_mutex::_state_uninitialised),
     _state_mutex(ft_nullptr), _valid_state(false)
 {
     return ;
@@ -17,9 +17,9 @@ pt_mutex::pt_mutex()
 
 pt_mutex::~pt_mutex()
 {
-    if (this->_initialized_state != pt_mutex::_state_initialized)
+    if (this->_initialised_state != pt_mutex::_state_initialised)
     {
-        this->_initialized_state = pt_mutex::_state_destroyed;
+        this->_initialised_state = pt_mutex::_state_destroyed;
         this->teardown_thread_safety();
         return ;
     }
@@ -30,11 +30,11 @@ pt_mutex::~pt_mutex()
 
 int pt_mutex::ensure_native_mutex() const
 {
-    this->abort_if_not_initialized("pt_mutex::ensure_native_mutex");
+    this->abort_if_not_initialised("pt_mutex::ensure_native_mutex");
     if (this->_native_mutex == ft_nullptr)
     {
         this->abort_lifecycle_error("pt_mutex::ensure_native_mutex",
-            "native mutex pointer is null while object is initialized");
+            "native mutex pointer is null while object is initialised");
         return (FT_ERR_INVALID_STATE);
     }
     return (FT_ERR_SUCCESS);
@@ -42,10 +42,10 @@ int pt_mutex::ensure_native_mutex() const
 
 int pt_mutex::initialize()
 {
-    if (this->_initialized_state == pt_mutex::_state_initialized)
+    if (this->_initialised_state == pt_mutex::_state_initialised)
     {
         this->abort_lifecycle_error("pt_mutex::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this->_native_mutex != ft_nullptr)
@@ -56,33 +56,33 @@ int pt_mutex::initialize()
     this->_native_mutex = new (std::nothrow) std::mutex();
     if (this->_native_mutex == ft_nullptr)
     {
-        this->_initialized_state = pt_mutex::_state_destroyed;
+        this->_initialised_state = pt_mutex::_state_destroyed;
         this->_valid_state.store(false, std::memory_order_release);
         return (FT_ERR_NO_MEMORY);
     }
-    this->_initialized_state = pt_mutex::_state_initialized;
+    this->_initialised_state = pt_mutex::_state_initialised;
     this->_valid_state.store(true, std::memory_order_release);
     return (FT_ERR_SUCCESS);
 }
 
 int pt_mutex::destroy()
 {
-    if (this->_initialized_state != pt_mutex::_state_initialized)
+    if (this->_initialised_state != pt_mutex::_state_initialised)
     {
-        this->_initialized_state = pt_mutex::_state_destroyed;
+        this->_initialised_state = pt_mutex::_state_destroyed;
         this->teardown_thread_safety();
         return (FT_ERR_SUCCESS);
     }
     if (this->_native_mutex == ft_nullptr)
     {
-        this->_initialized_state = pt_mutex::_state_destroyed;
+        this->_initialised_state = pt_mutex::_state_destroyed;
         return (FT_ERR_SUCCESS);
     }
     if (this->_lock.load(std::memory_order_acquire))
         return (FT_ERR_THREAD_BUSY);
     delete this->_native_mutex;
     this->_native_mutex = ft_nullptr;
-    this->_initialized_state = pt_mutex::_state_destroyed;
+    this->_initialised_state = pt_mutex::_state_destroyed;
     this->_valid_state.store(false, std::memory_order_release);
     this->_lock.store(false, std::memory_order_release);
     this->_owner.store(0, std::memory_order_release);
@@ -103,24 +103,24 @@ void pt_mutex::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void pt_mutex::abort_if_not_initialized(const char *method_name) const
+void pt_mutex::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == pt_mutex::_state_initialized)
+    if (this->_initialised_state == pt_mutex::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 bool pt_mutex::lockState() const
 {
-    this->abort_if_not_initialized("pt_mutex::lockState");
+    this->abort_if_not_initialised("pt_mutex::lockState");
     return (this->_lock.load(std::memory_order_acquire));
 }
 
 int pt_mutex::lock_internal(bool *lock_acquired) const
 {
-    this->abort_if_not_initialized("pt_mutex::lock_internal");
+    this->abort_if_not_initialised("pt_mutex::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
@@ -137,7 +137,7 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
 
 int pt_mutex::unlock_internal(bool lock_acquired) const
 {
-    this->abort_if_not_initialized("pt_mutex::unlock_internal");
+    this->abort_if_not_initialised("pt_mutex::unlock_internal");
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     this->_state_mutex->unlock_state(lock_acquired);
@@ -156,7 +156,7 @@ void pt_mutex::teardown_thread_safety()
 
 int pt_mutex::lock_state(bool *lock_acquired) const
 {
-    this->abort_if_not_initialized("pt_mutex::lock_state");
+    this->abort_if_not_initialised("pt_mutex::lock_state");
     int lock_error = this->lock_internal(lock_acquired);
 
     if (lock_error == FT_ERR_SUCCESS)
@@ -166,14 +166,14 @@ int pt_mutex::lock_state(bool *lock_acquired) const
 
 void pt_mutex::unlock_state(bool lock_acquired) const
 {
-    this->abort_if_not_initialized("pt_mutex::unlock_state");
+    this->abort_if_not_initialised("pt_mutex::unlock_state");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 bool pt_mutex::is_owned_by_thread(pt_thread_id_type thread_id) const
 {
-    this->abort_if_not_initialized("pt_mutex::is_owned_by_thread");
+    this->abort_if_not_initialised("pt_mutex::is_owned_by_thread");
     pthread_t owner_thread;
     pt_mutex_vector owned_mutexes;
     ft_size_t index;

@@ -11,7 +11,7 @@ The printf subsystem offers flexible formatting helpers that frequently operate 
 ## Thread-safety guarantees
 
 1. Reentrant formatters (`pf_vsnprintf`, `pf_snprintf`, `pf_vsprintf`, `pf_sprintf`) are safe to call concurrently as long as each call uses distinct output buffers.
-2. Internal global tables (conversion dispatchers, flag parsers) are initialized during static startup and never mutated after initialization, so they can be accessed concurrently without locking.
+2. Internal global tables (conversion dispatchers, flag parsers) are initialised during static startup and never mutated after initialization, so they can be accessed concurrently without locking.
 3. Registration helpers (`pf_register_specifier`, `pf_unregister_specifier`) acquire the internal mutex and are safe to call from multiple threads. They should be invoked during application startup to avoid contention on the hot path.
 4. Helper wrappers that append directly to shared containers do **not** take locks. Callers must coordinate access to these containers.
 

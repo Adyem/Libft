@@ -19,8 +19,8 @@ int64_t ft_strtol(const char *input_string, char **end_pointer, int32_t numeric_
     int32_t sign_value = 1;
     uint64_t accumulated_value = 0;
     int32_t digit_value;
-    bool overflow_detected = false;
-    bool digit_processed = false;
+    ft_bool overflow_detected = FT_FALSE;
+    ft_bool digit_processed = FT_FALSE;
     uint64_t positive_limit;
     uint64_t negative_limit;
     uint64_t base_value;
@@ -76,7 +76,7 @@ int64_t ft_strtol(const char *input_string, char **end_pointer, int32_t numeric_
         uint64_t digit_as_unsigned;
 
         digit_as_unsigned = static_cast<uint64_t>(digit_value);
-        digit_processed = true;
+        digit_processed = FT_TRUE;
         limit_value = positive_limit;
         if (sign_value < 0)
             limit_value = negative_limit;
@@ -88,7 +88,7 @@ int64_t ft_strtol(const char *input_string, char **end_pointer, int32_t numeric_
                 || (accumulated_value == limit_division
                     && digit_as_unsigned > limit_remainder))
         {
-            overflow_detected = true;
+            overflow_detected = FT_TRUE;
             accumulated_value = limit_value;
             ++current_character;
             while (ft_digit_value(*current_character) >= 0

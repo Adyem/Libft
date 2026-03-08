@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../RNG/rng.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "rng_test_utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD

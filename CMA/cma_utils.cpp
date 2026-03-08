@@ -2,8 +2,6 @@
 #include <cstdlib>
 #include <cstddef>
 #include <cstring>
-#include <sys/mman.h>
-#include <unistd.h>
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../Logger/logger.hpp"
@@ -22,7 +20,7 @@ static ft_size_t determine_page_size(ft_size_t size)
 
 static void determine_page_use(Page *page)
 {
-    if (page->heap == false)
+    if (page->heap == FT_FALSE)
         page->alloc_size_type = 0;
     else if (page->size == SMALL_ALLOC)
         page->alloc_size_type = 0;
@@ -59,20 +57,20 @@ static void report_corrupted_block(Block *block, const char *context,
     return ;
 }
 
-static int32_t are_blocks_adjacent(Block *left_block, Block *right_block)
+static ft_bool are_blocks_adjacent(Block *left_block, Block *right_block)
 {
     unsigned char   *expected_address;
     unsigned char   *actual_address;
 
     if (left_block == ft_nullptr || right_block == ft_nullptr)
-        return (0);
+        return (FT_FALSE);
     if (left_block->payload == ft_nullptr || right_block->payload == ft_nullptr)
-        return (0);
+        return (FT_FALSE);
     expected_address = left_block->payload + left_block->size;
     actual_address = right_block->payload;
     if (expected_address == actual_address)
-        return (1);
-    return (0);
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
 static void verify_forward_link(Block *block, Block *next_block)
@@ -80,7 +78,7 @@ static void verify_forward_link(Block *block, Block *next_block)
     if (next_block->prev != block)
         report_corrupted_block(next_block, "merge_block inconsistent next link",
             ft_nullptr);
-    if (are_blocks_adjacent(block, next_block) == 0)
+    if (are_blocks_adjacent(block, next_block) == FT_FALSE)
         report_corrupted_block(next_block, "merge_block detached next neighbor",
             ft_nullptr);
     return ;
@@ -91,7 +89,7 @@ static void verify_backward_link(Block *block, Block *previous_block)
     if (previous_block->next != block)
         report_corrupted_block(previous_block,
             "merge_block inconsistent prev link", ft_nullptr);
-    if (are_blocks_adjacent(previous_block, block) == 0)
+    if (are_blocks_adjacent(previous_block, block) == FT_FALSE)
         report_corrupted_block(previous_block,
             "merge_block detached prev neighbor", ft_nullptr);
     return ;
@@ -100,8 +98,8 @@ static void verify_backward_link(Block *block, Block *previous_block)
 void cma_validate_block(Block *block, const char *context, void *user_pointer)
 {
     const char    *location;
-    bool            sentinel_free;
-    bool            sentinel_allocated;
+    ft_bool            sentinel_free;
+    ft_bool            sentinel_allocated;
 
     location = context;
     if (block == ft_nullptr)
@@ -114,9 +112,9 @@ void cma_validate_block(Block *block, const char *context, void *user_pointer)
     sentinel_allocated = (block->magic == MAGIC_NUMBER_ALLOCATED);
     if (!sentinel_free && !sentinel_allocated)
         report_corrupted_block(block, location, user_pointer);
-    if (sentinel_free && block->free == false)
+    if (sentinel_free && block->free == FT_FALSE)
         cma_mark_block_free(block);
-    if (sentinel_allocated && block->free == true)
+    if (sentinel_allocated && block->free == FT_TRUE)
         cma_mark_block_allocated(block);
     if (block->payload == ft_nullptr)
         report_corrupted_block(block, location, user_pointer);
@@ -140,15 +138,15 @@ Block* split_block(Block* block, ft_size_t size)
     ft_size_t    remaining_size;
     ft_size_t    minimum_payload;
     Block       *result_block;
-    bool         metadata_guarded;
+    ft_bool         metadata_guarded;
 
     result_block = block;
-    metadata_guarded = false;
+    metadata_guarded = FT_FALSE;
     cma_validate_block(block, "split_block", ft_nullptr);
     metadata_guarded = cma_metadata_guard_increment();
     if (!metadata_guarded)
         goto split_block_cleanup;
-    if (cma_metadata_make_writable() != 0)
+    if (cma_metadata_make_writable() != FT_ERR_SUCCESS)
         goto split_block_cleanup;
     available_size = block->size;
     if (size >= available_size)
@@ -206,41 +204,41 @@ split_block_cleanup:
 Page *create_page(ft_size_t size)
 {
     ft_size_t page_size = determine_page_size(size);
-    bool use_heap = true;
+    ft_bool use_heap = FT_TRUE;
 
     if (page_list == ft_nullptr)
     {
         page_size = PAGE_SIZE;
-        use_heap = false;
+        use_heap = FT_FALSE;
     }
     else
     {
         if (size > determine_page_size(size))
             page_size = size;
     }
-    void* ptr;
+    void* memory_pointer;
     if (use_heap)
     {
-        ptr = std::malloc(page_size);
-        if (!ptr)
+        memory_pointer = std::malloc(page_size);
+        if (!memory_pointer)
             return (ft_nullptr);
     }
     else
     {
-        ptr = create_stack_block();
-        if (!ptr)
+        memory_pointer = create_stack_block();
+        if (!memory_pointer)
             return (ft_nullptr);
     }
     Page* page = static_cast<Page*>(std::malloc(sizeof(Page)));
     if (!page)
     {
         if (use_heap)
-            std::free(ptr);
+            std::free(memory_pointer);
         return (ft_nullptr);
     }
     std::memset(page, 0, sizeof(Page));
     page->heap = use_heap;
-    page->start = ptr;
+    page->start = memory_pointer;
     page->size = page_size;
     page->next = ft_nullptr;
     page->prev = ft_nullptr;
@@ -248,12 +246,12 @@ Page *create_page(ft_size_t size)
     if (page->blocks == ft_nullptr)
     {
         if (use_heap)
-            std::free(ptr);
+            std::free(memory_pointer);
         std::free(page);
         return (ft_nullptr);
     }
     page->blocks->size = page_size;
-    page->blocks->payload = static_cast<unsigned char *>(ptr);
+    page->blocks->payload = static_cast<unsigned char *>(memory_pointer);
     cma_debug_initialize_block(page->blocks);
     cma_mark_block_free(page->blocks);
     page->blocks->next = ft_nullptr;
@@ -400,7 +398,7 @@ Page *find_page_of_block(Block *block)
 
 void free_page_if_empty(Page *page)
 {
-    if (!page || page->heap == false)
+    if (!page || page->heap == FT_FALSE)
         return ;
     if (page->blocks && cma_block_is_free(page->blocks) &&
         page->blocks->next == ft_nullptr &&
@@ -425,7 +423,7 @@ int32_t cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *current_bytes,
         ft_size_t *peak_bytes)
 {
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESS)

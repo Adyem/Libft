@@ -17,18 +17,18 @@ static ft_size_t safe_strlen(const char *string)
     return (length);
 }
 
-static bool is_in_set(char character, const char *set)
+static ft_bool is_in_set(char character, const char *set)
 {
     if (set == ft_nullptr)
-        return (false);
+        return (FT_FALSE);
     ft_size_t index = 0;
     while (set[index] != '\0')
     {
         if (set[index] == character)
-            return (true);
+            return (FT_TRUE);
         index += 1;
     }
-    return (false);
+    return (FT_FALSE);
 }
 
 char *adv_strtrim(const char *input_string, const char *set)

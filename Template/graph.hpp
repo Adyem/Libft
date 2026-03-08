@@ -32,11 +32,11 @@ class ft_graph
         size_t                     _size;
         size_t                     _initial_capacity;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                    _initialized_state;
+        uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -57,12 +57,12 @@ class ft_graph
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -217,7 +217,7 @@ class ft_graph
         explicit ft_graph(size_t initial_capacity = 0)
             : _nodes(ft_nullptr), _node_capacity(0), _size(0),
               _initial_capacity(initial_capacity), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -225,7 +225,7 @@ class ft_graph
 
         ~ft_graph()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -241,10 +241,10 @@ class ft_graph
         {
             size_t index;
 
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_graph::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_nodes = ft_nullptr;
@@ -256,7 +256,7 @@ class ft_graph
                         * this->_initial_capacity));
                 if (this->_nodes == ft_nullptr)
                 {
-                    this->_initialized_state = _state_destroyed;
+                    this->_initialised_state = _state_destroyed;
                     return (set_last_operation_error(FT_ERR_NO_MEMORY));
                 }
                 this->_node_capacity = this->_initial_capacity;
@@ -270,7 +270,7 @@ class ft_graph
                     ++index;
                 }
             }
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -280,7 +280,7 @@ class ft_graph
             int lock_error;
             int unlock_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -296,7 +296,7 @@ class ft_graph
             unlock_error = this->unlock_internal(lock_acquired);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -308,7 +308,7 @@ class ft_graph
             VertexType *new_value;
             size_t index;
 
-            this->abort_if_not_initialized("ft_graph::add_vertex(copy)");
+            this->abort_if_not_initialised("ft_graph::add_vertex(copy)");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -347,7 +347,7 @@ class ft_graph
             VertexType *new_value;
             size_t index;
 
-            this->abort_if_not_initialized("ft_graph::add_vertex(move)");
+            this->abort_if_not_initialised("ft_graph::add_vertex(move)");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -385,7 +385,7 @@ class ft_graph
             int unlock_error;
             graph_node *node;
 
-            this->abort_if_not_initialized("ft_graph::add_edge");
+            this->abort_if_not_initialised("ft_graph::add_edge");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -434,7 +434,7 @@ class ft_graph
             size_t edge_index;
             size_t adjacent;
 
-            this->abort_if_not_initialized("ft_graph::bfs");
+            this->abort_if_not_initialised("ft_graph::bfs");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -517,7 +517,7 @@ class ft_graph
             size_t edge_index;
             size_t adjacent;
 
-            this->abort_if_not_initialized("ft_graph::dfs");
+            this->abort_if_not_initialised("ft_graph::dfs");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -594,7 +594,7 @@ class ft_graph
             int unlock_error;
             size_t edge_index;
 
-            this->abort_if_not_initialized("ft_graph::neighbors");
+            this->abort_if_not_initialised("ft_graph::neighbors");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -634,7 +634,7 @@ class ft_graph
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_graph::size");
+            this->abort_if_not_initialised("ft_graph::size");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -654,7 +654,7 @@ class ft_graph
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_graph::empty");
+            this->abort_if_not_initialised("ft_graph::empty");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -673,7 +673,7 @@ class ft_graph
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_graph::clear");
+            this->abort_if_not_initialised("ft_graph::clear");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -697,7 +697,7 @@ class ft_graph
             pt_recursive_mutex *new_mutex;
             int initialize_result;
 
-            this->abort_if_not_initialized("ft_graph::enable_thread_safety");
+            this->abort_if_not_initialised("ft_graph::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -718,8 +718,8 @@ class ft_graph
             pt_recursive_mutex *mutex_pointer;
             int destroy_result;
 
-            if (this->_initialized_state != _state_initialized
-                && this->_initialized_state != _state_destroyed)
+            if (this->_initialised_state != _state_initialised
+                && this->_initialised_state != _state_destroyed)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
@@ -734,7 +734,7 @@ class ft_graph
 
         bool is_thread_safe() const
         {
-            this->abort_if_not_initialized("ft_graph::is_thread_safe");
+            this->abort_if_not_initialised("ft_graph::is_thread_safe");
             set_last_operation_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
@@ -743,7 +743,7 @@ class ft_graph
         {
             int lock_result;
 
-            this->abort_if_not_initialized("ft_graph::lock");
+            this->abort_if_not_initialised("ft_graph::lock");
             lock_result = this->lock_internal(lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (-1);

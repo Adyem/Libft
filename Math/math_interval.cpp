@@ -3,7 +3,7 @@
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
 
-static ft_interval ft_interval_error(int error_code)
+static ft_interval ft_interval_error(int32_t error_code)
 {
     ft_interval interval;
 
@@ -123,7 +123,7 @@ static double ft_interval_max(double first_value, double second_value)
     return (second_value);
 }
 
-static int ft_interval_spans_zero(const ft_interval &interval)
+static int32_t ft_interval_spans_zero(const ft_interval &interval)
 {
     if (interval.lower > 0.0)
         return (0);
@@ -139,8 +139,8 @@ ft_interval ft_interval_multiply(const ft_interval &left_interval, const ft_inte
     double minimum_value;
     double maximum_value;
     double products[6];
-    size_t product_count;
-    size_t product_index;
+    ft_size_t product_count;
+    ft_size_t product_index;
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
     if (input_error._error_code != FT_ERR_SUCCESS)
@@ -225,10 +225,10 @@ ft_interval ft_interval_widen(const ft_interval &interval, double absolute_error
 
 ft_interval ft_interval_propagate_linear(const ft_interval *components,
         const double *sensitivities,
-        size_t component_count) noexcept
+        ft_size_t component_count) noexcept
 {
     ft_interval result;
-    size_t index;
+    ft_size_t index;
     double minimum_sum;
     double maximum_sum;
 
@@ -272,7 +272,7 @@ ft_interval ft_interval_propagate_linear(const ft_interval *components,
     return (result);
 }
 
-int ft_interval_get_error(const ft_interval *interval) noexcept
+int32_t ft_interval_get_error(const ft_interval *interval) noexcept
 {
     if (interval == ft_nullptr)
     {
@@ -283,7 +283,7 @@ int ft_interval_get_error(const ft_interval *interval) noexcept
 
 const char *ft_interval_get_error_str(const ft_interval *interval) noexcept
 {
-    int error_code;
+    int32_t error_code;
 
     error_code = ft_interval_get_error(interval);
     return (ft_strerror(error_code));
@@ -307,7 +307,7 @@ double ft_interval_radius(const ft_interval &interval) noexcept
     return ((interval.upper - interval.lower) / 2.0);
 }
 
-int ft_interval_contains(const ft_interval &interval, double value) noexcept
+int32_t ft_interval_contains(const ft_interval &interval, double value) noexcept
 {
     if (interval._error_code != FT_ERR_SUCCESS)
     {

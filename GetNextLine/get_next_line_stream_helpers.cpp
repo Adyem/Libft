@@ -18,66 +18,92 @@
 # define FILE_BINARY_FLAG 0
 #endif
 
-static int append_line_to_vector(ft_vector<ft_string> &, char *line_buffer)
+static int32_t append_line_to_vector(ft_vector<ft_string> &lines, char *line_buffer)
 {
+    ft_string line_string;
+    int32_t initialize_error;
+    int32_t push_error;
+
+    if (!line_buffer)
+        return (FT_ERR_INVALID_ARGUMENT);
+    initialize_error = line_string.initialize(line_buffer);
     if (line_buffer)
         cma_free(line_buffer);
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    lines.push_back(line_string);
+    push_error = ft_vector<ft_string>::last_operation_error();
+    if (push_error != FT_ERR_SUCCESS)
+        return (push_error);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_read_file_lines(int file_descriptor, ft_vector<ft_string> &lines, std::size_t buffer_size)
+int32_t ft_read_file_lines(int32_t file_descriptor, ft_vector<ft_string> &lines, ft_size_t buffer_size)
 {
     char *line_pointer;
-    bool finished;
-    int append_status;
-    int clear_status;
+    ft_bool finished;
+    int32_t append_status;
+    int32_t clear_status;
 
     if (buffer_size == 0 || file_descriptor < 0)
-        return (-1);
-    finished = false;
-    while (finished == false)
+        return (FT_ERR_INVALID_ARGUMENT);
+    finished = FT_FALSE;
+    while (finished == FT_FALSE)
     {
         line_pointer = get_next_line(file_descriptor, buffer_size);
         if (!line_pointer)
         {
-            finished = true;
+            finished = FT_TRUE;
         }
         else
         {
             append_status = append_line_to_vector(lines, line_pointer);
             if (append_status != FT_ERR_SUCCESS)
             {
-                gnl_clear_stream(file_descriptor);
-                return (-1);
+                (void)gnl_clear_stream(file_descriptor);
+                return (append_status);
             }
         }
     }
     clear_status = gnl_clear_stream(file_descriptor);
     if (clear_status != FT_ERR_SUCCESS)
-        return (-1);
-    return (0);
+        return (clear_status);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_open_and_read_file(const char *path, ft_vector<ft_string> &lines, std::size_t buffer_size)
+int32_t ft_open_and_read_file(const char *path, ft_vector<ft_string> &lines, ft_size_t buffer_size)
 {
-    int file_descriptor;
-    int open_flags;
-    int read_result;
-    int close_result;
+    int32_t file_descriptor;
+    int32_t open_flags;
+    int32_t read_result;
+    int32_t close_result;
+    int32_t close_error;
+    int32_t open_error;
 
     if (!path)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (buffer_size == 0)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     open_flags = O_RDONLY | FILE_BINARY_FLAG;
     file_descriptor = open(path, open_flags);
     if (file_descriptor < 0)
-        return (-1);
+    {
+        open_error = cmp_map_system_error_to_ft(errno);
+        if (open_error == FT_ERR_SUCCESS)
+            open_error = FT_ERR_IO;
+        return (open_error);
+    }
     read_result = ft_read_file_lines(file_descriptor, lines, buffer_size);
     close_result = close(file_descriptor);
     if (close_result != 0)
-        return (-1);
-    if (read_result != 0)
-        return (-1);
-    return (0);
+    {
+        close_error = cmp_map_system_error_to_ft(errno);
+        if (close_error == FT_ERR_SUCCESS)
+            close_error = FT_ERR_IO;
+        if (read_result == FT_ERR_SUCCESS)
+            return (close_error);
+    }
+    if (read_result != FT_ERR_SUCCESS)
+        return (read_result);
+    return (FT_ERR_SUCCESS);
 }

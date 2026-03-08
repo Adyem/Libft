@@ -1,30 +1,30 @@
 #include "roll.hpp"
 #include "math_internal.hpp"
 
-int    math_roll_check_number_next(char *string, int i)
+int32_t    math_roll_check_number_next(char *string, int32_t index)
 {
-    if (!(string[i + 1] == '+' || string[i + 1] == '-' ||
-            (string[i + 1] >= '0' && string[i + 1] <= '9')))
+    if (!(string[index + 1] == '+' || string[index + 1] == '-' ||
+            (string[index + 1] >= '0' && string[index + 1] <= '9')))
         return (1);
-    if (string[i + 1] == '+' || string[i + 1] == '-')
-        if (!(string[i + 2] >= '0' && string[i + 2] <= '9'))
+    if (string[index + 1] == '+' || string[index + 1] == '-')
+        if (!(string[index + 2] >= '0' && string[index + 2] <= '9'))
             return (1);
     return (0);
 }
 
-int    math_roll_check_number_previous(char *string, int i)
+int32_t    math_roll_check_number_previous(char *string, int32_t index)
 {
-    if (i == 1)
-        if (!(string[i - 1] >= '0' && string[i - 1] <= '9'))
+    if (index == 1)
+        if (!(string[index - 1] >= '0' && string[index - 1] <= '9'))
             return (1);
     return (0);
 }
 
-int    math_roll_check_character(char c)
+int32_t    math_roll_check_character(char character)
 {
-    if (c == 0)
+    if (character == 0)
         return (0);
-    if (c == '-' || c == '+' || c == '/' || c == '*')
+    if (character == '-' || character == '+' || character == '/' || character == '*')
         return (0);
     return (1);
 }

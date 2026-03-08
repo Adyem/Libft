@@ -9,6 +9,6 @@ int32_t    ft_strcmp(const char *string1, const char *string2)
         string1++;
         string2++;
     }
-    return (static_cast<int>(static_cast<unsigned char>(*string1))
-            - static_cast<int>(static_cast<unsigned char>(*string2)));
+    return (static_cast<int32_t>(static_cast<unsigned char>(*string1))
+            - static_cast<int32_t>(static_cast<unsigned char>(*string2)));
 }

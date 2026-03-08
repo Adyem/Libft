@@ -12,7 +12,7 @@ The SCMA module maintains two primary data structures:
 ## Allocation Flow
 
 When `scma_allocate` is called, the allocator first ensures that the module is
-initialized and that the requested `size` is non-zero. It then calls
+initialised and that the requested `size` is non-zero. It then calls
 `scma_compact` so that any gaps created by previously freed blocks are removed
 before evaluating free space (`SCMA/scma_core.cpp`, `scma_allocate`). The
 required total size is computed as the sum of the current used heap space and

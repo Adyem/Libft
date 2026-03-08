@@ -8,9 +8,9 @@
 #include <new>
 #include <unistd.h>
 
-static bool map_has_new_error(ft_unordered_map<int, char*> &map, int previous_error, int *current_error)
+static ft_bool map_has_new_error(ft_unordered_map<int32_t, char*> &map, int32_t previous_error, int32_t *current_error)
 {
-    int updated_error;
+    int32_t updated_error;
 
     updated_error = map.last_operation_error();
     if (current_error)
@@ -18,20 +18,20 @@ static bool map_has_new_error(ft_unordered_map<int, char*> &map, int previous_er
     if (updated_error != FT_ERR_SUCCESS)
     {
         if (previous_error == FT_ERR_SUCCESS)
-            return (true);
+            return (FT_TRUE);
         if (updated_error != previous_error)
-            return (true);
+            return (FT_TRUE);
     }
-    return (false);
+    return (FT_FALSE);
 }
 
-static ft_unordered_map<int, char*> g_gnl_leftovers;
-static ft_unordered_map<int, gnl_stream*> g_gnl_streams;
+static ft_unordered_map<int32_t, char*> g_gnl_leftovers;
+static ft_unordered_map<int32_t, gnl_stream*> g_gnl_streams;
 
-static bool stream_map_has_new_error(ft_unordered_map<int, gnl_stream*> &map,
-    int previous_error, int *current_error)
+static ft_bool stream_map_has_new_error(ft_unordered_map<int32_t, gnl_stream*> &map,
+    int32_t previous_error, int32_t *current_error)
 {
-    int updated_error;
+    int32_t updated_error;
 
     updated_error = map.last_operation_error();
     if (current_error)
@@ -39,21 +39,21 @@ static bool stream_map_has_new_error(ft_unordered_map<int, gnl_stream*> &map,
     if (updated_error != FT_ERR_SUCCESS)
     {
         if (previous_error == FT_ERR_SUCCESS)
-            return (true);
+            return (FT_TRUE);
         if (updated_error != previous_error)
-            return (true);
+            return (FT_TRUE);
     }
-    return (false);
+    return (FT_FALSE);
 }
 
-static gnl_stream *gnl_acquire_stream(int file_descriptor, int *stream_error)
+static gnl_stream *gnl_acquire_stream(int32_t file_descriptor, int32_t *stream_error)
 {
-    int map_error_before;
-    int map_error_after;
+    int32_t map_error_before;
+    int32_t map_error_after;
     gnl_stream *existing_stream;
     void *memory;
     gnl_stream *new_stream;
-    int init_error;
+    int32_t init_error;
 
     if (stream_error)
         *stream_error = FT_ERR_SUCCESS;
@@ -64,7 +64,7 @@ static gnl_stream *gnl_acquire_stream(int file_descriptor, int *stream_error)
         return (ft_nullptr);
     }
     map_error_before = g_gnl_streams.last_operation_error();
-    ft_unordered_map<int, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
+    ft_unordered_map<int32_t, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
         if (stream_error)
@@ -111,9 +111,9 @@ static gnl_stream *gnl_acquire_stream(int file_descriptor, int *stream_error)
     return (existing_stream);
 }
 
-static char* allocate_new_string(char* string_one, char* string_two, int *allocation_error)
+static char* allocate_new_string(char* string_one, char* string_two, int32_t *allocation_error)
 {
-    int total_length = 0;
+    int32_t total_length = 0;
     char* new_string;
 
     if (allocation_error)
@@ -153,7 +153,7 @@ void    gnl_reset_all_streams(void)
 {
     if (g_gnl_leftovers.has_valid_storage())
     {
-        ft_unordered_map<int, char*>::iterator map_iterator = g_gnl_leftovers.begin();
+        ft_unordered_map<int32_t, char*>::iterator map_iterator = g_gnl_leftovers.begin();
 
         while (map_iterator != g_gnl_leftovers.end())
         {
@@ -168,7 +168,7 @@ void    gnl_reset_all_streams(void)
     }
     if (g_gnl_streams.has_valid_storage())
     {
-        ft_unordered_map<int, gnl_stream*>::iterator stream_iterator = g_gnl_streams.begin();
+        ft_unordered_map<int32_t, gnl_stream*>::iterator stream_iterator = g_gnl_streams.begin();
 
         while (stream_iterator != g_gnl_streams.end())
         {
@@ -192,8 +192,8 @@ char* ft_strjoin_gnl(char* string_one, char* string_two)
 {
     char* result;
     char* original_string = string_one;
-    int index;
-    int error_code;
+    int32_t index;
+    int32_t error_code;
 
     if (!string_one && !string_two)
         return (ft_nullptr);
@@ -217,14 +217,14 @@ char* ft_strjoin_gnl(char* string_one, char* string_two)
     return (result);
 }
 
-static char* leftovers(char* readed_string, bool *buffer_was_freed, int *leftover_error)
+static char* leftovers(char* readed_string, ft_bool *buffer_was_freed, int32_t *leftover_error)
 {
-    int read_index = 0;
-    int write_index = 0;
+    int32_t read_index = 0;
+    int32_t write_index = 0;
     char* string;
 
     if (buffer_was_freed)
-        *buffer_was_freed = false;
+        *buffer_was_freed = FT_FALSE;
     if (leftover_error)
         *leftover_error = FT_ERR_SUCCESS;
     while (readed_string[read_index] && readed_string[read_index] != '\n')
@@ -233,7 +233,7 @@ static char* leftovers(char* readed_string, bool *buffer_was_freed, int *leftove
     {
         cma_free(readed_string);
         if (buffer_was_freed)
-            *buffer_was_freed = true;
+            *buffer_was_freed = FT_TRUE;
         return (ft_nullptr);
     }
     string = static_cast<char*>(g_gnl_leftover_alloc_hook(ft_strlen(readed_string)
@@ -252,7 +252,7 @@ static char* leftovers(char* readed_string, bool *buffer_was_freed, int *leftove
         }
         cma_free(readed_string);
         if (buffer_was_freed)
-            *buffer_was_freed = true;
+            *buffer_was_freed = FT_TRUE;
         return (ft_nullptr);
     }
     read_index++;
@@ -261,11 +261,11 @@ static char* leftovers(char* readed_string, bool *buffer_was_freed, int *leftove
     string[write_index] = '\0';
     cma_free(readed_string);
     if (buffer_was_freed)
-        *buffer_was_freed = true;
+        *buffer_was_freed = FT_TRUE;
     return (string);
 }
 
-static char* malloc_gnl(char* readed_string, size_t length, int *allocation_error)
+static char* malloc_gnl(char* readed_string, ft_size_t length, int32_t *allocation_error)
 {
     char* string;
 
@@ -284,12 +284,13 @@ static char* malloc_gnl(char* readed_string, size_t length, int *allocation_erro
     return (string);
 }
 
-static char* fetch_line(char* readed_string, int *line_error)
+static char* fetch_line(char* readed_string, int32_t *line_error)
 {
-    size_t index = 0;
+    ft_size_t index;
     char* string;
-    int error_code;
+    int32_t error_code;
 
+    index = 0;
     if (line_error)
         *line_error = FT_ERR_SUCCESS;
     if (!readed_string[index])
@@ -323,13 +324,13 @@ static char* fetch_line(char* readed_string, int *line_error)
     return (string);
 }
 
-static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t buffer_size,
-    int *read_error)
+static char* read_stream(gnl_stream *stream, char* readed_string, ft_size_t buffer_size,
+    int32_t *read_error)
 {
     char* buffer;
-    ssize_t readed_bytes;
-    bool has_read_bytes;
-    int error_code;
+    int64_t readed_bytes;
+    ft_bool has_read_bytes;
+    int32_t error_code;
 
     if (read_error)
         *read_error = FT_ERR_SUCCESS;
@@ -353,7 +354,7 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
         return (ft_nullptr);
     }
     readed_bytes = 1;
-    has_read_bytes = false;
+    has_read_bytes = FT_FALSE;
     while (((readed_string == ft_nullptr) || !ft_strchr(readed_string, '\n'))
         && readed_bytes != 0)
     {
@@ -369,12 +370,12 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
                 *read_error = FT_ERR_IO;
             return (ft_nullptr);
         }
-        buffer[readed_bytes] = '\0';
+        buffer[static_cast<ft_size_t>(readed_bytes)] = '\0';
         if (readed_bytes > 0)
         {
             char* previous_string;
 
-            has_read_bytes = true;
+            has_read_bytes = FT_TRUE;
             previous_string = readed_string;
             readed_string = ft_strjoin_gnl(readed_string, buffer);
             if (!readed_string)
@@ -398,15 +399,15 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
     return (readed_string);
 }
 
-int gnl_clear_stream(int file_descriptor)
+int32_t gnl_clear_stream(int32_t file_descriptor)
 {
-    int map_error_before;
-    int map_error_after;
+    int32_t map_error_before;
+    int32_t map_error_after;
     char *leftover;
     gnl_stream *stream_pointer;
 
     map_error_before = g_gnl_leftovers.last_operation_error();
-    ft_unordered_map<int, char*>::iterator map_iterator(g_gnl_leftovers.find(file_descriptor));
+    ft_unordered_map<int32_t, char*>::iterator map_iterator(g_gnl_leftovers.find(file_descriptor));
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         return (map_error_after);
     if (map_iterator == g_gnl_leftovers.end())
@@ -423,7 +424,7 @@ int gnl_clear_stream(int file_descriptor)
     if (leftover)
         cma_free(leftover);
     map_error_before = g_gnl_streams.last_operation_error();
-    ft_unordered_map<int, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
+    ft_unordered_map<int32_t, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
         return (map_error_after);
     if (stream_iterator != g_gnl_streams.end())
@@ -443,20 +444,20 @@ int gnl_clear_stream(int file_descriptor)
     return (FT_ERR_SUCCESS);
 }
 
-char    *get_next_line(int file_descriptor, std::size_t buffer_size)
+char    *get_next_line(int32_t file_descriptor, ft_size_t buffer_size)
 {
     char                                   *line;
     char                                   *combined_buffer;
     char                                   *leftover_string;
-    bool                                    combined_buffer_was_freed;
-    int                                     map_error_before;
-    int                                     map_error_after;
-    int                                     leftovers_error;
+    ft_bool                                    combined_buffer_was_freed;
+    int32_t                                     map_error_before;
+    int32_t                                     map_error_after;
+    int32_t                                     leftovers_error;
     gnl_stream                              *stream;
-    int                                     stream_error;
-    int                                     error_code;
-    int                                     read_error;
-    int                                     line_error;
+    int32_t                                     stream_error;
+    int32_t                                     error_code;
+    int32_t                                     read_error;
+    int32_t                                     line_error;
 
     line = ft_nullptr;
     combined_buffer = ft_nullptr;
@@ -472,7 +473,7 @@ char    *get_next_line(int file_descriptor, std::size_t buffer_size)
         return (ft_nullptr);
     }
     map_error_before = g_gnl_leftovers.last_operation_error();
-    ft_unordered_map<int, char*>::iterator map_iterator = g_gnl_leftovers.find(file_descriptor);
+    ft_unordered_map<int32_t, char*>::iterator map_iterator = g_gnl_leftovers.find(file_descriptor);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         return (ft_nullptr);
     if (map_iterator != g_gnl_leftovers.end())
@@ -498,7 +499,7 @@ char    *get_next_line(int file_descriptor, std::size_t buffer_size)
     }
     line_error = FT_ERR_SUCCESS;
     line = fetch_line(combined_buffer, &line_error);
-    combined_buffer_was_freed = false;
+    combined_buffer_was_freed = FT_FALSE;
     leftover_string = leftovers(combined_buffer, &combined_buffer_was_freed, &leftovers_error);
     if (leftovers_error != FT_ERR_SUCCESS)
     {

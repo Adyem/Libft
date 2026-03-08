@@ -6,7 +6,7 @@
 #include <new>
 
 static pt_mutex *g_observability_networking_mutex = ft_nullptr;
-static bool g_observability_networking_initialized = false;
+static bool g_observability_networking_initialised = false;
 static ft_networking_observability_exporter g_observability_networking_exporter = ft_nullptr;
 
 int observability_networking_metrics_initialize(ft_networking_observability_exporter exporter)
@@ -24,7 +24,7 @@ int observability_networking_metrics_initialize(ft_networking_observability_expo
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_networking_exporter = exporter;
-    g_observability_networking_initialized = true;
+    g_observability_networking_initialised = true;
     unlock_result = pt_mutex_unlock_if_not_null(g_observability_networking_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
         result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
@@ -43,7 +43,7 @@ int observability_networking_metrics_shutdown(void)
     lock_result = pt_mutex_lock_if_not_null(g_observability_networking_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    g_observability_networking_initialized = false;
+    g_observability_networking_initialised = false;
     g_observability_networking_exporter = ft_nullptr;
     unlock_result = pt_mutex_unlock_if_not_null(g_observability_networking_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
@@ -67,7 +67,7 @@ int observability_networking_metrics_record(const ft_networking_observability_sa
     lock_result = pt_mutex_lock_if_not_null(g_observability_networking_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    if (g_observability_networking_initialized && g_observability_networking_exporter != ft_nullptr)
+    if (g_observability_networking_initialised && g_observability_networking_exporter != ft_nullptr)
     {
         exporter_copy = g_observability_networking_exporter;
         should_emit = true;
@@ -113,7 +113,7 @@ int observability_networking_metrics_disable_thread_safety(void)
 {
     if (g_observability_networking_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    g_observability_networking_initialized = false;
+    g_observability_networking_initialised = false;
     g_observability_networking_exporter = ft_nullptr;
     int destroy_result = g_observability_networking_mutex->destroy();
     delete g_observability_networking_mutex;

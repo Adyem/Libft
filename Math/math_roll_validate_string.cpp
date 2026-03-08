@@ -2,28 +2,28 @@
 #include "math_internal.hpp"
 #include "../Printf/printf.hpp"
 
-static int    math_roll_check_arg(char *string)
+static int32_t    math_roll_check_arg(char *string)
 {
-    int    check;
-    int    i;
+    int32_t    check;
+    int32_t    index;
 
     check = 0;
-    i = 0;
-    while (string[i])
+    index = 0;
+    while (string[index])
     {
-        if (string[i] == '+' || string[i] == '-')
-            i++;
-        else if (string[i] == '/' || string[i] == '*')
-            i++;
-        else if (string[i] >= '0' && string[i] <= '9')
+        if (string[index] == '+' || string[index] == '-')
+            index++;
+        else if (string[index] == '/' || string[index] == '*')
+            index++;
+        else if (string[index] >= '0' && string[index] <= '9')
         {
             check++;
-            i++;
+            index++;
         }
-        else if (string[i] == '(' || string[i] == ')')
-            i++;
-        else if (string[i] == 'd')
-            i++;
+        else if (string[index] == '(' || string[index] == ')')
+            index++;
+        else if (string[index] == 'd')
+            index++;
         else
             return (1);
     }
@@ -32,96 +32,96 @@ static int    math_roll_check_arg(char *string)
     return (0);
 }
 
-static int    math_check_open_braces(char *string, int i, int *open_braces)
+static int32_t    math_check_open_braces(char *string, int32_t index, int32_t *open_braces)
 {
     if (DEBUG == 1)
-        pf_printf("open braces string=%s\n", &string[i]);
-    if (i > 0)
-        if (math_roll_check_character(string[i - 1]))
-            if (string[i - 1] != ')' && string[i - 1] != '(')
+        pf_printf("open braces string=%s\n", &string[index]);
+    if (index > 0)
+        if (math_roll_check_character(string[index - 1]))
+            if (string[index - 1] != ')' && string[index - 1] != '(')
                 return (1);
-    if (math_roll_check_number_next(string, i))
-        if (string[i + 1] != '(')
+    if (math_roll_check_number_next(string, index))
+        if (string[index + 1] != '(')
             return (1);
     (*open_braces)++;
     return (0);
 }
 
-static int    math_check_close_braces(char *string, int i,
-                int open_braces, int *close_braces)
+static int32_t    math_check_close_braces(char *string, int32_t index,
+                int32_t open_braces, int32_t *close_braces)
 {
     (*close_braces)++;
     if (DEBUG == 1)
-        pf_printf("close braces string=%s\n", &string[i]);
-    if (i == 0 || open_braces < *close_braces)
+        pf_printf("close braces string=%s\n", &string[index]);
+    if (index == 0 || open_braces < *close_braces)
         return (1);
-    if (math_roll_check_character(string[i + 1]))
-        if (string[i + 1] != ')')
+    if (math_roll_check_character(string[index + 1]))
+        if (string[index + 1] != ')')
             return (1);
-    if (math_roll_check_number_previous(string, i))
-        if (string[i + 1] != '(' && string[i + 1] != ')')
+    if (math_roll_check_number_previous(string, index))
+        if (string[index + 1] != '(' && string[index + 1] != ')')
             return (1);
     return (0);
 }
 
-static int    math_check_plus_minus(char *string, int i)
+static int32_t    math_check_plus_minus(char *string, int32_t index)
 {
-    int sign_seen;
+    int32_t sign_seen;
 
     sign_seen = 0;
-    if (i > 0)
+    if (index > 0)
     {
-        if (string[i - 1] == '+' || string[i - 1] == '-')
+        if (string[index - 1] == '+' || string[index - 1] == '-')
             sign_seen++;
-        else if (math_roll_check_number_previous(string, i) &&
-                (math_roll_check_character(string[i - 1])))
+        else if (math_roll_check_number_previous(string, index) &&
+                (math_roll_check_character(string[index - 1])))
             return (1);
     }
-    else if (math_roll_check_number_previous(string, i))
+    else if (math_roll_check_number_previous(string, index))
         return (1);
-    if (!((string[i + 1] == '+' && !sign_seen) ||
-            (string[i + 1] == '-' && !sign_seen) ||
-            (string[i + 1] >= '0' && string[i + 1] <= '9') ||
-            (string[i + 1] == '(')))
+    if (!((string[index + 1] == '+' && !sign_seen) ||
+            (string[index + 1] == '-' && !sign_seen) ||
+            (string[index + 1] >= '0' && string[index + 1] <= '9') ||
+            (string[index + 1] == '(')))
         return (1);
     return (0);
 }
 
-static int    math_check_divide_multiply(char *string, int i)
+static int32_t    math_check_divide_multiply(char *string, int32_t index)
 {
-    if (i == 0)
+    if (index == 0)
         return (1);
-    if (math_roll_check_number_next(string, i))
-        if (string[i + 1] != '(')
+    if (math_roll_check_number_next(string, index))
+        if (string[index + 1] != '(')
             return (2);
-    if (math_roll_check_number_previous(string, i))
+    if (math_roll_check_number_previous(string, index))
         return (3);
     return (0);
 }
 
-static int    math_check_dice(char *string, int i)
+static int32_t    math_check_dice(char *string, int32_t index)
 {
-    if (i == 0)
+    if (index == 0)
         return (0);
-    if (math_roll_check_number_previous(string, i))
+    if (math_roll_check_number_previous(string, index))
         return (1);
-    if (string[i - 1] == '/' || string[i - 1] == '*')
+    if (string[index - 1] == '/' || string[index - 1] == '*')
         return (0);
-    else if (i > 1)
+    else if (index > 1)
     {
-        if (string[i - 1] == '-' && (math_roll_check_character(string[i - 2])))
+        if (string[index - 1] == '-' && (math_roll_check_character(string[index - 2])))
             return (1);
-        else if (string[i + 1] == '-' || !string[i + 1])
+        else if (string[index + 1] == '-' || !string[index + 1])
             return (1);
     }
     return (0);
 }
 
-int math_roll_validate(char *string)
+int32_t math_roll_validate(char *string)
 {
-    int open_braces = 0;
-    int close_braces = 0;
-    int index = 0;
+    int32_t open_braces = 0;
+    int32_t close_braces = 0;
+    int32_t index = 0;
 
     if (math_roll_check_arg(string))
         return (1);

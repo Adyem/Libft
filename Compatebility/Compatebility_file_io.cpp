@@ -250,8 +250,8 @@ int32_t cmp_close(int32_t file_descriptor)
 
 void cmp_initialize_standard_file_descriptors()
 {
-    static int32_t initialized = 0;
-    if (initialized == 1)
+    static int32_t initialised = 0;
+    if (initialised == 1)
         return ;
     HANDLE standard_input = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE standard_output = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -289,7 +289,7 @@ void cmp_initialize_standard_file_descriptors()
     _setmode(0, _O_BINARY);
     _setmode(1, _O_BINARY);
     _setmode(2, _O_BINARY);
-    initialized = 1;
+    initialised = 1;
     return ;
 }
 

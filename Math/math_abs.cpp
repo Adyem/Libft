@@ -1,7 +1,7 @@
 #include "math.hpp"
 #include "../Basic/limits.hpp"
 
-int math_abs(int number)
+int32_t math_abs(int32_t number)
 {
     if (number < 0)
     {
@@ -12,23 +12,12 @@ int math_abs(int number)
     return (number);
 }
 
-long math_abs(long number)
+int64_t math_abs(int64_t number)
 {
     if (number < 0)
     {
-        if (number == static_cast<long>(FT_LLONG_MIN))
-            return (static_cast<long>(FT_LLONG_MAX));
-        return (-number);
-    }
-    return (number);
-}
-
-long long math_abs(long long number)
-{
-    if (number < 0)
-    {
-        if (number == FT_LLONG_MIN)
-            return (FT_LLONG_MAX);
+        if (number == static_cast<int64_t>(FT_LLONG_MIN))
+            return (static_cast<int64_t>(FT_LLONG_MAX));
         return (-number);
     }
     return (number);

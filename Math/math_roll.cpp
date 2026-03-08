@@ -7,9 +7,9 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 
-typedef int (*RollExecuteFunc)(char *, int *, int);
+typedef int32_t (*roll_execute_func)(char *, int32_t *, int32_t);
 
-void math_calculate_j(char *string, int *j)
+void math_calculate_j(char *string, int32_t *j)
 {
     *j = 0;
     while (string[*j] && string[*j] != ')')
@@ -19,36 +19,36 @@ void math_calculate_j(char *string, int *j)
     return ;
 }
 
-static int  *math_roll_report_error(char *buffer)
+static int32_t  *math_roll_report_error(char *buffer)
 {
     if (buffer)
         cma_free(buffer);
     return (ft_nullptr);
 }
 
-static int execute_roll_function(char *string, RollExecuteFunc func)
+static int32_t execute_roll_function(char *string, roll_execute_func func)
 {
-    int currentIndex = 0;
-    int stringBoundary;
-    int error;
+    int32_t current_index = 0;
+    int32_t string_boundary;
+    int32_t error;
 
     error = 0;
-    math_calculate_j(string, &stringBoundary);
-    while (currentIndex < stringBoundary)
+    math_calculate_j(string, &string_boundary);
+    while (current_index < string_boundary)
     {
-        error = func(string, &currentIndex, stringBoundary);
+        error = func(string, &current_index, string_boundary);
         if (error)
             return (error);
-        math_calculate_j(string, &stringBoundary);
-        currentIndex++;
+        math_calculate_j(string, &string_boundary);
+        current_index++;
     }
     return (0);
 }
 
-static int math_roll_parse(char *string, int nested)
+static int32_t math_roll_parse(char *string, int32_t nested)
 {
-    int error;
-    int index = nested;
+    int32_t error;
+    int32_t index = nested;
 
     while (string[index] != '(' && string[index])
         index++;
@@ -59,11 +59,11 @@ static int math_roll_parse(char *string, int nested)
             return (1);
     }
     if (execute_roll_function(string, math_roll_excecute_droll))
-        return 3;
+        return (3);
     if (execute_roll_function(string, math_roll_excecute_md))
-        return 4;
+        return (4);
     if (execute_roll_function(string, math_roll_excecute_pm))
-        return 5;
+        return (5);
     if (DEBUG == 1)
         pf_printf("Nested is %d\n", nested);
     if (nested)
@@ -77,11 +77,11 @@ static int math_roll_parse(char *string, int nested)
     return (0);
 }
 
-int *math_roll(const char *expression)
+int32_t *math_roll(const char *expression)
 {
     char    *result;
-    int     *value;
-    int     parse_error;
+    int32_t     *value;
+    int32_t     parse_error;
     ft_size_t index;
     ft_size_t length;
 
@@ -123,7 +123,7 @@ int *math_roll(const char *expression)
     {
         return (math_roll_report_error(result));
     }
-    value = reinterpret_cast<int*>(cma_malloc(sizeof(int)));
+    value = reinterpret_cast<int32_t*>(cma_malloc(sizeof(int32_t)));
     if (!value)
     {
         return (math_roll_report_error(result));

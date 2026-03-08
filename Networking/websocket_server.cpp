@@ -307,14 +307,14 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
 }
 
 ft_websocket_server::ft_websocket_server()
-    : _initialized_state(_state_uninitialized), _server_socket(ft_nullptr), _mutex(ft_nullptr)
+    : _initialised_state(_state_uninitialised), _server_socket(ft_nullptr), _mutex(ft_nullptr)
 {
     return ;
 }
 
 ft_websocket_server::~ft_websocket_server()
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -332,11 +332,11 @@ void ft_websocket_server::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_websocket_server::abort_if_not_initialized(const char *method_name) const
+void ft_websocket_server::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -344,9 +344,9 @@ int ft_websocket_server::initialize()
 {
     pt_recursive_mutex *mutex_pointer;
 
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("ft_websocket_server::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
@@ -358,13 +358,13 @@ int ft_websocket_server::initialize()
     this->_mutex = mutex_pointer;
     this->_server_socket = ft_nullptr;
     this->_connection_states.clear();
-    this->_initialized_state = _state_initialized;
+    this->_initialised_state = _state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_server::destroy()
 {
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         return (FT_ERR_INVALID_STATE);
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -382,7 +382,7 @@ int ft_websocket_server::destroy()
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    this->_initialized_state = _state_destroyed;
+    this->_initialised_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -418,7 +418,7 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
     int lock_error;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_websocket_server::start");
+    this->abort_if_not_initialised("ft_websocket_server::start");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -782,7 +782,7 @@ int ft_websocket_server::run_once(int &client_fd, ft_string &message)
     int result;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_websocket_server::run_once");
+    this->abort_if_not_initialised("ft_websocket_server::run_once");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -825,7 +825,7 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
     int lock_error;
     int deflate_error;
 
-    this->abort_if_not_initialized("ft_websocket_server::send_text");
+    this->abort_if_not_initialised("ft_websocket_server::send_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -904,7 +904,7 @@ int ft_websocket_server::get_port(unsigned short &port_value) const
     int server_fd;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_websocket_server::get_port");
+    this->abort_if_not_initialised("ft_websocket_server::get_port");
     port_value = 0;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)

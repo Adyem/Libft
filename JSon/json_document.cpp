@@ -43,11 +43,11 @@ void json_document::abort_lifecycle_error(const char *method_name, const char *r
     return ;
 }
 
-void json_document::abort_if_not_initialized(const char *method_name) const
+void json_document::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == json_document::_state_initialized)
+    if (this->_initialised_state == json_document::_state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -164,7 +164,7 @@ json_document::json_document() noexcept
     : _groups(ft_nullptr)
     , _error_code(FT_ERR_SUCCESS)
     , _mutex(ft_nullptr)
-    , _initialized_state(json_document::_state_uninitialized)
+    , _initialised_state(json_document::_state_uninitialised)
 {
     this->set_error_unlocked(FT_ERR_SUCCESS);
     return ;
@@ -172,20 +172,20 @@ json_document::json_document() noexcept
 
 json_document::~json_document() noexcept
 {
-    if (this->_initialized_state == json_document::_state_initialized)
+    if (this->_initialised_state == json_document::_state_initialised)
         (void)this->destroy();
     return ;
 }
 
 int json_document::initialize() noexcept
 {
-    if (this->_initialized_state == json_document::_state_initialized)
+    if (this->_initialised_state == json_document::_state_initialised)
     {
         this->abort_lifecycle_error("json_document::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_initialized_state = json_document::_state_initialized;
+    this->_initialised_state = json_document::_state_initialised;
     this->set_error_unlocked(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -196,7 +196,7 @@ int json_document::destroy() noexcept
     int unlock_error;
     int disable_error;
 
-    if (this->_initialized_state != json_document::_state_initialized)
+    if (this->_initialised_state != json_document::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     lock_error = FT_ERR_SUCCESS;
     unlock_error = FT_ERR_SUCCESS;
@@ -210,7 +210,7 @@ int json_document::destroy() noexcept
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = json_document::_state_destroyed;
+    this->_initialised_state = json_document::_state_destroyed;
     return (disable_error);
 }
 
@@ -219,7 +219,7 @@ int json_document::enable_thread_safety() noexcept
     pt_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("json_document::enable_thread_safety");
+    this->abort_if_not_initialised("json_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_mutex();
@@ -239,7 +239,7 @@ int json_document::disable_thread_safety() noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("json_document::disable_thread_safety");
+    this->abort_if_not_initialised("json_document::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -256,7 +256,7 @@ bool json_document::is_thread_safe() const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_mutex *json_document::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("json_document::get_mutex_for_validation");
+    this->abort_if_not_initialised("json_document::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif
@@ -1204,7 +1204,7 @@ json_group *json_document::get_groups() const noexcept
 
 void json_document::set_manual_error(int error_code) noexcept
 {
-    this->abort_if_not_initialized("json_document::set_manual_error");
+    this->abort_if_not_initialised("json_document::set_manual_error");
     this->set_error(error_code);
     return ;
 }

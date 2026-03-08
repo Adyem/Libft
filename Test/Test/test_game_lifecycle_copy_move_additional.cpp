@@ -4,12 +4,12 @@
 #include "../../Game/ft_vendor_profile.hpp"
 #include "../../Game/ft_currency_rate.hpp"
 #include "../../Game/game_economy_table.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_price_lifecycle_initialize_copy_from_initialized_source, "price definition initialize(copy) works with initialized source")
+FT_TEST(test_price_lifecycle_initialize_copy_from_initialised_source, "price definition initialize(copy) works with initialised source")
 {
     ft_price_definition source;
     ft_price_definition destination;
@@ -20,7 +20,7 @@ FT_TEST(test_price_lifecycle_initialize_copy_from_initialized_source, "price def
     return (1);
 }
 
-FT_TEST(test_price_lifecycle_initialize_move_from_initialized_source, "price definition initialize(move) works with initialized source")
+FT_TEST(test_price_lifecycle_initialize_move_from_initialised_source, "price definition initialize(move) works with initialised source")
 {
     ft_price_definition source;
     ft_price_definition destination;
@@ -51,7 +51,7 @@ FT_TEST(test_price_lifecycle_initialize_move_self_noop, "price definition initia
     return (1);
 }
 
-FT_TEST(test_rarity_lifecycle_initialize_copy_from_initialized_source, "rarity band initialize(copy) works with initialized source")
+FT_TEST(test_rarity_lifecycle_initialize_copy_from_initialised_source, "rarity band initialize(copy) works with initialised source")
 {
     ft_rarity_band source;
     ft_rarity_band destination;
@@ -62,7 +62,7 @@ FT_TEST(test_rarity_lifecycle_initialize_copy_from_initialized_source, "rarity b
     return (1);
 }
 
-FT_TEST(test_rarity_lifecycle_initialize_move_from_initialized_source, "rarity band initialize(move) works with initialized source")
+FT_TEST(test_rarity_lifecycle_initialize_move_from_initialised_source, "rarity band initialize(move) works with initialised source")
 {
     ft_rarity_band source;
     ft_rarity_band destination;
@@ -93,7 +93,7 @@ FT_TEST(test_rarity_lifecycle_initialize_move_self_noop, "rarity band initialize
     return (1);
 }
 
-FT_TEST(test_vendor_lifecycle_initialize_copy_from_initialized_source, "vendor profile initialize(copy) works with initialized source")
+FT_TEST(test_vendor_lifecycle_initialize_copy_from_initialised_source, "vendor profile initialize(copy) works with initialised source")
 {
     ft_vendor_profile source;
     ft_vendor_profile destination;
@@ -104,7 +104,7 @@ FT_TEST(test_vendor_lifecycle_initialize_copy_from_initialized_source, "vendor p
     return (1);
 }
 
-FT_TEST(test_vendor_lifecycle_initialize_move_from_initialized_source, "vendor profile initialize(move) works with initialized source")
+FT_TEST(test_vendor_lifecycle_initialize_move_from_initialised_source, "vendor profile initialize(move) works with initialised source")
 {
     ft_vendor_profile source;
     ft_vendor_profile destination;
@@ -135,7 +135,7 @@ FT_TEST(test_vendor_lifecycle_initialize_move_self_noop, "vendor profile initial
     return (1);
 }
 
-FT_TEST(test_currency_lifecycle_initialize_copy_from_initialized_source, "currency rate initialize(copy) works with initialized source")
+FT_TEST(test_currency_lifecycle_initialize_copy_from_initialised_source, "currency rate initialize(copy) works with initialised source")
 {
     ft_currency_rate source;
     ft_currency_rate destination;
@@ -146,7 +146,7 @@ FT_TEST(test_currency_lifecycle_initialize_copy_from_initialized_source, "curren
     return (1);
 }
 
-FT_TEST(test_currency_lifecycle_initialize_move_from_initialized_source, "currency rate initialize(move) works with initialized source")
+FT_TEST(test_currency_lifecycle_initialize_move_from_initialised_source, "currency rate initialize(move) works with initialised source")
 {
     ft_currency_rate source;
     ft_currency_rate destination;
@@ -177,7 +177,7 @@ FT_TEST(test_currency_lifecycle_initialize_move_self_noop, "currency rate initia
     return (1);
 }
 
-FT_TEST(test_economy_table_lifecycle_initialize_copy_from_initialized_source, "economy table initialize(copy) works with initialized source")
+FT_TEST(test_economy_table_lifecycle_initialize_copy_from_initialised_source, "economy table initialize(copy) works with initialised source")
 {
     ft_economy_table source;
     ft_economy_table destination;
@@ -187,7 +187,7 @@ FT_TEST(test_economy_table_lifecycle_initialize_copy_from_initialized_source, "e
     return (1);
 }
 
-FT_TEST(test_economy_table_lifecycle_initialize_move_from_initialized_source, "economy table initialize(move) works with initialized source")
+FT_TEST(test_economy_table_lifecycle_initialize_move_from_initialised_source, "economy table initialize(move) works with initialised source")
 {
     ft_economy_table source;
     ft_economy_table destination;

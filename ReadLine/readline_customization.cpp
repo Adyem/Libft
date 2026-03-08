@@ -27,7 +27,7 @@ struct rl_key_binding_entry
 };
 
 static pt_recursive_mutex g_customization_mutex;
-static bool g_customization_mutex_initialized = false;
+static bool g_customization_mutex_initialised = false;
 static rl_key_binding_entry g_key_bindings[RL_MAX_KEY_BINDINGS];
 static int g_key_binding_count = 0;
 static t_rl_completion_callback g_completion_callback = ft_nullptr;
@@ -70,19 +70,19 @@ static int rl_customization_lock_mutex(void)
 {
     int initialize_error;
 
-    if (g_customization_mutex_initialized == false)
+    if (g_customization_mutex_initialised == false)
     {
         initialize_error = g_customization_mutex.initialize();
         if (initialize_error != FT_ERR_SUCCESS)
             return (initialize_error);
-        g_customization_mutex_initialized = true;
+        g_customization_mutex_initialised = true;
     }
     return (g_customization_mutex.lock());
 }
 
 static int rl_customization_unlock_mutex(void)
 {
-    if (g_customization_mutex_initialized == false)
+    if (g_customization_mutex_initialised == false)
         return (FT_ERR_SUCCESS);
     return (g_customization_mutex.unlock());
 }

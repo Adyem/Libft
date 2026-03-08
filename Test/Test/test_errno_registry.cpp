@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -27,7 +27,7 @@ FT_TEST(test_ft_strerror_covers_documented_codes, "ft_strerror returns descripti
         FT_ERR_INTERNAL,
         FT_ERR_CONFIGURATION,
         FT_ERR_UNSUPPORTED_TYPE,
-        FT_ERR_ALREADY_INITIALIZED,
+        FT_ERR_ALREADY_INITIALISED,
         FT_ERR_INITIALIZATION_FAILED,
         FT_ERR_END_OF_FILE,
         FT_ERR_DIVIDE_BY_ZERO,

@@ -11,7 +11,7 @@ thread_local int ft_map3d::_last_error = FT_ERR_SUCCESS;
 ft_map3d::ft_map3d()
     : _data(ft_nullptr), _width(0), _height(0), _depth(0),
       _initial_value(0), _mutex(ft_nullptr),
-      _initialized_state(ft_map3d::_state_uninitialized)
+      _initialised_state(ft_map3d::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -19,9 +19,9 @@ ft_map3d::ft_map3d()
 
 ft_map3d::~ft_map3d()
 {
-    if (this->_initialized_state == ft_map3d::_state_uninitialized)
+    if (this->_initialised_state == ft_map3d::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_map3d::_state_initialized)
+    if (this->_initialised_state == ft_map3d::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -38,12 +38,12 @@ void ft_map3d::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_map3d::abort_if_not_initialized(const char *method_name) const
+void ft_map3d::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_map3d::_state_initialized)
+    if (this->_initialised_state == ft_map3d::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -65,10 +65,10 @@ const char *ft_map3d::get_error_str() const noexcept
 
 int ft_map3d::initialize()
 {
-    if (this->_initialized_state == ft_map3d::_state_initialized)
+    if (this->_initialised_state == ft_map3d::_state_initialised)
     {
         this->abort_lifecycle_error("ft_map3d::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     return (this->initialize(this->_width, this->_height, this->_depth,
@@ -77,10 +77,10 @@ int ft_map3d::initialize()
 
 int ft_map3d::initialize(size_t width, size_t height, size_t depth, int value)
 {
-    if (this->_initialized_state == ft_map3d::_state_initialized)
+    if (this->_initialised_state == ft_map3d::_state_initialised)
     {
         this->abort_lifecycle_error("ft_map3d::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_width = width;
@@ -89,7 +89,7 @@ int ft_map3d::initialize(size_t width, size_t height, size_t depth, int value)
     this->_initial_value = value;
     this->_data = ft_nullptr;
     this->allocate(width, height, depth, value);
-    this->_initialized_state = ft_map3d::_state_initialized;
+    this->_initialised_state = ft_map3d::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -98,14 +98,14 @@ int ft_map3d::destroy()
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_map3d::_state_initialized)
+    if (this->_initialised_state != ft_map3d::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     this->deallocate();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_map3d::_state_destroyed;
+    this->_initialised_state = ft_map3d::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -115,7 +115,7 @@ int ft_map3d::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_map3d::enable_thread_safety");
+    this->abort_if_not_initialised("ft_map3d::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -199,7 +199,7 @@ int ft_map3d::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_map3d::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_map3d::lock");
+    this->abort_if_not_initialised("ft_map3d::lock");
     const int lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -207,7 +207,7 @@ int ft_map3d::lock(bool *lock_acquired) const noexcept
 
 void ft_map3d::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_map3d::unlock");
+    this->abort_if_not_initialised("ft_map3d::unlock");
     const int unlock_result = this->unlock_internal(lock_acquired);
     this->set_error(unlock_result);
     return ;
@@ -218,7 +218,7 @@ void ft_map3d::resize(size_t width, size_t height, size_t depth, int value)
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_map3d::resize");
+    this->abort_if_not_initialised("ft_map3d::resize");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -245,7 +245,7 @@ int ft_map3d::get(size_t x, size_t y, size_t z) const
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_map3d::get");
+    this->abort_if_not_initialised("ft_map3d::get");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -281,7 +281,7 @@ void ft_map3d::set(size_t x, size_t y, size_t z, int value)
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_map3d::set");
+    this->abort_if_not_initialised("ft_map3d::set");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -328,7 +328,7 @@ void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z,
     int lock_error;
     int new_value;
 
-    this->abort_if_not_initialized("ft_map3d::toggle_obstacle");
+    this->abort_if_not_initialised("ft_map3d::toggle_obstacle");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -369,7 +369,7 @@ size_t ft_map3d::get_width() const
     int lock_error;
     size_t width_value;
 
-    this->abort_if_not_initialized("ft_map3d::get_width");
+    this->abort_if_not_initialised("ft_map3d::get_width");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -393,7 +393,7 @@ size_t ft_map3d::get_height() const
     int lock_error;
     size_t height_value;
 
-    this->abort_if_not_initialized("ft_map3d::get_height");
+    this->abort_if_not_initialised("ft_map3d::get_height");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -417,7 +417,7 @@ size_t ft_map3d::get_depth() const
     int lock_error;
     size_t depth_value;
 
-    this->abort_if_not_initialized("ft_map3d::get_depth");
+    this->abort_if_not_initialised("ft_map3d::get_depth");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

@@ -126,7 +126,7 @@ ft_world::ft_world() noexcept
     : _event_scheduler(), _world_registry(), _replay_session(),
     _economy_table(), _crafting(), _dialogue_table(), _world_region(), _quest(),
     _vendor_profile(), _upgrade(),
-    _initialized_state(ft_world::_state_uninitialized)
+    _initialised_state(ft_world::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -134,7 +134,7 @@ ft_world::ft_world() noexcept
 
 ft_world::~ft_world() noexcept
 {
-    if (this->_initialized_state == ft_world::_state_initialized)
+    if (this->_initialised_state == ft_world::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -159,12 +159,12 @@ void ft_world::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_world::abort_if_not_initialized(const char *method_name) const
+void ft_world::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_world::_state_initialized)
+    if (this->_initialised_state == ft_world::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -172,10 +172,10 @@ int ft_world::initialize() noexcept
 {
     int initialize_error;
 
-    if (this->_initialized_state == ft_world::_state_initialized)
+    if (this->_initialised_state == ft_world::_state_initialised)
     {
         this->abort_lifecycle_error("ft_world::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -205,7 +205,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
     }
@@ -216,7 +216,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -227,7 +227,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -238,7 +238,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -249,7 +249,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -260,7 +260,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -271,7 +271,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -282,7 +282,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -293,7 +293,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -304,7 +304,7 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
@@ -315,18 +315,18 @@ int ft_world::initialize() noexcept
             this->_world_registry, this->_replay_session, this->_economy_table,
             this->_crafting, this->_dialogue_table, this->_world_region,
             this->_quest, this->_vendor_profile, this->_upgrade);
-        this->_initialized_state = ft_world::_state_destroyed;
+        this->_initialised_state = ft_world::_state_destroyed;
         this->set_error(initialize_error);
         return (initialize_error);
     }
-    this->_initialized_state = ft_world::_state_initialized;
+    this->_initialised_state = ft_world::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_world::destroy() noexcept
 {
-    if (this->_initialized_state != ft_world::_state_initialized)
+    if (this->_initialised_state != ft_world::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -335,14 +335,14 @@ int ft_world::destroy() noexcept
         this->_world_registry, this->_replay_session, this->_economy_table,
         this->_crafting, this->_dialogue_table, this->_world_region,
         this->_quest, this->_vendor_profile, this->_upgrade);
-    this->_initialized_state = ft_world::_state_destroyed;
+    this->_initialised_state = ft_world::_state_destroyed;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
 {
-    this->abort_if_not_initialized("ft_world::schedule_event");
+    this->abort_if_not_initialised("ft_world::schedule_event");
     if (!event)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
@@ -359,7 +359,7 @@ void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
 
 void ft_world::update_events(ft_sharedptr<ft_world> &self, int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
 {
-    this->abort_if_not_initialized("ft_world::update_events");
+    this->abort_if_not_initialised("ft_world::update_events");
     if (!self)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
@@ -378,7 +378,7 @@ ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
 {
     int previous_error;
 
-    this->abort_if_not_initialized("ft_world::get_event_scheduler");
+    this->abort_if_not_initialised("ft_world::get_event_scheduler");
     previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
     {
@@ -393,7 +393,7 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
 {
     int previous_error;
 
-    this->abort_if_not_initialized("ft_world::get_event_scheduler const");
+    this->abort_if_not_initialised("ft_world::get_event_scheduler const");
     previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
     {
@@ -406,7 +406,7 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
 
 ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_world_registry");
+    this->abort_if_not_initialised("ft_world::get_world_registry");
     if (this->propagate_registry_state_error() == true)
         return (this->_world_registry);
     this->set_error(FT_ERR_SUCCESS);
@@ -415,7 +415,7 @@ ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() noexcept
 
 const ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_world_registry const");
+    this->abort_if_not_initialised("ft_world::get_world_registry const");
     if (this->propagate_registry_state_error() == true)
         return (this->_world_registry);
     this->set_error(FT_ERR_SUCCESS);
@@ -424,7 +424,7 @@ const ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() const noex
 
 ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_replay_session");
+    this->abort_if_not_initialised("ft_world::get_replay_session");
     if (this->propagate_replay_state_error() == true)
         return (this->_replay_session);
     this->set_error(FT_ERR_SUCCESS);
@@ -433,7 +433,7 @@ ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() noexcept
 
 const ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_replay_session const");
+    this->abort_if_not_initialised("ft_world::get_replay_session const");
     if (this->propagate_replay_state_error() == true)
         return (this->_replay_session);
     this->set_error(FT_ERR_SUCCESS);
@@ -442,7 +442,7 @@ const ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() cons
 
 ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_economy_table");
+    this->abort_if_not_initialised("ft_world::get_economy_table");
     if (this->propagate_economy_state_error() == true)
         return (this->_economy_table);
     this->set_error(FT_ERR_SUCCESS);
@@ -451,7 +451,7 @@ ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() noexcept
 
 const ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_economy_table const");
+    this->abort_if_not_initialised("ft_world::get_economy_table const");
     if (this->propagate_economy_state_error() == true)
         return (this->_economy_table);
     this->set_error(FT_ERR_SUCCESS);
@@ -460,7 +460,7 @@ const ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() const noexce
 
 ft_sharedptr<ft_crafting> &ft_world::get_crafting() noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_crafting");
+    this->abort_if_not_initialised("ft_world::get_crafting");
     if (this->propagate_crafting_state_error() == true)
         return (this->_crafting);
     this->set_error(FT_ERR_SUCCESS);
@@ -469,7 +469,7 @@ ft_sharedptr<ft_crafting> &ft_world::get_crafting() noexcept
 
 const ft_sharedptr<ft_crafting> &ft_world::get_crafting() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_crafting const");
+    this->abort_if_not_initialised("ft_world::get_crafting const");
     if (this->propagate_crafting_state_error() == true)
         return (this->_crafting);
     this->set_error(FT_ERR_SUCCESS);
@@ -478,7 +478,7 @@ const ft_sharedptr<ft_crafting> &ft_world::get_crafting() const noexcept
 
 ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_dialogue_table");
+    this->abort_if_not_initialised("ft_world::get_dialogue_table");
     if (this->propagate_dialogue_state_error() == true)
         return (this->_dialogue_table);
     this->set_error(FT_ERR_SUCCESS);
@@ -487,7 +487,7 @@ ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() noexcept
 
 const ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_dialogue_table const");
+    this->abort_if_not_initialised("ft_world::get_dialogue_table const");
     if (this->propagate_dialogue_state_error() == true)
         return (this->_dialogue_table);
     this->set_error(FT_ERR_SUCCESS);
@@ -496,7 +496,7 @@ const ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() const noex
 
 ft_sharedptr<ft_world_region> &ft_world::get_world_region() noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_world_region");
+    this->abort_if_not_initialised("ft_world::get_world_region");
     if (this->propagate_region_state_error() == true)
         return (this->_world_region);
     this->set_error(FT_ERR_SUCCESS);
@@ -505,7 +505,7 @@ ft_sharedptr<ft_world_region> &ft_world::get_world_region() noexcept
 
 const ft_sharedptr<ft_world_region> &ft_world::get_world_region() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_world_region const");
+    this->abort_if_not_initialised("ft_world::get_world_region const");
     if (this->propagate_region_state_error() == true)
         return (this->_world_region);
     this->set_error(FT_ERR_SUCCESS);
@@ -516,7 +516,7 @@ ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
 {
     int previous_error;
 
-    this->abort_if_not_initialized("ft_world::get_quest");
+    this->abort_if_not_initialised("ft_world::get_quest");
     previous_error = this->get_error();
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
@@ -533,7 +533,7 @@ const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
 {
     int previous_error;
 
-    this->abort_if_not_initialized("ft_world::get_quest const");
+    this->abort_if_not_initialised("ft_world::get_quest const");
     previous_error = this->get_error();
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
@@ -550,7 +550,7 @@ ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
 {
     int previous_error;
 
-    this->abort_if_not_initialized("ft_world::get_vendor_profile");
+    this->abort_if_not_initialised("ft_world::get_vendor_profile");
     previous_error = this->get_error();
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
@@ -567,7 +567,7 @@ const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noex
 {
     int previous_error;
 
-    this->abort_if_not_initialized("ft_world::get_vendor_profile const");
+    this->abort_if_not_initialised("ft_world::get_vendor_profile const");
     previous_error = this->get_error();
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
@@ -582,7 +582,7 @@ const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noex
 
 ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_upgrade");
+    this->abort_if_not_initialised("ft_world::get_upgrade");
     if (this->propagate_upgrade_state_error() == true)
         return (this->_upgrade);
     this->set_error(FT_ERR_SUCCESS);
@@ -591,7 +591,7 @@ ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() noexcept
 
 const ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_upgrade const");
+    this->abort_if_not_initialised("ft_world::get_upgrade const");
     if (this->propagate_upgrade_state_error() == true)
         return (this->_upgrade);
     this->set_error(FT_ERR_SUCCESS);
@@ -603,7 +603,7 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
     json_group *groups;
     int error_code;
 
-    this->abort_if_not_initialized("ft_world::save_to_file");
+    this->abort_if_not_initialised("ft_world::save_to_file");
     if (this->propagate_scheduler_state_error() == true)
         return (this->get_error());
     error_code = FT_ERR_SUCCESS;
@@ -626,7 +626,7 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
     json_group *groups;
     int restore_result;
 
-    this->abort_if_not_initialized("ft_world::load_from_file");
+    this->abort_if_not_initialised("ft_world::load_from_file");
     groups = json_read_from_file(file_path);
     if (!groups)
     {
@@ -643,7 +643,7 @@ int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_char
     json_group *groups;
     char *serialized_state;
     int error_code;
-    this->abort_if_not_initialized("ft_world::save_to_store");
+    this->abort_if_not_initialised("ft_world::save_to_store");
     if (slot_key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -684,7 +684,7 @@ int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_characte
     json_group *groups;
     int restore_result;
 
-    this->abort_if_not_initialized("ft_world::load_from_store");
+    this->abort_if_not_initialised("ft_world::load_from_store");
     if (slot_key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -718,7 +718,7 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
     char *serialized_state;
     int error_code;
 
-    this->abort_if_not_initialized("ft_world::save_to_buffer");
+    this->abort_if_not_initialised("ft_world::save_to_buffer");
     if (this->propagate_scheduler_state_error() == true)
         return (this->get_error());
     error_code = FT_ERR_SUCCESS;
@@ -756,7 +756,7 @@ int ft_world::load_from_buffer(const char *buffer, ft_character &character, ft_i
     int restore_result;
     int parse_error;
 
-    this->abort_if_not_initialized("ft_world::load_from_buffer");
+    this->abort_if_not_initialised("ft_world::load_from_buffer");
     if (buffer == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -782,7 +782,7 @@ int ft_world::plan_route(const ft_map3d &grid,
     ft_vector<ft_path_step> &path) const noexcept
 {
     ft_pathfinding finder;
-    this->abort_if_not_initialized("ft_world::plan_route");
+    this->abort_if_not_initialised("ft_world::plan_route");
     if (finder.astar_grid(grid, start_x, start_y, start_z,
             goal_x, goal_y, goal_z, path) != FT_ERR_SUCCESS)
     {
@@ -795,13 +795,13 @@ int ft_world::plan_route(const ft_map3d &grid,
 
 int ft_world::get_error() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_error");
+    this->abort_if_not_initialised("ft_world::get_error");
     return (ft_world::_last_error);
 }
 
 const char *ft_world::get_error_str() const noexcept
 {
-    this->abort_if_not_initialized("ft_world::get_error_str");
+    this->abort_if_not_initialised("ft_world::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 

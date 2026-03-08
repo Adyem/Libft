@@ -11,7 +11,7 @@ FT_TEST(test_scma_initialize_cycle,
     FT_ASSERT_EQ(1, scma_initialize(64));
     FT_ASSERT_EQ(0, scma_initialize(64));
     scma_shutdown();
-    FT_ASSERT_EQ(0, scma_is_initialized());
+    FT_ASSERT_EQ(0, scma_is_initialised());
     return (1);
 }
 

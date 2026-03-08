@@ -35,7 +35,7 @@ ft_dom_validation_error::~ft_dom_validation_error() noexcept
 
 ft_dom_validation_report::ft_dom_validation_report() noexcept
     : _valid(true), _errors(), _mutex(ft_nullptr),
-      _initialized_state(ft_dom_validation_report::_state_uninitialized)
+      _initialised_state(ft_dom_validation_report::_state_uninitialised)
 {
     return ;
 }
@@ -53,26 +53,26 @@ void ft_dom_validation_report::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_dom_validation_report::abort_if_not_initialized(const char *method_name) const
+void ft_dom_validation_report::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_dom_validation_report::_state_initialized)
+    if (this->_initialised_state == ft_dom_validation_report::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_dom_validation_report::initialize() noexcept
 {
-    if (this->_initialized_state == ft_dom_validation_report::_state_initialized)
+    if (this->_initialised_state == ft_dom_validation_report::_state_initialised)
     {
         this->abort_lifecycle_error("ft_dom_validation_report::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_valid = true;
     this->_errors.clear();
-    this->_initialized_state = ft_dom_validation_report::_state_initialized;
+    this->_initialised_state = ft_dom_validation_report::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -80,12 +80,12 @@ int ft_dom_validation_report::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_dom_validation_report::_state_initialized)
+    if (this->_initialised_state != ft_dom_validation_report::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->_errors.clear();
     this->_valid = true;
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_dom_validation_report::_state_destroyed;
+    this->_initialised_state = ft_dom_validation_report::_state_destroyed;
     return (disable_error);
 }
 
@@ -94,7 +94,7 @@ int ft_dom_validation_report::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_dom_validation_report::enable_thread_safety");
+    this->abort_if_not_initialised("ft_dom_validation_report::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -150,20 +150,20 @@ int ft_dom_validation_report::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_dom_validation_report::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_validation_report::lock");
+    this->abort_if_not_initialised("ft_dom_validation_report::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_dom_validation_report::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_validation_report::unlock");
+    this->abort_if_not_initialised("ft_dom_validation_report::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 ft_dom_validation_report::~ft_dom_validation_report() noexcept
 {
-    if (this->_initialized_state == ft_dom_validation_report::_state_initialized)
+    if (this->_initialised_state == ft_dom_validation_report::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -173,7 +173,7 @@ void ft_dom_validation_report::mark_valid() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_validation_report::mark_valid");
+    this->abort_if_not_initialised("ft_dom_validation_report::mark_valid");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -188,7 +188,7 @@ void ft_dom_validation_report::mark_invalid() noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_validation_report::mark_invalid");
+    this->abort_if_not_initialised("ft_dom_validation_report::mark_invalid");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -204,7 +204,7 @@ bool ft_dom_validation_report::valid() const noexcept
     int lock_error;
     bool valid_value;
 
-    this->abort_if_not_initialized("ft_dom_validation_report::valid");
+    this->abort_if_not_initialised("ft_dom_validation_report::valid");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -221,7 +221,7 @@ int ft_dom_validation_report::add_error(const ft_string &path,
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_dom_validation_report::add_error");
+    this->abort_if_not_initialised("ft_dom_validation_report::add_error");
     error_entry.path = path;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
@@ -241,14 +241,14 @@ int ft_dom_validation_report::add_error(const ft_string &path,
 
 const ft_vector<ft_dom_validation_error> &ft_dom_validation_report::errors() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_validation_report::errors");
+    this->abort_if_not_initialised("ft_dom_validation_report::errors");
     return (this->_errors);
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_dom_validation_report::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_validation_report::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_dom_validation_report::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

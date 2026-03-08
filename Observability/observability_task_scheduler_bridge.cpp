@@ -16,7 +16,7 @@ struct ft_otel_span_state
 };
 
 static pt_mutex g_observability_bridge_mutex;
-static bool g_observability_bridge_initialized = false;
+static bool g_observability_bridge_initialised = false;
 static ft_otel_span_exporter g_observability_bridge_exporter = ft_nullptr;
 static ft_unordered_map<unsigned long long, ft_otel_span_state> g_observability_span_states;
 static ft_otel_span_state observability_span_state_create(void)
@@ -71,7 +71,7 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return ;
-    if (!g_observability_bridge_initialized || g_observability_bridge_exporter == ft_nullptr)
+    if (!g_observability_bridge_initialised || g_observability_bridge_exporter == ft_nullptr)
     {
         (void)g_observability_bridge_mutex.unlock();
         return ;
@@ -183,7 +183,7 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    if (g_observability_bridge_initialized)
+    if (g_observability_bridge_initialised)
     {
         g_observability_bridge_exporter = exporter;
         (void)g_observability_bridge_mutex.unlock();
@@ -202,7 +202,7 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
         if (lock_result == FT_ERR_SUCCESS)
         {
             g_observability_bridge_exporter = ft_nullptr;
-            g_observability_bridge_initialized = false;
+            g_observability_bridge_initialised = false;
             (void)g_observability_bridge_mutex.unlock();
         }
         return (FT_ERR_INVALID_OPERATION);
@@ -214,11 +214,11 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
     if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
     {
         g_observability_bridge_exporter = ft_nullptr;
-        g_observability_bridge_initialized = false;
+        g_observability_bridge_initialised = false;
         (void)g_observability_bridge_mutex.unlock();
         return (FT_ERR_NO_MEMORY);
     }
-    g_observability_bridge_initialized = true;
+    g_observability_bridge_initialised = true;
     unlock_result = g_observability_bridge_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
@@ -233,7 +233,7 @@ int observability_task_scheduler_bridge_shutdown(void)
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    if (!g_observability_bridge_initialized)
+    if (!g_observability_bridge_initialised)
     {
         g_observability_bridge_exporter = ft_nullptr;
         g_observability_span_states.clear();
@@ -256,7 +256,7 @@ int observability_task_scheduler_bridge_shutdown(void)
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    g_observability_bridge_initialized = false;
+    g_observability_bridge_initialised = false;
     g_observability_bridge_exporter = ft_nullptr;
     g_observability_span_states.clear();
     unlock_result = g_observability_bridge_mutex.unlock();

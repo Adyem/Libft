@@ -27,26 +27,26 @@ static int &ft_socket_runtime_reference_count()
     return (reference_count);
 }
 
-static bool &ft_socket_runtime_initialized()
+static bool &ft_socket_runtime_initialised()
 {
-    static bool initialized = false;
-    return (initialized);
+    static bool initialised = false;
+    return (initialised);
 }
 #endif
 
-ft_socket_handle::ft_socket_handle() : _initialized_state(ft_socket_handle::_state_uninitialized), _socket_fd(-1)
+ft_socket_handle::ft_socket_handle() : _initialised_state(ft_socket_handle::_state_uninitialised), _socket_fd(-1)
 {
     return ;
 }
 
-ft_socket_handle::ft_socket_handle(int) : _initialized_state(ft_socket_handle::_state_uninitialized), _socket_fd(-1)
+ft_socket_handle::ft_socket_handle(int) : _initialised_state(ft_socket_handle::_state_uninitialised), _socket_fd(-1)
 {
     return ;
 }
 
 ft_socket_handle::~ft_socket_handle()
 {
-    if (this->_initialized_state == ft_socket_handle::_state_initialized)
+    if (this->_initialised_state == ft_socket_handle::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -63,36 +63,36 @@ void ft_socket_handle::abort_lifecycle_error(const char *method_name, const char
     return ;
 }
 
-void ft_socket_handle::abort_if_not_initialized(const char *method_name) const
+void ft_socket_handle::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_socket_handle::_state_initialized)
+    if (this->_initialised_state == ft_socket_handle::_state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
 int ft_socket_handle::initialize()
 {
-    if (this->_initialized_state == ft_socket_handle::_state_initialized)
+    if (this->_initialised_state == ft_socket_handle::_state_initialised)
         this->abort_lifecycle_error("ft_socket_handle::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     this->_socket_fd = -1;
-    this->_initialized_state = ft_socket_handle::_state_initialized;
+    this->_initialised_state = ft_socket_handle::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int ft_socket_handle::destroy()
 {
-    if (this->_initialized_state != ft_socket_handle::_state_initialized)
+    if (this->_initialised_state != ft_socket_handle::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     (void)this->close();
-    this->_initialized_state = ft_socket_handle::_state_destroyed;
+    this->_initialised_state = ft_socket_handle::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
 bool ft_socket_handle::reset(int socket_fd)
 {
-    this->abort_if_not_initialized("ft_socket_handle::reset");
+    this->abort_if_not_initialised("ft_socket_handle::reset");
     if (socket_fd < 0)
     {
         if (!this->close())
@@ -112,7 +112,7 @@ bool ft_socket_handle::reset(int socket_fd)
 
 bool ft_socket_handle::close()
 {
-    this->abort_if_not_initialized("ft_socket_handle::close");
+    this->abort_if_not_initialised("ft_socket_handle::close");
     if (this->_socket_fd < 0)
         return (true);
     if (nw_close(this->_socket_fd) != 0)
@@ -123,7 +123,7 @@ bool ft_socket_handle::close()
 
 bool ft_socket_handle::is_valid() const
 {
-    this->abort_if_not_initialized("ft_socket_handle::is_valid");
+    this->abort_if_not_initialised("ft_socket_handle::is_valid");
     if (this->_socket_fd >= 0)
         return (true);
     return (false);
@@ -131,7 +131,7 @@ bool ft_socket_handle::is_valid() const
 
 int ft_socket_handle::get() const
 {
-    this->abort_if_not_initialized("ft_socket_handle::get");
+    this->abort_if_not_initialised("ft_socket_handle::get");
     return (this->_socket_fd);
 }
 
@@ -151,7 +151,7 @@ int ft_socket_runtime_acquire()
             runtime_mutex.unlock();
             return (FT_ERR_INITIALIZATION_FAILED);
         }
-        ft_socket_runtime_initialized() = true;
+        ft_socket_runtime_initialised() = true;
     }
     if (reference_count < 0)
     {
@@ -169,13 +169,13 @@ void ft_socket_runtime_release()
 #ifdef _WIN32
     std::mutex &runtime_mutex = ft_socket_runtime_mutex();
     int &reference_count = ft_socket_runtime_reference_count();
-    bool &initialized = ft_socket_runtime_initialized();
+    bool &initialised = ft_socket_runtime_initialised();
 
     runtime_mutex.lock();
     if (reference_count > 0)
     {
         reference_count--;
-        if (reference_count == 0 && initialized)
+        if (reference_count == 0 && initialised)
         {
             if (WSACleanup() != 0)
             {
@@ -185,7 +185,7 @@ void ft_socket_runtime_release()
             {
                 (void)(FT_ERR_SUCCESS);
             }
-            initialized = false;
+            initialised = false;
             runtime_mutex.unlock();
             return ;
         }

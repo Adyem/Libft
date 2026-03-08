@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../GetNextLine/gnl_stream.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -101,7 +101,7 @@ FT_TEST(test_gnl_stream_reinitialize_after_destroy_with_callback,
 }
 
 FT_TEST(test_gnl_stream_initialize_twice_aborts,
-    "gnl_stream initialize aborts when called on initialized object")
+    "gnl_stream initialize aborts when called on initialised object")
 {
     FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt(gnl_stream_initialize_twice_aborts_operation));
     return (1);

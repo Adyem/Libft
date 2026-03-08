@@ -262,7 +262,7 @@ int ft_socket::listen_socket(const SocketConfig &config)
 
 int ft_socket::join_multicast_group(const SocketConfig &config)
 {
-    this->abort_if_not_initialized("ft_socket::join_multicast_group");
+    this->abort_if_not_initialised("ft_socket::join_multicast_group");
     if (config._multicast_group[0] == '\0')
         return (FT_ERR_SUCCESS);
     if (config._address_family == AF_INET)

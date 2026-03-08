@@ -4,12 +4,13 @@ DEBUG_TARGET := errno_debug.a
 
 SRCS :=        errno_strerror.cpp \
         errno_perror.cpp \
-        errno_exit.cpp
+        errno_exit.cpp \
+        errno_internal.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := errno.hpp
+HEADERS := errno.hpp errno_internal.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

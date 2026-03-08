@@ -26,7 +26,7 @@
 #include "../../Game/game_world_replay.hpp"
 #include "../../Game/game_quest.hpp"
 #include "../../Game/game_upgrade.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
@@ -38,14 +38,14 @@
 static volatile sig_atomic_t g_signal_caught = 0;
 static sigjmp_buf g_signal_jump_buffer;
 
-static void uninitialized_destructor_signal_handler(int signal_value)
+static void uninitialised_destructor_signal_handler(int signal_value)
 {
     g_signal_caught = signal_value;
     siglongjmp(g_signal_jump_buffer, 1);
 }
 
 template <typename TypeName>
-static int expect_no_sigabrt_on_uninitialized_destructor()
+static int expect_no_sigabrt_on_uninitialised_destructor()
 {
     struct sigaction old_action_abort;
     struct sigaction new_action_abort;
@@ -62,8 +62,8 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
     std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
-    new_action_abort.sa_handler = &uninitialized_destructor_signal_handler;
-    new_action_iot.sa_handler = &uninitialized_destructor_signal_handler;
+    new_action_abort.sa_handler = &uninitialised_destructor_signal_handler;
+    new_action_iot.sa_handler = &uninitialised_destructor_signal_handler;
     sigemptyset(&new_action_abort.sa_mask);
     sigemptyset(&new_action_iot.sa_mask);
     iot_handler_installed = false;
@@ -99,408 +99,408 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
     return (g_signal_caught == 0);
 }
 
-static int is_non_aborting_uninitialized_destroy_result(int error_code)
+static int is_non_aborting_uninitialised_destroy_result(int error_code)
 {
     if (error_code == FT_ERR_SUCCESS)
         return (1);
     return (error_code == FT_ERR_INVALID_STATE);
 }
 
-FT_TEST(test_game_price_definition_destroy_uninitialized_returns_invalid_state,
-    "ft_price_definition destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_price_definition_destroy_uninitialised_returns_invalid_state,
+    "ft_price_definition destroy on uninitialised object is non-aborting")
 {
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, definition.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, definition.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_price_definition>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_price_definition>());
     return (1);
 }
 
-FT_TEST(test_game_rarity_band_destroy_uninitialized_returns_invalid_state,
-    "ft_rarity_band destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_rarity_band_destroy_uninitialised_returns_invalid_state,
+    "ft_rarity_band destroy on uninitialised object is non-aborting")
 {
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, band.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, band.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_rarity_band>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_rarity_band>());
     return (1);
 }
 
-FT_TEST(test_game_vendor_profile_destroy_uninitialized_returns_invalid_state,
-    "ft_vendor_profile destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_vendor_profile_destroy_uninitialised_returns_invalid_state,
+    "ft_vendor_profile destroy on uninitialised object is non-aborting")
 {
     ft_vendor_profile vendor;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, vendor.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, vendor.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_vendor_profile>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_vendor_profile>());
     return (1);
 }
 
-FT_TEST(test_game_currency_rate_destroy_uninitialized_returns_invalid_state,
-    "ft_currency_rate destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_currency_rate_destroy_uninitialised_returns_invalid_state,
+    "ft_currency_rate destroy on uninitialised object is non-aborting")
 {
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, rate.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, rate.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_currency_rate>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_currency_rate>());
     return (1);
 }
 
-FT_TEST(test_game_economy_table_destroy_uninitialized_returns_invalid_state,
-    "ft_economy_table destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_economy_table_destroy_uninitialised_returns_invalid_state,
+    "ft_economy_table destroy on uninitialised object is non-aborting")
 {
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_economy_table>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_economy_table>());
     return (1);
 }
 
-FT_TEST(test_game_behavior_profile_destroy_uninitialized_returns_invalid_state,
-    "ft_behavior_profile destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_behavior_profile_destroy_uninitialised_returns_invalid_state,
+    "ft_behavior_profile destroy on uninitialised object is non-aborting")
 {
     ft_behavior_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, profile.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, profile.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_behavior_profile>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_behavior_profile>());
     return (1);
 }
 
-FT_TEST(test_game_behavior_table_destroy_uninitialized_returns_invalid_state,
-    "ft_behavior_table destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_behavior_table_destroy_uninitialised_returns_invalid_state,
+    "ft_behavior_table destroy on uninitialised object is non-aborting")
 {
     ft_behavior_table table;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_behavior_table>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_behavior_table>());
     return (1);
 }
 
-FT_TEST(test_game_buff_destroy_uninitialized_returns_invalid_state,
-    "ft_buff destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_buff_destroy_uninitialised_returns_invalid_state,
+    "ft_buff destroy on uninitialised object is non-aborting")
 {
     ft_buff buff;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, buff.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, buff.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_buff>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_buff>());
     return (1);
 }
 
-FT_TEST(test_game_debuff_destroy_uninitialized_returns_invalid_state,
-    "ft_debuff destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_debuff_destroy_uninitialised_returns_invalid_state,
+    "ft_debuff destroy on uninitialised object is non-aborting")
 {
     ft_debuff debuff;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, debuff.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, debuff.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_debuff>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_debuff>());
     return (1);
 }
 
-FT_TEST(test_game_skill_destroy_uninitialized_returns_invalid_state,
-    "ft_skill destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_skill_destroy_uninitialised_returns_invalid_state,
+    "ft_skill destroy on uninitialised object is non-aborting")
 {
     ft_skill skill;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, skill.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, skill.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_skill>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_skill>());
     return (1);
 }
 
-FT_TEST(test_game_reputation_destroy_uninitialized_returns_invalid_state,
-    "ft_reputation destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_reputation_destroy_uninitialised_returns_invalid_state,
+    "ft_reputation destroy on uninitialised object is non-aborting")
 {
     ft_reputation reputation;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, reputation.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, reputation.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_reputation>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_reputation>());
     return (1);
 }
 
-FT_TEST(test_game_dialogue_script_destroy_uninitialized_returns_invalid_state,
-    "ft_dialogue_script destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_dialogue_script_destroy_uninitialised_returns_invalid_state,
+    "ft_dialogue_script destroy on uninitialised object is non-aborting")
 {
     ft_dialogue_script script;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, script.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, script.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_dialogue_script>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_dialogue_script>());
     return (1);
 }
 
-FT_TEST(test_game_progress_tracker_destroy_uninitialized_returns_invalid_state,
-    "ft_progress_tracker destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_progress_tracker_destroy_uninitialised_returns_invalid_state,
+    "ft_progress_tracker destroy on uninitialised object is non-aborting")
 {
     ft_progress_tracker tracker;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, tracker.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, tracker.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_progress_tracker>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_progress_tracker>());
     return (1);
 }
 
-FT_TEST(test_game_inventory_destroy_uninitialized_returns_invalid_state,
-    "ft_inventory destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_inventory_destroy_uninitialised_returns_invalid_state,
+    "ft_inventory destroy on uninitialised object is non-aborting")
 {
     ft_inventory inventory;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, inventory.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, inventory.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_inventory>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_inventory>());
     return (1);
 }
 
-FT_TEST(test_game_map3d_destroy_uninitialized_returns_invalid_state,
-    "ft_map3d destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_map3d_destroy_uninitialised_returns_invalid_state,
+    "ft_map3d destroy on uninitialised object is non-aborting")
 {
     ft_map3d map_instance;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, map_instance.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, map_instance.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_map3d>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_map3d>());
     return (1);
 }
 
-FT_TEST(test_game_achievement_destroy_uninitialized_returns_invalid_state,
-    "ft_achievement destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_achievement_destroy_uninitialised_returns_invalid_state,
+    "ft_achievement destroy on uninitialised object is non-aborting")
 {
     ft_achievement achievement;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, achievement.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, achievement.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_achievement>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_achievement>());
     return (1);
 }
 
-FT_TEST(test_game_hooks_destroy_uninitialized_returns_invalid_state,
-    "ft_game_hooks destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_hooks_destroy_uninitialised_returns_invalid_state,
+    "ft_game_hooks destroy on uninitialised object is non-aborting")
 {
     ft_game_hooks hooks;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, hooks.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, hooks.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_game_hooks>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_game_hooks>());
     return (1);
 }
 
-FT_TEST(test_game_goal_destroy_uninitialized_returns_invalid_state,
-    "ft_goal destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_goal_destroy_uninitialised_returns_invalid_state,
+    "ft_goal destroy on uninitialised object is non-aborting")
 {
     ft_goal goal;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, goal.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, goal.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_goal>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_goal>());
     return (1);
 }
 
-FT_TEST(test_game_item_definition_destroy_uninitialized_is_non_aborting,
-    "ft_item_definition destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_item_definition_destroy_uninitialised_is_non_aborting,
+    "ft_item_definition destroy on uninitialised object is non-aborting")
 {
     ft_item_definition item_definition;
 
     const int destroy_error = item_definition.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, item_definition.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_item_definition>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_item_definition>());
     return (1);
 }
 
-FT_TEST(test_game_recipe_blueprint_destroy_uninitialized_is_non_aborting,
-    "ft_recipe_blueprint destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_recipe_blueprint_destroy_uninitialised_is_non_aborting,
+    "ft_recipe_blueprint destroy on uninitialised object is non-aborting")
 {
     ft_recipe_blueprint recipe_blueprint;
 
     const int destroy_error = recipe_blueprint.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, recipe_blueprint.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_recipe_blueprint>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_recipe_blueprint>());
     return (1);
 }
 
-FT_TEST(test_game_loadout_entry_destroy_uninitialized_is_non_aborting,
-    "ft_loadout_entry destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_loadout_entry_destroy_uninitialised_is_non_aborting,
+    "ft_loadout_entry destroy on uninitialised object is non-aborting")
 {
     ft_loadout_entry loadout_entry;
 
     const int destroy_error = loadout_entry.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, loadout_entry.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_loadout_entry>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_loadout_entry>());
     return (1);
 }
 
-FT_TEST(test_game_loadout_blueprint_destroy_uninitialized_is_non_aborting,
-    "ft_loadout_blueprint destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_loadout_blueprint_destroy_uninitialised_is_non_aborting,
+    "ft_loadout_blueprint destroy on uninitialised object is non-aborting")
 {
     ft_loadout_blueprint loadout_blueprint;
 
     const int destroy_error = loadout_blueprint.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, loadout_blueprint.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_loadout_blueprint>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_loadout_blueprint>());
     return (1);
 }
 
-FT_TEST(test_game_data_catalog_destroy_uninitialized_is_non_aborting,
-    "ft_data_catalog destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_data_catalog_destroy_uninitialised_is_non_aborting,
+    "ft_data_catalog destroy on uninitialised object is non-aborting")
 {
     ft_data_catalog data_catalog;
 
     const int destroy_error = data_catalog.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, data_catalog.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_data_catalog>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_data_catalog>());
     return (1);
 }
 
-FT_TEST(test_game_dialogue_table_destroy_uninitialized_is_non_aborting,
-    "ft_dialogue_table destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_dialogue_table_destroy_uninitialised_is_non_aborting,
+    "ft_dialogue_table destroy on uninitialised object is non-aborting")
 {
     ft_dialogue_table dialogue_table;
 
     const int destroy_error = dialogue_table.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, dialogue_table.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_dialogue_table>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_dialogue_table>());
     return (1);
 }
 
-FT_TEST(test_game_path_step_destroy_uninitialized_is_non_aborting,
-    "ft_path_step destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_path_step_destroy_uninitialised_is_non_aborting,
+    "ft_path_step destroy on uninitialised object is non-aborting")
 {
     ft_path_step path_step;
 
     const int destroy_error = path_step.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, path_step.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_path_step>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_path_step>());
     return (1);
 }
 
-FT_TEST(test_game_pathfinding_destroy_uninitialized_is_non_aborting,
-    "ft_pathfinding destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_pathfinding_destroy_uninitialised_is_non_aborting,
+    "ft_pathfinding destroy on uninitialised object is non-aborting")
 {
     ft_pathfinding pathfinding;
 
     const int destroy_error = pathfinding.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, pathfinding.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_pathfinding>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_pathfinding>());
     return (1);
 }
 
-FT_TEST(test_game_world_region_destroy_uninitialized_is_non_aborting,
-    "ft_world_region destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_world_region_destroy_uninitialised_is_non_aborting,
+    "ft_world_region destroy on uninitialised object is non-aborting")
 {
     ft_world_region world_region;
 
     const int destroy_error = world_region.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, world_region.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_world_region>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_world_region>());
     return (1);
 }
 
-FT_TEST(test_game_region_definition_destroy_uninitialized_is_non_aborting,
-    "ft_region_definition destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_region_definition_destroy_uninitialised_is_non_aborting,
+    "ft_region_definition destroy on uninitialised object is non-aborting")
 {
     ft_region_definition region_definition;
 
     const int destroy_error = region_definition.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, region_definition.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_region_definition>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_region_definition>());
     return (1);
 }
 
-FT_TEST(test_game_world_registry_destroy_uninitialized_is_non_aborting,
-    "ft_world_registry destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_world_registry_destroy_uninitialised_is_non_aborting,
+    "ft_world_registry destroy on uninitialised object is non-aborting")
 {
     ft_world_registry world_registry;
 
     const int destroy_error = world_registry.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, world_registry.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_world_registry>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_world_registry>());
     return (1);
 }
 
-FT_TEST(test_game_event_scheduler_destroy_uninitialized_is_non_aborting,
-    "ft_event_scheduler destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_event_scheduler_destroy_uninitialised_is_non_aborting,
+    "ft_event_scheduler destroy on uninitialised object is non-aborting")
 {
     ft_event_scheduler scheduler;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, scheduler.destroy());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, scheduler.get_error());
     FT_ASSERT_EQ(1,
-        expect_no_sigabrt_on_uninitialized_destructor<ft_event_scheduler>());
+        expect_no_sigabrt_on_uninitialised_destructor<ft_event_scheduler>());
     return (1);
 }
 
-FT_TEST(test_game_world_replay_destroy_uninitialized_is_non_aborting,
-    "ft_world_replay_session destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_world_replay_destroy_uninitialised_is_non_aborting,
+    "ft_world_replay_session destroy on uninitialised object is non-aborting")
 {
     ft_world_replay_session replay_session;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, replay_session.destroy());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<
         ft_world_replay_session>());
     return (1);
 }
 
-FT_TEST(test_game_quest_destroy_uninitialized_is_non_aborting,
-    "ft_quest destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_quest_destroy_uninitialised_is_non_aborting,
+    "ft_quest destroy on uninitialised object is non-aborting")
 {
     ft_quest quest;
 
     const int destroy_error = quest.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, quest.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_quest>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_quest>());
     return (1);
 }
 
-FT_TEST(test_game_upgrade_destroy_uninitialized_is_non_aborting,
-    "ft_upgrade destroy on uninitialized object is non-aborting")
+FT_TEST(test_game_upgrade_destroy_uninitialised_is_non_aborting,
+    "ft_upgrade destroy on uninitialised object is non-aborting")
 {
     ft_upgrade upgrade;
 
     const int destroy_error = upgrade.destroy();
-    FT_ASSERT_EQ(1, is_non_aborting_uninitialized_destroy_result(
+    FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
     FT_ASSERT_EQ(destroy_error, upgrade.get_error());
-    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<ft_upgrade>());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<ft_upgrade>());
     return (1);
 }

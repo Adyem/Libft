@@ -13,7 +13,7 @@
 time_timer::time_timer() noexcept
 {
     this->_mutex = ft_nullptr;
-    this->_initialized_state = time_timer::_state_uninitialized;
+    this->_initialised_state = time_timer::_state_uninitialised;
     this->_duration_ms = 0;
     this->_start_time = std::chrono::steady_clock::time_point();
     this->_running = false;
@@ -22,7 +22,7 @@ time_timer::time_timer() noexcept
 
 time_timer::~time_timer() noexcept
 {
-    if (this->_initialized_state == time_timer::_state_initialized)
+    if (this->_initialised_state == time_timer::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -39,18 +39,18 @@ void    time_timer::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void    time_timer::abort_if_not_initialized(const char *method_name) const noexcept
+void    time_timer::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == time_timer::_state_initialized)
+    if (this->_initialised_state == time_timer::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int     time_timer::lock_mutex(void) const noexcept
 {
-    this->abort_if_not_initialized("time_timer::lock_mutex");
+    this->abort_if_not_initialised("time_timer::lock_mutex");
     return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
@@ -61,16 +61,16 @@ int     time_timer::unlock_mutex(void) const noexcept
 
 int     time_timer::initialize(void) noexcept
 {
-    if (this->_initialized_state == time_timer::_state_initialized)
+    if (this->_initialised_state == time_timer::_state_initialised)
     {
         this->abort_lifecycle_error("time_timer::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_duration_ms = 0;
     this->_start_time = std::chrono::steady_clock::time_point();
     this->_running = false;
-    this->_initialized_state = time_timer::_state_initialized;
+    this->_initialised_state = time_timer::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -78,7 +78,7 @@ int     time_timer::destroy(void) noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != time_timer::_state_initialized)
+    if (this->_initialised_state != time_timer::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
@@ -86,7 +86,7 @@ int     time_timer::destroy(void) noexcept
     this->_duration_ms = 0;
     this->_start_time = std::chrono::steady_clock::time_point();
     this->_running = false;
-    this->_initialized_state = time_timer::_state_destroyed;
+    this->_initialised_state = time_timer::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -95,7 +95,7 @@ void    time_timer::start(long duration_ms) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("time_timer::start");
+    this->abort_if_not_initialised("time_timer::start");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -118,7 +118,7 @@ long    time_timer::update(void) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("time_timer::update");
+    this->abort_if_not_initialised("time_timer::update");
     remaining = -1;
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
@@ -150,7 +150,7 @@ long time_timer::add_time(long amount_ms) noexcept
     int unlock_error;
 
     result = -1;
-    this->abort_if_not_initialized("time_timer::add_time");
+    this->abort_if_not_initialised("time_timer::add_time");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (result);
@@ -183,7 +183,7 @@ long time_timer::remove_time(long amount_ms) noexcept
     int unlock_error;
 
     result = -1;
-    this->abort_if_not_initialized("time_timer::remove_time");
+    this->abort_if_not_initialised("time_timer::remove_time");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (result);
@@ -218,7 +218,7 @@ void    time_timer::sleep_remaining() noexcept
     int unlock_error;
 
     remaining = -1;
-    this->abort_if_not_initialized("time_timer::sleep_remaining");
+    this->abort_if_not_initialised("time_timer::sleep_remaining");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -249,7 +249,7 @@ int     time_timer::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    this->abort_if_not_initialized("time_timer::enable_thread_safety");
+    this->abort_if_not_initialised("time_timer::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -269,7 +269,7 @@ int     time_timer::disable_thread_safety(void) noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("time_timer::disable_thread_safety");
+    this->abort_if_not_initialised("time_timer::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         destroy_error = this->_mutex->destroy();
@@ -288,7 +288,7 @@ bool    time_timer::is_thread_safe(void) const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *time_timer::get_mutex_for_validation(void) const noexcept
 {
-    this->abort_if_not_initialized("time_timer::get_mutex_for_validation");
+    this->abort_if_not_initialised("time_timer::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

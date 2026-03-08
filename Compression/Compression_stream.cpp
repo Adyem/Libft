@@ -61,15 +61,15 @@ void t_compress_stream_options::abort_lifecycle_error(const char *method_name,
     su_abort();
 }
 
-void t_compress_stream_options::abort_if_not_initialized(const char *method_name) const
+void t_compress_stream_options::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state != this->_state_initialized)
-        this->abort_lifecycle_error(method_name, "object is not initialized");
+    if (this->_initialised_state != this->_state_initialised)
+        this->abort_lifecycle_error(method_name, "object is not initialised");
 }
 
 int t_compress_stream_options::enable_thread_safety()
 {
-    this->abort_if_not_initialized("enable_thread_safety");
+    this->abort_if_not_initialised("enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
@@ -92,7 +92,7 @@ int t_compress_stream_options::disable_thread_safety()
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("disable_thread_safety");
+    this->abort_if_not_initialised("disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -103,7 +103,7 @@ int t_compress_stream_options::disable_thread_safety()
 
 bool t_compress_stream_options::is_thread_safe() const
 {
-    this->abort_if_not_initialized("is_thread_safe");
+    this->abort_if_not_initialised("is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -119,22 +119,22 @@ t_compress_stream_options::t_compress_stream_options(void)
     this->_memory_level = 0;
     this->_strategy = Z_DEFAULT_STRATEGY;
     this->_mutex = ft_nullptr;
-    this->_initialized_state = this->_state_uninitialized;
+    this->_initialised_state = this->_state_uninitialised;
     return ;
 }
 
 t_compress_stream_options::~t_compress_stream_options(void)
 {
-    if (this->_initialized_state == this->_state_initialized)
+    if (this->_initialised_state == this->_state_initialised)
         (void)this->destroy();
     return ;
 }
 
 int t_compress_stream_options::initialize(void)
 {
-    if (this->_initialized_state == this->_state_initialized)
+    if (this->_initialised_state == this->_state_initialised)
         return (FT_ERR_INVALID_STATE);
-    this->_initialized_state = this->_state_initialized;
+    this->_initialised_state = this->_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -142,10 +142,10 @@ int t_compress_stream_options::destroy(void)
 {
     int disable_error;
 
-    if (this->_initialized_state != this->_state_initialized)
+    if (this->_initialised_state != this->_state_initialised)
         return (FT_ERR_INVALID_STATE);
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = this->_state_destroyed;
+    this->_initialised_state = this->_state_destroyed;
     return (disable_error);
 }
 

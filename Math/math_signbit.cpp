@@ -2,11 +2,11 @@
 
 typedef union u_double_bits
 {
-    double              double_value;
-    unsigned long long  unsigned_value;
+    double      double_value;
+    uint64_t    unsigned_value;
 }   t_double_bits;
 
-int math_signbit(double number)
+int32_t math_signbit(double number)
 {
     t_double_bits bit_structure;
 

@@ -3,9 +3,9 @@
 #include "../Errno/errno.hpp"
 #include <cerrno>
 
-int su_open(const char *path_name)
+int32_t su_open(const char *path_name)
 {
-    int result;
+    int32_t result;
 
     result = cmp_open(path_name);
     if (result < 0)
@@ -16,9 +16,9 @@ int su_open(const char *path_name)
     return (result);
 }
 
-int su_open(const char *path_name, int flags)
+int32_t su_open(const char *path_name, int32_t flags)
 {
-    int result;
+    int32_t result;
 
     result = cmp_open(path_name, flags);
     if (result < 0)
@@ -29,9 +29,9 @@ int su_open(const char *path_name, int flags)
     return (result);
 }
 
-int su_open(const char *path_name, int flags, mode_t mode)
+int32_t su_open(const char *path_name, int32_t flags, mode_t mode)
 {
-    int result;
+    int32_t result;
 
     result = cmp_open(path_name, flags, mode);
     if (result < 0)

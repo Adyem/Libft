@@ -24,7 +24,7 @@ const char	*ft_quest::get_error_str() const noexcept
 ft_quest::ft_quest() noexcept
     : _id(0), _phases(0), _current_phase(0), _description(), _objective(),
       _reward_experience(0), _reward_items(), _mutex(ft_nullptr),
-      _initialized_state(ft_quest::_state_uninitialized)
+      _initialised_state(ft_quest::_state_uninitialised)
 {
 	this->set_error(FT_ERR_SUCCESS);
 	return ;
@@ -32,7 +32,7 @@ ft_quest::ft_quest() noexcept
 
 ft_quest::~ft_quest() noexcept
 {
-    if (this->_initialized_state != ft_quest::_state_initialized)
+    if (this->_initialised_state != ft_quest::_state_initialised)
         return ;
     (void)this->destroy();
     return ;
@@ -50,12 +50,12 @@ void ft_quest::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_quest::abort_if_not_initialized(const char *method_name) const
+void ft_quest::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_quest::_state_initialized)
+    if (this->_initialised_state == ft_quest::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -65,10 +65,10 @@ int ft_quest::initialize() noexcept
     int objective_error;
     int reward_items_error;
 
-    if (this->_initialized_state == ft_quest::_state_initialized)
+    if (this->_initialised_state == ft_quest::_state_initialised)
     {
         this->abort_lifecycle_error("ft_quest::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -78,7 +78,7 @@ int ft_quest::initialize() noexcept
     description_error = this->_description.initialize();
     if (description_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_quest::_state_destroyed;
+        this->_initialised_state = ft_quest::_state_destroyed;
         this->set_error(description_error);
         return (description_error);
     }
@@ -86,7 +86,7 @@ int ft_quest::initialize() noexcept
     if (objective_error != FT_ERR_SUCCESS)
     {
         (void)this->_description.destroy();
-        this->_initialized_state = ft_quest::_state_destroyed;
+        this->_initialised_state = ft_quest::_state_destroyed;
         this->set_error(objective_error);
         return (objective_error);
     }
@@ -95,12 +95,12 @@ int ft_quest::initialize() noexcept
     {
         (void)this->_description.destroy();
         (void)this->_objective.destroy();
-        this->_initialized_state = ft_quest::_state_destroyed;
+        this->_initialised_state = ft_quest::_state_destroyed;
         this->set_error(reward_items_error);
         return (reward_items_error);
     }
     this->_reward_experience = 0;
-    this->_initialized_state = ft_quest::_state_initialized;
+    this->_initialised_state = ft_quest::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -110,10 +110,10 @@ int ft_quest::initialize(const ft_quest &other) noexcept
     int initialize_error;
     int copy_error;
 
-    if (other._initialized_state != ft_quest::_state_initialized)
+    if (other._initialised_state != ft_quest::_state_initialised)
     {
         other.abort_lifecycle_error("ft_quest::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -122,7 +122,7 @@ int ft_quest::initialize(const ft_quest &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialized_state == ft_quest::_state_initialized)
+    if (this->_initialised_state == ft_quest::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -146,7 +146,7 @@ int ft_quest::initialize(const ft_quest &other) noexcept
     copy_error = this->_reward_items.copy_from(other._reward_items);
     if (copy_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_quest::_state_destroyed;
+        this->_initialised_state = ft_quest::_state_destroyed;
         this->set_error(copy_error);
         return (copy_error);
     }
@@ -159,10 +159,10 @@ int ft_quest::initialize(ft_quest &&other) noexcept
     int initialize_error;
     int copy_error;
 
-    if (other._initialized_state != ft_quest::_state_initialized)
+    if (other._initialised_state != ft_quest::_state_initialised)
     {
         other.abort_lifecycle_error("ft_quest::initialize(move)",
-            "source object is not initialized");
+            "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -171,7 +171,7 @@ int ft_quest::initialize(ft_quest &&other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialized_state == ft_quest::_state_initialized)
+    if (this->_initialised_state == ft_quest::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -195,7 +195,7 @@ int ft_quest::initialize(ft_quest &&other) noexcept
     copy_error = this->_reward_items.copy_from(other._reward_items);
     if (copy_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_quest::_state_destroyed;
+        this->_initialised_state = ft_quest::_state_destroyed;
         this->set_error(copy_error);
         return (copy_error);
     }
@@ -211,7 +211,7 @@ int ft_quest::destroy() noexcept
     int disable_error;
     int first_error;
 
-    if (this->_initialized_state != ft_quest::_state_initialized)
+    if (this->_initialised_state != ft_quest::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -231,7 +231,7 @@ int ft_quest::destroy() noexcept
     this->_current_phase = 0;
     this->_reward_experience = 0;
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_quest::_state_destroyed;
+    this->_initialised_state = ft_quest::_state_destroyed;
     if (first_error != FT_ERR_SUCCESS)
     {
         this->set_error(first_error);
@@ -246,7 +246,7 @@ int ft_quest::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_quest::enable_thread_safety");
+    this->abort_if_not_initialised("ft_quest::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -330,13 +330,13 @@ int ft_quest::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_quest::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::lock");
+    this->abort_if_not_initialised("ft_quest::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_quest::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::unlock");
+    this->abort_if_not_initialised("ft_quest::unlock");
     int unlock_error;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
@@ -349,7 +349,7 @@ int ft_quest::get_id() const noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_quest::get_id");
+    this->abort_if_not_initialised("ft_quest::get_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -372,7 +372,7 @@ void ft_quest::set_id(int id) noexcept
     int lock_error;
     bool valid;
 
-    this->abort_if_not_initialized("ft_quest::set_id");
+    this->abort_if_not_initialised("ft_quest::set_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -399,7 +399,7 @@ int ft_quest::get_phases() const noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_quest::get_phases");
+    this->abort_if_not_initialised("ft_quest::get_phases");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -422,7 +422,7 @@ void ft_quest::set_phases(int phases) noexcept
     int lock_error;
     bool valid;
 
-    this->abort_if_not_initialized("ft_quest::set_phases");
+    this->abort_if_not_initialised("ft_quest::set_phases");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -453,7 +453,7 @@ int ft_quest::get_current_phase() const noexcept
     bool lock_acquired;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_quest::get_current_phase");
+    this->abort_if_not_initialised("ft_quest::get_current_phase");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -476,7 +476,7 @@ void ft_quest::set_current_phase(int phase) noexcept
     int lock_error;
     bool valid;
 
-    this->abort_if_not_initialized("ft_quest::set_current_phase");
+    this->abort_if_not_initialised("ft_quest::set_current_phase");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -500,7 +500,7 @@ void ft_quest::set_current_phase(int phase) noexcept
 
 const ft_string &ft_quest::get_description() const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::get_description");
+    this->abort_if_not_initialised("ft_quest::get_description");
     return (this->_description);
 }
 
@@ -510,7 +510,7 @@ void ft_quest::set_description(const ft_string &description) noexcept
 
     int lock_error;
 
-    this->abort_if_not_initialized("ft_quest::set_description");
+    this->abort_if_not_initialised("ft_quest::set_description");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -529,7 +529,7 @@ void ft_quest::set_description(const ft_string &description) noexcept
 
 const ft_string &ft_quest::get_objective() const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::get_objective");
+    this->abort_if_not_initialised("ft_quest::get_objective");
     return (this->_objective);
 }
 
@@ -539,7 +539,7 @@ void ft_quest::set_objective(const ft_string &objective) noexcept
 
     int lock_error;
 
-    this->abort_if_not_initialized("ft_quest::set_objective");
+    this->abort_if_not_initialised("ft_quest::set_objective");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -558,7 +558,7 @@ void ft_quest::set_objective(const ft_string &objective) noexcept
 
 int ft_quest::get_reward_experience() const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::get_reward_experience");
+    this->abort_if_not_initialised("ft_quest::get_reward_experience");
     return (this->_reward_experience);
 }
 
@@ -569,7 +569,7 @@ void ft_quest::set_reward_experience(int experience) noexcept
     int lock_error;
     bool valid;
 
-    this->abort_if_not_initialized("ft_quest::set_reward_experience");
+    this->abort_if_not_initialised("ft_quest::set_reward_experience");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -593,13 +593,13 @@ void ft_quest::set_reward_experience(int experience) noexcept
 
 ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() noexcept
 {
-    this->abort_if_not_initialized("ft_quest::get_reward_items");
+    this->abort_if_not_initialised("ft_quest::get_reward_items");
     return (this->_reward_items);
 }
 
 const ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::get_reward_items const");
+    this->abort_if_not_initialised("ft_quest::get_reward_items const");
     return (this->_reward_items);
 }
 
@@ -610,7 +610,7 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
     int lock_error;
     int copy_error;
 
-    this->abort_if_not_initialized("ft_quest::set_reward_items");
+    this->abort_if_not_initialised("ft_quest::set_reward_items");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -634,7 +634,7 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
 
 bool ft_quest::is_complete() const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::is_complete");
+    this->abort_if_not_initialised("ft_quest::is_complete");
     bool lock_acquired;
     int lock_error;
     bool result;
@@ -659,7 +659,7 @@ void ft_quest::advance_phase() noexcept
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_quest::advance_phase");
+    this->abort_if_not_initialised("ft_quest::advance_phase");
     int lock_error;
 
     lock_acquired = false;
@@ -682,7 +682,7 @@ void ft_quest::advance_phase() noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_quest::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_quest::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_quest::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

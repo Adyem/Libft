@@ -8,7 +8,7 @@ char    *ft_strrchr(const char *string, int32_t char_to_find)
 
     ft_size_t index = ft_strlen_size_t(string);
     char target_char = static_cast<char>(char_to_find);
-    while (true)
+    while (FT_TRUE)
     {
         if (string[index] == target_char)
             return (const_cast<char *>(string + index));

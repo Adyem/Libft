@@ -1,45 +1,37 @@
 #include "math.hpp"
 #include "../Basic/limits.hpp"
 
-static unsigned long long get_absolute_difference(long long first_number, long long second_number)
+static uint64_t get_absolute_difference(int64_t first_number,
+    int64_t second_number)
 {
     __int128 signed_difference;
 
     signed_difference = static_cast<__int128>(first_number);
     signed_difference -= static_cast<__int128>(second_number);
     if (signed_difference >= 0)
-        return (static_cast<unsigned long long>(signed_difference));
-    return (static_cast<unsigned long long>(-signed_difference));
+        return (static_cast<uint64_t>(signed_difference));
+    return (static_cast<uint64_t>(-signed_difference));
 }
 
-int math_absdiff(int first_number, int second_number)
+int32_t math_absdiff(int32_t first_number, int32_t second_number)
 {
-    unsigned long long magnitude;
+    uint64_t magnitude;
 
-    magnitude = get_absolute_difference(static_cast<long long>(first_number), static_cast<long long>(second_number));
-    if (magnitude > static_cast<unsigned long long>(FT_INT32_MAX))
+    magnitude = get_absolute_difference(static_cast<int64_t>(first_number),
+            static_cast<int64_t>(second_number));
+    if (magnitude > static_cast<uint64_t>(FT_INT32_MAX))
         return (FT_INT32_MAX);
-    return (static_cast<int>(magnitude));
+    return (static_cast<int32_t>(magnitude));
 }
 
-long math_absdiff(long first_number, long second_number)
+int64_t math_absdiff(int64_t first_number, int64_t second_number)
 {
-    unsigned long long magnitude;
-
-    magnitude = get_absolute_difference(static_cast<long long>(first_number), static_cast<long long>(second_number));
-    if (magnitude > static_cast<unsigned long long>(FT_LLONG_MAX))
-        return (static_cast<long>(FT_LLONG_MAX));
-    return (static_cast<long>(magnitude));
-}
-
-long long math_absdiff(long long first_number, long long second_number)
-{
-    unsigned long long magnitude;
+    uint64_t magnitude;
 
     magnitude = get_absolute_difference(first_number, second_number);
-    if (magnitude > static_cast<unsigned long long>(FT_LLONG_MAX))
+    if (magnitude > static_cast<uint64_t>(FT_LLONG_MAX))
         return (FT_LLONG_MAX);
-    return (static_cast<long long>(magnitude));
+    return (static_cast<int64_t>(magnitude));
 }
 
 double math_absdiff(double first_number, double second_number)

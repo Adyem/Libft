@@ -1,6 +1,7 @@
 #ifdef _WIN32
 
 #include "compatebility_cross_process.hpp"
+#include "compatebility_internal.hpp"
 #include <cerrno>
 #include <winsock2.h>
 #include <windows.h>
@@ -28,9 +29,9 @@ int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const 
 
         windows_error = WSAGetLastError();
         errno = windows_error;
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_cross_process_receive_descriptor(int32_t socket_file_descriptor, cross_process_message &message)
@@ -53,16 +54,16 @@ int32_t cmp_cross_process_receive_descriptor(int32_t socket_file_descriptor, cro
 
             windows_error = WSAGetLastError();
             errno = static_cast<int32_t>(windows_error);
-            return (-1);
+                return (cmp_map_system_error_to_ft(errno));
         }
         if (chunk_size == 0)
         {
             errno = ECONNRESET;
-            return (-1);
+                return (cmp_map_system_error_to_ft(errno));
         }
         offset += static_cast<ft_size_t>(chunk_size);
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cross_process_mapping *mapping)
@@ -76,7 +77,7 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
     {
         windows_error = GetLastError();
         errno = static_cast<int32_t>(windows_error);
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     mapping_pointer = MapViewOfFile(mapping_handle, FILE_MAP_ALL_ACCESS, 0, 0, static_cast<SIZE_T>(message.remote_memory_size));
     CloseHandle(mapping_handle);
@@ -84,7 +85,7 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
     {
         windows_error = GetLastError();
         errno = static_cast<int32_t>(windows_error);
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     mapping->mapping_address = reinterpret_cast<unsigned char *>(mapping_pointer);
     mapping->mapping_length = static_cast<ft_size_t>(message.remote_memory_size);
@@ -94,36 +95,36 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
     {
         cmp_cross_process_close_mapping(mapping);
         errno = EINVAL;
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     ft_size_t mutex_offset = compute_offset(message.shared_mutex_address, message.stack_base_address);
     if (mutex_offset + static_cast<ft_size_t>(sizeof(HANDLE)) > mapping->mapping_length)
     {
         cmp_cross_process_close_mapping(mapping);
         errno = EINVAL;
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     mapping->mutex_address = mapping->mapping_address + mutex_offset;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_cross_process_close_mapping(cmp_cross_process_mapping *mapping)
 {
     if (mapping->mapping_address == ft_nullptr)
-        return (0);
+        return (FT_ERR_SUCCESS);
     if (UnmapViewOfFile(mapping->mapping_address) == 0)
     {
         DWORD windows_error;
 
         windows_error = GetLastError();
         errno = static_cast<int32_t>(windows_error);
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     mapping->mapping_address = ft_nullptr;
     mapping->mapping_length = 0;
     mapping->platform_handle = ft_nullptr;
     mapping->mutex_address = ft_nullptr;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
@@ -132,22 +133,22 @@ int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_c
     if (!mapping || mapping->mutex_address == ft_nullptr)
     {
         errno = EINVAL;
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     HANDLE shared_mutex_handle = *reinterpret_cast<HANDLE *>(mapping->mutex_address);
     if (shared_mutex_handle == NULL)
     {
         errno = EINVAL;
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     int32_t attempt_count = 0;
-    bool mutex_locked = false;
+    ft_bool mutex_locked = FT_FALSE;
     while (attempt_count < 5)
     {
         DWORD wait_result = WaitForSingleObject(shared_mutex_handle, 0);
         if (wait_result == WAIT_OBJECT_0 || wait_result == WAIT_ABANDONED)
         {
-            mutex_locked = true;
+            mutex_locked = FT_TRUE;
             break ;
         }
         if (wait_result == WAIT_TIMEOUT)
@@ -160,15 +161,15 @@ int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_c
         }
         DWORD windows_error = GetLastError();
         errno = static_cast<int32_t>(windows_error);
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
-    if (mutex_locked == false)
+    if (mutex_locked == FT_FALSE)
     {
         errno = ETIMEDOUT;
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     mutex_state->platform_mutex = shared_mutex_handle;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_cross_process_unlock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
@@ -180,15 +181,15 @@ int32_t cmp_cross_process_unlock_mutex(const cross_process_message &message, cmp
     (void)mapping;
     shared_mutex_handle = reinterpret_cast<HANDLE>(mutex_state->platform_mutex);
     if (shared_mutex_handle == NULL)
-        return (0);
+        return (FT_ERR_SUCCESS);
     if (ReleaseMutex(shared_mutex_handle) == 0)
     {
         windows_error = GetLastError();
         errno = static_cast<int32_t>(windows_error);
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
     mutex_state->platform_mutex = ft_nullptr;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 #endif

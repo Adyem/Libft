@@ -11,12 +11,12 @@
 #include <stddef.h>
 #include <cstdio>
 
-int pf_string_pop_last_error(const ft_string &)
+int32_t pf_string_pop_last_error(const ft_string &)
 {
     return (ft_string::get_error());
 }
 
-static const char g_decimal_pairs[200] =
+static const char G_DECIMAL_PAIRS[200] =
 {
     '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9',
     '1', '0', '1', '1', '1', '2', '1', '3', '1', '4', '1', '5', '1', '6', '1', '7', '1', '8', '1', '9',
@@ -30,7 +30,7 @@ static const char g_decimal_pairs[200] =
     '9', '0', '9', '1', '9', '2', '9', '3', '9', '4', '9', '5', '9', '6', '9', '7', '9', '8', '9', '9'
 };
 
-static const char g_hex_pairs_lowercase[512] =
+static const char G_HEX_PAIRS_LOWERCASE[512] =
 {
     '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9',
     '0', 'a', '0', 'b', '0', 'c', '0', 'd', '0', 'e', '0', 'f', '1', '0', '1', '1', '1', '2', '1', '3',
@@ -60,7 +60,7 @@ static const char g_hex_pairs_lowercase[512] =
     'f', 'a', 'f', 'b', 'f', 'c', 'f', 'd', 'f', 'e', 'f', 'f'
 };
 
-static const char g_hex_pairs_uppercase[512] =
+static const char G_HEX_PAIRS_UPPERCASE[512] =
 {
     '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9',
     '0', 'A', '0', 'B', '0', 'C', '0', 'D', '0', 'E', '0', 'F', '1', '0', '1', '1', '1', '2', '1', '3',
@@ -90,7 +90,7 @@ static const char g_hex_pairs_uppercase[512] =
     'F', 'A', 'F', 'B', 'F', 'C', 'F', 'D', 'F', 'E', 'F', 'F'
 };
 
-static const char g_octal_triplets[512][3] =
+static const char G_OCTAL_TRIPLETS[512][3] =
 {
     { '0', '0', '0' }, { '0', '0', '1' }, { '0', '0', '2' }, { '0', '0', '3' },
     { '0', '0', '4' }, { '0', '0', '5' }, { '0', '0', '6' }, { '0', '0', '7' },
@@ -222,16 +222,16 @@ static const char g_octal_triplets[512][3] =
     { '7', '7', '4' }, { '7', '7', '5' }, { '7', '7', '6' }, { '7', '7', '7' }
 };
 
-static bool count_has_error(size_t *count)
+static ft_bool count_has_error(ft_size_t *count)
 {
     if (!count)
-        return (true);
+        return (FT_TRUE);
     if (*count == SIZE_MAX)
-        return (true);
-    return (false);
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
-static void mark_count_error(size_t *count)
+static void mark_count_error(ft_size_t *count)
 {
     if (!count)
         return ;
@@ -239,14 +239,14 @@ static void mark_count_error(size_t *count)
     return ;
 }
 
-static void write_buffer_fd(const char *buffer, size_t length, int file_descriptor, size_t *count)
+static void write_buffer_fd(const char *buffer, ft_size_t length, int32_t file_descriptor, ft_size_t *count)
 {
     if (count_has_error(count))
         return ;
     if (length == 0)
         return ;
-    ssize_t return_value = su_write(file_descriptor, buffer, length);
-    if (return_value != static_cast<ssize_t>(length))
+    int64_t return_value = su_write(file_descriptor, buffer, length);
+    if (return_value != static_cast<int64_t>(length))
     {
         mark_count_error(count);
         return ;
@@ -255,7 +255,7 @@ static void write_buffer_fd(const char *buffer, size_t length, int file_descript
     return ;
 }
 
-static void write_decimal_from_pairs(uintmax_t number, int file_descriptor, size_t *count)
+static void write_decimal_from_pairs(uint64_t number, int32_t file_descriptor, ft_size_t *count)
 {
     char        buffer[32];
     char        *cursor;
@@ -265,13 +265,13 @@ static void write_decimal_from_pairs(uintmax_t number, int file_descriptor, size
     cursor = buffer + sizeof(buffer);
     while (number >= 100)
     {
-        uintmax_t chunk = number % 100;
-        size_t pair_index = chunk * 2;
+        uint64_t chunk = number % 100;
+        ft_size_t pair_index = chunk * 2;
 
         number /= 100;
         cursor -= 2;
-        cursor[0] = g_decimal_pairs[pair_index];
-        cursor[1] = g_decimal_pairs[pair_index + 1];
+        cursor[0] = G_DECIMAL_PAIRS[pair_index];
+        cursor[1] = G_DECIMAL_PAIRS[pair_index + 1];
     }
     if (number < 10)
     {
@@ -280,19 +280,19 @@ static void write_decimal_from_pairs(uintmax_t number, int file_descriptor, size
     }
     else
     {
-        size_t pair_index = number * 2;
+        ft_size_t pair_index = number * 2;
 
         cursor -= 2;
-        cursor[0] = g_decimal_pairs[pair_index];
-        cursor[1] = g_decimal_pairs[pair_index + 1];
+        cursor[0] = G_DECIMAL_PAIRS[pair_index];
+        cursor[1] = G_DECIMAL_PAIRS[pair_index + 1];
     }
-    size_t length = static_cast<size_t>((buffer + sizeof(buffer)) - cursor);
+    ft_size_t length = static_cast<ft_size_t>((buffer + sizeof(buffer)) - cursor);
 
     write_buffer_fd(cursor, length, file_descriptor, count);
     return ;
 }
 
-static void write_hex_from_pairs(uintmax_t number, bool uppercase, int file_descriptor, size_t *count)
+static void write_hex_from_pairs(uint64_t number, ft_bool uppercase, int32_t file_descriptor, ft_size_t *count)
 {
     char        buffer[32];
     char        *cursor;
@@ -309,33 +309,33 @@ static void write_hex_from_pairs(uintmax_t number, bool uppercase, int file_desc
     }
     while (number != 0)
     {
-        unsigned int byte_value = static_cast<unsigned int>(number & 0xFF);
-        size_t pair_index = static_cast<size_t>(byte_value) * 2;
+        uint32_t byte_value = static_cast<uint32_t>(number & 0xFF);
+        ft_size_t pair_index = static_cast<ft_size_t>(byte_value) * 2;
 
         number >>= 8;
         cursor -= 2;
         if (uppercase)
         {
-            cursor[0] = g_hex_pairs_uppercase[pair_index];
-            cursor[1] = g_hex_pairs_uppercase[pair_index + 1];
+            cursor[0] = G_HEX_PAIRS_UPPERCASE[pair_index];
+            cursor[1] = G_HEX_PAIRS_UPPERCASE[pair_index + 1];
         }
         else
         {
-            cursor[0] = g_hex_pairs_lowercase[pair_index];
-            cursor[1] = g_hex_pairs_lowercase[pair_index + 1];
+            cursor[0] = G_HEX_PAIRS_LOWERCASE[pair_index];
+            cursor[1] = G_HEX_PAIRS_LOWERCASE[pair_index + 1];
         }
     }
     if (cursor[0] == '0')
     {
         cursor += 1;
     }
-    size_t length = static_cast<size_t>((buffer + sizeof(buffer)) - cursor);
+    ft_size_t length = static_cast<ft_size_t>((buffer + sizeof(buffer)) - cursor);
 
     write_buffer_fd(cursor, length, file_descriptor, count);
     return ;
 }
 
-static void write_octal_from_triplets(uintmax_t number, int file_descriptor, size_t *count)
+static void write_octal_from_triplets(uint64_t number, int32_t file_descriptor, ft_size_t *count)
 {
     char        buffer[66];
     char        *cursor;
@@ -352,8 +352,8 @@ static void write_octal_from_triplets(uintmax_t number, int file_descriptor, siz
     }
     while (number != 0)
     {
-        unsigned int block_value = static_cast<unsigned int>(number & 0x1FF);
-        const char *triplet = g_octal_triplets[block_value];
+        uint32_t block_value = static_cast<uint32_t>(number & 0x1FF);
+        const char *triplet = G_OCTAL_TRIPLETS[block_value];
 
         number >>= 9;
         cursor -= 3;
@@ -361,17 +361,17 @@ static void write_octal_from_triplets(uintmax_t number, int file_descriptor, siz
         cursor[1] = triplet[1];
         cursor[2] = triplet[2];
     }
-    while (cursor[0] == '0' && static_cast<size_t>((buffer + sizeof(buffer)) - cursor) > 1)
+    while (cursor[0] == '0' && static_cast<ft_size_t>((buffer + sizeof(buffer)) - cursor) > 1)
     {
         cursor += 1;
     }
-    size_t length = static_cast<size_t>((buffer + sizeof(buffer)) - cursor);
+    ft_size_t length = static_cast<ft_size_t>((buffer + sizeof(buffer)) - cursor);
 
     write_buffer_fd(cursor, length, file_descriptor, count);
     return ;
 }
 
-static int format_double_output(char specifier, int precision, double number, ft_string &output)
+static int32_t format_double_output(char specifier, int32_t precision, double number, ft_string &output)
 {
     if (precision < 0)
         precision = 6;
@@ -383,26 +383,26 @@ static int format_double_output(char specifier, int precision, double number, ft
 #define FORMAT_DOUBLE_CASE(character, literal) \
     if (specifier == character) \
     { \
-        int required_length = std::snprintf(ft_nullptr, 0, literal, precision, number); \
+        int32_t required_length = std::snprintf(ft_nullptr, 0, literal, precision, number); \
         char *output_buffer = ft_nullptr; \
         if (required_length < 0) \
-            return (-1); \
+            return (FT_ERR_IO); \
         output.clear(); \
         if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
-            return (-1); \
-        output.resize_length(static_cast<size_t>(required_length)); \
+            return (FT_ERR_INTERNAL); \
+        output.resize_length(static_cast<ft_size_t>(required_length)); \
         if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
-            return (-1); \
+            return (FT_ERR_INTERNAL); \
         output_buffer = output.print(); \
         if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS || output_buffer == ft_nullptr) \
-            return (-1); \
-        int written_length = std::snprintf(output_buffer, static_cast<size_t>(required_length) + 1, literal, precision, number); \
+            return (FT_ERR_INTERNAL); \
+        int32_t written_length = std::snprintf(output_buffer, static_cast<ft_size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
-            return (-1); \
-        output.resize_length(static_cast<size_t>(written_length)); \
+            return (FT_ERR_IO); \
+        output.resize_length(static_cast<ft_size_t>(written_length)); \
         if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
-            return (-1); \
-        return (0); \
+            return (FT_ERR_INTERNAL); \
+        return (FT_ERR_SUCCESS); \
     }
 
     FORMAT_DOUBLE_CASE('f', "%.*f");
@@ -412,12 +412,12 @@ static int format_double_output(char specifier, int precision, double number, ft
     FORMAT_DOUBLE_CASE('g', "%.*g");
     FORMAT_DOUBLE_CASE('G', "%.*G");
 #undef FORMAT_DOUBLE_CASE
-    return (-1);
+    return (FT_ERR_INVALID_ARGUMENT);
 }
 
-size_t ft_strlen_printf(const char *string)
+ft_size_t ft_strlen_printf(const char *string)
 {
-    size_t length = 0;
+    ft_size_t length = 0;
     if (!string)
         return (6);
     while (string[length])
@@ -425,13 +425,13 @@ size_t ft_strlen_printf(const char *string)
     return (length);
 }
 
-void ft_putchar_fd(const char character, int file_descriptor, size_t *count)
+void ft_putchar_fd(const char character, int32_t file_descriptor, ft_size_t *count)
 {
     write_buffer_fd(&character, 1, file_descriptor, count);
     return ;
 }
 
-void ft_putstr_fd(const char *string, int file_descriptor, size_t *count)
+void ft_putstr_fd(const char *string, int32_t file_descriptor, ft_size_t *count)
 {
     if (count_has_error(count))
         return ;
@@ -440,14 +440,14 @@ void ft_putstr_fd(const char *string, int file_descriptor, size_t *count)
         write_buffer_fd("(null)", 6, file_descriptor, count);
         return ;
     }
-    size_t length = ft_strlen_printf(string);
+    ft_size_t length = ft_strlen_printf(string);
     write_buffer_fd(string, length, file_descriptor, count);
     return ;
 }
 
-void ft_putnbr_fd(long number, int file_descriptor, size_t *count)
+void ft_putnbr_fd(int64_t number, int32_t file_descriptor, ft_size_t *count)
 {
-    uintmax_t  absolute_value;
+    uint64_t  absolute_value;
 
     if (count_has_error(count))
         return ;
@@ -456,35 +456,35 @@ void ft_putnbr_fd(long number, int file_descriptor, size_t *count)
         ft_putchar_fd('-', file_descriptor, count);
         if (count_has_error(count))
             return ;
-        absolute_value = static_cast<uintmax_t>(-(number + 1)) + 1;
+        absolute_value = static_cast<uint64_t>(-(number + 1)) + 1;
     }
     else
     {
-        absolute_value = static_cast<uintmax_t>(number);
+        absolute_value = static_cast<uint64_t>(number);
     }
     write_decimal_from_pairs(absolute_value, file_descriptor, count);
     return ;
 }
 
-void ft_putunsigned_fd(uintmax_t number, int file_descriptor, size_t *count)
+void ft_putunsigned_fd(uint64_t number, int32_t file_descriptor, ft_size_t *count)
 {
     write_decimal_from_pairs(number, file_descriptor, count);
     return ;
 }
 
-void ft_puthex_fd(uintmax_t number, int file_descriptor, bool uppercase, size_t *count)
+void ft_puthex_fd(uint64_t number, int32_t file_descriptor, ft_bool uppercase, ft_size_t *count)
 {
     write_hex_from_pairs(number, uppercase, file_descriptor, count);
     return ;
 }
 
-void ft_putoctal_fd(uintmax_t number, int file_descriptor, size_t *count)
+void ft_putoctal_fd(uint64_t number, int32_t file_descriptor, ft_size_t *count)
 {
     write_octal_from_triplets(number, file_descriptor, count);
     return ;
 }
 
-void ft_putptr_fd(void *pointer, int file_descriptor, size_t *count)
+void ft_putptr_fd(void *pointer, int32_t file_descriptor, ft_size_t *count)
 {
     if (count_has_error(count))
         return ;
@@ -492,28 +492,28 @@ void ft_putptr_fd(void *pointer, int file_descriptor, size_t *count)
     ft_putstr_fd("0x", file_descriptor, count);
     if (count_has_error(count))
         return ;
-    ft_puthex_fd(address, file_descriptor, false, count);
+    ft_puthex_fd(address, file_descriptor, FT_FALSE, count);
     return ;
 }
 
-void ft_putfloat_fd(double number, int file_descriptor, size_t *count, int precision)
+void ft_putfloat_fd(double number, int32_t file_descriptor, ft_size_t *count, int32_t precision)
 {
     if (count_has_error(count))
         return ;
     ft_string formatted_output;
-    if (format_double_output('f', precision, number, formatted_output) != 0)
+    if (format_double_output('f', precision, number, formatted_output) != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;
     }
-    size_t output_length = formatted_output.size();
+    ft_size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
     write_buffer_fd(formatted_output.c_str(), output_length, file_descriptor, count);
     return ;
 }
 
-void ft_putscientific_fd(double number, bool uppercase, int file_descriptor, size_t *count, int precision)
+void ft_putscientific_fd(double number, ft_bool uppercase, int32_t file_descriptor, ft_size_t *count, int32_t precision)
 {
     if (count_has_error(count))
         return ;
@@ -524,19 +524,19 @@ void ft_putscientific_fd(double number, bool uppercase, int file_descriptor, siz
     else
         specifier = 'e';
     ft_string formatted_output;
-    if (format_double_output(specifier, precision, number, formatted_output) != 0)
+    if (format_double_output(specifier, precision, number, formatted_output) != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;
     }
-    size_t output_length = formatted_output.size();
+    ft_size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
     write_buffer_fd(formatted_output.c_str(), output_length, file_descriptor, count);
     return ;
 }
 
-void ft_putgeneral_fd(double number, bool uppercase, int file_descriptor, size_t *count, int precision)
+void ft_putgeneral_fd(double number, ft_bool uppercase, int32_t file_descriptor, ft_size_t *count, int32_t precision)
 {
     if (count_has_error(count))
         return ;
@@ -547,22 +547,22 @@ void ft_putgeneral_fd(double number, bool uppercase, int file_descriptor, size_t
     else
         specifier = 'g';
     ft_string formatted_output;
-    if (format_double_output(specifier, precision, number, formatted_output) != 0)
+    if (format_double_output(specifier, precision, number, formatted_output) != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;
     }
-    size_t output_length = formatted_output.size();
+    ft_size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
     write_buffer_fd(formatted_output.c_str(), output_length, file_descriptor, count);
     return ;
 }
 
-void pf_write_ft_string_fd(const ft_string &output, int file_descriptor, size_t *count)
+void pf_write_ft_string_fd(const ft_string &output, int32_t file_descriptor, ft_size_t *count)
 {
     const char  *buffer;
-    size_t      length;
+    ft_size_t      length;
 
     if (count_has_error(count))
         return ;

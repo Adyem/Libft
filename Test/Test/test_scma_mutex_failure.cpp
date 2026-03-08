@@ -3,7 +3,7 @@
 #include "../../SCMA/SCMA.hpp"
 #include "../../SCMA/scma_internal.hpp"
 #include "../../PThread/recursive_mutex.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 
 #ifndef LIBFT_TEST_BUILD
@@ -102,20 +102,20 @@ FT_TEST(test_scma_shutdown_mutex_lock_failure,
     scma_shutdown();
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SUCCESS,
         std::memory_order_release);
-    FT_ASSERT_EQ(1, scma_is_initialized());
+    FT_ASSERT_EQ(1, scma_is_initialised());
     scma_shutdown();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_disable_thread_safety());
     return (1);
 }
 
-FT_TEST(test_scma_is_initialized_mutex_lock_failure,
-    "scma_is_initialized returns 0 when the runtime mutex lock fails")
+FT_TEST(test_scma_is_initialised_mutex_lock_failure,
+    "scma_is_initialised returns 0 when the runtime mutex lock fails")
 {
     scma_mutex_failure_prepare();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_enable_thread_safety());
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
-    FT_ASSERT_EQ(0, scma_is_initialized());
+    FT_ASSERT_EQ(0, scma_is_initialised());
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SUCCESS,
         std::memory_order_release);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_disable_thread_safety());

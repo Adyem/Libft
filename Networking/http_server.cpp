@@ -16,7 +16,7 @@
 #endif
 
 ft_http_server::ft_http_server()
-    : _initialized_state(_state_uninitialized), _server_socket(),
+    : _initialised_state(_state_uninitialised), _server_socket(),
       _non_blocking(false), _mutex(ft_nullptr)
 {
     return ;
@@ -24,7 +24,7 @@ ft_http_server::ft_http_server()
 
 ft_http_server::~ft_http_server()
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -42,11 +42,11 @@ void ft_http_server::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_http_server::abort_if_not_initialized(const char *method_name) const
+void ft_http_server::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    this->abort_lifecycle_error(method_name, "called while object is not initialised");
     return ;
 }
 
@@ -54,9 +54,9 @@ int ft_http_server::initialize()
 {
     pt_recursive_mutex *mutex_pointer;
 
-    if (this->_initialized_state == _state_initialized)
+    if (this->_initialised_state == _state_initialised)
         this->abort_lifecycle_error("ft_http_server::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
@@ -67,13 +67,13 @@ int ft_http_server::initialize()
     }
     this->_mutex = mutex_pointer;
     this->_non_blocking = false;
-    this->_initialized_state = _state_initialized;
+    this->_initialised_state = _state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int ft_http_server::destroy()
 {
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         return (FT_ERR_INVALID_STATE);
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -86,7 +86,7 @@ int ft_http_server::destroy()
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    this->_initialized_state = _state_destroyed;
+    this->_initialised_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -95,7 +95,7 @@ int ft_http_server::start(const char *ip, uint16_t port, int address_family, boo
     SocketConfig configuration;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_http_server::start");
+    this->abort_if_not_initialised("ft_http_server::start");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -282,7 +282,7 @@ int ft_http_server::run_once()
     int result;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_http_server::run_once");
+    this->abort_if_not_initialised("ft_http_server::run_once");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);

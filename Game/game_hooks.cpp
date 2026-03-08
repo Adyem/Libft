@@ -69,7 +69,7 @@ ft_function<void(ft_game_hook_context&)> ft_game_hook_make_world_event_adapter(f
 ft_game_hooks::ft_game_hooks() noexcept
     : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(),
       _listener_catalog(), _catalog_metadata(), _mutex(ft_nullptr),
-      _initialized_state(ft_game_hooks::_state_uninitialized)
+      _initialised_state(ft_game_hooks::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -77,9 +77,9 @@ ft_game_hooks::ft_game_hooks() noexcept
 
 ft_game_hooks::~ft_game_hooks() noexcept
 {
-    if (this->_initialized_state == ft_game_hooks::_state_uninitialized)
+    if (this->_initialised_state == ft_game_hooks::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_game_hooks::_state_initialized)
+    if (this->_initialised_state == ft_game_hooks::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -97,21 +97,21 @@ void ft_game_hooks::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_game_hooks::abort_if_not_initialized(const char *method_name) const
+void ft_game_hooks::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_game_hooks::_state_initialized)
+    if (this->_initialised_state == ft_game_hooks::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_game_hooks::initialize() noexcept
 {
-    if (this->_initialized_state == ft_game_hooks::_state_initialized)
+    if (this->_initialised_state == ft_game_hooks::_state_initialised)
     {
         this->abort_lifecycle_error("ft_game_hooks::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -121,7 +121,7 @@ int ft_game_hooks::initialize() noexcept
     int map_error = this->_listener_catalog.initialize();
     if (map_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_game_hooks::_state_destroyed;
+        this->_initialised_state = ft_game_hooks::_state_destroyed;
         this->set_error(map_error);
         return (map_error);
     }
@@ -129,13 +129,13 @@ int ft_game_hooks::initialize() noexcept
     if (metadata_error != FT_ERR_SUCCESS)
     {
         (void)this->_listener_catalog.destroy();
-        this->_initialized_state = ft_game_hooks::_state_destroyed;
+        this->_initialised_state = ft_game_hooks::_state_destroyed;
         this->set_error(metadata_error);
         return (metadata_error);
     }
     this->_listener_catalog.clear();
     this->_catalog_metadata.clear();
-    this->_initialized_state = ft_game_hooks::_state_initialized;
+    this->_initialised_state = ft_game_hooks::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -150,10 +150,10 @@ int ft_game_hooks::initialize(const ft_game_hooks &other) noexcept
     const ft_game_hook_metadata *metadata_entry;
     const ft_game_hook_metadata *metadata_end;
 
-    if (other._initialized_state != ft_game_hooks::_state_initialized)
+    if (other._initialised_state != ft_game_hooks::_state_initialised)
     {
         other.abort_lifecycle_error("ft_game_hooks::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -202,7 +202,7 @@ int ft_game_hooks::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_game_hooks::_state_initialized)
+    if (this->_initialised_state != ft_game_hooks::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -213,7 +213,7 @@ int ft_game_hooks::destroy() noexcept
     int map_destroy_error = this->_listener_catalog.destroy();
     int metadata_destroy_error = this->_catalog_metadata.destroy();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_game_hooks::_state_destroyed;
+    this->_initialised_state = ft_game_hooks::_state_destroyed;
     int final_error = disable_error;
     if (final_error == FT_ERR_SUCCESS && map_destroy_error != FT_ERR_SUCCESS)
         final_error = map_destroy_error;
@@ -228,7 +228,7 @@ int ft_game_hooks::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_game_hooks::enable_thread_safety");
+    this->abort_if_not_initialised("ft_game_hooks::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -298,7 +298,7 @@ int ft_game_hooks::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_game_hooks::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::lock");
+    this->abort_if_not_initialised("ft_game_hooks::lock");
     int lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -306,7 +306,7 @@ int ft_game_hooks::lock(bool *lock_acquired) const noexcept
 
 void ft_game_hooks::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::unlock");
+    this->abort_if_not_initialised("ft_game_hooks::unlock");
     int unlock_result = this->unlock_internal(lock_acquired);
     this->set_error(unlock_result);
     (void)unlock_result;
@@ -385,7 +385,7 @@ void ft_game_hooks::set_on_item_crafted(
     ft_game_hook_listener_entry entry;
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_game_hooks::set_on_item_crafted");
+    this->abort_if_not_initialised("ft_game_hooks::set_on_item_crafted");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_item_crafted = ft_move(callback);
@@ -413,7 +413,7 @@ void ft_game_hooks::set_on_character_damaged(
     ft_game_hook_listener_entry entry;
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_game_hooks::set_on_character_damaged");
+    this->abort_if_not_initialised("ft_game_hooks::set_on_character_damaged");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_character_damaged = ft_move(callback);
@@ -441,7 +441,7 @@ void ft_game_hooks::set_on_event_triggered(
     ft_game_hook_listener_entry entry;
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_game_hooks::set_on_event_triggered");
+    this->abort_if_not_initialised("ft_game_hooks::set_on_event_triggered");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_event_triggered = ft_move(callback);
@@ -465,19 +465,19 @@ void ft_game_hooks::set_on_event_triggered(
 
 ft_function<void(ft_character&, ft_item&)> ft_game_hooks::get_on_item_crafted() const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::get_on_item_crafted");
+    this->abort_if_not_initialised("ft_game_hooks::get_on_item_crafted");
     return (this->_legacy_item_crafted);
 }
 
 ft_function<void(ft_character&, int, uint8_t)> ft_game_hooks::get_on_character_damaged() const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::get_on_character_damaged");
+    this->abort_if_not_initialised("ft_game_hooks::get_on_character_damaged");
     return (this->_legacy_character_damaged);
 }
 
 ft_function<void(ft_world&, ft_event&)> ft_game_hooks::get_on_event_triggered() const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::get_on_event_triggered");
+    this->abort_if_not_initialised("ft_game_hooks::get_on_event_triggered");
     return (this->_legacy_event_triggered);
 }
 
@@ -487,7 +487,7 @@ void ft_game_hooks::invoke_hook(const ft_string &hook_identifier,
     const Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     size_t index;
 
-    this->abort_if_not_initialized("ft_game_hooks::invoke_hook");
+    this->abort_if_not_initialised("ft_game_hooks::invoke_hook");
     listeners_pair = this->_listener_catalog.find(hook_identifier);
     if (listeners_pair == this->_listener_catalog.end())
         return ;
@@ -561,7 +561,7 @@ void ft_game_hooks::register_listener(const ft_game_hook_metadata &metadata,
     ft_game_hook_listener_entry entry;
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_game_hooks::register_listener");
+    this->abort_if_not_initialised("ft_game_hooks::register_listener");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     entry.metadata = metadata;
@@ -583,7 +583,7 @@ void ft_game_hooks::unregister_listener(const ft_string &hook_identifier,
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_game_hooks::unregister_listener");
+    this->abort_if_not_initialised("ft_game_hooks::unregister_listener");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->remove_listener_unlocked(hook_identifier, listener_name);
@@ -596,14 +596,14 @@ void ft_game_hooks::unregister_listener(const ft_string &hook_identifier,
 
 ft_vector<ft_game_hook_metadata> ft_game_hooks::get_catalog_metadata() const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::get_catalog_metadata");
+    this->abort_if_not_initialised("ft_game_hooks::get_catalog_metadata");
     return (ft_vector<ft_game_hook_metadata>());
 }
 
 ft_vector<ft_game_hook_metadata> ft_game_hooks::get_catalog_metadata_for(
     const ft_string &) const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::get_catalog_metadata_for");
+    this->abort_if_not_initialised("ft_game_hooks::get_catalog_metadata_for");
     return (ft_vector<ft_game_hook_metadata>());
 }
 
@@ -611,7 +611,7 @@ void ft_game_hooks::reset() noexcept
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_game_hooks::reset");
+    this->abort_if_not_initialised("ft_game_hooks::reset");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_item_crafted = ft_function<void(ft_character&, ft_item&)>();
@@ -629,7 +629,7 @@ void ft_game_hooks::reset() noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_game_hooks::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_game_hooks::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_game_hooks::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

@@ -10,7 +10,7 @@ thread_local int ft_inventory::_last_error = FT_ERR_SUCCESS;
 ft_inventory::ft_inventory() noexcept
     : _items(), _capacity(0), _used_slots(0), _weight_limit(0),
       _current_weight(0), _next_slot(0), _mutex(ft_nullptr),
-      _initialized_state(ft_inventory::_state_uninitialized)
+      _initialised_state(ft_inventory::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -18,9 +18,9 @@ ft_inventory::ft_inventory() noexcept
 
 ft_inventory::~ft_inventory() noexcept
 {
-    if (this->_initialized_state == ft_inventory::_state_uninitialized)
+    if (this->_initialised_state == ft_inventory::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_inventory::_state_initialized)
+    if (this->_initialised_state == ft_inventory::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -37,21 +37,21 @@ void ft_inventory::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_inventory::abort_if_not_initialized(const char *method_name) const
+void ft_inventory::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_inventory::_state_initialized)
+    if (this->_initialised_state == ft_inventory::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_inventory::initialize() noexcept
 {
-    if (this->_initialized_state == ft_inventory::_state_initialized)
+    if (this->_initialised_state == ft_inventory::_state_initialised)
     {
         this->abort_lifecycle_error("ft_inventory::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     const int destroy_error = this->_items.destroy();
@@ -69,7 +69,7 @@ int ft_inventory::initialize() noexcept
     this->_used_slots = 0;
     this->_current_weight = 0;
     this->_next_slot = 0;
-    this->_initialized_state = ft_inventory::_state_initialized;
+    this->_initialised_state = ft_inventory::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -95,15 +95,15 @@ int ft_inventory::initialize(const ft_inventory &other) noexcept
     const Pair<int, ft_sharedptr<ft_item> > *entry;
     const Pair<int, ft_sharedptr<ft_item> > *entry_end;
 
-    if (other._initialized_state != ft_inventory::_state_initialized)
+    if (other._initialised_state != ft_inventory::_state_initialised)
     {
         other.abort_lifecycle_error("ft_inventory::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state == ft_inventory::_state_initialized)
+    if (this->_initialised_state == ft_inventory::_state_initialised)
     {
         int destroy_error = this->destroy();
         if (destroy_error != FT_ERR_SUCCESS)
@@ -143,14 +143,14 @@ int ft_inventory::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_inventory::_state_initialized)
+    if (this->_initialised_state != ft_inventory::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     this->_items.clear();
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_inventory::_state_destroyed;
+    this->_initialised_state = ft_inventory::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -160,7 +160,7 @@ int ft_inventory::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_inventory::enable_thread_safety");
+    this->abort_if_not_initialised("ft_inventory::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -237,7 +237,7 @@ int ft_inventory::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_inventory::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::lock");
+    this->abort_if_not_initialised("ft_inventory::lock");
     const int lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -245,7 +245,7 @@ int ft_inventory::lock(bool *lock_acquired) const noexcept
 
 void ft_inventory::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::unlock");
+    this->abort_if_not_initialised("ft_inventory::unlock");
     const int unlock_result = this->unlock_internal(lock_acquired);
     this->set_error(unlock_result);
     return ;
@@ -253,21 +253,21 @@ void ft_inventory::unlock(bool lock_acquired) const noexcept
 
 ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::get_items");
+    this->abort_if_not_initialised("ft_inventory::get_items");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_items);
 }
 
 const ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::get_items const");
+    this->abort_if_not_initialised("ft_inventory::get_items const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_items);
 }
 
 size_t ft_inventory::get_capacity() const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::get_capacity");
+    this->abort_if_not_initialised("ft_inventory::get_capacity");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_capacity);
 }
@@ -276,7 +276,7 @@ void ft_inventory::resize(size_t capacity) noexcept
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_inventory::resize");
+    this->abort_if_not_initialised("ft_inventory::resize");
     const int lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -291,7 +291,7 @@ void ft_inventory::resize(size_t capacity) noexcept
 
 size_t ft_inventory::get_used() const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::get_used");
+    this->abort_if_not_initialised("ft_inventory::get_used");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_used_slots);
 }
@@ -300,7 +300,7 @@ void ft_inventory::set_used_slots(size_t used) noexcept
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_inventory::set_used_slots");
+    this->abort_if_not_initialised("ft_inventory::set_used_slots");
     const int lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -315,7 +315,7 @@ void ft_inventory::set_used_slots(size_t used) noexcept
 
 bool ft_inventory::is_full() const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::is_full");
+    this->abort_if_not_initialised("ft_inventory::is_full");
     bool is_full_result;
 
 #if USE_INVENTORY_SLOTS
@@ -335,7 +335,7 @@ bool ft_inventory::is_full() const noexcept
 
 int ft_inventory::get_weight_limit() const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::get_weight_limit");
+    this->abort_if_not_initialised("ft_inventory::get_weight_limit");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_weight_limit);
 }
@@ -344,7 +344,7 @@ void ft_inventory::set_weight_limit(int limit) noexcept
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_inventory::set_weight_limit");
+    this->abort_if_not_initialised("ft_inventory::set_weight_limit");
     const int lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -359,7 +359,7 @@ void ft_inventory::set_weight_limit(int limit) noexcept
 
 int ft_inventory::get_current_weight() const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::get_current_weight");
+    this->abort_if_not_initialised("ft_inventory::get_current_weight");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_current_weight);
 }
@@ -368,7 +368,7 @@ void ft_inventory::set_current_weight(int weight) noexcept
 {
     bool lock_acquired;
 
-    this->abort_if_not_initialized("ft_inventory::set_current_weight");
+    this->abort_if_not_initialised("ft_inventory::set_current_weight");
     const int lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -395,7 +395,7 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
     Pair<int, ft_sharedptr<ft_item> > *item_pointer;
     Pair<int, ft_sharedptr<ft_item> > *item_end;
 
-    this->abort_if_not_initialized("ft_inventory::add_item");
+    this->abort_if_not_initialised("ft_inventory::add_item");
     if (this->check_item_valid(item) == false)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -486,7 +486,7 @@ void ft_inventory::remove_item(int slot) noexcept
 {
     Pair<int, ft_sharedptr<ft_item> > *entry;
 
-    this->abort_if_not_initialized("ft_inventory::remove_item");
+    this->abort_if_not_initialised("ft_inventory::remove_item");
     entry = this->_items.find(slot);
     if (entry != this->_items.end() && entry->value)
     {
@@ -506,7 +506,7 @@ int ft_inventory::count_item(int item_id) const noexcept
     const Pair<int, ft_sharedptr<ft_item> > *item_pointer;
     const Pair<int, ft_sharedptr<ft_item> > *item_end;
 
-    this->abort_if_not_initialized("ft_inventory::count_item");
+    this->abort_if_not_initialised("ft_inventory::count_item");
     total = 0;
     item_pointer = this->_items.end() - this->_items.size();
     item_end = this->_items.end();
@@ -525,7 +525,7 @@ int ft_inventory::count_item(int item_id) const noexcept
 
 bool ft_inventory::has_item(int item_id) const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::has_item");
+    this->abort_if_not_initialised("ft_inventory::has_item");
     const bool result = this->count_item(item_id) > 0;
     this->set_error(FT_ERR_SUCCESS);
     return (result);
@@ -537,7 +537,7 @@ int ft_inventory::count_rarity(int rarity) const noexcept
     const Pair<int, ft_sharedptr<ft_item> > *item_pointer;
     const Pair<int, ft_sharedptr<ft_item> > *item_end;
 
-    this->abort_if_not_initialized("ft_inventory::count_rarity");
+    this->abort_if_not_initialised("ft_inventory::count_rarity");
     total = 0;
     item_pointer = this->_items.end() - this->_items.size();
     item_end = this->_items.end();
@@ -556,7 +556,7 @@ int ft_inventory::count_rarity(int rarity) const noexcept
 
 bool ft_inventory::has_rarity(int rarity) const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::has_rarity");
+    this->abort_if_not_initialised("ft_inventory::has_rarity");
     const bool result = this->count_rarity(rarity) > 0;
     this->set_error(FT_ERR_SUCCESS);
     return (result);
@@ -581,7 +581,7 @@ const char *ft_inventory::get_error_str() const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_inventory::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_inventory::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_inventory::get_mutex_for_validation");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_mutex);
 }

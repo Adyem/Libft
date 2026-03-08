@@ -2,7 +2,7 @@
 # define TEST_SCMA_SHARED_HPP
 
 #include "../../SCMA/SCMA.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 
 struct scma_test_pair
@@ -13,7 +13,7 @@ struct scma_test_pair
 
 static inline void    scma_test_reset(void)
 {
-    if (scma_is_initialized())
+    if (scma_is_initialised())
         scma_shutdown();
     return ;
 }

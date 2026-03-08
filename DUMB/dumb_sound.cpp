@@ -1,13 +1,14 @@
-#include "dumb_sound.hpp"
+#include "sound_device.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 
-static int create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
+static int32_t create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
 {
     pt_recursive_mutex *created_mutex;
-    int initialize_error;
+    int32_t initialize_error;
 
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -24,221 +25,319 @@ static int create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
     return (FT_ERR_SUCCESS);
 }
 
-static void destroy_recursive_mutex(pt_recursive_mutex **mutex_pointer)
+static uint32_t destroy_recursive_mutex(pt_recursive_mutex **mutex_pointer)
 {
-    int destroy_error;
+    uint32_t destroy_error;
 
     if (mutex_pointer == ft_nullptr || *mutex_pointer == ft_nullptr)
-        return ;
+        return (FT_ERR_SUCCESS);
     destroy_error = (*mutex_pointer)->destroy();
-    if (destroy_error == FT_ERR_SUCCESS)
+    delete *mutex_pointer;
+    *mutex_pointer = ft_nullptr;
+    return (destroy_error);
+}
+
+static int32_t lock_ordered_mutexes(pt_recursive_mutex *mutex_left,
+    pt_recursive_mutex *mutex_right, pt_recursive_mutex **first_mutex,
+    pt_recursive_mutex **second_mutex)
+{
+    int32_t lock_error;
+
+    if (reinterpret_cast<uintptr_t>(mutex_left)
+        <= reinterpret_cast<uintptr_t>(mutex_right))
     {
-        delete *mutex_pointer;
-        *mutex_pointer = ft_nullptr;
+        *first_mutex = mutex_left;
+        *second_mutex = mutex_right;
     }
+    else
+    {
+        *first_mutex = mutex_right;
+        *second_mutex = mutex_left;
+    }
+    lock_error = pt_recursive_mutex_lock_if_not_null(*first_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (*second_mutex == *first_mutex)
+        return (FT_ERR_SUCCESS);
+    lock_error = pt_recursive_mutex_lock_if_not_null(*second_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(*first_mutex);
+        return (lock_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static void unlock_ordered_mutexes(pt_recursive_mutex *first_mutex,
+    pt_recursive_mutex *second_mutex)
+{
+    if (second_mutex != first_mutex)
+        (void)pt_recursive_mutex_unlock_if_not_null(second_mutex);
+    (void)pt_recursive_mutex_unlock_if_not_null(first_mutex);
     return ;
 }
 
 ft_sound_device::ft_sound_device(void)
-    : _initialized_state(ft_sound_device::_state_uninitialized)
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    return ;
+}
+
+ft_sound_device::ft_sound_device(const ft_sound_device &other)
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_sound_device::ft_sound_device(const ft_sound_device &)",
+            "called with uninitialised source object");
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_sound_device::ft_sound_device(ft_sound_device &&other)
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_sound_device::ft_sound_device(ft_sound_device &&)",
+            "called with uninitialised source object");
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(static_cast<ft_sound_device &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 ft_sound_device::~ft_sound_device(void)
 {
-    if (this->_initialized_state == ft_sound_device::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-void ft_sound_device::abort_lifecycle_error(const char *method_name,
-    const char *reason) const noexcept
+uint32_t ft_sound_device::initialize(void)
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_sound_device lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_sound_device::abort_if_not_initialized(const char *method_name) const noexcept
-{
-    if (this->_initialized_state == ft_sound_device::_state_initialized)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
-    return ;
-}
-
-int ft_sound_device::initialize(void)
-{
-    if (this->_initialized_state == ft_sound_device::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_sound_device::initialize",
-            "called while object is already initialized");
+        errno_abort_lifecycle(this->_initialised_state, "ft_sound_device::initialize",
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_initialized_state = ft_sound_device::_state_initialized;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_sound_device::initialize(const ft_sound_device &other)
+uint32_t ft_sound_device::initialize(const ft_sound_device &other)
 {
-    if (other._initialized_state == ft_sound_device::_state_uninitialized)
+    uint32_t destroy_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error(
+        errno_abort_lifecycle(other._initialised_state,
             "ft_sound_device::initialize(const ft_sound_device &) source",
-            "called with uninitialized source object");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (other._initialized_state != ft_sound_device::_state_initialized)
-    {
-        other.abort_lifecycle_error(
-            "ft_sound_device::initialize(const ft_sound_device &) source",
-            "called with source object that is not initialized");
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_sound_device::initialize(const ft_sound_device &) source",
+            "called with source object that is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     return (this->initialize());
 }
 
-int ft_sound_device::initialize(ft_sound_device &&other)
+uint32_t ft_sound_device::initialize(ft_sound_device &&other)
 {
-    if (other._initialized_state == ft_sound_device::_state_uninitialized)
+    uint32_t destroy_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error(
+        errno_abort_lifecycle(other._initialised_state,
             "ft_sound_device::initialize(ft_sound_device &&) source",
-            "called with uninitialized source object");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (other._initialized_state != ft_sound_device::_state_initialized)
-    {
-        other.abort_lifecycle_error(
-            "ft_sound_device::initialize(ft_sound_device &&) source",
-            "called with source object that is not initialized");
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_sound_device::initialize(ft_sound_device &&) source",
+            "called with source object that is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     if (this->initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
     return (this->move(other));
 }
 
-int ft_sound_device::destroy(void)
+int32_t ft_sound_device::destroy(void)
 {
-    if (this->_initialized_state != ft_sound_device::_state_initialized)
-        return (FT_ERR_INVALID_STATE);
-    this->disable_thread_safety();
-    this->_initialized_state = ft_sound_device::_state_destroyed;
-    return (FT_ERR_SUCCESS);
+    uint32_t disable_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    disable_error = this->disable_thread_safety();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (disable_error);
 }
 
-int ft_sound_device::move(ft_sound_device &other)
+int32_t ft_sound_device::move(ft_sound_device &other)
 {
-    if (other._initialized_state == ft_sound_device::_state_uninitialized)
+    int32_t lock_error;
+    pt_recursive_mutex *first_mutex;
+    pt_recursive_mutex *second_mutex;
+    pt_recursive_mutex *old_destination_mutex;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error("ft_sound_device::move source",
-            "called with uninitialized source object");
+        errno_abort_lifecycle(other._initialised_state, "ft_sound_device::move source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
-    if (other._initialized_state != ft_sound_device::_state_initialized)
-    {
-        other.abort_lifecycle_error("ft_sound_device::move source",
-            "called with source object that is not initialized");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (&other == this)
+    if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state != ft_sound_device::_state_initialized)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+            return (this->destroy());
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_sound_device::move source",
+            "called with source object that is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         if (this->initialize() != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_STATE);
     }
-    if (this->_mutex != ft_nullptr)
-        this->disable_thread_safety();
-    if (other._mutex != ft_nullptr)
+    lock_error = lock_ordered_mutexes(this->_mutex, other._mutex,
+        &first_mutex, &second_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->_mutex = other._mutex;
-        other._mutex = ft_nullptr;
+        (void)this->destroy();
+        return (lock_error);
     }
-    other._initialized_state = ft_sound_device::_state_destroyed;
+    old_destination_mutex = this->_mutex;
+    this->_mutex = other._mutex;
+    other._mutex = ft_nullptr;
+    unlock_ordered_mutexes(first_mutex, second_mutex);
+    if (old_destination_mutex != ft_nullptr
+        && old_destination_mutex != this->_mutex)
+    {
+        (void)destroy_recursive_mutex(&old_destination_mutex);
+    }
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_sound_device::prepare_thread_safety(void) noexcept
+int32_t ft_sound_device::prepare_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("ft_sound_device::prepare_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_sound_device::prepare_thread_safety");
     if (this->_mutex)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = create_recursive_mutex(&mutex_pointer);
+    int32_t mutex_error;
+
+    mutex_error = create_recursive_mutex(&mutex_pointer);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     this->_mutex = mutex_pointer;
     return (FT_ERR_SUCCESS);
 }
 
-void ft_sound_device::teardown_thread_safety(void) noexcept
+uint32_t ft_sound_device::teardown_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialized("ft_sound_device::teardown_thread_safety");
-    destroy_recursive_mutex(&this->_mutex);
-    return ;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_sound_device::teardown_thread_safety");
+    return (destroy_recursive_mutex(&this->_mutex));
 }
 
-int ft_sound_device::enable_thread_safety() noexcept
+uint32_t ft_sound_device::enable_thread_safety() noexcept
 {
-    this->abort_if_not_initialized("ft_sound_device::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_sound_device::enable_thread_safety");
     return (this->prepare_thread_safety());
 }
 
-void ft_sound_device::disable_thread_safety() noexcept
+uint32_t ft_sound_device::disable_thread_safety() noexcept
 {
-    this->abort_if_not_initialized("ft_sound_device::disable_thread_safety");
-    this->teardown_thread_safety();
-    return ;
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_sound_device::disable_thread_safety");
+    return (this->teardown_thread_safety());
 }
 
-bool ft_sound_device::is_thread_safe_enabled() const noexcept
+ft_bool ft_sound_device::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_sound_device::is_thread_safe_enabled");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_sound_device::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_sound_device::runtime_mutex(void)
-{
-    this->abort_if_not_initialized("ft_sound_device::runtime_mutex");
-    if (!this->_mutex)
-        this->prepare_thread_safety();
-    return (this->_mutex);
-}
-#endif
-
-#if defined(_WIN32)
-ft_sound_device *ft_create_sound_device_win32(void);
-#elif defined(__APPLE__)
-ft_sound_device *ft_create_sound_device_coreaudio(void);
-#else
-ft_sound_device *ft_create_sound_device_alsa(void);
-#endif
 
 ft_sound_device *ft_create_sound_device(void)
 {
     ft_sound_device *sound_device;
 
-#if defined(_WIN32)
-    sound_device = ft_create_sound_device_win32();
-#elif defined(__APPLE__)
-    sound_device = ft_create_sound_device_coreaudio();
-#else
-    sound_device = ft_create_sound_device_alsa();
-#endif
+    sound_device = cmp_create_sound_device();
     if (sound_device != ft_nullptr)
         (void)sound_device->initialize();
     return (sound_device);

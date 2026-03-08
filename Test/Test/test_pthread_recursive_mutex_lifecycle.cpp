@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../PThread/recursive_mutex.hpp"
 #include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 #include <sys/wait.h>
@@ -40,7 +40,7 @@ static void pt_recursive_mutex_initialize_twice_aborts_operation()
     return ;
 }
 
-static void pt_recursive_mutex_destroy_uninitialized_aborts_operation()
+static void pt_recursive_mutex_destroy_uninitialised_aborts_operation()
 {
     pt_recursive_mutex mutex_object;
 
@@ -58,7 +58,7 @@ static void pt_recursive_mutex_destroy_twice_aborts_operation()
     return ;
 }
 
-static void pt_recursive_mutex_lock_uninitialized_aborts_operation()
+static void pt_recursive_mutex_lock_uninitialised_aborts_operation()
 {
     pt_recursive_mutex mutex_object;
 
@@ -66,7 +66,7 @@ static void pt_recursive_mutex_lock_uninitialized_aborts_operation()
     return ;
 }
 
-static void pt_recursive_mutex_uninitialized_destructor_aborts_operation()
+static void pt_recursive_mutex_uninitialised_destructor_aborts_operation()
 {
     alignas(pt_recursive_mutex) unsigned char storage[sizeof(pt_recursive_mutex)];
     pt_recursive_mutex *mutex_pointer;
@@ -107,18 +107,18 @@ FT_TEST(test_pt_recursive_mutex_recursive_lock_then_destroy_busy,
 }
 
 FT_TEST(test_pt_recursive_mutex_initialize_twice_aborts,
-    "pt_recursive_mutex initialize aborts when called while initialized")
+    "pt_recursive_mutex initialize aborts when called while initialised")
 {
     FT_ASSERT_EQ(1, pt_recursive_mutex_expect_sigabrt(
         pt_recursive_mutex_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_pt_recursive_mutex_destroy_uninitialized_aborts,
-    "pt_recursive_mutex destroy aborts when called on uninitialized object")
+FT_TEST(test_pt_recursive_mutex_destroy_uninitialised_aborts,
+    "pt_recursive_mutex destroy aborts when called on uninitialised object")
 {
     FT_ASSERT_EQ(1, pt_recursive_mutex_expect_sigabrt(
-        pt_recursive_mutex_destroy_uninitialized_aborts_operation));
+        pt_recursive_mutex_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -130,18 +130,18 @@ FT_TEST(test_pt_recursive_mutex_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_pt_recursive_mutex_lock_uninitialized_aborts,
-    "pt_recursive_mutex lock aborts when called on uninitialized object")
+FT_TEST(test_pt_recursive_mutex_lock_uninitialised_aborts,
+    "pt_recursive_mutex lock aborts when called on uninitialised object")
 {
     FT_ASSERT_EQ(1, pt_recursive_mutex_expect_sigabrt(
-        pt_recursive_mutex_lock_uninitialized_aborts_operation));
+        pt_recursive_mutex_lock_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_pt_recursive_mutex_uninitialized_destructor_aborts,
-    "pt_recursive_mutex destructor aborts on uninitialized instance")
+FT_TEST(test_pt_recursive_mutex_uninitialised_destructor_aborts,
+    "pt_recursive_mutex destructor aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, pt_recursive_mutex_expect_sigabrt(
-        pt_recursive_mutex_uninitialized_destructor_aborts_operation));
+        pt_recursive_mutex_uninitialised_destructor_aborts_operation));
     return (1);
 }

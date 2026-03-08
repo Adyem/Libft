@@ -1,23 +1,22 @@
-#include "math_polynomial.hpp"
+#include "ft_cubic_spline.hpp"
 
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
 #include "../Template/move.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 static void math_polynomial_copy_vector(const ft_vector<double> &source,
     ft_vector<double> &destination,
-    size_t count,
-    int &error_code) noexcept
+    ft_size_t count,
+    int32_t &error_code) noexcept
 {
-    size_t index;
+    ft_size_t index;
 
     destination.resize(count, 0.0);
-    int resize_error = FT_ERR_SUCCESS;
+    int32_t resize_error = FT_ERR_SUCCESS;
     if (resize_error != FT_ERR_SUCCESS)
     {
         error_code = resize_error;
@@ -36,31 +35,22 @@ static void math_polynomial_copy_vector(const ft_vector<double> &source,
 void ft_cubic_spline::abort_lifecycle_error(const char *method_name,
     const char *reason) const noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_cubic_spline lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
+    errno_abort_lifecycle(this->_initialised_state, method_name, reason);
     return ;
 }
 
-void ft_cubic_spline::abort_if_not_initialized(const char *method_name) const noexcept
+void ft_cubic_spline::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_cubic_spline::_state_initialized)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+    errno_abort_if_uninitialised(this->_initialised_state, method_name);
     return ;
 }
 
-int ft_cubic_spline::enable_thread_safety() noexcept
+int32_t ft_cubic_spline::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
+    int32_t mutex_error;
 
-    this->abort_if_not_initialized("ft_cubic_spline::enable_thread_safety");
+    this->abort_if_not_initialised("ft_cubic_spline::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -76,11 +66,11 @@ int ft_cubic_spline::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_cubic_spline::disable_thread_safety() noexcept
+int32_t ft_cubic_spline::disable_thread_safety() noexcept
 {
-    int mutex_error;
+    int32_t mutex_error;
 
-    this->abort_if_not_initialized("ft_cubic_spline::disable_thread_safety");
+    this->abort_if_not_initialised("ft_cubic_spline::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
@@ -92,97 +82,109 @@ int ft_cubic_spline::disable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-bool ft_cubic_spline::is_thread_safe() const noexcept
+ft_bool ft_cubic_spline::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_cubic_spline::is_thread_safe");
+    this->abort_if_not_initialised("ft_cubic_spline::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 ft_cubic_spline::ft_cubic_spline() noexcept
     : _mutex(ft_nullptr)
 {
-    this->_initialized_state = ft_cubic_spline::_state_uninitialized;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    return ;
+}
+
+ft_cubic_spline::ft_cubic_spline(const ft_cubic_spline &other) noexcept
+    : _mutex(ft_nullptr)
+{
+    int32_t initialize_error;
+
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept
     : _mutex(ft_nullptr)
 {
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->_initialized_state = ft_cubic_spline::_state_uninitialized;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     initialize_error = this->initialize(ft_move(other));
     if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialized_state == ft_cubic_spline::_state_uninitialized)
-        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-int ft_cubic_spline::initialize() noexcept
+uint32_t ft_cubic_spline::initialize() noexcept
 {
-    int initialize_error;
+    int32_t initialize_error;
 
-    if (this->_initialized_state == ft_cubic_spline::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         this->abort_lifecycle_error("ft_cubic_spline::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    initialize_error = this->x_values.initialize();
+    initialize_error = this->_x_values.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (initialize_error);
     }
-    initialize_error = this->a_coefficients.initialize();
+    initialize_error = this->_a_coefficients.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        (void)this->x_values.destroy();
-        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        (void)this->_x_values.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (initialize_error);
     }
-    initialize_error = this->b_coefficients.initialize();
+    initialize_error = this->_b_coefficients.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        (void)this->a_coefficients.destroy();
-        (void)this->x_values.destroy();
-        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        (void)this->_a_coefficients.destroy();
+        (void)this->_x_values.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (initialize_error);
     }
-    initialize_error = this->c_coefficients.initialize();
+    initialize_error = this->_c_coefficients.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        (void)this->b_coefficients.destroy();
-        (void)this->a_coefficients.destroy();
-        (void)this->x_values.destroy();
-        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        (void)this->_b_coefficients.destroy();
+        (void)this->_a_coefficients.destroy();
+        (void)this->_x_values.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (initialize_error);
     }
-    initialize_error = this->d_coefficients.initialize();
+    initialize_error = this->_d_coefficients.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        (void)this->c_coefficients.destroy();
-        (void)this->b_coefficients.destroy();
-        (void)this->a_coefficients.destroy();
-        (void)this->x_values.destroy();
-        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        (void)this->_c_coefficients.destroy();
+        (void)this->_b_coefficients.destroy();
+        (void)this->_a_coefficients.destroy();
+        (void)this->_x_values.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (initialize_error);
     }
-    this->_initialized_state = ft_cubic_spline::_state_initialized;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
+uint32_t ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
 {
-    int copy_error;
-    int lock_error;
-    int unlock_error;
+    int32_t copy_error;
+    int32_t lock_error;
 
-    if (other._initialized_state != ft_cubic_spline::_state_initialized)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        if (other._initialized_state == ft_cubic_spline::_state_uninitialized)
+        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
             other.abort_lifecycle_error("ft_cubic_spline::initialize(const ft_cubic_spline &) source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         else
             other.abort_lifecycle_error("ft_cubic_spline::initialize(const ft_cubic_spline &) source",
                 "called with destroyed source object");
@@ -199,40 +201,38 @@ int ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
         (void)this->destroy();
         return (lock_error);
     }
-    copy_error = this->x_values.copy_from(other.x_values);
+    copy_error = this->_x_values.copy_from(other._x_values);
     if (copy_error == FT_ERR_SUCCESS)
-        copy_error = this->a_coefficients.copy_from(other.a_coefficients);
+        copy_error = this->_a_coefficients.copy_from(other._a_coefficients);
     if (copy_error == FT_ERR_SUCCESS)
-        copy_error = this->b_coefficients.copy_from(other.b_coefficients);
+        copy_error = this->_b_coefficients.copy_from(other._b_coefficients);
     if (copy_error == FT_ERR_SUCCESS)
-        copy_error = this->c_coefficients.copy_from(other.c_coefficients);
+        copy_error = this->_c_coefficients.copy_from(other._c_coefficients);
     if (copy_error == FT_ERR_SUCCESS)
-        copy_error = this->d_coefficients.copy_from(other.d_coefficients);
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (copy_error != FT_ERR_SUCCESS || unlock_error != FT_ERR_SUCCESS)
+        copy_error = this->_d_coefficients.copy_from(other._d_coefficients);
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+    if (copy_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
-        if (copy_error != FT_ERR_SUCCESS)
-            return (copy_error);
-        return (unlock_error);
+        return (copy_error);
     }
     return (FT_ERR_SUCCESS);
 }
 
-int ft_cubic_spline::move(ft_cubic_spline &other) noexcept
+int32_t ft_cubic_spline::move(ft_cubic_spline &other) noexcept
 {
     const ft_cubic_spline *lower;
     const ft_cubic_spline *upper;
-    int initialize_error;
-    int lower_error;
-    int upper_error;
-    int move_error;
+    int32_t initialize_error;
+    int32_t lower_error;
+    int32_t upper_error;
+    int32_t move_error;
 
-    if (other._initialized_state != ft_cubic_spline::_state_initialized)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        if (other._initialized_state == ft_cubic_spline::_state_uninitialized)
+        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
             other.abort_lifecycle_error("ft_cubic_spline::move source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         else
             other.abort_lifecycle_error("ft_cubic_spline::move source",
                 "called with destroyed source object");
@@ -240,7 +240,7 @@ int ft_cubic_spline::move(ft_cubic_spline &other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state != ft_cubic_spline::_state_initialized)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -255,7 +255,7 @@ int ft_cubic_spline::move(ft_cubic_spline &other) noexcept
         lower = upper;
         upper = temporary;
     }
-    while (true)
+    while (FT_TRUE)
     {
         lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
@@ -265,46 +265,46 @@ int ft_cubic_spline::move(ft_cubic_spline &other) noexcept
             break ;
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+            (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     }
-    move_error = this->x_values.copy_from(other.x_values);
+    move_error = this->_x_values.copy_from(other._x_values);
     if (move_error == FT_ERR_SUCCESS)
-        move_error = this->a_coefficients.copy_from(other.a_coefficients);
+        move_error = this->_a_coefficients.copy_from(other._a_coefficients);
     if (move_error == FT_ERR_SUCCESS)
-        move_error = this->b_coefficients.copy_from(other.b_coefficients);
+        move_error = this->_b_coefficients.copy_from(other._b_coefficients);
     if (move_error == FT_ERR_SUCCESS)
-        move_error = this->c_coefficients.copy_from(other.c_coefficients);
+        move_error = this->_c_coefficients.copy_from(other._c_coefficients);
     if (move_error == FT_ERR_SUCCESS)
-        move_error = this->d_coefficients.copy_from(other.d_coefficients);
+        move_error = this->_d_coefficients.copy_from(other._d_coefficients);
     if (move_error == FT_ERR_SUCCESS)
-        other.x_values.clear();
+        other._x_values.clear();
     if (move_error == FT_ERR_SUCCESS)
-        other.a_coefficients.clear();
+        other._a_coefficients.clear();
     if (move_error == FT_ERR_SUCCESS)
-        other.b_coefficients.clear();
+        other._b_coefficients.clear();
     if (move_error == FT_ERR_SUCCESS)
-        other.c_coefficients.clear();
+        other._c_coefficients.clear();
     if (move_error == FT_ERR_SUCCESS)
-        other.d_coefficients.clear();
-    pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
+        other._d_coefficients.clear();
+    (void)pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != upper)
-        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return (move_error);
 }
 
-int ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
+uint32_t ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
 {
-    int initialize_error;
-    int move_error;
+    int32_t initialize_error;
+    int32_t move_error;
 
-    if (other._initialized_state != ft_cubic_spline::_state_initialized)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        if (other._initialized_state == ft_cubic_spline::_state_uninitialized)
+        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
             other.abort_lifecycle_error("ft_cubic_spline::initialize(ft_cubic_spline &&) source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         else
             other.abort_lifecycle_error("ft_cubic_spline::initialize(ft_cubic_spline &&) source",
                 "called with destroyed source object");
@@ -324,26 +324,26 @@ int ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_cubic_spline::destroy() noexcept
+int32_t ft_cubic_spline::destroy() noexcept
 {
-    int destroy_error;
-    int disable_error;
+    int32_t destroy_error;
+    int32_t disable_error;
 
-    if (this->_initialized_state != ft_cubic_spline::_state_initialized)
-        return (FT_ERR_INVALID_STATE);
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
-    destroy_error = this->x_values.destroy();
+    destroy_error = this->_x_values.destroy();
     if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->a_coefficients.destroy();
+        destroy_error = this->_a_coefficients.destroy();
     if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->b_coefficients.destroy();
+        destroy_error = this->_b_coefficients.destroy();
     if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->c_coefficients.destroy();
+        destroy_error = this->_c_coefficients.destroy();
     if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->d_coefficients.destroy();
-    this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        destroy_error = this->_d_coefficients.destroy();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
     return (FT_ERR_SUCCESS);
@@ -351,7 +351,7 @@ int ft_cubic_spline::destroy() noexcept
 
 ft_cubic_spline::~ft_cubic_spline() noexcept
 {
-    if (this->_initialized_state == ft_cubic_spline::_state_initialized)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
@@ -360,9 +360,9 @@ ft_cubic_spline::~ft_cubic_spline() noexcept
 pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
+    int32_t mutex_error;
 
-    if (this->_initialized_state != ft_cubic_spline::_state_initialized)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (ft_nullptr);
     if (this->_mutex == ft_nullptr)
     {
@@ -381,9 +381,9 @@ pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
 }
 #endif
 
-static int math_polynomial_validate_coefficients(const ft_vector<double> &coefficients) noexcept
+static int32_t math_polynomial_validate_coefficients(const ft_vector<double> &coefficients) noexcept
 {
-    int coefficients_error = FT_ERR_SUCCESS;
+    int32_t coefficients_error = FT_ERR_SUCCESS;
     if (coefficients_error != FT_ERR_SUCCESS)
         return (coefficients_error);
     if (coefficients.size() == 0)
@@ -391,14 +391,14 @@ static int math_polynomial_validate_coefficients(const ft_vector<double> &coeffi
     return (FT_ERR_SUCCESS);
 }
 
-int math_polynomial_evaluate(const ft_vector<double> &coefficients,
-    double x,
+int32_t math_polynomial_evaluate(const ft_vector<double> &coefficients,
+    double input_value,
     double &result) noexcept
 {
-    size_t count;
-    size_t index;
+    ft_size_t count;
+    ft_size_t index;
     double value;
-    int validation_error;
+    int32_t validation_error;
 
     validation_error = math_polynomial_validate_coefficients(coefficients);
     if (validation_error != FT_ERR_SUCCESS)
@@ -416,21 +416,21 @@ int math_polynomial_evaluate(const ft_vector<double> &coefficients,
     index = count - 1;
     while (index > 0)
     {
-        value = value * x + coefficients[index - 1];
+        value = value * input_value + coefficients[index - 1];
         index--;
     }
     result = value;
     return (FT_ERR_SUCCESS);
 }
 
-static int math_polynomial_evaluate_with_derivative(const ft_vector<double> &coefficients,
-    double x,
+static int32_t math_polynomial_evaluate_with_derivative(const ft_vector<double> &coefficients,
+    double input_value,
     double &value,
     double &derivative) noexcept
 {
-    size_t count;
-    size_t index;
-    int validation_error;
+    ft_size_t count;
+    ft_size_t index;
+    int32_t validation_error;
 
     validation_error = math_polynomial_validate_coefficients(coefficients);
     if (validation_error != FT_ERR_SUCCESS)
@@ -450,24 +450,24 @@ static int math_polynomial_evaluate_with_derivative(const ft_vector<double> &coe
     index = count - 1;
     while (index > 0)
     {
-        derivative = derivative * x + value;
-        value = value * x + coefficients[index - 1];
+        derivative = derivative * input_value + value;
+        value = value * input_value + coefficients[index - 1];
         index--;
     }
     return (FT_ERR_SUCCESS);
 }
 
-int math_polynomial_find_root_newton(const ft_vector<double> &coefficients,
+int32_t math_polynomial_find_root_newton(const ft_vector<double> &coefficients,
     double initial_guess,
     double tolerance,
-    size_t max_iterations,
+    ft_size_t max_iterations,
     double &root) noexcept
 {
     double current;
     double value;
     double derivative;
-    size_t iteration;
-    int evaluation_error;
+    ft_size_t iteration;
+    int32_t evaluation_error;
     double difference;
     double epsilon;
 
@@ -513,31 +513,31 @@ int math_polynomial_find_root_newton(const ft_vector<double> &coefficients,
     return (FT_ERR_INVALID_OPERATION);
 }
 
-int math_polynomial_solve_quadratic(double a,
-    double b,
-    double c,
+int32_t math_polynomial_solve_quadratic(double coefficient_a,
+    double coefficient_b,
+    double coefficient_c,
     double &root_one,
     double &root_two) noexcept
 {
     double discriminant;
     double epsilon;
-    double q;
+    double stable_root_term;
     double sqrt_discriminant;
 
     epsilon = 0.000000000001;
-    if (std::fabs(a) <= epsilon)
+    if (std::fabs(coefficient_a) <= epsilon)
     {
-        if (std::fabs(b) <= epsilon)
+        if (std::fabs(coefficient_b) <= epsilon)
         {
             root_one = 0.0;
             root_two = 0.0;
             return (FT_ERR_INVALID_ARGUMENT);
         }
-        root_one = -c / b;
+        root_one = -coefficient_c / coefficient_b;
         root_two = root_one;
         return (FT_ERR_SUCCESS);
     }
-    discriminant = b * b - 4.0 * a * c;
+    discriminant = coefficient_b * coefficient_b - 4.0 * coefficient_a * coefficient_c;
     if (discriminant < 0.0)
     {
         root_one = 0.0;
@@ -545,48 +545,48 @@ int math_polynomial_solve_quadratic(double a,
         return (FT_ERR_INVALID_ARGUMENT);
     }
     sqrt_discriminant = std::sqrt(discriminant);
-    if (b >= 0.0)
-        q = -0.5 * (b + sqrt_discriminant);
+    if (coefficient_b >= 0.0)
+        stable_root_term = -0.5 * (coefficient_b + sqrt_discriminant);
     else
-        q = -0.5 * (b - sqrt_discriminant);
-    root_one = q / a;
-    if (std::fabs(q) <= epsilon)
-        root_two = -b / a;
+        stable_root_term = -0.5 * (coefficient_b - sqrt_discriminant);
+    root_one = stable_root_term / coefficient_a;
+    if (std::fabs(stable_root_term) <= epsilon)
+        root_two = -coefficient_b / coefficient_a;
     else
-        root_two = c / q;
+        root_two = coefficient_c / stable_root_term;
     return (FT_ERR_SUCCESS);
 }
 
-int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
+int32_t math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values_input,
     const ft_vector<double> &y_values,
-    double x,
+    double input_value,
     double &result) noexcept
 {
-    size_t count;
-    size_t index;
-    size_t inner_index;
+    ft_size_t count;
+    ft_size_t index;
+    ft_size_t inner_index;
     double term;
     double denominator;
     double epsilon;
 
-    int x_error = FT_ERR_SUCCESS;
+    int32_t x_error = FT_ERR_SUCCESS;
     if (x_error != FT_ERR_SUCCESS)
     {
         result = 0.0;
         return (x_error);
     }
-    int y_error = FT_ERR_SUCCESS;
+    int32_t y_error = FT_ERR_SUCCESS;
     if (y_error != FT_ERR_SUCCESS)
     {
         result = 0.0;
         return (y_error);
     }
-    if (x_values.size() == 0 || x_values.size() != y_values.size())
+    if (x_values_input.size() == 0 || x_values_input.size() != y_values.size())
     {
         result = 0.0;
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    count = x_values.size();
+    count = x_values_input.size();
     epsilon = 0.000000000001;
     result = 0.0;
     index = 0;
@@ -598,13 +598,13 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
         {
             if (inner_index != index)
             {
-                denominator = x_values[index] - x_values[inner_index];
+                denominator = x_values_input[index] - x_values_input[inner_index];
                 if (std::fabs(denominator) <= epsilon)
                 {
                     result = 0.0;
                     return (FT_ERR_INVALID_ARGUMENT);
                 }
-                term = term * (x - x_values[inner_index]) / denominator;
+                term = term * (input_value - x_values_input[inner_index]) / denominator;
             }
             inner_index++;
         }
@@ -614,17 +614,17 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
     return (FT_ERR_SUCCESS);
 }
 
-int math_bezier_evaluate(const ft_vector<double> &control_points,
+int32_t math_bezier_evaluate(const ft_vector<double> &control_points,
     double parameter,
     double &result) noexcept
 {
     ft_vector<double> working;
-    size_t count;
-    size_t level;
-    size_t index;
-    int copy_error;
+    ft_size_t count;
+    ft_size_t level;
+    ft_size_t index;
+    int32_t copy_error;
 
-    int control_error = FT_ERR_SUCCESS;
+    int32_t control_error = FT_ERR_SUCCESS;
     if (control_error != FT_ERR_SUCCESS)
     {
         result = 0.0;
@@ -668,29 +668,29 @@ int math_bezier_evaluate(const ft_vector<double> &control_points,
     return (FT_ERR_SUCCESS);
 }
 
-static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control_points,
+static int32_t math_polynomial_extract_coordinates(const ft_vector<vector2> &control_points,
     ft_vector<double> &x_coordinates,
     ft_vector<double> &y_coordinates) noexcept
 {
-    size_t count;
-    size_t index;
+    ft_size_t count;
+    ft_size_t index;
     double x_value;
     double y_value;
 
-    int control_error = FT_ERR_SUCCESS;
+    int32_t control_error = FT_ERR_SUCCESS;
     if (control_error != FT_ERR_SUCCESS)
     {
         return (control_error);
     }
     count = control_points.size();
     x_coordinates.resize(count, 0.0);
-    int x_resize_error = FT_ERR_SUCCESS;
+    int32_t x_resize_error = FT_ERR_SUCCESS;
     if (x_resize_error != FT_ERR_SUCCESS)
     {
         return (x_resize_error);
     }
     y_coordinates.resize(count, 0.0);
-    int y_resize_error = FT_ERR_SUCCESS;
+    int32_t y_resize_error = FT_ERR_SUCCESS;
     if (y_resize_error != FT_ERR_SUCCESS)
     {
         return (y_resize_error);
@@ -701,7 +701,7 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
         const vector2 &point = control_points[index];
 
         x_value = point.get_x();
-        int point_error = FT_ERR_SUCCESS;
+        int32_t point_error = FT_ERR_SUCCESS;
         if (point_error != FT_ERR_SUCCESS)
         {
             return (point_error);
@@ -719,7 +719,7 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
     return (FT_ERR_SUCCESS);
 }
 
-int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
+int32_t math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     double parameter,
     vector2 &result) noexcept
 {
@@ -727,7 +727,7 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     ft_vector<double> y_coordinates;
     double x_value;
     double y_value;
-    int coordinate_error;
+    int32_t coordinate_error;
 
     if (parameter < 0.0 || parameter > 1.0)
     {
@@ -740,7 +740,7 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     {
         return (coordinate_error);
     }
-    int evaluate_error;
+    int32_t evaluate_error;
 
     evaluate_error = math_bezier_evaluate(x_coordinates, parameter, x_value);
     if (evaluate_error != FT_ERR_SUCCESS)
@@ -754,7 +754,7 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     }
     result.~vector2();
     new (&result) vector2(x_value, y_value);
-    int result_error = FT_ERR_SUCCESS;
+    int32_t result_error = FT_ERR_SUCCESS;
     if (result_error != FT_ERR_SUCCESS)
     {
         return (result_error);
@@ -762,70 +762,70 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     return (FT_ERR_SUCCESS);
 }
 
-ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
+ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
     const ft_vector<double> &y_values) noexcept
 {
     ft_cubic_spline spline;
-    int spline_initialization_error;
-    size_t count;
-    size_t segment_count;
+    int32_t spline_initialization_error;
+    ft_size_t count;
+    ft_size_t segment_count;
     ft_vector<double> h;
     ft_vector<double> alpha;
-    size_t index;
-    int error_code;
+    ft_size_t index;
+    int32_t error_code;
     double epsilon;
 
     spline_initialization_error = spline.initialize();
     if (spline_initialization_error != FT_ERR_SUCCESS)
         return (spline);
-    int x_error = FT_ERR_SUCCESS;
+    int32_t x_error = FT_ERR_SUCCESS;
     if (x_error != FT_ERR_SUCCESS)
     {
         return (spline);
     }
-    int y_error = FT_ERR_SUCCESS;
+    int32_t y_error = FT_ERR_SUCCESS;
     if (y_error != FT_ERR_SUCCESS)
     {
         return (spline);
     }
-    if (x_values.size() < 2 || x_values.size() != y_values.size())
+    if (x_values_input.size() < 2 || x_values_input.size() != y_values.size())
     {
         return (spline);
     }
-    count = x_values.size();
+    count = x_values_input.size();
     epsilon = 0.000000000001;
     segment_count = count - 1;
-    math_polynomial_copy_vector(x_values, spline.x_values, count, error_code);
+    math_polynomial_copy_vector(x_values_input, spline._x_values, count, error_code);
     if (error_code != FT_ERR_SUCCESS)
     {
         return (spline);
     }
-    math_polynomial_copy_vector(y_values, spline.a_coefficients, count, error_code);
+    math_polynomial_copy_vector(y_values, spline._a_coefficients, count, error_code);
     if (error_code != FT_ERR_SUCCESS)
     {
         return (spline);
     }
-    spline.b_coefficients.resize(segment_count, 0.0);
+    spline._b_coefficients.resize(segment_count, 0.0);
     {
-        int resize_error = FT_ERR_SUCCESS;
+        int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
             return (spline);
         }
     }
-    spline.c_coefficients.resize(count, 0.0);
+    spline._c_coefficients.resize(count, 0.0);
     {
-        int resize_error = FT_ERR_SUCCESS;
+        int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
             return (spline);
         }
     }
-    spline.d_coefficients.resize(segment_count, 0.0);
+    spline._d_coefficients.resize(segment_count, 0.0);
     {
-        int resize_error = FT_ERR_SUCCESS;
+        int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
@@ -834,7 +834,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     }
     h.resize(segment_count, 0.0);
     {
-        int resize_error = FT_ERR_SUCCESS;
+        int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
@@ -843,7 +843,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     }
     alpha.resize(count, 0.0);
     {
-        int resize_error = FT_ERR_SUCCESS;
+        int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
@@ -853,7 +853,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     index = 0;
     while (index < segment_count)
     {
-        h[index] = spline.x_values[index + 1] - spline.x_values[index];
+        h[index] = spline._x_values[index + 1] - spline._x_values[index];
         if (h[index] <= 0.0)
         {
             return (spline);
@@ -863,19 +863,19 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     index = 1;
     while (index < segment_count)
     {
-        alpha[index] = 3.0 * (spline.a_coefficients[index + 1] - spline.a_coefficients[index]) / h[index]
-            - 3.0 * (spline.a_coefficients[index] - spline.a_coefficients[index - 1]) / h[index - 1];
+        alpha[index] = 3.0 * (spline._a_coefficients[index + 1] - spline._a_coefficients[index]) / h[index]
+            - 3.0 * (spline._a_coefficients[index] - spline._a_coefficients[index - 1]) / h[index - 1];
         index++;
     }
     if (segment_count == 1)
     {
         double slope;
 
-        slope = (spline.a_coefficients[1] - spline.a_coefficients[0]) / h[0];
-        spline.b_coefficients[0] = slope;
-        spline.c_coefficients[0] = 0.0;
-        spline.c_coefficients[1] = 0.0;
-        spline.d_coefficients[0] = 0.0;
+        slope = (spline._a_coefficients[1] - spline._a_coefficients[0]) / h[0];
+        spline._b_coefficients[0] = slope;
+        spline._c_coefficients[0] = 0.0;
+        spline._c_coefficients[1] = 0.0;
+        spline._d_coefficients[0] = 0.0;
         return (spline);
     }
     if (segment_count == 2)
@@ -887,9 +887,9 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         {
             return (spline);
         }
-        spline.c_coefficients[0] = 0.0;
-        spline.c_coefficients[1] = alpha[1] / denominator_two_segments;
-        spline.c_coefficients[2] = 0.0;
+        spline._c_coefficients[0] = 0.0;
+        spline._c_coefficients[1] = alpha[1] / denominator_two_segments;
+        spline._c_coefficients[2] = 0.0;
     }
     else
     {
@@ -898,10 +898,10 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         ft_vector<double> upper;
         ft_vector<double> rhs;
         ft_vector<double> interior_c;
-        size_t equation_count;
-        size_t equation_index;
-        size_t last_index;
-        size_t current_index;
+        ft_size_t equation_count;
+        ft_size_t equation_index;
+        ft_size_t last_index;
+        ft_size_t current_index;
         double pivot;
         double factor;
         double value;
@@ -909,7 +909,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         equation_count = count - 2;
         lower.resize(equation_count, 0.0);
         {
-            int resize_error = FT_ERR_SUCCESS;
+            int32_t resize_error = FT_ERR_SUCCESS;
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
@@ -918,7 +918,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         }
         diagonal.resize(equation_count, 0.0);
         {
-            int resize_error = FT_ERR_SUCCESS;
+            int32_t resize_error = FT_ERR_SUCCESS;
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
@@ -927,7 +927,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         }
         upper.resize(equation_count, 0.0);
         {
-            int resize_error = FT_ERR_SUCCESS;
+            int32_t resize_error = FT_ERR_SUCCESS;
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
@@ -936,7 +936,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         }
         rhs.resize(equation_count, 0.0);
         {
-            int resize_error = FT_ERR_SUCCESS;
+            int32_t resize_error = FT_ERR_SUCCESS;
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
@@ -945,7 +945,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         }
         interior_c.resize(equation_count, 0.0);
         {
-            int resize_error = FT_ERR_SUCCESS;
+            int32_t resize_error = FT_ERR_SUCCESS;
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
@@ -958,7 +958,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         equation_index = 1;
         while (equation_index + 1 < equation_count)
         {
-            size_t alpha_index;
+            ft_size_t alpha_index;
 
             alpha_index = equation_index + 1;
             lower[equation_index] = h[alpha_index - 1];
@@ -1001,66 +1001,66 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
             value /= pivot;
             interior_c[current_index] = value;
         }
-        spline.c_coefficients[0] = ((h[0] + h[1]) * interior_c[0] - h[0] * interior_c[1]) / h[1];
+        spline._c_coefficients[0] = ((h[0] + h[1]) * interior_c[0] - h[0] * interior_c[1]) / h[1];
         equation_index = 0;
         while (equation_index < equation_count)
         {
-            spline.c_coefficients[equation_index + 1] = interior_c[equation_index];
+            spline._c_coefficients[equation_index + 1] = interior_c[equation_index];
             equation_index++;
         }
-        spline.c_coefficients[count - 1] = ((h[segment_count - 2] + h[segment_count - 1]) * interior_c[equation_count - 1]
+        spline._c_coefficients[count - 1] = ((h[segment_count - 2] + h[segment_count - 1]) * interior_c[equation_count - 1]
                 - h[segment_count - 1] * interior_c[equation_count - 2]) / h[segment_count - 2];
     }
     index = segment_count;
     while (index > 0)
     {
-        spline.b_coefficients[index - 1] = (spline.a_coefficients[index] - spline.a_coefficients[index - 1]) / h[index - 1]
-            - h[index - 1] * (spline.c_coefficients[index] + 2.0 * spline.c_coefficients[index - 1]) / 3.0;
-        spline.d_coefficients[index - 1] = (spline.c_coefficients[index] - spline.c_coefficients[index - 1]) / (3.0 * h[index - 1]);
+        spline._b_coefficients[index - 1] = (spline._a_coefficients[index] - spline._a_coefficients[index - 1]) / h[index - 1]
+            - h[index - 1] * (spline._c_coefficients[index] + 2.0 * spline._c_coefficients[index - 1]) / 3.0;
+        spline._d_coefficients[index - 1] = (spline._c_coefficients[index] - spline._c_coefficients[index - 1]) / (3.0 * h[index - 1]);
         index--;
     }
     return (spline);
 }
 
 double ft_cubic_spline_evaluate(const ft_cubic_spline &spline,
-    double x) noexcept
+    double input_value) noexcept
 {
-    size_t segment_count;
-    size_t index;
+    ft_size_t segment_count;
+    ft_size_t index;
     double clamped_x;
     double delta;
     double value;
 
-    if (spline.x_values.size() < 2)
+    if (spline._x_values.size() < 2)
     {
         return (0.0);
     }
-    clamped_x = x;
-    if (clamped_x < spline.x_values[0])
-        clamped_x = spline.x_values[0];
-    if (clamped_x > spline.x_values[spline.x_values.size() - 1])
-        clamped_x = spline.x_values[spline.x_values.size() - 1];
-    segment_count = spline.x_values.size() - 1;
+    clamped_x = input_value;
+    if (clamped_x < spline._x_values[0])
+        clamped_x = spline._x_values[0];
+    if (clamped_x > spline._x_values[spline._x_values.size() - 1])
+        clamped_x = spline._x_values[spline._x_values.size() - 1];
+    segment_count = spline._x_values.size() - 1;
     index = segment_count - 1;
-    while (index > 0 && clamped_x < spline.x_values[index])
+    while (index > 0 && clamped_x < spline._x_values[index])
         index--;
-    delta = clamped_x - spline.x_values[index];
-    value = spline.a_coefficients[index]
-        + spline.b_coefficients[index] * delta
-        + spline.c_coefficients[index] * delta * delta
-        + spline.d_coefficients[index] * delta * delta * delta;
+    delta = clamped_x - spline._x_values[index];
+    value = spline._a_coefficients[index]
+        + spline._b_coefficients[index] * delta
+        + spline._c_coefficients[index] * delta * delta
+        + spline._d_coefficients[index] * delta * delta * delta;
     return (value);
 }
 
-static int math_integrate_trapezoidal_step(math_unary_function function,
+static int32_t math_integrate_trapezoidal_step(math_unary_function function,
     void *user_data,
     double lower_bound,
     double upper_bound,
-    size_t subdivisions,
+    ft_size_t subdivisions,
     double &result) noexcept
 {
     double step;
-    size_t index;
+    ft_size_t index;
     double sum;
     double current_x;
     double function_value;
@@ -1084,15 +1084,15 @@ static int math_integrate_trapezoidal_step(math_unary_function function,
     return (FT_ERR_SUCCESS);
 }
 
-int math_integrate_trapezoidal(math_unary_function function,
+int32_t math_integrate_trapezoidal(math_unary_function function,
     void *user_data,
     double lower_bound,
     double upper_bound,
-    size_t subdivisions,
+    ft_size_t subdivisions,
     double &result) noexcept
 {
     double local_result;
-    int step_error;
+    int32_t step_error;
     double orientation;
     double epsilon;
 
@@ -1132,15 +1132,15 @@ int math_integrate_trapezoidal(math_unary_function function,
     return (FT_ERR_SUCCESS);
 }
 
-static int math_integrate_simpson_estimate(math_unary_function function,
+static int32_t math_integrate_simpson_estimate(math_unary_function function,
     void *user_data,
     double lower_bound,
     double upper_bound,
-    size_t subdivisions,
+    ft_size_t subdivisions,
     double &result) noexcept
 {
     double step;
-    size_t index;
+    ft_size_t index;
     double odd_sum;
     double even_sum;
     double x_value;
@@ -1170,18 +1170,18 @@ static int math_integrate_simpson_estimate(math_unary_function function,
     return (FT_ERR_SUCCESS);
 }
 
-int math_integrate_simpson(math_unary_function function,
+int32_t math_integrate_simpson(math_unary_function function,
     void *user_data,
     double lower_bound,
     double upper_bound,
     double tolerance,
     double &result) noexcept
 {
-    size_t refinements;
-    size_t subdivisions;
+    ft_size_t refinements;
+    ft_size_t subdivisions;
     double previous;
     double current;
-    int estimate_error;
+    int32_t estimate_error;
     double orientation;
     double difference;
     double epsilon;

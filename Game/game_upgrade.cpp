@@ -24,7 +24,7 @@ const char *ft_upgrade::get_error_str() const noexcept
 ft_upgrade::ft_upgrade() noexcept
     : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0),
       _modifier3(0), _modifier4(0), _mutex(ft_nullptr),
-      _initialized_state(ft_upgrade::_state_uninitialized)
+      _initialised_state(ft_upgrade::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -34,7 +34,7 @@ ft_upgrade::~ft_upgrade() noexcept
 {
     int destroy_error;
 
-    if (this->_initialized_state == ft_upgrade::_state_initialized)
+    if (this->_initialised_state == ft_upgrade::_state_initialised)
     {
         destroy_error = this->destroy();
         if (destroy_error != FT_ERR_SUCCESS)
@@ -55,21 +55,21 @@ void ft_upgrade::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_upgrade::abort_if_not_initialized(const char *method_name) const
+void ft_upgrade::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_upgrade::_state_initialized)
+    if (this->_initialised_state == ft_upgrade::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
 int ft_upgrade::initialize() noexcept
 {
-    if (this->_initialized_state == ft_upgrade::_state_initialized)
+    if (this->_initialised_state == ft_upgrade::_state_initialised)
     {
         this->abort_lifecycle_error("ft_upgrade::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_id = 0;
@@ -79,7 +79,7 @@ int ft_upgrade::initialize() noexcept
     this->_modifier2 = 0;
     this->_modifier3 = 0;
     this->_modifier4 = 0;
-    this->_initialized_state = ft_upgrade::_state_initialized;
+    this->_initialised_state = ft_upgrade::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -88,10 +88,10 @@ int ft_upgrade::initialize(const ft_upgrade &other) noexcept
 {
     int initialize_error;
 
-    if (other._initialized_state != ft_upgrade::_state_initialized)
+    if (other._initialised_state != ft_upgrade::_state_initialised)
     {
         this->abort_lifecycle_error("ft_upgrade::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
@@ -99,7 +99,7 @@ int ft_upgrade::initialize(const ft_upgrade &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialized_state == ft_upgrade::_state_initialized)
+    if (this->_initialised_state == ft_upgrade::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -134,7 +134,7 @@ int ft_upgrade::destroy() noexcept
 {
     int disable_error;
 
-    if (this->_initialized_state != ft_upgrade::_state_initialized)
+    if (this->_initialised_state != ft_upgrade::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -147,7 +147,7 @@ int ft_upgrade::destroy() noexcept
     this->_modifier2 = 0;
     this->_modifier3 = 0;
     this->_modifier4 = 0;
-    this->_initialized_state = ft_upgrade::_state_destroyed;
+    this->_initialised_state = ft_upgrade::_state_destroyed;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -157,7 +157,7 @@ int ft_upgrade::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_upgrade::enable_thread_safety");
+    this->abort_if_not_initialised("ft_upgrade::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -208,7 +208,7 @@ int ft_upgrade::lock_internal(bool *lock_acquired) const noexcept
 {
     int lock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::lock_internal");
+    this->abort_if_not_initialised("ft_upgrade::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -225,7 +225,7 @@ int ft_upgrade::lock_internal(bool *lock_acquired) const noexcept
 
 int ft_upgrade::unlock_internal(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_upgrade::unlock_internal");
+    this->abort_if_not_initialised("ft_upgrade::unlock_internal");
     if (lock_acquired == false)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -241,13 +241,13 @@ int ft_upgrade::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_upgrade::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_upgrade::lock");
+    this->abort_if_not_initialised("ft_upgrade::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_upgrade::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_upgrade::unlock");
+    this->abort_if_not_initialised("ft_upgrade::unlock");
     int unlock_error;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
@@ -262,7 +262,7 @@ int ft_upgrade::get_id() const noexcept
     int identifier;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::get_id");
+    this->abort_if_not_initialised("ft_upgrade::get_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -284,7 +284,7 @@ void ft_upgrade::set_id(int id) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::set_id");
+    this->abort_if_not_initialised("ft_upgrade::set_id");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -307,7 +307,7 @@ uint16_t ft_upgrade::get_current_level() const noexcept
     uint16_t level_value;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::get_current_level");
+    this->abort_if_not_initialised("ft_upgrade::get_current_level");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -329,7 +329,7 @@ void ft_upgrade::set_current_level(uint16_t level) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::set_current_level");
+    this->abort_if_not_initialised("ft_upgrade::set_current_level");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -351,7 +351,7 @@ void ft_upgrade::add_level(uint16_t level) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::add_level");
+    this->abort_if_not_initialised("ft_upgrade::add_level");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -373,7 +373,7 @@ void ft_upgrade::sub_level(uint16_t level) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::sub_level");
+    this->abort_if_not_initialised("ft_upgrade::sub_level");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -396,7 +396,7 @@ uint16_t ft_upgrade::get_max_level() const noexcept
     uint16_t max_value;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::get_max_level");
+    this->abort_if_not_initialised("ft_upgrade::get_max_level");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -418,7 +418,7 @@ void ft_upgrade::set_max_level(uint16_t level) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::set_max_level");
+    this->abort_if_not_initialised("ft_upgrade::set_max_level");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -441,7 +441,7 @@ int ft_upgrade::get_modifier1() const noexcept
     int value;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::get_modifier1");
+    this->abort_if_not_initialised("ft_upgrade::get_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -463,7 +463,7 @@ void ft_upgrade::set_modifier1(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::set_modifier1");
+    this->abort_if_not_initialised("ft_upgrade::set_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -485,7 +485,7 @@ void ft_upgrade::add_modifier1(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::add_modifier1");
+    this->abort_if_not_initialised("ft_upgrade::add_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -507,7 +507,7 @@ void ft_upgrade::sub_modifier1(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::sub_modifier1");
+    this->abort_if_not_initialised("ft_upgrade::sub_modifier1");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -530,7 +530,7 @@ int ft_upgrade::get_modifier2() const noexcept
     int value;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::get_modifier2");
+    this->abort_if_not_initialised("ft_upgrade::get_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -552,7 +552,7 @@ void ft_upgrade::set_modifier2(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::set_modifier2");
+    this->abort_if_not_initialised("ft_upgrade::set_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -574,7 +574,7 @@ void ft_upgrade::add_modifier2(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::add_modifier2");
+    this->abort_if_not_initialised("ft_upgrade::add_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -596,7 +596,7 @@ void ft_upgrade::sub_modifier2(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::sub_modifier2");
+    this->abort_if_not_initialised("ft_upgrade::sub_modifier2");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -619,7 +619,7 @@ int ft_upgrade::get_modifier3() const noexcept
     int value;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::get_modifier3");
+    this->abort_if_not_initialised("ft_upgrade::get_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -641,7 +641,7 @@ void ft_upgrade::set_modifier3(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::set_modifier3");
+    this->abort_if_not_initialised("ft_upgrade::set_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -663,7 +663,7 @@ void ft_upgrade::add_modifier3(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::add_modifier3");
+    this->abort_if_not_initialised("ft_upgrade::add_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -685,7 +685,7 @@ void ft_upgrade::sub_modifier3(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::sub_modifier3");
+    this->abort_if_not_initialised("ft_upgrade::sub_modifier3");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -708,7 +708,7 @@ int ft_upgrade::get_modifier4() const noexcept
     int value;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::get_modifier4");
+    this->abort_if_not_initialised("ft_upgrade::get_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -730,7 +730,7 @@ void ft_upgrade::set_modifier4(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::set_modifier4");
+    this->abort_if_not_initialised("ft_upgrade::set_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -752,7 +752,7 @@ void ft_upgrade::add_modifier4(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::add_modifier4");
+    this->abort_if_not_initialised("ft_upgrade::add_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -774,7 +774,7 @@ void ft_upgrade::sub_modifier4(int mod) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_upgrade::sub_modifier4");
+    this->abort_if_not_initialised("ft_upgrade::sub_modifier4");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -793,7 +793,7 @@ void ft_upgrade::sub_modifier4(int mod) noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_upgrade::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_upgrade::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_upgrade::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

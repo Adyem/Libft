@@ -1,7 +1,7 @@
 #include "basic.hpp"
 
-int su_locale_compare(const char *left, const char *right, const char *locale_name,
-            int *result);
+int32_t su_locale_compare(const char *left, const char *right, const char *locale_name,
+            int32_t *result);
 
 int32_t ft_locale_compare(const char *left, const char *right, const char *locale_name)
 {

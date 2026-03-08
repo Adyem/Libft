@@ -1,7 +1,7 @@
 #include "basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-void *ft_memset(void *destination, int value, ft_size_t number_of_bytes)
+void *ft_memset(void *destination, int32_t value, ft_size_t number_of_bytes)
 {
     if (destination == ft_nullptr)
         return (ft_nullptr);

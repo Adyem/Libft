@@ -5,7 +5,7 @@
 
 #if NETWORKING_HAS_OPENSSL
 http2_header_field::http2_header_field(const http2_header_field &other) noexcept
-    : _initialized_state(_state_uninitialized), _name(), _value(), _mutex(ft_nullptr)
+    : _initialised_state(_state_uninitialised), _name(), _value(), _mutex(ft_nullptr)
 {
     ft_string name_value;
     ft_string value_value;
@@ -17,7 +17,7 @@ http2_header_field::http2_header_field(const http2_header_field &other) noexcept
 }
 
 http2_header_field::http2_header_field(http2_header_field &&other) noexcept
-    : _initialized_state(_state_uninitialized), _name(), _value(), _mutex(ft_nullptr)
+    : _initialised_state(_state_uninitialised), _name(), _value(), _mutex(ft_nullptr)
 {
     ft_string name_value;
     ft_string value_value;
@@ -38,7 +38,7 @@ http2_header_field &http2_header_field::operator=(const http2_header_field &othe
 
     if (this == &other)
         return (*this);
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         (void)this->initialize();
     if (other.copy_name(name_value) && other.copy_value(value_value))
         (void)this->assign(name_value, value_value);
@@ -52,7 +52,7 @@ http2_header_field &http2_header_field::operator=(http2_header_field &&other) no
 
     if (this == &other)
         return (*this);
-    if (this->_initialized_state != _state_initialized)
+    if (this->_initialised_state != _state_initialised)
         (void)this->initialize();
     if (other.copy_name(name_value) && other.copy_value(value_value))
     {

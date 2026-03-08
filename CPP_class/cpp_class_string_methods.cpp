@@ -36,12 +36,12 @@ void    ft_string::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void    ft_string::abort_if_not_initialized(const char *method_name) const noexcept
+void    ft_string::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == ft_string::_state_initialized)
+    if (this->_initialised_state == ft_string::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -358,7 +358,7 @@ int32_t ft_string::move_buffer(ft_string &other) noexcept
 
 int32_t ft_string::resize(ft_size_t new_capacity) noexcept
 {
-    this->abort_if_not_initialized("ft_string::resize");
+    this->abort_if_not_initialised("ft_string::resize");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -376,7 +376,7 @@ int32_t ft_string::resize(ft_size_t new_capacity) noexcept
 
 int32_t ft_string::append(char character) noexcept
 {
-    this->abort_if_not_initialized("ft_string::append(char)");
+    this->abort_if_not_initialised("ft_string::append(char)");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -392,8 +392,8 @@ int32_t ft_string::append(char character) noexcept
 
 int32_t ft_string::append(const ft_string& string) noexcept
 {
-    this->abort_if_not_initialized("ft_string::append(const ft_string &)");
-    string.abort_if_not_initialized("ft_string::append(const ft_string &)");
+    this->abort_if_not_initialised("ft_string::append(const ft_string &)");
+    string.abort_if_not_initialised("ft_string::append(const ft_string &)");
     if (string._length == 0)
         return (ft_string::set_error(FT_ERR_SUCCESS));
     pt_recursive_mutex *self_mutex = this->_mutex;
@@ -472,7 +472,7 @@ int32_t ft_string::append(const ft_string& string) noexcept
 
 int32_t ft_string::append(const char *string) noexcept
 {
-    this->abort_if_not_initialized("ft_string::append(const char *)");
+    this->abort_if_not_initialised("ft_string::append(const char *)");
     if (string == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     ft_size_t string_length = 0;
@@ -483,7 +483,7 @@ int32_t ft_string::append(const char *string) noexcept
 
 int32_t ft_string::clear() noexcept
 {
-    this->abort_if_not_initialized("ft_string::clear");
+    this->abort_if_not_initialised("ft_string::clear");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -498,7 +498,7 @@ int32_t ft_string::clear() noexcept
 
 const char* ft_string::at(ft_size_t index) const noexcept
 {
-    this->abort_if_not_initialized("ft_string::at");
+    this->abort_if_not_initialised("ft_string::at");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -520,7 +520,7 @@ const char* ft_string::at(ft_size_t index) const noexcept
 
 const char* ft_string::c_str() const noexcept
 {
-    this->abort_if_not_initialized("ft_string::c_str");
+    this->abort_if_not_initialised("ft_string::c_str");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -542,7 +542,7 @@ const char* ft_string::c_str() const noexcept
 
 char* ft_string::data() noexcept
 {
-    this->abort_if_not_initialized("ft_string::data");
+    this->abort_if_not_initialised("ft_string::data");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -567,7 +567,7 @@ char* ft_string::print() noexcept
 
 ft_size_t ft_string::size() const noexcept
 {
-    this->abort_if_not_initialized("ft_string::size");
+    this->abort_if_not_initialised("ft_string::size");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -585,18 +585,18 @@ bool ft_string::empty() const noexcept
     return (this->size() == 0);
 }
 
-bool ft_string::is_initialized() const noexcept
+bool ft_string::is_initialised() const noexcept
 {
-    return (this->_initialized_state == ft_string::_state_initialized);
+    return (this->_initialised_state == ft_string::_state_initialised);
 }
 
 int32_t ft_string::move(ft_string& other) noexcept
 {
-    if (other._initialized_state != ft_string::_state_initialized)
+    if (other._initialised_state != ft_string::_state_initialised)
     {
-        if (other._initialized_state == ft_string::_state_uninitialized)
+        if (other._initialised_state == ft_string::_state_uninitialised)
             other.abort_lifecycle_error("ft_string::move source",
-                "called with uninitialized source object");
+                "called with uninitialised source object");
         else
             other.abort_lifecycle_error("ft_string::move source",
                 "called with destroyed source object");
@@ -604,7 +604,7 @@ int32_t ft_string::move(ft_string& other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state != ft_string::_state_initialized)
+    if (this->_initialised_state != ft_string::_state_initialised)
     {
         int32_t initialize_error = this->initialize();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -675,7 +675,7 @@ int32_t ft_string::move(ft_string& other) noexcept
 
 int32_t ft_string::erase(ft_size_t index, ft_size_t count) noexcept
 {
-    this->abort_if_not_initialized("ft_string::erase");
+    this->abort_if_not_initialised("ft_string::erase");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -693,7 +693,7 @@ int32_t ft_string::erase(ft_size_t index, ft_size_t count) noexcept
 
 int32_t ft_string::append(const char *string, ft_size_t length) noexcept
 {
-    this->abort_if_not_initialized("ft_string::append(const char *, ft_size_t)");
+    this->abort_if_not_initialised("ft_string::append(const char *, ft_size_t)");
     if (!string)
     {
         ft_string::set_error(FT_ERR_INVALID_ARGUMENT);
@@ -721,7 +721,7 @@ int32_t ft_string::append(const char *string, ft_size_t length) noexcept
 
 int32_t ft_string::assign(ft_size_t count, char character) noexcept
 {
-    this->abort_if_not_initialized("ft_string::assign(ft_size_t, char)");
+    this->abort_if_not_initialised("ft_string::assign(ft_size_t, char)");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -739,7 +739,7 @@ int32_t ft_string::assign(ft_size_t count, char character) noexcept
 
 int32_t ft_string::assign(const char *string, ft_size_t length) noexcept
 {
-    this->abort_if_not_initialized("ft_string::assign(const char *, ft_size_t)");
+    this->abort_if_not_initialised("ft_string::assign(const char *, ft_size_t)");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -757,7 +757,7 @@ int32_t ft_string::assign(const char *string, ft_size_t length) noexcept
 
 int32_t ft_string::resize_length(ft_size_t new_length) noexcept
 {
-    this->abort_if_not_initialized("ft_string::resize_length");
+    this->abort_if_not_initialised("ft_string::resize_length");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -777,7 +777,7 @@ int32_t ft_string::push_back(char character) noexcept
 
 char ft_string::back() noexcept
 {
-    this->abort_if_not_initialized("ft_string::back");
+    this->abort_if_not_initialised("ft_string::back");
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -799,7 +799,7 @@ char ft_string::back() noexcept
 
 ft_size_t ft_string::find(const char *substring) const noexcept
 {
-    this->abort_if_not_initialized("ft_string::find(const char *)");
+    this->abort_if_not_initialised("ft_string::find(const char *)");
     if (!substring)
         return (ft_string::npos);
     auto search_without_lock = [this, substring]() -> ft_size_t {
@@ -837,8 +837,8 @@ ft_size_t ft_string::find(const char *substring) const noexcept
 
 ft_size_t ft_string::find(const ft_string &substring) const noexcept
 {
-    this->abort_if_not_initialized("ft_string::find(const ft_string &)");
-    substring.abort_if_not_initialized("ft_string::find(const ft_string &)");
+    this->abort_if_not_initialised("ft_string::find(const ft_string &)");
+    substring.abort_if_not_initialised("ft_string::find(const ft_string &)");
     if (substring._length == 0)
         return (0);
     if (substring._length > this->_length)
@@ -925,7 +925,7 @@ ft_size_t ft_string::find(const ft_string &substring) const noexcept
 ft_string ft_string::substr(ft_size_t index, ft_size_t count) const noexcept
 {
     ft_string substring;
-    this->abort_if_not_initialized("ft_string::substr");
+    this->abort_if_not_initialised("ft_string::substr");
     if (substring.initialize() != FT_ERR_SUCCESS)
         return (substring);
     if (this->_mutex != ft_nullptr)
@@ -967,8 +967,8 @@ ft_string::operator const char*() const noexcept
 
 ft_string &ft_string::operator+=(const ft_string &string) noexcept
 {
-    this->abort_if_not_initialized("ft_string::operator+=(const ft_string &)");
-    string.abort_if_not_initialized("ft_string::operator+=(const ft_string &) source");
+    this->abort_if_not_initialised("ft_string::operator+=(const ft_string &)");
+    string.abort_if_not_initialised("ft_string::operator+=(const ft_string &) source");
     this->_operation_error = this->append(string);
     ft_string::set_error(this->_operation_error);
     return (*this);
@@ -976,7 +976,7 @@ ft_string &ft_string::operator+=(const ft_string &string) noexcept
 
 ft_string &ft_string::operator+=(const char *string) noexcept
 {
-    this->abort_if_not_initialized("ft_string::operator+=(const char *)");
+    this->abort_if_not_initialised("ft_string::operator+=(const char *)");
     this->_operation_error = this->append(string);
     ft_string::set_error(this->_operation_error);
     return (*this);
@@ -984,7 +984,7 @@ ft_string &ft_string::operator+=(const char *string) noexcept
 
 ft_string &ft_string::operator+=(char character) noexcept
 {
-    this->abort_if_not_initialized("ft_string::operator+=(char)");
+    this->abort_if_not_initialised("ft_string::operator+=(char)");
     this->_operation_error = this->append(character);
     ft_string::set_error(this->_operation_error);
     return (*this);
@@ -994,8 +994,8 @@ bool ft_string::operator==(const ft_string &other) const noexcept
 {
     ft_size_t index;
 
-    this->abort_if_not_initialized("ft_string::operator==(const ft_string &)");
-    other.abort_if_not_initialized("ft_string::operator==(const ft_string &) source");
+    this->abort_if_not_initialised("ft_string::operator==(const ft_string &)");
+    other.abort_if_not_initialised("ft_string::operator==(const ft_string &) source");
     if (this->_length != other._length)
     {
         ft_string::set_error(FT_ERR_SUCCESS);
@@ -1019,7 +1019,7 @@ bool ft_string::operator==(const char *string) const noexcept
 {
     ft_size_t index;
 
-    this->abort_if_not_initialized("ft_string::operator==(const char *)");
+    this->abort_if_not_initialised("ft_string::operator==(const char *)");
     if (string == ft_nullptr)
     {
         ft_string::set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1056,7 +1056,7 @@ bool ft_string::operator!=(const char *string) const noexcept
 
 char ft_string::operator[](ft_size_t index) const noexcept
 {
-    this->abort_if_not_initialized("ft_string::operator[]");
+    this->abort_if_not_initialised("ft_string::operator[]");
     if (index >= this->_length)
     {
         ft_string::set_error(FT_ERR_OUT_OF_RANGE);

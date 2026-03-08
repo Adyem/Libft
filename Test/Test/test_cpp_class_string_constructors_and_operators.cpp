@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../CMA/CMA.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -41,8 +41,8 @@ FT_TEST(test_ft_string_move_constructor_moves_content,
     return (1);
 }
 
-FT_TEST(test_ft_string_copy_assignment_destination_uninitialized,
-    "ft_string copy assignment initializes uninitialized destination")
+FT_TEST(test_ft_string_copy_assignment_destination_uninitialised,
+    "ft_string copy assignment initializes uninitialised destination")
 {
     ft_string source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("copy"));
@@ -53,8 +53,8 @@ FT_TEST(test_ft_string_copy_assignment_destination_uninitialized,
     return (1);
 }
 
-FT_TEST(test_ft_string_copy_assignment_destination_initialized,
-    "ft_string copy assignment destroys and replaces initialized destination")
+FT_TEST(test_ft_string_copy_assignment_destination_initialised,
+    "ft_string copy assignment destroys and replaces initialised destination")
 {
     ft_string source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("new"));
@@ -80,8 +80,8 @@ FT_TEST(test_ft_string_copy_assignment_destination_destroyed,
     return (1);
 }
 
-FT_TEST(test_ft_string_move_assignment_destination_initialized,
-    "ft_string move assignment replaces initialized destination")
+FT_TEST(test_ft_string_move_assignment_destination_initialised,
+    "ft_string move assignment replaces initialised destination")
 {
     ft_string source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("move_me"));

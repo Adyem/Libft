@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Template/iterator.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -26,7 +26,7 @@ FT_TEST(test_iterator_thread_safety_sets_last_error_success,
     return (1);
 }
 
-FT_TEST(test_iterator_thread_safety_reinitialized_manually,
+FT_TEST(test_iterator_thread_safety_reinitialised_manually,
         "Iterator manual reset preserves mutex behavior")
 {
     int values[3] = {5, 10, 15};

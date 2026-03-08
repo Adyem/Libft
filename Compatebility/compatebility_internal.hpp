@@ -1,6 +1,7 @@
 #ifndef COMPATEBILITY_INTERNAL_HPP
 #define COMPATEBILITY_INTERNAL_HPP
 
+#include "../Basic/basic.hpp"
 #include "../File/open_dir.hpp"
 #include <atomic>
 #include <cstddef>
@@ -26,11 +27,11 @@ struct file_dir
 {
     intptr_t file_descriptor;
     WIN32_FIND_DATAA w_find_data;
-    bool first_read;
+    ft_bool first_read;
     pt_mutex mutex;
-    bool mutex_initialized;
+    ft_bool mutex_initialised;
     file_dirent entry;
-    bool closed;
+    ft_bool closed;
 };
 int32_t cmp_open(const char *path_name);
 int32_t cmp_open(const char *path_name, int32_t flags);
@@ -52,9 +53,9 @@ struct file_dir
     int64_t buffer_used;
     ft_size_t buffer_offset;
     pt_mutex mutex;
-    bool mutex_initialized;
+    ft_bool mutex_initialised;
     file_dirent entry;
-    bool closed;
+    ft_bool closed;
 };
 int32_t cmp_open(const char *path_name);
 int32_t cmp_open(const char *path_name, int32_t flags);
@@ -117,6 +118,14 @@ int32_t cmp_time_get_time_of_day(struct timeval *time_value);
 int32_t cmp_high_resolution_time(int64_t *nanoseconds_out);
 const char *cmp_service_null_device_path(void);
 int32_t cmp_service_format_pid_line(char *buffer, ft_size_t buffer_size, ft_size_t *length_out);
+typedef void (*t_cmp_service_signal_handler)(int32_t signal_number,
+    void *user_context);
+int32_t cmp_service_set_working_directory(const char *working_directory);
+int32_t cmp_service_detach_process(ft_bool force_no_fork);
+int32_t cmp_service_release_console(void);
+int32_t cmp_service_install_signal_handlers(t_cmp_service_signal_handler handler,
+    void *user_context);
+void cmp_service_clear_signal_handlers(void);
 
 int32_t cmp_su_write(int32_t file_descriptor, const char *buffer,
     ft_size_t length, int64_t *bytes_written_out);
@@ -127,5 +136,8 @@ int32_t cmp_socket_send_all(intptr_t socket_handle, const void *buffer,
 int32_t cmp_syslog_open(const char *identifier);
 void cmp_syslog_write(const char *message);
 void cmp_syslog_close(void);
+
+class ft_sound_device;
+ft_sound_device *cmp_create_sound_device(void);
 
 #endif

@@ -19,12 +19,12 @@ void kv_store_entry::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void kv_store_entry::abort_if_not_initialized(const char *method_name) const noexcept
+void kv_store_entry::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == kv_store_entry::_state_initialized)
+    if (this->_initialised_state == kv_store_entry::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -32,7 +32,7 @@ kv_store_entry::kv_store_entry() noexcept
     : _value()
     , _has_expiration(false)
     , _expiration_timestamp(0)
-    , _initialized_state(kv_store_entry::_state_uninitialized)
+    , _initialised_state(kv_store_entry::_state_uninitialised)
     , _mutex(ft_nullptr)
 {
     return ;
@@ -40,7 +40,7 @@ kv_store_entry::kv_store_entry() noexcept
 
 kv_store_entry::~kv_store_entry() noexcept
 {
-    if (this->_initialized_state == kv_store_entry::_state_initialized)
+    if (this->_initialised_state == kv_store_entry::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -50,7 +50,7 @@ int kv_store_entry::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    this->abort_if_not_initialized("kv_store_entry::enable_thread_safety");
+    this->abort_if_not_initialised("kv_store_entry::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -70,7 +70,7 @@ int kv_store_entry::disable_thread_safety() noexcept
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("kv_store_entry::disable_thread_safety");
+    this->abort_if_not_initialised("kv_store_entry::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -86,10 +86,10 @@ bool kv_store_entry::is_thread_safe() const noexcept
 
 int kv_store_entry::initialize() noexcept
 {
-    if (this->_initialized_state == kv_store_entry::_state_initialized)
+    if (this->_initialised_state == kv_store_entry::_state_initialised)
     {
         this->abort_lifecycle_error("kv_store_entry::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_value = "";
@@ -97,7 +97,7 @@ int kv_store_entry::initialize() noexcept
         return (FT_ERR_NO_MEMORY);
     this->_has_expiration = false;
     this->_expiration_timestamp = 0;
-    this->_initialized_state = kv_store_entry::_state_initialized;
+    this->_initialised_state = kv_store_entry::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
@@ -112,37 +112,37 @@ int kv_store_entry::initialize(const kv_store_entry &other) noexcept
 
     if (&other == this)
         return (FT_ERR_SUCCESS);
-    other.abort_if_not_initialized("kv_store_entry::initialize(const kv_store_entry &)");
+    other.abort_if_not_initialised("kv_store_entry::initialize(const kv_store_entry &)");
     init_error = this->initialize();
     if (init_error != FT_ERR_SUCCESS)
         return (init_error);
     value_error = other.copy_value(copied_value);
     if (value_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = kv_store_entry::_state_destroyed;
+        this->_initialised_state = kv_store_entry::_state_destroyed;
         return (FT_ERR_INVALID_OPERATION);
     }
     expiration_error = other.has_expiration(copied_has_expiration);
     if (expiration_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = kv_store_entry::_state_destroyed;
+        this->_initialised_state = kv_store_entry::_state_destroyed;
         return (FT_ERR_INVALID_OPERATION);
     }
     expiration_error = other.get_expiration(copied_expiration_timestamp);
     if (expiration_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = kv_store_entry::_state_destroyed;
+        this->_initialised_state = kv_store_entry::_state_destroyed;
         return (FT_ERR_INVALID_OPERATION);
     }
     if (this->set_value(copied_value) != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = kv_store_entry::_state_destroyed;
+        this->_initialised_state = kv_store_entry::_state_destroyed;
         return (FT_ERR_INVALID_OPERATION);
     }
     if (this->configure_expiration(copied_has_expiration,
             copied_expiration_timestamp) != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = kv_store_entry::_state_destroyed;
+        this->_initialised_state = kv_store_entry::_state_destroyed;
         return (FT_ERR_INVALID_OPERATION);
     }
     return (FT_ERR_SUCCESS);
@@ -152,12 +152,12 @@ int kv_store_entry::destroy() noexcept
 {
     int destroy_error;
 
-    if (this->_initialized_state != kv_store_entry::_state_initialized)
+    if (this->_initialised_state != kv_store_entry::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     destroy_error = this->disable_thread_safety();
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
-    this->_initialized_state = kv_store_entry::_state_destroyed;
+    this->_initialised_state = kv_store_entry::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -166,7 +166,7 @@ int kv_store_entry::set_value(const ft_string &value) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("kv_store_entry::set_value(const ft_string &)");
+    this->abort_if_not_initialised("kv_store_entry::set_value(const ft_string &)");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -186,7 +186,7 @@ int kv_store_entry::set_value(const char *value_string) noexcept
 {
     ft_string temporary_value;
 
-    this->abort_if_not_initialized("kv_store_entry::set_value(const char *)");
+    this->abort_if_not_initialised("kv_store_entry::set_value(const char *)");
     if (value_string == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     temporary_value = value_string;
@@ -200,7 +200,7 @@ int kv_store_entry::copy_value(ft_string &destination) const noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("kv_store_entry::copy_value");
+    this->abort_if_not_initialised("kv_store_entry::copy_value");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -221,7 +221,7 @@ int kv_store_entry::get_value_pointer(const char **value_pointer) const noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("kv_store_entry::get_value_pointer");
+    this->abort_if_not_initialised("kv_store_entry::get_value_pointer");
     if (value_pointer == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -244,7 +244,7 @@ int kv_store_entry::configure_expiration(bool has_expiration, long long expirati
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("kv_store_entry::configure_expiration");
+    this->abort_if_not_initialised("kv_store_entry::configure_expiration");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -264,7 +264,7 @@ int kv_store_entry::has_expiration(bool &has_expiration) const noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("kv_store_entry::has_expiration");
+    this->abort_if_not_initialised("kv_store_entry::has_expiration");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -280,7 +280,7 @@ int kv_store_entry::get_expiration(long long &expiration_timestamp) const noexce
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("kv_store_entry::get_expiration");
+    this->abort_if_not_initialised("kv_store_entry::get_expiration");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -296,7 +296,7 @@ int kv_store_entry::is_expired(long long current_time, bool &expired) const noex
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("kv_store_entry::is_expired");
+    this->abort_if_not_initialised("kv_store_entry::is_expired");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);

@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csetjmp>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -10,11 +10,11 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static sigjmp_buf g_string_uninitialized_abort_jump;
+static sigjmp_buf g_string_uninitialised_abort_jump;
 
-static void string_uninitialized_abort_handler(int /*signal_number*/)
+static void string_uninitialised_abort_handler(int /*signal_number*/)
 {
-    siglongjmp(g_string_uninitialized_abort_jump, 1);
+    siglongjmp(g_string_uninitialised_abort_jump, 1);
     return ;
 }
 
@@ -25,12 +25,12 @@ static int string_expect_sigabrt_signal_handler(void (*operation)(void))
     int result;
 
     std::memset(&action, 0, sizeof(action));
-    action.sa_handler = string_uninitialized_abort_handler;
+    action.sa_handler = string_uninitialised_abort_handler;
     sigemptyset(&action.sa_mask);
     result = 0;
     if (sigaction(SIGABRT, &action, &backup) != 0)
         return (0);
-    if (sigsetjmp(g_string_uninitialized_abort_jump, 1) == 0)
+    if (sigsetjmp(g_string_uninitialised_abort_jump, 1) == 0)
     {
         operation();
         result = 0;
@@ -41,19 +41,19 @@ static int string_expect_sigabrt_signal_handler(void (*operation)(void))
     return (result);
 }
 
-static int string_expect_sigabrt_uninitialized(void (*operation)(ft_string &))
+static int string_expect_sigabrt_uninitialised(void (*operation)(ft_string &))
 {
     struct sigaction action;
     struct sigaction backup;
     int result;
 
     std::memset(&action, 0, sizeof(action));
-    action.sa_handler = string_uninitialized_abort_handler;
+    action.sa_handler = string_uninitialised_abort_handler;
     sigemptyset(&action.sa_mask);
     result = 0;
     if (sigaction(SIGABRT, &action, &backup) != 0)
         return (0);
-    if (sigsetjmp(g_string_uninitialized_abort_jump, 1) == 0)
+    if (sigsetjmp(g_string_uninitialised_abort_jump, 1) == 0)
     {
         alignas(ft_string) unsigned char storage[sizeof(ft_string)];
         ft_string *string_pointer;
@@ -69,19 +69,19 @@ static int string_expect_sigabrt_uninitialized(void (*operation)(ft_string &))
     return (result);
 }
 
-static int string_expect_no_sigabrt_uninitialized(void (*operation)(ft_string &))
+static int string_expect_no_sigabrt_uninitialised(void (*operation)(ft_string &))
 {
     struct sigaction action;
     struct sigaction backup;
     int result;
 
     std::memset(&action, 0, sizeof(action));
-    action.sa_handler = string_uninitialized_abort_handler;
+    action.sa_handler = string_uninitialised_abort_handler;
     sigemptyset(&action.sa_mask);
     result = 0;
     if (sigaction(SIGABRT, &action, &backup) != 0)
         return (0);
-    if (sigsetjmp(g_string_uninitialized_abort_jump, 1) == 0)
+    if (sigsetjmp(g_string_uninitialised_abort_jump, 1) == 0)
     {
         alignas(ft_string) unsigned char storage[sizeof(ft_string)];
         ft_string *string_pointer;
@@ -97,19 +97,19 @@ static int string_expect_no_sigabrt_uninitialized(void (*operation)(ft_string &)
     return (result);
 }
 
-static void string_call_destructor_uninitialized(ft_string &string_value)
+static void string_call_destructor_uninitialised(ft_string &string_value)
 {
     string_value.~ft_string();
     return ;
 }
 
-static void string_call_destroy_uninitialized(ft_string &string_value)
+static void string_call_destroy_uninitialised(ft_string &string_value)
 {
     (void)string_value.destroy();
     return ;
 }
 
-static void string_call_append_uninitialized(ft_string &string_value)
+static void string_call_append_uninitialised(ft_string &string_value)
 {
     (void)string_value.append('x');
     return ;
@@ -134,7 +134,7 @@ static void string_call_destroy_twice(void)
     return ;
 }
 
-static void string_call_copy_ctor_from_uninitialized(void)
+static void string_call_copy_ctor_from_uninitialised(void)
 {
     alignas(ft_string) unsigned char storage[sizeof(ft_string)];
     ft_string *source_pointer;
@@ -146,7 +146,7 @@ static void string_call_copy_ctor_from_uninitialized(void)
     return ;
 }
 
-static void string_call_move_ctor_from_uninitialized(void)
+static void string_call_move_ctor_from_uninitialised(void)
 {
     alignas(ft_string) unsigned char storage[sizeof(ft_string)];
     ft_string *source_pointer;
@@ -158,7 +158,7 @@ static void string_call_move_ctor_from_uninitialized(void)
     return ;
 }
 
-static void string_call_copy_assign_from_uninitialized(void)
+static void string_call_copy_assign_from_uninitialised(void)
 {
     alignas(ft_string) unsigned char storage[sizeof(ft_string)];
     ft_string *source_pointer;
@@ -171,7 +171,7 @@ static void string_call_copy_assign_from_uninitialized(void)
     return ;
 }
 
-static void string_call_move_assign_from_uninitialized(void)
+static void string_call_move_assign_from_uninitialised(void)
 {
     alignas(ft_string) unsigned char storage[sizeof(ft_string)];
     ft_string *source_pointer;
@@ -184,29 +184,29 @@ static void string_call_move_assign_from_uninitialized(void)
     return ;
 }
 
-FT_TEST(test_ft_string_uninitialized_destructor_noop,
-    "ft_string destructor tolerates uninitialized instance")
+FT_TEST(test_ft_string_uninitialised_destructor_noop,
+    "ft_string destructor tolerates uninitialised instance")
 {
-    FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialized(string_call_destructor_uninitialized));
+    FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialised(string_call_destructor_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_uninitialized_destroy_noop,
-    "ft_string destroy tolerates uninitialized instance")
+FT_TEST(test_ft_string_uninitialised_destroy_noop,
+    "ft_string destroy tolerates uninitialised instance")
 {
-    FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialized(string_call_destroy_uninitialized));
+    FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialised(string_call_destroy_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_uninitialized_append_aborts,
-    "ft_string append aborts on uninitialized instance")
+FT_TEST(test_ft_string_uninitialised_append_aborts,
+    "ft_string append aborts on uninitialised instance")
 {
-    FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialized(string_call_append_uninitialized));
+    FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialised(string_call_append_uninitialised));
     return (1);
 }
 
 FT_TEST(test_ft_string_initialize_twice_aborts,
-    "ft_string initialize aborts when called while initialized")
+    "ft_string initialize aborts when called while initialised")
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
         string_call_initialize_twice));
@@ -221,34 +221,34 @@ FT_TEST(test_ft_string_destroy_twice_noops,
     return (1);
 }
 
-FT_TEST(test_ft_string_copy_ctor_from_uninitialized_source_aborts,
-    "ft_string copy constructor aborts with uninitialized source")
+FT_TEST(test_ft_string_copy_ctor_from_uninitialised_source_aborts,
+    "ft_string copy constructor aborts with uninitialised source")
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
-        string_call_copy_ctor_from_uninitialized));
+        string_call_copy_ctor_from_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_move_ctor_from_uninitialized_source_aborts,
-    "ft_string move constructor aborts with uninitialized source")
+FT_TEST(test_ft_string_move_ctor_from_uninitialised_source_aborts,
+    "ft_string move constructor aborts with uninitialised source")
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
-        string_call_move_ctor_from_uninitialized));
+        string_call_move_ctor_from_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_copy_assign_from_uninitialized_source_aborts,
-    "ft_string copy assignment aborts with uninitialized source")
+FT_TEST(test_ft_string_copy_assign_from_uninitialised_source_aborts,
+    "ft_string copy assignment aborts with uninitialised source")
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
-        string_call_copy_assign_from_uninitialized));
+        string_call_copy_assign_from_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_move_assign_from_uninitialized_source_aborts,
-    "ft_string move assignment aborts with uninitialized source")
+FT_TEST(test_ft_string_move_assign_from_uninitialised_source_aborts,
+    "ft_string move assignment aborts with uninitialised source")
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
-        string_call_move_assign_from_uninitialized));
+        string_call_move_assign_from_uninitialised));
     return (1);
 }

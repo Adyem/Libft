@@ -79,10 +79,10 @@ FT_TEST(test_scma_accessor_initialize_destroy_reinitialize_success,
 
     FT_ASSERT_EQ(1, scma_test_initialize(64));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
-    FT_ASSERT_EQ(1, accessor.is_initialized());
+    FT_ASSERT_EQ(1, accessor.is_initialised());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
-    FT_ASSERT_EQ(1, accessor.is_initialized());
+    FT_ASSERT_EQ(1, accessor.is_initialised());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
     scma_shutdown();
     return (1);
@@ -98,7 +98,7 @@ FT_TEST(test_scma_accessor_initialize_with_handle_binds,
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize(handle));
-    FT_ASSERT_EQ(1, accessor.is_initialized());
+    FT_ASSERT_EQ(1, accessor.is_initialised());
     FT_ASSERT_EQ(1, accessor.is_bound());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
     FT_ASSERT_EQ(1, scma_free(handle));
@@ -125,7 +125,7 @@ FT_TEST(test_scma_accessor_initialize_invalid_handle_sets_error_and_unbinds,
 }
 
 FT_TEST(test_scma_accessor_initialize_twice_aborts,
-    "scma accessor initialize aborts when called while initialized")
+    "scma accessor initialize aborts when called while initialised")
 {
     FT_ASSERT_EQ(1, scma_accessor_expect_sigabrt(scma_accessor_initialize_twice_aborts_operation));
     return (1);

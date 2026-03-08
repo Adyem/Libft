@@ -2,7 +2,7 @@
 #include "../../Advanced/advanced.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../CMA/CMA.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -319,7 +319,7 @@ FT_TEST(test_adv_span_to_string_late_append_failure_releases_memory,
 }
 
 FT_TEST(test_adv_to_string_and_locale_casefold,
-    "adv_to_string and adv_locale_casefold return initialized ft_string objects")
+    "adv_to_string and adv_locale_casefold return initialised ft_string objects")
 {
     ft_string *number_string;
     ft_string *folded_string;

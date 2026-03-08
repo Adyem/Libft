@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../PThread/mutex.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 #include <sys/wait.h>
@@ -39,7 +39,7 @@ static void pt_mutex_initialize_twice_aborts_operation()
     return ;
 }
 
-static void pt_mutex_destroy_uninitialized_aborts_operation()
+static void pt_mutex_destroy_uninitialised_aborts_operation()
 {
     pt_mutex mutex_object;
 
@@ -57,7 +57,7 @@ static void pt_mutex_destroy_twice_aborts_operation()
     return ;
 }
 
-static void pt_mutex_lock_uninitialized_aborts_operation()
+static void pt_mutex_lock_uninitialised_aborts_operation()
 {
     pt_mutex mutex_object;
 
@@ -65,7 +65,7 @@ static void pt_mutex_lock_uninitialized_aborts_operation()
     return ;
 }
 
-static void pt_mutex_uninitialized_destructor_aborts_operation()
+static void pt_mutex_uninitialised_destructor_aborts_operation()
 {
     alignas(pt_mutex) unsigned char storage[sizeof(pt_mutex)];
     pt_mutex *mutex_pointer;
@@ -102,16 +102,16 @@ FT_TEST(test_pt_mutex_destroy_busy_then_unlock,
 }
 
 FT_TEST(test_pt_mutex_initialize_twice_aborts,
-    "pt_mutex initialize aborts when called while initialized")
+    "pt_mutex initialize aborts when called while initialised")
 {
     FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_pt_mutex_destroy_uninitialized_aborts,
-    "pt_mutex destroy aborts when called on uninitialized object")
+FT_TEST(test_pt_mutex_destroy_uninitialised_aborts,
+    "pt_mutex destroy aborts when called on uninitialised object")
 {
-    FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_destroy_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -122,17 +122,17 @@ FT_TEST(test_pt_mutex_destroy_twice_aborts,
     return (1);
 }
 
-FT_TEST(test_pt_mutex_lock_uninitialized_aborts,
-    "pt_mutex lock aborts when called on uninitialized object")
+FT_TEST(test_pt_mutex_lock_uninitialised_aborts,
+    "pt_mutex lock aborts when called on uninitialised object")
 {
-    FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_lock_uninitialized_aborts_operation));
+    FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_lock_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_pt_mutex_uninitialized_destructor_aborts,
-    "pt_mutex destructor aborts on uninitialized instance")
+FT_TEST(test_pt_mutex_uninitialised_destructor_aborts,
+    "pt_mutex destructor aborts on uninitialised instance")
 {
     FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(
-        pt_mutex_uninitialized_destructor_aborts_operation));
+        pt_mutex_uninitialised_destructor_aborts_operation));
     return (1);
 }

@@ -8,7 +8,7 @@
 
 static cma_backend_hooks g_cma_backend_hooks = {ft_nullptr, ft_nullptr,
     ft_nullptr, ft_nullptr, ft_nullptr, ft_nullptr, ft_nullptr};
-static bool g_cma_backend_enabled = false;
+static ft_bool g_cma_backend_enabled = FT_FALSE;
 
 static void cma_backend_set_error(int32_t *error_code, int32_t value)
 {
@@ -25,19 +25,21 @@ static ft_size_t cma_backend_query_size(const void *memory_pointer)
             g_cma_backend_hooks.user_data));
 }
 
-static int32_t cma_backend_query_ownership(const void *memory_pointer)
+static ft_bool cma_backend_query_ownership(const void *memory_pointer)
 {
     if (!g_cma_backend_hooks.owns_allocation)
-        return (0);
+        return (FT_FALSE);
     if (!memory_pointer)
-        return (0);
-    return (g_cma_backend_hooks.owns_allocation(memory_pointer,
-            g_cma_backend_hooks.user_data));
+        return (FT_FALSE);
+    if (g_cma_backend_hooks.owns_allocation(memory_pointer,
+            g_cma_backend_hooks.user_data) == FT_TRUE)
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
 static void cma_backend_track_allocation(ft_size_t allocation_size)
 {
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESS)
@@ -55,7 +57,7 @@ static void cma_backend_track_allocation(ft_size_t allocation_size)
 
 static void cma_backend_track_free(ft_size_t allocation_size)
 {
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESS)
@@ -78,28 +80,28 @@ int32_t cma_set_backend(const cma_backend_hooks *hooks)
         || !hooks->get_allocation_size || !hooks->owns_allocation)
         return (FT_ERR_INVALID_ARGUMENT);
     g_cma_backend_hooks = *hooks;
-    g_cma_backend_enabled = true;
+    g_cma_backend_enabled = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
 int32_t cma_clear_backend(void)
 {
     std::memset(&g_cma_backend_hooks, 0, sizeof(g_cma_backend_hooks));
-    g_cma_backend_enabled = false;
+    g_cma_backend_enabled = FT_FALSE;
     return (FT_ERR_SUCCESS);
 }
 
-int32_t cma_backend_is_enabled(void)
+ft_bool cma_backend_is_enabled(void)
 {
     if (g_cma_backend_enabled)
-        return (1);
-    return (0);
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
-int32_t cma_backend_owns_pointer(const void *memory_pointer)
+ft_bool cma_backend_owns_pointer(const void *memory_pointer)
 {
     if (!g_cma_backend_enabled)
-        return (0);
+        return (FT_FALSE);
     return (cma_backend_query_ownership(memory_pointer));
 }
 
@@ -172,7 +174,7 @@ void *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size,
 static void cma_backend_update_stats_for_resize(ft_size_t previous_size,
         ft_size_t new_size)
 {
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESS)

@@ -1,6 +1,6 @@
 #include "math.hpp"
 
-int math_clamp(int value, int minimum, int maximum)
+int32_t math_clamp(int32_t value, int32_t minimum, int32_t maximum)
 {
     if (value < minimum)
         return (minimum);

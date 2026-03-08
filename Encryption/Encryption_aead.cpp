@@ -26,16 +26,16 @@ encryption_aead_context::encryption_aead_context()
     this->_context = NULL;
     this->_cipher = NULL;
     this->_encrypt_mode = false;
-    this->_initialized = false;
+    this->_initialised = false;
     this->_iv_length = 0;
     this->_mutex = ft_nullptr;
-    this->_initialized_state = this->_state_uninitialized;
+    this->_initialised_state = this->_state_uninitialised;
     return ;
 }
 
 encryption_aead_context::~encryption_aead_context()
 {
-    if (this->_initialized_state == this->_state_initialized)
+    if (this->_initialised_state == this->_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -52,11 +52,11 @@ void encryption_aead_context::abort_lifecycle_error(const char *method_name,
     su_abort();
 }
 
-void encryption_aead_context::abort_if_not_initialized(
+void encryption_aead_context::abort_if_not_initialised(
     const char *method_name) const
 {
-    if (this->_initialized_state != this->_state_initialized)
-        this->abort_lifecycle_error(method_name, "object is not initialized");
+    if (this->_initialised_state != this->_state_initialised)
+        this->abort_lifecycle_error(method_name, "object is not initialised");
 }
 
 int encryption_aead_context::enable_thread_safety()
@@ -64,7 +64,7 @@ int encryption_aead_context::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int mutex_error;
 
-    this->abort_if_not_initialized("enable_thread_safety");
+    this->abort_if_not_initialised("enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -84,7 +84,7 @@ int encryption_aead_context::disable_thread_safety()
 {
     int destroy_error;
 
-    this->abort_if_not_initialized("disable_thread_safety");
+    this->abort_if_not_initialised("disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -95,19 +95,19 @@ int encryption_aead_context::disable_thread_safety()
 
 bool encryption_aead_context::is_thread_safe() const
 {
-    this->abort_if_not_initialized("is_thread_safe");
+    this->abort_if_not_initialised("is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 int encryption_aead_context::initialize()
 {
-    if (this->_initialized_state == this->_state_initialized)
+    if (this->_initialised_state == this->_state_initialised)
         return (FT_ERR_INVALID_STATE);
-    this->_initialized_state = this->_state_initialized;
+    this->_initialised_state = this->_state_initialised;
     this->_context = EVP_CIPHER_CTX_new();
     if (this->_context == NULL)
     {
-        this->_initialized_state = this->_state_destroyed;
+        this->_initialised_state = this->_state_destroyed;
         return (FT_ERR_NO_MEMORY);
     }
     return (FT_ERR_SUCCESS);
@@ -117,7 +117,7 @@ int encryption_aead_context::destroy()
 {
     int disable_error;
 
-    if (this->_initialized_state != this->_state_initialized)
+    if (this->_initialised_state != this->_state_initialised)
         return (FT_ERR_INVALID_STATE);
     if (this->_context != NULL)
     {
@@ -127,15 +127,15 @@ int encryption_aead_context::destroy()
     disable_error = this->disable_thread_safety();
     this->_cipher = NULL;
     this->_encrypt_mode = false;
-    this->_initialized = false;
+    this->_initialised = false;
     this->_iv_length = 0;
-    this->_initialized_state = this->_state_destroyed;
+    this->_initialised_state = this->_state_destroyed;
     return (disable_error);
 }
 
 int encryption_aead_context::finalize_operation(int result) const
 {
-    this->abort_if_not_initialized("finalize_operation");
+    this->abort_if_not_initialised("finalize_operation");
     int unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
@@ -145,7 +145,7 @@ int encryption_aead_context::finalize_operation(int result) const
 int encryption_aead_context::configure_cipher(const unsigned char *key, size_t key_length,
         const unsigned char *iv, size_t iv_length, bool encrypt_mode)
 {
-    this->abort_if_not_initialized("configure_cipher");
+    this->abort_if_not_initialised("configure_cipher");
     const EVP_CIPHER *cipher;
     int control_result;
     int iv_length_value;
@@ -184,34 +184,34 @@ int encryption_aead_context::configure_cipher(const unsigned char *key, size_t k
         return (this->finalize_operation(FT_ERR_INTERNAL));
     this->_cipher = cipher;
     this->_encrypt_mode = encrypt_mode;
-    this->_initialized = true;
+    this->_initialised = true;
     return (this->finalize_operation(FT_ERR_SUCCESS));
 }
 
 int encryption_aead_context::initialize_encrypt(const unsigned char *key, size_t key_length,
         const unsigned char *iv, size_t iv_length)
 {
-    this->abort_if_not_initialized("initialize_encrypt");
+    this->abort_if_not_initialised("initialize_encrypt");
     return (this->configure_cipher(key, key_length, iv, iv_length, true));
 }
 
 int encryption_aead_context::initialize_decrypt(const unsigned char *key, size_t key_length,
         const unsigned char *iv, size_t iv_length)
 {
-    this->abort_if_not_initialized("initialize_decrypt");
+    this->abort_if_not_initialised("initialize_decrypt");
     return (this->configure_cipher(key, key_length, iv, iv_length, false));
 }
 
 int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_length)
 {
-    this->abort_if_not_initialized("update_aad");
+    this->abort_if_not_initialised("update_aad");
     int lock_result;
 
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
-    if (!this->_initialized)
+    if (!this->_initialised)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (aad_length == 0)
         return (this->finalize_operation(FT_ERR_SUCCESS));
@@ -228,7 +228,7 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
 int encryption_aead_context::update(const unsigned char *input, size_t input_length,
         unsigned char *output, size_t &output_length)
 {
-    this->abort_if_not_initialized("update");
+    this->abort_if_not_initialised("update");
     int lock_result;
 
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -236,7 +236,7 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
     output_length = 0;
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
-    if (!this->_initialized)
+    if (!this->_initialised)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (input_length == 0)
         return (this->finalize_operation(FT_ERR_SUCCESS));
@@ -253,14 +253,14 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
 
 int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
 {
-    this->abort_if_not_initialized("finalize");
+    this->abort_if_not_initialised("finalize");
     int lock_result;
 
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
-    if (!this->_initialized)
+    if (!this->_initialised)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     int final_result = 0;
     unsigned char final_block[EVP_MAX_BLOCK_LENGTH];
@@ -280,7 +280,7 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
         return (this->finalize_operation(FT_ERR_INTERNAL));
     if (!this->_encrypt_mode)
     {
-        this->_initialized = false;
+        this->_initialised = false;
         return (this->finalize_operation(FT_ERR_SUCCESS));
     }
     if (tag == NULL)
@@ -290,20 +290,20 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
     if (EVP_CIPHER_CTX_ctrl(this->_context, EVP_CTRL_GCM_GET_TAG,
             static_cast<int>(tag_length), tag) != 1)
         return (this->finalize_operation(FT_ERR_INTERNAL));
-    this->_initialized = false;
+    this->_initialised = false;
     return (this->finalize_operation(FT_ERR_SUCCESS));
 }
 
 int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length)
 {
-    this->abort_if_not_initialized("set_tag");
+    this->abort_if_not_initialised("set_tag");
     int lock_result;
 
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
-    if (!this->_initialized)
+    if (!this->_initialised)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (this->_encrypt_mode)
         return (this->finalize_operation(FT_ERR_INVALID_OPERATION));
@@ -319,7 +319,7 @@ int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length
 
 void    encryption_aead_context::reset()
 {
-    this->abort_if_not_initialized("reset");
+    this->abort_if_not_initialised("reset");
     int lock_result;
 
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -329,7 +329,7 @@ void    encryption_aead_context::reset()
         EVP_CIPHER_CTX_reset(this->_context);
     this->_cipher = NULL;
     this->_encrypt_mode = false;
-    this->_initialized = false;
+    this->_initialised = false;
     this->_iv_length = 0;
     int unlock_result;
 

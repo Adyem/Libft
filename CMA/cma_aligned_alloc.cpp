@@ -8,19 +8,19 @@
 #include "../Logger/logger.hpp"
 #include "../System_utils/system_utils.hpp"
 
-static int32_t  normalize_alignment_padding(ft_size_t *padding)
+static ft_bool normalize_alignment_padding(ft_size_t *padding)
 {
     ft_size_t    aligned_padding;
 
     if (padding == ft_nullptr)
-        return (0);
+        return (FT_FALSE);
     if (*padding == 0)
-        return (1);
+        return (FT_TRUE);
     aligned_padding = align16(*padding);
     if (aligned_padding < *padding)
-        return (0);
+        return (FT_FALSE);
     *padding = aligned_padding;
-    return (1);
+    return (FT_TRUE);
 }
 
 static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignment)
@@ -44,7 +44,7 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     return (padding);
 }
 
-static int32_t  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
+static ft_bool block_supports_aligned_request(Block *block, ft_size_t aligned_size,
             ft_size_t alignment, ft_size_t *padding)
 {
     ft_size_t    remaining_size;
@@ -52,25 +52,25 @@ static int32_t  block_supports_aligned_request(Block *block, ft_size_t aligned_s
     ft_size_t    minimum_payload;
 
     local_padding = calculate_alignment_padding(block, alignment);
-    if (normalize_alignment_padding(&local_padding) == 0)
-        return (0);
+    if (normalize_alignment_padding(&local_padding) == FT_FALSE)
+        return (FT_FALSE);
     minimum_payload = align16(1);
     if (minimum_payload < static_cast<ft_size_t>(16))
         minimum_payload = static_cast<ft_size_t>(16);
     if (local_padding > 0)
     {
         if (block->size <= local_padding)
-            return (0);
+            return (FT_FALSE);
         remaining_size = block->size - local_padding;
         if (remaining_size < minimum_payload)
-            return (0);
+            return (FT_FALSE);
     }
     else
         remaining_size = block->size;
     if (remaining_size < aligned_size)
-        return (0);
+        return (FT_FALSE);
     *padding = local_padding;
-    return (1);
+    return (FT_TRUE);
 }
 
 static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignment,
@@ -91,7 +91,7 @@ static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignm
                 ft_size_t   local_padding;
 
                 if (block_supports_aligned_request(current_block, aligned_size,
-                        alignment, &local_padding))
+                        alignment, &local_padding) == FT_TRUE)
                 {
                     *padding = local_padding;
                     return (current_block);
@@ -197,7 +197,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         return (ft_nullptr);
     if (OFFSWITCH == 1)
         return (aligned_alloc_offswitch(alignment, request_size, ft_nullptr));
-    bool lock_acquired = false;
+    ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -222,7 +222,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         cma_validate_block(block, "cma_aligned_alloc new page", ft_nullptr);
         padding = calculate_alignment_padding(block, alignment);
     }
-    if (normalize_alignment_padding(&padding) == 0)
+    if (normalize_alignment_padding(&padding) == FT_FALSE)
     {
         cma_unlock_allocator(lock_acquired);
         return (ft_nullptr);

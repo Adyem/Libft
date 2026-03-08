@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/move.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -28,7 +28,7 @@ FT_TEST(test_ft_vector_move_constructor_rebuilds_thread_safety,
 }
 
 FT_TEST(test_ft_vector_move_assignment_resets_source_mutex,
-        "ft_vector mutex can be reinitialized after manual transfer")
+        "ft_vector mutex can be reinitialised after manual transfer")
 {
     ft_vector<int> destination_vector;
     ft_vector<int> source_vector;

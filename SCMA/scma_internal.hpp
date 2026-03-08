@@ -24,7 +24,7 @@ scma_block       *&scma_blocks_data_ref(void);
 ft_size_t        &scma_block_capacity_ref(void);
 ft_size_t        &scma_block_count_ref(void);
 ft_size_t        &scma_used_size_ref(void);
-int32_t              &scma_initialized_ref(void);
+int32_t              &scma_initialised_ref(void);
 
 scma_block_span    scma_get_block_span(void);
 unsigned char    *scma_get_heap_data(void);

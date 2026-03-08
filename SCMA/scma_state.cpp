@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <cstring>
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/limits.hpp"
@@ -12,11 +13,11 @@ static scma_block *g_scma_blocks_data = ft_nullptr;
 static ft_size_t g_scma_block_capacity = 0;
 static ft_size_t g_scma_block_count = 0;
 static ft_size_t g_scma_used_size = 0;
-static int32_t g_scma_initialized = 0;
+static int32_t g_scma_initialised = 0;
 
-int32_t    &scma_initialized_ref(void)
+int32_t    &scma_initialised_ref(void)
 {
-    return (g_scma_initialized);
+    return (g_scma_initialised);
 }
 
 static scma_handle    scma_create_invalid_handle(void)
@@ -103,7 +104,7 @@ void    scma_compact(void)
     ft_size_t new_offset;
     ft_size_t index;
 
-    if (!scma_initialized_ref())
+    if (!scma_initialised_ref())
     {
         return ;
     }
@@ -145,7 +146,7 @@ int32_t    scma_validate_handle(scma_handle handle, scma_block **out_block)
     scma_block *block;
 
     validation_result = 0;
-    if (!scma_initialized_ref())
+    if (!scma_initialised_ref())
         return (0);
     if (scma_handle_is_invalid(handle))
         return (0);

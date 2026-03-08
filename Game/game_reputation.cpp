@@ -23,7 +23,7 @@ const char *ft_reputation::get_error_str() const noexcept
 
 ft_reputation::ft_reputation() noexcept
     : _milestones(), _reps(), _total_rep(0), _current_rep(0),
-      _mutex(ft_nullptr), _initialized_state(ft_reputation::_state_uninitialized)
+      _mutex(ft_nullptr), _initialised_state(ft_reputation::_state_uninitialised)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -31,9 +31,9 @@ ft_reputation::ft_reputation() noexcept
 
 ft_reputation::~ft_reputation() noexcept
 {
-    if (this->_initialized_state == ft_reputation::_state_uninitialized)
+    if (this->_initialised_state == ft_reputation::_state_uninitialised)
         return ;
-    if (this->_initialized_state == ft_reputation::_state_initialized)
+    if (this->_initialised_state == ft_reputation::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -51,12 +51,12 @@ void ft_reputation::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void ft_reputation::abort_if_not_initialized(const char *method_name) const
+void ft_reputation::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialized_state == ft_reputation::_state_initialized)
+    if (this->_initialised_state == ft_reputation::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -65,17 +65,17 @@ int ft_reputation::initialize() noexcept
     int milestones_error;
     int reps_error;
 
-    if (this->_initialized_state == ft_reputation::_state_initialized)
+    if (this->_initialised_state == ft_reputation::_state_initialised)
     {
         this->abort_lifecycle_error("ft_reputation::initialize",
-            "called while object is already initialized");
+            "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     milestones_error = this->_milestones.initialize();
     if (milestones_error != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = ft_reputation::_state_destroyed;
+        this->_initialised_state = ft_reputation::_state_destroyed;
         this->set_error(milestones_error);
         return (milestones_error);
     }
@@ -83,13 +83,13 @@ int ft_reputation::initialize() noexcept
     if (reps_error != FT_ERR_SUCCESS)
     {
         (void)this->_milestones.destroy();
-        this->_initialized_state = ft_reputation::_state_destroyed;
+        this->_initialised_state = ft_reputation::_state_destroyed;
         this->set_error(reps_error);
         return (reps_error);
     }
     this->_total_rep = 0;
     this->_current_rep = 0;
-    this->_initialized_state = ft_reputation::_state_initialized;
+    this->_initialised_state = ft_reputation::_state_initialised;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -99,7 +99,7 @@ int ft_reputation::initialize(const ft_map<int, int> &milestones,
 {
     int initialize_error;
 
-    if (this->_initialized_state == ft_reputation::_state_initialized)
+    if (this->_initialised_state == ft_reputation::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -119,16 +119,16 @@ int ft_reputation::initialize(const ft_reputation &other) noexcept
 {
     int initialize_error;
 
-    if (other._initialized_state != ft_reputation::_state_initialized)
+    if (other._initialised_state != ft_reputation::_state_initialised)
     {
         other.abort_lifecycle_error("ft_reputation::initialize(copy)",
-            "source object is not initialized");
+            "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
         return (FT_ERR_SUCCESS);
-    if (this->_initialized_state == ft_reputation::_state_initialized)
+    if (this->_initialised_state == ft_reputation::_state_initialised)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -157,7 +157,7 @@ int ft_reputation::destroy() noexcept
     int disable_error;
     int first_error;
 
-    if (this->_initialized_state != ft_reputation::_state_initialized)
+    if (this->_initialised_state != ft_reputation::_state_initialised)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -172,7 +172,7 @@ int ft_reputation::destroy() noexcept
     this->_total_rep = 0;
     this->_current_rep = 0;
     disable_error = this->disable_thread_safety();
-    this->_initialized_state = ft_reputation::_state_destroyed;
+    this->_initialised_state = ft_reputation::_state_destroyed;
     if (first_error != FT_ERR_SUCCESS)
     {
         this->set_error(first_error);
@@ -187,7 +187,7 @@ int ft_reputation::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
-    this->abort_if_not_initialized("ft_reputation::enable_thread_safety");
+    this->abort_if_not_initialised("ft_reputation::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -238,7 +238,7 @@ int ft_reputation::lock_internal(bool *lock_acquired) const noexcept
 {
     int lock_error;
 
-    this->abort_if_not_initialized("ft_reputation::lock_internal");
+    this->abort_if_not_initialised("ft_reputation::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -255,7 +255,7 @@ int ft_reputation::lock_internal(bool *lock_acquired) const noexcept
 
 int ft_reputation::unlock_internal(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_reputation::unlock_internal");
+    this->abort_if_not_initialised("ft_reputation::unlock_internal");
     if (lock_acquired == false)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -271,13 +271,13 @@ int ft_reputation::unlock_internal(bool lock_acquired) const noexcept
 
 int ft_reputation::lock(bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_reputation::lock");
+    this->abort_if_not_initialised("ft_reputation::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_reputation::unlock(bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialized("ft_reputation::unlock");
+    this->abort_if_not_initialised("ft_reputation::unlock");
     int unlock_error;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
@@ -292,7 +292,7 @@ int ft_reputation::get_total_rep() const noexcept
     int total;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::get_total_rep");
+    this->abort_if_not_initialised("ft_reputation::get_total_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -318,7 +318,7 @@ void ft_reputation::set_total_rep(int rep) noexcept
     int unlock_error;
     bool valid;
 
-    this->abort_if_not_initialized("ft_reputation::set_total_rep");
+    this->abort_if_not_initialised("ft_reputation::set_total_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -348,7 +348,7 @@ void ft_reputation::add_total_rep(int rep) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::add_total_rep");
+    this->abort_if_not_initialised("ft_reputation::add_total_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -373,7 +373,7 @@ void ft_reputation::sub_total_rep(int rep) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::sub_total_rep");
+    this->abort_if_not_initialised("ft_reputation::sub_total_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -399,7 +399,7 @@ int ft_reputation::get_current_rep() const noexcept
     int current;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::get_current_rep");
+    this->abort_if_not_initialised("ft_reputation::get_current_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -425,7 +425,7 @@ void ft_reputation::set_current_rep(int rep) noexcept
     int unlock_error;
     bool valid;
 
-    this->abort_if_not_initialized("ft_reputation::set_current_rep");
+    this->abort_if_not_initialised("ft_reputation::set_current_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -455,7 +455,7 @@ void ft_reputation::add_current_rep(int rep) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::add_current_rep");
+    this->abort_if_not_initialised("ft_reputation::add_current_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -480,7 +480,7 @@ void ft_reputation::sub_current_rep(int rep) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::sub_current_rep");
+    this->abort_if_not_initialised("ft_reputation::sub_current_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -505,7 +505,7 @@ ft_map<int, int> &ft_reputation::get_milestones() noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::get_milestones");
+    this->abort_if_not_initialised("ft_reputation::get_milestones");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -529,7 +529,7 @@ const ft_map<int, int> &ft_reputation::get_milestones() const noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::get_milestones const");
+    this->abort_if_not_initialised("ft_reputation::get_milestones const");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -553,7 +553,7 @@ void ft_reputation::set_milestones(const ft_map<int, int> &milestones) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::set_milestones");
+    this->abort_if_not_initialised("ft_reputation::set_milestones");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -576,7 +576,7 @@ int ft_reputation::get_milestone(int id) const noexcept
 {
     const Pair<int, int> *entry;
 
-    this->abort_if_not_initialized("ft_reputation::get_milestone");
+    this->abort_if_not_initialised("ft_reputation::get_milestone");
     bool lock_acquired;
     int lock_error;
     int value;
@@ -617,7 +617,7 @@ void ft_reputation::set_milestone(int id, int value) noexcept
     int lock_error;
     Pair<int, int> *entry;
 
-    this->abort_if_not_initialized("ft_reputation::set_milestone");
+    this->abort_if_not_initialised("ft_reputation::set_milestone");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -646,7 +646,7 @@ ft_map<int, int> &ft_reputation::get_reps() noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::get_reps");
+    this->abort_if_not_initialised("ft_reputation::get_reps");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -670,7 +670,7 @@ const ft_map<int, int> &ft_reputation::get_reps() const noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::get_reps const");
+    this->abort_if_not_initialised("ft_reputation::get_reps const");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -694,7 +694,7 @@ void ft_reputation::set_reps(const ft_map<int, int> &reps) noexcept
     int lock_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::set_reps");
+    this->abort_if_not_initialised("ft_reputation::set_reps");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -721,7 +721,7 @@ int ft_reputation::get_rep(int id) const noexcept
     int value;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::get_rep");
+    this->abort_if_not_initialised("ft_reputation::get_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -759,7 +759,7 @@ void ft_reputation::set_rep(int id, int value) noexcept
     Pair<int, int> *entry;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_reputation::set_rep");
+    this->abort_if_not_initialised("ft_reputation::set_rep");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -785,7 +785,7 @@ void ft_reputation::set_rep(int id, int value) noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_reputation::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("ft_reputation::get_mutex_for_validation");
+    this->abort_if_not_initialised("ft_reputation::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

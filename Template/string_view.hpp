@@ -17,11 +17,11 @@ class ft_string_view
         const CharType            *_data;
         size_t                     _size;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                    _initialized_state;
+        uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
         static int32_t set_last_operation_error(int32_t error_code) noexcept
@@ -43,12 +43,12 @@ class ft_string_view
             return ;
         }
 
-        void abort_if_not_initialized(const char *method_name) const
+        void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 return ;
             this->abort_lifecycle_error(method_name,
-                "called while object is not initialized");
+                "called while object is not initialised");
             return ;
         }
 
@@ -111,7 +111,7 @@ class ft_string_view
 
         ft_string_view()
             : _data(ft_nullptr), _size(0), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;
@@ -119,7 +119,7 @@ class ft_string_view
 
         ft_string_view(const CharType* string)
             : _data(ft_nullptr), _size(0), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             (void)this->initialize(string);
             return ;
@@ -127,7 +127,7 @@ class ft_string_view
 
         ft_string_view(const CharType* string, size_t size)
             : _data(ft_nullptr), _size(0), _mutex(ft_nullptr),
-              _initialized_state(_state_uninitialized)
+              _initialised_state(_state_uninitialised)
         {
             (void)this->initialize(string, size);
             return ;
@@ -135,7 +135,7 @@ class ft_string_view
 
         ~ft_string_view()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -149,15 +149,15 @@ class ft_string_view
 
         int initialize()
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_string_view::initialize",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_data = ft_nullptr;
             this->_size = 0;
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -165,10 +165,10 @@ class ft_string_view
         {
             size_t index;
 
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_string_view::initialize(string)",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_data = string;
@@ -180,21 +180,21 @@ class ft_string_view
                     ++index;
                 this->_size = index;
             }
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
         int initialize(const CharType *string, size_t size)
         {
-            if (this->_initialized_state == _state_initialized)
+            if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_string_view::initialize(string,size)",
-                    "called while object is already initialized");
+                    "called while object is already initialised");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             }
             this->_data = string;
             this->_size = size;
-            this->_initialized_state = _state_initialized;
+            this->_initialised_state = _state_initialised;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -204,7 +204,7 @@ class ft_string_view
             int lock_error;
             int unlock_error;
 
-            if (this->_initialized_state != _state_initialized)
+            if (this->_initialised_state != _state_initialised)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
@@ -215,7 +215,7 @@ class ft_string_view
             unlock_error = this->unlock_internal(lock_acquired);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
-            this->_initialized_state = _state_destroyed;
+            this->_initialised_state = _state_destroyed;
             return (set_last_operation_error(FT_ERR_SUCCESS));
         }
 
@@ -226,7 +226,7 @@ class ft_string_view
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_string_view::data");
+            this->abort_if_not_initialised("ft_string_view::data");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -252,7 +252,7 @@ class ft_string_view
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_string_view::size");
+            this->abort_if_not_initialised("ft_string_view::size");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -278,7 +278,7 @@ class ft_string_view
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_string_view::empty");
+            this->abort_if_not_initialised("ft_string_view::empty");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -304,7 +304,7 @@ class ft_string_view
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_string_view::operator[]");
+            this->abort_if_not_initialised("ft_string_view::operator[]");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -337,8 +337,8 @@ class ft_string_view
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_string_view::compare");
-            other.abort_if_not_initialized("ft_string_view::compare other");
+            this->abort_if_not_initialised("ft_string_view::compare");
+            other.abort_if_not_initialised("ft_string_view::compare other");
             first_lock_acquired = false;
             lock_error = this->lock_internal(&first_lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -396,8 +396,8 @@ class ft_string_view
             int lock_error;
             int unlock_error;
 
-            this->abort_if_not_initialized("ft_string_view::substr");
-            out_view.abort_if_not_initialized("ft_string_view::substr out_view");
+            this->abort_if_not_initialised("ft_string_view::substr");
+            out_view.abort_if_not_initialised("ft_string_view::substr out_view");
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
@@ -433,7 +433,7 @@ class ft_string_view
             pt_recursive_mutex *new_mutex;
             int initialize_result;
 
-            this->abort_if_not_initialized("ft_string_view::enable_thread_safety");
+            this->abort_if_not_initialised("ft_string_view::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
                 return (set_last_operation_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -454,8 +454,8 @@ class ft_string_view
             pt_recursive_mutex *mutex_pointer;
             int destroy_result;
 
-            if (this->_initialized_state != _state_initialized
-                && this->_initialized_state != _state_destroyed)
+            if (this->_initialised_state != _state_initialised
+                && this->_initialised_state != _state_destroyed)
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
@@ -470,7 +470,7 @@ class ft_string_view
 
         bool is_thread_safe() const
         {
-            this->abort_if_not_initialized("ft_string_view::is_thread_safe");
+            this->abort_if_not_initialised("ft_string_view::is_thread_safe");
             set_last_operation_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
@@ -479,7 +479,7 @@ class ft_string_view
         {
             int lock_result;
 
-            this->abort_if_not_initialized("ft_string_view::lock");
+            this->abort_if_not_initialised("ft_string_view::lock");
             lock_result = this->lock_internal(lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (-1);

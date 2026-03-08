@@ -5,7 +5,7 @@
 #include <new>
 
 api_connection_pool_handle::api_connection_pool_handle()
-    : _initialized_state(api_connection_pool_handle::_state_uninitialized),
+    : _initialised_state(api_connection_pool_handle::_state_uninitialised),
       _mutex(ft_nullptr), key(), socket(),
       security_mode(api_connection_security_mode::PLAIN),
       has_socket(false), from_pool(false), should_store(false),
@@ -21,7 +21,7 @@ api_connection_pool_handle::api_connection_pool_handle()
 
 api_connection_pool_handle::~api_connection_pool_handle()
 {
-    if (this->_initialized_state == api_connection_pool_handle::_state_initialized)
+    if (this->_initialised_state == api_connection_pool_handle::_state_initialised)
         (void)this->destroy();
     return ;
 }
@@ -39,12 +39,12 @@ void api_connection_pool_handle::abort_lifecycle_error(const char *method_name,
     return ;
 }
 
-void api_connection_pool_handle::abort_if_not_initialized(const char *method_name) const noexcept
+void api_connection_pool_handle::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialized_state == api_connection_pool_handle::_state_initialized)
+    if (this->_initialised_state == api_connection_pool_handle::_state_initialised)
         return ;
     this->abort_lifecycle_error(method_name,
-        "called while object is not initialized");
+        "called while object is not initialised");
     return ;
 }
 
@@ -53,7 +53,7 @@ int api_connection_pool_handle::enable_thread_safety() noexcept
     pt_recursive_mutex *new_mutex;
     int initialize_result;
 
-    this->abort_if_not_initialized("api_connection_pool_handle::enable_thread_safety");
+    this->abort_if_not_initialised("api_connection_pool_handle::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -74,7 +74,7 @@ int api_connection_pool_handle::disable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int destroy_result;
 
-    this->abort_if_not_initialized("api_connection_pool_handle::disable_thread_safety");
+    this->abort_if_not_initialised("api_connection_pool_handle::disable_thread_safety");
     mutex_pointer = this->_mutex;
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -93,13 +93,13 @@ bool api_connection_pool_handle::is_thread_safe() const noexcept
 
 int api_connection_pool_handle::initialize() noexcept
 {
-    if (this->_initialized_state == api_connection_pool_handle::_state_initialized)
+    if (this->_initialised_state == api_connection_pool_handle::_state_initialised)
         this->abort_lifecycle_error("api_connection_pool_handle::initialize",
-            "initialize called on initialized instance");
+            "initialize called on initialised instance");
     int key_init_result = this->key.initialize();
     if (key_init_result != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = api_connection_pool_handle::_state_destroyed;
+        this->_initialised_state = api_connection_pool_handle::_state_destroyed;
         return (key_init_result);
     }
     this->key.clear();
@@ -114,13 +114,13 @@ int api_connection_pool_handle::initialize() noexcept
     this->negotiated_http2 = false;
     this->plain_socket_timed_out = false;
     this->plain_socket_validated = false;
-    this->_initialized_state = api_connection_pool_handle::_state_initialized;
+    this->_initialised_state = api_connection_pool_handle::_state_initialised;
     return (FT_ERR_SUCCESS);
 }
 
 int api_connection_pool_handle::destroy() noexcept
 {
-    if (this->_initialized_state != api_connection_pool_handle::_state_initialized)
+    if (this->_initialised_state != api_connection_pool_handle::_state_initialised)
         return (FT_ERR_INVALID_STATE);
     this->key.clear();
 #if NETWORKING_HAS_OPENSSL
@@ -135,7 +135,7 @@ int api_connection_pool_handle::destroy() noexcept
     this->plain_socket_timed_out = false;
     this->plain_socket_validated = false;
     (void)this->disable_thread_safety();
-    this->_initialized_state = api_connection_pool_handle::_state_destroyed;
+    this->_initialised_state = api_connection_pool_handle::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
@@ -147,7 +147,7 @@ int api_connection_pool_handle::lock(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     mutable_handle = const_cast<api_connection_pool_handle *>(this);
-    mutable_handle->abort_if_not_initialized("api_connection_pool_handle::lock");
+    mutable_handle->abort_if_not_initialised("api_connection_pool_handle::lock");
     lock_result = pt_recursive_mutex_lock_if_not_null(mutable_handle->_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -170,7 +170,7 @@ void api_connection_pool_handle::unlock(bool lock_acquired) const
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *api_connection_pool_handle::get_mutex_for_validation() const noexcept
 {
-    this->abort_if_not_initialized("api_connection_pool_handle::get_mutex_for_validation");
+    this->abort_if_not_initialised("api_connection_pool_handle::get_mutex_for_validation");
     return (this->_mutex);
 }
 #endif

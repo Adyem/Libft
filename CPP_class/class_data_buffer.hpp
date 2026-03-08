@@ -49,15 +49,15 @@ class DataBuffer
         size_t _read_pos;
         bool _ok;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t _initialized_state;
+        uint8_t _initialised_state;
         int32_t _operation_error;
         static thread_local int32_t _last_error;
-        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_uninitialised = 0;
         static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialized = 2;
+        static const uint8_t _state_initialised = 2;
 
         static void abort_lifecycle_error(const char *method_name, const char *reason) noexcept;
-        void abort_if_not_initialized(const char *method_name) const noexcept;
+        void abort_if_not_initialised(const char *method_name) const noexcept;
         static int32_t set_last_operation_error(int32_t error_code) noexcept;
         void set_operation_error(int32_t error_code) noexcept;
         int lock_mutex(void) const noexcept;
@@ -172,7 +172,7 @@ int DataBuffer::read_value(ValueType &value) noexcept
 template <typename ValueType>
 data_buffer_proxy DataBuffer::operator<<(const ValueType &value) noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::operator<<");
+    this->abort_if_not_initialised("DataBuffer::operator<<");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -191,7 +191,7 @@ data_buffer_proxy DataBuffer::operator<<(const ValueType &value) noexcept
 template <typename ValueType>
 data_buffer_proxy DataBuffer::operator>>(ValueType &value) noexcept
 {
-    this->abort_if_not_initialized("DataBuffer::operator>>");
+    this->abort_if_not_initialised("DataBuffer::operator>>");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {

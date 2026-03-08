@@ -13,7 +13,7 @@ Libft exposes a large surface area with many cooperating modules. This document 
 ## CMA (custom memory allocation)
 - **Design goals:** Offer deterministic allocation primitives with tracking hooks so tests can inject failures, enforce allocation limits, and inspect outstanding allocations.
 - **Key invariants:**
-  - CMA must be initialized before use so allocator bookkeeping structures exist.
+  - CMA must be initialised before use so allocator bookkeeping structures exist.
   - Allocation hooks run under an internal mutex; long-running callbacks should be avoided to keep contention low.
   - Thread-safety toggles affect the entire process and should be set during program startup.
 - **Error reporting:** Allocation helpers return `nullptr` on failure and set `ft_errno` to codes defined in `Errno/errno.hpp` (`FT_ENOMEM`, `FT_EINTR`, etc.). Statistics helpers report errors through the `_error_code` field on the context structs.

@@ -4,7 +4,7 @@
 #include "../../Game/ft_vendor_profile.hpp"
 #include "../../Game/ft_currency_rate.hpp"
 #include "../../Game/game_economy_table.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
@@ -72,7 +72,7 @@ static int source_state_restore_signal_handlers(
 }
 
 template <typename TypeName>
-static int expect_sigabrt_copy_from_uninitialized_source()
+static int expect_sigabrt_copy_from_uninitialised_source()
 {
     struct sigaction old_action_abort;
     struct sigaction old_action_iot;
@@ -114,7 +114,7 @@ static int expect_sigabrt_copy_from_uninitialized_source()
 }
 
 template <typename TypeName>
-static int expect_sigabrt_move_from_uninitialized_source()
+static int expect_sigabrt_move_from_uninitialised_source()
 {
     struct sigaction old_action_abort;
     struct sigaction old_action_iot;
@@ -277,15 +277,15 @@ static int expect_sigabrt_move_from_destroyed_source()
     return (g_source_state_signal_caught == SIGIOT);
 }
 
-FT_TEST(test_price_copy_from_uninitialized_source_aborts, "price definition copy initialize aborts for uninitialized source")
+FT_TEST(test_price_copy_from_uninitialised_source_aborts, "price definition copy initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialized_source<ft_price_definition>());
+    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialised_source<ft_price_definition>());
     return (1);
 }
 
-FT_TEST(test_price_move_from_uninitialized_source_aborts, "price definition move initialize aborts for uninitialized source")
+FT_TEST(test_price_move_from_uninitialised_source_aborts, "price definition move initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialized_source<ft_price_definition>());
+    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialised_source<ft_price_definition>());
     return (1);
 }
 
@@ -301,15 +301,15 @@ FT_TEST(test_price_move_from_destroyed_source_aborts, "price definition move ini
     return (1);
 }
 
-FT_TEST(test_rarity_copy_from_uninitialized_source_aborts, "rarity band copy initialize aborts for uninitialized source")
+FT_TEST(test_rarity_copy_from_uninitialised_source_aborts, "rarity band copy initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialized_source<ft_rarity_band>());
+    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialised_source<ft_rarity_band>());
     return (1);
 }
 
-FT_TEST(test_rarity_move_from_uninitialized_source_aborts, "rarity band move initialize aborts for uninitialized source")
+FT_TEST(test_rarity_move_from_uninitialised_source_aborts, "rarity band move initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialized_source<ft_rarity_band>());
+    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialised_source<ft_rarity_band>());
     return (1);
 }
 
@@ -325,15 +325,15 @@ FT_TEST(test_rarity_move_from_destroyed_source_aborts, "rarity band move initial
     return (1);
 }
 
-FT_TEST(test_vendor_copy_from_uninitialized_source_aborts, "vendor profile copy initialize aborts for uninitialized source")
+FT_TEST(test_vendor_copy_from_uninitialised_source_aborts, "vendor profile copy initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialized_source<ft_vendor_profile>());
+    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialised_source<ft_vendor_profile>());
     return (1);
 }
 
-FT_TEST(test_vendor_move_from_uninitialized_source_aborts, "vendor profile move initialize aborts for uninitialized source")
+FT_TEST(test_vendor_move_from_uninitialised_source_aborts, "vendor profile move initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialized_source<ft_vendor_profile>());
+    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialised_source<ft_vendor_profile>());
     return (1);
 }
 
@@ -349,15 +349,15 @@ FT_TEST(test_vendor_move_from_destroyed_source_aborts, "vendor profile move init
     return (1);
 }
 
-FT_TEST(test_currency_copy_from_uninitialized_source_aborts, "currency rate copy initialize aborts for uninitialized source")
+FT_TEST(test_currency_copy_from_uninitialised_source_aborts, "currency rate copy initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialized_source<ft_currency_rate>());
+    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialised_source<ft_currency_rate>());
     return (1);
 }
 
-FT_TEST(test_currency_move_from_uninitialized_source_aborts, "currency rate move initialize aborts for uninitialized source")
+FT_TEST(test_currency_move_from_uninitialised_source_aborts, "currency rate move initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialized_source<ft_currency_rate>());
+    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialised_source<ft_currency_rate>());
     return (1);
 }
 
@@ -373,15 +373,15 @@ FT_TEST(test_currency_move_from_destroyed_source_aborts, "currency rate move ini
     return (1);
 }
 
-FT_TEST(test_table_copy_from_uninitialized_source_aborts, "economy table copy initialize aborts for uninitialized source")
+FT_TEST(test_table_copy_from_uninitialised_source_aborts, "economy table copy initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialized_source<ft_economy_table>());
+    FT_ASSERT_EQ(1, expect_sigabrt_copy_from_uninitialised_source<ft_economy_table>());
     return (1);
 }
 
-FT_TEST(test_table_move_from_uninitialized_source_aborts, "economy table move initialize aborts for uninitialized source")
+FT_TEST(test_table_move_from_uninitialised_source_aborts, "economy table move initialize aborts for uninitialised source")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialized_source<ft_economy_table>());
+    FT_ASSERT_EQ(1, expect_sigabrt_move_from_uninitialised_source<ft_economy_table>());
     return (1);
 }
 

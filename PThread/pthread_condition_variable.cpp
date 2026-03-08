@@ -43,12 +43,12 @@ static bool compute_wait_deadline(const struct timespec &relative_time, struct t
 }
 
 pt_condition_variable::pt_condition_variable()
-    : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false),
+    : _condition(), _mutex(), _condition_initialised(false), _mutex_initialised(false),
     _state_mutex(ft_nullptr)
 {
     if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
         return ;
-    this->_mutex_initialized = true;
+    this->_mutex_initialised = true;
 #if defined(CLOCK_MONOTONIC)
     pthread_condattr_t condition_attributes;
 
@@ -77,15 +77,15 @@ pt_condition_variable::pt_condition_variable()
         return ;
     }
 #endif
-    this->_condition_initialized = true;
+    this->_condition_initialised = true;
     return ;
 }
 
 pt_condition_variable::~pt_condition_variable()
 {
-    if (this->_condition_initialized)
+    if (this->_condition_initialised)
         pt_cond_destroy(&this->_condition);
-    if (this->_mutex_initialized)
+    if (this->_mutex_initialised)
         pthread_mutex_destroy(&this->_mutex);
     this->teardown_thread_safety();
     return ;
@@ -198,7 +198,7 @@ int pt_condition_variable::wait_for(pt_mutex &mutex, const struct timespec &rela
 
 int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &absolute_time)
 {
-    if (!this->_condition_initialized || !this->_mutex_initialized)
+    if (!this->_condition_initialised || !this->_mutex_initialised)
         return (FT_ERR_INVALID_ARGUMENT);
     if (!mutex.lockState())
         return (FT_ERR_MUTEX_NOT_OWNER);
@@ -233,7 +233,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
 
 int pt_condition_variable::signal()
 {
-    if (!this->_condition_initialized || !this->_mutex_initialized)
+    if (!this->_condition_initialised || !this->_mutex_initialised)
         return (FT_ERR_INVALID_ARGUMENT);
     int native_lock_error = pthread_mutex_lock(&this->_mutex);
     if (native_lock_error != 0)
@@ -253,7 +253,7 @@ int pt_condition_variable::signal()
 
 int pt_condition_variable::broadcast()
 {
-    if (!this->_condition_initialized || !this->_mutex_initialized)
+    if (!this->_condition_initialised || !this->_mutex_initialised)
         return (FT_ERR_INVALID_ARGUMENT);
     int native_lock_error = pthread_mutex_lock(&this->_mutex);
     if (native_lock_error != 0)

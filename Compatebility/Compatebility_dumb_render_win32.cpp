@@ -17,7 +17,7 @@ struct ft_render_win32_state
     int32_t             width;
     int32_t             height;
 
-    bool            is_fullscreen;
+    ft_bool            is_fullscreen;
 
     DWORD           window_style;
     RECT            windowed_rect;
@@ -74,7 +74,7 @@ static ft_render_platform_result ft_render_win32_create_dib(
     {
         ft_render_platform_result result;
 
-        result.error_code = ft_render_error_platform_failure;
+        result.error_code = FT_ERR_INITIALIZATION_FAILED;
         result.system_error_code = (int32_t)GetLastError();
         return (result);
     }
@@ -86,14 +86,14 @@ static ft_render_platform_result ft_render_win32_create_dib(
     out_framebuffer->height = state->height;
     out_framebuffer->pixels = (uint32_t *)pixels;
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_screen_size *out_size)
 {
     if (out_size == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     out_size->width = (int32_t)GetSystemMetrics(SM_CXSCREEN);
@@ -101,10 +101,10 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
 
     if (out_size->width <= 0 || out_size->height <= 0)
     {
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, (int32_t)GetLastError() });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, (int32_t)GetLastError() });
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_create_window(
@@ -121,19 +121,19 @@ ft_render_platform_result ft_render_platform_create_window(
 
     if (out_platform_state == NULL || out_framebuffer == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = (ft_render_win32_state *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ft_render_win32_state));
     if (state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
+        return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
     }
 
     state->instance_handle = GetModuleHandle(NULL);
     state->width = desc.width;
     state->height = desc.height;
-    state->is_fullscreen = false;
+    state->is_fullscreen = FT_FALSE;
     state->dib_section = NULL;
     state->dib_pixels = NULL;
 
@@ -147,14 +147,14 @@ ft_render_platform_result ft_render_platform_create_window(
     {
         ft_render_platform_result result;
 
-        result.error_code = ft_render_error_platform_failure;
+        result.error_code = FT_ERR_INITIALIZATION_FAILED;
         result.system_error_code = (int32_t)GetLastError();
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
     }
 
     style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    if ((desc.flags & ft_render_window_flag_resizable) != 0)
+    if ((desc.flags & FT_RENDER_WINDOW_FLAG_RESIZABLE) != 0)
     {
         style = style | WS_SIZEBOX | WS_MAXIMIZEBOX;
     }
@@ -184,7 +184,7 @@ ft_render_platform_result ft_render_platform_create_window(
     {
         ft_render_platform_result result;
 
-        result.error_code = ft_render_error_platform_failure;
+        result.error_code = FT_ERR_INITIALIZATION_FAILED;
         result.system_error_code = (int32_t)GetLastError();
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
@@ -203,7 +203,7 @@ ft_render_platform_result ft_render_platform_create_window(
     {
         ft_render_platform_result result;
 
-        result.error_code = ft_render_error_platform_failure;
+        result.error_code = FT_ERR_INITIALIZATION_FAILED;
         result.system_error_code = (int32_t)GetLastError();
         DestroyWindow(hwnd);
         HeapFree(GetProcessHeap(), 0, state);
@@ -214,7 +214,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result dib_result;
 
         dib_result = ft_render_win32_create_dib(state, out_framebuffer);
-        if (dib_result.error_code != ft_render_ok)
+        if (dib_result.error_code != FT_ERR_SUCCESS)
         {
             ReleaseDC(hwnd, state->window_device_context);
             DestroyWindow(hwnd);
@@ -224,7 +224,7 @@ ft_render_platform_result ft_render_platform_create_window(
     }
 
     *out_platform_state = state;
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_destroy_window(
@@ -236,7 +236,7 @@ ft_render_platform_result ft_render_platform_destroy_window(
 
     if (platform_state == NULL || *platform_state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_ok, 0 });
+        return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
     }
 
     state = (ft_render_win32_state *)(*platform_state);
@@ -270,12 +270,12 @@ ft_render_platform_result ft_render_platform_destroy_window(
         framebuffer->pixels = NULL;
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_poll_events(
     void *platform_state,
-    bool *out_should_close
+    ft_bool *out_should_close
 )
 {
     MSG   message;
@@ -283,17 +283,17 @@ ft_render_platform_result ft_render_platform_poll_events(
 
     if (platform_state == NULL || out_should_close == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
-    *out_should_close = false;
+    *out_should_close = FT_FALSE;
 
     got_message = PeekMessage(&message, NULL, 0, 0, PM_REMOVE);
     while (got_message != 0)
     {
         if (message.message == WM_QUIT)
         {
-            *out_should_close = true;
+            *out_should_close = FT_TRUE;
         }
         TranslateMessage(&message);
         DispatchMessage(&message);
@@ -301,7 +301,7 @@ ft_render_platform_result ft_render_platform_poll_events(
         got_message = PeekMessage(&message, NULL, 0, 0, PM_REMOVE);
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 ft_render_platform_result ft_render_platform_present(
@@ -315,7 +315,7 @@ ft_render_platform_result ft_render_platform_present(
 
     if (platform_state == NULL || framebuffer == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = (ft_render_win32_state *)platform_state;
@@ -323,7 +323,7 @@ ft_render_platform_result ft_render_platform_present(
     memory_dc = CreateCompatibleDC(state->window_device_context);
     if (memory_dc == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, (int32_t)GetLastError() });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, (int32_t)GetLastError() });
     }
 
     old_bitmap = (HBITMAP)SelectObject(memory_dc, state->dib_section);
@@ -341,7 +341,7 @@ ft_render_platform_result ft_render_platform_present(
     SelectObject(memory_dc, old_bitmap);
     DeleteDC(memory_dc);
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 static void ft_render_win32_enter_fullscreen(ft_render_win32_state *state)
@@ -367,7 +367,7 @@ static void ft_render_win32_enter_fullscreen(ft_render_win32_state *state)
         SWP_NOOWNERZORDER | SWP_FRAMECHANGED
     );
 
-    state->is_fullscreen = true;
+    state->is_fullscreen = FT_TRUE;
     return ;
 }
 
@@ -385,34 +385,34 @@ static void ft_render_win32_leave_fullscreen(ft_render_win32_state *state)
         SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
     );
 
-    state->is_fullscreen = false;
+    state->is_fullscreen = FT_FALSE;
     return ;
 }
 
 ft_render_platform_result ft_render_platform_set_fullscreen(
     void *platform_state,
-    bool enabled
+    ft_bool enabled
 )
 {
     ft_render_win32_state  *state;
 
     if (platform_state == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
+        return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
     state = (ft_render_win32_state *)platform_state;
 
-    if (enabled == true && state->is_fullscreen == false)
+    if (enabled == FT_TRUE && state->is_fullscreen == FT_FALSE)
     {
         ft_render_win32_enter_fullscreen(state);
     }
-    else if (enabled == false && state->is_fullscreen == true)
+    else if (enabled == FT_FALSE && state->is_fullscreen == FT_TRUE)
     {
         ft_render_win32_leave_fullscreen(state);
     }
 
-    return ((ft_render_platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
 #endif

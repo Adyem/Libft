@@ -2,7 +2,7 @@
 #include "limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static int ft_digit_value(char character)
+static int32_t ft_digit_value(char character)
 {
     if (character >= '0' && character <= '9')
         return (character - '0');
@@ -18,9 +18,9 @@ uint64_t ft_strtoul(const char *input_string, char **end_pointer, int32_t numeri
     const char *current_character = input_string;
     int32_t sign_value = 1;
     uint64_t accumulated_value = 0;
-    int digit_value;
-    bool overflow_detected = false;
-    bool digit_processed = false;
+    int32_t digit_value;
+    ft_bool overflow_detected = FT_FALSE;
+    ft_bool digit_processed = FT_FALSE;
     uint64_t base_value;
     uint64_t limit_value;
 
@@ -73,7 +73,7 @@ uint64_t ft_strtoul(const char *input_string, char **end_pointer, int32_t numeri
         uint64_t limit_remainder;
 
         digit_as_unsigned = static_cast<uint64_t>(digit_value);
-        digit_processed = true;
+        digit_processed = FT_TRUE;
         if (base_value == 0)
             break ;
         limit_division = limit_value / base_value;
@@ -82,7 +82,7 @@ uint64_t ft_strtoul(const char *input_string, char **end_pointer, int32_t numeri
                 || (accumulated_value == limit_division
                     && digit_as_unsigned > limit_remainder))
         {
-            overflow_detected = true;
+            overflow_detected = FT_TRUE;
             accumulated_value = limit_value;
             break ;
         }
@@ -102,7 +102,7 @@ uint64_t ft_strtoul(const char *input_string, char **end_pointer, int32_t numeri
     {
         if (overflow_detected)
             return (limit_value);
-        unsigned long negated_value = 0UL - accumulated_value;
+        uint64_t negated_value = 0UL - accumulated_value;
         return (negated_value);
     }
     if (overflow_detected)

@@ -1,9 +1,10 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 
-static int math_gcd_normalized_int(int first_number, int second_number)
+static int32_t math_gcd_normalized_int(int32_t first_number,
+    int32_t second_number)
 {
-    int remainder_value;
+    int32_t remainder_value;
 
     remainder_value = 0;
     while (second_number != 0)
@@ -15,9 +16,10 @@ static int math_gcd_normalized_int(int first_number, int second_number)
     return (first_number);
 }
 
-static long math_gcd_normalized_long(long first_number, long second_number)
+static int64_t math_gcd_normalized_int64(int64_t first_number,
+    int64_t second_number)
 {
-    long remainder_value;
+    int64_t remainder_value;
 
     remainder_value = 0;
     while (second_number != 0)
@@ -29,23 +31,9 @@ static long math_gcd_normalized_long(long first_number, long second_number)
     return (first_number);
 }
 
-static long long math_gcd_normalized_long_long(long long first_number, long long second_number)
+int32_t math_gcd(int32_t first_number, int32_t second_number)
 {
-    long long remainder_value;
-
-    remainder_value = 0;
-    while (second_number != 0)
-    {
-        remainder_value = first_number % second_number;
-        first_number = second_number;
-        second_number = remainder_value;
-    }
-    return (first_number);
-}
-
-int math_gcd(int first_number, int second_number)
-{
-    int result_value;
+    int32_t result_value;
 
     first_number = math_abs(first_number);
     second_number = math_abs(second_number);
@@ -53,22 +41,12 @@ int math_gcd(int first_number, int second_number)
     return (result_value);
 }
 
-long math_gcd(long first_number, long second_number)
+int64_t math_gcd(int64_t first_number, int64_t second_number)
 {
-    long result_value;
+    int64_t result_value;
 
     first_number = math_abs(first_number);
     second_number = math_abs(second_number);
-    result_value = math_gcd_normalized_long(first_number, second_number);
-    return (result_value);
-}
-
-long long math_gcd(long long first_number, long long second_number)
-{
-    long long result_value;
-
-    first_number = math_abs(first_number);
-    second_number = math_abs(second_number);
-    result_value = math_gcd_normalized_long_long(first_number, second_number);
+    result_value = math_gcd_normalized_int64(first_number, second_number);
     return (result_value);
 }

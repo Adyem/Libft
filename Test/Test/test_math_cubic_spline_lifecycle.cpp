@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Math/math_polynomial.hpp"
+#include "../../Math/ft_cubic_spline.hpp"
 #include "../../Math/math.hpp"
 #include "../../CMA/CMA.hpp"
-#include "../../System_utils/test_runner.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
@@ -73,7 +73,7 @@ static void spline_call_initialize_twice()
     return ;
 }
 
-static void spline_call_destroy_uninitialized()
+static void spline_call_destroy_uninitialised()
 {
     ft_cubic_spline spline_value;
 
@@ -81,7 +81,7 @@ static void spline_call_destroy_uninitialized()
     return ;
 }
 
-static void spline_call_copy_from_uninitialized_source()
+static void spline_call_copy_from_uninitialised_source()
 {
     ft_cubic_spline destination_value;
     ft_cubic_spline source_value;
@@ -91,7 +91,7 @@ static void spline_call_copy_from_uninitialized_source()
     return ;
 }
 
-static void spline_call_initialize_move_from_uninitialized_source()
+static void spline_call_initialize_move_from_uninitialised_source()
 {
     ft_cubic_spline destination_value;
     ft_cubic_spline source_value;
@@ -129,7 +129,7 @@ static void spline_call_initialize_move_from_destroyed_source()
     return ;
 }
 
-static void spline_call_move_self_uninitialized()
+static void spline_call_move_self_uninitialised()
 {
     ft_cubic_spline spline_value;
 
@@ -137,7 +137,7 @@ static void spline_call_move_self_uninitialized()
     return ;
 }
 
-static void spline_call_enable_thread_safety_uninitialized()
+static void spline_call_enable_thread_safety_uninitialised()
 {
     ft_cubic_spline spline_value;
 
@@ -145,7 +145,7 @@ static void spline_call_enable_thread_safety_uninitialized()
     return ;
 }
 
-static void spline_call_disable_thread_safety_uninitialized()
+static void spline_call_disable_thread_safety_uninitialised()
 {
     ft_cubic_spline spline_value;
 
@@ -153,7 +153,7 @@ static void spline_call_disable_thread_safety_uninitialized()
     return ;
 }
 
-static void spline_call_is_thread_safe_enabled_uninitialized()
+static void spline_call_is_thread_safe_enabled_uninitialised()
 {
     ft_cubic_spline spline_value;
 
@@ -171,7 +171,7 @@ static void spline_call_destroy_after_destroy()
     return ;
 }
 
-static void spline_call_initialize_copy_on_initialized_destination()
+static void spline_call_initialize_copy_on_initialised_destination()
 {
     ft_vector<double> x_values;
     ft_vector<double> y_values;
@@ -185,7 +185,7 @@ static void spline_call_initialize_copy_on_initialized_destination()
     return ;
 }
 
-static void spline_call_destructor_uninitialized_raw_memory()
+static void spline_call_destructor_uninitialised_raw_memory()
 {
     alignas(ft_cubic_spline) unsigned char storage[sizeof(ft_cubic_spline)];
     ft_cubic_spline *spline_pointer;
@@ -219,58 +219,58 @@ static void spline_fill_many_sample_points(ft_vector<double> &x_values,
 }
 
 FT_TEST(test_cubic_spline_initialize_twice_aborts,
-    "ft_cubic_spline initialize aborts on already initialized object")
+    "ft_cubic_spline initialize aborts on already initialised object")
 {
     FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_initialize_twice));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_destroy_uninitialized_aborts,
-    "ft_cubic_spline destroy aborts when called on uninitialized object")
+FT_TEST(test_cubic_spline_destroy_uninitialised_aborts,
+    "ft_cubic_spline destroy aborts when called on uninitialised object")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_destroy_uninitialized));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_destroy_uninitialised));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_copy_from_uninitialized_source_aborts,
-    "ft_cubic_spline initialize(copy) aborts on uninitialized source")
+FT_TEST(test_cubic_spline_copy_from_uninitialised_source_aborts,
+    "ft_cubic_spline initialize(copy) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_copy_from_uninitialized_source));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_copy_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_initialize_move_from_uninitialized_source_aborts,
-    "ft_cubic_spline initialize(move) aborts on uninitialized source")
+FT_TEST(test_cubic_spline_initialize_move_from_uninitialised_source_aborts,
+    "ft_cubic_spline initialize(move) aborts on uninitialised source")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_initialize_move_from_uninitialized_source));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_initialize_move_from_uninitialised_source));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_move_self_uninitialized_aborts,
-    "ft_cubic_spline move(self) aborts when object is uninitialized")
+FT_TEST(test_cubic_spline_move_self_uninitialised_aborts,
+    "ft_cubic_spline move(self) aborts when object is uninitialised")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_move_self_uninitialized));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_move_self_uninitialised));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_enable_thread_safety_uninitialized_aborts,
-    "ft_cubic_spline enable_thread_safety aborts on uninitialized object")
+FT_TEST(test_cubic_spline_enable_thread_safety_uninitialised_aborts,
+    "ft_cubic_spline enable_thread_safety aborts on uninitialised object")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_enable_thread_safety_uninitialized));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_enable_thread_safety_uninitialised));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_is_thread_safe_uninitialized_aborts,
-    "ft_cubic_spline is_thread_safe_enabled aborts on uninitialized object")
+FT_TEST(test_cubic_spline_is_thread_safe_uninitialised_aborts,
+    "ft_cubic_spline is_thread_safe_enabled aborts on uninitialised object")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_is_thread_safe_enabled_uninitialized));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_is_thread_safe_enabled_uninitialised));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_disable_thread_safety_uninitialized_aborts,
-    "ft_cubic_spline disable_thread_safety aborts on uninitialized object")
+FT_TEST(test_cubic_spline_disable_thread_safety_uninitialised_aborts,
+    "ft_cubic_spline disable_thread_safety aborts on uninitialised object")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_disable_thread_safety_uninitialized));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_disable_thread_safety_uninitialised));
     return (1);
 }
 
@@ -281,17 +281,17 @@ FT_TEST(test_cubic_spline_destroy_after_destroy_aborts,
     return (1);
 }
 
-FT_TEST(test_cubic_spline_initialize_copy_on_initialized_destination_aborts,
-    "ft_cubic_spline initialize(copy) aborts when destination is initialized")
+FT_TEST(test_cubic_spline_initialize_copy_on_initialised_destination_aborts,
+    "ft_cubic_spline initialize(copy) aborts when destination is initialised")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_initialize_copy_on_initialized_destination));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_initialize_copy_on_initialised_destination));
     return (1);
 }
 
-FT_TEST(test_cubic_spline_uninitialized_raw_destructor_aborts,
-    "ft_cubic_spline destructor aborts on raw uninitialized memory")
+FT_TEST(test_cubic_spline_uninitialised_raw_destructor_aborts,
+    "ft_cubic_spline destructor aborts on raw uninitialised memory")
 {
-    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_destructor_uninitialized_raw_memory));
+    FT_ASSERT_EQ(1, spline_expect_sigabrt(spline_call_destructor_uninitialised_raw_memory));
     return (1);
 }
 
@@ -408,7 +408,7 @@ FT_TEST(test_cubic_spline_thread_safety_and_validation_mutex,
     return (1);
 }
 
-FT_TEST(test_cubic_spline_get_mutex_for_validation_uninitialized_returns_null,
+FT_TEST(test_cubic_spline_get_mutex_for_validation_uninitialised_returns_null,
     "ft_cubic_spline validation mutex getter returns null before initialize")
 {
     ft_cubic_spline spline_value;
@@ -446,8 +446,8 @@ FT_TEST(test_cubic_spline_disable_thread_safety_without_enable_is_safe,
     return (1);
 }
 
-FT_TEST(test_cubic_spline_move_self_initialized_success,
-    "ft_cubic_spline move(self) succeeds when initialized")
+FT_TEST(test_cubic_spline_move_self_initialised_success,
+    "ft_cubic_spline move(self) succeeds when initialised")
 {
     ft_vector<double> x_values;
     ft_vector<double> y_values;

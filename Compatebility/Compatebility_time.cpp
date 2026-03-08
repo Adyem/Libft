@@ -28,15 +28,13 @@ static int32_t cmp_localtime_from_shared_state(const std::time_t *time_value, st
     shared_result = std::localtime(time_value);
     if (shared_result == ft_nullptr)
     {
-        if (pt_mutex_unlock_if_not_null(&localtime_mutex) != FT_ERR_SUCCESS)
-            return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+        (void)pt_mutex_unlock_if_not_null(&localtime_mutex);
         if (errno != 0)
             return (cmp_map_system_error_to_ft(errno));
         return (FT_ERR_INVALID_ARGUMENT);
     }
     *output = *shared_result;
-    if (pt_mutex_unlock_if_not_null(&localtime_mutex) != FT_ERR_SUCCESS)
-        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+    (void)pt_mutex_unlock_if_not_null(&localtime_mutex);
     return (FT_ERR_SUCCESS);
 }
 #endif
