@@ -8,14 +8,14 @@
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
-static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, int *prefix_len, int prefix_capacity)
+static int32_t rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, int32_t *prefix_len, int32_t prefix_capacity)
 {
-    state->word_start = state->pos - 1;
+    state->word_start = state->position - 1;
     while (state->word_start >= 0 && state->buffer[state->word_start] != ' ')
         state->word_start--;
     state->word_start++;
-    *prefix_len = state->pos - state->word_start;
-    if (*prefix_len == 0)
+    *prefix_len = state->position - state->word_start;
+    if (*prefix_len == FT_ERR_SUCCESS)
         return (FT_ERR_SUCCESS);
     if (*prefix_len >= prefix_capacity)
     {
@@ -28,21 +28,22 @@ static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, 
     return (FT_ERR_SUCCESS);
 }
 
-static void rl_gather_matching_suggestions(readline_state_t *state, const char *prefix, int prefix_len)
+static int32_t rl_gather_matching_suggestions(readline_state_t *state, const char *prefix, int32_t prefix_len)
 {
-    int dynamic_count;
-    int dynamic_index;
-    int index;
+    int32_t dynamic_count;
+    int32_t dynamic_index;
+    int32_t index;
 
     state->current_match_count = 0;
-    dynamic_count = rl_completion_get_dynamic_count();
+    if (rl_completion_get_dynamic_count(&dynamic_count) != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     dynamic_index = 0;
     while (dynamic_index < dynamic_count)
     {
         char *candidate;
 
         candidate = rl_completion_get_dynamic_match(dynamic_index);
-        if (candidate != ft_nullptr && ft_strncmp(candidate, prefix, prefix_len) == 0)
+        if (candidate != ft_nullptr && ft_strncmp(candidate, prefix, prefix_len) == FT_ERR_SUCCESS)
         {
             state->current_matches[state->current_match_count] = candidate;
             state->current_match_count += 1;
@@ -52,23 +53,23 @@ static void rl_gather_matching_suggestions(readline_state_t *state, const char *
     index = 0;
     while (index < suggestion_count)
     {
-        if (ft_strncmp(suggestions[index], prefix, prefix_len) == 0)
+        if (ft_strncmp(suggestions[index], prefix, prefix_len) == FT_ERR_SUCCESS)
         {
             state->current_matches[state->current_match_count] = suggestions[index];
             state->current_match_count += 1;
         }
         index++;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size)
+static int32_t rl_resize_buffer_if_needed(readline_state_t *state, int32_t required_size)
 {
-    if (required_size >= state->bufsize)
+    if (required_size >= state->buffer_size)
     {
-        int new_bufsize;
+        int32_t new_bufsize;
 
-        new_bufsize = state->bufsize;
+        new_bufsize = state->buffer_size;
         if (new_bufsize <= 0)
             new_bufsize = 1;
         while (required_size >= new_bufsize)
@@ -77,47 +78,47 @@ static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size
                 return (FT_ERR_OUT_OF_RANGE);
             new_bufsize *= 2;
         }
-        int resize_error = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
+        int32_t resize_error = rl_resize_buffer(&state->buffer, &state->buffer_size, new_bufsize);
         if (resize_error != FT_ERR_SUCCESS)
             return (resize_error);
     }
     return (FT_ERR_SUCCESS);
 }
 
-static int rl_apply_completion(readline_state_t *state, const char *completion)
+static int32_t rl_apply_completion(readline_state_t *state, const char *completion)
 {
-    int completion_length;
-    int original_position;
-    int suffix_length;
-    long long total_length;
-    int required_size;
+    int32_t completion_length;
+    int32_t original_position;
+    int32_t suffix_length;
+    int64_t total_length;
+    int32_t required_size;
 
     completion_length = ft_strlen(completion);
-    original_position = state->pos;
+    original_position = state->position;
     suffix_length = ft_strlen(&state->buffer[original_position]);
-    total_length = static_cast<long long>(state->word_start)
-        + static_cast<long long>(completion_length)
-        + static_cast<long long>(suffix_length);
-    if (total_length > static_cast<long long>(FT_INT32_MAX))
+    total_length = static_cast<int64_t>(state->word_start)
+        + static_cast<int64_t>(completion_length)
+        + static_cast<int64_t>(suffix_length);
+    if (total_length > static_cast<int64_t>(FT_INT32_MAX))
         return (FT_ERR_OUT_OF_RANGE);
-    state->pos = state->word_start;
-    required_size = static_cast<int>(total_length);
-    int resize_error = rl_resize_buffer_if_needed(state, required_size);
+    state->position = state->word_start;
+    required_size = static_cast<int32_t>(total_length);
+    int32_t resize_error = rl_resize_buffer_if_needed(state, required_size);
     if (resize_error != FT_ERR_SUCCESS)
         return (resize_error);
-    ft_memmove(&state->buffer[state->pos + completion_length],
+    ft_memmove(&state->buffer[state->position + completion_length],
         &state->buffer[original_position],
-        static_cast<size_t>(suffix_length) + 1);
+        static_cast<ft_size_t>(suffix_length) + 1);
     if (completion_length > 0)
-        ft_memcpy(&state->buffer[state->pos], completion,
-            static_cast<size_t>(completion_length));
-    state->pos += completion_length;
+        ft_memcpy(&state->buffer[state->position], completion,
+            static_cast<ft_size_t>(completion_length));
+    state->position += completion_length;
     return (FT_ERR_SUCCESS);
 }
 
 static void rl_update_display(const char *prompt, readline_state_t *state)
 {
-    int columns_after_cursor;
+    int32_t columns_after_cursor;
 
     if (rl_update_display_metrics(state) != FT_ERR_SUCCESS)
         return ;
@@ -131,16 +132,16 @@ static void rl_update_display(const char *prompt, readline_state_t *state)
     return ;
 }
 
-int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
+int32_t rl_handle_tab_completion(readline_state_t *state, const char *prompt)
 {
-    bool        lock_acquired;
-    int         result;
+    ft_bool        lock_acquired;
+    int32_t         result;
     const char *completion;
-    int         lock_result;
+    int32_t         lock_result;
 
     if (state == ft_nullptr || prompt == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     result = FT_ERR_SUCCESS;
     completion = ft_nullptr;
     lock_result = rl_state_lock(state, &lock_acquired);
@@ -149,8 +150,8 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
     if (!state->in_completion_mode)
     {
         char prefix[INITIAL_BUFFER_SIZE];
-        int prefix_len;
-        int prefix_status;
+        int32_t prefix_len;
+        int32_t prefix_status;
 
         prefix_status = rl_find_word_start_and_prefix(state, prefix, &prefix_len, INITIAL_BUFFER_SIZE);
         if (prefix_status != FT_ERR_SUCCESS)
@@ -158,15 +159,19 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
             result = prefix_status;
             goto cleanup;
         }
-        if (prefix_len == 0)
+        if (prefix_len == FT_ERR_SUCCESS)
             goto cleanup_success;
-        if (rl_completion_prepare_candidates(state->buffer, state->pos, prefix, prefix_len) != 0)
+        if (rl_completion_prepare_candidates(state->buffer, state->position, prefix, prefix_len) != FT_ERR_SUCCESS)
         {
             result = FT_ERR_INTERNAL;
             goto cleanup;
         }
-        rl_gather_matching_suggestions(state, prefix, prefix_len);
-        if (state->current_match_count == 0)
+        if (rl_gather_matching_suggestions(state, prefix, prefix_len) != FT_ERR_SUCCESS)
+        {
+            result = FT_ERR_INTERNAL;
+            goto cleanup;
+        }
+        if (state->current_match_count == FT_ERR_SUCCESS)
         {
             pf_printf("\a");
             fflush(stdout);
@@ -178,7 +183,7 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
     if (state->in_completion_mode && state->current_match_count > 0)
     {
         completion = state->current_matches[state->current_match_index];
-        int completion_result = rl_apply_completion(state, completion);
+        int32_t completion_result = rl_apply_completion(state, completion);
         if (completion_result != FT_ERR_SUCCESS)
         {
             result = completion_result;

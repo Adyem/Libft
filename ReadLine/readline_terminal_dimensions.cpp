@@ -11,21 +11,21 @@ static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
 {
     if (dimensions == ft_nullptr)
         return ;
-    dimensions->rows = 0;
-    dimensions->cols = 0;
+    dimensions->row_count = 0;
+    dimensions->column_count = 0;
     dimensions->x_pixels = 0;
     dimensions->y_pixels = 0;
-    dimensions->dimensions_valid = false;
+    dimensions->dimensions_valid = FT_FALSE;
     return ;
 }
-int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions)
+int32_t rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions)
 {
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
+    int32_t mutex_error;
 
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
@@ -42,113 +42,97 @@ int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions
 
 void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensions)
 {
-    int destroy_error;
-
     if (dimensions == ft_nullptr)
         return ;
     if (dimensions->mutex == ft_nullptr)
         return ;
-    destroy_error = dimensions->mutex->destroy();
-    if (destroy_error != FT_ERR_SUCCESS)
-        return ;
+    (void)dimensions->mutex->destroy();
     delete dimensions->mutex;
     dimensions->mutex = ft_nullptr;
     return ;
 }
 
-int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acquired)
+int32_t rl_terminal_dimensions_lock(terminal_dimensions *dimensions, ft_bool *lock_acquired)
 {
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    int mutex_error = pt_recursive_mutex_lock_if_not_null(dimensions->mutex);
+    int32_t mutex_error = pt_recursive_mutex_lock_if_not_null(dimensions->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     if (lock_acquired != ft_nullptr && dimensions->mutex != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-int rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired)
+int32_t rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, ft_bool lock_acquired)
 {
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
-    int mutex_error = pt_recursive_mutex_unlock_if_not_null(dimensions->mutex);
-    if (mutex_error != FT_ERR_SUCCESS)
-        return (mutex_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(dimensions->mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
+int32_t rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
 {
-    unsigned short rows;
-    unsigned short cols;
-    unsigned short x_pixels;
-    unsigned short y_pixels;
-    bool           lock_acquired;
-    int            result;
+    uint16_t row_count;
+    uint16_t column_count;
+    uint16_t x_pixels;
+    uint16_t y_pixels;
+    ft_bool           lock_acquired;
+    int32_t            result;
 
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     result = rl_terminal_dimensions_lock(dimensions, &lock_acquired);
     if (result != FT_ERR_SUCCESS)
         return (result);
-    if (cmp_readline_terminal_dimensions(&rows, &cols, &x_pixels, &y_pixels) != 0)
+    if (cmp_readline_terminal_dimensions(&row_count, &column_count, &x_pixels, &y_pixels) != FT_ERR_SUCCESS)
     {
         rl_terminal_dimensions_clear(dimensions);
         result = FT_ERR_TERMINATED;
         goto cleanup;
     }
-    dimensions->rows = rows;
-    dimensions->cols = cols;
+    dimensions->row_count = row_count;
+    dimensions->column_count = column_count;
     dimensions->x_pixels = x_pixels;
     dimensions->y_pixels = y_pixels;
-    dimensions->dimensions_valid = true;
+    dimensions->dimensions_valid = FT_TRUE;
 cleanup:
-    if (lock_acquired == true)
-    {
-        int unlock_error = rl_terminal_dimensions_unlock(dimensions, lock_acquired);
-
-        if (unlock_error != FT_ERR_SUCCESS && result == FT_ERR_SUCCESS)
-            result = unlock_error;
-    }
+    if (lock_acquired == FT_TRUE)
+        (void)rl_terminal_dimensions_unlock(dimensions, lock_acquired);
     return (result);
 }
 
-int rl_terminal_dimensions_get(terminal_dimensions *dimensions,
-    unsigned short *rows, unsigned short *cols,
-    unsigned short *x_pixels, unsigned short *y_pixels,
-    bool *dimensions_valid)
+int32_t rl_terminal_dimensions_get(terminal_dimensions *dimensions,
+    uint16_t *row_count, uint16_t *column_count,
+    uint16_t *x_pixels, uint16_t *y_pixels,
+    ft_bool *dimensions_valid)
 {
-    bool lock_acquired;
-    int  result;
+    ft_bool lock_acquired;
+    int32_t  result;
 
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     result = rl_terminal_dimensions_lock(dimensions, &lock_acquired);
     if (result != FT_ERR_SUCCESS)
         return (result);
-    if (rows != ft_nullptr)
-        *rows = dimensions->rows;
-    if (cols != ft_nullptr)
-        *cols = dimensions->cols;
+    if (row_count != ft_nullptr)
+        *row_count = dimensions->row_count;
+    if (column_count != ft_nullptr)
+        *column_count = dimensions->column_count;
     if (x_pixels != ft_nullptr)
         *x_pixels = dimensions->x_pixels;
     if (y_pixels != ft_nullptr)
         *y_pixels = dimensions->y_pixels;
     if (dimensions_valid != ft_nullptr)
         *dimensions_valid = dimensions->dimensions_valid;
-    if (lock_acquired == true)
-    {
-        int unlock_error = rl_terminal_dimensions_unlock(dimensions, lock_acquired);
-
-        if (unlock_error != FT_ERR_SUCCESS && result == FT_ERR_SUCCESS)
-            result = unlock_error;
-    }
+    if (lock_acquired == FT_TRUE)
+        (void)rl_terminal_dimensions_unlock(dimensions, lock_acquired);
     return (result);
 }

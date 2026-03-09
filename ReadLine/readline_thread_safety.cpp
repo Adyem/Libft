@@ -5,14 +5,14 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 
-int rl_state_prepare_thread_safety(readline_state_t *state)
+int32_t rl_state_prepare_thread_safety(readline_state_t *state)
 {
     if (state == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (state->mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
+    int32_t mutex_error;
 
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
@@ -29,42 +29,36 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
 
 void rl_state_teardown_thread_safety(readline_state_t *state)
 {
-    int destroy_error;
-
     if (state == ft_nullptr)
         return ;
     if (state->mutex == ft_nullptr)
         return ;
-    destroy_error = state->mutex->destroy();
-    if (destroy_error != FT_ERR_SUCCESS)
-        return ;
+    (void)state->mutex->destroy();
     delete state->mutex;
     state->mutex = ft_nullptr;
     return ;
 }
 
-int rl_state_lock(readline_state_t *state, bool *lock_acquired)
+int32_t rl_state_lock(readline_state_t *state, ft_bool *lock_acquired)
 {
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (state == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    int mutex_error = pt_recursive_mutex_lock_if_not_null(state->mutex);
+    int32_t mutex_error = pt_recursive_mutex_lock_if_not_null(state->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     if (lock_acquired != ft_nullptr && state->mutex != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-int rl_state_unlock(readline_state_t *state, bool lock_acquired)
+int32_t rl_state_unlock(readline_state_t *state, ft_bool lock_acquired)
 {
     if (state == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
-    int mutex_error = pt_recursive_mutex_unlock_if_not_null(state->mutex);
-    if (mutex_error != FT_ERR_SUCCESS)
-        return (mutex_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(state->mutex);
     return (FT_ERR_SUCCESS);
 }

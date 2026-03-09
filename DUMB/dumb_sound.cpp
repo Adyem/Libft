@@ -239,6 +239,7 @@ int32_t ft_sound_device::destroy(void)
 int32_t ft_sound_device::move(ft_sound_device &other)
 {
     int32_t lock_error;
+    int32_t destroy_error;
     pt_recursive_mutex *first_mutex;
     pt_recursive_mutex *second_mutex;
     pt_recursive_mutex *old_destination_mutex;
@@ -263,6 +264,12 @@ int32_t ft_sound_device::move(ft_sound_device &other)
         errno_abort_lifecycle(other._initialised_state, "ft_sound_device::move source",
             "called with source object that is not initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {

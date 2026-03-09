@@ -55,7 +55,7 @@ int32_t ft_read_file(const char *path, char **out_buffer, ft_size_t *out_size)
         return (FT_ERR_NO_MEMORY);
     }
 
-    bytes_read = fread(buffer, 1, static_cast<size_t>(file_size), file);
+    bytes_read = fread(buffer, 1, static_cast<ft_size_t>(file_size), file);
     if (bytes_read != static_cast<ft_size_t>(file_size))
     {
         cma_free(buffer);
@@ -93,7 +93,7 @@ int32_t ft_write_file(const char *path, const char *buffer, ft_size_t size)
 
     if (size > 0)
     {
-        bytes_written = fwrite(buffer, 1, static_cast<size_t>(size), file);
+        bytes_written = fwrite(buffer, 1, static_cast<ft_size_t>(size), file);
         if (bytes_written != size)
         {
             fclose(file);

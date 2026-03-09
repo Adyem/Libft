@@ -1,6 +1,7 @@
 #include "condition.hpp"
 #include "mutex.hpp"
 #include "pthread.hpp"
+#include "pthread_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
@@ -93,11 +94,11 @@ pt_condition_variable::~pt_condition_variable()
 
 int pt_condition_variable::lock_internal(bool *lock_acquired) const
 {
+    int state_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_state_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    int state_error = this->_state_mutex->lock();
+    state_error = pt_mutex_lock_if_not_null(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESS)
     {
         if (state_error == FT_ERR_MUTEX_ALREADY_LOCKED)
@@ -120,7 +121,7 @@ void pt_condition_variable::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    this->_state_mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(this->_state_mutex);
     return ;
 }
 

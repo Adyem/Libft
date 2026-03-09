@@ -14,6 +14,7 @@
 #include "../Time/time.hpp"
 #include "condition.hpp"
 #include "mutex.hpp"
+#include "pthread_internal.hpp"
 #include "task_scheduler_tracing.hpp"
 
 #include <pthread.h>
@@ -31,7 +32,11 @@
 template <typename ElementType>
 class ft_blocking_queue
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         pt_mutex _mutex;
         pt_condition_variable _condition;
         bool _shutdown;
@@ -40,7 +45,6 @@ class ft_blocking_queue
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
-        pt_mutex *mutex_handle() const;
 
     public:
         ft_blocking_queue();
@@ -68,13 +72,16 @@ class pt_recursive_mutex;
 
 class ft_scheduled_task_state
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         std::atomic<bool> _cancelled;
         mutable pt_mutex *_state_mutex;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
-        pt_mutex *mutex_handle() const;
 
     public:
         ft_scheduled_task_state();
@@ -92,14 +99,17 @@ class ft_scheduled_task_state
 
 class ft_scheduled_task_handle
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         ft_sharedptr<ft_scheduled_task_state> _state;
         ft_task_scheduler *_scheduler;
         mutable pt_mutex *_state_mutex;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
-        pt_mutex *mutex_handle() const;
 
     public:
         ft_scheduled_task_handle();
@@ -122,7 +132,11 @@ class ft_scheduled_task_handle
 
 class ft_task_scheduler
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         struct task_queue_entry
         {
             ft_function<void()> _function;
@@ -196,8 +210,6 @@ class ft_task_scheduler
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
-        void abort_lifecycle_error(const char *method_name,
-                const char *reason) const;
         void abort_if_not_initialised(const char *method_name) const;
 
     public:
@@ -243,7 +255,6 @@ class ft_task_scheduler
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         int unlock(bool lock_acquired) const;
-        pt_recursive_mutex *mutex_handle() const;
 };
 
 template <typename ElementType>
@@ -262,21 +273,13 @@ ft_blocking_queue<ElementType>::~ft_blocking_queue()
 }
 
 template <typename ElementType>
-pt_mutex *ft_blocking_queue<ElementType>::mutex_handle() const
-{
-    return (this->_state_mutex);
-}
-
-template <typename ElementType>
 int ft_blocking_queue<ElementType>::lock_internal(bool *lock_acquired) const
 {
+    int state_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_state_mutex == ft_nullptr)
-    {
-        return (FT_ERR_SUCCESS);
-    }
-    int state_error = this->_state_mutex->lock();
+    state_error = pt_mutex_lock_if_not_null(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESS)
     {
         if (state_error == FT_ERR_MUTEX_ALREADY_LOCKED)
@@ -302,7 +305,8 @@ int ft_blocking_queue<ElementType>::unlock_internal(bool lock_acquired) const
     {
         return (FT_ERR_SUCCESS);
     }
-    return (this->_state_mutex->unlock());
+    (void)pt_mutex_unlock_if_not_null(this->_state_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>

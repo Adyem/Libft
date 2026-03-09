@@ -6,7 +6,7 @@
 
 void rl_clear_history()
 {
-    int index;
+    int32_t index;
 
     index = 0;
     while (index < history_count)

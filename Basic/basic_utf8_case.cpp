@@ -1,6 +1,7 @@
 #include <cstddef>
 #include "basic.hpp"
 #include "utf8.hpp"
+#include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 
 uint32_t ft_utf8_case_ascii_lower(uint32_t code_point)
@@ -21,11 +22,11 @@ int32_t ft_utf8_encode(uint32_t code_point, char *buffer, ft_size_t buffer_size,
         ft_size_t *encoded_length_pointer)
 {
     if (!buffer && buffer_size != 0)
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_POINTER);
     if (code_point > 0x10FFFF)
-        return (FT_FAILURE);
+        return (FT_ERR_OUT_OF_RANGE);
     if (code_point >= 0xD800 && code_point <= 0xDFFF)
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_ARGUMENT);
     ft_size_t required_length;
     if (code_point <= 0x7F)
         required_length = 1;
@@ -36,7 +37,7 @@ int32_t ft_utf8_encode(uint32_t code_point, char *buffer, ft_size_t buffer_size,
     else
         required_length = 4;
     if (buffer_size <= required_length)
-        return (FT_FAILURE);
+        return (FT_ERR_OUT_OF_RANGE);
     if (required_length == 1)
         buffer[0] = static_cast<char>(code_point);
     else if (required_length == 2)
@@ -60,15 +61,17 @@ int32_t ft_utf8_encode(uint32_t code_point, char *buffer, ft_size_t buffer_size,
     buffer[required_length] = '\0';
     if (encoded_length_pointer)
         *encoded_length_pointer = required_length;
-    return (FT_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t ft_utf8_transform(const char *input, ft_size_t input_length,
         char *output_buffer, ft_size_t output_buffer_size,
         ft_utf8_case_hook case_hook)
 {
+    int32_t error_code;
+
     if (!input || !output_buffer || !case_hook)
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_POINTER);
     ft_size_t effective_length = input_length;
     if (effective_length == 0)
         effective_length = ft_strlen_size_t(input);
@@ -79,17 +82,19 @@ int32_t ft_utf8_transform(const char *input, ft_size_t input_length,
         ft_size_t working_index = input_index;
         uint32_t decoded_code_point = 0;
         ft_size_t sequence_length = 0;
-        if (ft_utf8_next(input, effective_length, &working_index,
-                &decoded_code_point, &sequence_length) != FT_SUCCESS)
-            return (FT_FAILURE);
+        error_code = ft_utf8_next(input, effective_length, &working_index,
+                &decoded_code_point, &sequence_length);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
         uint32_t mapped_code_point = case_hook(decoded_code_point);
         char encoded_buffer[5];
         ft_size_t encoded_length = 0;
-        if (ft_utf8_encode(mapped_code_point, encoded_buffer,
-                sizeof(encoded_buffer), &encoded_length) != FT_SUCCESS)
-            return (FT_FAILURE);
+        error_code = ft_utf8_encode(mapped_code_point, encoded_buffer,
+                sizeof(encoded_buffer), &encoded_length);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
         if (output_index + encoded_length >= output_buffer_size)
-            return (FT_FAILURE);
+            return (FT_ERR_OUT_OF_RANGE);
         ft_size_t copy_index = 0;
         while (copy_index < encoded_length)
         {
@@ -100,31 +105,34 @@ int32_t ft_utf8_transform(const char *input, ft_size_t input_length,
         input_index = working_index;
     }
     if (output_index >= output_buffer_size)
-        return (FT_FAILURE);
+        return (FT_ERR_OUT_OF_RANGE);
     output_buffer[output_index] = '\0';
-    return (FT_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t ft_utf8_transform_alloc(const char *input, char **output_pointer,
         ft_utf8_case_hook case_hook)
 {
+    int32_t error_code;
+
     if (!input || !output_pointer || !case_hook)
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_POINTER);
     ft_size_t code_point_count = 0;
-    if (ft_utf8_count(input, &code_point_count) != FT_SUCCESS)
-        return (FT_FAILURE);
+    error_code = ft_utf8_count(input, &code_point_count);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     ft_size_t allocation_size = code_point_count * 4 + 1;
     char *allocated_buffer = static_cast<char *>(cma_malloc(allocation_size));
     if (!allocated_buffer)
-        return (FT_FAILURE);
-    if (ft_utf8_transform(input, 0, allocated_buffer, allocation_size, case_hook)
-            != FT_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
+    error_code = ft_utf8_transform(input, 0, allocated_buffer, allocation_size, case_hook);
+    if (error_code != FT_ERR_SUCCESS)
     {
         cma_free(allocated_buffer);
-        return (FT_FAILURE);
+        return (error_code);
     }
     *output_pointer = allocated_buffer;
-    return (FT_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t adv_utf8_case_encode(uint32_t code_point, char *buffer, ft_size_t buffer_size,

@@ -656,15 +656,15 @@ int32_t cmp_secure_memzero(void *buffer, ft_size_t length)
 {
     if (buffer == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INVALID_POINTER);
     }
     if (length == 0)
     {
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
 #if defined(_WIN32) || defined(_WIN64)
     SecureZeroMemory(buffer, length);
-    return (0);
+    return (FT_ERR_SUCCESS);
 #else
     volatile unsigned char *volatile byte_pointer;
 
@@ -675,7 +675,7 @@ int32_t cmp_secure_memzero(void *buffer, ft_size_t length)
         byte_pointer = byte_pointer + 1;
         length = length - 1;
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 #endif
 }
 

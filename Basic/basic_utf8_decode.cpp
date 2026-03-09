@@ -1,6 +1,7 @@
 #include <cstddef>
 #include "basic.hpp"
 #include "utf8.hpp"
+#include "../Errno/errno.hpp"
 
 static int32_t ft_utf8_is_trailing_byte(unsigned char byte_value)
 {
@@ -17,30 +18,30 @@ static int32_t ft_utf8_detect_sequence(unsigned char first_byte, ft_size_t *expe
         *expected_length = 1;
         *initial_value = first_byte;
         *minimum_value = 0;
-        return (FT_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if ((first_byte & 0xE0) == 0xC0)
     {
         *expected_length = 2;
         *initial_value = first_byte & 0x1F;
         *minimum_value = 0x80;
-        return (FT_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if ((first_byte & 0xF0) == 0xE0)
     {
         *expected_length = 3;
         *initial_value = first_byte & 0x0F;
         *minimum_value = 0x800;
-        return (FT_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if ((first_byte & 0xF8) == 0xF0)
     {
         *expected_length = 4;
         *initial_value = first_byte & 0x07;
         *minimum_value = 0x10000;
-        return (FT_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
-    return (FT_FAILURE);
+    return (FT_ERR_INVALID_ARGUMENT);
 }
 
 int32_t ft_utf8_next(const char *string, ft_size_t string_length,
@@ -48,35 +49,35 @@ int32_t ft_utf8_next(const char *string, ft_size_t string_length,
         ft_size_t *sequence_length_pointer)
 {
     if (!string || !index_pointer || !code_point_pointer)
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_POINTER);
     if (*index_pointer >= string_length)
-        return (FT_FAILURE);
+        return (FT_ERR_OUT_OF_RANGE);
     ft_size_t current_index = *index_pointer;
     unsigned char first_byte = static_cast<unsigned char>(string[current_index]);
     ft_size_t expected_length = 0;
     uint32_t decoded_value = 0;
     uint32_t minimum_value = 0;
     if (ft_utf8_detect_sequence(first_byte, &expected_length, &decoded_value,
-            &minimum_value) != FT_SUCCESS)
-        return (FT_FAILURE);
+            &minimum_value) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_ARGUMENT);
     if (current_index + expected_length > string_length)
-        return (FT_FAILURE);
+        return (FT_ERR_OUT_OF_RANGE);
     ft_size_t processed_bytes = 1;
     while (processed_bytes < expected_length)
     {
         unsigned char continuation = static_cast<unsigned char>(string[current_index + processed_bytes]);
         if (!ft_utf8_is_trailing_byte(continuation))
-            return (FT_FAILURE);
+            return (FT_ERR_INVALID_ARGUMENT);
         decoded_value = (decoded_value << 6) | (continuation & 0x3F);
         ++processed_bytes;
     }
     if (decoded_value < minimum_value || decoded_value > 0x10FFFF)
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (decoded_value >= 0xD800 && decoded_value <= 0xDFFF)
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_ARGUMENT);
     *code_point_pointer = decoded_value;
     if (sequence_length_pointer)
         *sequence_length_pointer = expected_length;
     *index_pointer = current_index + expected_length;
-    return (FT_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }

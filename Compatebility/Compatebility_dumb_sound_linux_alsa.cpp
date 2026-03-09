@@ -25,7 +25,7 @@ void *ft_sound_device_alsa::sound_thread(void *argument)
             bytes_to_copy = static_cast<ft_size_t>(sound_device->_buffer_size);
         memcpy(sound_device->_buffer,
             sound_device->_current_clip->get_data() + sound_device->_playback_pos,
-            static_cast<size_t>(bytes_to_copy));
+            static_cast<ft_size_t>(bytes_to_copy));
         snd_pcm_writei(sound_device->_pcm_handle, sound_device->_buffer,
             bytes_to_copy / static_cast<ft_size_t>(sound_device->_spec.channels * 2));
         sound_device->_playback_pos += bytes_to_copy;

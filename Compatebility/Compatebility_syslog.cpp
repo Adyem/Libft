@@ -1,9 +1,10 @@
 #include "compatebility_internal.hpp"
+#include "../Errno/errno.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 int32_t cmp_syslog_open(const char *identifier)
 {
     (void)identifier;
-    return (-1);
+    return (FT_ERR_UNSUPPORTED_TYPE);
 }
 
 void cmp_syslog_write(const char *message)
@@ -21,7 +22,7 @@ void cmp_syslog_close(void)
 int32_t cmp_syslog_open(const char *identifier)
 {
     openlog(identifier, LOG_PID | LOG_CONS, LOG_USER);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void cmp_syslog_write(const char *message)

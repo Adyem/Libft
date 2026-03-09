@@ -1,6 +1,7 @@
 #include "thread.hpp"
 #include <cerrno>
 #include "mutex.hpp"
+#include "pthread_internal.hpp"
 #include <new>
 #include "../Template/move.hpp"
 
@@ -230,11 +231,13 @@ void ft_thread::unlock(bool lock_acquired) const
 
 int ft_thread::lock_internal(bool *lock_acquired) const
 {
+    int mutex_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
+    if (!this->_thread_safe_enabled)
         return (FT_ERR_SUCCESS);
-    int mutex_error = this->_state_mutex->lock();
+    mutex_error = pt_mutex_lock_if_not_null(this->_state_mutex);
     if (mutex_error != FT_ERR_SUCCESS)
     {
         if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
@@ -257,7 +260,7 @@ void ft_thread::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    this->_state_mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(this->_state_mutex);
     return ;
 }
 

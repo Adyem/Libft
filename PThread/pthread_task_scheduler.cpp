@@ -2,24 +2,10 @@
 #include "pthread.hpp"
 #include "recursive_mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 #include <utility>
 
-
-static void task_scheduler_abort_lifecycle_error(const char *method_name,
-    const char *reason)
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_task_scheduler::scheduled_task lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
 
 ft_task_scheduler::scheduled_task::scheduled_task()
 {
@@ -54,7 +40,8 @@ ft_task_scheduler::scheduled_task::operator=(const scheduled_task &other)
 {
     if (other._initialised_state != ft_task_scheduler::scheduled_task::_state_initialised)
     {
-        task_scheduler_abort_lifecycle_error(
+        errno_abort_lifecycle(
+            other._initialised_state,
             "scheduled_task::operator=(const scheduled_task &) source",
             "called with source object that is not initialised");
         return (*this);
@@ -72,7 +59,8 @@ ft_task_scheduler::scheduled_task::operator=(scheduled_task &&other)
 {
     if (other._initialised_state != ft_task_scheduler::scheduled_task::_state_initialised)
     {
-        task_scheduler_abort_lifecycle_error(
+        errno_abort_lifecycle(
+            other._initialised_state,
             "scheduled_task::operator=(scheduled_task &&) source",
             "called with source object that is not initialised");
         return (*this);
@@ -89,7 +77,8 @@ int ft_task_scheduler::scheduled_task::initialize()
 {
     if (this->_initialised_state == ft_task_scheduler::scheduled_task::_state_initialised)
     {
-        task_scheduler_abort_lifecycle_error("scheduled_task::initialize",
+        errno_abort_lifecycle(this->_initialised_state,
+            "scheduled_task::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -108,7 +97,8 @@ int ft_task_scheduler::scheduled_task::initialize(const scheduled_task &other)
 {
     if (other._initialised_state != ft_task_scheduler::scheduled_task::_state_initialised)
     {
-        task_scheduler_abort_lifecycle_error(
+        errno_abort_lifecycle(
+            other._initialised_state,
             "scheduled_task::initialize(const scheduled_task &) source",
             "called with source object that is not initialised");
         return (FT_ERR_INVALID_STATE);
@@ -131,7 +121,8 @@ int ft_task_scheduler::scheduled_task::initialize_move(scheduled_task &other)
 {
     if (other._initialised_state != ft_task_scheduler::scheduled_task::_state_initialised)
     {
-        task_scheduler_abort_lifecycle_error(
+        errno_abort_lifecycle(
+            other._initialised_state,
             "scheduled_task::initialize_move(scheduled_task &) source",
             "called with source object that is not initialised");
         return (FT_ERR_INVALID_STATE);
@@ -160,12 +151,11 @@ int ft_task_scheduler::scheduled_task::initialize_move(scheduled_task &other)
 
 int ft_task_scheduler::scheduled_task::destroy()
 {
+    if (this->_initialised_state == ft_task_scheduler::scheduled_task::_state_uninitialised
+        || this->_initialised_state == ft_task_scheduler::scheduled_task::_state_destroyed)
+        return (FT_ERR_SUCCESS);
     if (this->_initialised_state != ft_task_scheduler::scheduled_task::_state_initialised)
-    {
-        task_scheduler_abort_lifecycle_error("scheduled_task::destroy",
-            "called while object is not initialised");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_time = t_monotonic_time_point();
     this->_interval_ms = 0;
     this->_function = ft_function<void()>();
@@ -179,18 +169,9 @@ int ft_task_scheduler::scheduled_task::destroy()
 
 int ft_task_scheduler::scheduled_task::is_initialised() const
 {
-    if (this->_initialised_state != ft_task_scheduler::scheduled_task::_state_initialised)
-    {
-        task_scheduler_abort_lifecycle_error("scheduled_task::is_initialised",
-            "called while object is not initialised");
-        return (0);
-    }
-    return (1);
-}
-
-pt_mutex *ft_scheduled_task_state::mutex_handle() const
-{
-    return (this->_state_mutex);
+    if (this->_initialised_state == ft_task_scheduler::scheduled_task::_state_initialised)
+        return (1);
+    return (0);
 }
 
 ft_scheduled_task_state::ft_scheduled_task_state()
@@ -288,11 +269,11 @@ void ft_scheduled_task_state::unlock(bool lock_acquired) const
 
 int ft_scheduled_task_state::lock_internal(bool *lock_acquired) const
 {
+    int mutex_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_state_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    int mutex_error = this->_state_mutex->lock();
+    mutex_error = pt_mutex_lock_if_not_null(this->_state_mutex);
 
     if (mutex_error != FT_ERR_SUCCESS)
     {
@@ -316,7 +297,8 @@ int ft_scheduled_task_state::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (this->_state_mutex->unlock());
+    (void)pt_mutex_unlock_if_not_null(this->_state_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_scheduled_task_state::teardown_thread_safety()
@@ -331,11 +313,6 @@ void ft_scheduled_task_state::teardown_thread_safety()
         this->_state_mutex = ft_nullptr;
     }
     return ;
-}
-
-pt_mutex *ft_scheduled_task_handle::mutex_handle() const
-{
-    return (this->_state_mutex);
 }
 
 ft_scheduled_task_handle::ft_scheduled_task_handle()
@@ -575,11 +552,11 @@ void ft_scheduled_task_handle::unlock(bool lock_acquired) const
 
 int ft_scheduled_task_handle::lock_internal(bool *lock_acquired) const
 {
+    int mutex_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_state_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    int mutex_error = this->_state_mutex->lock();
+    mutex_error = pt_mutex_lock_if_not_null(this->_state_mutex);
 
     if (mutex_error != FT_ERR_SUCCESS)
     {
@@ -605,7 +582,8 @@ int ft_scheduled_task_handle::unlock_internal(bool lock_acquired) const
     {
         return (FT_ERR_SUCCESS);
     }
-    return (this->_state_mutex->unlock());
+    (void)pt_mutex_unlock_if_not_null(this->_state_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_scheduled_task_handle::teardown_thread_safety()
@@ -623,32 +601,10 @@ void ft_scheduled_task_handle::teardown_thread_safety()
 }
 
 
-void ft_task_scheduler::abort_lifecycle_error(const char *method_name,
-        const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_task_scheduler lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
 void ft_task_scheduler::abort_if_not_initialised(const char *method_name) const
 {
-    if (this->_initialised_state == ft_task_scheduler::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
+    errno_abort_if_uninitialised(this->_initialised_state, method_name);
     return ;
-}
-
-pt_recursive_mutex *ft_task_scheduler::mutex_handle() const
-{
-    this->abort_if_not_initialised("ft_task_scheduler::mutex_handle");
-    return (this->_state_mutex);
 }
 
 ft_task_scheduler::ft_task_scheduler(size_t thread_count)
@@ -677,7 +633,8 @@ int ft_task_scheduler::initialize(size_t thread_count)
 
     if (this->_initialised_state == ft_task_scheduler::_state_initialised)
     {
-        this->abort_lifecycle_error("ft_task_scheduler::initialize",
+        errno_abort_lifecycle(this->_initialised_state,
+            "ft_task_scheduler::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -843,20 +800,18 @@ int ft_task_scheduler::initialize(size_t thread_count)
 
 int ft_task_scheduler::destroy()
 {
+    if (this->_initialised_state == ft_task_scheduler::_state_uninitialised
+        || this->_initialised_state == ft_task_scheduler::_state_destroyed)
+        return (FT_ERR_SUCCESS);
     if (this->_initialised_state != ft_task_scheduler::_state_initialised)
-    {
-        this->abort_lifecycle_error("ft_task_scheduler::destroy",
-            "called while object is not initialised");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_running.store(false);
     this->_queue.shutdown();
     int scheduled_mutex_lock_error = this->_scheduled_mutex.lock();
     if (scheduled_mutex_lock_error == FT_ERR_SUCCESS)
     {
         this->_scheduled_condition.broadcast();
-        int scheduled_mutex_unlock_error = this->_scheduled_mutex.unlock();
-        (void)scheduled_mutex_unlock_error;
+        (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
     }
     (void)scheduled_mutex_lock_error;
     size_t index;
@@ -988,9 +943,7 @@ bool ft_task_scheduler::update_queue_size(long long delta)
     if (queue_metrics_lock_error != FT_ERR_SUCCESS)
         return (false);
     this->_queue_size_counter += delta;
-    int queue_metrics_unlock_error = this->_queue_metrics_mutex.unlock();
-    if (queue_metrics_unlock_error != FT_ERR_SUCCESS)
-        return (false);
+    (void)pt_mutex_unlock_if_not_null(&this->_queue_metrics_mutex);
     return (true);
 }
 
@@ -1001,9 +954,7 @@ bool ft_task_scheduler::update_worker_counters(long long active_delta, long long
         return (false);
     this->_worker_active_counter += active_delta;
     this->_worker_idle_counter += idle_delta;
-    int worker_metrics_unlock_error = this->_worker_metrics_mutex.unlock();
-    if (worker_metrics_unlock_error != FT_ERR_SUCCESS)
-        return (false);
+    (void)pt_mutex_unlock_if_not_null(&this->_worker_metrics_mutex);
     return (true);
 }
 
@@ -1024,9 +975,7 @@ bool ft_task_scheduler::update_worker_total(long long delta)
         else
             this->_worker_total_count -= decrement;
     }
-    int worker_metrics_unlock_error = this->_worker_metrics_mutex.unlock();
-    if (worker_metrics_unlock_error != FT_ERR_SUCCESS)
-        return (false);
+    (void)pt_mutex_unlock_if_not_null(&this->_worker_metrics_mutex);
     return (true);
 }
 
@@ -1122,7 +1071,6 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     bool should_emit_cancel;
     bool scheduler_lock_acquired;
     int scheduled_mutex_error;
-    int scheduled_mutex_unlock_error;
 
     scheduler_lock_acquired = false;
     int scheduler_lock_error = this->lock_internal(&scheduler_lock_acquired);
@@ -1169,12 +1117,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         size = this->_scheduled.size();
         if (ft_vector<scheduled_task>::last_operation_error() != FT_ERR_SUCCESS)
         {
-            scheduled_mutex_unlock_error = this->_scheduled_mutex.unlock();
-            if (scheduled_mutex_unlock_error != FT_ERR_SUCCESS)
-            {
-                this->unlock_internal(scheduler_lock_acquired);
-                return (false);
-            }
+            (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
             this->unlock_internal(scheduler_lock_acquired);
             return (false);
         }
@@ -1187,12 +1130,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
             cancelled_label = this->_scheduled[index]._label;
                 if (!this->scheduled_remove_index(index))
                 {
-                    scheduled_mutex_unlock_error = this->_scheduled_mutex.unlock();
-                    if (scheduled_mutex_unlock_error != FT_ERR_SUCCESS)
-                    {
-                        this->unlock_internal(scheduler_lock_acquired);
-                        return (false);
-                    }
+                    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                     this->unlock_internal(scheduler_lock_acquired);
                     return (false);
                 }
@@ -1202,12 +1140,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         }
         index++;
     }
-    scheduled_mutex_unlock_error = this->_scheduled_mutex.unlock();
-    if (scheduled_mutex_unlock_error != FT_ERR_SUCCESS)
-    {
-        this->unlock_internal(scheduler_lock_acquired);
-        return (false);
-    }
+    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
     if (this->_scheduled_condition.broadcast() != 0)
     {
         this->unlock_internal(scheduler_lock_acquired);
@@ -1242,13 +1175,13 @@ void ft_task_scheduler::timer_loop()
 
             if (!this->_running.load())
             {
-                this->_scheduled_mutex.unlock();
+                (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 return ;
             }
             scheduled_count = this->_scheduled.size();
             if (ft_vector<scheduled_task>::last_operation_error() != FT_ERR_SUCCESS)
             {
-                this->_scheduled_mutex.unlock();
+                (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 return ;
             }
             has_entries = scheduled_count > 0;
@@ -1256,7 +1189,7 @@ void ft_task_scheduler::timer_loop()
             {
                 if (this->_scheduled_condition.wait(this->_scheduled_mutex) != 0)
                 {
-                    this->_scheduled_mutex.unlock();
+                    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                     return ;
                 }
                 continue;
@@ -1281,7 +1214,7 @@ void ft_task_scheduler::timer_loop()
                 if (clock_gettime(CLOCK_REALTIME, &wake_time) != 0)
 #endif
                 {
-                    this->_scheduled_mutex.unlock();
+                    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                     return ;
                 }
                 seconds = wait_milliseconds / 1000;
@@ -1301,8 +1234,7 @@ void ft_task_scheduler::timer_loop()
                     continue;
                 if (wait_result != ETIMEDOUT)
                 {
-                    if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-                        return ;
+                    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                     return ;
                 }
             }
@@ -1319,8 +1251,7 @@ void ft_task_scheduler::timer_loop()
             scheduled_count = this->_scheduled.size();
             if (ft_vector<scheduled_task>::last_operation_error() != FT_ERR_SUCCESS)
             {
-                if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-                    return ;
+                (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 return ;
             }
             if (scheduled_count == 0)
@@ -1333,8 +1264,7 @@ void ft_task_scheduler::timer_loop()
             if (!pop_success)
             {
                 int scheduled_error = ft_vector<scheduled_task>::last_operation_error();
-                if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-                    return ;
+                (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 (void)scheduled_error;
                 return ;
             }
@@ -1352,8 +1282,7 @@ void ft_task_scheduler::timer_loop()
                 ft_function<void()> original_function;
 
                 original_function = ft_move(expired_task._function);
-                if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-                    return ;
+                (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED,
                         expired_task._trace_id, expired_task._parent_id,
                         expired_task._label, true);
@@ -1412,8 +1341,7 @@ void ft_task_scheduler::timer_loop()
                 ft_function<void()> original_function;
 
                 original_function = ft_move(expired_task._function);
-                if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-                    return ;
+                (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 if (original_function)
                     original_function();
                 if (!this->_running.load())
@@ -1446,8 +1374,7 @@ void ft_task_scheduler::timer_loop()
                 }
                 continue;
             }
-            if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-                return ;
+            (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
             queue_entry._trace_id = expired_task._trace_id;
             queue_entry._parent_id = expired_task._parent_id;
             queue_entry._label = expired_task._label;
@@ -1516,8 +1443,7 @@ void ft_task_scheduler::timer_loop()
             }
             continue;
         }
-        if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-            return ;
+        (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
     }
     return ;
 }
@@ -1543,8 +1469,7 @@ bool ft_task_scheduler::capture_metrics(ft_task_trace_event &event) const
     event.queue_depth = this->_queue_size_counter;
     if (queue_locked)
     {
-        if (this->_queue_metrics_mutex.unlock() != FT_ERR_SUCCESS)
-            return (false);
+        (void)pt_mutex_unlock_if_not_null(&this->_queue_metrics_mutex);
     }
     bool scheduled_locked;
     int scheduled_lock_error;
@@ -1563,8 +1488,7 @@ bool ft_task_scheduler::capture_metrics(ft_task_trace_event &event) const
     event.scheduled_depth = this->_scheduled_size_counter;
     if (scheduled_locked)
     {
-        if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-            return (false);
+        (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
     }
     bool worker_locked;
     int worker_lock_error;
@@ -1584,8 +1508,7 @@ bool ft_task_scheduler::capture_metrics(ft_task_trace_event &event) const
     event.worker_idle_count = this->_worker_idle_counter;
     if (worker_locked)
     {
-        if (this->_worker_metrics_mutex.unlock() != FT_ERR_SUCCESS)
-            return (false);
+        (void)pt_mutex_unlock_if_not_null(&this->_worker_metrics_mutex);
     }
     return (true);
 }
@@ -1632,8 +1555,7 @@ int ft_task_scheduler::get_queue_size(long long *queue_size) const
     if (this->_queue_metrics_mutex.lock() != FT_ERR_SUCCESS)
         return (FT_ERR_SYSTEM);
     *queue_size = this->_queue_size_counter;
-    if (this->_queue_metrics_mutex.unlock() != FT_ERR_SUCCESS)
-        return (FT_ERR_SYSTEM);
+    (void)pt_mutex_unlock_if_not_null(&this->_queue_metrics_mutex);
     return (FT_ERR_SUCCESS);
 }
 
@@ -1654,8 +1576,7 @@ int ft_task_scheduler::get_scheduled_task_count(long long *scheduled_count) cons
     if (this->_scheduled_mutex.lock() != FT_ERR_SUCCESS)
         return (FT_ERR_SYSTEM);
     *scheduled_count = this->_scheduled_size_counter;
-    if (this->_scheduled_mutex.unlock() != FT_ERR_SUCCESS)
-        return (FT_ERR_SYSTEM);
+    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
     return (FT_ERR_SUCCESS);
 }
 
@@ -1676,8 +1597,7 @@ int ft_task_scheduler::get_worker_active_count(long long *active_count) const
     if (this->_worker_metrics_mutex.lock() != FT_ERR_SUCCESS)
         return (FT_ERR_SYSTEM);
     *active_count = this->_worker_active_counter;
-    if (this->_worker_metrics_mutex.unlock() != FT_ERR_SUCCESS)
-        return (FT_ERR_SYSTEM);
+    (void)pt_mutex_unlock_if_not_null(&this->_worker_metrics_mutex);
     return (FT_ERR_SUCCESS);
 }
 
@@ -1698,8 +1618,7 @@ int ft_task_scheduler::get_worker_idle_count(long long *idle_count) const
     if (this->_worker_metrics_mutex.lock() != FT_ERR_SUCCESS)
         return (FT_ERR_SYSTEM);
     *idle_count = this->_worker_idle_counter;
-    if (this->_worker_metrics_mutex.unlock() != FT_ERR_SUCCESS)
-        return (FT_ERR_SYSTEM);
+    (void)pt_mutex_unlock_if_not_null(&this->_worker_metrics_mutex);
     return (FT_ERR_SUCCESS);
 }
 
@@ -1720,8 +1639,7 @@ int ft_task_scheduler::get_worker_total_count(size_t *total_count) const
     if (this->_worker_metrics_mutex.lock() != FT_ERR_SUCCESS)
         return (FT_ERR_SYSTEM);
     *total_count = this->_worker_total_count;
-    if (this->_worker_metrics_mutex.unlock() != FT_ERR_SUCCESS)
-        return (FT_ERR_SYSTEM);
+    (void)pt_mutex_unlock_if_not_null(&this->_worker_metrics_mutex);
     return (FT_ERR_SUCCESS);
 }
 
@@ -1802,16 +1720,12 @@ int ft_task_scheduler::unlock(bool lock_acquired) const
 
 int ft_task_scheduler::lock_internal(bool *lock_acquired) const
 {
+    int lock_result;
+
     this->abort_if_not_initialised("ft_task_scheduler::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_state_mutex == ft_nullptr)
-    {
-        return (FT_ERR_SUCCESS);
-    }
-    int lock_result;
-
-    lock_result = this->_state_mutex->lock();
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_state_mutex);
     if (lock_result != FT_ERR_SUCCESS)
     {
         return (lock_result);
@@ -1828,7 +1742,8 @@ int ft_task_scheduler::unlock_internal(bool lock_acquired) const
     {
         return (FT_ERR_SUCCESS);
     }
-    return (this->_state_mutex->unlock());
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_state_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_task_scheduler::teardown_thread_safety()

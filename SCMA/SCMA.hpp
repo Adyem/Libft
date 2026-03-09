@@ -9,8 +9,6 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/limits.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 
 
 struct scma_handle
@@ -71,7 +69,7 @@ class scma_handle_accessor
     private:
  #endif
         scma_handle _handle;
-        uint8_t _initialized_state;
+        uint8_t _initialised_state;
         static thread_local uint32_t _last_error;
         uint32_t    set_error(uint32_t error_code) const;
 
@@ -123,14 +121,14 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(void)
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_initialized_state = FT_CLASS_STATE_UNINITIALISED;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     return ;
 }
 
 template <typename TValue>
 inline scma_handle_accessor<TValue>::~scma_handle_accessor(void)
 {
-    if (this->_initialized_state == FT_CLASS_STATE_INITIALISED)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         uint32_t previous_error;
 
@@ -146,22 +144,22 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(
         const scma_handle_accessor &other)
 {
     this->_handle = scma_invalid_handle();
-    this->_initialized_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialized_state,
+        errno_abort_lifecycle(other._initialised_state,
             "scma_handle_accessor::copy_constructor",
             "source object is uninitialised");
         return ;
     }
-    if (other._initialized_state == FT_CLASS_STATE_DESTROYED)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
-        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(other.get_error());
         return ;
     }
     this->_handle = other._handle;
-    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(other.get_error());
     return ;
 }
@@ -171,25 +169,25 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(
         scma_handle_accessor &&other)
 {
     this->_handle = scma_invalid_handle();
-    this->_initialized_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialized_state,
+        errno_abort_lifecycle(other._initialised_state,
             "scma_handle_accessor::move_constructor",
             "source object is uninitialised");
         return ;
     }
-    if (other._initialized_state == FT_CLASS_STATE_DESTROYED)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
-        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(other.get_error());
         return ;
     }
     this->_handle = other._handle;
-    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(other.get_error());
     other._handle = scma_invalid_handle();
-    other._initialized_state = FT_CLASS_STATE_DESTROYED;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -198,9 +196,9 @@ inline uint32_t    scma_handle_accessor<TValue>::initialize(void)
 {
     int32_t lock_result;
 
-    if (this->_initialized_state == FT_CLASS_STATE_INITIALISED)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialized_state,
+        errno_abort_lifecycle(this->_initialised_state,
             "scma_handle_accessor::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
@@ -208,13 +206,13 @@ inline uint32_t    scma_handle_accessor<TValue>::initialize(void)
     lock_result = scma_mutex_lock();
     if (lock_result != FT_ERR_SUCCESS)
     {
-        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     (void)scma_mutex_unlock();
     return (FT_ERR_SUCCESS);
@@ -248,16 +246,16 @@ inline uint32_t    scma_handle_accessor<TValue>::move(
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (other._initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialized_state,
+        errno_abort_lifecycle(other._initialised_state,
             "scma_handle_accessor::move",
             "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     source_error = other.get_error();
-    if (this->_initialized_state == FT_CLASS_STATE_INITIALISED)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         destroy_result = this->destroy();
         if (destroy_result != FT_ERR_SUCCESS)
@@ -267,16 +265,16 @@ inline uint32_t    scma_handle_accessor<TValue>::move(
         }
     }
     this->_handle = scma_invalid_handle();
-    if (other._initialized_state == FT_CLASS_STATE_DESTROYED)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
-        this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(source_error);
         return (FT_ERR_SUCCESS);
     }
     this->_handle = other._handle;
-    this->_initialized_state = FT_CLASS_STATE_INITIALISED;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._handle = scma_invalid_handle();
-    other._initialized_state = FT_CLASS_STATE_DESTROYED;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
@@ -284,7 +282,7 @@ inline uint32_t    scma_handle_accessor<TValue>::move(
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::destroy(void)
 {
-    if (this->_initialized_state != FT_CLASS_STATE_INITIALISED)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
@@ -296,7 +294,7 @@ inline int32_t    scma_handle_accessor<TValue>::destroy(void)
     }
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_initialized_state = FT_CLASS_STATE_DESTROYED;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(FT_ERR_SUCCESS);
     (void)scma_mutex_unlock();
     return (this->get_error());
@@ -307,7 +305,7 @@ inline int32_t    scma_handle_accessor<TValue>::enable_thread_safety(void)
 {
     int32_t operation_error;
 
-    errno_abort_if_uninitialised(this->_initialized_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "scma_handle_accessor::enable_thread_safety");
     operation_error = scma_enable_thread_safety();
     this->set_error(static_cast<uint32_t>(operation_error));
@@ -319,7 +317,7 @@ inline int32_t    scma_handle_accessor<TValue>::disable_thread_safety(void)
 {
     int32_t operation_error;
 
-    errno_abort_if_uninitialised(this->_initialized_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "scma_handle_accessor::disable_thread_safety");
     operation_error = scma_disable_thread_safety();
     this->set_error(static_cast<uint32_t>(operation_error));
@@ -331,7 +329,7 @@ inline ft_bool    scma_handle_accessor<TValue>::is_thread_safe(void) const
 {
     ft_bool is_enabled;
 
-    errno_abort_if_uninitialised(this->_initialized_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "scma_handle_accessor::is_thread_safe");
     is_enabled = scma_is_thread_safe_enabled();
     this->set_error(FT_ERR_SUCCESS);
@@ -341,7 +339,7 @@ inline ft_bool    scma_handle_accessor<TValue>::is_thread_safe(void) const
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::is_initialised(void) const
 {
-    errno_abort_if_uninitialised(this->_initialized_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "scma_handle_accessor::is_initialised");
     this->set_error(FT_ERR_SUCCESS);
     return (1);
@@ -350,7 +348,7 @@ inline int32_t    scma_handle_accessor<TValue>::is_initialised(void) const
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::bind(scma_handle handle)
 {
-    errno_abort_if_uninitialised(this->_initialized_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "scma_handle_accessor::bind");
     if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
@@ -374,7 +372,7 @@ inline int32_t    scma_handle_accessor<TValue>::is_bound(void) const
 {
     int32_t is_bound_result;
 
-    errno_abort_if_uninitialised(this->_initialized_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "scma_handle_accessor::is_bound");
     is_bound_result = 0;
     if (scma_mutex_lock() != FT_ERR_SUCCESS)
@@ -398,7 +396,7 @@ inline scma_handle    scma_handle_accessor<TValue>::get_handle(void) const
 {
     scma_handle handle;
 
-    errno_abort_if_uninitialised(this->_initialized_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "scma_handle_accessor::get_handle");
     handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
@@ -776,9 +774,9 @@ inline uint32_t    scma_handle_accessor<TValue>::set_error(uint32_t error_code) 
 template <typename TValue>
 inline uint32_t    scma_handle_accessor<TValue>::get_error(void) const
 {
-    if (this->_initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(this->_initialized_state,
+        errno_abort_lifecycle(this->_initialised_state,
             "scma_handle_accessor::get_error",
             "called while object is uninitialised");
     }
@@ -788,9 +786,9 @@ inline uint32_t    scma_handle_accessor<TValue>::get_error(void) const
 template <typename TValue>
 inline const char *scma_handle_accessor<TValue>::get_error_str(void) const
 {
-    if (this->_initialized_state == FT_CLASS_STATE_UNINITIALISED)
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(this->_initialized_state,
+        errno_abort_lifecycle(this->_initialised_state,
             "scma_handle_accessor::get_error_str",
             "called while object is uninitialised");
     }

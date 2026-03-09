@@ -1,4 +1,5 @@
 #include "basic.hpp"
+#include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
 static void zero_buffer(void *buffer, ft_size_t buffer_size)
@@ -20,16 +21,16 @@ int32_t ft_memmove_s(void *destination, ft_size_t destination_size, const void *
         ft_size_t number_of_bytes)
 {
     if (number_of_bytes == 0)
-        return (0);
+        return (FT_ERR_SUCCESS);
     if (destination == ft_nullptr || source == ft_nullptr)
     {
         zero_buffer(destination, destination_size);
-        return (-1);
+        return (FT_ERR_INVALID_POINTER);
     }
     if (destination_size < number_of_bytes)
     {
         zero_buffer(destination, destination_size);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if ((static_cast<unsigned char *>(destination)
                 < static_cast<const unsigned char *>(source) + number_of_bytes)
@@ -37,8 +38,8 @@ int32_t ft_memmove_s(void *destination, ft_size_t destination_size, const void *
             < static_cast<unsigned char *>(destination) + number_of_bytes))
     {
         zero_buffer(destination, destination_size);
-        return (-1);
+        return (FT_ERR_OVERLAP);
     }
     ft_memmove(destination, source, number_of_bytes);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }

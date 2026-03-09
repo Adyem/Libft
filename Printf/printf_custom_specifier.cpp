@@ -8,16 +8,6 @@
 
 static pt_recursive_mutex *g_pf_custom_specifiers_mutex = ft_nullptr;
 
-static int32_t pf_custom_specifiers_lock(void)
-{
-    return (pt_recursive_mutex_lock_if_not_null(g_pf_custom_specifiers_mutex));
-}
-
-static int32_t pf_custom_specifiers_unlock(void)
-{
-    return (pt_recursive_mutex_unlock_if_not_null(g_pf_custom_specifiers_mutex));
-}
-
 int32_t pf_enable_thread_safety(void)
 {
     pt_recursive_mutex *mutex_pointer;
@@ -74,7 +64,7 @@ int32_t pf_register_custom_specifier(char specifier, t_pf_custom_formatter handl
     int32_t                     lock_error;
     int32_t                     result;
 
-    lock_error = pf_custom_specifiers_lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_pf_custom_specifiers_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     result = FT_ERR_SUCCESS;
@@ -93,7 +83,7 @@ int32_t pf_register_custom_specifier(char specifier, t_pf_custom_formatter handl
     entry->handler = handler;
     entry->context = context;
 unlock:
-    (void)pf_custom_specifiers_unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_pf_custom_specifiers_mutex);
     return (result);
 }
 
@@ -102,12 +92,12 @@ int32_t pf_unregister_custom_specifier(char specifier)
     uint8_t index;
     int32_t       lock_error;
 
-    lock_error = pf_custom_specifiers_lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_pf_custom_specifiers_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     index = static_cast<uint8_t>(specifier);
     pf_clear_entry(g_pf_custom_specifiers[index]);
-    (void)pf_custom_specifiers_unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_pf_custom_specifiers_mutex);
     return (FT_ERR_SUCCESS);
 }
 
@@ -116,7 +106,7 @@ int32_t pf_try_format_custom_specifier(char specifier, va_list *argument_list, f
     uint8_t         index;
     t_pf_custom_formatter handler;
     void                  *context;
-    int32_t                   error_code;
+    int32_t                   callback_error;
     int32_t                   lock_error;
     int32_t               initialization_error;
 
@@ -133,28 +123,25 @@ int32_t pf_try_format_custom_specifier(char specifier, va_list *argument_list, f
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
     index = static_cast<uint8_t>(specifier);
-    lock_error = pf_custom_specifiers_lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_pf_custom_specifiers_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     handler = g_pf_custom_specifiers[index].handler;
     context = g_pf_custom_specifiers[index].context;
-    (void)pf_custom_specifiers_unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_pf_custom_specifiers_mutex);
     if (handler == ft_nullptr)
         return (FT_ERR_SUCCESS);
     output.clear();
-    int32_t string_error = pf_string_pop_last_error(output);
+    int32_t string_error = ft_string::get_error();
     if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     *handled = FT_TRUE;
-    if (handler(argument_list, output, context) != 0)
+    callback_error = handler(argument_list, output, context);
+    if (callback_error != FT_ERR_SUCCESS)
     {
-        string_error = pf_string_pop_last_error(output);
-        error_code = string_error;
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_INTERNAL;
-        return (error_code);
+        return (callback_error);
     }
-    string_error = pf_string_pop_last_error(output);
+    string_error = ft_string::get_error();
     if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     return (FT_ERR_SUCCESS);

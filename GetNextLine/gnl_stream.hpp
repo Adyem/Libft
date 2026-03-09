@@ -56,9 +56,6 @@ class gnl_stream
         void reset() noexcept;
         int64_t read(char *buffer, ft_size_t max_size) noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 #endif

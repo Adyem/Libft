@@ -9,7 +9,11 @@
 
 class pt_mutex
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         mutable std::atomic<pt_thread_id_type>    _owner;
         mutable std::atomic<bool>         _lock;
         mutable std::mutex                *_native_mutex;
@@ -24,9 +28,6 @@ class pt_mutex
         int     lock_internal(bool *lock_acquired) const;
         int     unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
-        void    abort_lifecycle_error(const char *method_name,
-                    const char *reason) const;
-        void    abort_if_not_initialised(const char *method_name) const;
 
         pt_mutex(const pt_mutex&) = delete;
         pt_mutex& operator=(const pt_mutex&) = delete;

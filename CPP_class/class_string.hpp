@@ -5,6 +5,7 @@
 #include <climits>
 #include <cstdint>
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Basic/basic.hpp"
 
@@ -21,21 +22,16 @@ class ft_string
         mutable pt_recursive_mutex *_mutex;
         mutable uint8_t            _initialised_state;
         int32_t                    _operation_error;
-        static const uint8_t       _state_uninitialised = 0;
-        static const uint8_t       _state_destroyed = 1;
-        static const uint8_t       _state_initialised = 2;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
+        static thread_local uint8_t _last_initialised_state;
 
-        void        abort_lifecycle_error(const char *method_name,
-                    const char *reason) const noexcept;
-        void        abort_if_not_initialised(const char *method_name) const noexcept;
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         friend class ft_string_proxy;
 
 
         int32_t     enable_thread_safety(void) noexcept;
         int32_t     disable_thread_safety(void) noexcept;
-        bool        is_thread_safe(void) const noexcept;
+        ft_bool        is_thread_safe(void) const noexcept;
 
         int32_t     resize(ft_size_t new_capacity) noexcept;
         static void sleep_backoff() noexcept;
@@ -65,18 +61,18 @@ class ft_string
         ft_string &operator+=(const char *string) noexcept;
         ft_string &operator+=(char character) noexcept;
 
-        bool        operator==(const ft_string &other) const noexcept;
-        bool        operator==(const char *string) const noexcept;
-        bool        operator!=(const ft_string &other) const noexcept;
-        bool        operator!=(const char *string) const noexcept;
+        ft_bool        operator==(const ft_string &other) const noexcept;
+        ft_bool        operator==(const char *string) const noexcept;
+        ft_bool        operator!=(const ft_string &other) const noexcept;
+        ft_bool        operator!=(const char *string) const noexcept;
         char        operator[](ft_size_t index) const noexcept;
         operator const char*() const noexcept;
 
-        int32_t initialize() noexcept;
-        int32_t initialize(const char *initial_string) noexcept;
-        int32_t initialize(ft_size_t count, char character) noexcept;
-        int32_t initialize(const ft_string &other) noexcept;
-        int32_t initialize(ft_string &&other) noexcept;
+        uint32_t initialize() noexcept;
+        uint32_t initialize(const char *initial_string) noexcept;
+        uint32_t initialize(ft_size_t count, char character) noexcept;
+        uint32_t initialize(const ft_string &other) noexcept;
+        uint32_t initialize(ft_string &&other) noexcept;
         int32_t destroy() noexcept;
 
         int32_t      append(char character) noexcept;
@@ -92,8 +88,8 @@ class ft_string
         const char  *data() const noexcept;
         char*       print() noexcept;
         ft_size_t   size() const noexcept;
-        bool        empty() const noexcept;
-        bool        is_initialised() const noexcept;
+        ft_bool        empty() const noexcept;
+        ft_bool        is_initialised() const noexcept;
         int32_t     move(ft_string& other) noexcept;
         int32_t     erase(ft_size_t index, ft_size_t count) noexcept;
         int32_t     push_back(char character) noexcept;
@@ -104,17 +100,18 @@ class ft_string
         ft_string   substr(ft_size_t index, ft_size_t count = npos) const noexcept;
 
         static const ft_size_t npos = static_cast<ft_size_t>(-1);
-        static int32_t     get_error() noexcept;
+        static uint32_t get_error() noexcept;
         static const char  *get_error_str() noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 class ft_string_proxy
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         ft_string   _value;
         int32_t     _last_error;
 
@@ -126,8 +123,8 @@ class ft_string_proxy
         ft_string_proxy(ft_string_proxy &&other) noexcept;
         ~ft_string_proxy();
 
-        ft_string_proxy &operator=(const ft_string_proxy &other) noexcept;
-        ft_string_proxy &operator=(ft_string_proxy &&other) noexcept;
+        ft_string_proxy &operator=(const ft_string_proxy &other) noexcept = delete;
+        ft_string_proxy &operator=(ft_string_proxy &&other) noexcept = delete;
 
         ft_string_proxy operator+(const ft_string &right) const noexcept;
         ft_string_proxy operator+(const char *right) const noexcept;
@@ -145,7 +142,7 @@ ft_string_proxy operator+(char left, const ft_string &right) noexcept;
 ft_string_proxy operator+(const ft_string_proxy &left, const ft_string &right) noexcept;
 ft_string_proxy operator+(const ft_string_proxy &left, const char *right) noexcept;
 ft_string_proxy operator+(const ft_string_proxy &left, char right) noexcept;
-bool        operator==(const char *left, const ft_string &right) noexcept;
-bool        operator!=(const char *left, const ft_string &right) noexcept;
+ft_bool        operator==(const char *left, const ft_string &right) noexcept;
+ft_bool        operator!=(const char *left, const ft_string &right) noexcept;
 
 #endif

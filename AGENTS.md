@@ -36,8 +36,14 @@ Template member function bodies must not be defined inside the class declaration
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a default constructor and destructor. Do not use = default; explicitly define the bodies.
 All classes must define copy and move constructors.
+Specialized constructors are forbidden by default; keep only default, copy, and move constructors unless a module-specific exception is explicitly documented.
+When a specialized construction flow is required by exception, route fallible setup through `initialize(...)` instead of performing fallible work directly in that constructor body.
 All classes must delete copy and move assignment operators by default. Only add assignment operators when a class explicitly needs assignment semantics and document that requirement. Operator overloading alone does not justify adding assignment operators.
 Lifecycle classes must expose a dedicated explicit move helper named exactly `move` (for example `uint32_t move(ft_string& other) noexcept`) and keep this name consistent across classes.
+
+Assignment operator exceptions:
+- `ft_string`: copy/move assignment is allowed for required string value semantics used by stream/conversion APIs.
+- `ft_big_number`: copy/move assignment is allowed for required arithmetic/proxy value semantics across the module.
 
 ### Class Skeleton Baseline
 
@@ -104,6 +110,9 @@ Lifecycle scope:
 - Lifecycle enforcement is mandatory for all lifecycle classes except explicitly exempt categories listed below.
 - Explicit exemptions:
   - Proxy classes are exempt from lifecycle and thread-safety ownership requirements; proxies must be designed so proxy operations themselves do not fail unexpectedly, while underlying class operations may fail and report errors explicitly.
+    - Proxy classes are not required to own a mutex, expose lifecycle helpers (`initialize(...)`, `destroy()`, `move(...)`), or follow lifecycle state-field shape requirements.
+    - Proxy classes are allowed to remain lightweight failure-propagation carriers for operator chains; their purpose is to forward/report underlying errors without introducing additional meaningful failure modes.
+    - Prefer minimal, low-dependency proxy implementations that avoid extra ownership layers and avoid adding synchronization/lifecycle machinery unless a proxy-specific contract explicitly requires it.
     - A class is considered a proxy class only when its class name explicitly contains `proxy`.
   - `ft_nullptr`/`nullptr` stand-in utility classes are exempt from lifecycle enforcement and optional thread-safety helper requirements because they have no meaningful failure state and must complete their local task without failure.
   - `ft_nullptr` must explicitly behave as a null-pointer literal stand-in: assigning it to any pointer type must set that pointer value to `0` (null), equivalent to `nullptr`.
@@ -229,6 +238,25 @@ Dedicated testing-only mutex exposure helpers are not required. Prefer the `Test
 
 - Proxy classes are exempt only as documented in `Lifecycle scope`.
 - `ft_nullptr`/`nullptr` stand-ins are exempt only as documented in `Lifecycle scope`.
+- `pt_mutex` and `pt_recursive_mutex` are exempt from the class-owned mutex shape rule that requires class mutex fields to be `pt_recursive_mutex *`, because they are the core mutex primitives and must remain thread-safe by default without extra optional thread-safety layers.
+
+### PThread low-level compatibility exemptions
+
+- The low-level `PThread` module is a compatibility/primitive layer and is exempt from the fixed-width replacement rule for C/POSIX-facing ABI types. In this module, using `int`, `bool`, `size_t`, `long`, `unsigned long long`, and related native types is allowed when required for ABI compatibility or existing public API stability.
+- In the `PThread` module, C-style return conventions (`0`/non-zero or `-1`) are allowed for compatibility wrappers and legacy synchronization/task-scheduler helpers; the strict `FT_ERR_*`-only return contract applies to new higher-level modules unless a `PThread` API is explicitly migrated.
+- Legacy public symbol names in `PThread` (including existing non-snake-case method names) are exempt from the snake_case naming rule when renaming would break compatibility.
+- `pt_condition_variable`, `ft_thread`, `ft_task_scheduler`, and related `PThread` internals are exempt from the class-owned mutex shape rule requiring `pt_recursive_mutex *` fields.
+- `PThread/lock_guard.hpp`, `PThread/unique_lock.hpp`, and `PThread/pthread_errno_guard.hpp` are compatibility utilities and are exempt from the "no RAII lock guards" and deprecated error-stack removal requirements while they remain part of supported API surface.
+- Unlock result handling rules in `PThread` low-level primitives may follow existing implementation semantics where platform/system unlock failures are explicitly surfaced; the strict "always ignore unlock return values" rule applies to higher-level module call sites using `pt_*_unlock_if_not_null(...)`.
+- Lifecycle class-skeleton baseline requirements are relaxed for existing `PThread` compatibility classes: legacy assignment operators, legacy move helper names (for example `initialize_move(...)`), and existing constructor sets are allowed where required to preserve ABI/API behavior.
+- Existing `PThread` lifecycle state constants defined inside classes are allowed and do not need to be migrated to shared Errno lifecycle constants unless that class is being actively refactored.
+
+### Compatebility low-level platform exemptions
+
+- In the `Compatebility` module, platform-mandated callback/signature types may use native ABI forms where required by OS APIs (for example signal-handler signatures using `int`).
+- In the `Compatebility` module, the following low-level service/syslog compatibility wrappers may keep documented C/POSIX-style status returns (`0`, `1`, `-1`) for compatibility with existing call chains: `cmp_service_set_working_directory`, `cmp_service_detach_process`, `cmp_service_release_console`, `cmp_service_install_signal_handlers`, and `cmp_syslog_open`.
+- `cmp_secure_memzero` is exempt from the strict `FT_ERR_*` return contract and may keep `0`/`-1` compatibility status semantics.
+- Platform sound backend classes (`ft_sound_device_alsa`, `ft_sound_device_coreaudio`, `ft_sound_device_win32`) are exempt from lifecycle class-skeleton enforcement (`_initialised_state`, `initialize(...)`, `destroy()`, `move(...)`, and class-owned mutex helper shape) while they remain thin backend adapters behind the `DUMB` sound-device abstraction.
 
 `Template/pair.hpp` intentionally provides a minimal `Pair` template that exposes `key`/`value`
 directly for compatibility with the rest of the library. That class is exempt from the mutex requirements
@@ -323,6 +351,7 @@ When a class maintains a `_last_error` field, treat it as thread-local diagnosti
 - Declare `_last_error` as `static thread_local uint32_t _last_error` so each thread has its own copy while the class exposes a single helper suite.
 - `_last_error` must be initialised to `0` (`FT_ERR_SUCCESS`) once at thread/program startup for that thread-local instance, not per object instance.
 - Constructors and destructors must never modify `_last_error`.
+  - Exception for strict preservation in constructor/destructor internals: if constructor/destructor code must invoke helper paths that may update `_last_error`, it is allowed to preserve and restore the previously observed `_last_error` value so ctor/dtor execution does not produce a net externally visible `_last_error` modification.
 - Classes that expose `_last_error` behavior must provide `uint32_t set_error(uint32_t error_code)`, `get_error()`, and `get_error_str()` helpers. `set_error(uint32_t error_code)` is the only writer for `_last_error`.
 - `set_error(uint32_t error_code)` must be private in production builds; test builds may access it only through `LIBFT_TEST_BUILD` private-section exposure.
 - `get_error()` and `get_error_str()` are strictly read-only and must never modify `_last_error`.

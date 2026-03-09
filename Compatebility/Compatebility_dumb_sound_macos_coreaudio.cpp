@@ -23,7 +23,7 @@ void ft_sound_device_coreaudio::audio_queue_callback(void *user_data,
             bytes_to_copy = static_cast<ft_size_t>(audio_buffer->mAudioDataBytesCapacity);
         memcpy(audio_buffer->mAudioData,
             sound_device->_current_clip->get_data() + sound_device->_playback_pos,
-            static_cast<size_t>(bytes_to_copy));
+            static_cast<ft_size_t>(bytes_to_copy));
         audio_buffer->mAudioDataByteSize = static_cast<uint32_t>(bytes_to_copy);
         sound_device->_playback_pos += bytes_to_copy;
         AudioQueueEnqueueBuffer(audio_queue, audio_buffer, 0, ft_nullptr);

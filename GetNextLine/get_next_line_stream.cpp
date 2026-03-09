@@ -2,19 +2,18 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include <errno.h>
 #include <new>
-#include <unistd.h>
-#ifdef _WIN32
-# include <winsock2.h>
-#endif
 
 static int64_t gnl_stream_default_fd_read(void *user_data, char *buffer, ft_size_t max_size,
     int32_t *error_code)
 {
     int32_t file_descriptor;
+    int64_t read_result;
+    int32_t read_error;
 
     file_descriptor = -1;
+    read_result = -1;
+    read_error = FT_ERR_SUCCESS;
     if (error_code)
         *error_code = FT_ERR_SUCCESS;
     if (user_data)
@@ -25,37 +24,12 @@ static int64_t gnl_stream_default_fd_read(void *user_data, char *buffer, ft_size
             *error_code = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    int64_t read_result;
-
-    read_result = read(file_descriptor, buffer, max_size);
-    if (read_result < 0)
+    read_error = cmp_read(file_descriptor, buffer, max_size, &read_result);
+    if (read_error != FT_ERR_SUCCESS)
     {
-#ifdef _WIN32
-        int32_t last_error;
-
-        last_error = WSAGetLastError();
-        if (last_error != 0)
-        {
-            if (error_code)
-                *error_code = cmp_map_system_error_to_ft(last_error);
-        }
-        else
-        {
-            if (error_code)
-                *error_code = FT_ERR_IO;
-        }
-#else
-        if (errno != 0)
-        {
-            if (error_code)
-                *error_code = cmp_map_system_error_to_ft(errno);
-        }
-        else
-        {
-            if (error_code)
-                *error_code = FT_ERR_IO;
-        }
-#endif
+        if (error_code)
+            *error_code = read_error;
+        return (-1);
     }
     return (read_result);
 }
@@ -178,12 +152,6 @@ gnl_stream::~gnl_stream() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
-    if (this->_mutex != ft_nullptr)
-    {
-        (void)this->_mutex->destroy();
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
-    }
     return ;
 }
 
@@ -221,7 +189,15 @@ uint32_t gnl_stream::move(gnl_stream &other) noexcept
     {
         destroy_error = this->destroy();
         if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->_read_callback = ft_nullptr;
+            this->_user_data = ft_nullptr;
+            this->_file_descriptor = -1;
+            this->_file_handle = ft_nullptr;
+            this->_close_on_reset = FT_FALSE;
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
             return (static_cast<uint32_t>(destroy_error));
+        }
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
@@ -236,11 +212,27 @@ uint32_t gnl_stream::move(gnl_stream &other) noexcept
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         if (this->initialize() != FT_ERR_SUCCESS)
+        {
+            this->_read_callback = ft_nullptr;
+            this->_user_data = ft_nullptr;
+            this->_file_descriptor = -1;
+            this->_file_handle = ft_nullptr;
+            this->_close_on_reset = FT_FALSE;
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
             return (FT_ERR_INITIALIZATION_FAILED);
+        }
     }
     lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_read_callback = ft_nullptr;
+        this->_user_data = ft_nullptr;
+        this->_file_descriptor = -1;
+        this->_file_handle = ft_nullptr;
+        this->_close_on_reset = FT_FALSE;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (static_cast<uint32_t>(lock_error));
+    }
     this->_read_callback = other._read_callback;
     this->_user_data = other._user_data;
     this->_file_descriptor = other._file_descriptor;
@@ -483,10 +475,3 @@ int64_t gnl_stream::read(char *buffer, ft_size_t max_size) noexcept
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (read_result);
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *gnl_stream::get_mutex_for_validation() const noexcept
-{
-    return (this->_mutex);
-}
-#endif

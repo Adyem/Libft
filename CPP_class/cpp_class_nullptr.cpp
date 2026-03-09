@@ -6,16 +6,14 @@ ft_nullptr_t::ft_nullptr_t() noexcept
     return ;
 }
 
-ft_nullptr_t::ft_nullptr_t(const ft_nullptr_t &other) noexcept
+ft_nullptr_t::ft_nullptr_t(const ft_nullptr_t &) noexcept
 {
-    (void)other;
     return ;
 }
 
-ft_nullptr_t &ft_nullptr_t::operator=(const ft_nullptr_t &other) noexcept
+ft_nullptr_t::ft_nullptr_t(ft_nullptr_t &&) noexcept
 {
-    (void)other;
-    return (*this);
+    return ;
 }
 
 ft_nullptr_t::~ft_nullptr_t() noexcept

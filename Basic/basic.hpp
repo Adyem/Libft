@@ -2,8 +2,6 @@
 # define LIBFT_HPP
 
 #include <cstdint>
-#define FT_SUCCESS 0
-#define FT_FAILURE 1
 
 #ifndef FT_TYPES_HPP
 # define FT_TYPES_HPP

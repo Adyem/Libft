@@ -3,46 +3,40 @@
 
 #include "class_string.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <cstdint>
 #include <cstddef>
 
 class ft_stringbuf
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         ft_string _storage;
-        std::size_t _position;
+        ft_size_t _position;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-
-        static void abort_lifecycle_error(const char *method_name,
-                    const char *reason) noexcept;
-        void abort_if_not_initialised(const char *method_name) const noexcept;
-        int lock_mutex(void) const noexcept;
-        int unlock_mutex(void) const noexcept;
 
     public:
         ft_stringbuf() noexcept;
+        ft_stringbuf(const ft_stringbuf &other) noexcept;
+        ft_stringbuf(ft_stringbuf &&other) noexcept;
         ~ft_stringbuf() noexcept;
 
-        ft_stringbuf(const ft_stringbuf &other) noexcept = delete;
         ft_stringbuf &operator=(const ft_stringbuf &other) noexcept = delete;
-        ft_stringbuf(ft_stringbuf &&other) noexcept = delete;
         ft_stringbuf &operator=(ft_stringbuf &&other) noexcept = delete;
 
-        int initialize(const ft_string &string) noexcept;
-        int destroy() noexcept;
-        ssize_t read(char *buffer, std::size_t count) noexcept;
-        bool is_valid() const noexcept;
-        int get_string(ft_string &value) const noexcept;
-        int enable_thread_safety(void) noexcept;
-        int disable_thread_safety(void) noexcept;
-        bool is_thread_safe(void) const noexcept;
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
+        uint32_t initialize(const ft_string &string) noexcept;
+        int32_t destroy() noexcept;
+        int32_t move(ft_stringbuf &other) noexcept;
+        ssize_t read(char *buffer, ft_size_t count) noexcept;
+        ft_bool is_valid() const noexcept;
+        int32_t get_string(ft_string &value) const noexcept;
+        int32_t enable_thread_safety(void) noexcept;
+        int32_t disable_thread_safety(void) noexcept;
+        ft_bool is_thread_safe(void) const noexcept;
 };
 
 #endif

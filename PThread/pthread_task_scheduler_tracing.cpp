@@ -9,16 +9,16 @@ static ft_vector<task_scheduler_trace_sink> g_task_scheduler_trace_sinks(4);
 static std::mutex g_task_scheduler_trace_mutex;
 static std::atomic<unsigned long long> g_task_scheduler_trace_counter(1);
 thread_local unsigned long long g_task_scheduler_trace_current = 0;
-static thread_local int g_task_scheduler_trace_last_error = FT_ERR_SUCCESS;
+static thread_local uint32_t g_task_scheduler_trace_last_error = FT_ERR_SUCCESS;
 
 const char *const g_ft_task_trace_label_async = "async_task";
 const char *const g_ft_task_trace_label_schedule_once = "scheduled_once";
 const char *const g_ft_task_trace_label_schedule_repeat = "scheduled_repeat";
 
-static void task_scheduler_trace_set_error(int error)
+static uint32_t task_scheduler_trace_set_error(uint32_t error)
 {
     g_task_scheduler_trace_last_error = error;
-    return ;
+    return (error);
 }
 
 int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
@@ -105,6 +105,16 @@ int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
         g_task_scheduler_trace_mutex.unlock();
     task_scheduler_trace_set_error(FT_ERR_NOT_FOUND);
     return (-1);
+}
+
+int32_t task_scheduler_trace_get_error(void)
+{
+    return (static_cast<int32_t>(g_task_scheduler_trace_last_error));
+}
+
+const char *task_scheduler_trace_get_error_str(void)
+{
+    return (ft_strerror(task_scheduler_trace_get_error()));
 }
 
 void task_scheduler_trace_emit(const ft_task_trace_event &event)

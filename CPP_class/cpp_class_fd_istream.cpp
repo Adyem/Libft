@@ -1,47 +1,16 @@
 #include "class_fd_istream.hpp"
 #include "class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
 
-void ft_fd_istream::abort_lifecycle_error(const char *method_name,
-    const char *reason) noexcept
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_fd_istream lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_fd_istream::abort_if_not_initialised(const char *method_name) const noexcept
-{
-    if (this->_initialised_state == ft_fd_istream::_state_initialised)
-        return ;
-    ft_fd_istream::abort_lifecycle_error(method_name, "called while object is not initialised");
-    return ;
-}
-
-int ft_fd_istream::lock_mutex(void) const noexcept
-{
-    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
-}
-
-int ft_fd_istream::unlock_mutex(void) const noexcept
-{
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
-}
-
-int ft_fd_istream::enable_thread_safety(void) noexcept
+int32_t ft_fd_istream::enable_thread_safety(void) noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_fd_istream::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_fd_istream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -57,93 +26,179 @@ int ft_fd_istream::enable_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_fd_istream::disable_thread_safety(void) noexcept
+int32_t ft_fd_istream::disable_thread_safety(void) noexcept
 {
-    this->abort_if_not_initialised("ft_fd_istream::disable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_fd_istream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int destroy_error = this->_mutex->destroy();
+    int32_t destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
     return (destroy_error);
 }
 
-bool ft_fd_istream::is_thread_safe(void) const noexcept
+ft_bool ft_fd_istream::is_thread_safe(void) const noexcept
 {
-    this->abort_if_not_initialised("ft_fd_istream::is_thread_safe");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_fd_istream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
-ft_fd_istream::ft_fd_istream(int file_descriptor) noexcept
-    : ft_istream(), _file_descriptor(file_descriptor), _mutex(ft_nullptr),
-      _initialised_state(ft_fd_istream::_state_uninitialised)
+ft_fd_istream::ft_fd_istream() noexcept
+    : ft_istream(), _file_descriptor(-1), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    int initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
+    return ;
+}
+
+ft_fd_istream::ft_fd_istream(int32_t file_descriptor) noexcept
+    : ft_istream(), _file_descriptor(file_descriptor), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    return ;
+}
+
+ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
+    : ft_istream(), _file_descriptor(-1), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        this->_initialised_state = ft_fd_istream::_state_destroyed;
+        errno_abort_lifecycle(other._initialised_state, "ft_fd_istream::ft_fd_istream copy source",
+            "called with uninitialised source object");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    this->_initialised_state = ft_fd_istream::_state_initialised;
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    this->_file_descriptor = other._file_descriptor;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    if (other._mutex != ft_nullptr && this->enable_thread_safety() != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
+    : ft_istream(), _file_descriptor(-1), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_fd_istream::ft_fd_istream move source",
+            "called with uninitialised source object");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    this->_file_descriptor = other._file_descriptor;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    if (other._mutex != ft_nullptr)
+    {
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)other.disable_thread_safety();
+    }
+    other._file_descriptor = -1;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 ft_fd_istream::~ft_fd_istream() noexcept
 {
-    if (this->_initialised_state != ft_fd_istream::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->_initialised_state = ft_fd_istream::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
     (void)this->destroy();
     return ;
 }
 
-void ft_fd_istream::set_file_descriptor(int file_descriptor) noexcept
+int32_t ft_fd_istream::move(ft_fd_istream &other) noexcept
 {
-    this->abort_if_not_initialised("ft_fd_istream::set_file_descriptor");
-    if (this->lock_mutex() != FT_ERR_SUCCESS)
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_fd_istream::move",
+            "called with uninitialised source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        int32_t destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_file_descriptor = -1;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    uint32_t initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    this->_file_descriptor = other._file_descriptor;
+    other._file_descriptor = -1;
+    if (other._mutex != ft_nullptr)
+    {
+        int32_t thread_safety_error = this->enable_thread_safety();
+        if (thread_safety_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (thread_safety_error);
+        }
+        (void)other.disable_thread_safety();
+    }
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_fd_istream::set_file_descriptor(int32_t file_descriptor) noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_fd_istream::set_file_descriptor");
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return ;
     this->_file_descriptor = file_descriptor;
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
-int ft_fd_istream::get_file_descriptor() const noexcept
+int32_t ft_fd_istream::get_file_descriptor() const noexcept
 {
-    int file_descriptor;
+    int32_t file_descriptor;
 
-    this->abort_if_not_initialised("ft_fd_istream::get_file_descriptor");
-    if (this->lock_mutex() != FT_ERR_SUCCESS)
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_fd_istream::get_file_descriptor");
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (-1);
     file_descriptor = this->_file_descriptor;
-    if (this->unlock_mutex() != FT_ERR_SUCCESS)
-        return (-1);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (file_descriptor);
 }
 
-ssize_t ft_fd_istream::do_read(char *buffer, std::size_t count)
+ssize_t ft_fd_istream::do_read(char *buffer, ft_size_t count)
 {
-    int file_descriptor;
-    int unlock_error;
+    int32_t file_descriptor;
     ssize_t result;
 
-    this->abort_if_not_initialised("ft_fd_istream::do_read");
-    if (this->lock_mutex() != FT_ERR_SUCCESS)
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_fd_istream::do_read");
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (-1);
     file_descriptor = this->_file_descriptor;
-    unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (-1);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     result = su_read(file_descriptor, buffer, count);
     if (result < 0)
         return (-1);
     return (result);
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_fd_istream::get_mutex_for_validation() const noexcept
-{
-    return (this->_mutex);
-}
-#endif

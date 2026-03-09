@@ -6,16 +6,16 @@
 #include <cstddef>
 #include <cstdint>
 
-static int rl_utf8_code_point_width(uint32_t code_point)
+static int32_t rl_utf8_code_point_width(uint32_t code_point)
 {
     if (ft_utf8_is_combining_code_point(code_point))
-        return (0);
-    if (code_point == 0)
-        return (0);
+        return (FT_ERR_SUCCESS);
+    if (code_point == FT_ERR_SUCCESS)
+        return (FT_ERR_SUCCESS);
     if (code_point < 0x20)
-        return (0);
+        return (FT_ERR_SUCCESS);
     if (code_point >= 0x7F && code_point < 0xA0)
-        return (0);
+        return (FT_ERR_SUCCESS);
     if (code_point >= 0x1100 && code_point <= 0x115F)
         return (2);
     if (code_point == 0x2329 || code_point == 0x232A)
@@ -43,22 +43,22 @@ static int rl_utf8_code_point_width(uint32_t code_point)
     return (1);
 }
 
-static int rl_utf8_measure_grapheme_width(const char *buffer, size_t grapheme_length, int *display_width)
+static int32_t rl_utf8_measure_grapheme_width(const char *buffer, ft_size_t grapheme_length, int32_t *display_width)
 {
-    size_t offset;
-    int total_width;
+    ft_size_t offset;
+    int32_t total_width;
 
     if (display_width == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     offset = 0;
     total_width = 0;
     while (offset < grapheme_length)
     {
-        size_t decode_index;
+        ft_size_t decode_index;
         uint32_t code_point;
-        size_t sequence_length;
+        ft_size_t sequence_length;
 
         decode_index = offset;
         code_point = 0;
@@ -66,40 +66,40 @@ static int rl_utf8_measure_grapheme_width(const char *buffer, size_t grapheme_le
         if (ft_utf8_next(buffer, grapheme_length, &decode_index,
                 &code_point, &sequence_length) != FT_SUCCESS)
         {
-            total_width = static_cast<int>(grapheme_length);
+            total_width = static_cast<int32_t>(grapheme_length);
             *display_width = total_width;
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
         total_width += rl_utf8_code_point_width(code_point);
         offset = decode_index;
     }
     *display_width = total_width;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-static int rl_utf8_extract_grapheme(const char *buffer, size_t buffer_length,
-        size_t start_index, size_t *end_index, size_t *byte_length,
-        int *display_width)
+static int32_t rl_utf8_extract_grapheme(const char *buffer, ft_size_t buffer_length,
+        ft_size_t start_index, ft_size_t *end_index, ft_size_t *byte_length,
+        int32_t *display_width)
 {
-    size_t local_index;
-    size_t grapheme_length;
-    int width;
+    ft_size_t local_index;
+    ft_size_t grapheme_length;
+    int32_t width;
 
     if (end_index == ft_nullptr || byte_length == ft_nullptr
         || display_width == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (buffer == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (start_index >= buffer_length)
     {
         *end_index = start_index;
         *byte_length = 0;
         *display_width = 0;
-        return (1);
+        return (FT_ERR_NOT_FOUND);
     }
     local_index = start_index;
     grapheme_length = 0;
@@ -114,25 +114,25 @@ static int rl_utf8_extract_grapheme(const char *buffer, size_t buffer_length,
     else
     {
         if (rl_utf8_measure_grapheme_width(buffer + start_index,
-                grapheme_length, &width) != 0)
-            width = static_cast<int>(grapheme_length);
+                grapheme_length, &width) != FT_ERR_SUCCESS)
+            width = static_cast<int32_t>(grapheme_length);
     }
     *end_index = local_index;
     *byte_length = grapheme_length;
     *display_width = width;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-static int rl_utf8_compute_columns_range_internal(const char *string,
-        size_t buffer_length, size_t start_index, size_t end_index,
-        int *columns)
+static int32_t rl_utf8_compute_columns_range_internal(const char *string,
+        ft_size_t buffer_length, ft_size_t start_index, ft_size_t end_index,
+        int32_t *columns)
 {
-    size_t index;
-    int total_columns;
+    ft_size_t index;
+    int32_t total_columns;
 
     if (columns == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (start_index > buffer_length)
         start_index = buffer_length;
@@ -142,22 +142,22 @@ static int rl_utf8_compute_columns_range_internal(const char *string,
     total_columns = 0;
     while (index < end_index)
     {
-        size_t next_index;
-        size_t grapheme_length;
-        int display_width;
+        ft_size_t next_index;
+        ft_size_t grapheme_length;
+        int32_t display_width;
 
         next_index = index;
         grapheme_length = 0;
         display_width = 0;
         if (rl_utf8_extract_grapheme(string, buffer_length, index,
-                &next_index, &grapheme_length, &display_width) == 1)
+                &next_index, &grapheme_length, &display_width) == FT_ERR_NOT_FOUND)
             break ;
         if (next_index > end_index)
         {
-            size_t remaining_bytes;
+            ft_size_t remaining_bytes;
 
             remaining_bytes = end_index - index;
-            total_columns += static_cast<int>(remaining_bytes);
+            total_columns += static_cast<int32_t>(remaining_bytes);
             index = end_index;
         }
         else
@@ -167,138 +167,138 @@ static int rl_utf8_compute_columns_range_internal(const char *string,
         }
     }
     *columns = total_columns;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int rl_utf8_compute_columns(const char *string, int *columns)
+int32_t rl_utf8_compute_columns(const char *string, int32_t *columns)
 {
-    size_t string_length;
+    ft_size_t string_length;
 
     if (string == ft_nullptr || columns == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     string_length = ft_strlen_size_t(string);
     if (rl_utf8_compute_columns_range_internal(string, string_length,
-            0, string_length, columns) != 0)
-        return (-1);
-    return (0);
+            0, string_length, columns) != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
+    return (FT_ERR_SUCCESS);
 }
 
-int rl_utf8_find_previous_grapheme(const char *buffer, int cursor_pos,
-        int *start_byte, int *end_byte, int *display_width)
+int32_t rl_utf8_find_previous_grapheme(const char *buffer, int32_t cursor_pos,
+        int32_t *start_byte, int32_t *end_byte, int32_t *display_width)
 {
-    size_t buffer_length;
-    size_t index;
+    ft_size_t buffer_length;
+    ft_size_t index;
 
     if (buffer == ft_nullptr || start_byte == ft_nullptr
         || end_byte == ft_nullptr || display_width == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (cursor_pos <= 0)
     {
-        return (1);
+        return (FT_ERR_NOT_FOUND);
     }
     buffer_length = ft_strlen_size_t(buffer);
-    if (static_cast<size_t>(cursor_pos) > buffer_length)
-        cursor_pos = static_cast<int>(buffer_length);
+    if (static_cast<ft_size_t>(cursor_pos) > buffer_length)
+        cursor_pos = static_cast<int32_t>(buffer_length);
     index = 0;
-    while (index < static_cast<size_t>(cursor_pos))
+    while (index < static_cast<ft_size_t>(cursor_pos))
     {
-        size_t next_index;
-        size_t grapheme_length;
-        int width;
+        ft_size_t next_index;
+        ft_size_t grapheme_length;
+        int32_t width;
 
         if (rl_utf8_extract_grapheme(buffer, buffer_length, index,
-                &next_index, &grapheme_length, &width) == 1)
+                &next_index, &grapheme_length, &width) == FT_ERR_NOT_FOUND)
             break ;
-        if (static_cast<int>(next_index) >= cursor_pos)
+        if (static_cast<int32_t>(next_index) >= cursor_pos)
         {
-            if (static_cast<int>(next_index) > cursor_pos)
+            if (static_cast<int32_t>(next_index) > cursor_pos)
             {
                 *start_byte = cursor_pos - 1;
                 *end_byte = cursor_pos;
                 *display_width = 1;
-                return (0);
+                return (FT_ERR_SUCCESS);
             }
-            *start_byte = static_cast<int>(index);
-            *end_byte = static_cast<int>(next_index);
+            *start_byte = static_cast<int32_t>(index);
+            *end_byte = static_cast<int32_t>(next_index);
             *display_width = width;
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
         index = next_index;
     }
-    return (1);
+    return (FT_ERR_NOT_FOUND);
 }
 
-int rl_utf8_find_next_grapheme(const char *buffer, int cursor_pos,
-        int *start_byte, int *end_byte, int *display_width)
+int32_t rl_utf8_find_next_grapheme(const char *buffer, int32_t cursor_pos,
+        int32_t *start_byte, int32_t *end_byte, int32_t *display_width)
 {
-    size_t buffer_length;
-    size_t index;
+    ft_size_t buffer_length;
+    ft_size_t index;
 
     if (buffer == ft_nullptr || start_byte == ft_nullptr
         || end_byte == ft_nullptr || display_width == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (cursor_pos < 0)
         cursor_pos = 0;
     buffer_length = ft_strlen_size_t(buffer);
-    if (static_cast<size_t>(cursor_pos) >= buffer_length)
+    if (static_cast<ft_size_t>(cursor_pos) >= buffer_length)
     {
-        return (1);
+        return (FT_ERR_NOT_FOUND);
     }
     index = 0;
     while (index < buffer_length)
     {
-        size_t next_index;
-        size_t grapheme_length;
-        int width;
+        ft_size_t next_index;
+        ft_size_t grapheme_length;
+        int32_t width;
 
         if (rl_utf8_extract_grapheme(buffer, buffer_length, index,
-                &next_index, &grapheme_length, &width) == 1)
+                &next_index, &grapheme_length, &width) == FT_ERR_NOT_FOUND)
             break ;
-        if (static_cast<int>(index) >= cursor_pos)
+        if (static_cast<int32_t>(index) >= cursor_pos)
         {
-            *start_byte = static_cast<int>(index);
-            *end_byte = static_cast<int>(next_index);
+            *start_byte = static_cast<int32_t>(index);
+            *end_byte = static_cast<int32_t>(next_index);
             *display_width = width;
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
         index = next_index;
     }
-    return (1);
+    return (FT_ERR_NOT_FOUND);
 }
 
-int rl_update_display_metrics(readline_state_t *state)
+int32_t rl_update_display_metrics(readline_state_t *state)
 {
-    size_t buffer_length;
-    int total_columns;
-    int prefix_columns;
+    ft_size_t buffer_length;
+    int32_t total_columns;
+    int32_t prefix_columns;
 
     if (state == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (state->buffer == ft_nullptr)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     buffer_length = ft_strlen_size_t(state->buffer);
-    if (state->pos < 0)
-        state->pos = 0;
-    if (static_cast<size_t>(state->pos) > buffer_length)
-        state->pos = static_cast<int>(buffer_length);
+    if (state->position < 0)
+        state->position = 0;
+    if (static_cast<ft_size_t>(state->position) > buffer_length)
+        state->position = static_cast<int32_t>(buffer_length);
     if (rl_utf8_compute_columns_range_internal(state->buffer, buffer_length,
-            0, buffer_length, &total_columns) != 0)
-        total_columns = static_cast<int>(buffer_length);
+            0, buffer_length, &total_columns) != FT_ERR_SUCCESS)
+        total_columns = static_cast<int32_t>(buffer_length);
     if (rl_utf8_compute_columns_range_internal(state->buffer, buffer_length,
-            0, static_cast<size_t>(state->pos), &prefix_columns) != 0)
-        prefix_columns = state->pos;
+            0, static_cast<ft_size_t>(state->position), &prefix_columns) != FT_ERR_SUCCESS)
+        prefix_columns = state->position;
     state->display_pos = prefix_columns;
     state->prev_display_columns = total_columns;
-    state->prev_buffer_length = static_cast<int>(buffer_length);
-    return (0);
+    state->prev_buffer_length = static_cast<int32_t>(buffer_length);
+    return (FT_ERR_SUCCESS);
 }

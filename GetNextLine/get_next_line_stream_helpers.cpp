@@ -8,15 +8,6 @@
 #include "../Template/move.hpp"
 
 #include <cerrno>
-#include <fcntl.h>
-#include <unistd.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-# include <io.h>
-# define FILE_BINARY_FLAG O_BINARY
-#else
-# define FILE_BINARY_FLAG 0
-#endif
 
 static int32_t append_line_to_vector(ft_vector<ft_string> &lines, char *line_buffer)
 {
@@ -74,18 +65,15 @@ int32_t ft_read_file_lines(int32_t file_descriptor, ft_vector<ft_string> &lines,
 int32_t ft_open_and_read_file(const char *path, ft_vector<ft_string> &lines, ft_size_t buffer_size)
 {
     int32_t file_descriptor;
-    int32_t open_flags;
     int32_t read_result;
     int32_t close_result;
-    int32_t close_error;
     int32_t open_error;
 
     if (!path)
         return (FT_ERR_INVALID_ARGUMENT);
     if (buffer_size == 0)
         return (FT_ERR_INVALID_ARGUMENT);
-    open_flags = O_RDONLY | FILE_BINARY_FLAG;
-    file_descriptor = open(path, open_flags);
+    file_descriptor = cmp_open(path);
     if (file_descriptor < 0)
     {
         open_error = cmp_map_system_error_to_ft(errno);
@@ -94,14 +82,11 @@ int32_t ft_open_and_read_file(const char *path, ft_vector<ft_string> &lines, ft_
         return (open_error);
     }
     read_result = ft_read_file_lines(file_descriptor, lines, buffer_size);
-    close_result = close(file_descriptor);
-    if (close_result != 0)
+    close_result = cmp_close(file_descriptor);
+    if (close_result != FT_ERR_SUCCESS)
     {
-        close_error = cmp_map_system_error_to_ft(errno);
-        if (close_error == FT_ERR_SUCCESS)
-            close_error = FT_ERR_IO;
         if (read_result == FT_ERR_SUCCESS)
-            return (close_error);
+            return (close_result);
     }
     if (read_result != FT_ERR_SUCCESS)
         return (read_result);

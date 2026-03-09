@@ -2,6 +2,7 @@
 
 #if LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS
 #include "basic.hpp"
+#include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
 static void zero_buffer(void *buffer, ft_size_t buffer_size)
@@ -22,16 +23,16 @@ int32_t ft_memcpy_s(void *destination, ft_size_t destination_size,
                         const void *source, ft_size_t number_of_bytes)
 {
     if (number_of_bytes == 0)
-        return (0);
+        return (FT_ERR_SUCCESS);
     if (destination == ft_nullptr || source == ft_nullptr)
     {
         zero_buffer(destination, destination_size);
-        return (-1);
+        return (FT_ERR_INVALID_POINTER);
     }
     if (destination_size < number_of_bytes)
     {
         zero_buffer(destination, destination_size);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     unsigned char *destination_bytes = static_cast<unsigned char *>(destination);
     const unsigned char *source_bytes = static_cast<const unsigned char *>(source);
@@ -39,9 +40,9 @@ int32_t ft_memcpy_s(void *destination, ft_size_t destination_size,
         && (source_bytes < destination_bytes + number_of_bytes))
     {
         zero_buffer(destination, destination_size);
-        return (-1);
+        return (FT_ERR_OVERLAP);
     }
     ft_memcpy(destination, source, number_of_bytes);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 #endif

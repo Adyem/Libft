@@ -11,11 +11,6 @@
 #include <stddef.h>
 #include <cstdio>
 
-int32_t pf_string_pop_last_error(const ft_string &)
-{
-    return (ft_string::get_error());
-}
-
 static const char G_DECIMAL_PAIRS[200] =
 {
     '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9',
@@ -388,19 +383,19 @@ static int32_t format_double_output(char specifier, int32_t precision, double nu
         if (required_length < 0) \
             return (FT_ERR_IO); \
         output.clear(); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
+        if (ft_string::get_error() != FT_ERR_SUCCESS) \
             return (FT_ERR_INTERNAL); \
         output.resize_length(static_cast<ft_size_t>(required_length)); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
+        if (ft_string::get_error() != FT_ERR_SUCCESS) \
             return (FT_ERR_INTERNAL); \
         output_buffer = output.print(); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS || output_buffer == ft_nullptr) \
+        if (ft_string::get_error() != FT_ERR_SUCCESS || output_buffer == ft_nullptr) \
             return (FT_ERR_INTERNAL); \
         int32_t written_length = std::snprintf(output_buffer, static_cast<ft_size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
             return (FT_ERR_IO); \
         output.resize_length(static_cast<ft_size_t>(written_length)); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
+        if (ft_string::get_error() != FT_ERR_SUCCESS) \
             return (FT_ERR_INTERNAL); \
         return (FT_ERR_SUCCESS); \
     }
@@ -566,19 +561,19 @@ void pf_write_ft_string_fd(const ft_string &output, int32_t file_descriptor, ft_
 
     if (count_has_error(count))
         return ;
-    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;
     }
     buffer = output.c_str();
-    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS || buffer == ft_nullptr)
+    if (ft_string::get_error() != FT_ERR_SUCCESS || buffer == ft_nullptr)
     {
         mark_count_error(count);
         return ;
     }
     length = output.size();
-    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;

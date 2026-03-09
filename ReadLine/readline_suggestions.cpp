@@ -11,10 +11,10 @@
 
 void rl_add_suggestion(const char *word)
 {
-    int index = 0;
+    int32_t index = 0;
     while (index < suggestion_count)
     {
-        if (strcmp(suggestions[index], word) == 0)
+        if (strcmp(suggestions[index], word) == FT_ERR_SUCCESS)
             return ;
         index++;
     }
@@ -37,7 +37,7 @@ void rl_add_suggestion(const char *word)
 
 void rl_clear_suggestions()
 {
-    int index = 0;
+    int32_t index = 0;
     while (index < suggestion_count)
     {
         cma_free(suggestions[index]);

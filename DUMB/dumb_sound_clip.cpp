@@ -286,6 +286,7 @@ int32_t ft_sound_clip::move(ft_sound_clip &other)
 {
     int32_t first_lock_error;
     int32_t second_lock_error;
+    int32_t destroy_error;
     pt_recursive_mutex *first_mutex;
     pt_recursive_mutex *second_mutex;
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
@@ -309,6 +310,12 @@ int32_t ft_sound_clip::move(ft_sound_clip &other)
             "called with source object that is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         if (this->initialize() != FT_ERR_SUCCESS)
@@ -327,7 +334,16 @@ int32_t ft_sound_clip::move(ft_sound_clip &other)
     }
     first_lock_error = pt_recursive_mutex_lock_if_not_null(first_mutex);
     if (first_lock_error != FT_ERR_SUCCESS)
+    {
+        this->_data.clear();
+        if (this->_spec != ft_nullptr)
+        {
+            delete this->_spec;
+            this->_spec = ft_nullptr;
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (first_lock_error);
+    }
     if (second_mutex != first_mutex)
         second_lock_error = pt_recursive_mutex_lock_if_not_null(second_mutex);
     else
@@ -335,6 +351,13 @@ int32_t ft_sound_clip::move(ft_sound_clip &other)
     if (second_lock_error != FT_ERR_SUCCESS)
     {
         (void)pt_recursive_mutex_unlock_if_not_null(first_mutex);
+        this->_data.clear();
+        if (this->_spec != ft_nullptr)
+        {
+            delete this->_spec;
+            this->_spec = ft_nullptr;
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (second_lock_error);
     }
     this->_data.swap(other._data);

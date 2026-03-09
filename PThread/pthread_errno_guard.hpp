@@ -7,7 +7,11 @@
 template <typename GuardType>
 class pt_errno_guard
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         GuardType  *_first_guard;
         GuardType  *_second_guard;
         int         _previous_error;

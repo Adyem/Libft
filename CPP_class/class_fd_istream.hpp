@@ -4,43 +4,38 @@
 #include "class_istream.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <cstdint>
 
 class ft_fd_istream : public ft_istream
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
-        int _file_descriptor;
+#endif
+        int32_t _file_descriptor;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        int lock_mutex(void) const noexcept;
-        int unlock_mutex(void) const noexcept;
-        static void abort_lifecycle_error(const char *method_name,
-                const char *reason) noexcept;
-        void abort_if_not_initialised(const char *method_name) const noexcept;
     public:
-        ft_fd_istream(int file_descriptor) noexcept;
-        ft_fd_istream(const ft_fd_istream &other) noexcept = delete;
-        ft_fd_istream(ft_fd_istream &&other) noexcept = delete;
+        ft_fd_istream() noexcept;
+        ft_fd_istream(int32_t file_descriptor) noexcept;
+        ft_fd_istream(const ft_fd_istream &other) noexcept;
+        ft_fd_istream(ft_fd_istream &&other) noexcept;
         ~ft_fd_istream() noexcept;
 
         ft_fd_istream &operator=(const ft_fd_istream &other) noexcept = delete;
         ft_fd_istream &operator=(ft_fd_istream &&other) noexcept = delete;
 
-        void set_file_descriptor(int file_descriptor) noexcept;
-        int get_file_descriptor() const noexcept;
-        int enable_thread_safety(void) noexcept;
-        int disable_thread_safety(void) noexcept;
-        bool is_thread_safe(void) const noexcept;
-
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
+        void set_file_descriptor(int32_t file_descriptor) noexcept;
+        int32_t move(ft_fd_istream &other) noexcept;
+        int32_t get_file_descriptor() const noexcept;
+        int32_t enable_thread_safety(void) noexcept;
+        int32_t disable_thread_safety(void) noexcept;
+        ft_bool is_thread_safe(void) const noexcept;
 
     protected:
-        ssize_t do_read(char *buffer, std::size_t count);
+        ssize_t do_read(char *buffer, ft_size_t count);
 };
 
 #endif

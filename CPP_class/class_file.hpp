@@ -10,45 +10,48 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <cstddef>
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class ft_file
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
-        int _file_descriptor;
+#endif
+        int32_t _file_descriptor;
         mutable pt_recursive_mutex *_mutex;
-
-        int lock_mutex(void) const noexcept;
-        int unlock_mutex(void) const noexcept;
+        uint8_t _initialised_state;
 
     public:
         ft_file() noexcept;
+        ft_file(const ft_file& other) noexcept;
+        ft_file(ft_file&& other) noexcept;
         ~ft_file() noexcept;
 
-        ft_file(const ft_file&) = delete;
         ft_file &operator=(const ft_file&) = delete;
-        ft_file(ft_file&& other) = delete;
         ft_file& operator=(ft_file&& other) = delete;
 
-        int            get_file_descriptor() const;
+        uint32_t            initialize() noexcept;
+        int32_t             destroy() noexcept;
+        int32_t             move(ft_file &other) noexcept;
+        int32_t            get_file_descriptor() const;
 
-        int            open(const char* filename, int flags, mode_t mode) noexcept;
-        int            open(const char* filename, int flags) noexcept;
+        int32_t            open(const char* filename, int32_t flags, mode_t mode) noexcept;
+        int32_t            open(const char* filename, int32_t flags) noexcept;
         ssize_t        write(const char *string) noexcept;
-        ssize_t        write_buffer(const char *buffer, size_t length) noexcept;
+        ssize_t        write_buffer(const char *buffer, ft_size_t length) noexcept;
         void        close() noexcept;
-        int            seek(off_t offset, int whence) noexcept;
-        ssize_t        read(char *buffer, int count) noexcept;
-        int            printf(const char *format, ...)
+        int32_t            seek(off_t offset, int32_t whence) noexcept;
+        ssize_t        read(char *buffer, int32_t count) noexcept;
+        int32_t            printf(const char *format, ...)
                         __attribute__((format(printf, 2, 3), hot));
-        int            copy_to(const char *destination_path) noexcept;
-        int            copy_to_with_buffer(const char *destination_path, size_t buffer_size) noexcept;
-        int            enable_thread_safety(void) noexcept;
-        int            disable_thread_safety(void) noexcept;
-        bool           is_thread_safe(void) const noexcept;
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex &recursive_mutex(void) noexcept;
-#endif
+        int32_t            copy_to(const char *destination_path) noexcept;
+        int32_t            copy_to_with_buffer(const char *destination_path, ft_size_t buffer_size) noexcept;
+        int32_t            enable_thread_safety(void) noexcept;
+        int32_t            disable_thread_safety(void) noexcept;
+        ft_bool           is_thread_safe(void) const noexcept;
 };
 
 #endif

@@ -15,7 +15,11 @@ class pt_mutex;
 
 class ft_thread
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         struct start_payload
         {
             ft_function<void()> function;

@@ -2,11 +2,11 @@
 
 s_readline_state::s_readline_state(void)
 {
-    int index;
+    int32_t index;
 
     this->buffer = ft_nullptr;
-    this->bufsize = 0;
-    this->pos = 0;
+    this->buffer_size = 0;
+    this->position = 0;
     this->prev_buffer_length = 0;
     this->display_pos = 0;
     this->prev_display_columns = 0;
@@ -28,8 +28,8 @@ s_readline_state::s_readline_state(void)
 s_readline_state::~s_readline_state(void)
 {
     this->buffer = ft_nullptr;
-    this->bufsize = 0;
-    this->pos = 0;
+    this->buffer_size = 0;
+    this->position = 0;
     this->prev_buffer_length = 0;
     this->display_pos = 0;
     this->prev_display_columns = 0;

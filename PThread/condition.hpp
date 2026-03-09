@@ -14,7 +14,11 @@ int pt_cond_broadcast(pthread_cond_t *condition);
 
 class pt_condition_variable
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         pthread_cond_t _condition;
         pthread_mutex_t _mutex;
         bool _condition_initialised;

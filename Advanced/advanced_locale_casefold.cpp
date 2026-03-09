@@ -2,6 +2,7 @@
 #include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include <new>
 
 ft_string *adv_locale_casefold(const char *input, const char *locale_name)
@@ -16,7 +17,7 @@ ft_string *adv_locale_casefold(const char *input, const char *locale_name)
         delete folded_result;
         return (ft_nullptr);
     }
-    if (su_locale_casefold(input, locale_name, *folded_result) != 0)
+    if (su_locale_casefold(input, locale_name, *folded_result) != FT_ERR_SUCCESS)
     {
         delete folded_result;
         return (ft_nullptr);

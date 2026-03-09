@@ -325,6 +325,7 @@ int32_t ft_render_window::destroy(void)
 int32_t ft_render_window::move(ft_render_window &other)
 {
     int32_t lock_error;
+    int32_t destroy_error;
     pt_recursive_mutex *first_mutex;
     pt_recursive_mutex *second_mutex;
 
@@ -354,6 +355,12 @@ int32_t ft_render_window::move(ft_render_window &other)
         errno_abort_lifecycle(other._initialised_state, "ft_render_window::move source",
             "called with source object that is not initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {

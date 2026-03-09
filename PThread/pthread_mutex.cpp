@@ -1,12 +1,11 @@
 #include "pthread.hpp"
 #include "mutex.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "pthread_lock_tracking.hpp"
 #include <system_error>
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 
 pt_mutex::pt_mutex()
     : _owner(0), _lock(false), _native_mutex(ft_nullptr), _initialised_state(pt_mutex::_state_uninitialised),
@@ -30,10 +29,12 @@ pt_mutex::~pt_mutex()
 
 int pt_mutex::ensure_native_mutex() const
 {
-    this->abort_if_not_initialised("pt_mutex::ensure_native_mutex");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "pt_mutex::ensure_native_mutex");
     if (this->_native_mutex == ft_nullptr)
     {
-        this->abort_lifecycle_error("pt_mutex::ensure_native_mutex",
+        errno_abort_lifecycle(this->_initialised_state,
+            "pt_mutex::ensure_native_mutex",
             "native mutex pointer is null while object is initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -44,7 +45,7 @@ int pt_mutex::initialize()
 {
     if (this->_initialised_state == pt_mutex::_state_initialised)
     {
-        this->abort_lifecycle_error("pt_mutex::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "pt_mutex::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -90,37 +91,17 @@ int pt_mutex::destroy()
     return (FT_ERR_SUCCESS);
 }
 
-void pt_mutex::abort_lifecycle_error(const char *method_name,
-        const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "pt_mutex lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void pt_mutex::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == pt_mutex::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
 bool pt_mutex::lockState() const
 {
-    this->abort_if_not_initialised("pt_mutex::lockState");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "pt_mutex::lockState");
     return (this->_lock.load(std::memory_order_acquire));
 }
 
 int pt_mutex::lock_internal(bool *lock_acquired) const
 {
-    this->abort_if_not_initialised("pt_mutex::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "pt_mutex::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
@@ -137,7 +118,8 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
 
 int pt_mutex::unlock_internal(bool lock_acquired) const
 {
-    this->abort_if_not_initialised("pt_mutex::unlock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "pt_mutex::unlock_internal");
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     this->_state_mutex->unlock_state(lock_acquired);
@@ -156,7 +138,8 @@ void pt_mutex::teardown_thread_safety()
 
 int pt_mutex::lock_state(bool *lock_acquired) const
 {
-    this->abort_if_not_initialised("pt_mutex::lock_state");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "pt_mutex::lock_state");
     int lock_error = this->lock_internal(lock_acquired);
 
     if (lock_error == FT_ERR_SUCCESS)
@@ -166,14 +149,16 @@ int pt_mutex::lock_state(bool *lock_acquired) const
 
 void pt_mutex::unlock_state(bool lock_acquired) const
 {
-    this->abort_if_not_initialised("pt_mutex::unlock_state");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "pt_mutex::unlock_state");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 bool pt_mutex::is_owned_by_thread(pt_thread_id_type thread_id) const
 {
-    this->abort_if_not_initialised("pt_mutex::is_owned_by_thread");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "pt_mutex::is_owned_by_thread");
     pthread_t owner_thread;
     pt_mutex_vector owned_mutexes;
     ft_size_t index;

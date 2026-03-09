@@ -31,7 +31,7 @@ void CALLBACK ft_sound_device_win32::wave_out_proc(HWAVEOUT wave_out,
                 bytes_to_copy = header->dwBufferLength;
             memcpy(header->lpData,
                 sound_device->_current_clip->get_data() + sound_device->_playback_pos,
-                static_cast<size_t>(bytes_to_copy));
+                static_cast<ft_size_t>(bytes_to_copy));
             header->dwBufferLength = static_cast<DWORD>(bytes_to_copy);
             sound_device->_playback_pos += bytes_to_copy;
             waveOutWrite(wave_out, header, sizeof(WAVEHDR));

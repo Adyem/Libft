@@ -50,28 +50,28 @@ static int32_t ft_utf16_decode_unit(const char16_t *input, ft_size_t length,
     {
         if (index + 1 >= length)
         {
-            return (FT_FAILURE);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         char16_t second_unit;
 
         second_unit = input[index + 1];
         if (second_unit < 0xDC00 || second_unit > 0xDFFF)
         {
-            return (FT_FAILURE);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         *code_point_pointer = 0x10000;
         *code_point_pointer += static_cast<uint32_t>(first_unit - 0xD800) << 10;
         *code_point_pointer += static_cast<uint32_t>(second_unit - 0xDC00);
         *advance = 2;
-        return (FT_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (first_unit >= 0xDC00 && first_unit <= 0xDFFF)
     {
-        return (FT_FAILURE);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     *code_point_pointer = static_cast<uint32_t>(first_unit);
     *advance = 1;
-    return (FT_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 static ft_string *create_empty_string(void)
@@ -104,13 +104,13 @@ ft_string *adv_utf16_to_utf8(const char16_t *input, ft_size_t input_length)
         ft_size_t encoded_length;
 
         if (ft_utf16_decode_unit(input, length, index, &code_point, &advance)
-                != FT_SUCCESS)
+                != FT_ERR_SUCCESS)
         {
             delete result;
             return (ft_nullptr);
         }
         if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
-                &encoded_length) != FT_SUCCESS)
+                &encoded_length) != FT_ERR_SUCCESS)
         {
             delete result;
             return (ft_nullptr);
@@ -152,7 +152,7 @@ ft_string *adv_utf32_to_utf8(const char32_t *input, ft_size_t input_length)
             return (ft_nullptr);
         }
         if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
-                &encoded_length) != FT_SUCCESS)
+                &encoded_length) != FT_ERR_SUCCESS)
         {
             delete result;
             return (ft_nullptr);
@@ -197,7 +197,7 @@ char16_t *ft_utf8_to_utf16(const char *input, ft_size_t input_length,
         uint32_t code_point = 0;
         ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
-                &sequence_length) != FT_SUCCESS)
+                &sequence_length) != FT_ERR_SUCCESS)
             return (ft_nullptr);
         if (code_point <= 0xFFFF)
         {
@@ -220,7 +220,7 @@ char16_t *ft_utf8_to_utf16(const char *input, ft_size_t input_length,
         uint32_t code_point = 0;
         ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
-                &sequence_length) != FT_SUCCESS)
+                &sequence_length) != FT_ERR_SUCCESS)
         {
             cma_free(result);
             return (ft_nullptr);
@@ -261,7 +261,7 @@ char32_t *ft_utf8_to_utf32(const char *input, ft_size_t input_length,
         uint32_t code_point = 0;
         ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
-                &sequence_length) != FT_SUCCESS)
+                &sequence_length) != FT_ERR_SUCCESS)
             return (ft_nullptr);
         code_point_count++;
         index = working_index;
@@ -278,7 +278,7 @@ char32_t *ft_utf8_to_utf32(const char *input, ft_size_t input_length,
         uint32_t code_point = 0;
         ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
-                &sequence_length) != FT_SUCCESS)
+                &sequence_length) != FT_ERR_SUCCESS)
         {
             cma_free(result);
             return (ft_nullptr);

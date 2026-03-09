@@ -5,13 +5,19 @@
 
 class ft_nullptr_t
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         void operator&() const;
 
     public:
         ft_nullptr_t() noexcept;
-        ft_nullptr_t(const ft_nullptr_t &other) noexcept;
-        ft_nullptr_t &operator=(const ft_nullptr_t &other) noexcept;
+        ft_nullptr_t(const ft_nullptr_t &) noexcept;
+        ft_nullptr_t(ft_nullptr_t &&) noexcept;
+        ft_nullptr_t &operator=(const ft_nullptr_t &) noexcept = delete;
+        ft_nullptr_t &operator=(ft_nullptr_t &&) noexcept = delete;
         ~ft_nullptr_t() noexcept;
 
         template <typename PointerType>

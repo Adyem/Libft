@@ -40,7 +40,11 @@ struct s_pt_lock_tracking_thread_state
 
 class pt_lock_tracking
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         static std::mutex *get_registry_mutex(void);
         static pt_buffer<s_pt_thread_lock_info> *get_thread_infos(int *error_code);
         static bool ensure_registry_mutex_initialised(int *error_code);
