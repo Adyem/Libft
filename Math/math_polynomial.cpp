@@ -356,30 +356,6 @@ ft_cubic_spline::~ft_cubic_spline() noexcept
     return ;
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
-{
-    pt_recursive_mutex *mutex_pointer;
-    int32_t mutex_error;
-
-    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
-        return (ft_nullptr);
-    if (this->_mutex == ft_nullptr)
-    {
-        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-        if (mutex_pointer == ft_nullptr)
-            return (ft_nullptr);
-        mutex_error = mutex_pointer->initialize();
-        if (mutex_error != FT_ERR_SUCCESS)
-        {
-            delete mutex_pointer;
-            return (ft_nullptr);
-        }
-        const_cast<ft_cubic_spline *>(this)->_mutex = mutex_pointer;
-    }
-    return (this->_mutex);
-}
-#endif
 
 static int32_t math_polynomial_validate_coefficients(const ft_vector<double> &coefficients) noexcept
 {

@@ -57,9 +57,6 @@ class quaternion
         ft_bool is_thread_safe() const noexcept;
         uint32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_testing() noexcept;
-#endif
 };
 
 #endif

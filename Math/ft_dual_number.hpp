@@ -68,9 +68,6 @@ class ft_dual_number
         ft_dual_number   apply_exp() const noexcept;
         ft_dual_number   apply_log() const noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

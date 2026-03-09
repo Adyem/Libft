@@ -45,9 +45,6 @@ class matrix3
         vector3 transform(const vector3 &vector) const;
         matrix3 multiply(const matrix3 &other) const;
         matrix3 invert() const;
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_testing() noexcept;
-#endif
         uint32_t enable_thread_safety() noexcept;
         uint32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

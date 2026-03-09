@@ -52,9 +52,6 @@ class matrix4
         vector4 transform(const vector4 &vector) const;
         matrix4 multiply(const matrix4 &other) const;
         matrix4 invert() const;
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_testing() noexcept;
-#endif
         uint32_t enable_thread_safety() noexcept;
         uint32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

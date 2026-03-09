@@ -55,9 +55,6 @@ class vector3
         vector3 cross(const vector3 &other) const;
         double  length() const;
         vector3 normalize() const;
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_testing() noexcept;
-#endif
         uint32_t enable_thread_safety() noexcept;
         uint32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

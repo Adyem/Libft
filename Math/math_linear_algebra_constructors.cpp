@@ -18,14 +18,17 @@ uint32_t vector2::set_error(uint32_t error_code) noexcept
 
 uint32_t vector2::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "vector2::get_error",
+            "called while object is uninitialised");
     return (vector2::_last_error);
 }
 
 const char *vector2::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
-        "vector2::get_error_str");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "vector2::get_error_str",
+            "called while object is uninitialised");
     return (ft_strerror(vector2::_last_error));
 }
 
@@ -37,14 +40,17 @@ uint32_t vector3::set_error(uint32_t error_code) noexcept
 
 uint32_t vector3::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "vector3::get_error",
+            "called while object is uninitialised");
     return (vector3::_last_error);
 }
 
 const char *vector3::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
-        "vector3::get_error_str");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "vector3::get_error_str",
+            "called while object is uninitialised");
     return (ft_strerror(vector3::_last_error));
 }
 
@@ -56,14 +62,17 @@ uint32_t vector4::set_error(uint32_t error_code) noexcept
 
 uint32_t vector4::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "vector4::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "vector4::get_error",
+            "called while object is uninitialised");
     return (vector4::_last_error);
 }
 
 const char *vector4::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
-        "vector4::get_error_str");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "vector4::get_error_str",
+            "called while object is uninitialised");
     return (ft_strerror(vector4::_last_error));
 }
 
@@ -75,14 +84,17 @@ uint32_t matrix2::set_error(uint32_t error_code) noexcept
 
 uint32_t matrix2::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "matrix2::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "matrix2::get_error",
+            "called while object is uninitialised");
     return (matrix2::_last_error);
 }
 
 const char *matrix2::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
-        "matrix2::get_error_str");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "matrix2::get_error_str",
+            "called while object is uninitialised");
     return (ft_strerror(matrix2::_last_error));
 }
 
@@ -94,14 +106,17 @@ uint32_t matrix3::set_error(uint32_t error_code) noexcept
 
 uint32_t matrix3::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "matrix3::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "matrix3::get_error",
+            "called while object is uninitialised");
     return (matrix3::_last_error);
 }
 
 const char *matrix3::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
-        "matrix3::get_error_str");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "matrix3::get_error_str",
+            "called while object is uninitialised");
     return (ft_strerror(matrix3::_last_error));
 }
 
@@ -113,14 +128,17 @@ uint32_t matrix4::set_error(uint32_t error_code) noexcept
 
 uint32_t matrix4::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "matrix4::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "matrix4::get_error",
+            "called while object is uninitialised");
     return (matrix4::_last_error);
 }
 
 const char *matrix4::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
-        "matrix4::get_error_str");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "matrix4::get_error_str",
+            "called while object is uninitialised");
     return (ft_strerror(matrix4::_last_error));
 }
 
@@ -232,20 +250,36 @@ uint32_t vector2::initialize(double x_component, double y_component) noexcept
 uint32_t vector2::initialize(const vector2 &other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector2::initialize(const vector2 &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector2::initialize(const vector2 &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector2::initialize(const vector2 &) source",
+            "called with uninitialised source object");
         return (vector2::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector2::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector2::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (vector2::set_error(static_cast<uint32_t>(initialization_error)));
@@ -266,20 +300,36 @@ uint32_t vector2::move(vector2 &other) noexcept
     const vector2 *lower;
     const vector2 *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector2::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector2::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector2::move source",
+            "called with uninitialised source object");
         return (vector2::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector2::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector2::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -288,7 +338,12 @@ uint32_t vector2::move(vector2 &other) noexcept
     }
     lock_error = vector2::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (vector2::set_error(static_cast<uint32_t>(lock_error)));
+    }
     this->_x_component = other._x_component;
     this->_y_component = other._y_component;
     other._x_component = 0.0;
@@ -300,20 +355,36 @@ uint32_t vector2::move(vector2 &other) noexcept
 uint32_t vector2::initialize(vector2 &&other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector2::initialize(vector2 &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector2::initialize(vector2 &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector2::initialize(vector2 &&) source",
+            "called with uninitialised source object");
         return (vector2::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector2::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector2::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (vector2::set_error(static_cast<uint32_t>(initialization_error)));
@@ -464,20 +535,37 @@ uint32_t vector3::initialize(double x_component, double y_component, double z_co
 uint32_t vector3::initialize(const vector3 &other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector3::initialize(const vector3 &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector3::initialize(const vector3 &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector3::initialize(const vector3 &) source",
+            "called with uninitialised source object");
         return (vector3::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector3::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector3::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (vector3::set_error(static_cast<uint32_t>(initialization_error)));
@@ -499,20 +587,37 @@ uint32_t vector3::move(vector3 &other) noexcept
     const vector3 *lower;
     const vector3 *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector3::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector3::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector3::move source",
+            "called with uninitialised source object");
         return (vector3::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector3::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector3::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -521,7 +626,13 @@ uint32_t vector3::move(vector3 &other) noexcept
     }
     lock_error = vector3::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (vector3::set_error(static_cast<uint32_t>(lock_error)));
+    }
     this->_x_component = other._x_component;
     this->_y_component = other._y_component;
     this->_z_component = other._z_component;
@@ -535,20 +646,37 @@ uint32_t vector3::move(vector3 &other) noexcept
 uint32_t vector3::initialize(vector3 &&other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector3::initialize(vector3 &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector3::initialize(vector3 &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector3::initialize(vector3 &&) source",
+            "called with uninitialised source object");
         return (vector3::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector3::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector3::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (vector3::set_error(static_cast<uint32_t>(initialization_error)));
@@ -706,20 +834,38 @@ uint32_t vector4::initialize(double x_component, double y_component, double z_co
 uint32_t vector4::initialize(const vector4 &other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector4::initialize(const vector4 &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector4::initialize(const vector4 &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector4::initialize(const vector4 &) source",
+            "called with uninitialised source object");
         return (vector4::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector4::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_w_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector4::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (vector4::set_error(static_cast<uint32_t>(initialization_error)));
@@ -742,20 +888,38 @@ uint32_t vector4::move(vector4 &other) noexcept
     const vector4 *lower;
     const vector4 *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector4::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector4::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector4::move source",
+            "called with uninitialised source object");
         return (vector4::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector4::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_w_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector4::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -764,7 +928,14 @@ uint32_t vector4::move(vector4 &other) noexcept
     }
     lock_error = vector4::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_w_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (vector4::set_error(static_cast<uint32_t>(lock_error)));
+    }
     this->_x_component = other._x_component;
     this->_y_component = other._y_component;
     this->_z_component = other._z_component;
@@ -780,20 +951,38 @@ uint32_t vector4::move(vector4 &other) noexcept
 uint32_t vector4::initialize(vector4 &&other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("vector4::initialize(vector4 &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("vector4::initialize(vector4 &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("vector4::initialize(vector4 &&) source",
+            "called with uninitialised source object");
         return (vector4::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (vector4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (vector4::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        this->_x_component = 0.0;
+        this->_y_component = 0.0;
+        this->_z_component = 0.0;
+        this->_w_component = 0.0;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (vector4::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (vector4::set_error(static_cast<uint32_t>(initialization_error)));
@@ -953,22 +1142,37 @@ uint32_t matrix2::initialize(double m00, double m01, double m10, double m11) noe
 uint32_t matrix2::initialize(const matrix2 &other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t row;
     int32_t column;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix2::initialize(const matrix2 &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix2::initialize(const matrix2 &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix2::initialize(const matrix2 &) source",
+            "called with uninitialised source object");
         return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix2::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix2_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix2::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (matrix2::set_error(static_cast<uint32_t>(initialization_error)));
@@ -998,22 +1202,37 @@ uint32_t matrix2::move(matrix2 &other) noexcept
     const matrix2 *lower;
     const matrix2 *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t row;
     int32_t column;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix2::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix2::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix2::move source",
+            "called with uninitialised source object");
         return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix2::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix2_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix2::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -1022,7 +1241,11 @@ uint32_t matrix2::move(matrix2 &other) noexcept
     }
     lock_error = matrix2::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        matrix2_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (matrix2::set_error(static_cast<uint32_t>(lock_error)));
+    }
     row = 0;
     while (row < 2)
     {
@@ -1045,20 +1268,35 @@ uint32_t matrix2::move(matrix2 &other) noexcept
 uint32_t matrix2::initialize(matrix2 &&other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix2::initialize(matrix2 &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix2::initialize(matrix2 &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix2::initialize(matrix2 &&) source",
+            "called with uninitialised source object");
         return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix2::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix2_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix2::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (matrix2::set_error(static_cast<uint32_t>(initialization_error)));
@@ -1210,22 +1448,37 @@ uint32_t matrix3::initialize(double m00, double m01, double m02,
 uint32_t matrix3::initialize(const matrix3 &other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t row;
     int32_t column;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix3::initialize(const matrix3 &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix3::initialize(const matrix3 &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix3::initialize(const matrix3 &) source",
+            "called with uninitialised source object");
         return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix3::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix3_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix3::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (matrix3::set_error(static_cast<uint32_t>(initialization_error)));
@@ -1255,22 +1508,37 @@ uint32_t matrix3::move(matrix3 &other) noexcept
     const matrix3 *lower;
     const matrix3 *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t row;
     int32_t column;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix3::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix3::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix3::move source",
+            "called with uninitialised source object");
         return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix3::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix3_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix3::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -1279,7 +1547,11 @@ uint32_t matrix3::move(matrix3 &other) noexcept
     }
     lock_error = matrix3::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        matrix3_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (matrix3::set_error(static_cast<uint32_t>(lock_error)));
+    }
     row = 0;
     while (row < 3)
     {
@@ -1302,20 +1574,35 @@ uint32_t matrix3::move(matrix3 &other) noexcept
 uint32_t matrix3::initialize(matrix3 &&other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix3::initialize(matrix3 &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix3::initialize(matrix3 &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix3::initialize(matrix3 &&) source",
+            "called with uninitialised source object");
         return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix3::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix3_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix3::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (matrix3::set_error(static_cast<uint32_t>(initialization_error)));
@@ -1477,22 +1764,37 @@ uint32_t matrix4::initialize(double m00, double m01, double m02, double m03,
 uint32_t matrix4::initialize(const matrix4 &other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t row;
     int32_t column;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix4::initialize(const matrix4 &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix4::initialize(const matrix4 &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix4::initialize(const matrix4 &) source",
+            "called with uninitialised source object");
         return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix4::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix4_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix4::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (matrix4::set_error(static_cast<uint32_t>(initialization_error)));
@@ -1522,22 +1824,37 @@ uint32_t matrix4::move(matrix4 &other) noexcept
     const matrix4 *lower;
     const matrix4 *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t row;
     int32_t column;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix4::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix4::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix4::move source",
+            "called with uninitialised source object");
         return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix4::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix4_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix4::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -1546,7 +1863,11 @@ uint32_t matrix4::move(matrix4 &other) noexcept
     }
     lock_error = matrix4::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        matrix4_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (matrix4::set_error(static_cast<uint32_t>(lock_error)));
+    }
     row = 0;
     while (row < 4)
     {
@@ -1569,20 +1890,35 @@ uint32_t matrix4::move(matrix4 &other) noexcept
 uint32_t matrix4::initialize(matrix4 &&other) noexcept
 {
     int32_t initialization_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("matrix4::initialize(matrix4 &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("matrix4::initialize(matrix4 &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("matrix4::initialize(matrix4 &&) source",
+            "called with uninitialised source object");
         return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_INVALID_STATE)));
     }
     if (this == &other)
         return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (matrix4::set_error(static_cast<uint32_t>(destroy_error)));
+        }
+        matrix4_set_identity(this->_m);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (matrix4::set_error(static_cast<uint32_t>(destroy_error)));
+    }
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (matrix4::set_error(static_cast<uint32_t>(initialization_error)));

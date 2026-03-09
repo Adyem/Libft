@@ -359,31 +359,3 @@ ft_bool vector3::is_thread_safe() const noexcept
     vector3::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *vector3::get_mutex_for_testing() noexcept
-{
-    pt_recursive_mutex *mutex_pointer;
-    int32_t mutex_error;
-
-    if (this->_mutex == ft_nullptr)
-    {
-        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-        if (mutex_pointer == ft_nullptr)
-        {
-            vector3::set_error(FT_ERR_NO_MEMORY);
-            return (ft_nullptr);
-        }
-        mutex_error = mutex_pointer->initialize();
-        if (mutex_error != FT_ERR_SUCCESS)
-        {
-            delete mutex_pointer;
-            vector3::set_error(static_cast<uint32_t>(mutex_error));
-            return (ft_nullptr);
-        }
-        this->_mutex = mutex_pointer;
-    }
-    vector3::set_error(FT_ERR_SUCCESS);
-    return (this->_mutex);
-}
-#endif

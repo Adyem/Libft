@@ -153,33 +153,6 @@ matrix2 matrix2::invert() const
     return (matrix2(result_00, result_01, result_10, result_11));
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *matrix2::get_mutex_for_testing() noexcept
-{
-    pt_recursive_mutex *mutex_pointer;
-    int32_t mutex_error;
-
-    if (this->_mutex == ft_nullptr)
-    {
-        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-        if (mutex_pointer == ft_nullptr)
-        {
-            matrix2::set_error(FT_ERR_NO_MEMORY);
-            return (ft_nullptr);
-        }
-        mutex_error = mutex_pointer->initialize();
-        if (mutex_error != FT_ERR_SUCCESS)
-        {
-            delete mutex_pointer;
-            matrix2::set_error(static_cast<uint32_t>(mutex_error));
-            return (ft_nullptr);
-        }
-        this->_mutex = mutex_pointer;
-    }
-    matrix2::set_error(FT_ERR_SUCCESS);
-    return (this->_mutex);
-}
-#endif
 
 uint32_t matrix2::enable_thread_safety() noexcept
 {
@@ -393,33 +366,6 @@ matrix3 matrix3::invert() const
             result_20, result_21, result_22));
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *matrix3::get_mutex_for_testing() noexcept
-{
-    pt_recursive_mutex *mutex_pointer;
-    int32_t mutex_error;
-
-    if (this->_mutex == ft_nullptr)
-    {
-        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-        if (mutex_pointer == ft_nullptr)
-        {
-            matrix3::set_error(FT_ERR_NO_MEMORY);
-            return (ft_nullptr);
-        }
-        mutex_error = mutex_pointer->initialize();
-        if (mutex_error != FT_ERR_SUCCESS)
-        {
-            delete mutex_pointer;
-            matrix3::set_error(static_cast<uint32_t>(mutex_error));
-            return (ft_nullptr);
-        }
-        this->_mutex = mutex_pointer;
-    }
-    matrix3::set_error(FT_ERR_SUCCESS);
-    return (this->_mutex);
-}
-#endif
 
 uint32_t matrix3::enable_thread_safety() noexcept
 {
@@ -789,33 +735,6 @@ matrix4 matrix4::make_rotation_z(double angle)
             0.0, 0.0, 0.0, 1.0));
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *matrix4::get_mutex_for_testing() noexcept
-{
-    pt_recursive_mutex *mutex_pointer;
-    int32_t mutex_error;
-
-    if (this->_mutex == ft_nullptr)
-    {
-        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-        if (mutex_pointer == ft_nullptr)
-        {
-            matrix4::set_error(FT_ERR_NO_MEMORY);
-            return (ft_nullptr);
-        }
-        mutex_error = mutex_pointer->initialize();
-        if (mutex_error != FT_ERR_SUCCESS)
-        {
-            delete mutex_pointer;
-            matrix4::set_error(static_cast<uint32_t>(mutex_error));
-            return (ft_nullptr);
-        }
-        this->_mutex = mutex_pointer;
-    }
-    matrix4::set_error(FT_ERR_SUCCESS);
-    return (this->_mutex);
-}
-#endif
 
 uint32_t matrix4::enable_thread_safety() noexcept
 {

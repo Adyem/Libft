@@ -182,20 +182,37 @@ uint32_t ft_dual_number::initialize(double value, double derivative) noexcept
 uint32_t ft_dual_number::initialize(const ft_dual_number &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("ft_dual_number::initialize(const ft_dual_number &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("ft_dual_number::initialize(const ft_dual_number &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("ft_dual_number::initialize(const ft_dual_number &) source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (destroy_error);
+        }
+        this->_value = 0.0;
+        this->_derivative = 0.0;
+        this->_operation_error = FT_ERR_SUCCESS;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -217,20 +234,37 @@ int32_t ft_dual_number::move(ft_dual_number &other) noexcept
     const ft_dual_number *lower;
     const ft_dual_number *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("ft_dual_number::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("ft_dual_number::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("ft_dual_number::move source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (destroy_error);
+        }
+        this->_value = 0.0;
+        this->_derivative = 0.0;
+        this->_operation_error = FT_ERR_SUCCESS;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -239,7 +273,13 @@ int32_t ft_dual_number::move(ft_dual_number &other) noexcept
     }
     lock_error = ft_dual_number::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_value = 0.0;
+        this->_derivative = 0.0;
+        this->_operation_error = FT_ERR_SUCCESS;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (lock_error);
+    }
     this->_value = other._value;
     this->_derivative = other._derivative;
     this->_operation_error = other._operation_error;
@@ -253,20 +293,37 @@ int32_t ft_dual_number::move(ft_dual_number &other) noexcept
 uint32_t ft_dual_number::initialize(ft_dual_number &&other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("ft_dual_number::initialize(ft_dual_number &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("ft_dual_number::initialize(ft_dual_number &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("ft_dual_number::initialize(ft_dual_number &&) source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+                return (destroy_error);
+        }
+        this->_value = 0.0;
+        this->_derivative = 0.0;
+        this->_operation_error = FT_ERR_SUCCESS;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -828,40 +885,20 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
     return (result);
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_dual_number::get_mutex_for_validation() const noexcept
-{
-    pt_recursive_mutex *mutex_pointer;
-    int32_t mutex_error;
-
-    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
-        return (ft_nullptr);
-    if (this->_mutex == ft_nullptr)
-    {
-        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-        if (mutex_pointer == ft_nullptr)
-            return (ft_nullptr);
-        mutex_error = mutex_pointer->initialize();
-        if (mutex_error != FT_ERR_SUCCESS)
-        {
-            delete mutex_pointer;
-            return (ft_nullptr);
-        }
-        const_cast<ft_dual_number *>(this)->_mutex = mutex_pointer;
-    }
-    return (this->_mutex);
-}
-#endif
 
 uint32_t ft_dual_number::get_error() const noexcept
 {
-    this->abort_if_not_initialised("ft_dual_number::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->abort_lifecycle_error("ft_dual_number::get_error",
+            "called while object is uninitialised");
     return (ft_dual_number::_last_error);
 }
 
 const char *ft_dual_number::get_error_str() const noexcept
 {
-    this->abort_if_not_initialised("ft_dual_number::get_error_str");
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->abort_lifecycle_error("ft_dual_number::get_error_str",
+            "called while object is uninitialised");
     return (ft_strerror(this->get_error()));
 }
 
