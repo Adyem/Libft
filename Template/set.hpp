@@ -15,22 +15,22 @@ class ft_set
 {
     private:
         ElementType*                  _data;
-        size_t                        _capacity;
-        size_t                        _size;
+        ft_size_t                        _capacity;
+        ft_size_t                        _size;
         mutable pt_recursive_mutex*   _mutex;
         static thread_local int32_t   _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code)
+        static int32_t set_error(int32_t error_code)
         {
             _last_error = error_code;
             return (error_code);
         }
 
-        bool ensure_capacity(size_t desired_capacity)
+        bool ensure_capacity(ft_size_t desired_capacity)
         {
-            size_t new_capacity;
+            ft_size_t new_capacity;
             ElementType* new_data;
-            size_t index;
+            ft_size_t index;
 
             if (desired_capacity <= this->_capacity)
                 return (true);
@@ -43,7 +43,7 @@ class ft_set
             new_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * new_capacity));
             if (new_data == ft_nullptr)
             {
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return (false);
             }
             index = 0;
@@ -60,11 +60,11 @@ class ft_set
             return (true);
         }
 
-        size_t find_index(const ElementType& value) const
+        ft_size_t find_index(const ElementType& value) const
         {
-            size_t left;
-            size_t right;
-            size_t middle;
+            ft_size_t left;
+            ft_size_t right;
+            ft_size_t middle;
 
             left = 0;
             right = this->_size;
@@ -81,11 +81,11 @@ class ft_set
             return (this->_size);
         }
 
-        size_t lower_bound(const ElementType& value) const
+        ft_size_t lower_bound(const ElementType& value) const
         {
-            size_t left;
-            size_t right;
-            size_t middle;
+            ft_size_t left;
+            ft_size_t right;
+            ft_size_t middle;
 
             left = 0;
             right = this->_size;
@@ -100,30 +100,29 @@ class ft_set
             return (left);
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
-                return (set_last_operation_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
+                return (set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        int unlock_internal(bool lock_acquired) const
+        int32_t unlock_internal(ft_bool lock_acquired) const
         {
-            if (lock_acquired == false || this->_mutex == ft_nullptr)
+            if (lock_acquired == FT_FALSE || this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            if (pt_recursive_mutex_unlock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
-                return (set_last_operation_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED));
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_ERR_SUCCESS);
         }
 
     public:
-        ft_set(size_t initial_capacity = 0)
+        ft_set(ft_size_t initial_capacity = 0)
             : _data(ft_nullptr), _capacity(0), _size(0), _mutex(ft_nullptr)
         {
             if (initial_capacity > 0)
@@ -131,12 +130,12 @@ class ft_set
                 this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initial_capacity));
                 if (this->_data == ft_nullptr)
                 {
-                    set_last_operation_error(FT_ERR_NO_MEMORY);
+                    set_error(FT_ERR_NO_MEMORY);
                     return ;
                 }
                 this->_capacity = initial_capacity;
             }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -154,56 +153,54 @@ class ft_set
         ft_set(ft_set&& other) = delete;
         ft_set& operator=(ft_set&& other) = delete;
 
-        int enable_thread_safety()
+        int32_t enable_thread_safety()
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
 
             if (this->_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_mutex = new_mutex;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety()
+        int32_t disable_thread_safety()
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
 
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool is_thread_safe() const
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
 
-        int lock(bool *lock_acquired) const
+        int32_t lock(ft_bool *lock_acquired) const
         {
-            if (this->lock_internal(lock_acquired) != FT_ERR_SUCCESS)
-                return (-1);
-            return (0);
+            return (set_error(this->lock_internal(lock_acquired)));
         }
 
-        void unlock(bool lock_acquired) const
+        void unlock(ft_bool lock_acquired) const
         {
             (void)this->unlock_internal(lock_acquired);
             return ;
@@ -211,12 +208,12 @@ class ft_set
 
         void insert(const ElementType& value)
         {
-            bool lock_acquired;
-            int lock_result;
-            size_t position;
-            size_t index;
+            ft_bool lock_acquired;
+            int32_t lock_result;
+            ft_size_t position;
+            ft_size_t index;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return ;
@@ -224,7 +221,7 @@ class ft_set
             if (position < this->_size && !(value < this->_data[position])
                 && !(this->_data[position] < value))
             {
-                set_last_operation_error(FT_ERR_SUCCESS);
+                set_error(FT_ERR_SUCCESS);
                 (void)this->unlock_internal(lock_acquired);
                 return ;
             }
@@ -242,19 +239,19 @@ class ft_set
             }
             ::construct_at(&this->_data[position], value);
             this->_size += 1;
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
         void insert(ElementType&& value)
         {
-            bool lock_acquired;
-            int lock_result;
-            size_t position;
-            size_t index;
+            ft_bool lock_acquired;
+            int32_t lock_result;
+            ft_size_t position;
+            ft_size_t index;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return ;
@@ -262,7 +259,7 @@ class ft_set
             if (position < this->_size && !(value < this->_data[position])
                 && !(this->_data[position] < value))
             {
-                set_last_operation_error(FT_ERR_SUCCESS);
+                set_error(FT_ERR_SUCCESS);
                 (void)this->unlock_internal(lock_acquired);
                 return ;
             }
@@ -280,74 +277,74 @@ class ft_set
             }
             ::construct_at(&this->_data[position], ft_move(value));
             this->_size += 1;
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
         ElementType* find(const ElementType& value)
         {
-            bool lock_acquired;
-            int lock_result;
-            size_t index;
+            ft_bool lock_acquired;
+            int32_t lock_result;
+            ft_size_t index;
             ElementType *result;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (ft_nullptr);
             index = this->find_index(value);
             if (index == this->_size)
             {
-                set_last_operation_error(FT_ERR_NOT_FOUND);
+                set_error(FT_ERR_NOT_FOUND);
                 (void)this->unlock_internal(lock_acquired);
                 return (ft_nullptr);
             }
             result = &this->_data[index];
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return (result);
         }
 
         const ElementType* find(const ElementType& value) const
         {
-            bool lock_acquired;
-            int lock_result;
-            size_t index;
+            ft_bool lock_acquired;
+            int32_t lock_result;
+            ft_size_t index;
             const ElementType *result;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (ft_nullptr);
             index = this->find_index(value);
             if (index == this->_size)
             {
-                set_last_operation_error(FT_ERR_NOT_FOUND);
+                set_error(FT_ERR_NOT_FOUND);
                 (void)this->unlock_internal(lock_acquired);
                 return (ft_nullptr);
             }
             result = &this->_data[index];
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return (result);
         }
 
         void remove(const ElementType& value)
         {
-            bool lock_acquired;
-            int lock_result;
-            size_t index;
-            size_t current_index;
+            ft_bool lock_acquired;
+            int32_t lock_result;
+            ft_size_t index;
+            ft_size_t current_index;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return ;
             index = this->find_index(value);
             if (index == this->_size)
             {
-                set_last_operation_error(FT_ERR_NOT_FOUND);
+                set_error(FT_ERR_NOT_FOUND);
                 (void)this->unlock_internal(lock_acquired);
                 return ;
             }
@@ -360,50 +357,50 @@ class ft_set
                 current_index += 1;
             }
             this->_size -= 1;
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
-        size_t size() const
+        ft_size_t size() const
         {
-            bool lock_acquired;
-            int lock_result;
-            size_t current_size;
+            ft_bool lock_acquired;
+            int32_t lock_result;
+            ft_size_t current_size;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (0);
             current_size = this->_size;
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return (current_size);
         }
 
         bool empty() const
         {
-            bool lock_acquired;
-            int lock_result;
+            ft_bool lock_acquired;
+            int32_t lock_result;
             bool result;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return (true);
             result = (this->_size == 0);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return (result);
         }
 
         void clear()
         {
-            bool lock_acquired;
-            int lock_result;
-            size_t index;
+            ft_bool lock_acquired;
+            int32_t lock_result;
+            ft_size_t index;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_result = this->lock_internal(&lock_acquired);
             if (lock_result != FT_ERR_SUCCESS)
                 return ;
@@ -414,27 +411,21 @@ class ft_set
                 index += 1;
             }
             this->_size = 0;
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
-        static int32_t last_operation_error()
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-        static const char *last_operation_error_str()
+        static const char *get_error_str() noexcept
         {
             return (ft_strerror(_last_error));
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept
-        {
-            return (this->_mutex);
-        }
-#endif
 };
 
 template <typename ElementType>

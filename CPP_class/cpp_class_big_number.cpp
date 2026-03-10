@@ -342,7 +342,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     return ;
 }
 
-uint32_t ft_big_number::initialize() noexcept
+int32_t ft_big_number::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -360,7 +360,7 @@ uint32_t ft_big_number::initialize() noexcept
     return (ft_big_number::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_big_number::initialize(const ft_big_number& other) noexcept
+int32_t ft_big_number::initialize(const ft_big_number& other) noexcept
 {
     int32_t destroy_error;
 
@@ -407,7 +407,7 @@ uint32_t ft_big_number::initialize(const ft_big_number& other) noexcept
     return (ft_big_number::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_big_number::initialize(ft_big_number&& other) noexcept
+int32_t ft_big_number::initialize(ft_big_number&& other) noexcept
 {
     int32_t destroy_error;
     int32_t move_error;
@@ -1988,14 +1988,14 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
     if (base < 2 || base > 16)
     {
         ft_big_number::set_error(FT_ERR_INVALID_ARGUMENT);
-        return (ft_string(FT_ERR_INVALID_ARGUMENT));
+        return (ft_string::from_error(FT_ERR_INVALID_ARGUMENT));
     }
     int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_error != FT_ERR_SUCCESS)
     {
         ft_big_number::set_error(lock_error);
-        return (ft_string(lock_error));
+        return (ft_string::from_error(lock_error));
     }
     auto finalize_to_string = [&](ft_string result_value, int32_t error_code) noexcept -> ft_string
     {
@@ -2007,7 +2007,7 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
     {
         int32_t stored_error = ft_big_number::_last_error;
 
-        return (finalize_to_string(ft_string(stored_error), stored_error));
+        return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
     }
     ft_bool is_zero_value_result = this->is_zero_value();
     ft_bool original_negative = this->_is_negative;
@@ -2019,19 +2019,19 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
 
         initialization_error = zero_result.initialize();
         if (initialization_error != FT_ERR_SUCCESS)
-            return (finalize_to_string(ft_string(initialization_error),
+            return (finalize_to_string(ft_string::from_error(initialization_error),
                         initialization_error));
 
         zero_result.append('0');
         if (ft_big_number::_last_error != 0)
-            return (finalize_to_string(ft_string(FT_ERR_NO_MEMORY), FT_ERR_NO_MEMORY));
+            return (finalize_to_string(ft_string::from_error(FT_ERR_NO_MEMORY), FT_ERR_NO_MEMORY));
         return (finalize_to_string(zero_result, FT_ERR_SUCCESS));
     }
     ft_big_number magnitude;
     int32_t magnitude_initialization_error = magnitude.initialize(*this);
 
     if (magnitude_initialization_error != FT_ERR_SUCCESS)
-        return (finalize_to_string(ft_string(magnitude_initialization_error),
+        return (finalize_to_string(ft_string::from_error(magnitude_initialization_error),
                     magnitude_initialization_error));
     magnitude._is_negative = FT_FALSE;
     ft_big_number base_value;
@@ -2039,7 +2039,7 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
 
     base_value_initialization_error = base_value.initialize();
     if (base_value_initialization_error != FT_ERR_SUCCESS)
-        return (finalize_to_string(ft_string(base_value_initialization_error),
+        return (finalize_to_string(ft_string::from_error(base_value_initialization_error),
                     base_value_initialization_error));
 
     base_value.append_unsigned(static_cast<uint64_t>(base));
@@ -2047,14 +2047,14 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
     {
         int32_t stored_error = ft_big_number::_last_error;
 
-        return (finalize_to_string(ft_string(stored_error), stored_error));
+        return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
     }
     ft_string digits;
     int32_t digits_initialization_error;
 
     digits_initialization_error = digits.initialize();
     if (digits_initialization_error != FT_ERR_SUCCESS)
-        return (finalize_to_string(ft_string(digits_initialization_error),
+        return (finalize_to_string(ft_string::from_error(digits_initialization_error),
                     digits_initialization_error));
 
     while (!magnitude.is_zero_value())
@@ -2065,7 +2065,7 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
         {
             int32_t stored_error = ft_big_number::_last_error;
 
-            return (finalize_to_string(ft_string(stored_error), stored_error));
+            return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
         }
         ft_big_number product = quotient * base_value;
 
@@ -2073,7 +2073,7 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
         {
             int32_t stored_error = ft_big_number::_last_error;
 
-            return (finalize_to_string(ft_string(stored_error), stored_error));
+            return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
         }
         ft_big_number remainder_number = magnitude - product;
 
@@ -2081,7 +2081,7 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
         {
             int32_t stored_error = ft_big_number::_last_error;
 
-            return (finalize_to_string(ft_string(stored_error), stored_error));
+            return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
         }
         const char* remainder_digits = remainder_number.c_str();
 
@@ -2089,7 +2089,7 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
         {
             int32_t stored_error = ft_big_number::_last_error;
 
-            return (finalize_to_string(ft_string(stored_error), stored_error));
+            return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
         }
         ft_size_t remainder_index = 0;
         int32_t remainder_value = 0;
@@ -2102,18 +2102,18 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
         char digit_symbol = ft_big_number_digit_symbol(remainder_value);
 
         if (digit_symbol == '\0')
-            return (finalize_to_string(ft_string(FT_ERR_INVALID_ARGUMENT),
+            return (finalize_to_string(ft_string::from_error(FT_ERR_INVALID_ARGUMENT),
                         FT_ERR_INVALID_ARGUMENT));
         digits.append(digit_symbol);
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
-            return (finalize_to_string(ft_string(FT_ERR_NO_MEMORY),
+            return (finalize_to_string(ft_string::from_error(FT_ERR_NO_MEMORY),
                         FT_ERR_NO_MEMORY));
         magnitude = quotient;
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
         {
             int32_t stored_error = ft_big_number::_last_error;
 
-            return (finalize_to_string(ft_string(stored_error), stored_error));
+            return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
         }
         magnitude._is_negative = FT_FALSE;
     }
@@ -2122,14 +2122,14 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
 
     result_initialization_error = result.initialize();
     if (result_initialization_error != FT_ERR_SUCCESS)
-        return (finalize_to_string(ft_string(result_initialization_error),
+        return (finalize_to_string(ft_string::from_error(result_initialization_error),
                     result_initialization_error));
 
     if (original_negative)
     {
         result.append('-');
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
-            return (finalize_to_string(ft_string(FT_ERR_NO_MEMORY),
+            return (finalize_to_string(ft_string::from_error(FT_ERR_NO_MEMORY),
                         FT_ERR_NO_MEMORY));
     }
     const char* digits_buffer = digits.c_str();
@@ -2139,14 +2139,14 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
     {
         int32_t stored_error = ft_big_number::_last_error;
 
-        return (finalize_to_string(ft_string(stored_error), stored_error));
+        return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
     }
     while (digits_length > 0)
     {
         digits_length--;
         result.append(digits_buffer[digits_length]);
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
-            return (finalize_to_string(ft_string(FT_ERR_NO_MEMORY),
+            return (finalize_to_string(ft_string::from_error(FT_ERR_NO_MEMORY),
                         FT_ERR_NO_MEMORY));
     }
     return (finalize_to_string(result, FT_ERR_SUCCESS));
@@ -2465,11 +2465,6 @@ int32_t ft_big_number_proxy::get_error() const noexcept
     return (this->_last_error);
 }
 
-int32_t ft_big_number::last_operation_error() noexcept
-{
-    return (ft_big_number::_last_error);
-}
-
 ft_big_number_proxy operator+(const ft_big_number_proxy &left, const ft_big_number &right) noexcept
 {
     return (left.operator+(right));
@@ -2493,9 +2488,4 @@ ft_big_number_proxy operator/(const ft_big_number_proxy &left, const ft_big_numb
 ft_big_number_proxy operator%(const ft_big_number_proxy &left, const ft_big_number &right) noexcept
 {
     return (left.operator%(right));
-}
-
-const char* ft_big_number::last_operation_error_str() noexcept
-{
-    return (ft_big_number::get_error_str());
 }

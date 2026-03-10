@@ -1,9 +1,10 @@
 #include "bitset.hpp"
+#include <cstdint>
 
-static int compile_bitset_usage()
+static int32_t compile_bitset_usage()
 {
     ft_bitset bitset_value(8);
-    int test_value;
+    int32_t test_value;
 
     bitset_value.set(1);
     test_value = 0;
@@ -12,4 +13,4 @@ static int compile_bitset_usage()
     return (test_value);
 }
 
-static int bitset_dummy = compile_bitset_usage();
+static int32_t bitset_dummy = compile_bitset_usage();

@@ -212,7 +212,7 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
     entry.function = sink;
     entry.user_data = user_data;
     g_sinks.push_back(entry);
-    if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+    if (g_sinks.get_error() != FT_ERR_SUCCESS)
     {
         log_sink_teardown_thread_safety(&entry);
         lock_error = logger_unlock_sinks();
@@ -328,7 +328,7 @@ void ft_json_sink(const char *message, void *user_data)
                     return ;
             }
             context_fields.push_back(field);
-            if (context_fields.last_operation_error() != FT_ERR_SUCCESS)
+            if (context_fields.get_error() != FT_ERR_SUCCESS)
                 return ;
         }
         if (message[index] == '\0' || message[index] == '\n')
@@ -358,7 +358,7 @@ void ft_json_sink(const char *message, void *user_data)
     size_t context_index;
 
     context_count = context_fields.size();
-    if (context_fields.last_operation_error() != FT_ERR_SUCCESS)
+    if (context_fields.get_error() != FT_ERR_SUCCESS)
     {
         return ;
     }

@@ -62,11 +62,11 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
             return (-1);
     }
     ft_unordered_map<char*, char*>::const_iterator attribute_iterator = source->attributes.begin();
-    int attribute_error_code = source->attributes.last_operation_error();
+    int attribute_error_code = source->attributes.get_error();
     if (attribute_error_code != FT_ERR_SUCCESS)
         return (xml_dom_report_error(attribute_error_code));
     ft_unordered_map<char*, char*>::const_iterator attribute_end = source->attributes.end();
-    attribute_error_code = source->attributes.last_operation_error();
+    attribute_error_code = source->attributes.get_error();
     if (attribute_error_code != FT_ERR_SUCCESS)
         return (xml_dom_report_error(attribute_error_code));
     while (attribute_iterator != attribute_end)
@@ -97,7 +97,7 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         child_source = source->children[index];
         int child_error_code;
 
-        child_error_code = ft_vector<xml_node *>::last_operation_error();
+        child_error_code = ft_vector<xml_node *>::get_error();
         if (child_error_code != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_error_code));
         if (!child_source)
@@ -216,12 +216,12 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
 
         int attribute_keys_error;
 
-        attribute_keys_error = ft_vector<ft_string>::last_operation_error();
+        attribute_keys_error = ft_vector<ft_string>::get_error();
         if (attribute_keys_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_keys_error));
         int attribute_values_error;
 
-        attribute_values_error = ft_vector<ft_string>::last_operation_error();
+        attribute_values_error = ft_vector<ft_string>::get_error();
         if (attribute_values_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_values_error));
         output += " ";
@@ -250,7 +250,7 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
     has_value = value.size() > 0;
     int children_error_code;
 
-    children_error_code = ft_vector<ft_dom_node *>::last_operation_error();
+    children_error_code = ft_vector<ft_dom_node *>::get_error();
     if (children_error_code != FT_ERR_SUCCESS)
         return (xml_dom_report_error(children_error_code));
     if (!has_children && !has_value)
@@ -279,7 +279,7 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
 
         int child_vector_error;
 
-        child_vector_error = ft_vector<ft_dom_node *>::last_operation_error();
+        child_vector_error = ft_vector<ft_dom_node *>::get_error();
         if (child_vector_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_vector_error));
         if (xml_dom_serialize_node(child_node, output) != 0)

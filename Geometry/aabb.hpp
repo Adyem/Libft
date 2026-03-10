@@ -6,7 +6,11 @@
 
 class aabb
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         double                    _minimum_x;
         double                    _minimum_y;
         double                    _maximum_x;
@@ -20,8 +24,6 @@ class aabb
 
     public:
         aabb() noexcept;
-        aabb(double minimum_x, double minimum_y, double maximum_x,
-                double maximum_y) noexcept;
         aabb(const aabb &other) noexcept;
         aabb(aabb &&other) noexcept;
         ~aabb() noexcept;
@@ -29,11 +31,11 @@ class aabb
         aabb &operator=(const aabb &other) = delete;
         aabb &operator=(aabb &&other) noexcept = delete;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double minimum_x, double minimum_y,
+        int32_t initialize() noexcept;
+        int32_t initialize(double minimum_x, double minimum_y,
                 double maximum_x, double maximum_y) noexcept;
-        uint32_t initialize(const aabb &other) noexcept;
-        uint32_t initialize(aabb &&other) noexcept;
+        int32_t initialize(const aabb &other) noexcept;
+        int32_t initialize(aabb &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(aabb &other) noexcept;
 

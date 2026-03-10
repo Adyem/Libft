@@ -82,22 +82,6 @@ circle::circle() noexcept
     return ;
 }
 
-circle::circle(double center_x, double center_y, double radius) noexcept
-    : _center_x(0.0)
-    , _center_y(0.0)
-    , _radius(0.0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->initialize(center_x, center_y, radius);
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 circle::circle(const circle &other) noexcept
     : _center_x(0.0)
     , _center_y(0.0)
@@ -130,7 +114,7 @@ circle::circle(circle &&other) noexcept
     return ;
 }
 
-uint32_t circle::initialize() noexcept
+int32_t circle::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -144,7 +128,7 @@ uint32_t circle::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t circle::initialize(double center_x, double center_y, double radius) noexcept
+int32_t circle::initialize(double center_x, double center_y, double radius) noexcept
 {
     uint32_t initialize_error;
 
@@ -157,7 +141,7 @@ uint32_t circle::initialize(double center_x, double center_y, double radius) noe
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t circle::initialize(const circle &other) noexcept
+int32_t circle::initialize(const circle &other) noexcept
 {
     uint32_t destroy_error;
     uint32_t lock_error;
@@ -245,7 +229,7 @@ uint32_t circle::move(circle &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t circle::initialize(circle &&other) noexcept
+int32_t circle::initialize(circle &&other) noexcept
 {
     return (this->move(other));
 }

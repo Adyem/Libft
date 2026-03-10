@@ -130,7 +130,7 @@ ft_sound_device::~ft_sound_device(void)
     return ;
 }
 
-uint32_t ft_sound_device::initialize(void)
+int32_t ft_sound_device::initialize(void)
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -142,7 +142,7 @@ uint32_t ft_sound_device::initialize(void)
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_sound_device::initialize(const ft_sound_device &other)
+int32_t ft_sound_device::initialize(const ft_sound_device &other)
 {
     uint32_t destroy_error;
 
@@ -182,7 +182,7 @@ uint32_t ft_sound_device::initialize(const ft_sound_device &other)
     return (this->initialize());
 }
 
-uint32_t ft_sound_device::initialize(ft_sound_device &&other)
+int32_t ft_sound_device::initialize(ft_sound_device &&other)
 {
     uint32_t destroy_error;
 

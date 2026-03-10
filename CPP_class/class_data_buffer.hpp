@@ -61,9 +61,9 @@ class DataBuffer
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
         uint32_t _operation_error;
-        static thread_local uint32_t _last_operation_error;
+        static thread_local uint32_t _last_error;
 
-        static uint32_t set_last_operation_error(uint32_t error_code) noexcept;
+        static uint32_t set_last_error(uint32_t error_code) noexcept;
         void set_operation_error(uint32_t error_code) noexcept;
         int32_t write_length_locked(ft_size_t length) noexcept;
         int32_t read_length_locked(ft_size_t &length) noexcept;
@@ -83,8 +83,8 @@ class DataBuffer
         DataBuffer& operator=(const DataBuffer& other) noexcept = delete;
         DataBuffer& operator=(DataBuffer&& other) noexcept = delete;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(const DataBuffer &other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const DataBuffer &other) noexcept;
         uint32_t move(DataBuffer &other) noexcept;
         int32_t destroy() noexcept;
 
@@ -108,8 +108,8 @@ class DataBuffer
         int32_t disable_thread_safety(void) noexcept;
         ft_bool is_thread_safe(void) const noexcept;
 
-        static int32_t last_operation_error() noexcept;
-        static const char *last_operation_error_str() noexcept;
+        static int32_t get_error() noexcept;
+        static const char *get_error_str() noexcept;
         int32_t get_operation_error() const noexcept;
         const char *get_operation_error_str() const noexcept;
 
@@ -134,7 +134,7 @@ int32_t DataBuffer::write_value(const ValueType &value) noexcept
     while (index < length)
     {
         this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
-        int32_t push_error = ft_vector<uint8_t>::last_operation_error();
+        int32_t push_error = ft_vector<uint8_t>::get_error();
         if (push_error != FT_ERR_SUCCESS)
         {
             cma_free(bytes);
@@ -211,12 +211,12 @@ data_buffer_proxy data_buffer_proxy::operator<<(const ValueType &value) const no
 {
     if (this->_error_code != FT_ERR_SUCCESS)
     {
-        DataBuffer::set_last_operation_error(this->_error_code);
+        DataBuffer::set_last_error(this->_error_code);
         return (data_buffer_proxy(this->_data_buffer, this->_error_code));
     }
     if (this->_data_buffer == ft_nullptr)
     {
-        DataBuffer::set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+        DataBuffer::set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (data_buffer_proxy(this->_data_buffer, FT_ERR_INVALID_ARGUMENT));
     }
     return (this->_data_buffer->operator<<(value));
@@ -227,12 +227,12 @@ data_buffer_proxy data_buffer_proxy::operator>>(ValueType &value) const noexcept
 {
     if (this->_error_code != FT_ERR_SUCCESS)
     {
-        DataBuffer::set_last_operation_error(this->_error_code);
+        DataBuffer::set_last_error(this->_error_code);
         return (data_buffer_proxy(this->_data_buffer, this->_error_code));
     }
     if (this->_data_buffer == ft_nullptr)
     {
-        DataBuffer::set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+        DataBuffer::set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (data_buffer_proxy(this->_data_buffer, FT_ERR_INVALID_ARGUMENT));
     }
     return (this->_data_buffer->operator>>(value));

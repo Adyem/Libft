@@ -82,8 +82,8 @@ class scma_handle_accessor
         scma_handle_accessor &operator=(const scma_handle_accessor &other) = delete;
         scma_handle_accessor &operator=(scma_handle_accessor &&other) = delete;
 
-        uint32_t    initialize(void);
-        uint32_t    initialize(scma_handle handle);
+        int32_t    initialize(void);
+        int32_t    initialize(scma_handle handle);
         uint32_t    move(scma_handle_accessor &other);
         int32_t     destroy(void);
         int32_t     enable_thread_safety(void);
@@ -192,7 +192,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(
 }
 
 template <typename TValue>
-inline uint32_t    scma_handle_accessor<TValue>::initialize(void)
+inline int32_t    scma_handle_accessor<TValue>::initialize(void)
 {
     int32_t lock_result;
 
@@ -219,7 +219,7 @@ inline uint32_t    scma_handle_accessor<TValue>::initialize(void)
 }
 
 template <typename TValue>
-inline uint32_t    scma_handle_accessor<TValue>::initialize(scma_handle handle)
+inline int32_t    scma_handle_accessor<TValue>::initialize(scma_handle handle)
 {
     uint32_t initialization_error;
 

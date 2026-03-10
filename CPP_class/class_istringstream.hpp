@@ -23,7 +23,7 @@ class ft_istringstream : public ft_istream
         ft_istringstream &operator=(const ft_istringstream &) = delete;
         ft_istringstream &operator=(ft_istringstream &&other) = delete;
 
-        uint32_t initialize(const ft_string &string) noexcept;
+        int32_t initialize(const ft_string &string) noexcept;
         int32_t destroy() noexcept;
         int32_t move(ft_istringstream &other) noexcept;
 

@@ -4,7 +4,7 @@
 #include "../PThread/pthread_internal.hpp"
 #include <new>
 
-thread_local uint32_t DataBuffer::_last_operation_error = FT_ERR_SUCCESS;
+thread_local uint32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
 
 data_buffer_proxy::data_buffer_proxy() noexcept
     : _data_buffer(ft_nullptr), _error_code(FT_ERR_SUCCESS)
@@ -42,9 +42,9 @@ int32_t data_buffer_proxy::get_error() const noexcept
     return (this->_error_code);
 }
 
-uint32_t DataBuffer::set_last_operation_error(uint32_t error_code) noexcept
+uint32_t DataBuffer::set_last_error(uint32_t error_code) noexcept
 {
-    DataBuffer::_last_operation_error = error_code;
+    DataBuffer::_last_error = error_code;
     return (error_code);
 }
 
@@ -52,7 +52,7 @@ void DataBuffer::set_operation_error(uint32_t error_code) noexcept
 {
     this->_operation_error = error_code;
     this->_ok = (error_code == FT_ERR_SUCCESS);
-    DataBuffer::set_last_operation_error(error_code);
+    DataBuffer::set_last_error(error_code);
     return ;
 }
 
@@ -64,7 +64,7 @@ int32_t DataBuffer::write_length_locked(ft_size_t length) noexcept
     while (index < sizeof(ft_size_t))
     {
         this->_buffer.push_back(pointer[index]);
-        int32_t push_error = ft_vector<uint8_t>::last_operation_error();
+        int32_t push_error = ft_vector<uint8_t>::get_error();
         if (push_error != FT_ERR_SUCCESS)
             return (push_error);
         index++;
@@ -119,11 +119,11 @@ DataBuffer::~DataBuffer() noexcept
     }
     int32_t destroy_error = this->destroy();
     if (destroy_error != FT_ERR_SUCCESS)
-        DataBuffer::set_last_operation_error(destroy_error);
+        DataBuffer::set_last_error(destroy_error);
     return ;
 }
 
-uint32_t DataBuffer::initialize() noexcept
+int32_t DataBuffer::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -136,11 +136,11 @@ uint32_t DataBuffer::initialize() noexcept
     this->_ok = FT_TRUE;
     this->_operation_error = FT_ERR_SUCCESS;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    DataBuffer::set_last_operation_error(FT_ERR_SUCCESS);
+    DataBuffer::set_last_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t DataBuffer::initialize(const DataBuffer &other) noexcept
+int32_t DataBuffer::initialize(const DataBuffer &other) noexcept
 {
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -161,7 +161,7 @@ uint32_t DataBuffer::initialize(const DataBuffer &other) noexcept
         this->_ok = FT_TRUE;
         this->_operation_error = FT_ERR_SUCCESS;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        DataBuffer::set_last_operation_error(FT_ERR_SUCCESS);
+        DataBuffer::set_last_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
     if (&other == this)
@@ -202,7 +202,7 @@ uint32_t DataBuffer::initialize(const DataBuffer &other) noexcept
     while (index < other._buffer.size() && copy_error == FT_ERR_SUCCESS)
     {
         this->_buffer.push_back(other._buffer[index]);
-        copy_error = ft_vector<uint8_t>::last_operation_error();
+        copy_error = ft_vector<uint8_t>::get_error();
         index++;
     }
     if (copy_error == FT_ERR_SUCCESS)
@@ -281,7 +281,7 @@ uint32_t DataBuffer::move(DataBuffer &other) noexcept
     while (index < other._buffer.size() && move_error == FT_ERR_SUCCESS)
     {
         this->_buffer.push_back(other._buffer[index]);
-        move_error = ft_vector<uint8_t>::last_operation_error();
+        move_error = ft_vector<uint8_t>::get_error();
         index++;
     }
     if (move_error == FT_ERR_SUCCESS)
@@ -320,11 +320,11 @@ int32_t DataBuffer::destroy() noexcept
     this->_ok = FT_TRUE;
     this->_operation_error = destroy_error;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    DataBuffer::set_last_operation_error(this->_operation_error);
+    DataBuffer::set_last_error(this->_operation_error);
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
     this->_operation_error = FT_ERR_SUCCESS;
-    DataBuffer::set_last_operation_error(FT_ERR_SUCCESS);
+    DataBuffer::set_last_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -471,14 +471,14 @@ ft_bool DataBuffer::is_thread_safe(void) const noexcept
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t DataBuffer::last_operation_error() noexcept
+int32_t DataBuffer::get_error() noexcept
 {
-    return (DataBuffer::_last_operation_error);
+    return (DataBuffer::_last_error);
 }
 
-const char *DataBuffer::last_operation_error_str() noexcept
+const char *DataBuffer::get_error_str() noexcept
 {
-    return (ft_strerror(DataBuffer::last_operation_error()));
+    return (ft_strerror(DataBuffer::get_error()));
 }
 
 int32_t DataBuffer::get_operation_error() const noexcept

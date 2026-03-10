@@ -17,9 +17,9 @@ class ft_fd_istream : public ft_istream
         int32_t _file_descriptor;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
+
     public:
         ft_fd_istream() noexcept;
-        ft_fd_istream(int32_t file_descriptor) noexcept;
         ft_fd_istream(const ft_fd_istream &other) noexcept;
         ft_fd_istream(ft_fd_istream &&other) noexcept;
         ~ft_fd_istream() noexcept;

@@ -23,7 +23,7 @@ class Iterator
         static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        static int32_t set_error(int32_t error_code) noexcept
         {
             _last_error = error_code;
             return (error_code);
@@ -50,33 +50,29 @@ class Iterator
             return ;
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_result));
+                return (set_error(lock_result));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        int unlock_internal(bool lock_acquired) const
+        int32_t unlock_internal(ft_bool lock_acquired) const
         {
-            int unlock_result;
-
-            if (lock_acquired == false)
+            if (lock_acquired == FT_FALSE)
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            if (unlock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_result));
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_ERR_SUCCESS);
         }
 
@@ -123,7 +119,7 @@ class Iterator
             : _ptr(ft_nullptr), _mutex(ft_nullptr),
               _initialised_state(_state_uninitialised)
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -149,273 +145,229 @@ class Iterator
         Iterator &operator=(const Iterator &other) = delete;
         Iterator &operator=(Iterator &&other) = delete;
 
-        int initialize() noexcept
+        int32_t initialize() noexcept
         {
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("Iterator::initialize",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_ptr = ft_nullptr;
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int initialize(ValueType *pointer) noexcept
+        int32_t initialize(ValueType *pointer) noexcept
         {
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("Iterator::initialize(pointer)",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_ptr = pointer;
             this->_initialised_state = _state_initialised;
             if (pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_INVALID_ARGUMENT));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_INVALID_ARGUMENT));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int destroy() noexcept
+        int32_t destroy() noexcept
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             if (this->_initialised_state != _state_initialised)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            lock_acquired = false;
+                return (set_error(FT_ERR_SUCCESS));
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_error));
+                return (set_error(lock_error));
             this->_ptr = ft_nullptr;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_error));
+            (void)this->unlock_internal(lock_acquired);
             this->_initialised_state = _state_destroyed;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         Iterator& operator++() noexcept
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("Iterator::operator++");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (*this);
             }
             if (this->_ptr == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_INVALID_ARGUMENT);
                 return (*this);
             }
             ++this->_ptr;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                set_last_operation_error(unlock_error);
-            else
-                set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (*this);
         }
 
         bool operator!=(const Iterator& other) const noexcept
         {
-            bool this_lock_acquired;
-            bool other_lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool this_lock_acquired;
+            ft_bool other_lock_acquired;
+            int32_t lock_error;
             bool is_different;
 
             this->abort_if_not_initialised("Iterator::operator!=");
             other.abort_if_not_initialised("Iterator::operator!= other");
-            this_lock_acquired = false;
+            this_lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&this_lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (false);
             }
-            other_lock_acquired = false;
+            other_lock_acquired = FT_FALSE;
             lock_error = other.lock_internal(&other_lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                unlock_error = this->unlock_internal(this_lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(lock_error);
+                (void)this->unlock_internal(this_lock_acquired);
+                set_error(lock_error);
                 return (false);
             }
             is_different = (this->_ptr != other._ptr);
-            unlock_error = other.unlock_internal(other_lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                this->unlock_internal(this_lock_acquired);
-                set_last_operation_error(unlock_error);
-                return (false);
-            }
-            unlock_error = this->unlock_internal(this_lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (false);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)other.unlock_internal(other_lock_acquired);
+            (void)this->unlock_internal(this_lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (is_different);
         }
 
         reference_proxy operator*() const noexcept
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
             ValueType *pointer_value;
 
             this->abort_if_not_initialised("Iterator::operator*");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
                 return (reference_proxy(ft_nullptr,
-                    set_last_operation_error(lock_error)));
+                    set_error(lock_error)));
             pointer_value = this->_ptr;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (reference_proxy(ft_nullptr,
-                    set_last_operation_error(unlock_error)));
+            (void)this->unlock_internal(lock_acquired);
             if (pointer_value == ft_nullptr)
                 return (reference_proxy(ft_nullptr,
-                    set_last_operation_error(FT_ERR_INVALID_ARGUMENT)));
+                    set_error(FT_ERR_INVALID_ARGUMENT)));
             return (reference_proxy(pointer_value,
-                set_last_operation_error(FT_ERR_SUCCESS)));
+                set_error(FT_ERR_SUCCESS)));
         }
 
         ValueType *operator->() const noexcept
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
             ValueType *pointer_value;
 
             this->abort_if_not_initialised("Iterator::operator->");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (ft_nullptr);
             }
             pointer_value = this->_ptr;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (ft_nullptr);
-            }
+            (void)this->unlock_internal(lock_acquired);
             if (pointer_value == ft_nullptr)
             {
-                set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+                set_error(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (pointer_value);
         }
 
-        int enable_thread_safety()
+        int32_t enable_thread_safety()
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
 
             this->abort_if_not_initialised("Iterator::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_mutex = new_mutex;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety()
+        int32_t disable_thread_safety()
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
 
             if (this->_initialised_state != _state_initialised
                 && this->_initialised_state != _state_destroyed)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool is_thread_safe() const noexcept
         {
             if (this->_initialised_state != _state_initialised)
             {
-                set_last_operation_error(FT_ERR_INVALID_STATE);
+                set_error(FT_ERR_INVALID_STATE);
                 return (false);
             }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
 
-        int lock(bool *lock_acquired) const
+        int32_t lock(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             this->abort_if_not_initialised("Iterator::lock");
             lock_result = this->lock_internal(lock_acquired);
-            if (lock_result != FT_ERR_SUCCESS)
-                return (-1);
-            set_last_operation_error(FT_ERR_SUCCESS);
-            return (0);
+            return (set_error(lock_result));
         }
 
-        void unlock(bool lock_acquired) const
+        void unlock(ft_bool lock_acquired) const
         {
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
-        static int32_t last_operation_error() noexcept
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-        static const char *last_operation_error_str() noexcept
+        static const char *get_error_str() noexcept
         {
             return (ft_strerror(_last_error));
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept
-        {
-            return (this->_mutex);
-        }
-#endif
 };
 
 template <typename ValueType>

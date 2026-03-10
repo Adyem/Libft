@@ -2,6 +2,8 @@
 #define FT_CONTAINER_SERIALIZATION_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../Basic/basic.hpp"
 #include "../JSon/json.hpp"
 #include "../YAML/yaml.hpp"
 #include "../Template/vector.hpp"
@@ -16,7 +18,7 @@
 #include <cstdio>
 
 template <typename ElementType>
-int default_string_serializer(const ElementType &value, ft_string &output) noexcept
+int32_t default_string_serializer(const ElementType &value, ft_string &output) noexcept
 {
     if constexpr (std::is_same<ElementType, ft_string>::value)
     {
@@ -37,12 +39,12 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
     else if constexpr (std::is_integral<ElementType>::value)
     {
         char number_buffer[64];
-        int format_result;
+        int32_t format_result;
 
         if constexpr (std::numeric_limits<ElementType>::is_signed)
         {
             format_result = std::snprintf(number_buffer, sizeof(number_buffer),
-                    "%lld", static_cast<long long>(value));
+                    "%" FT_PRId64, static_cast<int64_t>(value));
             if (format_result <= 0)
                 return (-1);
             output = number_buffer;
@@ -53,7 +55,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
         else
         {
             format_result = std::snprintf(number_buffer, sizeof(number_buffer),
-                    "%llu", static_cast<unsigned long long>(value));
+                    "%" FT_PRIu64, static_cast<uint64_t>(value));
             if (format_result <= 0)
                 return (-1);
             output = number_buffer;
@@ -65,7 +67,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
     else if constexpr (std::is_floating_point<ElementType>::value)
     {
         char number_buffer[128];
-        int format_result;
+        int32_t format_result;
 
         format_result = std::snprintf(number_buffer, sizeof(number_buffer),
                 "%.17g", static_cast<double>(value));
@@ -80,7 +82,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
 }
 
 template <typename ElementType>
-int default_string_deserializer(const char *value_string, ElementType &output) noexcept
+int32_t default_string_deserializer(const char *value_string, ElementType &output) noexcept
 {
     if (value_string == ft_nullptr)
         return (-1);
@@ -98,26 +100,26 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
         errno = 0;
         if constexpr (std::numeric_limits<ElementType>::is_signed)
         {
-            long long parsed_value;
+            int64_t parsed_value;
 
-            parsed_value = std::strtoll(value_string, &end_pointer, 10);
-            if (end_pointer == value_string || errno == ERANGE)
+            parsed_value = ft_strtol(value_string, &end_pointer, 10);
+            if (end_pointer == value_string || end_pointer == ft_nullptr)
                 return (-1);
-            if (parsed_value < static_cast<long long>(std::numeric_limits<ElementType>::min()))
+            if (parsed_value < static_cast<int64_t>(std::numeric_limits<ElementType>::min()))
                 return (-1);
-            if (parsed_value > static_cast<long long>(std::numeric_limits<ElementType>::max()))
+            if (parsed_value > static_cast<int64_t>(std::numeric_limits<ElementType>::max()))
                 return (-1);
             output = static_cast<ElementType>(parsed_value);
             return (0);
         }
         else
         {
-            unsigned long long parsed_value;
+            uint64_t parsed_value;
 
-            parsed_value = std::strtoull(value_string, &end_pointer, 10);
-            if (end_pointer == value_string || errno == ERANGE)
+            parsed_value = ft_strtoul(value_string, &end_pointer, 10);
+            if (end_pointer == value_string || end_pointer == ft_nullptr)
                 return (-1);
-            if (parsed_value > static_cast<unsigned long long>(std::numeric_limits<ElementType>::max()))
+            if (parsed_value > static_cast<uint64_t>(std::numeric_limits<ElementType>::max()))
                 return (-1);
             output = static_cast<ElementType>(parsed_value);
             return (0);
@@ -139,7 +141,7 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
 }
 
 template <typename ElementType, typename Serializer>
-int ft_vector_serialize_json(const ft_vector<ElementType> &values,
+int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
     const char *group_name,
     Serializer serializer,
     json_group *&output_group,
@@ -147,8 +149,8 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     const char *item_prefix = "item_") noexcept
 {
     json_group *group;
-    size_t index;
-    size_t total_size;
+    ft_size_t index;
+    ft_size_t total_size;
 
     output_group = ft_nullptr;
     if (group_name == ft_nullptr || count_key == ft_nullptr || item_prefix == ft_nullptr)
@@ -173,10 +175,10 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
         }
         {
             char index_buffer[32];
-            int format_result;
+            int32_t format_result;
 
             format_result = std::snprintf(index_buffer, sizeof(index_buffer),
-                    "%llu", static_cast<unsigned long long>(index));
+                    "%" FT_PRIu64, static_cast<uint64_t>(index));
             if (format_result <= 0)
             {
                 json_free_groups(group);
@@ -207,7 +209,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     {
         json_item *count_item;
 
-        count_item = json_create_item(count_key, static_cast<int>(total_size));
+        count_item = json_create_item(count_key, static_cast<int32_t>(total_size));
         if (count_item == ft_nullptr)
         {
             json_free_groups(group);
@@ -220,7 +222,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
 }
 
 template <typename ElementType>
-int ft_vector_serialize_json(const ft_vector<ElementType> &values,
+int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
     const char *group_name,
     json_group *&output_group,
     const char *count_key = "count",
@@ -232,15 +234,15 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
 }
 
 template <typename ElementType, typename Deserializer>
-int ft_vector_deserialize_json(json_group *group,
+int32_t ft_vector_deserialize_json(json_group *group,
     const char *count_key,
     const char *item_prefix,
     ft_vector<ElementType> &output,
     Deserializer deserializer) noexcept
 {
     json_item *count_item;
-    long long expected_count;
-    size_t index;
+    int64_t expected_count;
+    ft_size_t index;
     ft_vector<ElementType> parsed_values;
 
     if (group == ft_nullptr || count_key == ft_nullptr || item_prefix == ft_nullptr)
@@ -249,11 +251,11 @@ int ft_vector_deserialize_json(json_group *group,
     if (count_item == ft_nullptr || count_item->value == ft_nullptr)
         return (-1);
     errno = 0;
-    expected_count = std::strtoll(count_item->value, ft_nullptr, 10);
-    if (errno == ERANGE || expected_count < 0)
+    expected_count = ft_strtol(count_item->value, ft_nullptr, 10);
+    if (expected_count < 0)
         return (-1);
     index = 0;
-    while (index < static_cast<size_t>(expected_count))
+    while (index < static_cast<ft_size_t>(expected_count))
     {
         ft_string key_string(item_prefix);
         ft_string index_string;
@@ -262,10 +264,10 @@ int ft_vector_deserialize_json(json_group *group,
 
         {
             char index_buffer[32];
-            int format_result;
+            int32_t format_result;
 
             format_result = std::snprintf(index_buffer, sizeof(index_buffer),
-                    "%llu", static_cast<unsigned long long>(index));
+                    "%" FT_PRIu64, static_cast<uint64_t>(index));
             if (format_result <= 0)
                 return (-1);
             index_string = index_buffer;
@@ -288,7 +290,7 @@ int ft_vector_deserialize_json(json_group *group,
 }
 
 template <typename ElementType>
-int ft_vector_deserialize_json(json_group *group,
+int32_t ft_vector_deserialize_json(json_group *group,
     ft_vector<ElementType> &output,
     const char *count_key = "count",
     const char *item_prefix = "item_") noexcept
@@ -298,13 +300,13 @@ int ft_vector_deserialize_json(json_group *group,
 }
 
 template <typename ElementType, typename Serializer>
-int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
+int32_t ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     Serializer serializer,
     yaml_value *&output_value) noexcept
 {
     yaml_value *list_value;
-    size_t index;
-    size_t total_size;
+    ft_size_t index;
+    ft_size_t total_size;
 
     output_value = ft_nullptr;
     list_value = new (std::nothrow) yaml_value();
@@ -341,7 +343,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
 }
 
 template <typename ElementType>
-int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
+int32_t ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     yaml_value *&output_value) noexcept
 {
     return (ft_vector_serialize_yaml(values,
@@ -350,13 +352,13 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
 }
 
 template <typename ElementType, typename Deserializer>
-int ft_vector_deserialize_yaml(const yaml_value &value,
+int32_t ft_vector_deserialize_yaml(const yaml_value &value,
     ft_vector<ElementType> &output,
     Deserializer deserializer) noexcept
 {
     const ft_vector<yaml_value*> &children = value.get_list();
-    size_t total;
-    size_t index;
+    ft_size_t total;
+    ft_size_t index;
     ft_vector<ElementType> parsed;
 
     if (value.get_type() != YAML_LIST)
@@ -385,7 +387,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
 }
 
 template <typename ElementType>
-int ft_vector_deserialize_yaml(const yaml_value &value,
+int32_t ft_vector_deserialize_yaml(const yaml_value &value,
     ft_vector<ElementType> &output) noexcept
 {
     return (ft_vector_deserialize_yaml(value, output,

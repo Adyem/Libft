@@ -6,7 +6,11 @@
 
 class sphere
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         double                    _center_x;
         double                    _center_y;
         double                    _center_z;
@@ -20,8 +24,6 @@ class sphere
 
     public:
         sphere() noexcept;
-        sphere(double center_x, double center_y, double center_z,
-                double radius) noexcept;
         sphere(const sphere &other) noexcept;
         sphere(sphere &&other) noexcept;
         ~sphere() noexcept;
@@ -29,11 +31,11 @@ class sphere
         sphere &operator=(const sphere &other) = delete;
         sphere &operator=(sphere &&other) noexcept = delete;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double center_x, double center_y, double center_z,
+        int32_t initialize() noexcept;
+        int32_t initialize(double center_x, double center_y, double center_z,
                 double radius) noexcept;
-        uint32_t initialize(const sphere &other) noexcept;
-        uint32_t initialize(sphere &&other) noexcept;
+        int32_t initialize(const sphere &other) noexcept;
+        int32_t initialize(sphere &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(sphere &other) noexcept;
 

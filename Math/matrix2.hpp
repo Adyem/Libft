@@ -33,10 +33,10 @@ class matrix2
         matrix2(matrix2 &&other) noexcept;
         matrix2 &operator=(matrix2 &&other) = delete;
         ~matrix2() noexcept;
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double m00, double m01, double m10, double m11) noexcept;
-        uint32_t initialize(const matrix2 &other) noexcept;
-        uint32_t initialize(matrix2 &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(double m00, double m01, double m10, double m11) noexcept;
+        int32_t initialize(const matrix2 &other) noexcept;
+        int32_t initialize(matrix2 &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(matrix2 &other) noexcept;
         vector2 transform(const vector2 &vector) const;

@@ -74,10 +74,10 @@ int32_t ft_cubic_spline::disable_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
-        if (mutex_error != FT_ERR_SUCCESS)
-            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
     }
     return (FT_ERR_SUCCESS);
 }
@@ -121,7 +121,7 @@ ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept
     return ;
 }
 
-uint32_t ft_cubic_spline::initialize() noexcept
+int32_t ft_cubic_spline::initialize() noexcept
 {
     int32_t initialize_error;
 
@@ -175,23 +175,31 @@ uint32_t ft_cubic_spline::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
+int32_t ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
 {
     int32_t copy_error;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("ft_cubic_spline::initialize(const ft_cubic_spline &) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("ft_cubic_spline::initialize(const ft_cubic_spline &) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("ft_cubic_spline::initialize(const ft_cubic_spline &) source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
     copy_error = this->initialize();
     if (copy_error != FT_ERR_SUCCESS)
         return (copy_error);
@@ -224,22 +232,30 @@ int32_t ft_cubic_spline::move(ft_cubic_spline &other) noexcept
     const ft_cubic_spline *lower;
     const ft_cubic_spline *upper;
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t lower_error;
     int32_t upper_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("ft_cubic_spline::move source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("ft_cubic_spline::move source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("ft_cubic_spline::move source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->initialize();
@@ -295,23 +311,31 @@ int32_t ft_cubic_spline::move(ft_cubic_spline &other) noexcept
     return (move_error);
 }
 
-uint32_t ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
+int32_t ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     int32_t move_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-            other.abort_lifecycle_error("ft_cubic_spline::initialize(ft_cubic_spline &&) source",
-                "called with uninitialised source object");
-        else
-            other.abort_lifecycle_error("ft_cubic_spline::initialize(ft_cubic_spline &&) source",
-                "called with destroyed source object");
+        other.abort_lifecycle_error("ft_cubic_spline::initialize(ft_cubic_spline &&) source",
+            "called with uninitialised source object");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -326,27 +350,33 @@ uint32_t ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
 
 int32_t ft_cubic_spline::destroy() noexcept
 {
+    int32_t first_error;
     int32_t destroy_error;
     int32_t disable_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (FT_ERR_SUCCESS);
+    first_error = FT_ERR_SUCCESS;
     disable_error = this->disable_thread_safety();
-    if (disable_error != FT_ERR_SUCCESS)
-        return (disable_error);
+    if (disable_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = disable_error;
     destroy_error = this->_x_values.destroy();
-    if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->_a_coefficients.destroy();
-    if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->_b_coefficients.destroy();
-    if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->_c_coefficients.destroy();
-    if (destroy_error == FT_ERR_SUCCESS)
-        destroy_error = this->_d_coefficients.destroy();
+    if (destroy_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = destroy_error;
+    destroy_error = this->_a_coefficients.destroy();
+    if (destroy_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = destroy_error;
+    destroy_error = this->_b_coefficients.destroy();
+    if (destroy_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = destroy_error;
+    destroy_error = this->_c_coefficients.destroy();
+    if (destroy_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = destroy_error;
+    destroy_error = this->_d_coefficients.destroy();
+    if (destroy_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = destroy_error;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    if (destroy_error != FT_ERR_SUCCESS)
-        return (destroy_error);
-    return (FT_ERR_SUCCESS);
+    return (first_error);
 }
 
 ft_cubic_spline::~ft_cubic_spline() noexcept

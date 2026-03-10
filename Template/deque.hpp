@@ -5,6 +5,7 @@
 #include "move.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
@@ -27,16 +28,13 @@ class ft_deque
 
         deque_node                *_front;
         deque_node                *_back;
-        size_t                     _size;
+        ft_size_t                     _size;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                    _initialised_state;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        static int32_t set_error(int32_t error_code) noexcept
         {
             _last_error = error_code;
             return (error_code);
@@ -45,51 +43,39 @@ class ft_deque
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const
         {
-            if (method_name == ft_nullptr)
-                method_name = "unknown";
-            if (reason == ft_nullptr)
-                reason = "unknown";
-            pf_printf_fd(2, "ft_deque lifecycle error: %s: %s\n", method_name, reason);
-            su_abort();
+            errno_abort_lifecycle(this->_initialised_state, method_name, reason);
             return ;
         }
 
         void abort_if_not_initialised(const char *method_name) const
         {
-            if (this->_initialised_state == _state_initialised)
-                return ;
-            this->abort_lifecycle_error(method_name,
-                "called while object is not initialised");
+            errno_abort_if_uninitialised(this->_initialised_state, method_name);
             return ;
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_result));
+                return (set_error(lock_result));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        int unlock_internal(bool lock_acquired) const
+        int32_t unlock_internal(ft_bool lock_acquired) const
         {
-            int unlock_result;
-
-            if (lock_acquired == false)
+            if (lock_acquired == FT_FALSE)
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            if (unlock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_result));
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_ERR_SUCCESS);
         }
 
@@ -112,15 +98,15 @@ class ft_deque
     public:
         ft_deque()
             : _front(ft_nullptr), _back(ft_nullptr), _size(0), _mutex(ft_nullptr),
-              _initialised_state(_state_uninitialised)
+              _initialised_state(FT_CLASS_STATE_UNINITIALISED)
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
         ~ft_deque()
         {
-            if (this->_initialised_state == _state_initialised)
+            if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
                 (void)this->disable_thread_safety();
@@ -132,99 +118,93 @@ class ft_deque
         ft_deque &operator=(const ft_deque &other) = delete;
         ft_deque &operator=(ft_deque &&other) = delete;
 
-        int initialize()
+        int32_t initialize()
         {
-            if (this->_initialised_state == _state_initialised)
+            if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
             {
                 this->abort_lifecycle_error("ft_deque::initialize",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_front = ft_nullptr;
             this->_back = ft_nullptr;
             this->_size = 0;
-            this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int destroy()
+        int32_t destroy()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
-            if (this->_initialised_state != _state_initialised)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            lock_acquired = false;
+            if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+                return (set_error(FT_ERR_SUCCESS));
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_error));
+                return (set_error(lock_error));
             this->destroy_all_unlocked();
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_error));
-            this->_initialised_state = _state_destroyed;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            (void)this->unlock_internal(lock_acquired);
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int enable_thread_safety()
+        int32_t enable_thread_safety()
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
 
             this->abort_if_not_initialised("ft_deque::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_mutex = new_mutex;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety()
+        int32_t disable_thread_safety()
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
 
             this->abort_if_not_initialised("ft_deque::disable_thread_safety");
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool is_thread_safe() const
         {
             this->abort_if_not_initialised("ft_deque::is_thread_safe");
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
 
-        int lock(bool *lock_acquired) const
+        int32_t lock(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             this->abort_if_not_initialised("ft_deque::lock");
             lock_result = this->lock_internal(lock_acquired);
-            if (lock_result != FT_ERR_SUCCESS)
-                return (-1);
-            set_last_operation_error(FT_ERR_SUCCESS);
-            return (0);
+            return (set_error(lock_result));
         }
 
-        void unlock(bool lock_acquired) const
+        void unlock(ft_bool lock_acquired) const
         {
             (void)this->unlock_internal(lock_acquired);
             return ;
@@ -233,26 +213,22 @@ class ft_deque
         void push_front(const ElementType& value)
         {
             deque_node *new_node;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::push_front");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             new_node = static_cast<deque_node*>(cma_malloc(sizeof(deque_node)));
             if (new_node == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NO_MEMORY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_NO_MEMORY);
                 return ;
             }
             construct_at(&new_node->_data, value);
@@ -264,39 +240,30 @@ class ft_deque
                 this->_front->_prev = new_node;
             this->_front = new_node;
             this->_size += 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
         void push_front(ElementType&& value)
         {
             deque_node *new_node;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::push_front(move)");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             new_node = static_cast<deque_node*>(cma_malloc(sizeof(deque_node)));
             if (new_node == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NO_MEMORY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_NO_MEMORY);
                 return ;
             }
             construct_at(&new_node->_data, ft_move(value));
@@ -308,39 +275,30 @@ class ft_deque
                 this->_front->_prev = new_node;
             this->_front = new_node;
             this->_size += 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
         void push_back(const ElementType& value)
         {
             deque_node *new_node;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::push_back");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             new_node = static_cast<deque_node*>(cma_malloc(sizeof(deque_node)));
             if (new_node == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NO_MEMORY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_NO_MEMORY);
                 return ;
             }
             construct_at(&new_node->_data, value);
@@ -352,39 +310,30 @@ class ft_deque
                 this->_back->_next = new_node;
             this->_back = new_node;
             this->_size += 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
         void push_back(ElementType&& value)
         {
             deque_node *new_node;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::push_back(move)");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             new_node = static_cast<deque_node*>(cma_malloc(sizeof(deque_node)));
             if (new_node == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NO_MEMORY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_NO_MEMORY);
                 return ;
             }
             construct_at(&new_node->_data, ft_move(value));
@@ -396,13 +345,8 @@ class ft_deque
                 this->_back->_next = new_node;
             this->_back = new_node;
             this->_size += 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -410,25 +354,21 @@ class ft_deque
         {
             deque_node *node;
             ElementType value;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::pop_front");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (ElementType());
             }
             if (this->_front == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (ElementType());
             }
             node = this->_front;
@@ -441,13 +381,8 @@ class ft_deque
             destroy_at(&node->_data);
             cma_free(node);
             this->_size -= 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (ElementType());
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (value);
         }
 
@@ -455,25 +390,21 @@ class ft_deque
         {
             deque_node *node;
             ElementType value;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::pop_back");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (ElementType());
             }
             if (this->_back == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (ElementType());
             }
             node = this->_back;
@@ -486,13 +417,8 @@ class ft_deque
             destroy_at(&node->_data);
             cma_free(node);
             this->_size -= 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (ElementType());
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (value);
         }
 
@@ -500,35 +426,26 @@ class ft_deque
         {
             static ElementType error_element = ElementType();
             ElementType *value_pointer;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::front");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (error_element);
             }
             if (this->_front == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (error_element);
             }
             value_pointer = &this->_front->_data;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (error_element);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (*value_pointer);
         }
 
@@ -536,35 +453,26 @@ class ft_deque
         {
             static ElementType error_element = ElementType();
             const ElementType *value_pointer;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::front const");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (error_element);
             }
             if (this->_front == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (error_element);
             }
             value_pointer = &this->_front->_data;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (error_element);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (*value_pointer);
         }
 
@@ -572,35 +480,26 @@ class ft_deque
         {
             static ElementType error_element = ElementType();
             ElementType *value_pointer;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::back");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (error_element);
             }
             if (this->_back == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (error_element);
             }
             value_pointer = &this->_back->_data;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (error_element);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (*value_pointer);
         }
 
@@ -608,131 +507,98 @@ class ft_deque
         {
             static ElementType error_element = ElementType();
             const ElementType *value_pointer;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::back const");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (error_element);
             }
             if (this->_back == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (error_element);
             }
             value_pointer = &this->_back->_data;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (error_element);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (*value_pointer);
         }
 
-        size_t size() const
+        ft_size_t size() const
         {
-            size_t current_size;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_size_t current_size;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::size");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (0);
             }
             current_size = this->_size;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (0);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (current_size);
         }
 
         bool empty() const
         {
             bool is_empty;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::empty");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (true);
             }
             is_empty = (this->_size == 0);
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (true);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (is_empty);
         }
 
         void clear()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_deque::clear");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             this->destroy_all_unlocked();
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
-        static int32_t last_operation_error() noexcept
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-        static const char *last_operation_error_str() noexcept
+        static const char *get_error_str() noexcept
         {
             return (ft_strerror(_last_error));
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept
-        {
-            return (this->_mutex);
-        }
-#endif
 };
 
 template <typename ElementType>

@@ -84,7 +84,7 @@ ft_ofstream::~ft_ofstream() noexcept
     return ;
 }
 
-uint32_t ft_ofstream::initialize() noexcept
+int32_t ft_ofstream::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {

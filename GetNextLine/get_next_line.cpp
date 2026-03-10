@@ -12,7 +12,7 @@ static ft_bool map_has_new_error(ft_unordered_map<int32_t, char*> &map, int32_t 
 {
     int32_t updated_error;
 
-    updated_error = map.last_operation_error();
+    updated_error = map.get_error();
     if (current_error)
         *current_error = updated_error;
     if (updated_error != FT_ERR_SUCCESS)
@@ -33,7 +33,7 @@ static ft_bool stream_map_has_new_error(ft_unordered_map<int32_t, gnl_stream*> &
 {
     int32_t updated_error;
 
-    updated_error = map.last_operation_error();
+    updated_error = map.get_error();
     if (current_error)
         *current_error = updated_error;
     if (updated_error != FT_ERR_SUCCESS)
@@ -63,7 +63,7 @@ static gnl_stream *gnl_acquire_stream(int32_t file_descriptor, int32_t *stream_e
             *stream_error = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    map_error_before = g_gnl_streams.last_operation_error();
+    map_error_before = g_gnl_streams.get_error();
     ft_unordered_map<int32_t, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
@@ -94,7 +94,7 @@ static gnl_stream *gnl_acquire_stream(int32_t file_descriptor, int32_t *stream_e
             *stream_error = init_error;
         return (ft_nullptr);
     }
-    map_error_before = g_gnl_streams.last_operation_error();
+    map_error_before = g_gnl_streams.get_error();
     g_gnl_streams.insert(file_descriptor, new_stream);
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
@@ -406,14 +406,14 @@ int32_t gnl_clear_stream(int32_t file_descriptor)
     char *leftover;
     gnl_stream *stream_pointer;
 
-    map_error_before = g_gnl_leftovers.last_operation_error();
+    map_error_before = g_gnl_leftovers.get_error();
     ft_unordered_map<int32_t, char*>::iterator map_iterator(g_gnl_leftovers.find(file_descriptor));
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         return (map_error_after);
     if (map_iterator == g_gnl_leftovers.end())
         return (FT_ERR_SUCCESS);
     leftover = map_iterator->second;
-    map_error_before = g_gnl_leftovers.last_operation_error();
+    map_error_before = g_gnl_leftovers.get_error();
     g_gnl_leftovers.erase(file_descriptor);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
     {
@@ -423,14 +423,14 @@ int32_t gnl_clear_stream(int32_t file_descriptor)
     }
     if (leftover)
         cma_free(leftover);
-    map_error_before = g_gnl_streams.last_operation_error();
+    map_error_before = g_gnl_streams.get_error();
     ft_unordered_map<int32_t, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
         return (map_error_after);
     if (stream_iterator != g_gnl_streams.end())
     {
         stream_pointer = stream_iterator->second;
-        map_error_before = g_gnl_streams.last_operation_error();
+        map_error_before = g_gnl_streams.get_error();
         g_gnl_streams.erase(file_descriptor);
         if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
             return (map_error_after);
@@ -472,14 +472,14 @@ char    *get_next_line(int32_t file_descriptor, ft_size_t buffer_size)
             error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    map_error_before = g_gnl_leftovers.last_operation_error();
+    map_error_before = g_gnl_leftovers.get_error();
     ft_unordered_map<int32_t, char*>::iterator map_iterator = g_gnl_leftovers.find(file_descriptor);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         return (ft_nullptr);
     if (map_iterator != g_gnl_leftovers.end())
     {
         combined_buffer = map_iterator->second;
-        map_error_before = g_gnl_leftovers.last_operation_error();
+        map_error_before = g_gnl_leftovers.get_error();
         g_gnl_leftovers.erase(file_descriptor);
         if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
@@ -520,7 +520,7 @@ char    *get_next_line(int32_t file_descriptor, ft_size_t buffer_size)
     {
         if (leftover_string)
         {
-            map_error_before = g_gnl_leftovers.last_operation_error();
+            map_error_before = g_gnl_leftovers.get_error();
             g_gnl_leftovers.insert(file_descriptor, leftover_string);
             if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
             {
@@ -535,7 +535,7 @@ char    *get_next_line(int32_t file_descriptor, ft_size_t buffer_size)
     }
     if (leftover_string)
     {
-        map_error_before = g_gnl_leftovers.last_operation_error();
+        map_error_before = g_gnl_leftovers.get_error();
         g_gnl_leftovers.insert(file_descriptor, leftover_string);
         if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {

@@ -500,9 +500,9 @@ int ft_crafting::register_recipe(int recipe_id,
     while (ingredient_index < ingredient_count)
     {
         copied_ingredients.push_back(ingredients[ingredient_index]);
-        if (ft_vector<ft_crafting_ingredient>::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_vector<ft_crafting_ingredient>::get_error() != FT_ERR_SUCCESS)
         {
-            int error_code = ft_vector<ft_crafting_ingredient>::last_operation_error();
+            int error_code = ft_vector<ft_crafting_ingredient>::get_error();
             this->unlock_internal(lock_acquired);
             this->set_error(error_code);
             return (error_code);

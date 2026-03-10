@@ -33,7 +33,7 @@ class ft_file
         ft_file &operator=(const ft_file&) = delete;
         ft_file& operator=(ft_file&& other) = delete;
 
-        uint32_t            initialize() noexcept;
+        int32_t            initialize() noexcept;
         int32_t             destroy() noexcept;
         int32_t             move(ft_file &other) noexcept;
         int32_t            get_file_descriptor() const;

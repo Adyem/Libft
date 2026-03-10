@@ -292,7 +292,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             }
         }
         node->attributes.insert(attribute_name, attribute_value);
-        int attribute_error = node->attributes.last_operation_error();
+        int attribute_error = node->attributes.get_error();
         if (attribute_error != FT_ERR_SUCCESS)
         {
             if (attribute_value)
@@ -559,7 +559,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
                 return (ft_nullptr);
             }
             node->children.push_back(child);
-            int children_error_code = ft_vector<xml_node *>::last_operation_error();
+            int children_error_code = ft_vector<xml_node *>::get_error();
             if (children_error_code != FT_ERR_SUCCESS)
             {
                 delete child;
@@ -991,21 +991,21 @@ char *xml_document::write_to_string() const noexcept
             error_code = write_status;
         if (error_code == FT_ERR_SUCCESS)
         {
-            buffer_error = ft_vector<char>::last_operation_error();
+            buffer_error = ft_vector<char>::get_error();
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESS)
         {
             buffer.push_back('\n');
-            buffer_error = ft_vector<char>::last_operation_error();
+            buffer_error = ft_vector<char>::get_error();
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESS)
         {
             buffer.push_back('\0');
-            buffer_error = ft_vector<char>::last_operation_error();
+            buffer_error = ft_vector<char>::get_error();
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }

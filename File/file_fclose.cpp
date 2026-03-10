@@ -9,5 +9,5 @@ int ft_fclose(FILE *stream)
         return (EOF);
     if (std::fclose(stream) != 0)
         return (EOF);
-    return (FT_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }

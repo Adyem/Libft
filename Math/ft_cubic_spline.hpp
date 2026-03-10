@@ -38,9 +38,9 @@ class ft_cubic_spline
         ft_cubic_spline &operator=(const ft_cubic_spline &other) = delete;
         ft_cubic_spline &operator=(ft_cubic_spline &&other) noexcept = delete;
         ~ft_cubic_spline() noexcept;
-        uint32_t initialize() noexcept;
-        uint32_t initialize(const ft_cubic_spline &other) noexcept;
-        uint32_t initialize(ft_cubic_spline &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_cubic_spline &other) noexcept;
+        int32_t initialize(ft_cubic_spline &&other) noexcept;
         int32_t destroy() noexcept;
         int32_t move(ft_cubic_spline &other) noexcept;
         int32_t enable_thread_safety() noexcept;

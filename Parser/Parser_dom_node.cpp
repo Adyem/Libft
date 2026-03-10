@@ -287,7 +287,7 @@ int ft_dom_node::add_child(ft_dom_node *child) noexcept
         return (lock_error);
     this->_children.push_back(child);
     (void)this->unlock_internal(lock_acquired);
-    return (ft_vector<ft_dom_node *>::last_operation_error());
+    return (ft_vector<ft_dom_node *>::get_error());
 }
 
 const ft_vector<ft_dom_node*> &ft_dom_node::get_children() const noexcept
@@ -321,14 +321,14 @@ int ft_dom_node::add_attribute(const ft_string &key, const ft_string &value) noe
         key_index += 1;
     }
     this->_attribute_keys.push_back(key);
-    if (ft_vector<ft_string>::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_vector<ft_string>::get_error() != FT_ERR_SUCCESS)
     {
         (void)this->unlock_internal(lock_acquired);
-        return (ft_vector<ft_string>::last_operation_error());
+        return (ft_vector<ft_string>::get_error());
     }
     this->_attribute_values.push_back(value);
     (void)this->unlock_internal(lock_acquired);
-    return (ft_vector<ft_string>::last_operation_error());
+    return (ft_vector<ft_string>::get_error());
 }
 
 int ft_dom_node::add_attribute(const char *key, const char *value) noexcept

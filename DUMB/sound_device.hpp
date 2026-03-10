@@ -36,9 +36,9 @@ class ft_sound_device
         ft_sound_device &operator=(ft_sound_device &&other) = delete;
         virtual ~ft_sound_device(void);
 
-        uint32_t                     initialize(void);
-        uint32_t                     initialize(const ft_sound_device &other);
-        uint32_t                     initialize(ft_sound_device &&other);
+        int32_t                     initialize(void);
+        int32_t                     initialize(const ft_sound_device &other);
+        int32_t                     initialize(ft_sound_device &&other);
         int32_t                      destroy(void);
         int32_t                      move(ft_sound_device &other);
         virtual int32_t open(const ft_sound_spec *spec) = 0;

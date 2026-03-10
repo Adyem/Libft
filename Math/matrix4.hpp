@@ -35,13 +35,13 @@ class matrix4
         matrix4(matrix4 &&other) noexcept;
         matrix4 &operator=(matrix4 &&other) = delete;
         ~matrix4() noexcept;
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double m00, double m01, double m02, double m03,
+        int32_t initialize() noexcept;
+        int32_t initialize(double m00, double m01, double m02, double m03,
                 double m10, double m11, double m12, double m13,
                 double m20, double m21, double m22, double m23,
                 double m30, double m31, double m32, double m33) noexcept;
-        uint32_t initialize(const matrix4 &other) noexcept;
-        uint32_t initialize(matrix4 &&other) noexcept;
+        int32_t initialize(const matrix4 &other) noexcept;
+        int32_t initialize(matrix4 &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(matrix4 &other) noexcept;
         static matrix4 make_translation(double translation_x, double translation_y, double translation_z);

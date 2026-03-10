@@ -29,10 +29,10 @@ class ft_unordered_map
 {
     private:
         ft_pair<Key, MappedType>      *_data;
-        bool                          *_occupied;
-        size_t                        _capacity;
-        size_t                        _size;
-        size_t                        _requested_capacity;
+        ft_bool                          *_occupied;
+        ft_size_t                        _capacity;
+        ft_size_t                        _size;
+        ft_size_t                        _requested_capacity;
         mutable pt_recursive_mutex    *_mutex;
         mutable uint8_t               _initialised_state;
 
@@ -44,20 +44,20 @@ class ft_unordered_map
                     const char *reason) const;
         void    abort_if_not_initialised(const char *method_name) const;
         static thread_local int32_t _last_error;
-        static int set_last_operation_error(int error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        bool    has_storage_unlocked() const;
+        ft_bool    has_storage_unlocked() const;
         void    destroy_elements_unlocked();
         void    release_storage_unlocked();
-        int     prepare_empty_storage_unlocked(size_t capacity);
+        int32_t prepare_empty_storage_unlocked(ft_size_t capacity);
 
-        size_t  hash_key(const Key& key) const;
-        size_t  find_index_unlocked(const Key& key) const;
-        int     insert_internal_unlocked(const Key& key, const MappedType& value);
-        int     resize_unlocked(size_t new_capacity);
+        ft_size_t  hash_key(const Key& key) const;
+        ft_size_t  find_index_unlocked(const Key& key) const;
+        int32_t insert_internal_unlocked(const Key& key, const MappedType& value);
+        int32_t resize_unlocked(ft_size_t new_capacity);
 
-        int     lock_internal(bool *lock_acquired) const;
-        int     unlock_internal(bool lock_acquired) const;
+        int32_t lock_internal(ft_bool *lock_acquired) const;
+        int32_t unlock_internal(ft_bool lock_acquired) const;
 
     public:
         class mapped_proxy
@@ -87,9 +87,9 @@ class ft_unordered_map
         {
             private:
                 ft_pair<Key, MappedType>      *_data;
-                bool                          *_occupied;
-                size_t                        _index;
-                size_t                        _capacity;
+                ft_bool                          *_occupied;
+                ft_size_t                        _index;
+                ft_size_t                        _capacity;
                 uint8_t                       _initialised_state;
 
                 static thread_local int32_t   _last_error;
@@ -105,36 +105,36 @@ class ft_unordered_map
 
             public:
                 iterator();
-                iterator(ft_pair<Key, MappedType>* data, bool* occupied,
-                    size_t index, size_t capacity);
+                iterator(ft_pair<Key, MappedType>* data, ft_bool* occupied,
+                    ft_size_t index, ft_size_t capacity);
                 iterator(const iterator& other) = delete;
                 iterator(iterator&& other) = delete;
                 iterator& operator=(const iterator& other) = delete;
                 iterator& operator=(iterator&& other) = delete;
                 ~iterator();
 
-                int initialize(ft_pair<Key, MappedType>* data, bool* occupied,
-                    size_t index, size_t capacity);
-                int initialize(const iterator& other);
-                int initialize(iterator&& other);
-                int destroy();
-                int move(iterator& other);
-                int get_error() const;
+                int32_t initialize(ft_pair<Key, MappedType>* data, ft_bool* occupied,
+                    ft_size_t index, ft_size_t capacity);
+                int32_t initialize(const iterator& other);
+                int32_t initialize(iterator&& other);
+                int32_t destroy();
+                int32_t move(iterator& other);
+                int32_t get_error() const;
 
                 ft_pair<Key, MappedType>& operator*() const;
                 ft_pair<Key, MappedType>* operator->() const;
                 iterator& operator++();
-                bool operator==(const iterator& other) const;
-                bool operator!=(const iterator& other) const;
+                ft_bool operator==(const iterator& other) const;
+                ft_bool operator!=(const iterator& other) const;
         };
 
         class const_iterator
         {
             private:
                 const ft_pair<Key, MappedType>    *_data;
-                const bool                        *_occupied;
-                size_t                            _index;
-                size_t                            _capacity;
+                const ft_bool                        *_occupied;
+                ft_size_t                            _index;
+                ft_size_t                            _capacity;
                 uint8_t                           _initialised_state;
 
                 static thread_local int32_t       _last_error;
@@ -151,64 +151,59 @@ class ft_unordered_map
             public:
                 const_iterator();
                 const_iterator(const ft_pair<Key, MappedType>* data,
-                    const bool* occupied, size_t index, size_t capacity);
+                    const ft_bool* occupied, ft_size_t index, ft_size_t capacity);
                 const_iterator(const const_iterator& other) = delete;
                 const_iterator(const_iterator&& other) = delete;
                 const_iterator& operator=(const const_iterator& other) = delete;
                 const_iterator& operator=(const_iterator&& other) = delete;
                 ~const_iterator();
 
-                int initialize(const ft_pair<Key, MappedType>* data,
-                    const bool* occupied, size_t index, size_t capacity);
-                int initialize(const const_iterator& other);
-                int initialize(const_iterator&& other);
-                int destroy();
-                int move(const_iterator& other);
-                int get_error() const;
+                int32_t initialize(const ft_pair<Key, MappedType>* data,
+                    const ft_bool* occupied, ft_size_t index, ft_size_t capacity);
+                int32_t initialize(const const_iterator& other);
+                int32_t initialize(const_iterator&& other);
+                int32_t destroy();
+                int32_t move(const_iterator& other);
+                int32_t get_error() const;
 
                 const ft_pair<Key, MappedType>& operator*() const;
                 const ft_pair<Key, MappedType>* operator->() const;
                 const_iterator& operator++();
-                bool operator==(const const_iterator& other) const;
-                bool operator!=(const const_iterator& other) const;
+                ft_bool operator==(const const_iterator& other) const;
+                ft_bool operator!=(const const_iterator& other) const;
         };
 
-        ft_unordered_map(size_t initial_capacity = 10);
+        ft_unordered_map(ft_size_t initial_capacity = 10);
         ft_unordered_map(const ft_unordered_map& other) = delete;
         ft_unordered_map& operator=(const ft_unordered_map& other);
         ft_unordered_map(ft_unordered_map&& other) noexcept = delete;
         ft_unordered_map& operator=(ft_unordered_map&& other) noexcept;
         ~ft_unordered_map();
 
-        int     initialize();
-        int     initialize(const ft_unordered_map& other) = delete;
-        int     initialize(ft_unordered_map&& other) = delete;
-        int     destroy();
-        int     move(ft_unordered_map& other) = delete;
+        int32_t     initialize();
+        int32_t     initialize(const ft_unordered_map& other) = delete;
+        int32_t     initialize(ft_unordered_map&& other) = delete;
+        int32_t     destroy();
+        int32_t move(ft_unordered_map& other) = delete;
 
-        int     enable_thread_safety();
-        int     disable_thread_safety();
-        bool    is_thread_safe() const;
-        int     lock(bool *lock_acquired) const;
-        void    unlock(bool lock_acquired) const;
+        int32_t enable_thread_safety();
+        int32_t disable_thread_safety();
+        ft_bool    is_thread_safe() const;
+        int32_t lock(ft_bool *lock_acquired) const;
+        void    unlock(ft_bool lock_acquired) const;
 
         void            insert(const Key& key, const MappedType& value);
         iterator        find(const Key& key);
         const_iterator  find(const Key& key) const;
         void            erase(const Key& key);
-        bool            empty() const;
+        ft_bool            empty() const;
         void            clear();
-        size_t          size() const;
-        size_t          bucket_count() const;
-        bool            has_valid_storage() const;
+        ft_size_t          size() const;
+        ft_size_t          bucket_count() const;
+        ft_bool            has_valid_storage() const;
 
-        static int          last_operation_error() noexcept;
-        static const char   *last_operation_error_str() noexcept;
-        static int          operation_error_at(ft_size_t index) noexcept;
-        static const char   *operation_error_str_at(ft_size_t index) noexcept;
-        static void         pop_operation_errors() noexcept;
-        static int          pop_oldest_operation_error() noexcept;
-        static int          pop_newest_operation_error() noexcept;
+        static int32_t get_error() noexcept;
+        static const char   *get_error_str() noexcept;
 
         iterator        begin();
         iterator        end();
@@ -219,9 +214,6 @@ class ft_unordered_map
         const MappedType    &at(const Key& key) const;
         mapped_proxy        operator[](const Key& key);
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 template <typename Key, typename MappedType>
@@ -242,7 +234,7 @@ template <typename Key, typename MappedType>
 thread_local int32_t ft_unordered_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::set_last_operation_error(int error_code) noexcept
+int32_t ft_unordered_map<Key, MappedType>::set_error(int32_t error_code) noexcept
 {
     ft_unordered_map<Key, MappedType>::_last_error = error_code;
     return (error_code);
@@ -274,7 +266,7 @@ void ft_unordered_map<Key, MappedType>::abort_if_not_initialised(
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::has_storage_unlocked() const
+ft_bool ft_unordered_map<Key, MappedType>::has_storage_unlocked() const
 {
     if (this->_data == ft_nullptr)
         return (false);
@@ -288,8 +280,8 @@ bool ft_unordered_map<Key, MappedType>::has_storage_unlocked() const
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::destroy_elements_unlocked()
 {
-    size_t index;
-    size_t remaining_elements;
+    ft_size_t index;
+    ft_size_t remaining_elements;
 
     if (!this->has_storage_unlocked())
         return ;
@@ -300,7 +292,7 @@ void ft_unordered_map<Key, MappedType>::destroy_elements_unlocked()
         if (this->_occupied[index])
         {
             ::destroy_at(&this->_data[index]);
-            this->_occupied[index] = false;
+            this->_occupied[index] = FT_FALSE;
             remaining_elements -= 1;
         }
         index += 1;
@@ -324,38 +316,38 @@ void ft_unordered_map<Key, MappedType>::release_storage_unlocked()
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::prepare_empty_storage_unlocked(size_t capacity)
+int32_t ft_unordered_map<Key, MappedType>::prepare_empty_storage_unlocked(ft_size_t capacity)
 {
     void    *raw_data;
     void    *raw_occupied;
-    size_t  index;
+    ft_size_t  index;
 
     if (capacity == 0)
         capacity = 1;
     raw_data = cma_malloc(sizeof(ft_pair<Key, MappedType>) * capacity);
     if (raw_data == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    raw_occupied = cma_malloc(sizeof(bool) * capacity);
+    raw_occupied = cma_malloc(sizeof(ft_bool) * capacity);
     if (raw_occupied == ft_nullptr)
     {
         cma_free(raw_data);
         return (FT_ERR_NO_MEMORY);
     }
     this->_data = static_cast<ft_pair<Key, MappedType>*>(raw_data);
-    this->_occupied = static_cast<bool*>(raw_occupied);
+    this->_occupied = static_cast<ft_bool*>(raw_occupied);
     this->_capacity = capacity;
     this->_size = 0;
     index = 0;
     while (index < this->_capacity)
     {
-        this->_occupied[index] = false;
+        this->_occupied[index] = FT_FALSE;
         index += 1;
     }
     return (FT_ERR_SUCCESS);
 }
 
 template <typename Key, typename MappedType>
-size_t ft_unordered_map<Key, MappedType>::hash_key(const Key& key) const
+ft_size_t ft_unordered_map<Key, MappedType>::hash_key(const Key& key) const
 {
     std::hash<Key> hasher;
 
@@ -365,10 +357,10 @@ size_t ft_unordered_map<Key, MappedType>::hash_key(const Key& key) const
 }
 
 template <typename Key, typename MappedType>
-size_t ft_unordered_map<Key, MappedType>::find_index_unlocked(const Key& key) const
+ft_size_t ft_unordered_map<Key, MappedType>::find_index_unlocked(const Key& key) const
 {
-    size_t  start_index;
-    size_t  current_index;
+    ft_size_t  start_index;
+    ft_size_t  current_index;
 
     if (!this->has_storage_unlocked())
         return (this->_capacity);
@@ -390,36 +382,36 @@ size_t ft_unordered_map<Key, MappedType>::find_index_unlocked(const Key& key) co
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::resize_unlocked(size_t new_capacity)
+int32_t ft_unordered_map<Key, MappedType>::resize_unlocked(ft_size_t new_capacity)
 {
     ft_pair<Key, MappedType>  *old_data;
-    bool                      *old_occupied;
-    size_t                    old_capacity;
-    size_t                    old_size;
+    ft_bool                      *old_occupied;
+    ft_size_t                    old_capacity;
+    ft_size_t                    old_size;
     void                      *raw_data;
     void                      *raw_occupied;
     ft_pair<Key, MappedType>  *new_data;
-    bool                      *new_occupied;
-    size_t                    old_index;
-    size_t                    inserted_count;
+    ft_bool                      *new_occupied;
+    ft_size_t                    old_index;
+    ft_size_t                    inserted_count;
 
     if (new_capacity == 0)
         return (FT_ERR_NO_MEMORY);
     raw_data = cma_malloc(sizeof(ft_pair<Key, MappedType>) * new_capacity);
     if (raw_data == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    raw_occupied = cma_malloc(sizeof(bool) * new_capacity);
+    raw_occupied = cma_malloc(sizeof(ft_bool) * new_capacity);
     if (raw_occupied == ft_nullptr)
     {
         cma_free(raw_data);
         return (FT_ERR_NO_MEMORY);
     }
     new_data = static_cast<ft_pair<Key, MappedType>*>(raw_data);
-    new_occupied = static_cast<bool*>(raw_occupied);
+    new_occupied = static_cast<ft_bool*>(raw_occupied);
     old_index = 0;
     while (old_index < new_capacity)
     {
-        new_occupied[old_index] = false;
+        new_occupied[old_index] = FT_FALSE;
         old_index += 1;
     }
 
@@ -434,14 +426,14 @@ int ft_unordered_map<Key, MappedType>::resize_unlocked(size_t new_capacity)
     {
         if (old_occupied[old_index])
         {
-            size_t destination_index;
+            ft_size_t destination_index;
             std::hash<Key> hasher;
 
             destination_index = hasher(old_data[old_index].first) % new_capacity;
             while (new_occupied[destination_index])
                 destination_index = (destination_index + 1) % new_capacity;
             construct_at(&new_data[destination_index], ft_move(old_data[old_index]));
-            new_occupied[destination_index] = true;
+            new_occupied[destination_index] = FT_TRUE;
             ::destroy_at(&old_data[old_index]);
             inserted_count += 1;
         }
@@ -459,12 +451,12 @@ int ft_unordered_map<Key, MappedType>::resize_unlocked(size_t new_capacity)
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::insert_internal_unlocked(
+int32_t ft_unordered_map<Key, MappedType>::insert_internal_unlocked(
     const Key& key, const MappedType& value)
 {
-    size_t key_index;
-    size_t start_index;
-    size_t current_index;
+    ft_size_t key_index;
+    ft_size_t start_index;
+    ft_size_t current_index;
 
     if (!this->has_storage_unlocked())
         return (FT_ERR_INVALID_STATE);
@@ -478,8 +470,8 @@ int ft_unordered_map<Key, MappedType>::insert_internal_unlocked(
 
     if ((this->_size * 2) >= this->_capacity)
     {
-        size_t new_capacity;
-        int resize_error;
+        ft_size_t new_capacity;
+        int32_t resize_error;
 
         new_capacity = this->_capacity * 2;
         if (new_capacity == 0)
@@ -496,7 +488,7 @@ int ft_unordered_map<Key, MappedType>::insert_internal_unlocked(
         if (!this->_occupied[current_index])
         {
             construct_at(&this->_data[current_index], ft_pair<Key, MappedType>(key, value));
-            this->_occupied[current_index] = true;
+            this->_occupied[current_index] = FT_TRUE;
             this->_size += 1;
             return (FT_ERR_SUCCESS);
         }
@@ -508,32 +500,33 @@ int ft_unordered_map<Key, MappedType>::insert_internal_unlocked(
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
+int32_t ft_unordered_map<Key, MappedType>::lock_internal(ft_bool *lock_acquired) const
 {
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
+int32_t ft_unordered_map<Key, MappedType>::unlock_internal(ft_bool lock_acquired) const
 {
     if (!lock_acquired)
         return (FT_ERR_SUCCESS);
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename Key, typename MappedType>
-ft_unordered_map<Key, MappedType>::ft_unordered_map(size_t initial_capacity)
+ft_unordered_map<Key, MappedType>::ft_unordered_map(ft_size_t initial_capacity)
     : _data(ft_nullptr)
     , _occupied(ft_nullptr)
     , _capacity(0)
@@ -542,11 +535,11 @@ ft_unordered_map<Key, MappedType>::ft_unordered_map(size_t initial_capacity)
     , _mutex(ft_nullptr)
     , _initialised_state(ft_unordered_map<Key, MappedType>::_state_uninitialised)
 {
-    int initialize_error;
+    int32_t initialize_error;
 
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(initialize_error);
+        ft_unordered_map<Key, MappedType>::set_error(initialize_error);
     return ;
 }
 
@@ -568,9 +561,9 @@ template <typename Key, typename MappedType>
 ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
     const ft_unordered_map<Key, MappedType>& other)
 {
-    bool lock_acquired;
-    int lock_error;
-    size_t index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t index;
 
     if (other._initialised_state != ft_unordered_map<Key, MappedType>::_state_initialised)
     {
@@ -587,11 +580,11 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
             return (*this);
     }
     this->clear();
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = other.lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (*this);
     }
     index = 0;
@@ -602,7 +595,7 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
         index += 1;
     }
     (void)other.unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -619,11 +612,11 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::initialize()
+int32_t ft_unordered_map<Key, MappedType>::initialize()
 {
-    size_t initial_capacity;
-    int    prepare_error;
-    int    mutex_error;
+    ft_size_t initial_capacity;
+    int32_t prepare_error;
+    int32_t mutex_error;
 
     if (this->_initialised_state == ft_unordered_map<Key, MappedType>::_state_initialised)
     {
@@ -643,7 +636,7 @@ int ft_unordered_map<Key, MappedType>::initialize()
     if (prepare_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = ft_unordered_map<Key, MappedType>::_state_destroyed;
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(prepare_error);
+        ft_unordered_map<Key, MappedType>::set_error(prepare_error);
         return (prepare_error);
     }
 
@@ -654,42 +647,35 @@ int ft_unordered_map<Key, MappedType>::initialize()
         this->destroy_elements_unlocked();
         this->release_storage_unlocked();
         this->_initialised_state = ft_unordered_map<Key, MappedType>::_state_destroyed;
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(mutex_error);
+        ft_unordered_map<Key, MappedType>::set_error(mutex_error);
         return (mutex_error);
     }
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::destroy()
+int32_t ft_unordered_map<Key, MappedType>::destroy()
 {
-    bool lock_acquired;
-    int  lock_error;
-    int  unlock_error;
-    int  mutex_destroy_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t mutex_destroy_error;
 
     if (this->_initialised_state != ft_unordered_map<Key, MappedType>::_state_initialised)
-                return (FT_ERR_INVALID_STATE);
+                return (FT_ERR_SUCCESS);
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (lock_error);
     }
 
     this->destroy_elements_unlocked();
     this->release_storage_unlocked();
-
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
-        return (unlock_error);
-    }
+    (void)this->unlock_internal(lock_acquired);
 
     mutex_destroy_error = FT_ERR_SUCCESS;
     if (this->_mutex != ft_nullptr)
@@ -700,28 +686,28 @@ int ft_unordered_map<Key, MappedType>::destroy()
     }
 
     this->_initialised_state = ft_unordered_map<Key, MappedType>::_state_destroyed;
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(mutex_destroy_error);
+    ft_unordered_map<Key, MappedType>::set_error(mutex_destroy_error);
     return (mutex_destroy_error);
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::enable_thread_safety()
+int32_t ft_unordered_map<Key, MappedType>::enable_thread_safety()
 {
     this->abort_if_not_initialised("ft_unordered_map::enable_thread_safety");
 
     if (this->_mutex != ft_nullptr)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+        ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
 
     pt_recursive_mutex *mutex_pointer;
-    int                initialize_error;
+    int32_t initialize_error;
 
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
+        ft_unordered_map<Key, MappedType>::set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
     }
 
@@ -729,93 +715,89 @@ int ft_unordered_map<Key, MappedType>::enable_thread_safety()
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(initialize_error);
+        ft_unordered_map<Key, MappedType>::set_error(initialize_error);
         return (initialize_error);
     }
 
     this->_mutex = mutex_pointer;
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::disable_thread_safety()
+int32_t ft_unordered_map<Key, MappedType>::disable_thread_safety()
 {
     this->abort_if_not_initialised("ft_unordered_map::disable_thread_safety");
 
     if (this->_mutex == ft_nullptr)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+        ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
 
-    int destroy_error;
+    int32_t destroy_error;
 
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(destroy_error);
+    ft_unordered_map<Key, MappedType>::set_error(destroy_error);
     return (destroy_error);
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::is_thread_safe() const
+ft_bool ft_unordered_map<Key, MappedType>::is_thread_safe() const
 {
     this->abort_if_not_initialised("ft_unordered_map::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::lock(bool *lock_acquired) const
+int32_t ft_unordered_map<Key, MappedType>::lock(ft_bool *lock_acquired) const
 {
     this->abort_if_not_initialised("ft_unordered_map::lock");
 
-    int lock_error;
+    int32_t lock_error;
 
     lock_error = this->lock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+    ft_unordered_map<Key, MappedType>::set_error(lock_error);
     return (lock_error);
 }
 
 template <typename Key, typename MappedType>
-void ft_unordered_map<Key, MappedType>::unlock(bool lock_acquired) const
+void ft_unordered_map<Key, MappedType>::unlock(ft_bool lock_acquired) const
 {
     this->abort_if_not_initialised("ft_unordered_map::unlock");
-
-    int unlock_error;
-
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 {
-    bool lock_acquired;
-    int  lock_error;
-    int  insert_error;
-    int  unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t insert_error;
 
     this->abort_if_not_initialised("ft_unordered_map::insert");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return ;
     }
 
     insert_error = this->insert_internal_unlocked(key, value);
-    unlock_error = this->unlock_internal(lock_acquired);
+    (void)this->unlock_internal(lock_acquired);
 
     if (insert_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(insert_error);
+        ft_unordered_map<Key, MappedType>::set_error(insert_error);
         return ;
     }
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -823,26 +805,25 @@ template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::iterator
 ft_unordered_map<Key, MappedType>::find(const Key& key)
 {
-    bool    lock_acquired;
-    int     lock_error;
-    int     unlock_error;
-    size_t  index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t  index;
 
     this->abort_if_not_initialised("ft_unordered_map::find");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (iterator(this->_data, this->_occupied, this->_capacity,
             this->_capacity));
     }
 
     index = this->find_index_unlocked(key);
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     if (index == this->_capacity)
         return (iterator(this->_data, this->_occupied, this->_capacity,
             this->_capacity));
@@ -853,26 +834,25 @@ template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::const_iterator
 ft_unordered_map<Key, MappedType>::find(const Key& key) const
 {
-    bool    lock_acquired;
-    int     lock_error;
-    int     unlock_error;
-    size_t  index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t  index;
 
     this->abort_if_not_initialised("ft_unordered_map::find const");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (const_iterator(this->_data, this->_occupied, this->_capacity,
             this->_capacity));
     }
 
     index = this->find_index_unlocked(key);
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     if (index == this->_capacity)
         return (const_iterator(this->_data, this->_occupied, this->_capacity,
             this->_capacity));
@@ -882,32 +862,31 @@ ft_unordered_map<Key, MappedType>::find(const Key& key) const
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::erase(const Key& key)
 {
-    bool    lock_acquired;
-    int     lock_error;
-    int     unlock_error;
-    size_t  index;
-    size_t  next_index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t  index;
+    ft_size_t  next_index;
 
     this->abort_if_not_initialised("ft_unordered_map::erase");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return ;
     }
 
     index = this->find_index_unlocked(key);
     if (index == this->_capacity)
     {
-        unlock_error = this->unlock_internal(lock_acquired);
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+        (void)this->unlock_internal(lock_acquired);
+        ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
         return ;
     }
 
     ::destroy_at(&this->_data[index]);
-    this->_occupied[index] = false;
+    this->_occupied[index] = FT_FALSE;
     if (this->_size > 0)
         this->_size -= 1;
 
@@ -915,208 +894,158 @@ void ft_unordered_map<Key, MappedType>::erase(const Key& key)
     while (this->_occupied[next_index])
     {
         ft_pair<Key, MappedType> moving_pair;
-        int                      reinsert_error;
+        int32_t reinsert_error;
 
         moving_pair = this->_data[next_index];
         ::destroy_at(&this->_data[next_index]);
-        this->_occupied[next_index] = false;
+        this->_occupied[next_index] = FT_FALSE;
         if (this->_size > 0)
             this->_size -= 1;
 
         reinsert_error = this->insert_internal_unlocked(moving_pair.first, moving_pair.second);
         if (reinsert_error != FT_ERR_SUCCESS)
         {
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error == FT_ERR_SUCCESS)
-                ft_unordered_map<Key, MappedType>::set_last_operation_error(reinsert_error);
-            else
-                ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+            (void)this->unlock_internal(lock_acquired);
+            ft_unordered_map<Key, MappedType>::set_error(reinsert_error);
             return ;
         }
         next_index = (next_index + 1) % this->_capacity;
     }
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::empty() const
+ft_bool ft_unordered_map<Key, MappedType>::empty() const
 {
-    bool    lock_acquired;
-    int     lock_error;
-    bool    is_empty;
-    int     unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_bool    is_empty;
 
     this->abort_if_not_initialised("ft_unordered_map::empty");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (true);
     }
 
     is_empty = (this->_size == 0);
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (is_empty);
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::clear()
 {
-    bool    lock_acquired;
-    int     lock_error;
-    int     unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
     this->abort_if_not_initialised("ft_unordered_map::clear");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return ;
     }
 
     this->destroy_elements_unlocked();
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 template <typename Key, typename MappedType>
-size_t ft_unordered_map<Key, MappedType>::size() const
+ft_size_t ft_unordered_map<Key, MappedType>::size() const
 {
-    bool    lock_acquired;
-    int     lock_error;
-    size_t  current_size;
-    int     unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t  current_size;
 
     this->abort_if_not_initialised("ft_unordered_map::size");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (0);
     }
 
     current_size = this->_size;
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (current_size);
 }
 
 template <typename Key, typename MappedType>
-size_t ft_unordered_map<Key, MappedType>::bucket_count() const
+ft_size_t ft_unordered_map<Key, MappedType>::bucket_count() const
 {
-    bool    lock_acquired;
-    int     lock_error;
-    size_t  bucket_total;
-    int     unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t  bucket_total;
 
     this->abort_if_not_initialised("ft_unordered_map::bucket_count");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (0);
     }
 
     bucket_total = this->_capacity;
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (bucket_total);
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::has_valid_storage() const
+ft_bool ft_unordered_map<Key, MappedType>::has_valid_storage() const
 {
-    bool    lock_acquired;
-    int     lock_error;
-    bool    valid_storage;
-    int     unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_bool    valid_storage;
 
     this->abort_if_not_initialised("ft_unordered_map::has_valid_storage");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (false);
     }
 
     valid_storage = this->has_storage_unlocked();
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (valid_storage);
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::last_operation_error() noexcept
+int32_t ft_unordered_map<Key, MappedType>::get_error() noexcept
 {
     return (ft_unordered_map<Key, MappedType>::_last_error);
 }
 
 template <typename Key, typename MappedType>
-const char *ft_unordered_map<Key, MappedType>::last_operation_error_str() noexcept
+const char *ft_unordered_map<Key, MappedType>::get_error_str() noexcept
 {
-    return (ft_strerror(ft_unordered_map<Key, MappedType>::last_operation_error()));
-}
-
-template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::operation_error_at(ft_size_t index) noexcept
-{
-    if (index == 0)
-        return (ft_unordered_map<Key, MappedType>::_last_error);
-    return (FT_ERR_NOT_FOUND);
-}
-
-template <typename Key, typename MappedType>
-const char *ft_unordered_map<Key, MappedType>::operation_error_str_at(
-    ft_size_t index) noexcept
-{
-    return (ft_strerror(ft_unordered_map<Key, MappedType>::operation_error_at(index)));
-}
-
-template <typename Key, typename MappedType>
-void ft_unordered_map<Key, MappedType>::pop_operation_errors() noexcept
-{
-    ft_unordered_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
-    return ;
-}
-
-template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::pop_oldest_operation_error() noexcept
-{
-    int error_code;
-
-    error_code = ft_unordered_map<Key, MappedType>::_last_error;
-    ft_unordered_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
-    return (error_code);
-}
-
-template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::pop_newest_operation_error() noexcept
-{
-    int error_code;
-
-    error_code = ft_unordered_map<Key, MappedType>::_last_error;
-    ft_unordered_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
-    return (error_code);
+    return (ft_strerror(ft_unordered_map<Key, MappedType>::get_error()));
 }
 
 template <typename Key, typename MappedType>
@@ -1124,7 +1053,7 @@ typename ft_unordered_map<Key, MappedType>::iterator ft_unordered_map<Key, Mappe
 {
     this->abort_if_not_initialised("ft_unordered_map::begin");
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (iterator(this->_data, this->_occupied, 0, this->_capacity));
 }
 
@@ -1133,7 +1062,7 @@ typename ft_unordered_map<Key, MappedType>::iterator ft_unordered_map<Key, Mappe
 {
     this->abort_if_not_initialised("ft_unordered_map::end");
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (iterator(this->_data, this->_occupied, this->_capacity,
         this->_capacity));
 }
@@ -1144,7 +1073,7 @@ ft_unordered_map<Key, MappedType>::begin() const
 {
     this->abort_if_not_initialised("ft_unordered_map::begin const");
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (const_iterator(this->_data, this->_occupied, 0, this->_capacity));
 }
 
@@ -1154,7 +1083,7 @@ ft_unordered_map<Key, MappedType>::end() const
 {
     this->abort_if_not_initialised("ft_unordered_map::end const");
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (const_iterator(this->_data, this->_occupied, this->_capacity,
         this->_capacity));
 }
@@ -1163,40 +1092,31 @@ template <typename Key, typename MappedType>
 MappedType& ft_unordered_map<Key, MappedType>::at(const Key& key)
 {
     static MappedType  error_value = MappedType();
-    bool                lock_acquired;
-    int                 lock_error;
-    size_t              key_index;
-    int                 unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t              key_index;
 
     this->abort_if_not_initialised("ft_unordered_map::at");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (error_value);
     }
 
     key_index = this->find_index_unlocked(key);
     if (key_index == this->_capacity)
     {
-        unlock_error = this->unlock_internal(lock_acquired);
-        if (unlock_error == FT_ERR_SUCCESS)
-            ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_NOT_FOUND);
-        else
-            ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+        (void)this->unlock_internal(lock_acquired);
+        ft_unordered_map<Key, MappedType>::set_error(FT_ERR_NOT_FOUND);
         return (error_value);
     }
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
-        return (error_value);
-    }
+    (void)this->unlock_internal(lock_acquired);
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (this->_data[key_index].second);
 }
 
@@ -1204,40 +1124,31 @@ template <typename Key, typename MappedType>
 const MappedType& ft_unordered_map<Key, MappedType>::at(const Key& key) const
 {
     static MappedType  error_value = MappedType();
-    bool                lock_acquired;
-    int                 lock_error;
-    size_t              key_index;
-    int                 unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t              key_index;
 
     this->abort_if_not_initialised("ft_unordered_map::at const");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (error_value);
     }
 
     key_index = this->find_index_unlocked(key);
     if (key_index == this->_capacity)
     {
-        unlock_error = this->unlock_internal(lock_acquired);
-        if (unlock_error == FT_ERR_SUCCESS)
-            ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_NOT_FOUND);
-        else
-            ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
+        (void)this->unlock_internal(lock_acquired);
+        ft_unordered_map<Key, MappedType>::set_error(FT_ERR_NOT_FOUND);
         return (error_value);
     }
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
-        return (error_value);
-    }
+    (void)this->unlock_internal(lock_acquired);
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (this->_data[key_index].second);
 }
 
@@ -1278,13 +1189,13 @@ MappedType *ft_unordered_map<Key, MappedType>::mapped_proxy::operator->()
     {
         this->_last_error = FT_ERR_INVALID_STATE;
         if (this->_parent_map != ft_nullptr)
-            ft_unordered_map<Key, MappedType>::set_last_operation_error(
+            ft_unordered_map<Key, MappedType>::set_error(
                 this->_last_error);
         return (&error_value);
     }
     this->_last_error = FT_ERR_SUCCESS;
     if (this->_parent_map != ft_nullptr)
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(
+        ft_unordered_map<Key, MappedType>::set_error(
             this->_last_error);
     return (this->_mapped_value_pointer);
 }
@@ -1298,13 +1209,13 @@ MappedType &ft_unordered_map<Key, MappedType>::mapped_proxy::operator*()
     {
         this->_last_error = FT_ERR_INVALID_STATE;
         if (this->_parent_map != ft_nullptr)
-            ft_unordered_map<Key, MappedType>::set_last_operation_error(
+            ft_unordered_map<Key, MappedType>::set_error(
                 this->_last_error);
         return (error_value);
     }
     this->_last_error = FT_ERR_SUCCESS;
     if (this->_parent_map != ft_nullptr)
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(
+        ft_unordered_map<Key, MappedType>::set_error(
             this->_last_error);
     return (*this->_mapped_value_pointer);
 }
@@ -1318,14 +1229,14 @@ ft_unordered_map<Key, MappedType>::mapped_proxy::operator=(
     {
         this->_last_error = FT_ERR_INVALID_STATE;
         if (this->_parent_map != ft_nullptr)
-            ft_unordered_map<Key, MappedType>::set_last_operation_error(
+            ft_unordered_map<Key, MappedType>::set_error(
                 this->_last_error);
         return (*this);
     }
     *this->_mapped_value_pointer = mapped_value;
     this->_last_error = FT_ERR_SUCCESS;
     if (this->_parent_map != ft_nullptr)
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(
+        ft_unordered_map<Key, MappedType>::set_error(
             this->_last_error);
     return (*this);
 }
@@ -1354,19 +1265,18 @@ template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::mapped_proxy
 ft_unordered_map<Key, MappedType>::operator[](const Key& key)
 {
-    bool    lock_acquired;
-    int     lock_error;
-    size_t  key_index;
-    int     insert_error;
-    int     unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t  key_index;
+    int32_t insert_error;
 
     this->abort_if_not_initialised("ft_unordered_map::operator[]");
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(lock_error);
+        ft_unordered_map<Key, MappedType>::set_error(lock_error);
         return (mapped_proxy(this, ft_nullptr, lock_error, 0));
     }
 
@@ -1376,26 +1286,16 @@ ft_unordered_map<Key, MappedType>::operator[](const Key& key)
         insert_error = this->insert_internal_unlocked(key, MappedType());
         if (insert_error != FT_ERR_SUCCESS)
         {
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error == FT_ERR_SUCCESS)
-                ft_unordered_map<Key, MappedType>::set_last_operation_error(insert_error);
-            else
-                ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
-            if (unlock_error == FT_ERR_SUCCESS)
-                return (mapped_proxy(this, ft_nullptr, insert_error, 0));
-            return (mapped_proxy(this, ft_nullptr, unlock_error, 0));
+            (void)this->unlock_internal(lock_acquired);
+            ft_unordered_map<Key, MappedType>::set_error(insert_error);
+            return (mapped_proxy(this, ft_nullptr, insert_error, 0));
         }
         key_index = this->find_index_unlocked(key);
     }
 
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_unordered_map<Key, MappedType>::set_last_operation_error(unlock_error);
-        return (mapped_proxy(this, ft_nullptr, unlock_error, 0));
-    }
+    (void)this->unlock_internal(lock_acquired);
 
-    ft_unordered_map<Key, MappedType>::set_last_operation_error(FT_ERR_SUCCESS);
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (mapped_proxy(this, &this->_data[key_index].second, FT_ERR_SUCCESS,
         1));
 }
@@ -1445,7 +1345,7 @@ ft_unordered_map<Key, MappedType>::iterator::iterator()
 
 template <typename Key, typename MappedType>
 ft_unordered_map<Key, MappedType>::iterator::iterator(
-    ft_pair<Key, MappedType>* data, bool* occupied, size_t index, size_t capacity)
+    ft_pair<Key, MappedType>* data, ft_bool* occupied, ft_size_t index, ft_size_t capacity)
     : _data(ft_nullptr)
     , _occupied(ft_nullptr)
     , _index(0)
@@ -1467,8 +1367,8 @@ ft_unordered_map<Key, MappedType>::iterator::~iterator()
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::iterator::initialize(
-    ft_pair<Key, MappedType>* data, bool* occupied, size_t index, size_t capacity)
+int32_t ft_unordered_map<Key, MappedType>::iterator::initialize(
+    ft_pair<Key, MappedType>* data, ft_bool* occupied, ft_size_t index, ft_size_t capacity)
 {
     if (this->_initialised_state
         == ft_unordered_map<Key, MappedType>::iterator::_state_initialised)
@@ -1486,7 +1386,7 @@ int ft_unordered_map<Key, MappedType>::iterator::initialize(
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::iterator::initialize(const iterator& other)
+int32_t ft_unordered_map<Key, MappedType>::iterator::initialize(const iterator& other)
 {
     if (this->_initialised_state
         == ft_unordered_map<Key, MappedType>::iterator::_state_initialised)
@@ -1504,7 +1404,7 @@ int ft_unordered_map<Key, MappedType>::iterator::initialize(const iterator& othe
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::iterator::initialize(iterator&& other)
+int32_t ft_unordered_map<Key, MappedType>::iterator::initialize(iterator&& other)
 {
     if (this->_initialised_state
         == ft_unordered_map<Key, MappedType>::iterator::_state_initialised)
@@ -1528,12 +1428,12 @@ int ft_unordered_map<Key, MappedType>::iterator::initialize(iterator&& other)
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::iterator::destroy()
+int32_t ft_unordered_map<Key, MappedType>::iterator::destroy()
 {
     if (this->_initialised_state
         != ft_unordered_map<Key, MappedType>::iterator::_state_initialised)
     {
-        this->_last_error = FT_ERR_INVALID_STATE;
+        this->_last_error = FT_ERR_SUCCESS;
         return (this->_last_error);
     }
     this->_data = ft_nullptr;
@@ -1547,7 +1447,7 @@ int ft_unordered_map<Key, MappedType>::iterator::destroy()
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::iterator::move(iterator& other)
+int32_t ft_unordered_map<Key, MappedType>::iterator::move(iterator& other)
 {
     this->abort_if_not_initialised("ft_unordered_map::iterator::move");
     other.abort_if_not_initialised("ft_unordered_map::iterator::move");
@@ -1567,7 +1467,7 @@ int ft_unordered_map<Key, MappedType>::iterator::move(iterator& other)
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::iterator::get_error() const
+int32_t ft_unordered_map<Key, MappedType>::iterator::get_error() const
 {
     this->abort_if_not_initialised("ft_unordered_map::iterator::get_error");
     return (this->_last_error);
@@ -1660,7 +1560,7 @@ ft_unordered_map<Key, MappedType>::iterator::operator++()
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::iterator::operator==(const iterator& other) const
+ft_bool ft_unordered_map<Key, MappedType>::iterator::operator==(const iterator& other) const
 {
     this->abort_if_not_initialised("ft_unordered_map::iterator::operator==");
     other.abort_if_not_initialised("ft_unordered_map::iterator::operator==");
@@ -1672,7 +1572,7 @@ bool ft_unordered_map<Key, MappedType>::iterator::operator==(const iterator& oth
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::iterator::operator!=(const iterator& other) const
+ft_bool ft_unordered_map<Key, MappedType>::iterator::operator!=(const iterator& other) const
 {
     this->abort_if_not_initialised("ft_unordered_map::iterator::operator!=");
     other.abort_if_not_initialised("ft_unordered_map::iterator::operator!=");
@@ -1724,8 +1624,8 @@ ft_unordered_map<Key, MappedType>::const_iterator::const_iterator()
 
 template <typename Key, typename MappedType>
 ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(
-    const ft_pair<Key, MappedType>* data, const bool* occupied,
-    size_t index, size_t capacity)
+    const ft_pair<Key, MappedType>* data, const ft_bool* occupied,
+    ft_size_t index, ft_size_t capacity)
     : _data(ft_nullptr)
     , _occupied(ft_nullptr)
     , _index(0)
@@ -1747,9 +1647,9 @@ ft_unordered_map<Key, MappedType>::const_iterator::~const_iterator()
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::const_iterator::initialize(
-    const ft_pair<Key, MappedType>* data, const bool* occupied,
-    size_t index, size_t capacity)
+int32_t ft_unordered_map<Key, MappedType>::const_iterator::initialize(
+    const ft_pair<Key, MappedType>* data, const ft_bool* occupied,
+    ft_size_t index, ft_size_t capacity)
 {
     if (this->_initialised_state
         == ft_unordered_map<Key, MappedType>::const_iterator::_state_initialised)
@@ -1767,7 +1667,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::initialize(
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::const_iterator::initialize(
+int32_t ft_unordered_map<Key, MappedType>::const_iterator::initialize(
     const const_iterator& other)
 {
     if (this->_initialised_state
@@ -1786,7 +1686,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::initialize(
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::const_iterator::initialize(
+int32_t ft_unordered_map<Key, MappedType>::const_iterator::initialize(
     const_iterator&& other)
 {
     if (this->_initialised_state
@@ -1811,12 +1711,12 @@ int ft_unordered_map<Key, MappedType>::const_iterator::initialize(
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::const_iterator::destroy()
+int32_t ft_unordered_map<Key, MappedType>::const_iterator::destroy()
 {
     if (this->_initialised_state
         != ft_unordered_map<Key, MappedType>::const_iterator::_state_initialised)
     {
-        this->_last_error = FT_ERR_INVALID_STATE;
+        this->_last_error = FT_ERR_SUCCESS;
         return (this->_last_error);
     }
     this->_data = ft_nullptr;
@@ -1830,7 +1730,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::destroy()
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::const_iterator::move(const_iterator& other)
+int32_t ft_unordered_map<Key, MappedType>::const_iterator::move(const_iterator& other)
 {
     this->abort_if_not_initialised("ft_unordered_map::const_iterator::move");
     other.abort_if_not_initialised("ft_unordered_map::const_iterator::move");
@@ -1850,7 +1750,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::move(const_iterator& othe
 }
 
 template <typename Key, typename MappedType>
-int ft_unordered_map<Key, MappedType>::const_iterator::get_error() const
+int32_t ft_unordered_map<Key, MappedType>::const_iterator::get_error() const
 {
     this->abort_if_not_initialised("ft_unordered_map::const_iterator::get_error");
     return (this->_last_error);
@@ -1945,7 +1845,7 @@ ft_unordered_map<Key, MappedType>::const_iterator::operator++()
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::const_iterator::operator==(
+ft_bool ft_unordered_map<Key, MappedType>::const_iterator::operator==(
     const const_iterator& other) const
 {
     this->abort_if_not_initialised("ft_unordered_map::const_iterator::operator==");
@@ -1958,7 +1858,7 @@ bool ft_unordered_map<Key, MappedType>::const_iterator::operator==(
 }
 
 template <typename Key, typename MappedType>
-bool ft_unordered_map<Key, MappedType>::const_iterator::operator!=(
+ft_bool ft_unordered_map<Key, MappedType>::const_iterator::operator!=(
     const const_iterator& other) const
 {
     this->abort_if_not_initialised("ft_unordered_map::const_iterator::operator!=");
@@ -1967,13 +1867,6 @@ bool ft_unordered_map<Key, MappedType>::const_iterator::operator!=(
     return (!(*this == other));
 }
 
-#ifdef LIBFT_TEST_BUILD
-template <typename Key, typename MappedType>
-pt_recursive_mutex *ft_unordered_map<Key, MappedType>::get_mutex_for_validation() const noexcept
-{
-    return (this->_mutex);
-}
-#endif
 
 template <typename Key, typename MappedType>
 using ft_unord_map = ft_unordered_map<Key, MappedType>;

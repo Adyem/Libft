@@ -84,25 +84,6 @@ aabb::aabb() noexcept
     return ;
 }
 
-aabb::aabb(double minimum_x, double minimum_y,
-    double maximum_x, double maximum_y) noexcept
-    : _minimum_x(0.0)
-    , _minimum_y(0.0)
-    , _maximum_x(0.0)
-    , _maximum_y(0.0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->initialize(minimum_x, minimum_y,
-            maximum_x, maximum_y);
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 aabb::aabb(const aabb &other) noexcept
     : _minimum_x(0.0)
     , _minimum_y(0.0)
@@ -137,7 +118,7 @@ aabb::aabb(aabb &&other) noexcept
     return ;
 }
 
-uint32_t aabb::initialize() noexcept
+int32_t aabb::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -152,7 +133,7 @@ uint32_t aabb::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t aabb::initialize(double minimum_x, double minimum_y,
+int32_t aabb::initialize(double minimum_x, double minimum_y,
     double maximum_x, double maximum_y) noexcept
 {
     uint32_t initialize_error;
@@ -172,7 +153,7 @@ uint32_t aabb::initialize(double minimum_x, double minimum_y,
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t aabb::initialize(const aabb &other) noexcept
+int32_t aabb::initialize(const aabb &other) noexcept
 {
     uint32_t destroy_error;
     uint32_t lock_error;
@@ -265,7 +246,7 @@ uint32_t aabb::move(aabb &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t aabb::initialize(aabb &&other) noexcept
+int32_t aabb::initialize(aabb &&other) noexcept
 {
     return (this->move(other));
 }
@@ -310,7 +291,7 @@ uint32_t aabb::set_bounds(double minimum_x, double minimum_y,
         return (lock_error);
     if (minimum_x > maximum_x || minimum_y > maximum_y)
     {
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_x = minimum_x;
@@ -331,7 +312,7 @@ uint32_t aabb::set_minimum(double minimum_x, double minimum_y)
         return (lock_error);
     if (minimum_x > this->_maximum_x || minimum_y > this->_maximum_y)
     {
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_x = minimum_x;
@@ -350,7 +331,7 @@ uint32_t aabb::set_minimum_x(double minimum_x)
         return (lock_error);
     if (minimum_x > this->_maximum_x)
     {
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_x = minimum_x;
@@ -368,7 +349,7 @@ uint32_t aabb::set_minimum_y(double minimum_y)
         return (lock_error);
     if (minimum_y > this->_maximum_y)
     {
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_y = minimum_y;
@@ -386,7 +367,7 @@ uint32_t aabb::set_maximum(double maximum_x, double maximum_y)
         return (lock_error);
     if (maximum_x < this->_minimum_x || maximum_y < this->_minimum_y)
     {
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_x = maximum_x;
@@ -405,7 +386,7 @@ uint32_t aabb::set_maximum_x(double maximum_x)
         return (lock_error);
     if (maximum_x < this->_minimum_x)
     {
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_x = maximum_x;
@@ -423,7 +404,7 @@ uint32_t aabb::set_maximum_y(double maximum_y)
         return (lock_error);
     if (maximum_y < this->_minimum_y)
     {
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_y = maximum_y;

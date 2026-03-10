@@ -6,7 +6,11 @@
 
 class circle
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         double                    _center_x;
         double                    _center_y;
         double                    _radius;
@@ -19,7 +23,6 @@ class circle
 
     public:
         circle() noexcept;
-        circle(double center_x, double center_y, double radius) noexcept;
         circle(const circle &other) noexcept;
         circle(circle &&other) noexcept;
         ~circle() noexcept;
@@ -27,11 +30,11 @@ class circle
         circle &operator=(const circle &other) = delete;
         circle &operator=(circle &&other) noexcept = delete;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double center_x, double center_y,
+        int32_t initialize() noexcept;
+        int32_t initialize(double center_x, double center_y,
                 double radius) noexcept;
-        uint32_t initialize(const circle &other) noexcept;
-        uint32_t initialize(circle &&other) noexcept;
+        int32_t initialize(const circle &other) noexcept;
+        int32_t initialize(circle &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(circle &other) noexcept;
 

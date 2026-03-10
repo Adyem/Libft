@@ -24,7 +24,7 @@ void ft_log_close()
         return ;
     }
     sink_count = g_sinks.size();
-    if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+    if (g_sinks.get_error() != FT_ERR_SUCCESS)
     {
         lock_error = logger_unlock_sinks();
         if (lock_error != FT_ERR_SUCCESS)
@@ -41,7 +41,7 @@ void ft_log_close()
         s_log_sink entry;
 
         entry = g_sinks[index];
-        if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+        if (g_sinks.get_error() != FT_ERR_SUCCESS)
         {
             lock_error = logger_unlock_sinks();
             if (lock_error != FT_ERR_SUCCESS)
@@ -53,7 +53,7 @@ void ft_log_close()
             return ;
         }
         sinks_snapshot.push_back(entry);
-        if (sinks_snapshot.last_operation_error() != FT_ERR_SUCCESS)
+        if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
         {
             lock_error = logger_unlock_sinks();
             if (lock_error != FT_ERR_SUCCESS)
@@ -67,7 +67,7 @@ void ft_log_close()
         index++;
     }
     g_sinks.clear();
-    clear_error = g_sinks.last_operation_error();
+    clear_error = g_sinks.get_error();
     lock_error = logger_unlock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -82,7 +82,7 @@ void ft_log_close()
     size_t snapshot_count;
 
     snapshot_count = sinks_snapshot.size();
-    if (sinks_snapshot.last_operation_error() != FT_ERR_SUCCESS)
+    if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
     {
         log_close_report();
         return ;
@@ -93,7 +93,7 @@ void ft_log_close()
         s_log_sink entry;
 
         entry = sinks_snapshot[index];
-        if (sinks_snapshot.last_operation_error() != FT_ERR_SUCCESS)
+        if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
         {
             log_close_report();
             return ;

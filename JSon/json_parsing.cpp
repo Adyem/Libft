@@ -95,9 +95,9 @@ void json_item_refresh_numeric_state(json_item *item)
             else
             {
                 allocated_number->assign(item->value);
-                if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
+                if (ft_big_number::get_error() != FT_ERR_SUCCESS)
                 {
-                    result_code = ft_big_number::last_operation_error();
+                    result_code = ft_big_number::get_error();
                     delete allocated_number;
                 }
                 else

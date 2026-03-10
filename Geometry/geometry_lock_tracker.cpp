@@ -44,7 +44,7 @@ static uint32_t geometry_lock_tracker_register_wait(pt_thread_id_type thread_ide
     initialize_error = geometry_lock_tracker_ensure_mutex_initialised();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
-    lock_error = g_geometry_tracker_mutex.lock();
+    lock_error = pt_mutex_lock_if_not_null(&g_geometry_tracker_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     ft_size_t index;
@@ -75,7 +75,7 @@ static uint32_t geometry_lock_tracker_register_wait(pt_thread_id_type thread_ide
         }
         catch (const std::bad_alloc &)
         {
-    (void)g_geometry_tracker_mutex.unlock();
+            (void)pt_mutex_unlock_if_not_null(&g_geometry_tracker_mutex);
             return (FT_ERR_NO_MEMORY);
         }
     }
@@ -94,7 +94,7 @@ static uint32_t geometry_lock_tracker_register_wait(pt_thread_id_type thread_ide
         index += 1;
     }
     out_cycle_detected = cycle_detected;
-    (void)g_geometry_tracker_mutex.unlock();
+    (void)pt_mutex_unlock_if_not_null(&g_geometry_tracker_mutex);
     return (FT_ERR_SUCCESS);
 }
 
@@ -106,7 +106,7 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
     initialize_error = geometry_lock_tracker_ensure_mutex_initialised();
     if (initialize_error != FT_ERR_SUCCESS)
         return ;
-    lock_error = g_geometry_tracker_mutex.lock();
+    lock_error = pt_mutex_lock_if_not_null(&g_geometry_tracker_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     ft_size_t index;
@@ -130,7 +130,7 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
         }
         index += 1;
     }
-    (void)g_geometry_tracker_mutex.unlock();
+    (void)pt_mutex_unlock_if_not_null(&g_geometry_tracker_mutex);
     return ;
 }
 
@@ -167,7 +167,7 @@ uint32_t geometry_lock_tracker_lock_pair(const void *first_object, const void *s
     {
         uint32_t self_error;
 
-        self_error = first_mutex.lock();
+        self_error = pt_recursive_mutex_lock_if_not_null(&first_mutex);
         if (self_error != FT_ERR_SUCCESS)
             return (self_error);
         return (FT_ERR_SUCCESS);

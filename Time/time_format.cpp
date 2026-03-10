@@ -43,7 +43,7 @@ ft_string    time_format_iso8601(t_time time_value)
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_SUCCESS)
+        if (reported_error != FT_ERR_SUCCESS)
             return (time_format_failure(reported_error));
     }
     time_pointer = std::gmtime(&standard_time);
@@ -62,7 +62,7 @@ ft_string    time_format_iso8601(t_time time_value)
             else
                 reported_error = mutex_result;
 
-            if (reported_error != FT_SUCCESS)
+            if (reported_error != FT_ERR_SUCCESS)
                 return (time_format_failure(reported_error));
         }
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
@@ -81,7 +81,7 @@ ft_string    time_format_iso8601(t_time time_value)
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_SUCCESS)
+        if (reported_error != FT_ERR_SUCCESS)
             return (time_format_failure(reported_error));
     }
     strftime_result = std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", &time_storage);
@@ -135,7 +135,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_SUCCESS)
+        if (reported_error != FT_ERR_SUCCESS)
             return (time_format_failure(reported_error));
     }
     time_pointer = std::gmtime(&adjusted_time);
@@ -154,7 +154,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
             else
                 reported_error = mutex_result;
 
-            if (reported_error != FT_SUCCESS)
+            if (reported_error != FT_ERR_SUCCESS)
                 return (time_format_failure(reported_error));
         }
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
@@ -173,7 +173,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_SUCCESS)
+        if (reported_error != FT_ERR_SUCCESS)
             return (time_format_failure(reported_error));
     }
     strftime_result = std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &time_storage);

@@ -50,26 +50,20 @@ ft_string::ft_string(ft_string &&other) noexcept
     return ;
 }
 
-ft_string::ft_string(int32_t error_code) noexcept
-    : _data(ft_nullptr)
-    , _length(0)
-    , _capacity(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _operation_error(error_code)
+ft_string ft_string::from_error(int32_t error_code) noexcept
 {
+    ft_string value;
     int32_t initialization_error;
 
-    initialization_error = this->initialize();
+    initialization_error = value.initialize();
     if (initialization_error != FT_ERR_SUCCESS)
-        this->_operation_error = initialization_error;
+        value._operation_error = initialization_error;
     else
-        this->_operation_error = error_code;
-    ft_string::_last_initialised_state = this->_initialised_state;
-    return ;
+        value._operation_error = error_code;
+    return (value);
 }
 
-uint32_t ft_string::initialize() noexcept
+int32_t ft_string::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -86,7 +80,7 @@ uint32_t ft_string::initialize() noexcept
     return (ft_string::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_string::initialize(const char *initial_string) noexcept
+int32_t ft_string::initialize(const char *initial_string) noexcept
 {
     int32_t initialization_error = this->initialize();
     int32_t assign_error;
@@ -105,7 +99,7 @@ uint32_t ft_string::initialize(const char *initial_string) noexcept
     return (ft_string::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_string::initialize(ft_size_t count, char character) noexcept
+int32_t ft_string::initialize(ft_size_t count, char character) noexcept
 {
     int32_t initialization_error = this->initialize();
     int32_t assign_error;
@@ -121,7 +115,7 @@ uint32_t ft_string::initialize(ft_size_t count, char character) noexcept
     return (ft_string::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_string::initialize(const ft_string &other) noexcept
+int32_t ft_string::initialize(const ft_string &other) noexcept
 {
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -187,7 +181,7 @@ uint32_t ft_string::initialize(const ft_string &other) noexcept
     return (ft_string::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_string::initialize(ft_string &&other) noexcept
+int32_t ft_string::initialize(ft_string &&other) noexcept
 {
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {

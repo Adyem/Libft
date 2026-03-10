@@ -1,10 +1,11 @@
 #include "variant.hpp"
+#include <cstdint>
 
-static int check_variant_usage()
+static int32_t check_variant_usage()
 {
-    ft_variant<int, const char*> variant_value;
-    variant_value.emplace<int>(42);
-    int stored_integer = variant_value.get<int>();
+    ft_variant<int32_t, const char*> variant_value;
+    variant_value.emplace<int32_t>(42);
+    int32_t stored_integer = variant_value.get<int32_t>();
     (void)stored_integer;
     variant_value.emplace<const char*>("hello");
     const char *stored_string = variant_value.get<const char*>();
@@ -14,8 +15,8 @@ static int check_variant_usage()
         (void)value;
     });
     variant_value.reset();
-    return (static_cast<int>(variant_value.holds_alternative<int>())
-            + static_cast<int>(variant_value.holds_alternative<const char*>()));
+    return (static_cast<int32_t>(variant_value.holds_alternative<int32_t>())
+            + static_cast<int32_t>(variant_value.holds_alternative<const char*>()));
 }
 
-static volatile int template_variant_result = check_variant_usage();
+static volatile int32_t template_variant_result = check_variant_usage();

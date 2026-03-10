@@ -112,7 +112,7 @@ int json_register_schema_migration(const ft_string &schema_name,
         ft_vector<json_schema_migration_step> steps;
 
         steps.push_back(step);
-        int vector_error = ft_vector<json_schema_migration_step>::last_operation_error();
+        int vector_error = ft_vector<json_schema_migration_step>::get_error();
         if (vector_error != FT_ERR_SUCCESS)
         {
             (void)json_schema_registry_unlock(mutex, lock_acquired);
@@ -141,7 +141,7 @@ int json_register_schema_migration(const ft_string &schema_name,
         index++;
     }
     steps.push_back(step);
-    int vector_error = ft_vector<json_schema_migration_step>::last_operation_error();
+    int vector_error = ft_vector<json_schema_migration_step>::get_error();
     (void)json_schema_registry_unlock(mutex, lock_acquired);
     if (vector_error != FT_ERR_SUCCESS)
         return (vector_error);

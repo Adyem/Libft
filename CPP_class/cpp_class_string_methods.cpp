@@ -1103,7 +1103,7 @@ ft_string_proxy ft_string_proxy::operator+(char right) const noexcept
 ft_string_proxy::operator ft_string() const noexcept
 {
     if (this->_last_error != FT_ERR_SUCCESS)
-        return (ft_string(this->_last_error));
+        return (ft_string::from_error(this->_last_error));
     return (this->_value);
 }
 

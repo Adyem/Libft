@@ -344,10 +344,10 @@ uint32_t vector3::disable_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
-        if (mutex_error != FT_ERR_SUCCESS)
-            return (vector3::set_error(static_cast<uint32_t>(mutex_error)));
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (vector3::set_error(static_cast<uint32_t>(mutex_error)));
     }
     return (vector3::set_error(FT_ERR_SUCCESS));
 }

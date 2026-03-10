@@ -32,7 +32,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_SUCCESS)
+        if (reported_error != FT_ERR_SUCCESS)
         {
             (void)(reported_error);
             return (false);
@@ -54,7 +54,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
             else
                 reported_error = mutex_result;
 
-            if (reported_error != FT_SUCCESS)
+            if (reported_error != FT_ERR_SUCCESS)
             {
                 (void)(reported_error);
                 return (false);
@@ -77,7 +77,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_SUCCESS)
+        if (reported_error != FT_ERR_SUCCESS)
         {
             (void)(reported_error);
             return (false);

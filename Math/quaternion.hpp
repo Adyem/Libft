@@ -37,10 +37,10 @@ class quaternion
         quaternion(quaternion &&other) noexcept;
         quaternion &operator=(quaternion &&other) noexcept = delete;
         ~quaternion() noexcept;
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double scalar_w, double x_component, double y_component, double z_component) noexcept;
-        uint32_t initialize(const quaternion &other) noexcept;
-        uint32_t initialize(quaternion &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(double scalar_w, double x_component, double y_component, double z_component) noexcept;
+        int32_t initialize(const quaternion &other) noexcept;
+        int32_t initialize(quaternion &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(quaternion &other) noexcept;
         double      get_w() const;

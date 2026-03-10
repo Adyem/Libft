@@ -1,6 +1,7 @@
 #ifndef FT_TEMPLATE_MATH_HPP
 #define FT_TEMPLATE_MATH_HPP
 
+#include "../Basic/basic.hpp"
 #include <cstddef>
 #include <type_traits>
 
@@ -40,6 +41,6 @@ template <typename... Args>
 struct is_single_convertible_to_size_t : std::false_type {};
 
 template <typename Arg>
-struct is_single_convertible_to_size_t<Arg> : std::is_convertible<std::decay_t<Arg>, size_t> {};
+struct is_single_convertible_to_size_t<Arg> : std::is_convertible<std::decay_t<Arg>, ft_size_t> {};
 
 #endif

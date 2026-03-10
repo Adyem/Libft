@@ -31,9 +31,9 @@ class ft_sound_clip
         ft_sound_clip &operator=(ft_sound_clip &&other) = delete;
         ~ft_sound_clip(void);
 
-        uint32_t                 initialize(void);
-        uint32_t                 initialize(const ft_sound_clip &other);
-        uint32_t                 initialize(ft_sound_clip &&other);
+        int32_t                 initialize(void);
+        int32_t                 initialize(const ft_sound_clip &other);
+        int32_t                 initialize(ft_sound_clip &&other);
         int32_t                  destroy(void);
         int32_t                  move(ft_sound_clip &other);
         int32_t                  load_wav(const char *file_path);

@@ -64,7 +64,7 @@ static int32_t rl_utf8_measure_grapheme_width(const char *buffer, ft_size_t grap
         code_point = 0;
         sequence_length = 0;
         if (ft_utf8_next(buffer, grapheme_length, &decode_index,
-                &code_point, &sequence_length) != FT_SUCCESS)
+                &code_point, &sequence_length) != FT_ERR_SUCCESS)
         {
             total_width = static_cast<int32_t>(grapheme_length);
             *display_width = total_width;
@@ -105,7 +105,7 @@ static int32_t rl_utf8_extract_grapheme(const char *buffer, ft_size_t buffer_len
     grapheme_length = 0;
     width = 0;
     if (ft_utf8_next_grapheme(buffer, buffer_length, &local_index,
-            &grapheme_length) != FT_SUCCESS)
+            &grapheme_length) != FT_ERR_SUCCESS)
     {
         local_index = start_index + 1;
         grapheme_length = 1;

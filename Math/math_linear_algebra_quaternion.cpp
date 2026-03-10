@@ -133,7 +133,9 @@ quaternion::quaternion() noexcept
 quaternion::quaternion(double scalar_w, double x_component, double y_component, double z_component) noexcept
 {
     int32_t initialization_error;
+    uint32_t previous_last_error;
 
+    previous_last_error = quaternion::_last_error;
     this->_w_component = 1.0;
     this->_x_component = 0.0;
     this->_y_component = 0.0;
@@ -143,13 +145,16 @@ quaternion::quaternion(double scalar_w, double x_component, double y_component, 
     if (initialization_error != FT_ERR_SUCCESS
         && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    quaternion::set_error(previous_last_error);
     return ;
 }
 
 quaternion::quaternion(const quaternion &other) noexcept
 {
     int32_t initialization_error;
+    uint32_t previous_last_error;
 
+    previous_last_error = quaternion::_last_error;
     this->_w_component = 1.0;
     this->_x_component = 0.0;
     this->_y_component = 0.0;
@@ -160,24 +165,29 @@ quaternion::quaternion(const quaternion &other) noexcept
         other.abort_lifecycle_error(
             "quaternion::quaternion(const quaternion &) source",
             "called with uninitialised source object");
+        quaternion::set_error(previous_last_error);
         return ;
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        quaternion::set_error(previous_last_error);
         return ;
     }
     initialization_error = this->initialize(other);
     if (initialization_error != FT_ERR_SUCCESS
         && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    quaternion::set_error(previous_last_error);
     return ;
 }
 
 quaternion::quaternion(quaternion &&other) noexcept
 {
     int32_t initialization_error;
+    uint32_t previous_last_error;
 
+    previous_last_error = quaternion::_last_error;
     this->_w_component = 1.0;
     this->_x_component = 0.0;
     this->_y_component = 0.0;
@@ -187,21 +197,24 @@ quaternion::quaternion(quaternion &&other) noexcept
     {
         other.abort_lifecycle_error("quaternion::quaternion(quaternion &&) source",
             "called with uninitialised source object");
+        quaternion::set_error(previous_last_error);
         return ;
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        quaternion::set_error(previous_last_error);
         return ;
     }
     initialization_error = this->initialize(static_cast<quaternion &&>(other));
     if (initialization_error != FT_ERR_SUCCESS
         && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    quaternion::set_error(previous_last_error);
     return ;
 }
 
-uint32_t quaternion::initialize() noexcept
+int32_t quaternion::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -217,7 +230,7 @@ uint32_t quaternion::initialize() noexcept
     return (quaternion::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t quaternion::initialize(double scalar_w, double x_component, double y_component, double z_component) noexcept
+int32_t quaternion::initialize(double scalar_w, double x_component, double y_component, double z_component) noexcept
 {
     int32_t initialization_error;
 
@@ -231,7 +244,7 @@ uint32_t quaternion::initialize(double scalar_w, double x_component, double y_co
     return (quaternion::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t quaternion::initialize(const quaternion &other) noexcept
+int32_t quaternion::initialize(const quaternion &other) noexcept
 {
     int32_t initialization_error;
     int32_t destroy_error;
@@ -348,7 +361,7 @@ uint32_t quaternion::move(quaternion &other) noexcept
     return (quaternion::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t quaternion::initialize(quaternion &&other) noexcept
+int32_t quaternion::initialize(quaternion &&other) noexcept
 {
     int32_t initialization_error;
     int32_t destroy_error;
@@ -401,21 +414,25 @@ uint32_t quaternion::destroy() noexcept
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (quaternion::set_error(FT_ERR_SUCCESS));
+    disable_error = this->disable_thread_safety();
     this->_w_component = 1.0;
     this->_x_component = 0.0;
     this->_y_component = 0.0;
     this->_z_component = 0.0;
-    disable_error = this->disable_thread_safety();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     if (disable_error != FT_ERR_SUCCESS)
         return (quaternion::set_error(disable_error));
-    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (quaternion::set_error(FT_ERR_SUCCESS));
 }
 
 quaternion::~quaternion() noexcept
 {
+    uint32_t previous_last_error;
+
+    previous_last_error = quaternion::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
+    quaternion::set_error(previous_last_error);
     return ;
 }
 
@@ -423,6 +440,8 @@ double  quaternion::get_w() const
 {
     double value;
     int32_t lock_error;
+
+    this->abort_if_not_initialised("quaternion::get_w");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -439,6 +458,8 @@ double  quaternion::get_x() const
 {
     double value;
     int32_t lock_error;
+
+    this->abort_if_not_initialised("quaternion::get_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -455,6 +476,8 @@ double  quaternion::get_y() const
 {
     double value;
     int32_t lock_error;
+
+    this->abort_if_not_initialised("quaternion::get_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -471,6 +494,8 @@ double  quaternion::get_z() const
 {
     double value;
     int32_t lock_error;
+
+    this->abort_if_not_initialised("quaternion::get_z");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -493,6 +518,8 @@ quaternion  quaternion::add(const quaternion &other) const
     double result_y;
     double result_z;
 
+    this->abort_if_not_initialised("quaternion::add");
+    other.abort_if_not_initialised("quaternion::add source");
     lock_error = quaternion::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -518,6 +545,8 @@ quaternion  quaternion::multiply(const quaternion &other) const
     double result_y;
     double result_z;
 
+    this->abort_if_not_initialised("quaternion::multiply");
+    other.abort_if_not_initialised("quaternion::multiply source");
     lock_error = quaternion::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -540,6 +569,7 @@ quaternion  quaternion::conjugate() const
     double result_y;
     double result_z;
 
+    this->abort_if_not_initialised("quaternion::conjugate");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -560,6 +590,7 @@ double  quaternion::length() const
     double length_value;
     int32_t lock_error;
 
+    this->abort_if_not_initialised("quaternion::length");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -584,6 +615,7 @@ quaternion  quaternion::normalize() const
     double local_z;
     int32_t lock_error;
 
+    this->abort_if_not_initialised("quaternion::normalize");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -640,10 +672,10 @@ uint32_t quaternion::disable_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
-        if (mutex_error != FT_ERR_SUCCESS)
-            return (quaternion::set_error(static_cast<uint32_t>(mutex_error)));
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (quaternion::set_error(static_cast<uint32_t>(mutex_error)));
     }
     return (quaternion::set_error(FT_ERR_SUCCESS));
 }

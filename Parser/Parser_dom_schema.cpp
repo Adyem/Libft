@@ -159,8 +159,8 @@ int ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, bool r
         return (lock_error);
     this->_rules.push_back(rule);
     (void)this->unlock_internal(lock_acquired);
-    if (ft_vector<ft_dom_schema_rule>::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_vector<ft_dom_schema_rule>::last_operation_error());
+    if (ft_vector<ft_dom_schema_rule>::get_error() != FT_ERR_SUCCESS)
+        return (ft_vector<ft_dom_schema_rule>::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -170,14 +170,14 @@ static ft_string ft_dom_build_path(const ft_string &base, const ft_string &segme
 
     result = base;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string(ft_string::get_error()));
+        return (ft_string());
     if (result.size() != 0)
         result += "/";
     if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string(ft_string::get_error()));
+        return (ft_string());
     result += segment;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string(ft_string::get_error()));
+        return (ft_string());
     return (result);
 }
 
@@ -275,10 +275,10 @@ int ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validation_r
     {
         const ft_dom_schema_rule &rule = this->_rules[index];
 
-        if (ft_vector<ft_dom_schema_rule>::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_vector<ft_dom_schema_rule>::get_error() != FT_ERR_SUCCESS)
         {
             (void)this->unlock_internal(lock_acquired);
-            return (ft_vector<ft_dom_schema_rule>::last_operation_error());
+            return (ft_vector<ft_dom_schema_rule>::get_error());
         }
         ft_string rule_path;
         if (rule_path.initialize("") != FT_ERR_SUCCESS)

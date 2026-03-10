@@ -62,10 +62,10 @@ class ft_render_window
         ft_render_window &operator=(ft_render_window &&other) = delete;
         ~ft_render_window(void);
 
-        uint32_t                     initialize(void);
-        uint32_t                     initialize(const ft_render_window_desc &desc);
-        uint32_t                     initialize(const ft_render_window &other);
-        uint32_t                     initialize(ft_render_window &&other);
+        int32_t                     initialize(void);
+        int32_t                     initialize(const ft_render_window_desc &desc);
+        int32_t                     initialize(const ft_render_window &other);
+        int32_t                     initialize(ft_render_window &&other);
         int32_t                      destroy(void);
         int32_t                      move(ft_render_window &other);
         void                         shutdown(void);

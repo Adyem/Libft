@@ -155,7 +155,7 @@ gnl_stream::~gnl_stream() noexcept
     return ;
 }
 
-uint32_t gnl_stream::initialize() noexcept
+int32_t gnl_stream::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {

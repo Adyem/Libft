@@ -23,7 +23,7 @@ static int32_t append_line_to_vector(ft_vector<ft_string> &lines, char *line_buf
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
     lines.push_back(line_string);
-    push_error = ft_vector<ft_string>::last_operation_error();
+    push_error = ft_vector<ft_string>::get_error();
     if (push_error != FT_ERR_SUCCESS)
         return (push_error);
     return (FT_ERR_SUCCESS);

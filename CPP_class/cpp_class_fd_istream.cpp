@@ -52,13 +52,6 @@ ft_fd_istream::ft_fd_istream() noexcept
     return ;
 }
 
-ft_fd_istream::ft_fd_istream(int32_t file_descriptor) noexcept
-    : ft_istream(), _file_descriptor(file_descriptor), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    return ;
-}
-
 ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
     : ft_istream(), _file_descriptor(-1), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)

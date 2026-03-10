@@ -22,8 +22,7 @@ ft_string yaml_substr(const ft_string &string, size_t start, size_t length) noex
 {
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        ft_string error_string(ft_string::get_error());
-        return (error_string);
+        return (ft_string());
     }
     ft_string result;
     const char *data = string.c_str();
@@ -33,8 +32,7 @@ ft_string yaml_substr(const ft_string &string, size_t start, size_t length) noex
         result.append(data[start + index]);
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
-            ft_string error_string(ft_string::get_error());
-            return (error_string);
+            return (ft_string());
         }
         index++;
     }
@@ -45,16 +43,14 @@ ft_string yaml_substr_from(const ft_string &string, size_t start) noexcept
 {
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        ft_string error_string(ft_string::get_error());
-        return (error_string);
+        return (ft_string());
     }
     if (start >= string.size())
         return (ft_string());
     ft_string part = yaml_substr(string, start, string.size() - start);
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        ft_string error_string(ft_string::get_error());
-        return (error_string);
+        return (ft_string());
     }
     return (part);
 }
@@ -88,7 +84,7 @@ void yaml_trim(ft_string &string) noexcept
     ft_string trimmed = yaml_substr(string, start_index, end_index - start_index);
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        string = ft_string(ft_string::get_error());
+        string = ft_string();
         return ;
     }
     string = trimmed;
@@ -111,8 +107,8 @@ int yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noex
         if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (ft_string::get_error());
         lines.push_back(part);
-        if (ft_vector<ft_string>::last_operation_error() != FT_ERR_SUCCESS)
-            return (ft_vector<ft_string>::last_operation_error());
+        if (ft_vector<ft_string>::get_error() != FT_ERR_SUCCESS)
+            return (ft_vector<ft_string>::get_error());
         start_index = end_index + 1;
     }
     return (FT_ERR_SUCCESS);

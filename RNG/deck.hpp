@@ -146,7 +146,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::pop_random_element() noexcept
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
@@ -162,7 +162,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::pop_random_element() noexcept
     {
         index = static_cast<size_t>(roll_result - 1);
         element = this->release_at(index);
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     unlock_error = this->unlock_deck(lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
@@ -189,7 +189,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::get_random_element() const noexce
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
@@ -205,7 +205,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::get_random_element() const noexce
     {
         index = static_cast<size_t>(roll_result - 1);
         element = (*this)[index];
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     unlock_error = this->unlock_deck(lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
@@ -231,7 +231,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::draw_top_element() noexcept
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
@@ -241,7 +241,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::draw_top_element() noexcept
     {
         index = deck_size - 1;
         element = this->release_at(index);
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     unlock_error = this->unlock_deck(lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
@@ -267,7 +267,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::peek_top_element() const noexcept
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
@@ -277,7 +277,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::peek_top_element() const noexcept
     {
         index = deck_size - 1;
         element = (*this)[index];
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     unlock_error = this->unlock_deck(lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
@@ -305,7 +305,7 @@ int ft_deck<ElementType>::shuffle() noexcept
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::last_operation_error();
+        operation_error = ft_vector<ElementType*>::get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
@@ -329,20 +329,20 @@ int ft_deck<ElementType>::shuffle() noexcept
             }
             random_index = static_cast<size_t>(roll_result - 1);
             first_element = (*this)[index];
-            operation_error = ft_vector<ElementType*>::last_operation_error();
+            operation_error = ft_vector<ElementType*>::get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             second_element = (*this)[random_index];
-            operation_error = ft_vector<ElementType*>::last_operation_error();
+            operation_error = ft_vector<ElementType*>::get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             ft_swap(first_element, second_element);
             (*this)[index] = first_element;
-            operation_error = ft_vector<ElementType*>::last_operation_error();
+            operation_error = ft_vector<ElementType*>::get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             (*this)[random_index] = second_element;
-            operation_error = ft_vector<ElementType*>::last_operation_error();
+            operation_error = ft_vector<ElementType*>::get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             index -= 1;

@@ -101,9 +101,9 @@ int ft_log_add_redaction_with_replacement(const char *pattern,
         return (-1);
     }
     g_redaction_rules.push_back(rule);
-    if (g_redaction_rules.last_operation_error() != FT_ERR_SUCCESS)
+    if (g_redaction_rules.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = g_redaction_rules.last_operation_error();
+        error_code = g_redaction_rules.get_error();
         lock_error = logger_unlock_sinks();
         if (lock_error != FT_ERR_SUCCESS)
         {
@@ -136,7 +136,7 @@ void ft_log_clear_redactions()
         return ;
     }
     g_redaction_rules.clear();
-    clear_error = g_redaction_rules.last_operation_error();
+    clear_error = g_redaction_rules.get_error();
     unlock_result = logger_unlock_sinks();
     if (unlock_result != FT_ERR_SUCCESS)
     {
@@ -156,19 +156,19 @@ int logger_copy_redaction_rules(ft_vector<s_redaction_rule> &destination)
     int error_code;
 
     rule_count = g_redaction_rules.size();
-    if (g_redaction_rules.last_operation_error() != FT_ERR_SUCCESS)
-        return (g_redaction_rules.last_operation_error());
+    if (g_redaction_rules.get_error() != FT_ERR_SUCCESS)
+        return (g_redaction_rules.get_error());
     index = 0;
     while (index < rule_count)
     {
         s_redaction_rule rule;
 
         rule = g_redaction_rules[index];
-        if (g_redaction_rules.last_operation_error() != FT_ERR_SUCCESS)
-            return (g_redaction_rules.last_operation_error());
+        if (g_redaction_rules.get_error() != FT_ERR_SUCCESS)
+            return (g_redaction_rules.get_error());
         destination.push_back(rule);
-        if (destination.last_operation_error() != FT_ERR_SUCCESS)
-            return (destination.last_operation_error());
+        if (destination.get_error() != FT_ERR_SUCCESS)
+            return (destination.get_error());
         index++;
     }
     error_code = FT_ERR_SUCCESS;
@@ -185,8 +185,8 @@ int logger_apply_redactions(ft_string &text,
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
     rule_count = rules.size();
-    if (rules.last_operation_error() != FT_ERR_SUCCESS)
-        return (rules.last_operation_error());
+    if (rules.get_error() != FT_ERR_SUCCESS)
+        return (rules.get_error());
     index = 0;
     while (index < rule_count)
     {
@@ -194,8 +194,8 @@ int logger_apply_redactions(ft_string &text,
         int             apply_error;
 
         rule = rules[index];
-        if (rules.last_operation_error() != FT_ERR_SUCCESS)
-            return (rules.last_operation_error());
+        if (rules.get_error() != FT_ERR_SUCCESS)
+            return (rules.get_error());
         apply_error = logger_apply_redaction_rule(text, rule);
         if (apply_error != FT_ERR_SUCCESS)
             return (apply_error);

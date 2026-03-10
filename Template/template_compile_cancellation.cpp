@@ -1,6 +1,7 @@
 #include "cancellation.hpp"
+#include <cstdint>
 
-static int compile_cancellation_usage()
+static int32_t compile_cancellation_usage()
 {
     ft_cancellation_state cancellation_state;
 
@@ -12,4 +13,4 @@ static int compile_cancellation_usage()
     return (1);
 }
 
-static int cancellation_dummy = compile_cancellation_usage();
+static int32_t cancellation_dummy = compile_cancellation_usage();

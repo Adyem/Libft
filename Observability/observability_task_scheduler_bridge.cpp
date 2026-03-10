@@ -79,7 +79,7 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
         ft_otel_span_state new_state;
         ft_otel_span_state *state_pointer;
         ft_unordered_map<unsigned long long, ft_otel_span_state>::iterator iterator(g_observability_span_states.find(event.trace_id));
-        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+        if (g_observability_span_states.get_error() != FT_ERR_SUCCESS)
         {
             (void)g_observability_bridge_mutex.unlock();
             return ;
@@ -88,14 +88,14 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
         {
             new_state = observability_span_state_create();
             g_observability_span_states.insert(event.trace_id, new_state);
-            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+            if (g_observability_span_states.get_error() != FT_ERR_SUCCESS)
             {
                 (void)g_observability_bridge_mutex.unlock();
                 return ;
             }
             ft_unordered_map<unsigned long long, ft_otel_span_state>::iterator
                 inserted_iterator(g_observability_span_states.find(event.trace_id));
-            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS
+            if (g_observability_span_states.get_error() != FT_ERR_SUCCESS
                 || inserted_iterator == g_observability_span_states.end())
             {
                 (void)g_observability_bridge_mutex.unlock();
@@ -157,7 +157,7 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
             if (event.timer_thread)
                 completed_metrics.timer_thread = true;
             g_observability_span_states.erase(event.trace_id);
-            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+            if (g_observability_span_states.get_error() != FT_ERR_SUCCESS)
             {
                 (void)g_observability_bridge_mutex.unlock();
                 return ;
@@ -211,7 +211,7 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_span_states.clear();
-    if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+    if (g_observability_span_states.get_error() != FT_ERR_SUCCESS)
     {
         g_observability_bridge_exporter = ft_nullptr;
         g_observability_bridge_initialised = false;
@@ -240,7 +240,7 @@ int observability_task_scheduler_bridge_shutdown(void)
         unlock_result = g_observability_bridge_mutex.unlock();
         if (unlock_result != FT_ERR_SUCCESS)
             return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+        if (g_observability_span_states.get_error() != FT_ERR_SUCCESS)
             return (FT_ERR_INTERNAL);
         return (FT_ERR_SUCCESS);
     }
@@ -262,7 +262,7 @@ int observability_task_scheduler_bridge_shutdown(void)
     unlock_result = g_observability_bridge_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-    if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+    if (g_observability_span_states.get_error() != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     return (FT_ERR_SUCCESS);
 }

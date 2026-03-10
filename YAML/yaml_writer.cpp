@@ -190,7 +190,7 @@ ft_string yaml_write_to_string(const yaml_value *value) noexcept
 
     write_error = write_node(value, output, 0);
     if (write_error != FT_ERR_SUCCESS)
-        return (ft_string(write_error));
+        return (ft_string());
     return (output);
 }
 

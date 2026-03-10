@@ -19,8 +19,8 @@ class ft_trie
     private:
         struct node_value
         {
-            size_t      _key_length;
-            int         _unset_value;
+            ft_size_t      _key_length;
+            int32_t     _unset_value;
             ValueType  *_value_pointer;
         };
 
@@ -34,7 +34,7 @@ class ft_trie
         static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        static int32_t set_error(int32_t error_code) noexcept
         {
             _last_error = error_code;
             return (error_code);
@@ -61,39 +61,35 @@ class ft_trie
             return ;
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_result));
+                return (set_error(lock_result));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        int unlock_internal(bool lock_acquired) const
+        int32_t unlock_internal(ft_bool lock_acquired) const
         {
-            int unlock_result;
-
-            if (lock_acquired == false)
+            if (lock_acquired == FT_FALSE)
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            if (unlock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_result));
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_ERR_SUCCESS);
         }
 
-        size_t key_length(const char *key) const
+        ft_size_t key_length(const char *key) const
         {
-            size_t index;
+            ft_size_t index;
 
             index = 0;
             while (key[index] != '\0')
@@ -115,14 +111,14 @@ class ft_trie
             return ;
         }
 
-        int insert_helper(const char *key, int unset_value, ValueType *value_pointer)
+        int32_t insert_helper(const char *key, int32_t unset_value, ValueType *value_pointer)
         {
             ft_trie<ValueType> *current_node;
             const char *key_iterator;
-            size_t length_value;
+            ft_size_t length_value;
 
             if (key == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_INVALID_ARGUMENT));
+                return (set_error(FT_ERR_INVALID_ARGUMENT));
             length_value = this->key_length(key);
             current_node = this;
             key_iterator = key;
@@ -130,18 +126,18 @@ class ft_trie
             {
                 char character;
                 ft_trie<ValueType> *new_child;
-                int child_result;
+                int32_t child_result;
 
                 character = *key_iterator;
                 if (current_node->_children[character] == ft_nullptr)
                 {
                     new_child = new (std::nothrow) ft_trie<ValueType>();
                     if (new_child == ft_nullptr)
-                        return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                        return (set_error(FT_ERR_NO_MEMORY));
                     if (new_child->initialize() != FT_ERR_SUCCESS)
                     {
                         delete new_child;
-                        return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                        return (set_error(FT_ERR_INVALID_STATE));
                     }
                     current_node->_children[character] = new_child;
                     if (this->_mutex != ft_nullptr)
@@ -151,7 +147,7 @@ class ft_trie
                         {
                             current_node->_children[character] = ft_nullptr;
                             delete new_child;
-                            return (set_last_operation_error(child_result));
+                            return (set_error(child_result));
                         }
                     }
                 }
@@ -162,12 +158,12 @@ class ft_trie
             {
                 current_node->_data = static_cast<node_value*>(cma_malloc(sizeof(node_value)));
                 if (current_node->_data == ft_nullptr)
-                    return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                    return (set_error(FT_ERR_NO_MEMORY));
             }
             current_node->_data->_unset_value = unset_value;
             current_node->_data->_key_length = length_value;
             current_node->_data->_value_pointer = value_pointer;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
     public:
@@ -175,7 +171,7 @@ class ft_trie
             : _data(ft_nullptr), _children(), _mutex(ft_nullptr),
               _initialised_state(_state_uninitialised)
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -193,82 +189,75 @@ class ft_trie
         ft_trie(ft_trie &&other) = delete;
         ft_trie &operator=(ft_trie &&other) = delete;
 
-        int initialize()
+        int32_t initialize()
         {
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_trie::initialize",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_data = ft_nullptr;
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int destroy()
+        int32_t destroy()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             if (this->_initialised_state != _state_initialised)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            lock_acquired = false;
+                return (set_error(FT_ERR_SUCCESS));
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_error));
+                return (set_error(lock_error));
             this->destroy_children_unlocked();
             if (this->_data != ft_nullptr)
             {
                 cma_free(this->_data);
                 this->_data = ft_nullptr;
             }
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_error));
+            (void)this->unlock_internal(lock_acquired);
             this->_initialised_state = _state_destroyed;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int insert(const char *key, ValueType *value_pointer, int unset_value = 0)
+        int32_t insert(const char *key, ValueType *value_pointer, int32_t unset_value = 0)
         {
-            bool lock_acquired;
-            int lock_error;
-            int insert_result;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
+            int32_t insert_result;
 
             this->abort_if_not_initialised("ft_trie::insert");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_error));
+                return (set_error(lock_error));
             insert_result = this->insert_helper(key, unset_value, value_pointer);
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_error));
-            return (set_last_operation_error(insert_result));
+            (void)this->unlock_internal(lock_acquired);
+            return (set_error(insert_result));
         }
 
         const node_value *search(const char *key) const
         {
             const ft_trie<ValueType> *current_node;
             const char *key_iterator;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_trie::search");
             if (key == ft_nullptr)
             {
-                set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+                set_error(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (ft_nullptr);
             }
             current_node = this;
@@ -279,43 +268,35 @@ class ft_trie
                 if (child_iterator == current_node->_children.end()
                     || child_iterator->second == ft_nullptr)
                 {
-                    unlock_error = this->unlock_internal(lock_acquired);
-                    if (unlock_error != FT_ERR_SUCCESS)
-                        set_last_operation_error(unlock_error);
-                    else
-                        set_last_operation_error(FT_ERR_NOT_FOUND);
+                    (void)this->unlock_internal(lock_acquired);
+                    set_error(FT_ERR_NOT_FOUND);
                     return (ft_nullptr);
                 }
                 current_node = child_iterator->second;
                 ++key_iterator;
             }
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (ft_nullptr);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (current_node->_data);
         }
 
-        int enable_thread_safety()
+        int32_t enable_thread_safety()
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
             typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator(this->_children.begin());
 
             this->abort_if_not_initialised("ft_trie::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_mutex = new_mutex;
             while (child_iterator != this->_children.end())
@@ -324,22 +305,22 @@ class ft_trie
                 {
                     initialize_result = child_iterator->second->enable_thread_safety();
                     if (initialize_result != FT_ERR_SUCCESS)
-                        return (set_last_operation_error(initialize_result));
+                        return (set_error(initialize_result));
                 }
                 ++child_iterator;
             }
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety()
+        int32_t disable_thread_safety()
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
             typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator(this->_children.begin());
 
             if (this->_initialised_state != _state_initialised
                 && this->_initialised_state != _state_destroyed)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             while (child_iterator != this->_children.end())
             {
                 if (child_iterator->second != ft_nullptr)
@@ -348,56 +329,47 @@ class ft_trie
             }
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool is_thread_safe() const
         {
             this->abort_if_not_initialised("ft_trie::is_thread_safe");
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
 
-        int lock(bool *lock_acquired) const
+        int32_t lock(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             this->abort_if_not_initialised("ft_trie::lock");
             lock_result = this->lock_internal(lock_acquired);
-            if (lock_result != FT_ERR_SUCCESS)
-                return (-1);
-            set_last_operation_error(FT_ERR_SUCCESS);
-            return (0);
+            return (set_error(lock_result));
         }
 
-        void unlock(bool lock_acquired) const
+        void unlock(ft_bool lock_acquired) const
         {
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
-        static int32_t last_operation_error() noexcept
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-        static const char *last_operation_error_str() noexcept
+        static const char *get_error_str() noexcept
         {
             return (ft_strerror(_last_error));
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept
-        {
-            return (this->_mutex);
-        }
-#endif
 };
 
 template <typename ValueType>

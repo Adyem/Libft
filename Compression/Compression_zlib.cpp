@@ -9,7 +9,7 @@ static const unsigned char g_compression_empty_input = 0;
 
 static bool compression_vector_operation_failed(void)
 {
-    return (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS);
+    return (ft_vector<unsigned char>::get_error() != FT_ERR_SUCCESS);
 }
 
 static int compression_string_pop_error(const ft_string &)

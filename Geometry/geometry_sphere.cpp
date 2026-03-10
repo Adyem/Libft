@@ -22,24 +22,6 @@ sphere::sphere() noexcept
     return ;
 }
 
-sphere::sphere(double center_x, double center_y, double center_z,
-    double radius) noexcept
-    : _center_x(0.0)
-    , _center_y(0.0)
-    , _center_z(0.0)
-    , _radius(0.0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->initialize(center_x, center_y, center_z, radius);
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 sphere::sphere(const sphere &other) noexcept
     : _center_x(0.0)
     , _center_y(0.0)
@@ -74,7 +56,7 @@ sphere::sphere(sphere &&other) noexcept
     return ;
 }
 
-uint32_t sphere::initialize() noexcept
+int32_t sphere::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -89,7 +71,7 @@ uint32_t sphere::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t sphere::initialize(double center_x, double center_y, double center_z,
+int32_t sphere::initialize(double center_x, double center_y, double center_z,
     double radius) noexcept
 {
     uint32_t initialize_error;
@@ -104,7 +86,7 @@ uint32_t sphere::initialize(double center_x, double center_y, double center_z,
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t sphere::initialize(const sphere &other) noexcept
+int32_t sphere::initialize(const sphere &other) noexcept
 {
     uint32_t destroy_error;
     uint32_t lock_error;
@@ -197,7 +179,7 @@ uint32_t sphere::move(sphere &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t sphere::initialize(sphere &&other) noexcept
+int32_t sphere::initialize(sphere &&other) noexcept
 {
     return (this->move(other));
 }

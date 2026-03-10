@@ -42,10 +42,10 @@ class ft_dual_number
         ft_dual_number(ft_dual_number &&other) noexcept;
         ~ft_dual_number() noexcept;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double value, double derivative) noexcept;
-        uint32_t initialize(const ft_dual_number &other) noexcept;
-        uint32_t initialize(ft_dual_number &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(double value, double derivative) noexcept;
+        int32_t initialize(const ft_dual_number &other) noexcept;
+        int32_t initialize(ft_dual_number &&other) noexcept;
         int32_t             destroy() noexcept;
         int32_t             move(ft_dual_number &other) noexcept;
 

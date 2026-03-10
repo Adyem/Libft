@@ -61,8 +61,8 @@ void ft_shuffle(RandomIt first, RandomIt last)
     RandomIt iterator = last - 1;
     while (iterator > first)
     {
-        size_t random_index = static_cast<size_t>(ft_random_int()) %
-                    static_cast<size_t>((iterator - first) + 1);
+        ft_size_t random_index = static_cast<ft_size_t>(ft_random_int()) %
+                    static_cast<ft_size_t>((iterator - first) + 1);
         ft_swap(*(first + random_index), *iterator);
         --iterator;
     }

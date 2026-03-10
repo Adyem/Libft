@@ -39,7 +39,7 @@ ft_istringstream::~ft_istringstream() noexcept
     return ;
 }
 
-uint32_t ft_istringstream::initialize(const ft_string &string) noexcept
+int32_t ft_istringstream::initialize(const ft_string &string) noexcept
 {
     uint32_t stream_initialize_error;
     uint32_t buffer_initialize_error;

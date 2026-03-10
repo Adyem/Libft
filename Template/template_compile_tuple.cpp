@@ -1,3 +1,4 @@
 #include "tuple.hpp"
+#include <cstdint>
 
-template class ft_tuple<int, double>;
+template class ft_tuple<int32_t, double>;

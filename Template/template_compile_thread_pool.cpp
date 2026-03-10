@@ -1,6 +1,7 @@
 #include "thread_pool.hpp"
+#include <cstdint>
 
-static int compile_thread_pool_usage()
+static int32_t compile_thread_pool_usage()
 {
     ft_thread_pool thread_pool_value(0, 0);
 
@@ -10,4 +11,4 @@ static int compile_thread_pool_usage()
     return (1);
 }
 
-static int thread_pool_dummy = compile_thread_pool_usage();
+static int32_t thread_pool_dummy = compile_thread_pool_usage();

@@ -136,7 +136,7 @@ ft_sound_clip::~ft_sound_clip(void)
     return ;
 }
 
-uint32_t ft_sound_clip::initialize(void)
+int32_t ft_sound_clip::initialize(void)
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -160,7 +160,7 @@ uint32_t ft_sound_clip::initialize(void)
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_sound_clip::initialize(const ft_sound_clip &other)
+int32_t ft_sound_clip::initialize(const ft_sound_clip &other)
 {
     int32_t lock_error;
     uint32_t destroy_error;
@@ -216,7 +216,7 @@ uint32_t ft_sound_clip::initialize(const ft_sound_clip &other)
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_sound_clip::initialize(ft_sound_clip &&other)
+int32_t ft_sound_clip::initialize(ft_sound_clip &&other)
 {
     uint32_t initialization_error;
     uint32_t move_error;

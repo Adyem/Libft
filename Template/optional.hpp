@@ -28,7 +28,7 @@ class ft_optional
         static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        static int32_t set_error(int32_t error_code) noexcept
         {
             _last_error = error_code;
             return (error_code);
@@ -55,33 +55,29 @@ class ft_optional
             return ;
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_result));
+                return (set_error(lock_result));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        int unlock_internal(bool lock_acquired) const
+        int32_t unlock_internal(ft_bool lock_acquired) const
         {
-            int unlock_result;
-
-            if (lock_acquired == false)
+            if (lock_acquired == FT_FALSE)
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            if (unlock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_result));
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_ERR_SUCCESS);
         }
 
@@ -177,7 +173,7 @@ class ft_optional
             : _value(ft_nullptr), _mutex(ft_nullptr),
               _initialised_state(_state_uninitialised)
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -211,100 +207,91 @@ class ft_optional
         ft_optional &operator=(const ft_optional &other) = delete;
         ft_optional &operator=(ft_optional &&other) = delete;
 
-        int initialize()
+        int32_t initialize()
         {
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_optional::initialize",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_value = ft_nullptr;
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int initialize(const ElementType& value)
+        int32_t initialize(const ElementType& value)
         {
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_optional::initialize(copy)",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_value = static_cast<ElementType*>(cma_malloc(sizeof(ElementType)));
             if (this->_value == ft_nullptr)
             {
                 this->_initialised_state = _state_destroyed;
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             }
             construct_at(this->_value, value);
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int initialize(ElementType&& value)
+        int32_t initialize(ElementType&& value)
         {
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_optional::initialize(move)",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_value = static_cast<ElementType*>(cma_malloc(sizeof(ElementType)));
             if (this->_value == ft_nullptr)
             {
                 this->_initialised_state = _state_destroyed;
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             }
             construct_at(this->_value, ft_move(value));
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int destroy()
+        int32_t destroy()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             if (this->_initialised_state != _state_initialised)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            lock_acquired = false;
+                return (set_error(FT_ERR_SUCCESS));
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_error));
+                return (set_error(lock_error));
             this->destroy_value_unlocked();
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_error));
+            (void)this->unlock_internal(lock_acquired);
             this->_initialised_state = _state_destroyed;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool has_value() const
         {
             bool has_stored_value;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_optional::has_value");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (false);
             }
             has_stored_value = (this->_value != ft_nullptr);
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (has_stored_value);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (has_stored_value);
         }
 
@@ -312,35 +299,26 @@ class ft_optional
         {
             static ElementType fallback = ElementType();
             ElementType *value_pointer;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_optional::value");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (fallback);
             }
             if (this->_value == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (fallback);
             }
             value_pointer = this->_value;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (fallback);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (*value_pointer);
         }
 
@@ -348,35 +326,26 @@ class ft_optional
         {
             static ElementType fallback = ElementType();
             const ElementType *value_pointer;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_optional::value const");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (fallback);
             }
             if (this->_value == ft_nullptr)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_EMPTY);
                 return (fallback);
             }
             value_pointer = this->_value;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return (fallback);
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (*value_pointer);
         }
 
@@ -384,39 +353,39 @@ class ft_optional
         {
             if (this->_initialised_state != _state_initialised)
                 return (value_proxy(ft_nullptr,
-                    set_last_operation_error(FT_ERR_INVALID_STATE)));
+                    set_error(FT_ERR_INVALID_STATE)));
             if (this->_value == ft_nullptr)
                 return (value_proxy(ft_nullptr,
-                    set_last_operation_error(FT_ERR_EMPTY)));
+                    set_error(FT_ERR_EMPTY)));
             return (value_proxy(this->_value,
-                set_last_operation_error(FT_ERR_SUCCESS)));
+                set_error(FT_ERR_SUCCESS)));
         }
 
         const_value_proxy operator*() const noexcept
         {
             if (this->_initialised_state != _state_initialised)
                 return (const_value_proxy(ft_nullptr,
-                    set_last_operation_error(FT_ERR_INVALID_STATE)));
+                    set_error(FT_ERR_INVALID_STATE)));
             if (this->_value == ft_nullptr)
                 return (const_value_proxy(ft_nullptr,
-                    set_last_operation_error(FT_ERR_EMPTY)));
+                    set_error(FT_ERR_EMPTY)));
             return (const_value_proxy(this->_value,
-                set_last_operation_error(FT_ERR_SUCCESS)));
+                set_error(FT_ERR_SUCCESS)));
         }
 
         ElementType *operator->() noexcept
         {
             if (this->_initialised_state != _state_initialised)
             {
-                set_last_operation_error(FT_ERR_INVALID_STATE);
+                set_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
             }
             if (this->_value == ft_nullptr)
             {
-                set_last_operation_error(FT_ERR_EMPTY);
+                set_error(FT_ERR_EMPTY);
                 return (ft_nullptr);
             }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_value);
         }
 
@@ -424,15 +393,15 @@ class ft_optional
         {
             if (this->_initialised_state != _state_initialised)
             {
-                set_last_operation_error(FT_ERR_INVALID_STATE);
+                set_error(FT_ERR_INVALID_STATE);
                 return (ft_nullptr);
             }
             if (this->_value == ft_nullptr)
             {
-                set_last_operation_error(FT_ERR_EMPTY);
+                set_error(FT_ERR_EMPTY);
                 return (ft_nullptr);
             }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_value);
         }
 
@@ -440,95 +409,83 @@ class ft_optional
         {
             if (this->_initialised_state != _state_initialised)
             {
-                set_last_operation_error(FT_ERR_INVALID_STATE);
+                set_error(FT_ERR_INVALID_STATE);
                 return (false);
             }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_value != ft_nullptr);
         }
 
         void reset()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_optional::reset");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             this->destroy_value_unlocked();
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
-        int enable_thread_safety() noexcept
+        int32_t enable_thread_safety() noexcept
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
 
             if (this->_initialised_state != _state_initialised)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             if (this->_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_mutex = new_mutex;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety() noexcept
+        int32_t disable_thread_safety() noexcept
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
 
             if (this->_initialised_state != _state_initialised
                 && this->_initialised_state != _state_destroyed)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        static int32_t last_operation_error() noexcept
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-        static const char *last_operation_error_str() noexcept
+        static const char *get_error_str() noexcept
         {
             return (ft_strerror(_last_error));
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept
-        {
-            return (this->_mutex);
-        }
-#endif
 };
 
 template <typename ElementType>

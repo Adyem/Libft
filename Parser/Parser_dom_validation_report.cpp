@@ -234,8 +234,8 @@ int ft_dom_validation_report::add_error(const ft_string &path,
         return (lock_error);
     this->_errors.push_back(error_entry);
     (void)this->unlock_internal(lock_acquired);
-    if (ft_vector<ft_dom_validation_error>::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_vector<ft_dom_validation_error>::last_operation_error());
+    if (ft_vector<ft_dom_validation_error>::get_error() != FT_ERR_SUCCESS)
+        return (ft_vector<ft_dom_validation_error>::get_error());
     return (FT_ERR_SUCCESS);
 }
 

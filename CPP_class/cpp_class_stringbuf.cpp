@@ -82,7 +82,7 @@ ft_stringbuf::~ft_stringbuf() noexcept
     return ;
 }
 
-uint32_t ft_stringbuf::initialize(const ft_string &string) noexcept
+int32_t ft_stringbuf::initialize(const ft_string &string) noexcept
 {
     int32_t assign_error;
     int32_t storage_initialize_error;

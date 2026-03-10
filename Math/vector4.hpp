@@ -41,10 +41,10 @@ class vector4
         vector4(vector4 &&other) noexcept;
         vector4 &operator=(vector4 &&other) = delete;
         ~vector4() noexcept;
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double x_component, double y_component, double z_component, double w_component) noexcept;
-        uint32_t initialize(const vector4 &other) noexcept;
-        uint32_t initialize(vector4 &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(double x_component, double y_component, double z_component, double w_component) noexcept;
+        int32_t initialize(const vector4 &other) noexcept;
+        int32_t initialize(vector4 &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(vector4 &other) noexcept;
         double  get_x() const;

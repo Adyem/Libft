@@ -12,7 +12,7 @@ static int logger_context_rollback(size_t count)
     while (index < count)
     {
         g_log_context_entries.pop_back();
-        int vector_error = g_log_context_entries.last_operation_error();
+        int vector_error = g_log_context_entries.get_error();
         if (vector_error != FT_ERR_SUCCESS)
             return (vector_error);
         index += 1;
@@ -87,7 +87,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         }
         log_field_unlock(field, lock_acquired);
         g_log_context_entries.push_back(entry);
-        error_code = g_log_context_entries.last_operation_error();
+        error_code = g_log_context_entries.get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             logger_context_rollback(index);
@@ -105,7 +105,7 @@ void logger_context_pop(size_t count)
     int error_code;
 
     available = g_log_context_entries.size();
-    error_code = g_log_context_entries.last_operation_error();
+    error_code = g_log_context_entries.get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return ;
@@ -120,7 +120,7 @@ void logger_context_pop(size_t count)
     while (count > 0)
     {
         g_log_context_entries.pop_back();
-        error_code = g_log_context_entries.last_operation_error();
+        error_code = g_log_context_entries.get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return ;
@@ -138,7 +138,7 @@ static int logger_context_format_prefix(ft_string &prefix)
     int error_code;
 
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.last_operation_error();
+    error_code = g_log_context_entries.get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -159,7 +159,7 @@ static int logger_context_format_prefix(ft_string &prefix)
     {
         const s_log_context_entry &entry = g_log_context_entries[index];
 
-        error_code = g_log_context_entries.last_operation_error();
+        error_code = g_log_context_entries.get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return (-1);
@@ -365,7 +365,7 @@ int logger_context_format_flat(ft_string &output)
         return (-1);
     }
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.last_operation_error();
+    error_code = g_log_context_entries.get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -380,7 +380,7 @@ int logger_context_format_flat(ft_string &output)
     {
         const s_log_context_entry &entry = g_log_context_entries[index];
 
-        error_code = g_log_context_entries.last_operation_error();
+        error_code = g_log_context_entries.get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return (-1);
@@ -430,13 +430,13 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
     int error_code;
 
     snapshot.clear();
-    error_code = snapshot.last_operation_error();
+    error_code = snapshot.get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
     }
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.last_operation_error();
+    error_code = g_log_context_entries.get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -447,7 +447,7 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
         const s_log_context_entry &entry = g_log_context_entries[index];
         s_log_context_view view;
 
-        error_code = g_log_context_entries.last_operation_error();
+        error_code = g_log_context_entries.get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return (-1);
@@ -456,7 +456,7 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
         view.value = entry.value.c_str();
         view.has_value = entry.has_value;
         snapshot.push_back(view);
-        error_code = snapshot.last_operation_error();
+        error_code = snapshot.get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return (-1);
@@ -472,7 +472,7 @@ void logger_context_clear()
     int error_code;
 
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.last_operation_error();
+    error_code = g_log_context_entries.get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return ;
@@ -480,7 +480,7 @@ void logger_context_clear()
     while (count > 0)
     {
         g_log_context_entries.pop_back();
-        error_code = g_log_context_entries.last_operation_error();
+        error_code = g_log_context_entries.get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return ;

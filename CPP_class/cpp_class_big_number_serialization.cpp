@@ -7,7 +7,7 @@ ft_string big_number_to_hex_string(const ft_big_number& number) noexcept
     int32_t number_copy_initialization_error = number_copy.initialize(number);
 
     if (number_copy_initialization_error != FT_ERR_SUCCESS)
-        return (ft_string(number_copy_initialization_error));
+        return (ft_string::from_error(number_copy_initialization_error));
     ft_string hex_string = number_copy.to_string_base(16);
     return (hex_string);
 }

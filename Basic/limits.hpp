@@ -2,6 +2,7 @@
 #define LIBFT_LIMITS_HPP
 
 #include <cstdint>
+#include <cinttypes>
 
 typedef uint64_t ft_size_t;
 
@@ -14,5 +15,8 @@ static constexpr int64_t FT_LLONG_MIN = (-9223372036854775807LL - 1LL);
 static constexpr uint64_t FT_ULLONG_MAX = 18446744073709551615ULL;
 
 static constexpr ft_size_t FT_SYSTEM_SIZE_MAX = 18446744073709551615ULL;
+
+#define FT_PRId64 PRId64
+#define FT_PRIu64 PRIu64
 
 #endif

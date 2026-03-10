@@ -80,6 +80,7 @@ vector2 matrix2::transform(const vector2 &vector) const
     double result_x;
     double result_y;
 
+    this->abort_if_not_initialised("matrix2::transform");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -105,6 +106,8 @@ matrix2 matrix2::multiply(const matrix2 &other) const
     double result_10;
     double result_11;
 
+    this->abort_if_not_initialised("matrix2::multiply");
+    other.abort_if_not_initialised("matrix2::multiply source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -130,6 +133,7 @@ matrix2 matrix2::invert() const
     double result_10;
     double result_11;
 
+    this->abort_if_not_initialised("matrix2::invert");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -185,10 +189,10 @@ uint32_t matrix2::disable_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
-        if (mutex_error != FT_ERR_SUCCESS)
-            return (matrix2::set_error(static_cast<uint32_t>(mutex_error)));
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (matrix2::set_error(static_cast<uint32_t>(mutex_error)));
     }
     return (matrix2::set_error(FT_ERR_SUCCESS));
 }
@@ -265,6 +269,7 @@ vector3 matrix3::transform(const vector3 &vector) const
     double result_y;
     double result_z;
 
+    this->abort_if_not_initialised("matrix3::transform");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -297,6 +302,8 @@ matrix3 matrix3::multiply(const matrix3 &other) const
     double result_21;
     double result_22;
 
+    this->abort_if_not_initialised("matrix3::multiply");
+    other.abort_if_not_initialised("matrix3::multiply source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -334,6 +341,7 @@ matrix3 matrix3::invert() const
     double result_21;
     double result_22;
 
+    this->abort_if_not_initialised("matrix3::invert");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -398,10 +406,10 @@ uint32_t matrix3::disable_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
-        if (mutex_error != FT_ERR_SUCCESS)
-            return (matrix3::set_error(static_cast<uint32_t>(mutex_error)));
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (matrix3::set_error(static_cast<uint32_t>(mutex_error)));
     }
     return (matrix3::set_error(FT_ERR_SUCCESS));
 }
@@ -520,6 +528,7 @@ vector4 matrix4::transform(const vector4 &vector) const
     double result_z;
     double result_w;
 
+    this->abort_if_not_initialised("matrix4::transform");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -549,6 +558,8 @@ matrix4 matrix4::multiply(const matrix4 &other) const
     ft_size_t row_index;
     double column_values[4];
 
+    this->abort_if_not_initialised("matrix4::multiply");
+    other.abort_if_not_initialised("matrix4::multiply source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -593,6 +604,7 @@ matrix4 matrix4::invert() const
     double pivot;
     double factor;
 
+    this->abort_if_not_initialised("matrix4::invert");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -767,10 +779,10 @@ uint32_t matrix4::disable_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         mutex_error = this->_mutex->destroy();
-        if (mutex_error != FT_ERR_SUCCESS)
-            return (matrix4::set_error(static_cast<uint32_t>(mutex_error)));
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (matrix4::set_error(static_cast<uint32_t>(mutex_error)));
     }
     return (matrix4::set_error(FT_ERR_SUCCESS));
 }

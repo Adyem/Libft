@@ -21,17 +21,17 @@ static ft_big_number math_big_absolute_value(const ft_big_number &number)
         if (positive_initialization_error != FT_ERR_SUCCESS)
             return (math_big_error_result(positive_initialization_error));
         positive_number.trim_leading_zeros();
-        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-            return (math_big_error_result(ft_big_number::last_operation_error()));
+        if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+            return (math_big_error_result(ft_big_number::get_error()));
         return (positive_number + zero_number);
     }
     ft_big_number positive_number = zero_number - number;
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     positive_number.trim_leading_zeros();
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     return (positive_number + zero_number);
 }
 
@@ -57,18 +57,18 @@ static ft_big_number math_big_gcd_normalized(const ft_big_number &first_input,
     {
         ft_big_number remainder_number = first_value % second_value;
 
-        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-            return (math_big_error_result(ft_big_number::last_operation_error()));
+        if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+            return (math_big_error_result(ft_big_number::get_error()));
         first_value = second_value;
-        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-            return (math_big_error_result(ft_big_number::last_operation_error()));
+        if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+            return (math_big_error_result(ft_big_number::get_error()));
         second_value = remainder_number;
-        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-            return (math_big_error_result(ft_big_number::last_operation_error()));
+        if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+            return (math_big_error_result(ft_big_number::get_error()));
     }
     first_value.trim_leading_zeros();
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     return (first_value + zero_number);
 }
 
@@ -81,16 +81,16 @@ ft_big_number math_big_gcd(const ft_big_number &first_number, const ft_big_numbe
     zero_initialization_error = zero_number.initialize();
     if (zero_initialization_error != FT_ERR_SUCCESS)
         return (math_big_error_result(zero_initialization_error));
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     ft_big_number second_value = math_big_absolute_value(second_number);
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     ft_big_number gcd_value = math_big_gcd_normalized(first_value, second_value);
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     return (gcd_value + zero_number);
 }
 
@@ -98,12 +98,12 @@ ft_big_number math_big_lcm(const ft_big_number &first_number, const ft_big_numbe
 {
     ft_big_number first_value = math_big_absolute_value(first_number);
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     ft_big_number second_value = math_big_absolute_value(second_number);
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     ft_big_number zero_number;
     int32_t zero_initialization_error;
 
@@ -122,15 +122,15 @@ ft_big_number math_big_lcm(const ft_big_number &first_number, const ft_big_numbe
     }
     ft_big_number gcd_value = math_big_gcd_normalized(first_value, second_value);
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     ft_big_number product_value = first_value * second_value;
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     ft_big_number lcm_value = product_value / gcd_value;
 
-    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESS)
-        return (math_big_error_result(ft_big_number::last_operation_error()));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        return (math_big_error_result(ft_big_number::get_error()));
     return (lcm_value + zero_number);
 }

@@ -42,7 +42,7 @@ class gnl_stream
         gnl_stream &operator=(const gnl_stream &other) = delete;
         gnl_stream &operator=(gnl_stream &&other) = delete;
 
-        uint32_t initialize() noexcept;
+        int32_t initialize() noexcept;
         int32_t destroy() noexcept;
         uint32_t move(gnl_stream &other) noexcept;
         int32_t enable_thread_safety(void) noexcept;

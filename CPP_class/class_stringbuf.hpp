@@ -28,7 +28,7 @@ class ft_stringbuf
         ft_stringbuf &operator=(const ft_stringbuf &other) noexcept = delete;
         ft_stringbuf &operator=(ft_stringbuf &&other) noexcept = delete;
 
-        uint32_t initialize(const ft_string &string) noexcept;
+        int32_t initialize(const ft_string &string) noexcept;
         int32_t destroy() noexcept;
         int32_t move(ft_stringbuf &other) noexcept;
         ssize_t read(char *buffer, ft_size_t count) noexcept;

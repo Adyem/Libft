@@ -51,9 +51,9 @@ class ft_big_number
         ft_big_number(ft_big_number&& other) noexcept;
         ~ft_big_number() noexcept;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(const ft_big_number& other) noexcept;
-        uint32_t initialize(ft_big_number&& other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_big_number& other) noexcept;
+        int32_t initialize(ft_big_number&& other) noexcept;
         int32_t         destroy() noexcept;
         int32_t         move(ft_big_number& other) noexcept;
 
@@ -87,13 +87,11 @@ class ft_big_number
         ft_bool        is_positive() const noexcept;
         ft_string   to_string_base(int32_t base) noexcept;
         ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
-        static const char *last_operation_error_str() noexcept;
-        static uint32_t get_error() noexcept;
         static const char *get_error_str() noexcept;
+        static uint32_t get_error() noexcept;
         int32_t     enable_thread_safety(void) noexcept;
         int32_t     disable_thread_safety(void) noexcept;
         ft_bool    is_thread_safe(void) const noexcept;
-        static int32_t last_operation_error() noexcept;
 
 };
 

@@ -75,9 +75,9 @@ class ft_example
         ft_example &operator=(const ft_example &other) noexcept = delete;
         ft_example &operator=(ft_example &&other) noexcept = delete;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(const ft_example &other) noexcept;
-        uint32_t initialize(ft_example &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_example &other) noexcept;
+        int32_t initialize(ft_example &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(ft_example &other) noexcept;
 
@@ -258,10 +258,20 @@ Dedicated testing-only mutex exposure helpers are not required. Prefer the `Test
 - `cmp_secure_memzero` is exempt from the strict `FT_ERR_*` return contract and may keep `0`/`-1` compatibility status semantics.
 - Platform sound backend classes (`ft_sound_device_alsa`, `ft_sound_device_coreaudio`, `ft_sound_device_win32`) are exempt from lifecycle class-skeleton enforcement (`_initialised_state`, `initialize(...)`, `destroy()`, `move(...)`, and class-owned mutex helper shape) while they remain thin backend adapters behind the `DUMB` sound-device abstraction.
 
-`Template/pair.hpp` intentionally provides a minimal `Pair` template that exposes `key`/`value`
-directly for compatibility with the rest of the library. That class is exempt from the mutex requirements
-described above and must not introduce additional recursive mutex state or the associated helpers.
-Treat `Pair` as a plain-old-data holder only.
+### System_utils compatibility exemptions
+
+- In the `System_utils` module, existing low-level compatibility wrappers may keep documented C/POSIX-style status returns (`0` success, `-1` failure) for public `su_*`/`ft_*` APIs where compatibility with existing call chains and syscall-like behavior is required.
+- In the `System_utils` module, existing process-wide registry internals in `System_utils_health.cpp` and `System_utils_resource_tracer.cpp` may keep direct `std::mutex` lock/unlock usage while those registries remain stdlib container-backed compatibility implementations.
+
+### Math constructor compatibility exemptions
+
+- In the `Math` module, value-oriented linear-algebra/autodiff classes may keep existing specialized value constructors for API ergonomics and compatibility (`vector2`, `vector3`, `vector4`, `matrix2`, `matrix3`, `matrix4`, `quaternion`, `ft_dual_number`).
+- These specialized constructors must keep constructor bodies thin and route fallible setup through `initialize(...)`.
+- `ft_dual_number_proxy` may keep compatibility specialized constructors used for explicit error/value forwarding in operator-chain proxy flows.
+
+### Printf floating-point compatibility exemptions
+
+- In the `Printf` module, `long double` usage is allowed where required for `%Lf` and related `printf`-compatible formatting/parsing behavior.
 
 ### Template function simplification
 
@@ -275,6 +285,16 @@ error handling and synchronization to callers rather than reintroducing state in
 `ft_error_stack`, `ft_operation_error_stack`, etc.) are deprecated. Do not add them back to any
 new code. Remove references if you encounter them, and rely on return codes or other explicit error
 reporting mechanisms instead.
+Anything related to error-stack concepts is deprecated as well (including helper wrappers,
+aliases, compatibility shims, and stack-style push/pop accessors) and should be removed when
+encountered.
+
+### Deprecated Last-Operation Error API
+
+Legacy helpers named `last_operation_error`, `last_operation_error_str`, and
+`set_last_operation_error` are deprecated and must be removed from code when touched.
+Use the `_last_error Contract` naming only: `set_error(uint32_t error_code)`, `get_error()`,
+and `get_error_str()`.
 
 ### Error Code Definition Contract
 
@@ -287,7 +307,7 @@ Any new error code must be defined in the Errno `.hpp` file before use.
 
 ### Initialize Return Contract
 
-`initialize(...)` methods must return `uint32_t` and follow the Error Code Definition Contract.
+`initialize(...)` methods must return `int32_t` and follow the Error Code Definition Contract.
 
 ## File/module naming
 

@@ -1,3 +1,4 @@
 #include "deque.hpp"
+#include <cstdint>
 
-template class ft_deque<int>;
+template class ft_deque<int32_t>;

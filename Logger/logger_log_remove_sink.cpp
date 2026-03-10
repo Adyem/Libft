@@ -14,7 +14,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
     }
     index = 0;
     sink_count = g_sinks.size();
-    if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+    if (g_sinks.get_error() != FT_ERR_SUCCESS)
     {
         lock_error = logger_unlock_sinks();
         if (lock_error != FT_ERR_SUCCESS)
@@ -28,7 +28,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         s_log_sink entry;
 
         entry = g_sinks[index];
-        if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+        if (g_sinks.get_error() != FT_ERR_SUCCESS)
         {
             lock_error = logger_unlock_sinks();
             if (lock_error != FT_ERR_SUCCESS)
@@ -43,7 +43,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
             bool        sink_lock_acquired;
             int         sink_lock_error;
 
-            if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+            if (g_sinks.get_error() != FT_ERR_SUCCESS)
             {
                 lock_error = logger_unlock_sinks();
                 if (lock_error != FT_ERR_SUCCESS)
@@ -67,7 +67,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
 
             locked_entry = stored_entry;
             g_sinks.erase(g_sinks.begin() + index);
-            if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+            if (g_sinks.get_error() != FT_ERR_SUCCESS)
             {
                 if (sink_lock_acquired)
                     log_sink_unlock(&locked_entry, sink_lock_acquired);

@@ -16,7 +16,7 @@ class Pool
 {
     private:
         ft_vector<T*>              _slots;
-        ft_vector<size_t>          _free_indices;
+        ft_vector<ft_size_t>          _free_indices;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                    _initialised_state;
 
@@ -25,7 +25,7 @@ class Pool
         static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        static int32_t set_error(int32_t error_code) noexcept
         {
             _last_error = error_code;
             return (error_code);
@@ -52,64 +52,60 @@ class Pool
             return ;
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_result));
+                return (set_error(lock_result));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        int unlock_internal(bool lock_acquired) const
+        int32_t unlock_internal(ft_bool lock_acquired) const
         {
-            int unlock_result;
-
-            if (lock_acquired == false)
+            if (lock_acquired == FT_FALSE)
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            if (unlock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_result));
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_ERR_SUCCESS);
         }
 
-        T* ptr_at(size_t index) noexcept
+        T* ptr_at(ft_size_t index) noexcept
         {
             if (index >= this->_slots.size())
             {
-                set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+                set_error(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_slots[index]);
         }
 
-        void release(size_t index) noexcept
+        void release(ft_size_t index) noexcept
         {
-            bool lock_acquired;
-            int lock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             if (index < this->_slots.size())
                 this->_slots[index] = ft_nullptr;
             this->_free_indices.push_back(index);
             (void)this->unlock_internal(lock_acquired);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -118,46 +114,42 @@ class Pool
         {
             private:
                 Pool<T>                   *_pool;
-                size_t                     _index;
+                ft_size_t                     _index;
                 T                         *_pointer;
                 mutable pt_recursive_mutex *_mutex;
                 uint8_t                    _initialised_state;
 
                 static thread_local int32_t _last_error;
 
-                static int32_t set_last_operation_error(int32_t error_code) noexcept
+                static int32_t set_error(int32_t error_code) noexcept
                 {
                     _last_error = error_code;
                     return (error_code);
                 }
 
-                int lock_internal(bool *lock_acquired) const
+                int32_t lock_internal(ft_bool *lock_acquired) const
                 {
-                    int lock_result;
+                    int32_t lock_result;
 
                     if (lock_acquired != ft_nullptr)
-                        *lock_acquired = false;
+                        *lock_acquired = FT_FALSE;
                     if (this->_mutex == ft_nullptr)
                         return (FT_ERR_SUCCESS);
                     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
                     if (lock_result != FT_ERR_SUCCESS)
-                        return (set_last_operation_error(lock_result));
+                        return (set_error(lock_result));
                     if (lock_acquired != ft_nullptr)
-                        *lock_acquired = true;
+                        *lock_acquired = FT_TRUE;
                     return (FT_ERR_SUCCESS);
                 }
 
-                int unlock_internal(bool lock_acquired) const
+                int32_t unlock_internal(ft_bool lock_acquired) const
                 {
-                    int unlock_result;
-
-                    if (lock_acquired == false)
+                    if (lock_acquired == FT_FALSE)
                         return (FT_ERR_SUCCESS);
                     if (this->_mutex == ft_nullptr)
                         return (FT_ERR_SUCCESS);
-                    unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-                    if (unlock_result != FT_ERR_SUCCESS)
-                        return (set_last_operation_error(unlock_result));
+                    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
                     return (FT_ERR_SUCCESS);
                 }
 
@@ -166,15 +158,15 @@ class Pool
                     : _pool(ft_nullptr), _index(0), _pointer(ft_nullptr),
                       _mutex(ft_nullptr), _initialised_state(2)
                 {
-                    set_last_operation_error(FT_ERR_SUCCESS);
+                    set_error(FT_ERR_SUCCESS);
                     return ;
                 }
 
-                Object(Pool<T>* pool, size_t index, T* pointer) noexcept
+                Object(Pool<T>* pool, ft_size_t index, T* pointer) noexcept
                     : _pool(pool), _index(index), _pointer(pointer), _mutex(ft_nullptr),
                       _initialised_state(2)
                 {
-                    set_last_operation_error(FT_ERR_SUCCESS);
+                    set_error(FT_ERR_SUCCESS);
                     return ;
                 }
 
@@ -209,7 +201,7 @@ class Pool
                     other._pointer = ft_nullptr;
                     other._mutex = ft_nullptr;
                     other._initialised_state = 1;
-                    set_last_operation_error(FT_ERR_SUCCESS);
+                    set_error(FT_ERR_SUCCESS);
                     return ;
                 }
 
@@ -235,7 +227,7 @@ class Pool
                     other._pointer = ft_nullptr;
                     other._mutex = ft_nullptr;
                     other._initialised_state = 1;
-                    set_last_operation_error(FT_ERR_SUCCESS);
+                    set_error(FT_ERR_SUCCESS);
                     return (*this);
                 }
 
@@ -243,10 +235,10 @@ class Pool
                 {
                     if (this->_pointer == ft_nullptr)
                     {
-                        set_last_operation_error(FT_ERR_INVALID_HANDLE);
+                        set_error(FT_ERR_INVALID_HANDLE);
                         return (ft_nullptr);
                     }
-                    set_last_operation_error(FT_ERR_SUCCESS);
+                    set_error(FT_ERR_SUCCESS);
                     return (this->_pointer);
                 }
 
@@ -254,95 +246,86 @@ class Pool
                 {
                     if (this->_pointer == ft_nullptr)
                     {
-                        set_last_operation_error(FT_ERR_INVALID_HANDLE);
+                        set_error(FT_ERR_INVALID_HANDLE);
                         return (false);
                     }
-                    set_last_operation_error(FT_ERR_SUCCESS);
+                    set_error(FT_ERR_SUCCESS);
                     return (true);
                 }
 
-                int enable_thread_safety()
+                int32_t enable_thread_safety()
                 {
                     pt_recursive_mutex *new_mutex;
-                    int initialize_result;
+                    int32_t initialize_result;
 
                     if (this->_mutex != ft_nullptr)
-                        return (set_last_operation_error(FT_ERR_SUCCESS));
+                        return (set_error(FT_ERR_SUCCESS));
                     new_mutex = new (std::nothrow) pt_recursive_mutex();
                     if (new_mutex == ft_nullptr)
-                        return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                        return (set_error(FT_ERR_NO_MEMORY));
                     initialize_result = new_mutex->initialize();
                     if (initialize_result != FT_ERR_SUCCESS)
                     {
                         delete new_mutex;
-                        return (set_last_operation_error(initialize_result));
+                        return (set_error(initialize_result));
                     }
                     this->_mutex = new_mutex;
-                    return (set_last_operation_error(FT_ERR_SUCCESS));
+                    return (set_error(FT_ERR_SUCCESS));
                 }
 
-                int disable_thread_safety()
+                int32_t disable_thread_safety()
                 {
                     pt_recursive_mutex *mutex_pointer;
-                    int destroy_result;
+                    int32_t destroy_result;
 
                     mutex_pointer = this->_mutex;
                     if (mutex_pointer == ft_nullptr)
-                        return (set_last_operation_error(FT_ERR_SUCCESS));
+                        return (set_error(FT_ERR_SUCCESS));
                     this->_mutex = ft_nullptr;
                     destroy_result = mutex_pointer->destroy();
                     delete mutex_pointer;
                     if (destroy_result != FT_ERR_SUCCESS)
-                        return (set_last_operation_error(destroy_result));
-                    return (set_last_operation_error(FT_ERR_SUCCESS));
+                        return (set_error(destroy_result));
+                    return (set_error(FT_ERR_SUCCESS));
                 }
 
                 bool is_thread_safe() const
                 {
-                    set_last_operation_error(FT_ERR_SUCCESS);
+                    set_error(FT_ERR_SUCCESS);
                     return (this->_mutex != ft_nullptr);
                 }
 
-                int lock(bool *lock_acquired) const
+                int32_t lock(ft_bool *lock_acquired) const
                 {
-                    int lock_result;
+                    int32_t lock_result;
 
                     lock_result = this->lock_internal(lock_acquired);
-                    if (lock_result != FT_ERR_SUCCESS)
-                        return (-1);
-                    set_last_operation_error(FT_ERR_SUCCESS);
-                    return (0);
+                    return (set_error(lock_result));
                 }
 
-                void unlock(bool lock_acquired) const
+                void unlock(ft_bool lock_acquired) const
                 {
                     (void)this->unlock_internal(lock_acquired);
                     return ;
                 }
 
-                static int32_t last_operation_error() noexcept
+                static int32_t get_error() noexcept
                 {
                     return (_last_error);
                 }
 
-                static const char *last_operation_error_str() noexcept
+                static const char *get_error_str() noexcept
                 {
                     return (ft_strerror(_last_error));
                 }
 
-#ifdef LIBFT_TEST_BUILD
-                pt_recursive_mutex* get_mutex_for_validation() const noexcept
-                {
-                    return (this->_mutex);
-                }
-#endif
         };
 
         Pool()
             : _slots(), _free_indices(), _mutex(ft_nullptr),
               _initialised_state(_state_uninitialised)
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -360,33 +343,32 @@ class Pool
         Pool(const Pool&) = delete;
         Pool& operator=(const Pool&) = delete;
 
-        int initialize()
+        int32_t initialize()
         {
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("Pool::initialize",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_slots.clear();
             this->_free_indices.clear();
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int destroy()
+        int32_t destroy()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             if (this->_initialised_state != _state_initialised)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            lock_acquired = false;
+                return (set_error(FT_ERR_SUCCESS));
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_error));
-            size_t index;
+                return (set_error(lock_error));
+            ft_size_t index;
 
             index = 0;
             while (index < this->_slots.size())
@@ -401,26 +383,23 @@ class Pool
             }
             this->_slots.clear();
             this->_free_indices.clear();
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_error));
+            (void)this->unlock_internal(lock_acquired);
             this->_initialised_state = _state_destroyed;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        void resize(size_t new_size)
+        void resize(ft_size_t new_size)
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
-            size_t index;
+            ft_bool lock_acquired;
+            int32_t lock_error;
+            ft_size_t index;
 
             this->abort_if_not_initialised("Pool::resize");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             this->_slots.resize(new_size, ft_nullptr);
@@ -432,44 +411,35 @@ class Pool
                 this->_free_indices.push_back(index);
                 ++index;
             }
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
         template<typename... Args>
         Object acquire(Args&&... args)
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
-            size_t free_count;
-            size_t last_index;
-            size_t storage_index;
+            ft_bool lock_acquired;
+            int32_t lock_error;
+            ft_size_t free_count;
+            ft_size_t last_index;
+            ft_size_t storage_index;
             T *constructed_pointer;
             Object result;
 
             this->abort_if_not_initialised("Pool::acquire");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return (result);
             }
             free_count = this->_free_indices.size();
             if (free_count == 0)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_EMPTY);
+                (void)this->unlock_internal(lock_acquired);
+                set_error(FT_ERR_EMPTY);
                 return (result);
             }
             last_index = free_count - 1;
@@ -480,7 +450,7 @@ class Pool
             {
                 this->_free_indices.push_back(storage_index);
                 (void)this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return (result);
             }
             construct_at(constructed_pointer, std::forward<Args>(args)...);
@@ -488,95 +458,83 @@ class Pool
             result = Object(this, storage_index, constructed_pointer);
             if (this->_mutex != ft_nullptr)
                 (void)result.enable_thread_safety();
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                set_last_operation_error(unlock_error);
-            else
-                set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (result);
         }
 
-        int enable_thread_safety()
+        int32_t enable_thread_safety()
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
 
             this->abort_if_not_initialised("Pool::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_mutex = new_mutex;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety()
+        int32_t disable_thread_safety()
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
 
             if (this->_initialised_state != _state_initialised
                 && this->_initialised_state != _state_destroyed)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool is_thread_safe() const
         {
             this->abort_if_not_initialised("Pool::is_thread_safe");
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
 
-        int lock(bool *lock_acquired) const
+        int32_t lock(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             this->abort_if_not_initialised("Pool::lock");
             lock_result = this->lock_internal(lock_acquired);
-            if (lock_result != FT_ERR_SUCCESS)
-                return (-1);
-            set_last_operation_error(FT_ERR_SUCCESS);
-            return (0);
+            return (set_error(lock_result));
         }
 
-        void unlock(bool lock_acquired) const
+        void unlock(ft_bool lock_acquired) const
         {
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
-        static int32_t last_operation_error() noexcept
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-        static const char *last_operation_error_str() noexcept
+        static const char *get_error_str() noexcept
         {
             return (ft_strerror(_last_error));
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex* get_mutex_for_validation() const noexcept
-        {
-            return (this->_mutex);
-        }
-#endif
 };
 
 template<typename T>

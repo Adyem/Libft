@@ -2,6 +2,7 @@
 # define PAIR_HPP
 
 #include "move.hpp"
+#include "../Basic/basic.hpp"
 #include <type_traits>
 #include <utility>
 
@@ -268,7 +269,7 @@ struct ft_is_array<Type[]>
 {
 };
 
-template <typename Type, unsigned long Size>
+template <typename Type, ft_size_t Size>
 struct ft_is_array<Type[Size]>
         : ft_true_type
 {
@@ -286,7 +287,7 @@ struct ft_remove_extent<Type[]>
     typedef Type type;
 };
 
-template <typename Type, unsigned long Size>
+template <typename Type, ft_size_t Size>
 struct ft_remove_extent<Type[Size]>
 {
     typedef Type type;

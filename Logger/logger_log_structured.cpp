@@ -228,17 +228,17 @@ void ft_log_structured(t_log_level level, const char *message,
         size_t context_index;
 
         context_count = context_snapshot.size();
-        if (context_snapshot.last_operation_error() != FT_ERR_SUCCESS)
-            error_code = context_snapshot.last_operation_error();
+        if (context_snapshot.get_error() != FT_ERR_SUCCESS)
+            error_code = context_snapshot.get_error();
         context_index = 0;
         while (context_index < context_count && error_code == FT_ERR_SUCCESS)
         {
             const s_log_context_view &view = context_snapshot[context_index];
             s_log_field context_field;
 
-            if (context_snapshot.last_operation_error() != FT_ERR_SUCCESS)
+            if (context_snapshot.get_error() != FT_ERR_SUCCESS)
             {
-                error_code = context_snapshot.last_operation_error();
+                error_code = context_snapshot.get_error();
                 break ;
             }
             context_field.key = view.key;

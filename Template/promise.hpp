@@ -18,10 +18,10 @@ class ft_promise
 {
     private:
         ValueType _value;
-        std::atomic<bool> _ready;
+        std::atomic<ft_bool> _ready;
         mutable pt_recursive_mutex *_mutex;
-        int lock_internal(bool *lock_acquired) const;
-        int unlock_internal(bool lock_acquired) const;
+        int32_t lock_internal(ft_bool *lock_acquired) const;
+        int32_t unlock_internal(ft_bool lock_acquired) const;
 
     protected:
     public:
@@ -36,26 +36,23 @@ class ft_promise
         void set_value(const ValueType& value);
         void set_value(ValueType&& value);
         ValueType get() const;
-        bool is_ready() const;
+        ft_bool is_ready() const;
 
-        int enable_thread_safety();
-        int disable_thread_safety();
-        bool is_thread_safe() const;
-        int lock(bool *lock_acquired) const;
-        void unlock(bool lock_acquired) const;
-    #ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-    #endif
-};
+        int32_t enable_thread_safety();
+        int32_t disable_thread_safety();
+        ft_bool is_thread_safe() const;
+        int32_t lock(ft_bool *lock_acquired) const;
+        void unlock(ft_bool lock_acquired) const;
+    };
 
 template <>
 class ft_promise<void>
 {
     private:
-        std::atomic<bool> _ready;
+        std::atomic<ft_bool> _ready;
         mutable pt_recursive_mutex *_mutex;
-        int lock_internal(bool *lock_acquired) const;
-        int unlock_internal(bool lock_acquired) const;
+        int32_t lock_internal(ft_bool *lock_acquired) const;
+        int32_t unlock_internal(ft_bool lock_acquired) const;
 
     public:
         ft_promise();
@@ -68,17 +65,14 @@ class ft_promise<void>
 
         void set_value();
         void get() const;
-        bool is_ready() const;
+        ft_bool is_ready() const;
 
-        int enable_thread_safety();
-        int disable_thread_safety();
-        bool is_thread_safe() const;
-        int lock(bool *lock_acquired) const;
-        void unlock(bool lock_acquired) const;
-    #ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-    #endif
-};
+        int32_t enable_thread_safety();
+        int32_t disable_thread_safety();
+        ft_bool is_thread_safe() const;
+        int32_t lock(ft_bool *lock_acquired) const;
+        void unlock(ft_bool lock_acquired) const;
+    };
 
 template <typename ValueType>
 ft_promise<ValueType>::ft_promise()
@@ -107,89 +101,81 @@ inline ft_promise<void>::~ft_promise()
 }
 
 template <typename ValueType>
-int ft_promise<ValueType>::lock(bool *lock_acquired) const
+int32_t ft_promise<ValueType>::lock(ft_bool *lock_acquired) const
 {
     return (this->lock_internal(lock_acquired));
 }
 
-inline int ft_promise<void>::lock(bool *lock_acquired) const
+inline int32_t ft_promise<void>::lock(ft_bool *lock_acquired) const
 {
     return (this->lock_internal(lock_acquired));
 }
 
 template <typename ValueType>
-void ft_promise<ValueType>::unlock(bool lock_acquired) const
+void ft_promise<ValueType>::unlock(ft_bool lock_acquired) const
 {
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-inline void ft_promise<void>::unlock(bool lock_acquired) const
+inline void ft_promise<void>::unlock(ft_bool lock_acquired) const
 {
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 template <typename ValueType>
-int ft_promise<ValueType>::lock_internal(bool *lock_acquired) const
+int32_t ft_promise<ValueType>::lock_internal(ft_bool *lock_acquired) const
 {
-    int mutex_result;
+    int32_t mutex_result;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     mutex_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (mutex_result != FT_ERR_SUCCESS)
         return (mutex_result);
     if (lock_acquired != ft_nullptr && this->_mutex != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-inline int ft_promise<void>::lock_internal(bool *lock_acquired) const
+inline int32_t ft_promise<void>::lock_internal(ft_bool *lock_acquired) const
 {
-    int mutex_result;
+    int32_t mutex_result;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     mutex_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (mutex_result != FT_ERR_SUCCESS)
         return (mutex_result);
     if (lock_acquired != ft_nullptr && this->_mutex != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
-int ft_promise<ValueType>::unlock_internal(bool lock_acquired) const
+int32_t ft_promise<ValueType>::unlock_internal(ft_bool lock_acquired) const
 {
-    int mutex_result;
-
     if (!lock_acquired)
         return (FT_ERR_SUCCESS);
-    mutex_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (mutex_result != FT_ERR_SUCCESS)
-        return (mutex_result);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-inline int ft_promise<void>::unlock_internal(bool lock_acquired) const
+inline int32_t ft_promise<void>::unlock_internal(ft_bool lock_acquired) const
 {
-    int mutex_result;
-
     if (!lock_acquired)
         return (FT_ERR_SUCCESS);
-    mutex_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (mutex_result != FT_ERR_SUCCESS)
-        return (mutex_result);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
 void ft_promise<ValueType>::set_value(const ValueType& value)
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != 0)
         return ;
     this->_value = value;
@@ -200,9 +186,9 @@ void ft_promise<ValueType>::set_value(const ValueType& value)
 
 inline void ft_promise<void>::set_value()
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != 0)
         return ;
     this->_ready.store(true, std::memory_order_release);
@@ -213,9 +199,9 @@ inline void ft_promise<void>::set_value()
 template <typename ValueType>
 void ft_promise<ValueType>::set_value(ValueType&& value)
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != 0)
         return ;
     this->_value = ft_move(value);
@@ -227,12 +213,12 @@ void ft_promise<ValueType>::set_value(ValueType&& value)
 template <typename ValueType>
 ValueType ft_promise<ValueType>::get() const
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
     ValueType value_copy;
 
     if (!this->_ready.load(std::memory_order_acquire))
         return (ValueType());
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != 0)
         return (ValueType());
     value_copy = this->_value;
@@ -242,11 +228,11 @@ ValueType ft_promise<ValueType>::get() const
 
 inline void ft_promise<void>::get() const
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
     if (!this->_ready.load(std::memory_order_acquire))
         return ;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != 0)
         return ;
     (void)this->unlock_internal(lock_acquired);
@@ -254,21 +240,21 @@ inline void ft_promise<void>::get() const
 }
 
 template <typename ValueType>
-bool ft_promise<ValueType>::is_ready() const
+ft_bool ft_promise<ValueType>::is_ready() const
 {
-    bool ready;
+    ft_bool ready;
 
     ready = this->_ready.load(std::memory_order_acquire);
     return (ready);
 }
 
-inline bool ft_promise<void>::is_ready() const
+inline ft_bool ft_promise<void>::is_ready() const
 {
     return (this->_ready.load(std::memory_order_acquire));
 }
 
 template <typename ValueType>
-int ft_promise<ValueType>::enable_thread_safety()
+int32_t ft_promise<ValueType>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -277,7 +263,7 @@ int ft_promise<ValueType>::enable_thread_safety()
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    int mutex_error = mutex_pointer->initialize();
+    int32_t mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
@@ -287,7 +273,7 @@ int ft_promise<ValueType>::enable_thread_safety()
     return (FT_ERR_SUCCESS);
 }
 
-inline int ft_promise<void>::enable_thread_safety()
+inline int32_t ft_promise<void>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -296,7 +282,7 @@ inline int ft_promise<void>::enable_thread_safety()
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    int mutex_error = mutex_pointer->initialize();
+    int32_t mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
@@ -307,11 +293,11 @@ inline int ft_promise<void>::enable_thread_safety()
 }
 
 template <typename ValueType>
-int ft_promise<ValueType>::disable_thread_safety()
+int32_t ft_promise<ValueType>::disable_thread_safety()
 {
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int destroy_error = this->_mutex->destroy();
+    int32_t destroy_error = this->_mutex->destroy();
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
     delete this->_mutex;
@@ -319,11 +305,11 @@ int ft_promise<ValueType>::disable_thread_safety()
     return (FT_ERR_SUCCESS);
 }
 
-inline int ft_promise<void>::disable_thread_safety()
+inline int32_t ft_promise<void>::disable_thread_safety()
 {
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int destroy_error = this->_mutex->destroy();
+    int32_t destroy_error = this->_mutex->destroy();
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
     delete this->_mutex;
@@ -332,27 +318,15 @@ inline int ft_promise<void>::disable_thread_safety()
 }
 
 template <typename ValueType>
-bool ft_promise<ValueType>::is_thread_safe() const
+ft_bool ft_promise<ValueType>::is_thread_safe() const
 {
     return (this->_mutex != ft_nullptr);
 }
 
-inline bool ft_promise<void>::is_thread_safe() const
+inline ft_bool ft_promise<void>::is_thread_safe() const
 {
     return (this->_mutex != ft_nullptr);
 }
 
-#ifdef LIBFT_TEST_BUILD
-template <typename ValueType>
-pt_recursive_mutex *ft_promise<ValueType>::get_mutex_for_validation() const noexcept
-{
-    return (this->_mutex);
-}
-
-inline pt_recursive_mutex *ft_promise<void>::get_mutex_for_validation() const noexcept
-{
-    return (this->_mutex);
-}
-#endif
 
 #endif

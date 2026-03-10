@@ -1056,7 +1056,7 @@ bool api_tls_client::populate_handshake_diagnostics()
         return (false);
     }
     this->_handshake_diagnostics.certificates.clear();
-    if (ft_vector<api_tls_certificate_diagnostics>::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_vector<api_tls_certificate_diagnostics>::get_error() != FT_ERR_SUCCESS)
     {
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);

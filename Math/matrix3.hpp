@@ -34,12 +34,12 @@ class matrix3
         matrix3(matrix3 &&other) noexcept;
         matrix3 &operator=(matrix3 &&other) = delete;
         ~matrix3() noexcept;
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double m00, double m01, double m02,
+        int32_t initialize() noexcept;
+        int32_t initialize(double m00, double m01, double m02,
                 double m10, double m11, double m12,
                 double m20, double m21, double m22) noexcept;
-        uint32_t initialize(const matrix3 &other) noexcept;
-        uint32_t initialize(matrix3 &&other) noexcept;
+        int32_t initialize(const matrix3 &other) noexcept;
+        int32_t initialize(matrix3 &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(matrix3 &other) noexcept;
         vector3 transform(const vector3 &vector) const;

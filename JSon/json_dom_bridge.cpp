@@ -203,7 +203,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
         int big_number_error;
 
         big_number_value.assign(item_value);
-        big_number_error = ft_big_number::last_operation_error();
+        big_number_error = ft_big_number::get_error();
         if (big_number_error != FT_ERR_SUCCESS)
         {
             document.set_manual_error(big_number_error);

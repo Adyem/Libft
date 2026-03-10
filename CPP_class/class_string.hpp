@@ -45,11 +45,11 @@ class ft_string
         int32_t     erase_buffer(ft_size_t index, ft_size_t count) noexcept;
         int32_t     resize_length_buffer(ft_size_t new_length) noexcept;
         int32_t     move_buffer(ft_string &other) noexcept;
+
     public:
         ft_string() noexcept;
         ft_string(const ft_string &other) noexcept;
         ft_string(ft_string &&other) noexcept;
-        explicit ft_string(int32_t error_code) noexcept;
         ~ft_string();
 
         ft_string &operator=(const ft_string &other) noexcept;
@@ -68,11 +68,11 @@ class ft_string
         char        operator[](ft_size_t index) const noexcept;
         operator const char*() const noexcept;
 
-        uint32_t initialize() noexcept;
-        uint32_t initialize(const char *initial_string) noexcept;
-        uint32_t initialize(ft_size_t count, char character) noexcept;
-        uint32_t initialize(const ft_string &other) noexcept;
-        uint32_t initialize(ft_string &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const char *initial_string) noexcept;
+        int32_t initialize(ft_size_t count, char character) noexcept;
+        int32_t initialize(const ft_string &other) noexcept;
+        int32_t initialize(ft_string &&other) noexcept;
         int32_t destroy() noexcept;
 
         int32_t      append(char character) noexcept;
@@ -98,6 +98,7 @@ class ft_string
         ft_size_t   find(const char *substring) const noexcept;
         int32_t     resize_length(ft_size_t new_length) noexcept;
         ft_string   substr(ft_size_t index, ft_size_t count = npos) const noexcept;
+        static ft_string from_error(int32_t error_code) noexcept;
 
         static const ft_size_t npos = static_cast<ft_size_t>(-1);
         static uint32_t get_error() noexcept;

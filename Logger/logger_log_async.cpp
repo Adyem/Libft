@@ -36,7 +36,7 @@ static void ft_log_process_message(const ft_string &message)
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     sink_count = g_sinks.size();
-    if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+    if (g_sinks.get_error() != FT_ERR_SUCCESS)
     {
         logger_unlock_sinks();
         return ;
@@ -55,13 +55,13 @@ static void ft_log_process_message(const ft_string &message)
     {
         s_log_sink entry;
         entry = g_sinks[index];
-        if (g_sinks.last_operation_error() != FT_ERR_SUCCESS)
+        if (g_sinks.get_error() != FT_ERR_SUCCESS)
         {
             logger_unlock_sinks();
             return ;
         }
         sinks_snapshot.push_back(entry);
-        if (sinks_snapshot.last_operation_error() != FT_ERR_SUCCESS)
+        if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
         {
             logger_unlock_sinks();
             return ;
@@ -75,7 +75,7 @@ static void ft_log_process_message(const ft_string &message)
         s_log_sink entry;
 
         entry = sinks_snapshot[index];
-        if (sinks_snapshot.last_operation_error() != FT_ERR_SUCCESS)
+        if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
             return ;
         bool sink_lock_acquired;
         int  sink_error;
@@ -137,7 +137,7 @@ static void *ft_log_worker(void *argument)
     while (1)
     {
         queue_is_empty = g_log_queue.empty();
-        if (g_log_queue.last_operation_error() != FT_ERR_SUCCESS)
+        if (g_log_queue.get_error() != FT_ERR_SUCCESS)
             break ;
         if (!g_async_running && queue_is_empty)
             break ;
@@ -149,7 +149,7 @@ static void *ft_log_worker(void *argument)
         else
         {
             message = g_log_queue.dequeue();
-            queue_error = g_log_queue.last_operation_error();
+            queue_error = g_log_queue.get_error();
             if (queue_error == FT_ERR_SUCCESS)
             {
                 if (g_async_pending_messages > 0)
@@ -308,7 +308,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         return ;
     }
     g_log_queue.enqueue(final_message);
-    queue_error = g_log_queue.last_operation_error();
+    queue_error = g_log_queue.get_error();
     if (queue_error == FT_ERR_SUCCESS)
     {
         g_async_pending_messages += 1;
@@ -350,7 +350,7 @@ void ft_log_set_async_queue_limit(size_t limit)
             int drop_error;
 
             dropped_message = g_log_queue.dequeue();
-            drop_error = g_log_queue.last_operation_error();
+            drop_error = g_log_queue.get_error();
             if (drop_error != FT_ERR_SUCCESS)
             {
                 if (pthread_mutex_unlock(&g_condition_mutex) != 0)

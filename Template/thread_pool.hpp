@@ -25,10 +25,10 @@ class ft_thread_pool
     private:
         ft_vector<ft_thread>            _workers;
         ft_queue<ft_function<void()> >  _tasks;
-        size_t                          _configured_thread_count;
-        size_t                          _max_tasks;
+        ft_size_t                          _configured_thread_count;
+        ft_size_t                          _max_tasks;
         bool                            _stop;
-        size_t                          _active;
+        ft_size_t                          _active;
         pthread_mutex_t                 _mutex;
         pthread_cond_t                  _cond;
         bool                            _mutex_initialised;
@@ -41,7 +41,7 @@ class ft_thread_pool
         static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        static int32_t set_error(int32_t error_code) noexcept
         {
             _last_error = error_code;
             return (error_code);
@@ -69,25 +69,25 @@ class ft_thread_pool
             return ;
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_thread_safe_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             lock_result = pt_recursive_mutex_lock_if_not_null(this->_thread_safe_mutex);
             if (lock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_result));
+                return (set_error(lock_result));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        void unlock_internal(bool lock_acquired) const
+        void unlock_internal(ft_bool lock_acquired) const
         {
-            if (lock_acquired == false)
+            if (lock_acquired == FT_FALSE)
                 return ;
             if (this->_thread_safe_mutex == ft_nullptr)
                 return ;
@@ -111,7 +111,7 @@ class ft_thread_pool
 
                 if (pthread_mutex_lock(&this->_mutex) != 0)
                     return ;
-                while (this->_stop == false && this->_tasks.empty())
+                while (this->_stop == FT_FALSE && this->_tasks.empty())
                     pthread_cond_wait(&this->_cond, &this->_mutex);
                 if (this->_stop && this->_tasks.empty())
                 {
@@ -132,22 +132,25 @@ class ft_thread_pool
         }
 
     public:
-        ft_thread_pool(size_t thread_count = 0, size_t max_tasks = 0)
+        ft_thread_pool(ft_size_t thread_count = 0, ft_size_t max_tasks = 0)
             : _workers(), _tasks(), _configured_thread_count(thread_count),
               _max_tasks(max_tasks), _stop(false), _active(0), _mutex(), _cond(),
               _mutex_initialised(false), _cond_initialised(false),
               _thread_safe_mutex(ft_nullptr), _initialised_state(_state_uninitialised)
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
             return ;
         }
 
         ~ft_thread_pool()
         {
+            int32_t previous_error;
+
+            previous_error = _last_error;
             if (this->_initialised_state == _state_initialised)
-                this->destroy();
+                (void)this->destroy();
             if (this->_thread_safe_mutex != ft_nullptr)
-                this->disable_thread_safety();
+                (void)this->disable_thread_safety();
+            (void)set_error(previous_error);
             return ;
         }
 
@@ -156,32 +159,32 @@ class ft_thread_pool
         ft_thread_pool(ft_thread_pool&&) = delete;
         ft_thread_pool& operator=(ft_thread_pool&&) = delete;
 
-        int initialize()
+        int32_t initialize()
         {
-            size_t worker_index;
+            ft_size_t worker_index;
 
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_thread_pool::initialize",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
-            this->_stop = false;
+            this->_stop = FT_FALSE;
             this->_active = 0;
             if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
             {
                 this->_initialised_state = _state_destroyed;
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
-            this->_mutex_initialised = true;
+            this->_mutex_initialised = FT_TRUE;
             if (pthread_cond_init(&this->_cond, ft_nullptr) != 0)
             {
                 pthread_mutex_destroy(&this->_mutex);
-                this->_mutex_initialised = false;
+                this->_mutex_initialised = FT_FALSE;
                 this->_initialised_state = _state_destroyed;
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
-            this->_cond_initialised = true;
+            this->_cond_initialised = FT_TRUE;
             this->_workers.clear();
             this->_tasks.initialize();
             worker_index = 0;
@@ -193,32 +196,30 @@ class ft_thread_pool
                 ++worker_index;
             }
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int initialize(size_t thread_count, size_t max_tasks)
+        int32_t initialize(ft_size_t thread_count, ft_size_t max_tasks)
         {
             this->_configured_thread_count = thread_count;
             this->_max_tasks = max_tasks;
             return (this->initialize());
         }
 
-        void destroy()
+        int32_t destroy()
         {
-            size_t worker_index;
-            size_t worker_count;
+            ft_size_t worker_index;
+            ft_size_t worker_count;
 
             if (this->_initialised_state != _state_initialised)
             {
-                set_last_operation_error(FT_ERR_INVALID_STATE);
-                return ;
+                return (set_error(FT_ERR_SUCCESS));
             }
             if (pthread_mutex_lock(&this->_mutex) != 0)
             {
-                set_last_operation_error(FT_ERR_INVALID_STATE);
-                return ;
+                return (set_error(FT_ERR_INVALID_STATE));
             }
-            this->_stop = true;
+            this->_stop = FT_TRUE;
             pthread_mutex_unlock(&this->_mutex);
             pthread_cond_broadcast(&this->_cond);
             worker_index = 0;
@@ -234,44 +235,43 @@ class ft_thread_pool
             if (this->_cond_initialised)
             {
                 pthread_cond_destroy(&this->_cond);
-                this->_cond_initialised = false;
+                this->_cond_initialised = FT_FALSE;
             }
             if (this->_mutex_initialised)
             {
                 pthread_mutex_destroy(&this->_mutex);
-                this->_mutex_initialised = false;
+                this->_mutex_initialised = FT_FALSE;
             }
             this->_initialised_state = _state_destroyed;
-            set_last_operation_error(FT_ERR_SUCCESS);
-            return ;
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         template <typename Function>
         void submit(Function &&function)
         {
-            bool lock_acquired;
-            int lock_error;
-            size_t task_count;
+            ft_bool lock_acquired;
+            int32_t lock_error;
+            ft_size_t task_count;
 
             this->abort_if_not_initialised("ft_thread_pool::submit");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             if (pthread_mutex_lock(&this->_mutex) != 0)
             {
                 this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_INVALID_STATE);
+                set_error(FT_ERR_INVALID_STATE);
                 return ;
             }
             if (this->_stop)
             {
                 pthread_mutex_unlock(&this->_mutex);
                 this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_INVALID_STATE);
+                set_error(FT_ERR_INVALID_STATE);
                 return ;
             }
             if (this->_max_tasks != 0)
@@ -281,7 +281,7 @@ class ft_thread_pool
                 {
                     pthread_mutex_unlock(&this->_mutex);
                     this->unlock_internal(lock_acquired);
-                    set_last_operation_error(FT_ERR_FULL);
+                    set_error(FT_ERR_FULL);
                     return ;
                 }
             }
@@ -292,7 +292,7 @@ class ft_thread_pool
             pthread_cond_signal(&this->_cond);
             pthread_mutex_unlock(&this->_mutex);
             this->unlock_internal(lock_acquired);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -301,7 +301,7 @@ class ft_thread_pool
         {
             if (token.is_cancellation_requested())
             {
-                set_last_operation_error(FT_ERR_SUCCESS);
+                set_error(FT_ERR_SUCCESS);
                 return ;
             }
             this->submit(std::forward<Function>(function));
@@ -310,108 +310,99 @@ class ft_thread_pool
 
         void wait()
         {
-            bool lock_acquired;
-            int lock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_thread_pool::wait");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             if (pthread_mutex_lock(&this->_mutex) != 0)
             {
                 this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_INVALID_STATE);
+                set_error(FT_ERR_INVALID_STATE);
                 return ;
             }
-            while (this->_tasks.empty() == false || this->_active != 0)
+            while (this->_tasks.empty() == FT_FALSE || this->_active != 0)
                 pthread_cond_wait(&this->_cond, &this->_mutex);
             pthread_mutex_unlock(&this->_mutex);
             this->unlock_internal(lock_acquired);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
-        int enable_thread_safety()
+        int32_t enable_thread_safety()
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
 
             this->abort_if_not_initialised("ft_thread_pool::enable_thread_safety");
             if (this->_thread_safe_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_thread_safe_mutex = new_mutex;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety()
+        int32_t disable_thread_safety()
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
 
             if (this->_initialised_state != _state_initialised
                 && this->_initialised_state != _state_destroyed)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_thread_safe_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_thread_safe_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool is_thread_safe() const
         {
             this->abort_if_not_initialised("ft_thread_pool::is_thread_safe");
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_thread_safe_mutex != ft_nullptr);
         }
 
-        int lock(bool *lock_acquired) const
+        int32_t lock(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             this->abort_if_not_initialised("ft_thread_pool::lock");
             lock_result = this->lock_internal(lock_acquired);
-            if (lock_result != FT_ERR_SUCCESS)
-                return (-1);
-            set_last_operation_error(FT_ERR_SUCCESS);
-            return (0);
+            return (set_error(lock_result));
         }
 
-        void unlock(bool lock_acquired) const
+        void unlock(ft_bool lock_acquired) const
         {
             this->unlock_internal(lock_acquired);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
-        static int32_t last_operation_error() noexcept
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept
-        {
-            return (this->_thread_safe_mutex);
-        }
-#endif
 };
 
 thread_local int32_t ft_thread_pool::_last_error = FT_ERR_SUCCESS;

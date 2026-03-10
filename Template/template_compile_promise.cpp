@@ -1,4 +1,5 @@
 #include "promise.hpp"
+#include <cstdint>
 
-template class ft_promise<int>;
+template class ft_promise<int32_t>;
 template class ft_promise<void>;

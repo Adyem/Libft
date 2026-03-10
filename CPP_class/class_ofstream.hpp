@@ -17,6 +17,7 @@ class ft_ofstream
         ft_file _file;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
+
     public:
         ft_ofstream() noexcept;
         ft_ofstream(const ft_ofstream &other) noexcept;
@@ -26,7 +27,7 @@ class ft_ofstream
         ft_ofstream &operator=(const ft_ofstream &other) noexcept = delete;
         ft_ofstream &operator=(ft_ofstream &&other) noexcept = delete;
 
-        uint32_t initialize() noexcept;
+        int32_t initialize() noexcept;
         int32_t destroy() noexcept;
         int32_t move(ft_ofstream &other) noexcept;
         int32_t enable_thread_safety(void) noexcept;

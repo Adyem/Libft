@@ -31,7 +31,7 @@ class ft_istream
         ft_istream &operator=(const ft_istream &other) noexcept = delete;
         ft_istream &operator=(ft_istream &&other) noexcept = delete;
 
-        uint32_t initialize() noexcept;
+        int32_t initialize() noexcept;
         int32_t destroy() noexcept;
         int32_t move(ft_istream &other) noexcept;
         int32_t enable_thread_safety(void) noexcept;

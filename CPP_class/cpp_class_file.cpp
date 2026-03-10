@@ -160,7 +160,7 @@ ft_file::ft_file(ft_file&& other) noexcept
     return ;
 }
 
-uint32_t ft_file::initialize() noexcept
+int32_t ft_file::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {

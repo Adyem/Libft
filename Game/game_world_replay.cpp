@@ -30,8 +30,8 @@ static int world_replay_collect_callbacks(ft_world &world,
         if (scheduled_events[event_index]->get_error() != FT_ERR_SUCCESS)
             return (scheduled_events[event_index]->get_error());
         callbacks.push_back(event_callback);
-        if (ft_vector<ft_function<void(ft_world&, ft_event&)> >::last_operation_error() != FT_ERR_SUCCESS)
-            return (ft_vector<ft_function<void(ft_world&, ft_event&)> >::last_operation_error());
+        if (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error() != FT_ERR_SUCCESS)
+            return (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error());
         event_index++;
     }
     return (FT_ERR_SUCCESS);
@@ -180,8 +180,8 @@ int ft_world_replay_session::capture_snapshot(ft_world &world,
     while (callback_index < callback_count)
     {
         this->_event_callbacks.push_back(callback_snapshot[callback_index]);
-        if (ft_vector<ft_function<void(ft_world&, ft_event&)> >::last_operation_error() != FT_ERR_SUCCESS)
-            return (ft_vector<ft_function<void(ft_world&, ft_event&)> >::last_operation_error());
+        if (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error() != FT_ERR_SUCCESS)
+            return (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error());
         callback_index++;
     }
     return (FT_ERR_SUCCESS);

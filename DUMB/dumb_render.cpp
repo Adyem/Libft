@@ -164,7 +164,7 @@ ft_render_window::~ft_render_window(void)
     return ;
 }
 
-uint32_t ft_render_window::initialize(void)
+int32_t ft_render_window::initialize(void)
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -182,7 +182,7 @@ uint32_t ft_render_window::initialize(void)
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_render_window::initialize(const ft_render_window &other)
+int32_t ft_render_window::initialize(const ft_render_window &other)
 {
     uint32_t destroy_error;
     int32_t lock_error;
@@ -251,7 +251,7 @@ uint32_t ft_render_window::initialize(const ft_render_window &other)
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_render_window::initialize(ft_render_window &&other)
+int32_t ft_render_window::initialize(ft_render_window &&other)
 {
     uint32_t initialization_error;
     uint32_t move_error;
@@ -388,7 +388,7 @@ int32_t ft_render_window::move(ft_render_window &other)
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_render_window::initialize(const ft_render_window_desc &desc)
+int32_t ft_render_window::initialize(const ft_render_window_desc &desc)
 {
     int32_t                   lock_status;
     ft_render_platform_result platform_result;

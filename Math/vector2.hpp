@@ -39,10 +39,10 @@ class vector2
         vector2(vector2 &&other) noexcept;
         vector2 &operator=(vector2 &&other) = delete;
         ~vector2() noexcept;
-        uint32_t initialize() noexcept;
-        uint32_t initialize(double x_component, double y_component) noexcept;
-        uint32_t initialize(const vector2 &other) noexcept;
-        uint32_t initialize(vector2 &&other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(double x_component, double y_component) noexcept;
+        int32_t initialize(const vector2 &other) noexcept;
+        int32_t initialize(vector2 &&other) noexcept;
         uint32_t destroy() noexcept;
         uint32_t move(vector2 &other) noexcept;
         double  get_x() const;

@@ -22,15 +22,15 @@ class ft_graph
         struct graph_node
         {
             VertexType *_value_pointer;
-            size_t     *_edges;
-            size_t      _degree;
-            size_t      _edge_capacity;
+            ft_size_t     *_edges;
+            ft_size_t      _degree;
+            ft_size_t      _edge_capacity;
         };
 
         graph_node                *_nodes;
-        size_t                     _node_capacity;
-        size_t                     _size;
-        size_t                     _initial_capacity;
+        ft_size_t                     _node_capacity;
+        ft_size_t                     _size;
+        ft_size_t                     _initial_capacity;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                    _initialised_state;
 
@@ -39,7 +39,7 @@ class ft_graph
         static const uint8_t _state_initialised = 2;
         static thread_local int32_t _last_error;
 
-        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        static int32_t set_error(int32_t error_code) noexcept
         {
             _last_error = error_code;
             return (error_code);
@@ -66,33 +66,29 @@ class ft_graph
             return ;
         }
 
-        int lock_internal(bool *lock_acquired) const
+        int32_t lock_internal(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = false;
+                *lock_acquired = FT_FALSE;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
             lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_result));
+                return (set_error(lock_result));
             if (lock_acquired != ft_nullptr)
-                *lock_acquired = true;
+                *lock_acquired = FT_TRUE;
             return (FT_ERR_SUCCESS);
         }
 
-        int unlock_internal(bool lock_acquired) const
+        int32_t unlock_internal(ft_bool lock_acquired) const
         {
-            int unlock_result;
-
-            if (lock_acquired == false)
+            if (lock_acquired == FT_FALSE)
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            if (unlock_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_result));
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_ERR_SUCCESS);
         }
 
@@ -118,11 +114,11 @@ class ft_graph
             return ;
         }
 
-        bool ensure_node_capacity(size_t desired_capacity)
+        bool ensure_node_capacity(ft_size_t desired_capacity)
         {
-            size_t new_capacity;
+            ft_size_t new_capacity;
             graph_node *new_nodes;
-            size_t index;
+            ft_size_t index;
 
             if (desired_capacity <= this->_node_capacity)
                 return (true);
@@ -135,7 +131,7 @@ class ft_graph
             new_nodes = static_cast<graph_node*>(cma_malloc(sizeof(graph_node) * new_capacity));
             if (new_nodes == ft_nullptr)
             {
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return (false);
             }
             index = 0;
@@ -161,15 +157,15 @@ class ft_graph
                 cma_free(this->_nodes);
             this->_nodes = new_nodes;
             this->_node_capacity = new_capacity;
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (true);
         }
 
-        bool ensure_edge_capacity(graph_node &node, size_t desired_capacity)
+        bool ensure_edge_capacity(graph_node &node, ft_size_t desired_capacity)
         {
-            size_t new_capacity;
-            size_t *new_edges;
-            size_t index;
+            ft_size_t new_capacity;
+            ft_size_t *new_edges;
+            ft_size_t index;
 
             if (desired_capacity <= node._edge_capacity)
                 return (true);
@@ -179,10 +175,10 @@ class ft_graph
                 new_capacity = node._edge_capacity * 2;
             while (new_capacity < desired_capacity)
                 new_capacity *= 2;
-            new_edges = static_cast<size_t*>(cma_malloc(sizeof(size_t) * new_capacity));
+            new_edges = static_cast<ft_size_t*>(cma_malloc(sizeof(ft_size_t) * new_capacity));
             if (new_edges == ft_nullptr)
             {
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return (false);
             }
             index = 0;
@@ -195,13 +191,13 @@ class ft_graph
                 cma_free(node._edges);
             node._edges = new_edges;
             node._edge_capacity = new_capacity;
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (true);
         }
 
         void destroy_all_nodes_unlocked()
         {
-            size_t index;
+            ft_size_t index;
 
             index = 0;
             while (index < this->_size)
@@ -214,12 +210,12 @@ class ft_graph
         }
 
     public:
-        explicit ft_graph(size_t initial_capacity = 0)
+        explicit ft_graph(ft_size_t initial_capacity = 0)
             : _nodes(ft_nullptr), _node_capacity(0), _size(0),
               _initial_capacity(initial_capacity), _mutex(ft_nullptr),
               _initialised_state(_state_uninitialised)
         {
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
@@ -237,15 +233,15 @@ class ft_graph
         ft_graph(ft_graph&& other) = delete;
         ft_graph& operator=(ft_graph&& other) = delete;
 
-        int initialize()
+        int32_t initialize()
         {
-            size_t index;
+            ft_size_t index;
 
             if (this->_initialised_state == _state_initialised)
             {
                 this->abort_lifecycle_error("ft_graph::initialize",
                     "called while object is already initialised");
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             }
             this->_nodes = ft_nullptr;
             this->_node_capacity = 0;
@@ -257,7 +253,7 @@ class ft_graph
                 if (this->_nodes == ft_nullptr)
                 {
                     this->_initialised_state = _state_destroyed;
-                    return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                    return (set_error(FT_ERR_NO_MEMORY));
                 }
                 this->_node_capacity = this->_initial_capacity;
                 index = 0;
@@ -271,21 +267,20 @@ class ft_graph
                 }
             }
             this->_initialised_state = _state_initialised;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int destroy()
+        int32_t destroy()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             if (this->_initialised_state != _state_initialised)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            lock_acquired = false;
+                return (set_error(FT_ERR_SUCCESS));
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(lock_error));
+                return (set_error(lock_error));
             this->destroy_all_nodes_unlocked();
             if (this->_nodes != ft_nullptr)
             {
@@ -293,27 +288,24 @@ class ft_graph
                 this->_nodes = ft_nullptr;
             }
             this->_node_capacity = 0;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (set_last_operation_error(unlock_error));
+            (void)this->unlock_internal(lock_acquired);
             this->_initialised_state = _state_destroyed;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        size_t add_vertex(const VertexType& value)
+        ft_size_t add_vertex(const VertexType& value)
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
             VertexType *new_value;
-            size_t index;
+            ft_size_t index;
 
             this->abort_if_not_initialised("ft_graph::add_vertex(copy)");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
                 return (this->_size);
-            if (this->ensure_node_capacity(this->_size + 1) == false)
+            if (this->ensure_node_capacity(this->_size + 1) == FT_FALSE)
             {
                 (void)this->unlock_internal(lock_acquired);
                 return (this->_size);
@@ -322,7 +314,7 @@ class ft_graph
             if (new_value == ft_nullptr)
             {
                 (void)this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return (this->_size);
             }
             construct_at(new_value, value);
@@ -332,27 +324,24 @@ class ft_graph
             this->_nodes[index]._degree = 0;
             this->_nodes[index]._edge_capacity = 0;
             this->_size += 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (this->_size);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (index);
         }
 
-        size_t add_vertex(VertexType&& value)
+        ft_size_t add_vertex(VertexType&& value)
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
             VertexType *new_value;
-            size_t index;
+            ft_size_t index;
 
             this->abort_if_not_initialised("ft_graph::add_vertex(move)");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
                 return (this->_size);
-            if (this->ensure_node_capacity(this->_size + 1) == false)
+            if (this->ensure_node_capacity(this->_size + 1) == FT_FALSE)
             {
                 (void)this->unlock_internal(lock_acquired);
                 return (this->_size);
@@ -361,7 +350,7 @@ class ft_graph
             if (new_value == ft_nullptr)
             {
                 (void)this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return (this->_size);
             }
             construct_at(new_value, ft_move(value));
@@ -371,88 +360,73 @@ class ft_graph
             this->_nodes[index]._degree = 0;
             this->_nodes[index]._edge_capacity = 0;
             this->_size += 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (this->_size);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (index);
         }
 
-        void add_edge(size_t from, size_t to)
+        void add_edge(ft_size_t from, ft_size_t to)
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
             graph_node *node;
 
             this->abort_if_not_initialised("ft_graph::add_edge");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             if (from >= this->_size || to >= this->_size)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NOT_FOUND);
+                (void)this->unlock_internal(lock_acquired);
+                set_error(FT_ERR_NOT_FOUND);
                 return ;
             }
             node = &this->_nodes[from];
-            if (this->ensure_edge_capacity(*node, node->_degree + 1) == false)
+            if (this->ensure_edge_capacity(*node, node->_degree + 1) == FT_FALSE)
             {
                 (void)this->unlock_internal(lock_acquired);
                 return ;
             }
             node->_edges[node->_degree] = to;
             node->_degree += 1;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
         template <typename Func>
-        void bfs(size_t start, Func visit)
+        void bfs(ft_size_t start, Func visit)
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
             bool *visited;
-            size_t *queue_buffer;
-            size_t queue_head;
-            size_t queue_tail;
-            size_t current;
-            size_t edge_index;
-            size_t adjacent;
+            ft_size_t *queue_buffer;
+            ft_size_t queue_head;
+            ft_size_t queue_tail;
+            ft_size_t current;
+            ft_size_t edge_index;
+            ft_size_t adjacent;
 
             this->abort_if_not_initialised("ft_graph::bfs");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             if (start >= this->_size)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NOT_FOUND);
+                (void)this->unlock_internal(lock_acquired);
+                set_error(FT_ERR_NOT_FOUND);
                 return ;
             }
             visited = static_cast<bool*>(cma_malloc(sizeof(bool) * this->_size));
-            queue_buffer = static_cast<size_t*>(cma_malloc(sizeof(size_t) * this->_size));
+            queue_buffer = static_cast<ft_size_t*>(cma_malloc(sizeof(ft_size_t) * this->_size));
             if (visited == ft_nullptr || queue_buffer == ft_nullptr)
             {
                 if (visited != ft_nullptr)
@@ -460,18 +434,18 @@ class ft_graph
                 if (queue_buffer != ft_nullptr)
                     cma_free(queue_buffer);
                 (void)this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return ;
             }
             current = 0;
             while (current < this->_size)
             {
-                visited[current] = false;
+                visited[current] = FT_FALSE;
                 ++current;
             }
             queue_head = 0;
             queue_tail = 0;
-            visited[start] = true;
+            visited[start] = FT_TRUE;
             queue_buffer[queue_tail] = start;
             queue_tail += 1;
             while (queue_head < queue_tail)
@@ -483,9 +457,9 @@ class ft_graph
                 while (edge_index < this->_nodes[current]._degree)
                 {
                     adjacent = this->_nodes[current]._edges[edge_index];
-                    if (visited[adjacent] == false)
+                    if (visited[adjacent] == FT_FALSE)
                     {
-                        visited[adjacent] = true;
+                        visited[adjacent] = FT_TRUE;
                         queue_buffer[queue_tail] = adjacent;
                         queue_tail += 1;
                     }
@@ -494,48 +468,39 @@ class ft_graph
             }
             cma_free(queue_buffer);
             cma_free(visited);
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
         template <typename Func>
-        void dfs(size_t start, Func visit)
+        void dfs(ft_size_t start, Func visit)
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
             bool *visited;
-            size_t *stack_buffer;
-            size_t stack_size;
-            size_t current;
-            size_t edge_index;
-            size_t adjacent;
+            ft_size_t *stack_buffer;
+            ft_size_t stack_size;
+            ft_size_t current;
+            ft_size_t edge_index;
+            ft_size_t adjacent;
 
             this->abort_if_not_initialised("ft_graph::dfs");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             if (start >= this->_size)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NOT_FOUND);
+                (void)this->unlock_internal(lock_acquired);
+                set_error(FT_ERR_NOT_FOUND);
                 return ;
             }
             visited = static_cast<bool*>(cma_malloc(sizeof(bool) * this->_size));
-            stack_buffer = static_cast<size_t*>(cma_malloc(sizeof(size_t) * this->_size));
+            stack_buffer = static_cast<ft_size_t*>(cma_malloc(sizeof(ft_size_t) * this->_size));
             if (visited == ft_nullptr || stack_buffer == ft_nullptr)
             {
                 if (visited != ft_nullptr)
@@ -543,13 +508,13 @@ class ft_graph
                 if (stack_buffer != ft_nullptr)
                     cma_free(stack_buffer);
                 (void)this->unlock_internal(lock_acquired);
-                set_last_operation_error(FT_ERR_NO_MEMORY);
+                set_error(FT_ERR_NO_MEMORY);
                 return ;
             }
             current = 0;
             while (current < this->_size)
             {
-                visited[current] = false;
+                visited[current] = FT_FALSE;
                 ++current;
             }
             stack_size = 0;
@@ -561,14 +526,14 @@ class ft_graph
                 current = stack_buffer[stack_size];
                 if (visited[current])
                     continue ;
-                visited[current] = true;
+                visited[current] = FT_TRUE;
                 visit(*this->_nodes[current]._value_pointer);
                 edge_index = this->_nodes[current]._degree;
                 while (edge_index > 0)
                 {
                     edge_index -= 1;
                     adjacent = this->_nodes[current]._edges[edge_index];
-                    if (visited[adjacent] == false)
+                    if (visited[adjacent] == FT_FALSE)
                     {
                         stack_buffer[stack_size] = adjacent;
                         stack_size += 1;
@@ -577,38 +542,29 @@ class ft_graph
             }
             cma_free(stack_buffer);
             cma_free(visited);
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
-        void neighbors(size_t index, ft_vector<size_t> &out) const
+        void neighbors(ft_size_t index, ft_vector<ft_size_t> &out) const
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
-            size_t edge_index;
+            ft_bool lock_acquired;
+            int32_t lock_error;
+            ft_size_t edge_index;
 
             this->abort_if_not_initialised("ft_graph::neighbors");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             if (index >= this->_size)
             {
-                unlock_error = this->unlock_internal(lock_acquired);
-                if (unlock_error != FT_ERR_SUCCESS)
-                    set_last_operation_error(unlock_error);
-                else
-                    set_last_operation_error(FT_ERR_NOT_FOUND);
+                (void)this->unlock_internal(lock_acquired);
+                set_error(FT_ERR_NOT_FOUND);
                 return ;
             }
             edge_index = 0;
@@ -617,162 +573,136 @@ class ft_graph
                 out.push_back(this->_nodes[index]._edges[edge_index]);
                 ++edge_index;
             }
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
-        size_t size() const
+        ft_size_t size() const
         {
-            size_t value;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_size_t value;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_graph::size");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
                 return (0);
             value = this->_size;
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (0);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (value);
         }
 
         bool empty() const
         {
             bool value;
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_graph::empty");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
                 return (true);
             value = (this->_size == 0);
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-                return (true);
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return (value);
         }
 
         void clear()
         {
-            bool lock_acquired;
-            int lock_error;
-            int unlock_error;
+            ft_bool lock_acquired;
+            int32_t lock_error;
 
             this->abort_if_not_initialised("ft_graph::clear");
-            lock_acquired = false;
+            lock_acquired = FT_FALSE;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)
             {
-                set_last_operation_error(lock_error);
+                set_error(lock_error);
                 return ;
             }
             this->destroy_all_nodes_unlocked();
-            unlock_error = this->unlock_internal(lock_acquired);
-            if (unlock_error != FT_ERR_SUCCESS)
-            {
-                set_last_operation_error(unlock_error);
-                return ;
-            }
-            set_last_operation_error(FT_ERR_SUCCESS);
+            (void)this->unlock_internal(lock_acquired);
+            set_error(FT_ERR_SUCCESS);
             return ;
         }
 
-        int enable_thread_safety()
+        int32_t enable_thread_safety()
         {
             pt_recursive_mutex *new_mutex;
-            int initialize_result;
+            int32_t initialize_result;
 
             this->abort_if_not_initialised("ft_graph::enable_thread_safety");
             if (this->_mutex != ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             new_mutex = new (std::nothrow) pt_recursive_mutex();
             if (new_mutex == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                return (set_error(FT_ERR_NO_MEMORY));
             initialize_result = new_mutex->initialize();
             if (initialize_result != FT_ERR_SUCCESS)
             {
                 delete new_mutex;
-                return (set_last_operation_error(initialize_result));
+                return (set_error(initialize_result));
             }
             this->_mutex = new_mutex;
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
-        int disable_thread_safety()
+        int32_t disable_thread_safety()
         {
             pt_recursive_mutex *mutex_pointer;
-            int destroy_result;
+            int32_t destroy_result;
 
             if (this->_initialised_state != _state_initialised
                 && this->_initialised_state != _state_destroyed)
-                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+                return (set_error(FT_ERR_INVALID_STATE));
             mutex_pointer = this->_mutex;
             if (mutex_pointer == ft_nullptr)
-                return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(FT_ERR_SUCCESS));
             this->_mutex = ft_nullptr;
             destroy_result = mutex_pointer->destroy();
             delete mutex_pointer;
             if (destroy_result != FT_ERR_SUCCESS)
-                return (set_last_operation_error(destroy_result));
-            return (set_last_operation_error(FT_ERR_SUCCESS));
+                return (set_error(destroy_result));
+            return (set_error(FT_ERR_SUCCESS));
         }
 
         bool is_thread_safe() const
         {
             this->abort_if_not_initialised("ft_graph::is_thread_safe");
-            set_last_operation_error(FT_ERR_SUCCESS);
+            set_error(FT_ERR_SUCCESS);
             return (this->_mutex != ft_nullptr);
         }
 
-        int lock(bool *lock_acquired) const
+        int32_t lock(ft_bool *lock_acquired) const
         {
-            int lock_result;
+            int32_t lock_result;
 
             this->abort_if_not_initialised("ft_graph::lock");
             lock_result = this->lock_internal(lock_acquired);
-            if (lock_result != FT_ERR_SUCCESS)
-                return (-1);
-            set_last_operation_error(FT_ERR_SUCCESS);
-            return (0);
+            return (set_error(lock_result));
         }
 
-        void unlock(bool lock_acquired) const
+        void unlock(ft_bool lock_acquired) const
         {
             (void)this->unlock_internal(lock_acquired);
             return ;
         }
 
-        static int32_t last_operation_error() noexcept
+        static int32_t get_error() noexcept
         {
             return (_last_error);
         }
 
-        static const char *last_operation_error_str() noexcept
+        static const char *get_error_str() noexcept
         {
             return (ft_strerror(_last_error));
         }
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *mutex_handle() const noexcept
-        {
-            return (this->_mutex);
-        }
-#endif
 };
 
 template <typename VertexType>
