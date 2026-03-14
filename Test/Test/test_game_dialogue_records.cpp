@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Game/ft_dialogue_line.hpp"
-#include "../../Game/ft_dialogue_script.hpp"
+#include "../../Game/game_dialogue_line.hpp"
+#include "../../Game/game_dialogue_script.hpp"
 #include "../../Template/vector.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 

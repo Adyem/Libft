@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_dialogue_table.hpp"
-#include "../../Game/ft_dialogue_line.hpp"
-#include "../../Game/ft_dialogue_script.hpp"
+#include "../../Game/game_dialogue_line.hpp"
+#include "../../Game/game_dialogue_script.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include "../../Template/vector.hpp"
 #include <cstring>

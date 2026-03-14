@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Game/ft_region_definition.hpp"
-#include "../../Game/ft_vendor_profile.hpp"
-#include "../../Game/ft_rarity_band.hpp"
+#include "../../Game/game_region_definition.hpp"
+#include "../../Game/game_vendor_profile.hpp"
+#include "../../Game/game_rarity_band.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD

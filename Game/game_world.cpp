@@ -6,9 +6,9 @@
 #include "game_economy_table.hpp"
 #include "game_crafting.hpp"
 #include "game_dialogue_table.hpp"
-#include "ft_world_region.hpp"
+#include "game_world_region.hpp"
 #include "game_quest.hpp"
-#include "ft_vendor_profile.hpp"
+#include "game_vendor_profile.hpp"
 #include "game_upgrade.hpp"
 #include "../JSon/json.hpp"
 #include "../Basic/basic.hpp"
@@ -23,56 +23,56 @@
 #include "../Template/move.hpp"
 #include "../Storage/kv_store.hpp"
 
-json_group *serialize_character(const ft_character &character);
-int32_t deserialize_character(ft_character &character, json_group *group);
-json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &scheduler);
-int32_t deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, json_group *group);
-json_group *serialize_inventory(const ft_inventory &inventory);
-int32_t deserialize_inventory(ft_inventory &inventory, json_group *group);
-json_group *serialize_equipment(const ft_character &character);
-int32_t deserialize_equipment(ft_character &character, json_group *group);
+json_group *serialize_character(const game_character &character);
+int32_t deserialize_character(game_character &character, json_group *group);
+json_group *serialize_event_scheduler(const ft_sharedptr<game_event_scheduler> &scheduler);
+int32_t deserialize_event_scheduler(ft_sharedptr<game_event_scheduler> &scheduler, json_group *group);
+json_group *serialize_inventory(const game_inventory &inventory);
+int32_t deserialize_inventory(game_inventory &inventory, json_group *group);
+json_group *serialize_equipment(const game_character &character);
+int32_t deserialize_equipment(game_character &character, json_group *group);
 
-thread_local int32_t ft_world::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_world::_last_error = FT_ERR_SUCCESS;
 
-static void default_event_callback(ft_world &world, ft_event &event) noexcept;
-static ft_function<void(ft_world&, ft_event&)> get_callback_by_id(int32_t type_id) noexcept;
+static void default_event_callback(game_world &world, game_event &event) noexcept;
+static ft_function<void(game_world&, game_event&)> get_callback_by_id(int32_t type_id) noexcept;
 static void destroy_world_lifecycle_components(
-    ft_sharedptr<ft_event_scheduler> &event_scheduler,
-    ft_sharedptr<ft_world_registry> &world_registry,
-    ft_sharedptr<ft_world_replay_session> &replay_session,
-    ft_sharedptr<ft_economy_table> &economy_table,
-    ft_sharedptr<ft_crafting> &crafting,
-    ft_sharedptr<ft_dialogue_table> &dialogue_table,
-    ft_sharedptr<ft_world_region> &world_region,
-    ft_sharedptr<ft_quest> &quest,
-    ft_sharedptr<ft_vendor_profile> &vendor_profile,
-    ft_sharedptr<ft_upgrade> &upgrade) noexcept;
+    ft_sharedptr<game_event_scheduler> &event_scheduler,
+    ft_sharedptr<game_world_registry> &world_registry,
+    ft_sharedptr<game_world_replay_session> &replay_session,
+    ft_sharedptr<game_economy_table> &economy_table,
+    ft_sharedptr<game_crafting> &crafting,
+    ft_sharedptr<game_dialogue_table> &dialogue_table,
+    ft_sharedptr<game_world_region> &world_region,
+    ft_sharedptr<game_quest> &quest,
+    ft_sharedptr<game_vendor_profile> &vendor_profile,
+    ft_sharedptr<game_upgrade> &upgrade) noexcept;
 
-static void default_event_callback(ft_world &world, ft_event &event) noexcept
+static void default_event_callback(game_world &world, game_event &event) noexcept
 {
     (void)world;
     (void)event;
     return ;
 }
 
-static ft_function<void(ft_world&, ft_event&)> get_callback_by_id(int32_t type_id) noexcept
+static ft_function<void(game_world&, game_event&)> get_callback_by_id(int32_t type_id) noexcept
 {
     if (type_id == 1)
-        return (ft_function<void(ft_world&, ft_event&)>(default_event_callback));
-    return (ft_function<void(ft_world&, ft_event&)>());
+        return (ft_function<void(game_world&, game_event&)>(default_event_callback));
+    return (ft_function<void(game_world&, game_event&)>());
 }
 
 static void destroy_world_lifecycle_components(
-    ft_sharedptr<ft_event_scheduler> &event_scheduler,
-    ft_sharedptr<ft_world_registry> &world_registry,
-    ft_sharedptr<ft_world_replay_session> &replay_session,
-    ft_sharedptr<ft_economy_table> &economy_table,
-    ft_sharedptr<ft_crafting> &crafting,
-    ft_sharedptr<ft_dialogue_table> &dialogue_table,
-    ft_sharedptr<ft_world_region> &world_region,
-    ft_sharedptr<ft_quest> &quest,
-    ft_sharedptr<ft_vendor_profile> &vendor_profile,
-    ft_sharedptr<ft_upgrade> &upgrade) noexcept
+    ft_sharedptr<game_event_scheduler> &event_scheduler,
+    ft_sharedptr<game_world_registry> &world_registry,
+    ft_sharedptr<game_world_replay_session> &replay_session,
+    ft_sharedptr<game_economy_table> &economy_table,
+    ft_sharedptr<game_crafting> &crafting,
+    ft_sharedptr<game_dialogue_table> &dialogue_table,
+    ft_sharedptr<game_world_region> &world_region,
+    ft_sharedptr<game_quest> &quest,
+    ft_sharedptr<game_vendor_profile> &vendor_profile,
+    ft_sharedptr<game_upgrade> &upgrade) noexcept
 {
     if (replay_session.get() != ft_nullptr)
         (void)replay_session->destroy();
@@ -107,7 +107,7 @@ static void destroy_world_lifecycle_components(
     return ;
 }
 
-ft_bool ft_world::propagate_scheduler_state_error() const noexcept
+ft_bool game_world::propagate_scheduler_state_error() const noexcept
 {
     if (!this->_event_scheduler)
     {
@@ -123,7 +123,7 @@ ft_bool ft_world::propagate_scheduler_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_world::ft_world() noexcept
+game_world::game_world() noexcept
     : _event_scheduler(), _world_registry(), _replay_session(),
     _economy_table(), _crafting(), _dialogue_table(), _world_region(), _quest(),
     _vendor_profile(), _upgrade(),
@@ -133,7 +133,7 @@ ft_world::ft_world() noexcept
     return ;
 }
 
-ft_world::ft_world(const ft_world &other) noexcept
+game_world::game_world(const game_world &other) noexcept
     : _event_scheduler(), _world_registry(), _replay_session(),
     _economy_table(), _crafting(), _dialogue_table(), _world_region(), _quest(),
     _vendor_profile(), _upgrade(),
@@ -143,7 +143,7 @@ ft_world::ft_world(const ft_world &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_world::ft_world(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_world::game_world(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -175,7 +175,7 @@ ft_world::ft_world(const ft_world &other) noexcept
     return ;
 }
 
-ft_world::ft_world(ft_world &&other) noexcept
+game_world::game_world(game_world &&other) noexcept
     : _event_scheduler(), _world_registry(), _replay_session(),
     _economy_table(), _crafting(), _dialogue_table(), _world_region(), _quest(),
     _vendor_profile(), _upgrade(),
@@ -185,7 +185,7 @@ ft_world::ft_world(ft_world &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_world::ft_world(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_world::game_world(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -203,40 +203,40 @@ ft_world::ft_world(ft_world &&other) noexcept
     return ;
 }
 
-ft_world::~ft_world() noexcept
+game_world::~game_world() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-int32_t ft_world::initialize() noexcept
+int32_t game_world::initialize() noexcept
 {
     int32_t initialize_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_world::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_world::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    this->_event_scheduler = ft_sharedptr<ft_event_scheduler>(
-        new (std::nothrow) ft_event_scheduler());
-    this->_world_registry = ft_sharedptr<ft_world_registry>(
-        new (std::nothrow) ft_world_registry());
-    this->_replay_session = ft_sharedptr<ft_world_replay_session>(
-        new (std::nothrow) ft_world_replay_session());
-    this->_economy_table = ft_sharedptr<ft_economy_table>(
-        new (std::nothrow) ft_economy_table());
-    this->_crafting = ft_sharedptr<ft_crafting>(new (std::nothrow) ft_crafting());
-    this->_dialogue_table = ft_sharedptr<ft_dialogue_table>(
-        new (std::nothrow) ft_dialogue_table());
-    this->_world_region = ft_sharedptr<ft_world_region>(
-        new (std::nothrow) ft_world_region());
-    this->_quest = ft_sharedptr<ft_quest>(new (std::nothrow) ft_quest());
-    this->_vendor_profile = ft_sharedptr<ft_vendor_profile>(
-        new (std::nothrow) ft_vendor_profile());
-    this->_upgrade = ft_sharedptr<ft_upgrade>(new (std::nothrow) ft_upgrade());
+    this->_event_scheduler = ft_sharedptr<game_event_scheduler>(
+        new (std::nothrow) game_event_scheduler());
+    this->_world_registry = ft_sharedptr<game_world_registry>(
+        new (std::nothrow) game_world_registry());
+    this->_replay_session = ft_sharedptr<game_world_replay_session>(
+        new (std::nothrow) game_world_replay_session());
+    this->_economy_table = ft_sharedptr<game_economy_table>(
+        new (std::nothrow) game_economy_table());
+    this->_crafting = ft_sharedptr<game_crafting>(new (std::nothrow) game_crafting());
+    this->_dialogue_table = ft_sharedptr<game_dialogue_table>(
+        new (std::nothrow) game_dialogue_table());
+    this->_world_region = ft_sharedptr<game_world_region>(
+        new (std::nothrow) game_world_region());
+    this->_quest = ft_sharedptr<game_quest>(new (std::nothrow) game_quest());
+    this->_vendor_profile = ft_sharedptr<game_vendor_profile>(
+        new (std::nothrow) game_vendor_profile());
+    this->_upgrade = ft_sharedptr<game_upgrade>(new (std::nothrow) game_upgrade());
     if (!this->_event_scheduler || !this->_world_registry || !this->_replay_session
         || !this->_economy_table || !this->_crafting || !this->_dialogue_table
         || !this->_world_region || !this->_quest || !this->_vendor_profile
@@ -365,7 +365,7 @@ int32_t ft_world::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_world::destroy() noexcept
+int32_t game_world::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -381,7 +381,7 @@ int32_t ft_world::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_world::move(ft_world &other) noexcept
+int32_t game_world::move(game_world &other) noexcept
 {
     int32_t destroy_error;
 
@@ -389,7 +389,7 @@ int32_t ft_world::move(ft_world &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_world::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_world::move", "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -431,9 +431,9 @@ int32_t ft_world::move(ft_world &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
+void game_world::schedule_event(const ft_sharedptr<game_event> &event) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::schedule_event");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::schedule_event");
     if (!event)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
@@ -448,9 +448,9 @@ void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
     return ;
 }
 
-void ft_world::update_events(ft_sharedptr<ft_world> &self, int32_t ticks, const char *log_file_path, ft_string *log_buffer) noexcept
+void game_world::update_events(ft_sharedptr<game_world> &self, int32_t ticks, const char *log_file_path, ft_string *log_buffer) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::update_events");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::update_events");
     if (!self)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
@@ -465,11 +465,11 @@ void ft_world::update_events(ft_sharedptr<ft_world> &self, int32_t ticks, const 
     return ;
 }
 
-ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
+ft_sharedptr<game_event_scheduler> &game_world::get_event_scheduler() noexcept
 {
     int32_t previous_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_event_scheduler");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_event_scheduler");
     previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
     {
@@ -480,11 +480,11 @@ ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
     return (this->_event_scheduler);
 }
 
-const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const noexcept
+const ft_sharedptr<game_event_scheduler> &game_world::get_event_scheduler() const noexcept
 {
     int32_t previous_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_event_scheduler const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_event_scheduler const");
     previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
     {
@@ -495,119 +495,119 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
     return (this->_event_scheduler);
 }
 
-ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() noexcept
+ft_sharedptr<game_world_registry> &game_world::get_world_registry() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_world_registry");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_world_registry");
     if (this->propagate_registry_state_error() == FT_TRUE)
         return (this->_world_registry);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_registry);
 }
 
-const ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() const noexcept
+const ft_sharedptr<game_world_registry> &game_world::get_world_registry() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_world_registry const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_world_registry const");
     if (this->propagate_registry_state_error() == FT_TRUE)
         return (this->_world_registry);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_registry);
 }
 
-ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() noexcept
+ft_sharedptr<game_world_replay_session> &game_world::get_replay_session() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_replay_session");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_replay_session");
     if (this->propagate_replay_state_error() == FT_TRUE)
         return (this->_replay_session);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_replay_session);
 }
 
-const ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() const noexcept
+const ft_sharedptr<game_world_replay_session> &game_world::get_replay_session() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_replay_session const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_replay_session const");
     if (this->propagate_replay_state_error() == FT_TRUE)
         return (this->_replay_session);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_replay_session);
 }
 
-ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() noexcept
+ft_sharedptr<game_economy_table> &game_world::get_economy_table() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_economy_table");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_economy_table");
     if (this->propagate_economy_state_error() == FT_TRUE)
         return (this->_economy_table);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_economy_table);
 }
 
-const ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() const noexcept
+const ft_sharedptr<game_economy_table> &game_world::get_economy_table() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_economy_table const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_economy_table const");
     if (this->propagate_economy_state_error() == FT_TRUE)
         return (this->_economy_table);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_economy_table);
 }
 
-ft_sharedptr<ft_crafting> &ft_world::get_crafting() noexcept
+ft_sharedptr<game_crafting> &game_world::get_crafting() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_crafting");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_crafting");
     if (this->propagate_crafting_state_error() == FT_TRUE)
         return (this->_crafting);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_crafting);
 }
 
-const ft_sharedptr<ft_crafting> &ft_world::get_crafting() const noexcept
+const ft_sharedptr<game_crafting> &game_world::get_crafting() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_crafting const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_crafting const");
     if (this->propagate_crafting_state_error() == FT_TRUE)
         return (this->_crafting);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_crafting);
 }
 
-ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() noexcept
+ft_sharedptr<game_dialogue_table> &game_world::get_dialogue_table() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_dialogue_table");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_dialogue_table");
     if (this->propagate_dialogue_state_error() == FT_TRUE)
         return (this->_dialogue_table);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_dialogue_table);
 }
 
-const ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() const noexcept
+const ft_sharedptr<game_dialogue_table> &game_world::get_dialogue_table() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_dialogue_table const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_dialogue_table const");
     if (this->propagate_dialogue_state_error() == FT_TRUE)
         return (this->_dialogue_table);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_dialogue_table);
 }
 
-ft_sharedptr<ft_world_region> &ft_world::get_world_region() noexcept
+ft_sharedptr<game_world_region> &game_world::get_world_region() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_world_region");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_world_region");
     if (this->propagate_region_state_error() == FT_TRUE)
         return (this->_world_region);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_region);
 }
 
-const ft_sharedptr<ft_world_region> &ft_world::get_world_region() const noexcept
+const ft_sharedptr<game_world_region> &game_world::get_world_region() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_world_region const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_world_region const");
     if (this->propagate_region_state_error() == FT_TRUE)
         return (this->_world_region);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_region);
 }
 
-ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
+ft_sharedptr<game_quest> &game_world::get_quest() noexcept
 {
     int32_t previous_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_quest");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_quest");
     previous_error = this->get_error();
     if (this->propagate_quest_state_error() == FT_TRUE)
         return (this->_quest);
@@ -620,11 +620,11 @@ ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
     return (this->_quest);
 }
 
-const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
+const ft_sharedptr<game_quest> &game_world::get_quest() const noexcept
 {
     int32_t previous_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_quest const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_quest const");
     previous_error = this->get_error();
     if (this->propagate_quest_state_error() == FT_TRUE)
         return (this->_quest);
@@ -637,11 +637,11 @@ const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
     return (this->_quest);
 }
 
-ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
+ft_sharedptr<game_vendor_profile> &game_world::get_vendor_profile() noexcept
 {
     int32_t previous_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_vendor_profile");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_vendor_profile");
     previous_error = this->get_error();
     if (this->propagate_vendor_profile_state_error() == FT_TRUE)
         return (this->_vendor_profile);
@@ -654,11 +654,11 @@ ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
     return (this->_vendor_profile);
 }
 
-const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noexcept
+const ft_sharedptr<game_vendor_profile> &game_world::get_vendor_profile() const noexcept
 {
     int32_t previous_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_vendor_profile const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_vendor_profile const");
     previous_error = this->get_error();
     if (this->propagate_vendor_profile_state_error() == FT_TRUE)
         return (this->_vendor_profile);
@@ -671,30 +671,30 @@ const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noex
     return (this->_vendor_profile);
 }
 
-ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() noexcept
+ft_sharedptr<game_upgrade> &game_world::get_upgrade() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_upgrade");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_upgrade");
     if (this->propagate_upgrade_state_error() == FT_TRUE)
         return (this->_upgrade);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_upgrade);
 }
 
-const ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() const noexcept
+const ft_sharedptr<game_upgrade> &game_world::get_upgrade() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::get_upgrade const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::get_upgrade const");
     if (this->propagate_upgrade_state_error() == FT_TRUE)
         return (this->_upgrade);
     this->set_error(FT_ERR_SUCCESS);
     return (this->_upgrade);
 }
 
-int32_t ft_world::save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept
+int32_t game_world::save_to_file(const char *file_path, const game_character &character, const game_inventory &inventory) const noexcept
 {
     json_group *groups;
     int32_t error_code;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::save_to_file");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::save_to_file");
     if (this->propagate_scheduler_state_error() == FT_TRUE)
         return (this->get_error());
     error_code = FT_ERR_SUCCESS;
@@ -712,12 +712,12 @@ int32_t ft_world::save_to_file(const char *file_path, const ft_character &charac
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_world::load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept
+int32_t game_world::load_from_file(const char *file_path, game_character &character, game_inventory &inventory) noexcept
 {
     json_group *groups;
     int32_t restore_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::load_from_file");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::load_from_file");
     groups = json_read_from_file(file_path);
     if (!groups)
     {
@@ -729,12 +729,12 @@ int32_t ft_world::load_from_file(const char *file_path, ft_character &character,
     return (restore_result);
 }
 
-int32_t ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_character &character, const ft_inventory &inventory) const noexcept
+int32_t game_world::save_to_store(kv_store &store, const char *slot_key, const game_character &character, const game_inventory &inventory) const noexcept
 {
     json_group *groups;
     char *serialized_state;
     int32_t error_code;
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::save_to_store");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::save_to_store");
     if (slot_key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -769,13 +769,13 @@ int32_t ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_world::load_from_store(kv_store &store, const char *slot_key, ft_character &character, ft_inventory &inventory) noexcept
+int32_t game_world::load_from_store(kv_store &store, const char *slot_key, game_character &character, game_inventory &inventory) noexcept
 {
     const char *serialized_state;
     json_group *groups;
     int32_t restore_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::load_from_store");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::load_from_store");
     if (slot_key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -803,13 +803,13 @@ int32_t ft_world::load_from_store(kv_store &store, const char *slot_key, ft_char
     return (restore_result);
 }
 
-int32_t ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &character, const ft_inventory &inventory) const noexcept
+int32_t game_world::save_to_buffer(ft_string &out_buffer, const game_character &character, const game_inventory &inventory) const noexcept
 {
     json_group *groups;
     char *serialized_state;
     int32_t error_code;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::save_to_buffer");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::save_to_buffer");
     if (this->propagate_scheduler_state_error() == FT_TRUE)
         return (this->get_error());
     error_code = FT_ERR_SUCCESS;
@@ -841,13 +841,13 @@ int32_t ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &char
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_world::load_from_buffer(const char *buffer, ft_character &character, ft_inventory &inventory) noexcept
+int32_t game_world::load_from_buffer(const char *buffer, game_character &character, game_inventory &inventory) noexcept
 {
     json_group *groups;
     int32_t restore_result;
     int32_t parse_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::load_from_buffer");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::load_from_buffer");
     if (buffer == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -867,13 +867,13 @@ int32_t ft_world::load_from_buffer(const char *buffer, ft_character &character, 
     return (restore_result);
 }
 
-int32_t ft_world::plan_route(const ft_map3d &grid,
+int32_t game_world::plan_route(const game_map3d &grid,
     ft_size_t start_x, ft_size_t start_y, ft_size_t start_z,
     ft_size_t goal_x, ft_size_t goal_y, ft_size_t goal_z,
-    ft_vector<ft_path_step> &path) const noexcept
+    ft_vector<game_path_step> &path) const noexcept
 {
-    ft_pathfinding finder;
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_world::plan_route");
+    game_pathfinding finder;
+    errno_abort_if_uninitialised(this->_initialised_state, "game_world::plan_route");
     if (finder.astar_grid(grid, start_x, start_y, start_z,
             goal_x, goal_y, goal_z, path) != FT_ERR_SUCCESS)
     {
@@ -884,29 +884,29 @@ int32_t ft_world::plan_route(const ft_map3d &grid,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_world::get_error() const noexcept
+int32_t game_world::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_world::get_error");
-    return (ft_world::_last_error);
+            "game_world::get_error");
+    return (game_world::_last_error);
 }
 
-const char *ft_world::get_error_str() const noexcept
+const char *game_world::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_world::get_error_str");
-    return (ft_strerror(ft_world::_last_error));
+            "game_world::get_error_str");
+    return (ft_strerror(game_world::_last_error));
 }
 
-int32_t ft_world::set_error(int32_t error_code) noexcept
+uint32_t game_world::set_error(uint32_t error_code) noexcept
 {
-    ft_world::_last_error = error_code;
+    game_world::_last_error = error_code;
     return (error_code);
 }
 
-ft_bool ft_world::propagate_registry_state_error() const noexcept
+ft_bool game_world::propagate_registry_state_error() const noexcept
 {
     if (!this->_world_registry)
     {
@@ -916,7 +916,7 @@ ft_bool ft_world::propagate_registry_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_replay_state_error() const noexcept
+ft_bool game_world::propagate_replay_state_error() const noexcept
 {
     if (!this->_replay_session)
     {
@@ -926,7 +926,7 @@ ft_bool ft_world::propagate_replay_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_economy_state_error() const noexcept
+ft_bool game_world::propagate_economy_state_error() const noexcept
 {
     if (!this->_economy_table)
     {
@@ -936,7 +936,7 @@ ft_bool ft_world::propagate_economy_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_crafting_state_error() const noexcept
+ft_bool game_world::propagate_crafting_state_error() const noexcept
 {
     if (!this->_crafting)
     {
@@ -954,7 +954,7 @@ ft_bool ft_world::propagate_crafting_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_dialogue_state_error() const noexcept
+ft_bool game_world::propagate_dialogue_state_error() const noexcept
 {
     if (!this->_dialogue_table)
     {
@@ -964,7 +964,7 @@ ft_bool ft_world::propagate_dialogue_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_region_state_error() const noexcept
+ft_bool game_world::propagate_region_state_error() const noexcept
 {
     if (!this->_world_region)
     {
@@ -974,7 +974,7 @@ ft_bool ft_world::propagate_region_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_quest_state_error() const noexcept
+ft_bool game_world::propagate_quest_state_error() const noexcept
 {
     if (!this->_quest)
     {
@@ -984,7 +984,7 @@ ft_bool ft_world::propagate_quest_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_vendor_profile_state_error() const noexcept
+ft_bool game_world::propagate_vendor_profile_state_error() const noexcept
 {
     if (!this->_vendor_profile)
     {
@@ -994,7 +994,7 @@ ft_bool ft_world::propagate_vendor_profile_state_error() const noexcept
     return (FT_FALSE);
 }
 
-ft_bool ft_world::propagate_upgrade_state_error() const noexcept
+ft_bool game_world::propagate_upgrade_state_error() const noexcept
 {
     if (!this->_upgrade)
     {
@@ -1003,8 +1003,8 @@ ft_bool ft_world::propagate_upgrade_state_error() const noexcept
     }
     return (FT_FALSE);
 }
-json_group *ft_world::build_snapshot_groups(const ft_character &character,
-    const ft_inventory &inventory, int32_t &error_code) const noexcept
+json_group *game_world::build_snapshot_groups(const game_character &character,
+    const game_inventory &inventory, int32_t &error_code) const noexcept
 {
     json_group *groups;
     json_group *event_group;
@@ -1062,8 +1062,8 @@ json_group *ft_world::build_snapshot_groups(const ft_character &character,
     return (groups);
 }
 
-int32_t ft_world::restore_from_groups(json_group *groups, ft_character &character,
-    ft_inventory &inventory) noexcept
+int32_t game_world::restore_from_groups(json_group *groups, game_character &character,
+    game_inventory &inventory) noexcept
 {
     json_group *event_group;
     json_group *character_group;
@@ -1098,7 +1098,7 @@ int32_t ft_world::restore_from_groups(json_group *groups, ft_character &characte
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->get_error());
     }
-    ft_vector<ft_sharedptr<ft_event> > scheduled_events;
+    ft_vector<ft_sharedptr<game_event> > scheduled_events;
     this->_event_scheduler->dump_events(scheduled_events);
     if (this->propagate_scheduler_state_error() == FT_TRUE)
         return (this->get_error());
@@ -1112,7 +1112,7 @@ int32_t ft_world::restore_from_groups(json_group *groups, ft_character &characte
     event_count = scheduled_events.size();
     while (event_index < event_count)
     {
-        ft_sharedptr<ft_event> &scheduled_event = scheduled_events[event_index];
+        ft_sharedptr<game_event> &scheduled_event = scheduled_events[event_index];
 
         scheduled_event->set_callback(get_callback_by_id(scheduled_event->get_id()));
         this->_event_scheduler->schedule_event(scheduled_event);

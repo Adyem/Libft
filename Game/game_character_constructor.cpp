@@ -4,9 +4,9 @@
 #include "../PThread/pthread.hpp"
 #include <new>
 
-thread_local int32_t ft_character::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_character::_last_error = FT_ERR_SUCCESS;
 
-ft_bool ft_character::handle_component_error(int32_t error) noexcept
+ft_bool game_character::handle_component_error(int32_t error) noexcept
 {
     if (error == FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -14,7 +14,7 @@ ft_bool ft_character::handle_component_error(int32_t error) noexcept
     return (FT_TRUE);
 }
 
-ft_bool ft_character::check_internal_errors() noexcept
+ft_bool game_character::check_internal_errors() noexcept
 {
     if (this->handle_component_error(this->_equipment.get_error()) == FT_TRUE)
         return (FT_TRUE);
@@ -35,7 +35,7 @@ ft_bool ft_character::check_internal_errors() noexcept
     return (FT_FALSE);
 }
 
-ft_character::ft_character() noexcept
+game_character::game_character() noexcept
     : _hit_points(0), _physical_armor(0), _magic_armor(0),
       _current_physical_armor(0), _current_magic_armor(0),
       _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0),
@@ -51,7 +51,7 @@ ft_character::ft_character() noexcept
     return ;
 }
 
-ft_character::ft_character(const ft_character &other) noexcept
+game_character::game_character(const game_character &other) noexcept
     : _hit_points(0), _physical_armor(0), _magic_armor(0),
       _current_physical_armor(0), _current_magic_armor(0),
       _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0),
@@ -67,12 +67,12 @@ ft_character::ft_character(const ft_character &other) noexcept
     int32_t level_count;
     int32_t level_index;
     int32_t transfer_error;
-    ft_sharedptr<ft_item> equipped_item;
+    ft_sharedptr<game_item> equipped_item;
 
     this->set_error(FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_character::ft_character(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_character::game_character(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -263,7 +263,7 @@ ft_character::ft_character(const ft_character &other) noexcept
     return ;
 }
 
-ft_character::ft_character(ft_character &&other) noexcept
+game_character::game_character(game_character &&other) noexcept
     : _hit_points(0), _physical_armor(0), _magic_armor(0),
       _current_physical_armor(0), _current_magic_armor(0),
       _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0),
@@ -280,7 +280,7 @@ ft_character::ft_character(ft_character &&other) noexcept
     this->set_error(FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_character::ft_character(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_character::game_character(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -301,7 +301,7 @@ ft_character::ft_character(ft_character &&other) noexcept
     return ;
 }
 
-int32_t ft_character::initialize() noexcept
+int32_t game_character::initialize() noexcept
 {
     int32_t initialize_error;
     ft_bool fire_initialised;
@@ -316,7 +316,7 @@ int32_t ft_character::initialize() noexcept
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_character::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "game_character::initialize",
             "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -608,13 +608,13 @@ int32_t ft_character::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-ft_character::~ft_character() noexcept
+game_character::~game_character() noexcept
 {
     (void)this->destroy();
     return ;
 }
 
-int32_t ft_character::destroy() noexcept
+int32_t game_character::destroy() noexcept
 {
     int32_t first_error;
     int32_t current_error;
@@ -684,7 +684,7 @@ int32_t ft_character::destroy() noexcept
     return (first_error);
 }
 
-int32_t ft_character::move(ft_character &other) noexcept
+int32_t game_character::move(game_character &other) noexcept
 {
     int32_t destroy_error;
     int32_t initialize_error;
@@ -698,7 +698,7 @@ int32_t ft_character::move(ft_character &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_character::move",
+        errno_abort_lifecycle(other._initialised_state, "game_character::move",
             "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -879,7 +879,7 @@ int32_t ft_character::move(ft_character &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_character::enable_thread_safety() noexcept
+int32_t game_character::enable_thread_safety() noexcept
 {
     int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
@@ -899,7 +899,7 @@ int32_t ft_character::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_character::disable_thread_safety() noexcept
+int32_t game_character::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
@@ -913,7 +913,7 @@ int32_t ft_character::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_character::is_thread_safe() const noexcept
+ft_bool game_character::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }

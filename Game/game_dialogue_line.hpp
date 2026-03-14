@@ -8,7 +8,7 @@
 #include "../PThread/mutex.hpp"
 #include <cstdint>
 
-class ft_dialogue_line
+class game_dialogue_line
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -21,25 +21,25 @@ class ft_dialogue_line
         ft_vector<int32_t> _next_line_ids;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_dialogue_line() noexcept;
-        virtual ~ft_dialogue_line() noexcept;
-        ft_dialogue_line(const ft_dialogue_line &other) noexcept;
-        ft_dialogue_line &operator=(const ft_dialogue_line &other) noexcept = delete;
-        ft_dialogue_line(ft_dialogue_line &&other) noexcept;
-        ft_dialogue_line &operator=(ft_dialogue_line &&other) noexcept = delete;
+        game_dialogue_line() noexcept;
+        virtual ~game_dialogue_line() noexcept;
+        game_dialogue_line(const game_dialogue_line &other) noexcept;
+        game_dialogue_line &operator=(const game_dialogue_line &other) noexcept = delete;
+        game_dialogue_line(game_dialogue_line &&other) noexcept;
+        game_dialogue_line &operator=(game_dialogue_line &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
         int32_t initialize(int32_t line_id, const ft_string &speaker,
             const ft_string &text, const ft_vector<int32_t> &next_line_ids) noexcept;
         int32_t destroy() noexcept;
-        int32_t move(ft_dialogue_line &other) noexcept;
+        int32_t move(game_dialogue_line &other) noexcept;
 
         int32_t get_line_id() const noexcept;
         void set_line_id(int32_t line_id) noexcept;

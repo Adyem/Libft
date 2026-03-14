@@ -6,9 +6,9 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_inventory::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_inventory::_last_error = FT_ERR_SUCCESS;
 
-ft_inventory::ft_inventory() noexcept
+game_inventory::game_inventory() noexcept
     : _items(), _capacity(0), _used_slots(0), _weight_limit(0),
       _current_weight(0), _next_slot(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -17,7 +17,7 @@ ft_inventory::ft_inventory() noexcept
     return ;
 }
 
-ft_inventory::ft_inventory(const ft_inventory &other) noexcept
+game_inventory::game_inventory(const game_inventory &other) noexcept
     : _items(), _capacity(0), _used_slots(0), _weight_limit(0),
       _current_weight(0), _next_slot(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -26,7 +26,7 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_inventory::ft_inventory(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_inventory::game_inventory(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -44,7 +44,7 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
     return ;
 }
 
-ft_inventory::ft_inventory(ft_inventory &&other) noexcept
+game_inventory::game_inventory(game_inventory &&other) noexcept
     : _items(), _capacity(0), _used_slots(0), _weight_limit(0),
       _current_weight(0), _next_slot(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -53,7 +53,7 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_inventory::ft_inventory(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_inventory::game_inventory(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -71,7 +71,7 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
     return ;
 }
 
-ft_inventory::~ft_inventory() noexcept
+game_inventory::~game_inventory() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
@@ -80,11 +80,11 @@ ft_inventory::~ft_inventory() noexcept
     return ;
 }
 
-int32_t ft_inventory::initialize() noexcept
+int32_t game_inventory::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_inventory::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_inventory::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     const int32_t destroy_error = this->_items.destroy();
@@ -107,7 +107,7 @@ int32_t ft_inventory::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_inventory::initialize(ft_size_t capacity, int32_t weight_limit) noexcept
+int32_t game_inventory::initialize(ft_size_t capacity, int32_t weight_limit) noexcept
 {
     int32_t initialize_error;
 
@@ -120,17 +120,17 @@ int32_t ft_inventory::initialize(ft_size_t capacity, int32_t weight_limit) noexc
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_inventory::initialize(const ft_inventory &other) noexcept
+int32_t game_inventory::initialize(const game_inventory &other) noexcept
 {
     int32_t initialize_error;
     ft_size_t count;
     ft_size_t index;
-    const Pair<int32_t, ft_sharedptr<ft_item> > *entry;
-    const Pair<int32_t, ft_sharedptr<ft_item> > *entry_end;
+    const Pair<int32_t, ft_sharedptr<game_item> > *entry;
+    const Pair<int32_t, ft_sharedptr<game_item> > *entry_end;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_inventory::initialize(copy)", "source object is uninitialised");
+        errno_abort_lifecycle(other._initialised_state, "game_inventory::initialize(copy)", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -176,12 +176,12 @@ int32_t ft_inventory::initialize(const ft_inventory &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_inventory::initialize(ft_inventory &&other) noexcept
+int32_t game_inventory::initialize(game_inventory &&other) noexcept
 {
     return (this->move(other));
 }
 
-int32_t ft_inventory::move(ft_inventory &other) noexcept
+int32_t game_inventory::move(game_inventory &other) noexcept
 {
     int32_t initialize_error;
 
@@ -189,7 +189,7 @@ int32_t ft_inventory::move(ft_inventory &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_inventory::move", "source object is uninitialised");
+        errno_abort_lifecycle(other._initialised_state, "game_inventory::move", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -202,7 +202,7 @@ int32_t ft_inventory::move(ft_inventory &other) noexcept
         this->set_error(other.get_error());
         return (FT_ERR_SUCCESS);
     }
-    initialize_error = this->initialize(static_cast<const ft_inventory &>(other));
+    initialize_error = this->initialize(static_cast<const game_inventory &>(other));
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
     (void)other.destroy();
@@ -210,7 +210,7 @@ int32_t ft_inventory::move(ft_inventory &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_inventory::destroy() noexcept
+int32_t game_inventory::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -226,12 +226,12 @@ int32_t ft_inventory::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_inventory::enable_thread_safety() noexcept
+int32_t game_inventory::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -255,7 +255,7 @@ int32_t ft_inventory::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_inventory::disable_thread_safety() noexcept
+int32_t game_inventory::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -271,12 +271,12 @@ int32_t ft_inventory::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_inventory::is_thread_safe() const noexcept
+ft_bool game_inventory::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_inventory::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_inventory::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -294,7 +294,7 @@ int32_t ft_inventory::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_inventory::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_inventory::unlock_internal(ft_bool lock_acquired) const noexcept
 {
     if (lock_acquired == FT_FALSE)
     {
@@ -305,48 +305,47 @@ int32_t ft_inventory::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_inventory::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_inventory::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
 }
 
-void ft_inventory::unlock(ft_bool lock_acquired) const noexcept
+void game_inventory::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::unlock");
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::unlock");
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-ft_map<int32_t, ft_sharedptr<ft_item> > &ft_inventory::get_items() noexcept
+ft_map<int32_t, ft_sharedptr<game_item> > &game_inventory::get_items() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::get_items");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::get_items");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_items);
 }
 
-const ft_map<int32_t, ft_sharedptr<ft_item> > &ft_inventory::get_items() const noexcept
+const ft_map<int32_t, ft_sharedptr<game_item> > &game_inventory::get_items() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::get_items const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::get_items const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_items);
 }
 
-ft_size_t ft_inventory::get_capacity() const noexcept
+ft_size_t game_inventory::get_capacity() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::get_capacity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::get_capacity");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_capacity);
 }
 
-void ft_inventory::resize(ft_size_t capacity) noexcept
+void game_inventory::resize(ft_size_t capacity) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::resize");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::resize");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -354,23 +353,22 @@ void ft_inventory::resize(ft_size_t capacity) noexcept
         return ;
     }
     this->_capacity = capacity;
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-ft_size_t ft_inventory::get_used() const noexcept
+ft_size_t game_inventory::get_used() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::get_used");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::get_used");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_used_slots);
 }
 
-void ft_inventory::set_used_slots(ft_size_t used) noexcept
+void game_inventory::set_used_slots(ft_size_t used) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::set_used_slots");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::set_used_slots");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -378,14 +376,13 @@ void ft_inventory::set_used_slots(ft_size_t used) noexcept
         return ;
     }
     this->_used_slots = used;
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-ft_bool ft_inventory::is_full() const noexcept
+ft_bool game_inventory::is_full() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::is_full");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::is_full");
     ft_bool is_full_result;
 
 #if USE_INVENTORY_SLOTS
@@ -403,18 +400,18 @@ ft_bool ft_inventory::is_full() const noexcept
     return (is_full_result);
 }
 
-int32_t ft_inventory::get_weight_limit() const noexcept
+int32_t game_inventory::get_weight_limit() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::get_weight_limit");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::get_weight_limit");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_weight_limit);
 }
 
-void ft_inventory::set_weight_limit(int32_t limit) noexcept
+void game_inventory::set_weight_limit(int32_t limit) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::set_weight_limit");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::set_weight_limit");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -422,23 +419,22 @@ void ft_inventory::set_weight_limit(int32_t limit) noexcept
         return ;
     }
     this->_weight_limit = limit;
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int32_t ft_inventory::get_current_weight() const noexcept
+int32_t game_inventory::get_current_weight() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::get_current_weight");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::get_current_weight");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_current_weight);
 }
 
-void ft_inventory::set_current_weight(int32_t weight) noexcept
+void game_inventory::set_current_weight(int32_t weight) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::set_current_weight");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::set_current_weight");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -446,26 +442,25 @@ void ft_inventory::set_current_weight(int32_t weight) noexcept
         return ;
     }
     this->_current_weight = weight;
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-ft_bool ft_inventory::check_item_valid(const ft_sharedptr<ft_item> &item) const noexcept
+ft_bool game_inventory::check_item_valid(const ft_sharedptr<game_item> &item) const noexcept
 {
     if (!item)
         return (FT_FALSE);
     return (FT_TRUE);
 }
 
-int32_t ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
+int32_t game_inventory::add_item(const ft_sharedptr<game_item> &item) noexcept
 {
     int32_t remaining;
     int32_t item_id;
-    Pair<int32_t, ft_sharedptr<ft_item> > *item_pointer;
-    Pair<int32_t, ft_sharedptr<ft_item> > *item_end;
+    Pair<int32_t, ft_sharedptr<game_item> > *item_pointer;
+    Pair<int32_t, ft_sharedptr<game_item> > *item_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::add_item");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::add_item");
     if (this->check_item_valid(item) == FT_FALSE)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -521,7 +516,7 @@ int32_t ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
             return (FT_ERR_FULL);
         }
 #endif
-        ft_sharedptr<ft_item> new_item(new ft_item());
+        ft_sharedptr<game_item> new_item(new game_item());
         int32_t amount_to_add;
 
         if (!new_item)
@@ -552,11 +547,11 @@ int32_t ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_inventory::remove_item(int32_t slot) noexcept
+void game_inventory::remove_item(int32_t slot) noexcept
 {
-    Pair<int32_t, ft_sharedptr<ft_item> > *entry;
+    Pair<int32_t, ft_sharedptr<game_item> > *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::remove_item");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::remove_item");
     entry = this->_items.find(slot);
     if (entry != this->_items.end() && entry->value)
     {
@@ -570,13 +565,13 @@ void ft_inventory::remove_item(int32_t slot) noexcept
     return ;
 }
 
-int32_t ft_inventory::count_item(int32_t item_id) const noexcept
+int32_t game_inventory::count_item(int32_t item_id) const noexcept
 {
     int32_t total;
-    const Pair<int32_t, ft_sharedptr<ft_item> > *item_pointer;
-    const Pair<int32_t, ft_sharedptr<ft_item> > *item_end;
+    const Pair<int32_t, ft_sharedptr<game_item> > *item_pointer;
+    const Pair<int32_t, ft_sharedptr<game_item> > *item_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::count_item");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::count_item");
     total = 0;
     item_pointer = this->_items.end() - this->_items.size();
     item_end = this->_items.end();
@@ -593,21 +588,21 @@ int32_t ft_inventory::count_item(int32_t item_id) const noexcept
     return (total);
 }
 
-ft_bool ft_inventory::has_item(int32_t item_id) const noexcept
+ft_bool game_inventory::has_item(int32_t item_id) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::has_item");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::has_item");
     const ft_bool result = this->count_item(item_id) > 0;
     this->set_error(FT_ERR_SUCCESS);
     return (result);
 }
 
-int32_t ft_inventory::count_rarity(int32_t rarity) const noexcept
+int32_t game_inventory::count_rarity(int32_t rarity) const noexcept
 {
     int32_t total;
-    const Pair<int32_t, ft_sharedptr<ft_item> > *item_pointer;
-    const Pair<int32_t, ft_sharedptr<ft_item> > *item_end;
+    const Pair<int32_t, ft_sharedptr<game_item> > *item_pointer;
+    const Pair<int32_t, ft_sharedptr<game_item> > *item_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::count_rarity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::count_rarity");
     total = 0;
     item_pointer = this->_items.end() - this->_items.size();
     item_end = this->_items.end();
@@ -624,32 +619,32 @@ int32_t ft_inventory::count_rarity(int32_t rarity) const noexcept
     return (total);
 }
 
-ft_bool ft_inventory::has_rarity(int32_t rarity) const noexcept
+ft_bool game_inventory::has_rarity(int32_t rarity) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_inventory::has_rarity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_inventory::has_rarity");
     const ft_bool result = this->count_rarity(rarity) > 0;
     this->set_error(FT_ERR_SUCCESS);
     return (result);
 }
 
-int32_t ft_inventory::set_error(int32_t error_code) noexcept
+uint32_t game_inventory::set_error(uint32_t error_code) noexcept
 {
-    ft_inventory::_last_error = error_code;
+    game_inventory::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_inventory::get_error() const noexcept
+int32_t game_inventory::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_inventory::get_error");
-    return (ft_inventory::_last_error);
+            "game_inventory::get_error");
+    return (static_cast<int32_t>(game_inventory::_last_error));
 }
 
-const char *ft_inventory::get_error_str() const noexcept
+const char *game_inventory::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_inventory::get_error_str");
+            "game_inventory::get_error_str");
     return (ft_strerror(this->get_error()));
 }

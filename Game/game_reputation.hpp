@@ -7,7 +7,7 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_reputation
+class game_reputation
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -19,25 +19,25 @@ class ft_reputation
         int32_t               _total_rep;
         int32_t               _current_rep;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local int32_t    _last_error;
+        static thread_local uint32_t _last_error;
         uint8_t           _initialised_state;
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_reputation() noexcept;
-        ft_reputation(const ft_reputation &other) noexcept;
-        ft_reputation(ft_reputation &&other) noexcept;
-        virtual ~ft_reputation() noexcept;
-        ft_reputation &operator=(const ft_reputation &other) = delete;
-        ft_reputation &operator=(ft_reputation &&other) = delete;
+        game_reputation() noexcept;
+        game_reputation(const game_reputation &other) noexcept;
+        game_reputation(game_reputation &&other) noexcept;
+        virtual ~game_reputation() noexcept;
+        game_reputation &operator=(const game_reputation &other) = delete;
+        game_reputation &operator=(game_reputation &&other) = delete;
 
         int32_t initialize() noexcept;
         int32_t initialize(const ft_map<int32_t, int32_t> &milestones, int32_t total = 0) noexcept;
-        int32_t initialize(const ft_reputation &other) noexcept;
-        int32_t initialize(ft_reputation &&other) noexcept;
-        int32_t move(ft_reputation &other) noexcept;
+        int32_t initialize(const game_reputation &other) noexcept;
+        int32_t initialize(game_reputation &&other) noexcept;
+        int32_t move(game_reputation &other) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;

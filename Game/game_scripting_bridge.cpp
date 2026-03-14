@@ -39,16 +39,16 @@ static void trim_whitespace(ft_string &target) noexcept
     return ;
 }
 
-thread_local int32_t ft_game_script_context::_last_error = FT_ERR_SUCCESS;
-thread_local int32_t ft_game_script_bridge::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_script_context::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_script_bridge::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_game_script_context::set_error(int32_t error_code) noexcept
+uint32_t game_script_context::set_error(uint32_t error_code) noexcept
 {
-    ft_game_script_context::_last_error = error_code;
+    game_script_context::_last_error = error_code;
     return (error_code);
 }
 
-ft_game_script_context::ft_game_script_context() noexcept
+game_script_context::game_script_context() noexcept
     : _state(ft_nullptr), _world(), _variables(),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -56,7 +56,7 @@ ft_game_script_context::ft_game_script_context() noexcept
     return ;
 }
 
-ft_game_script_context::ft_game_script_context(const ft_game_script_context &other) noexcept
+game_script_context::game_script_context(const game_script_context &other) noexcept
     : _state(ft_nullptr), _world(), _variables(),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -64,7 +64,7 @@ ft_game_script_context::ft_game_script_context(const ft_game_script_context &oth
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_game_script_context::ft_game_script_context(copy)",
+            "game_script_context::game_script_context(copy)",
             "source object is not initialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
@@ -72,7 +72,7 @@ ft_game_script_context::ft_game_script_context(const ft_game_script_context &oth
     return ;
 }
 
-ft_game_script_context::ft_game_script_context(ft_game_script_context &&other) noexcept
+game_script_context::game_script_context(game_script_context &&other) noexcept
     : _state(ft_nullptr), _world(), _variables(),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -80,7 +80,7 @@ ft_game_script_context::ft_game_script_context(ft_game_script_context &&other) n
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_game_script_context::ft_game_script_context(move)",
+            "game_script_context::game_script_context(move)",
             "source object is not initialised");
     }
     if (this->move(other) != FT_ERR_SUCCESS)
@@ -88,7 +88,7 @@ ft_game_script_context::ft_game_script_context(ft_game_script_context &&other) n
     return ;
 }
 
-ft_game_script_context::~ft_game_script_context() noexcept
+game_script_context::~game_script_context() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
@@ -97,11 +97,11 @@ ft_game_script_context::~ft_game_script_context() noexcept
     return ;
 }
 
-int32_t ft_game_script_context::initialize() noexcept
+int32_t game_script_context::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_game_script_context::initialize", "already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_script_context::initialize", "already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -113,18 +113,18 @@ int32_t ft_game_script_context::initialize() noexcept
         return (variable_error);
     }
     this->_state = ft_nullptr;
-    this->_world = ft_sharedptr<ft_world>();
+    this->_world = ft_sharedptr<game_world>();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_context::initialize(ft_game_state *state,
-    const ft_sharedptr<ft_world> &world) noexcept
+int32_t game_script_context::initialize(game_state *state,
+    const ft_sharedptr<game_world> &world) noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_game_script_context::initialize", "already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_script_context::initialize", "already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -142,19 +142,19 @@ int32_t ft_game_script_context::initialize(ft_game_state *state,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_context::initialize(const ft_game_script_context &other) noexcept
+int32_t game_script_context::initialize(const game_script_context &other) noexcept
 {
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_game_script_context::initialize", "source object is not initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_script_context::initialize", "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_game_script_context::initialize", "already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_script_context::initialize", "already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -180,12 +180,12 @@ int32_t ft_game_script_context::initialize(const ft_game_script_context &other) 
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_context::move(ft_game_script_context &other) noexcept
+int32_t game_script_context::move(game_script_context &other) noexcept
 {
-    return (this->initialize(static_cast<const ft_game_script_context &>(other)));
+    return (this->initialize(static_cast<const game_script_context &>(other)));
 }
 
-int32_t ft_game_script_context::destroy() noexcept
+int32_t game_script_context::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -193,42 +193,42 @@ int32_t ft_game_script_context::destroy() noexcept
         return (FT_ERR_SUCCESS);
     }
     this->_state = ft_nullptr;
-    this->_world = ft_sharedptr<ft_world>();
+    this->_world = ft_sharedptr<game_world>();
     int32_t destroy_error = this->_variables.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(destroy_error);
     return (destroy_error);
 }
 
-ft_game_state *ft_game_script_context::get_state() const noexcept
+game_state *game_script_context::get_state() const noexcept
 {
     return (this->_state);
 }
 
-const ft_sharedptr<ft_world> &ft_game_script_context::get_world() const noexcept
+const ft_sharedptr<game_world> &game_script_context::get_world() const noexcept
 {
     return (this->_world);
 }
 
-void ft_game_script_context::set_state(ft_game_state *state) noexcept
+void game_script_context::set_state(game_state *state) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_game_script_context::set_state");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::set_state");
     this->_state = state;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_game_script_context::set_world(const ft_sharedptr<ft_world> &world) noexcept
+void game_script_context::set_world(const ft_sharedptr<game_world> &world) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_game_script_context::set_world");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::set_world");
     this->_world = world;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_game_script_context::set_variable(const ft_string &key, const ft_string &value) noexcept
+void game_script_context::set_variable(const ft_string &key, const ft_string &value) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_game_script_context::set_variable");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::set_variable");
     if (this->_state)
     {
         this->_state->set_variable(key, value);
@@ -249,9 +249,9 @@ void ft_game_script_context::set_variable(const ft_string &key, const ft_string 
     return ;
 }
 
-const ft_string *ft_game_script_context::get_variable(const ft_string &key) const noexcept
+const ft_string *game_script_context::get_variable(const ft_string &key) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_game_script_context::get_variable");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::get_variable");
     if (this->_state)
     {
         const ft_string *value;
@@ -272,9 +272,9 @@ const ft_string *ft_game_script_context::get_variable(const ft_string &key) cons
     return (&entry->value);
 }
 
-void ft_game_script_context::remove_variable(const ft_string &key) noexcept
+void game_script_context::remove_variable(const ft_string &key) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_game_script_context::remove_variable");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::remove_variable");
     if (this->_state)
     {
         this->_state->remove_variable(key);
@@ -286,9 +286,9 @@ void ft_game_script_context::remove_variable(const ft_string &key) noexcept
     return ;
 }
 
-void ft_game_script_context::clear_variables() noexcept
+void game_script_context::clear_variables() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_game_script_context::clear_variables");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::clear_variables");
     if (this->_state)
     {
         this->_state->clear_variables();
@@ -300,29 +300,29 @@ void ft_game_script_context::clear_variables() noexcept
     return ;
 }
 
-int32_t ft_game_script_context::get_error() const noexcept
+int32_t game_script_context::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_game_script_context::get_error");
-    return (ft_game_script_context::_last_error);
+            "game_script_context::get_error");
+    return (game_script_context::_last_error);
 }
 
-const char *ft_game_script_context::get_error_str() const noexcept
+const char *game_script_context::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_game_script_context::get_error_str");
-    return (ft_strerror(ft_game_script_context::_last_error));
+            "game_script_context::get_error_str");
+    return (ft_strerror(game_script_context::_last_error));
 }
 
-int32_t ft_game_script_bridge::set_error(int32_t error_code) noexcept
+uint32_t game_script_bridge::set_error(uint32_t error_code) noexcept
 {
-    ft_game_script_bridge::_last_error = error_code;
+    game_script_bridge::_last_error = error_code;
     return (error_code);
 }
 
-ft_bool ft_game_script_bridge::is_supported_language(const ft_string &language) noexcept
+ft_bool game_script_bridge::is_supported_language(const ft_string &language) noexcept
 {
     ft_string normalized;
     char *data;
@@ -338,7 +338,7 @@ ft_bool ft_game_script_bridge::is_supported_language(const ft_string &language) 
     return (FT_FALSE);
 }
 
-ft_game_script_bridge::ft_game_script_bridge() noexcept
+game_script_bridge::game_script_bridge() noexcept
     : _world(), _callbacks(), _language(), _max_operations(32),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED),
       _mutex(ft_nullptr)
@@ -347,7 +347,7 @@ ft_game_script_bridge::ft_game_script_bridge() noexcept
     return ;
 }
 
-ft_game_script_bridge::ft_game_script_bridge(const ft_game_script_bridge &other) noexcept
+game_script_bridge::game_script_bridge(const game_script_bridge &other) noexcept
     : _world(), _callbacks(), _language(), _max_operations(32),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED),
       _mutex(ft_nullptr)
@@ -356,7 +356,7 @@ ft_game_script_bridge::ft_game_script_bridge(const ft_game_script_bridge &other)
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_game_script_bridge::ft_game_script_bridge(copy)",
+            "game_script_bridge::game_script_bridge(copy)",
             "source object is not initialised");
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
@@ -376,7 +376,7 @@ ft_game_script_bridge::ft_game_script_bridge(const ft_game_script_bridge &other)
     return ;
 }
 
-ft_game_script_bridge::ft_game_script_bridge(ft_game_script_bridge &&other) noexcept
+game_script_bridge::game_script_bridge(game_script_bridge &&other) noexcept
     : _world(), _callbacks(), _language(), _max_operations(32),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED),
       _mutex(ft_nullptr)
@@ -385,7 +385,7 @@ ft_game_script_bridge::ft_game_script_bridge(ft_game_script_bridge &&other) noex
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_game_script_bridge::ft_game_script_bridge(move)",
+            "game_script_bridge::game_script_bridge(move)",
             "source object is not initialised");
     }
     if (this->move(other) != FT_ERR_SUCCESS)
@@ -393,12 +393,12 @@ ft_game_script_bridge::ft_game_script_bridge(ft_game_script_bridge &&other) noex
     return ;
 }
 
-int32_t ft_game_script_bridge::initialize() noexcept
+int32_t game_script_bridge::initialize() noexcept
 {
-    return (this->initialize(ft_sharedptr<ft_world>(), "lua"));
+    return (this->initialize(ft_sharedptr<game_world>(), "lua"));
 }
 
-int32_t ft_game_script_bridge::initialize(const ft_sharedptr<ft_world> &world,
+int32_t game_script_bridge::initialize(const ft_sharedptr<game_world> &world,
     const char *language) noexcept
 {
     int32_t map_error;
@@ -406,7 +406,7 @@ int32_t ft_game_script_bridge::initialize(const ft_sharedptr<ft_world> &world,
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state,
-            "ft_game_script_bridge::initialize",
+            "game_script_bridge::initialize",
             "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -423,7 +423,7 @@ int32_t ft_game_script_bridge::initialize(const ft_sharedptr<ft_world> &world,
         this->_language = language;
     else
         this->_language = "lua";
-    if (ft_game_script_bridge::is_supported_language(this->_language) == FT_FALSE)
+    if (game_script_bridge::is_supported_language(this->_language) == FT_FALSE)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -434,13 +434,13 @@ int32_t ft_game_script_bridge::initialize(const ft_sharedptr<ft_world> &world,
     return (FT_ERR_SUCCESS);
 }
 
-ft_game_script_bridge::~ft_game_script_bridge() noexcept
+game_script_bridge::~game_script_bridge() noexcept
 {
     (void)this->destroy();
     return ;
 }
 
-int32_t ft_game_script_bridge::destroy() noexcept
+int32_t game_script_bridge::destroy() noexcept
 {
     int32_t first_error;
     int32_t current_error;
@@ -457,7 +457,7 @@ int32_t ft_game_script_bridge::destroy() noexcept
     current_error = this->_callbacks.destroy();
     if (first_error == FT_ERR_SUCCESS && current_error != FT_ERR_SUCCESS)
         first_error = current_error;
-    this->_world = ft_sharedptr<ft_world>();
+    this->_world = ft_sharedptr<game_world>();
     this->_language.clear();
     this->_max_operations = 32;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -465,13 +465,13 @@ int32_t ft_game_script_bridge::destroy() noexcept
     return (first_error);
 }
 
-int32_t ft_game_script_bridge::move(ft_game_script_bridge &other) noexcept
+int32_t game_script_bridge::move(game_script_bridge &other) noexcept
 {
     int32_t destroy_error;
     int32_t initialize_error;
-    Pair<ft_string, ft_function<int32_t(ft_game_script_context &,
+    Pair<ft_string, ft_function<int32_t(game_script_context &,
         const ft_vector<ft_string> &)> > *entry;
-    Pair<ft_string, ft_function<int32_t(ft_game_script_context &,
+    Pair<ft_string, ft_function<int32_t(game_script_context &,
         const ft_vector<ft_string> &)> > *entry_end;
 
     if (&other == this)
@@ -479,7 +479,7 @@ int32_t ft_game_script_bridge::move(ft_game_script_bridge &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_game_script_bridge::move", "source object is not initialised");
+            "game_script_bridge::move", "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -515,7 +515,7 @@ int32_t ft_game_script_bridge::move(ft_game_script_bridge &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_script_bridge::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -529,7 +529,7 @@ int32_t ft_game_script_bridge::lock_internal(ft_bool *lock_acquired) const noexc
     return (FT_ERR_SUCCESS);
 }
 
-void ft_game_script_bridge::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_script_bridge::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -538,7 +538,7 @@ void ft_game_script_bridge::unlock_internal(ft_bool lock_acquired) const noexcep
     return ;
 }
 
-void ft_game_script_bridge::set_language(const char *language) noexcept
+void game_script_bridge::set_language(const char *language) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -564,7 +564,7 @@ void ft_game_script_bridge::set_language(const char *language) noexcept
         this->unlock_internal(lock_acquired);
         return ;
     }
-    if (ft_game_script_bridge::is_supported_language(candidate) == FT_FALSE)
+    if (game_script_bridge::is_supported_language(candidate) == FT_FALSE)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         this->unlock_internal(lock_acquired);
@@ -576,12 +576,12 @@ void ft_game_script_bridge::set_language(const char *language) noexcept
     return ;
 }
 
-const ft_string &ft_game_script_bridge::get_language() const noexcept
+const ft_string &game_script_bridge::get_language() const noexcept
 {
     return (this->_language);
 }
 
-void ft_game_script_bridge::set_max_operations(int32_t limit) noexcept
+void game_script_bridge::set_max_operations(int32_t limit) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -606,21 +606,21 @@ void ft_game_script_bridge::set_max_operations(int32_t limit) noexcept
     return ;
 }
 
-int32_t ft_game_script_bridge::get_max_operations() const noexcept
+int32_t game_script_bridge::get_max_operations() const noexcept
 {
     return (this->_max_operations);
 }
 
-ft_size_t ft_game_script_bridge::get_callback_count() const noexcept
+ft_size_t game_script_bridge::get_callback_count() const noexcept
 {
     return (this->_callbacks.size());
 }
 
-int32_t ft_game_script_bridge::register_function(const ft_string &name, const ft_function<int32_t(ft_game_script_context &, const ft_vector<ft_string> &)> &callback) noexcept
+int32_t game_script_bridge::register_function(const ft_string &name, const ft_function<int32_t(game_script_context &, const ft_vector<ft_string> &)> &callback) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    Pair<ft_string, ft_function<int32_t(ft_game_script_context &, const ft_vector<ft_string> &)> > *entry;
+    Pair<ft_string, ft_function<int32_t(game_script_context &, const ft_vector<ft_string> &)> > *entry;
 
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -649,7 +649,7 @@ int32_t ft_game_script_bridge::register_function(const ft_string &name, const ft
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::remove_function(const ft_string &name) noexcept
+int32_t game_script_bridge::remove_function(const ft_string &name) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -668,7 +668,7 @@ int32_t ft_game_script_bridge::remove_function(const ft_string &name) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_game_script_bridge::tokenize_line(const ft_string &line, ft_vector<ft_string> &tokens) const noexcept
+void game_script_bridge::tokenize_line(const ft_string &line, ft_vector<ft_string> &tokens) const noexcept
 {
     const char *data;
     ft_size_t length;
@@ -700,7 +700,7 @@ void ft_game_script_bridge::tokenize_line(const ft_string &line, ft_vector<ft_st
     return ;
 }
 
-int32_t ft_game_script_bridge::handle_set(ft_game_script_context &context, const ft_vector<ft_string> &tokens) noexcept
+int32_t game_script_bridge::handle_set(game_script_context &context, const ft_vector<ft_string> &tokens) noexcept
 {
     ft_string value;
     ft_size_t index;
@@ -725,7 +725,7 @@ int32_t ft_game_script_bridge::handle_set(ft_game_script_context &context, const
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::handle_unset(ft_game_script_context &context, const ft_vector<ft_string> &tokens) noexcept
+int32_t game_script_bridge::handle_unset(game_script_context &context, const ft_vector<ft_string> &tokens) noexcept
 {
     if (tokens.size() < 2)
     {
@@ -737,10 +737,10 @@ int32_t ft_game_script_bridge::handle_unset(ft_game_script_context &context, con
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::handle_call(ft_game_script_context &context, const ft_vector<ft_string> &tokens) noexcept
+int32_t game_script_bridge::handle_call(game_script_context &context, const ft_vector<ft_string> &tokens) noexcept
 {
     ft_vector<ft_string> arguments;
-    Pair<ft_string, ft_function<int32_t(ft_game_script_context &, const ft_vector<ft_string> &)> > *entry;
+    Pair<ft_string, ft_function<int32_t(game_script_context &, const ft_vector<ft_string> &)> > *entry;
     ft_size_t count;
     ft_size_t index;
     int32_t result;
@@ -779,7 +779,7 @@ int32_t ft_game_script_bridge::handle_call(ft_game_script_context &context, cons
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::execute_line(ft_game_script_context &context, const ft_string &line) noexcept
+int32_t game_script_bridge::execute_line(game_script_context &context, const ft_string &line) noexcept
 {
     ft_vector<ft_string> tokens;
     ft_string command;
@@ -805,11 +805,11 @@ int32_t ft_game_script_bridge::execute_line(ft_game_script_context &context, con
     return (FT_ERR_INVALID_ARGUMENT);
 }
 
-int32_t ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state) noexcept
+int32_t game_script_bridge::execute(const ft_string &script, game_state &state) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    ft_game_script_context context;
+    game_script_context context;
     int32_t context_init_error;
     const char *data;
     ft_size_t length;
@@ -830,7 +830,7 @@ int32_t ft_game_script_bridge::execute(const ft_string &script, ft_game_state &s
         this->unlock_internal(lock_acquired);
         return (context_init_error);
     }
-    if (ft_game_script_bridge::is_supported_language(this->_language) == FT_FALSE)
+    if (game_script_bridge::is_supported_language(this->_language) == FT_FALSE)
     {
         this->set_error(FT_ERR_CONFIGURATION);
         this->unlock_internal(lock_acquired);
@@ -892,7 +892,7 @@ int32_t ft_game_script_bridge::execute(const ft_string &script, ft_game_state &s
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, ft_vector<ft_string> &violations) noexcept
+int32_t game_script_bridge::check_sandbox_capabilities(const ft_string &script, ft_vector<ft_string> &violations) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -1007,7 +1007,7 @@ int32_t ft_game_script_bridge::check_sandbox_capabilities(const ft_string &scrip
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<ft_string> &warnings) noexcept
+int32_t game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<ft_string> &warnings) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -1078,7 +1078,7 @@ int32_t ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vect
                         else
                         {
                             ft_string callback_name;
-                            Pair<ft_string, ft_function<int32_t(ft_game_script_context &, const ft_vector<ft_string> &)> > *entry;
+                            Pair<ft_string, ft_function<int32_t(game_script_context &, const ft_vector<ft_string> &)> > *entry;
 
                             callback_name = tokens[1];
                             entry = this->_callbacks.find(callback_name);
@@ -1182,7 +1182,7 @@ int32_t ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vect
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int32_t &required_operations) noexcept
+int32_t game_script_bridge::inspect_bytecode_budget(const ft_string &script, int32_t &required_operations) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -1274,7 +1274,7 @@ int32_t ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, 
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::enable_thread_safety() noexcept
+int32_t game_script_bridge::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
@@ -1299,7 +1299,7 @@ int32_t ft_game_script_bridge::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_game_script_bridge::disable_thread_safety() noexcept
+int32_t game_script_bridge::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -1312,23 +1312,23 @@ int32_t ft_game_script_bridge::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_game_script_bridge::is_thread_safe() const noexcept
+ft_bool game_script_bridge::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_game_script_bridge::get_error() const noexcept
+int32_t game_script_bridge::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_game_script_bridge::get_error");
-    return (ft_game_script_bridge::_last_error);
+            "game_script_bridge::get_error");
+    return (game_script_bridge::_last_error);
 }
 
-const char *ft_game_script_bridge::get_error_str() const noexcept
+const char *game_script_bridge::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_game_script_bridge::get_error_str");
-    return (ft_strerror(ft_game_script_bridge::_last_error));
+            "game_script_bridge::get_error_str");
+    return (ft_strerror(game_script_bridge::_last_error));
 }

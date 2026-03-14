@@ -6,7 +6,7 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_region_definition
+class game_region_definition
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -19,26 +19,26 @@ class ft_region_definition
         int32_t         _recommended_level;
         pt_recursive_mutex   *_mutex;
         uint8_t     _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
 
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_region_definition() noexcept;
-        virtual ~ft_region_definition() noexcept;
-        ft_region_definition(const ft_region_definition &other) noexcept;
-        ft_region_definition &operator=(const ft_region_definition &other) noexcept = delete;
-        ft_region_definition(ft_region_definition &&other) noexcept;
-        ft_region_definition &operator=(ft_region_definition &&other) noexcept = delete;
+        game_region_definition() noexcept;
+        virtual ~game_region_definition() noexcept;
+        game_region_definition(const game_region_definition &other) noexcept;
+        game_region_definition &operator=(const game_region_definition &other) noexcept = delete;
+        game_region_definition(game_region_definition &&other) noexcept;
+        game_region_definition &operator=(game_region_definition &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_region_definition &other) noexcept;
-        int32_t initialize(ft_region_definition &&other) noexcept;
-        int32_t move(ft_region_definition &other) noexcept;
+        int32_t initialize(const game_region_definition &other) noexcept;
+        int32_t initialize(game_region_definition &&other) noexcept;
+        int32_t move(game_region_definition &other) noexcept;
         int32_t initialize(int32_t region_id, const ft_string &name,
             const ft_string &description, int32_t recommended_level) noexcept;
         int32_t destroy() noexcept;

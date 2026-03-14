@@ -5,62 +5,62 @@
 #include "game_crafting.hpp"
 #include <new>
 
-thread_local int32_t ft_crafting_ingredient::_last_error = FT_ERR_SUCCESS;
-thread_local int32_t ft_crafting::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_crafting_ingredient::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_crafting::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_crafting_ingredient::set_error(int32_t error_code) noexcept
+uint32_t game_crafting_ingredient::set_error(uint32_t error_code) noexcept
 {
-    ft_crafting_ingredient::_last_error = error_code;
+    game_crafting_ingredient::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_crafting_ingredient::get_error() const noexcept
+int32_t game_crafting_ingredient::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_crafting_ingredient::get_error");
-    return (ft_crafting_ingredient::_last_error);
+            "game_crafting_ingredient::get_error");
+    return (game_crafting_ingredient::_last_error);
 }
 
-const char *ft_crafting_ingredient::get_error_str() const noexcept
+const char *game_crafting_ingredient::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_crafting_ingredient::get_error_str");
+            "game_crafting_ingredient::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-int32_t ft_crafting::set_error(int32_t error_code) noexcept
+uint32_t game_crafting::set_error(uint32_t error_code) noexcept
 {
-    ft_crafting::_last_error = error_code;
+    game_crafting::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_crafting::get_error() const noexcept
+int32_t game_crafting::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_crafting::get_error");
-    return (ft_crafting::_last_error);
+            "game_crafting::get_error");
+    return (game_crafting::_last_error);
 }
 
-const char *ft_crafting::get_error_str() const noexcept
+const char *game_crafting::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_crafting::get_error_str");
-    return (ft_strerror(ft_crafting::_last_error));
+            "game_crafting::get_error_str");
+    return (ft_strerror(game_crafting::_last_error));
 }
 
-ft_crafting_ingredient::ft_crafting_ingredient() noexcept
+game_crafting_ingredient::game_crafting_ingredient() noexcept
     : _item_id(0), _count(0), _rarity(-1),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     return ;
 }
 
-ft_crafting_ingredient::ft_crafting_ingredient(
-    const ft_crafting_ingredient &other) noexcept
+game_crafting_ingredient::game_crafting_ingredient(
+    const game_crafting_ingredient &other) noexcept
     : _item_id(0), _count(0), _rarity(-1),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
@@ -68,35 +68,35 @@ ft_crafting_ingredient::ft_crafting_ingredient(
     return ;
 }
 
-ft_crafting_ingredient::ft_crafting_ingredient(
-    ft_crafting_ingredient &&other) noexcept
+game_crafting_ingredient::game_crafting_ingredient(
+    game_crafting_ingredient &&other) noexcept
     : _item_id(0), _count(0), _rarity(-1),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
-    (void)this->initialize(static_cast<ft_crafting_ingredient &&>(other));
+    (void)this->initialize(static_cast<game_crafting_ingredient &&>(other));
     return ;
 }
 
-ft_crafting_ingredient::~ft_crafting_ingredient() noexcept
+game_crafting_ingredient::~game_crafting_ingredient() noexcept
 {
     (void)this->destroy();
     return ;
 }
 
-ft_crafting::ft_crafting() noexcept
+game_crafting::game_crafting() noexcept
     : _recipes(), _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     return ;
 }
 
-ft_crafting::ft_crafting(const ft_crafting &other) noexcept
+game_crafting::game_crafting(const game_crafting &other) noexcept
     : _recipes(), _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     int32_t initialize_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_crafting::ft_crafting(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_crafting::game_crafting(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -118,14 +118,14 @@ ft_crafting::ft_crafting(const ft_crafting &other) noexcept
     return ;
 }
 
-ft_crafting::ft_crafting(ft_crafting &&other) noexcept
+game_crafting::game_crafting(game_crafting &&other) noexcept
     : _recipes(), _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     int32_t move_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_crafting::ft_crafting(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_crafting::game_crafting(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -143,17 +143,17 @@ ft_crafting::ft_crafting(ft_crafting &&other) noexcept
     return ;
 }
 
-ft_crafting::~ft_crafting() noexcept
+game_crafting::~game_crafting() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-int32_t ft_crafting::initialize() noexcept
+int32_t game_crafting::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-        errno_abort_lifecycle(this->_initialised_state, "ft_crafting::initialize", "initialize called on initialised instance");
+        errno_abort_lifecycle(this->_initialised_state, "game_crafting::initialize", "initialize called on initialised instance");
     int32_t recipes_error = this->_recipes.initialize();
     if (recipes_error != FT_ERR_SUCCESS)
     {
@@ -166,7 +166,7 @@ int32_t ft_crafting::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting::destroy() noexcept
+int32_t game_crafting::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (FT_ERR_SUCCESS);
@@ -182,7 +182,7 @@ int32_t ft_crafting::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_crafting::move(ft_crafting &other) noexcept
+int32_t game_crafting::move(game_crafting &other) noexcept
 {
     int32_t destroy_error;
 
@@ -190,7 +190,7 @@ int32_t ft_crafting::move(ft_crafting &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_crafting::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_crafting::move", "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -216,8 +216,8 @@ int32_t ft_crafting::move(ft_crafting &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting_ingredient::initialize(
-    const ft_crafting_ingredient &other) noexcept
+int32_t game_crafting_ingredient::initialize(
+    const game_crafting_ingredient &other) noexcept
 {
     ft_bool this_lock_acquired;
     ft_bool other_lock_acquired;
@@ -230,7 +230,7 @@ int32_t ft_crafting_ingredient::initialize(
     }
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(other._initialised_state,
-            "ft_crafting_ingredient::initialize(copy)",
+            "game_crafting_ingredient::initialize(copy)",
             "source object is uninitialised");
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
@@ -263,11 +263,11 @@ int32_t ft_crafting_ingredient::initialize(
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting_ingredient::initialize(ft_crafting_ingredient &&other) noexcept
+int32_t game_crafting_ingredient::initialize(game_crafting_ingredient &&other) noexcept
 {
     int32_t initialize_error;
 
-    initialize_error = this->initialize(static_cast<const ft_crafting_ingredient &>(other));
+    initialize_error = this->initialize(static_cast<const game_crafting_ingredient &>(other));
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
     other._item_id = 0;
@@ -278,7 +278,7 @@ int32_t ft_crafting_ingredient::initialize(ft_crafting_ingredient &&other) noexc
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting_ingredient::move(ft_crafting_ingredient &other) noexcept
+int32_t game_crafting_ingredient::move(game_crafting_ingredient &other) noexcept
 {
     int32_t destroy_error;
 
@@ -287,10 +287,10 @@ int32_t ft_crafting_ingredient::move(ft_crafting_ingredient &other) noexcept
     destroy_error = this->destroy();
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
-    return (this->initialize(static_cast<ft_crafting_ingredient &&>(other)));
+    return (this->initialize(static_cast<game_crafting_ingredient &&>(other)));
 }
 
-int32_t ft_crafting_ingredient::initialize(int32_t item_id, int32_t count, int32_t rarity) noexcept
+int32_t game_crafting_ingredient::initialize(int32_t item_id, int32_t count, int32_t rarity) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -311,7 +311,7 @@ int32_t ft_crafting_ingredient::initialize(int32_t item_id, int32_t count, int32
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting_ingredient::destroy() noexcept
+int32_t game_crafting_ingredient::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -329,7 +329,7 @@ int32_t ft_crafting_ingredient::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_crafting_ingredient::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_crafting_ingredient::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -343,7 +343,7 @@ int32_t ft_crafting_ingredient::lock_internal(ft_bool *lock_acquired) const noex
     return (FT_ERR_SUCCESS);
 }
 
-void ft_crafting_ingredient::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_crafting_ingredient::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -352,7 +352,7 @@ void ft_crafting_ingredient::unlock_internal(ft_bool lock_acquired) const noexce
     return ;
 }
 
-int32_t ft_crafting_ingredient::enable_thread_safety() noexcept
+int32_t game_crafting_ingredient::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
@@ -380,7 +380,7 @@ int32_t ft_crafting_ingredient::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting_ingredient::disable_thread_safety() noexcept
+int32_t game_crafting_ingredient::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *mutex_pointer;
@@ -403,12 +403,12 @@ int32_t ft_crafting_ingredient::disable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-ft_bool ft_crafting_ingredient::is_thread_safe() const noexcept
+ft_bool game_crafting_ingredient::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_crafting_ingredient::get_item_id() const noexcept
+int32_t game_crafting_ingredient::get_item_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -427,7 +427,7 @@ int32_t ft_crafting_ingredient::get_item_id() const noexcept
     return (item_id);
 }
 
-void ft_crafting_ingredient::set_item_id(int32_t item_id) noexcept
+void game_crafting_ingredient::set_item_id(int32_t item_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -445,7 +445,7 @@ void ft_crafting_ingredient::set_item_id(int32_t item_id) noexcept
     return ;
 }
 
-int32_t ft_crafting_ingredient::get_count() const noexcept
+int32_t game_crafting_ingredient::get_count() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -464,7 +464,7 @@ int32_t ft_crafting_ingredient::get_count() const noexcept
     return (count);
 }
 
-void ft_crafting_ingredient::set_count(int32_t count) noexcept
+void game_crafting_ingredient::set_count(int32_t count) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -487,7 +487,7 @@ void ft_crafting_ingredient::set_count(int32_t count) noexcept
     return ;
 }
 
-int32_t ft_crafting_ingredient::get_rarity() const noexcept
+int32_t game_crafting_ingredient::get_rarity() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -506,7 +506,7 @@ int32_t ft_crafting_ingredient::get_rarity() const noexcept
     return (rarity);
 }
 
-void ft_crafting_ingredient::set_rarity(int32_t rarity) noexcept
+void game_crafting_ingredient::set_rarity(int32_t rarity) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -529,7 +529,7 @@ void ft_crafting_ingredient::set_rarity(int32_t rarity) noexcept
     return ;
 }
 
-int32_t ft_crafting::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_crafting::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -543,7 +543,7 @@ int32_t ft_crafting::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_crafting::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_crafting::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -552,12 +552,12 @@ void ft_crafting::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_crafting::enable_thread_safety() noexcept
+int32_t game_crafting::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_crafting::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -581,7 +581,7 @@ int32_t ft_crafting::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting::disable_thread_safety() noexcept
+int32_t game_crafting::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *mutex_pointer;
@@ -604,36 +604,36 @@ int32_t ft_crafting::disable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-ft_bool ft_crafting::is_thread_safe() const noexcept
+ft_bool game_crafting::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-ft_map<int32_t, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept
+ft_map<int32_t, ft_vector<game_crafting_ingredient>> &game_crafting::get_recipes() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_crafting::get_recipes");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::get_recipes");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
 
-const ft_map<int32_t, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() const noexcept
+const ft_map<int32_t, ft_vector<game_crafting_ingredient>> &game_crafting::get_recipes() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_crafting::get_recipes");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::get_recipes");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
 
-int32_t ft_crafting::register_recipe(int32_t recipe_id,
-    ft_vector<ft_crafting_ingredient> &&ingredients) noexcept
+int32_t game_crafting::register_recipe(int32_t recipe_id,
+    ft_vector<game_crafting_ingredient> &&ingredients) noexcept
 {
-    ft_vector<ft_crafting_ingredient> copied_ingredients;
+    ft_vector<game_crafting_ingredient> copied_ingredients;
     ft_size_t ingredient_index;
     ft_size_t ingredient_count;
     ft_bool lock_acquired;
     int32_t lock_error;
 
     lock_acquired = FT_FALSE;
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_crafting::register_recipe");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::register_recipe");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -660,11 +660,11 @@ int32_t ft_crafting::register_recipe(int32_t recipe_id,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_crafting::craft_item(ft_inventory &inventory, int32_t recipe_id,
-    const ft_sharedptr<ft_item> &result) noexcept
+int32_t game_crafting::craft_item(game_inventory &inventory, int32_t recipe_id,
+    const ft_sharedptr<game_item> &result) noexcept
 {
-    Pair<int32_t, ft_vector<ft_crafting_ingredient>> *recipe_entry;
-    ft_vector<ft_crafting_ingredient> *ingredients;
+    Pair<int32_t, ft_vector<game_crafting_ingredient>> *recipe_entry;
+    ft_vector<game_crafting_ingredient> *ingredients;
     ft_size_t ingredient_index;
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -674,7 +674,7 @@ int32_t ft_crafting::craft_item(ft_inventory &inventory, int32_t recipe_id,
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_crafting::craft_item");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::craft_item");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -693,7 +693,7 @@ int32_t ft_crafting::craft_item(ft_inventory &inventory, int32_t recipe_id,
     ingredient_index = 0;
     while (ingredient_index < ingredients->size())
     {
-        ft_crafting_ingredient &ingredient = (*ingredients)[ingredient_index];
+        game_crafting_ingredient &ingredient = (*ingredients)[ingredient_index];
         int32_t have_count;
 
         if (ingredient.get_rarity() == -1)
@@ -711,10 +711,10 @@ int32_t ft_crafting::craft_item(ft_inventory &inventory, int32_t recipe_id,
     ingredient_index = 0;
     while (ingredient_index < ingredients->size())
     {
-        ft_crafting_ingredient &ingredient = (*ingredients)[ingredient_index];
-        ft_map<int32_t, ft_sharedptr<ft_item> > &items = inventory.get_items();
-        Pair<int32_t, ft_sharedptr<ft_item> > *item_ptr;
-        Pair<int32_t, ft_sharedptr<ft_item> > *item_end;
+        game_crafting_ingredient &ingredient = (*ingredients)[ingredient_index];
+        ft_map<int32_t, ft_sharedptr<game_item> > &items = inventory.get_items();
+        Pair<int32_t, ft_sharedptr<game_item> > *item_ptr;
+        Pair<int32_t, ft_sharedptr<game_item> > *item_end;
         int32_t remaining;
 
         remaining = ingredient.get_count();

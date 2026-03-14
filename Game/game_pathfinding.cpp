@@ -12,46 +12,46 @@ static ft_size_t distance_component(ft_size_t left_value, ft_size_t right_value)
     return (right_value - left_value);
 }
 
-thread_local int32_t ft_path_step::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_path_step::_last_error = FT_ERR_SUCCESS;
 
 #ifdef LIBFT_TEST_BUILD
 
-int32_t ft_path_step_test_helper::ensure_thread_safe(ft_path_step &step) noexcept
+int32_t game_path_step_test_helper::ensure_thread_safe(game_path_step &step) noexcept
 {
     if (step._mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (step.enable_thread_safety());
 }
 
-int32_t ft_path_step_test_helper::lock(ft_path_step &step) noexcept
+int32_t game_path_step_test_helper::lock(game_path_step &step) noexcept
 {
     int32_t ensure_error;
 
-    ensure_error = ft_path_step_test_helper::ensure_thread_safe(step);
+    ensure_error = game_path_step_test_helper::ensure_thread_safe(step);
     if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
     return (pt_recursive_mutex_lock_if_not_null(step._mutex));
 }
 
-int32_t ft_path_step_test_helper::unlock(ft_path_step &step) noexcept
+int32_t game_path_step_test_helper::unlock(game_path_step &step) noexcept
 {
     (void)pt_recursive_mutex_unlock_if_not_null(step._mutex);
     return (FT_ERR_SUCCESS);
 }
 
-ft_bool ft_path_step_test_helper::is_locked(const ft_path_step &step) noexcept
+ft_bool game_path_step_test_helper::is_locked(const game_path_step &step) noexcept
 {
     return (step._mutex != ft_nullptr && step._mutex->lockState());
 }
 
-ft_bool ft_path_step_test_helper::is_owned_by_thread(const ft_path_step &step,
+ft_bool game_path_step_test_helper::is_owned_by_thread(const game_path_step &step,
     pthread_t thread_id) noexcept
 {
     return (step._mutex != ft_nullptr
         && step._mutex->is_owned_by_thread(thread_id));
 }
 
-int32_t ft_path_step_test_helper::get_mutex_error(const ft_path_step &step) noexcept
+int32_t game_path_step_test_helper::get_mutex_error(const game_path_step &step) noexcept
 {
     if (step._mutex == ft_nullptr)
         return (FT_ERR_INVALID_STATE);
@@ -60,13 +60,13 @@ int32_t ft_path_step_test_helper::get_mutex_error(const ft_path_step &step) noex
 
 #endif
 
-void ft_path_step::set_error(int32_t error_code) const noexcept
+uint32_t game_path_step::set_error(uint32_t error_code) noexcept
 {
-    ft_path_step::_last_error = error_code;
-    return ;
+    game_path_step::_last_error = error_code;
+    return (error_code);
 }
 
-int32_t ft_path_step::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_path_step::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -84,7 +84,7 @@ int32_t ft_path_step::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_path_step::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -93,7 +93,7 @@ int32_t ft_path_step::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-ft_path_step::ft_path_step() noexcept
+game_path_step::game_path_step() noexcept
     : _x(0), _y(0), _z(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -101,7 +101,7 @@ ft_path_step::ft_path_step() noexcept
     return ;
 }
 
-ft_path_step::ft_path_step(const ft_path_step &other) noexcept
+game_path_step::game_path_step(const game_path_step &other) noexcept
     : _x(0), _y(0), _z(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -109,7 +109,7 @@ ft_path_step::ft_path_step(const ft_path_step &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_path_step::ft_path_step(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_path_step::game_path_step(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -127,7 +127,7 @@ ft_path_step::ft_path_step(const ft_path_step &other) noexcept
     return ;
 }
 
-ft_path_step::ft_path_step(ft_path_step &&other) noexcept
+game_path_step::game_path_step(game_path_step &&other) noexcept
     : _x(0), _y(0), _z(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -135,7 +135,7 @@ ft_path_step::ft_path_step(ft_path_step &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_path_step::ft_path_step(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_path_step::game_path_step(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -153,7 +153,7 @@ ft_path_step::ft_path_step(ft_path_step &&other) noexcept
     return ;
 }
 
-ft_path_step::~ft_path_step() noexcept
+game_path_step::~game_path_step() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
@@ -161,29 +161,29 @@ ft_path_step::~ft_path_step() noexcept
     return ;
 }
 
-int32_t ft_path_step::initialize() noexcept
+int32_t game_path_step::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_path_step::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_path_step::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::initialize(const ft_path_step &other) noexcept
+int32_t game_path_step::initialize(const game_path_step &other) noexcept
 {
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_path_step::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_path_step::initialize(copy)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_path_step::initialize(copy)", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_path_step::initialize(copy)", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_x = other._x;
@@ -193,18 +193,18 @@ int32_t ft_path_step::initialize(const ft_path_step &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::initialize(ft_path_step &&other) noexcept
+int32_t game_path_step::initialize(game_path_step &&other) noexcept
 {
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_path_step::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_path_step::initialize(move)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_path_step::initialize(move)", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_path_step::initialize(move)", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_x = other._x;
@@ -218,12 +218,12 @@ int32_t ft_path_step::initialize(ft_path_step &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::move(ft_path_step &other) noexcept
+int32_t game_path_step::move(game_path_step &other) noexcept
 {
-    return (this->initialize(static_cast<ft_path_step &&>(other)));
+    return (this->initialize(static_cast<game_path_step &&>(other)));
 }
 
-int32_t ft_path_step::destroy() noexcept
+int32_t game_path_step::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -241,12 +241,12 @@ int32_t ft_path_step::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_path_step::enable_thread_safety() noexcept
+int32_t game_path_step::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -270,7 +270,7 @@ int32_t ft_path_step::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::disable_thread_safety() noexcept
+int32_t game_path_step::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
     int32_t destroy_error;
@@ -288,17 +288,17 @@ int32_t ft_path_step::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_path_step::is_thread_safe() const noexcept
+ft_bool game_path_step::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_path_step::set_coordinates(ft_size_t x, ft_size_t y, ft_size_t z) noexcept
+int32_t game_path_step::set_coordinates(ft_size_t x, ft_size_t y, ft_size_t z) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_coordinates");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::set_coordinates");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -309,12 +309,12 @@ int32_t ft_path_step::set_coordinates(ft_size_t x, ft_size_t y, ft_size_t z) noe
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::set_x(ft_size_t x) noexcept
+int32_t game_path_step::set_x(ft_size_t x) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_x");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::set_x");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -323,12 +323,12 @@ int32_t ft_path_step::set_x(ft_size_t x) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::set_y(ft_size_t y) noexcept
+int32_t game_path_step::set_y(ft_size_t y) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_y");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::set_y");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -337,12 +337,12 @@ int32_t ft_path_step::set_y(ft_size_t y) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_path_step::set_z(ft_size_t z) noexcept
+int32_t game_path_step::set_z(ft_size_t z) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_z");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::set_z");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -351,49 +351,49 @@ int32_t ft_path_step::set_z(ft_size_t z) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-ft_size_t ft_path_step::get_x() const noexcept
+ft_size_t game_path_step::get_x() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::get_x");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::get_x");
     return (this->_x);
 }
 
-ft_size_t ft_path_step::get_y() const noexcept
+ft_size_t game_path_step::get_y() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::get_y");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::get_y");
     return (this->_y);
 }
 
-ft_size_t ft_path_step::get_z() const noexcept
+ft_size_t game_path_step::get_z() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::get_z");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_path_step::get_z");
     return (this->_z);
 }
 
-int32_t ft_path_step::get_error() const noexcept
+int32_t game_path_step::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_path_step::get_error");
-    return (ft_path_step::_last_error);
+            "game_path_step::get_error");
+    return (static_cast<int32_t>(game_path_step::_last_error));
 }
 
-const char *ft_path_step::get_error_str() const noexcept
+const char *game_path_step::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_path_step::get_error_str");
-    return (ft_strerror(ft_path_step::_last_error));
+            "game_path_step::get_error_str");
+    return (ft_strerror(game_path_step::_last_error));
 }
 
-thread_local int32_t ft_pathfinding::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_pathfinding::_last_error = FT_ERR_SUCCESS;
 
-void ft_pathfinding::set_error(int32_t error_code) const noexcept
+uint32_t game_pathfinding::set_error(uint32_t error_code) noexcept
 {
-    ft_pathfinding::_last_error = error_code;
-    return ;
+    game_pathfinding::_last_error = error_code;
+    return (error_code);
 }
 
-int32_t ft_pathfinding::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_pathfinding::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -411,7 +411,7 @@ int32_t ft_pathfinding::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_pathfinding::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_pathfinding::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -420,7 +420,7 @@ int32_t ft_pathfinding::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-ft_pathfinding::ft_pathfinding() noexcept
+game_pathfinding::game_pathfinding() noexcept
     : _current_path(), _needs_replan(FT_FALSE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -428,7 +428,7 @@ ft_pathfinding::ft_pathfinding() noexcept
     return ;
 }
 
-ft_pathfinding::ft_pathfinding(const ft_pathfinding &other)
+game_pathfinding::game_pathfinding(const game_pathfinding &other)
     : _current_path(), _needs_replan(FT_FALSE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -436,7 +436,7 @@ ft_pathfinding::ft_pathfinding(const ft_pathfinding &other)
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_pathfinding::ft_pathfinding(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_pathfinding::game_pathfinding(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -459,7 +459,7 @@ ft_pathfinding::ft_pathfinding(const ft_pathfinding &other)
     return ;
 }
 
-ft_pathfinding::ft_pathfinding(ft_pathfinding &&other)
+game_pathfinding::game_pathfinding(game_pathfinding &&other)
     : _current_path(), _needs_replan(FT_FALSE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -467,7 +467,7 @@ ft_pathfinding::ft_pathfinding(ft_pathfinding &&other)
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_pathfinding::ft_pathfinding(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_pathfinding::game_pathfinding(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -485,7 +485,7 @@ ft_pathfinding::ft_pathfinding(ft_pathfinding &&other)
     return ;
 }
 
-ft_pathfinding::~ft_pathfinding()
+game_pathfinding::~game_pathfinding()
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
@@ -493,11 +493,11 @@ ft_pathfinding::~ft_pathfinding()
     return ;
 }
 
-int32_t ft_pathfinding::initialize() noexcept
+int32_t game_pathfinding::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_pathfinding::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_pathfinding::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_needs_replan = FT_FALSE;
@@ -507,7 +507,7 @@ int32_t ft_pathfinding::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_pathfinding::destroy() noexcept
+int32_t game_pathfinding::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -524,7 +524,7 @@ int32_t ft_pathfinding::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_pathfinding::move(ft_pathfinding &other) noexcept
+int32_t game_pathfinding::move(game_pathfinding &other) noexcept
 {
     int32_t destroy_error;
     ft_size_t index;
@@ -534,7 +534,7 @@ int32_t ft_pathfinding::move(ft_pathfinding &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_pathfinding::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_pathfinding::move", "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -569,12 +569,12 @@ int32_t ft_pathfinding::move(ft_pathfinding &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_pathfinding::enable_thread_safety() noexcept
+int32_t game_pathfinding::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_pathfinding::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -598,7 +598,7 @@ int32_t ft_pathfinding::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_pathfinding::disable_thread_safety() noexcept
+int32_t game_pathfinding::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
     int32_t destroy_error;
@@ -616,25 +616,25 @@ int32_t ft_pathfinding::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_pathfinding::is_thread_safe() const noexcept
+ft_bool game_pathfinding::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_pathfinding::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_pathfinding::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_pathfinding::lock");
     return (this->lock_internal(lock_acquired));
 }
 
-void ft_pathfinding::unlock(ft_bool lock_acquired) const noexcept
+void game_pathfinding::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_pathfinding::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-void ft_pathfinding::update_obstacle(ft_size_t x, ft_size_t y, ft_size_t z,
+void game_pathfinding::update_obstacle(ft_size_t x, ft_size_t y, ft_size_t z,
     int32_t value) noexcept
 {
     ft_bool lock_acquired;
@@ -642,7 +642,7 @@ void ft_pathfinding::update_obstacle(ft_size_t x, ft_size_t y, ft_size_t z,
     ft_size_t index;
 
     (void)value;
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::update_obstacle");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_pathfinding::update_obstacle");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -668,17 +668,17 @@ void ft_pathfinding::update_obstacle(ft_size_t x, ft_size_t y, ft_size_t z,
     return ;
 }
 
-int32_t ft_pathfinding::recalculate_path(const ft_map3d &grid,
+int32_t game_pathfinding::recalculate_path(const game_map3d &grid,
     ft_size_t start_x, ft_size_t start_y, ft_size_t start_z,
     ft_size_t goal_x, ft_size_t goal_y, ft_size_t goal_z,
-    ft_vector<ft_path_step> &out_path) noexcept
+    ft_vector<game_path_step> &out_path) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t result;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::recalculate_path");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_pathfinding::recalculate_path");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -719,10 +719,10 @@ int32_t ft_pathfinding::recalculate_path(const ft_map3d &grid,
     return (result);
 }
 
-int32_t ft_pathfinding::astar_grid(const ft_map3d &grid,
+int32_t game_pathfinding::astar_grid(const game_map3d &grid,
     ft_size_t start_x, ft_size_t start_y, ft_size_t start_z,
     ft_size_t goal_x, ft_size_t goal_y, ft_size_t goal_z,
-    ft_vector<ft_path_step> &out_path) const noexcept
+    ft_vector<game_path_step> &out_path) const noexcept
 {
     struct node
     {
@@ -775,14 +775,14 @@ int32_t ft_pathfinding::astar_grid(const ft_map3d &grid,
         if (nodes[current_index].x == goal_x && nodes[current_index].y == goal_y
             && nodes[current_index].z == goal_z)
         {
-            ft_vector<ft_path_step> reverse_path;
+            ft_vector<game_path_step> reverse_path;
             ft_size_t trace_index;
             ft_size_t reverse_index;
 
             trace_index = current_index;
             while (FT_TRUE)
             {
-                ft_path_step step;
+                game_path_step step;
 
                 (void)step.initialize();
                 (void)step.set_coordinates(nodes[trace_index].x,
@@ -887,7 +887,7 @@ int32_t ft_pathfinding::astar_grid(const ft_map3d &grid,
     return (FT_ERR_GAME_INVALID_MOVE);
 }
 
-int32_t ft_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
+int32_t game_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
     ft_size_t start_vertex, ft_size_t goal_vertex,
     ft_vector<ft_size_t> &out_path) const noexcept
 {
@@ -967,18 +967,18 @@ int32_t ft_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_pathfinding::get_error() const noexcept
+int32_t game_pathfinding::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_pathfinding::get_error");
-    return (ft_pathfinding::_last_error);
+            "game_pathfinding::get_error");
+    return (static_cast<int32_t>(game_pathfinding::_last_error));
 }
 
-const char *ft_pathfinding::get_error_str() const noexcept
+const char *game_pathfinding::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_pathfinding::get_error_str");
-    return (ft_strerror(ft_pathfinding::_last_error));
+            "game_pathfinding::get_error_str");
+    return (ft_strerror(game_pathfinding::_last_error));
 }

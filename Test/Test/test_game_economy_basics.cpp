@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_achievement.hpp"
 #include "../../Game/game_reputation.hpp"
-#include "../../Game/ft_currency_rate.hpp"
+#include "../../Game/game_currency_rate.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD

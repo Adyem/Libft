@@ -5,9 +5,9 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_behavior_table::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_behavior_table::_last_error = FT_ERR_SUCCESS;
 
-ft_behavior_table::ft_behavior_table() noexcept
+game_behavior_table::game_behavior_table() noexcept
     : _profiles(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -15,7 +15,7 @@ ft_behavior_table::ft_behavior_table() noexcept
     return ;
 }
 
-ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
+game_behavior_table::game_behavior_table(const game_behavior_table &other) noexcept
     : _profiles(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -23,7 +23,7 @@ ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_behavior_table::ft_behavior_table(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_behavior_table::game_behavior_table(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -44,7 +44,7 @@ ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
     return ;
 }
 
-ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
+game_behavior_table::game_behavior_table(game_behavior_table &&other) noexcept
     : _profiles(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -52,7 +52,7 @@ ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_behavior_table::ft_behavior_table(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_behavior_table::game_behavior_table(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -73,7 +73,7 @@ ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
     return ;
 }
 
-ft_behavior_table::~ft_behavior_table() noexcept
+game_behavior_table::~game_behavior_table() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
@@ -82,11 +82,11 @@ ft_behavior_table::~ft_behavior_table() noexcept
     return ;
 }
 
-int32_t ft_behavior_table::initialize() noexcept
+int32_t game_behavior_table::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_behavior_table::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "game_behavior_table::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -98,17 +98,17 @@ int32_t ft_behavior_table::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_table::initialize(const ft_behavior_table &other) noexcept
+int32_t game_behavior_table::initialize(const game_behavior_table &other) noexcept
 {
     int32_t initialize_error;
     ft_size_t count;
     ft_size_t index;
-    const Pair<int32_t, ft_behavior_profile> *entry;
-    const Pair<int32_t, ft_behavior_profile> *entry_end;
+    const Pair<int32_t, game_behavior_profile> *entry;
+    const Pair<int32_t, game_behavior_profile> *entry_end;
 
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_behavior_table::initialize(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_behavior_table::initialize(copy)",
             "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -131,17 +131,17 @@ int32_t ft_behavior_table::initialize(const ft_behavior_table &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_table::initialize(ft_behavior_table &&other) noexcept
+int32_t game_behavior_table::initialize(game_behavior_table &&other) noexcept
 {
-    return (this->initialize(static_cast<const ft_behavior_table &>(other)));
+    return (this->initialize(static_cast<const game_behavior_table &>(other)));
 }
 
-int32_t ft_behavior_table::move(ft_behavior_table &other) noexcept
+int32_t game_behavior_table::move(game_behavior_table &other) noexcept
 {
-    return (this->initialize(static_cast<ft_behavior_table &&>(other)));
+    return (this->initialize(static_cast<game_behavior_table &&>(other)));
 }
 
-int32_t ft_behavior_table::destroy() noexcept
+int32_t game_behavior_table::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -155,12 +155,12 @@ int32_t ft_behavior_table::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_behavior_table::enable_thread_safety() noexcept
+int32_t game_behavior_table::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -181,7 +181,7 @@ int32_t ft_behavior_table::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_table::disable_thread_safety() noexcept
+int32_t game_behavior_table::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -197,12 +197,12 @@ int32_t ft_behavior_table::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_behavior_table::is_thread_safe() const noexcept
+ft_bool game_behavior_table::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_behavior_table::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_behavior_table::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -216,7 +216,7 @@ int32_t ft_behavior_table::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_table::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_behavior_table::unlock_internal(ft_bool lock_acquired) const noexcept
 {
     if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
@@ -224,45 +224,45 @@ int32_t ft_behavior_table::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_table::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_behavior_table::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::lock");
     int32_t lock_error = this->lock_internal(lock_acquired);
     this->set_error(lock_error);
     return (lock_error);
 }
 
-void ft_behavior_table::unlock(ft_bool lock_acquired) const noexcept
+void game_behavior_table::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-ft_map<int32_t, ft_behavior_profile> &ft_behavior_table::get_profiles() noexcept
+ft_map<int32_t, game_behavior_profile> &game_behavior_table::get_profiles() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::get_profiles");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::get_profiles");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_profiles);
 }
 
-const ft_map<int32_t, ft_behavior_profile> &ft_behavior_table::get_profiles() const noexcept
+const ft_map<int32_t, game_behavior_profile> &game_behavior_table::get_profiles() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::get_profiles const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::get_profiles const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_profiles);
 }
 
-void ft_behavior_table::set_profiles(
-    const ft_map<int32_t, ft_behavior_profile> &profiles) noexcept
+void game_behavior_table::set_profiles(
+    const ft_map<int32_t, game_behavior_profile> &profiles) noexcept
 {
     ft_bool lock_acquired;
     ft_size_t count;
     ft_size_t index;
-    const Pair<int32_t, ft_behavior_profile> *entry;
-    const Pair<int32_t, ft_behavior_profile> *entry_end;
+    const Pair<int32_t, game_behavior_profile> *entry;
+    const Pair<int32_t, game_behavior_profile> *entry_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::set_profiles");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::set_profiles");
     int32_t lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -285,12 +285,12 @@ void ft_behavior_table::set_profiles(
     return ;
 }
 
-int32_t ft_behavior_table::register_profile(const ft_behavior_profile &profile) noexcept
+int32_t game_behavior_table::register_profile(const game_behavior_profile &profile) noexcept
 {
     ft_bool lock_acquired;
     int32_t profile_identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::register_profile");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::register_profile");
     int32_t lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -304,12 +304,12 @@ int32_t ft_behavior_table::register_profile(const ft_behavior_profile &profile) 
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_table::fetch_profile(int32_t profile_id,
-    ft_behavior_profile &profile) const noexcept
+int32_t game_behavior_table::fetch_profile(int32_t profile_id,
+    game_behavior_profile &profile) const noexcept
 {
-    const Pair<int32_t, ft_behavior_profile> *entry;
+    const Pair<int32_t, game_behavior_profile> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_behavior_table::fetch_profile");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::fetch_profile");
     entry = this->_profiles.find(profile_id);
     if (entry == this->_profiles.end())
     {
@@ -322,24 +322,24 @@ int32_t ft_behavior_table::fetch_profile(int32_t profile_id,
 }
 
 
-int32_t ft_behavior_table::get_error() const noexcept
+int32_t game_behavior_table::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_behavior_table::get_error");
-    return (ft_behavior_table::_last_error);
+            "game_behavior_table::get_error");
+    return (game_behavior_table::_last_error);
 }
 
-const char *ft_behavior_table::get_error_str() const noexcept
+const char *game_behavior_table::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_behavior_table::get_error_str");
+            "game_behavior_table::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-int32_t ft_behavior_table::set_error(int32_t error_code) noexcept
+uint32_t game_behavior_table::set_error(uint32_t error_code) noexcept
 {
-    ft_behavior_table::_last_error = error_code;
+    game_behavior_table::_last_error = error_code;
     return (error_code);
 }

@@ -12,58 +12,58 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_game_hooks;
+class game_hooks;
 
-class ft_game_state
+class game_state
 {
     #ifdef LIBFT_TEST_BUILD
         public:
     #else
         private:
     #endif
-        ft_vector<ft_sharedptr<ft_world> >     _worlds;
-        ft_vector<ft_sharedptr<ft_character> > _characters;
+        ft_vector<ft_sharedptr<game_world> >     _worlds;
+        ft_vector<ft_sharedptr<game_character> > _characters;
         ft_map<ft_string, ft_string>           _variables;
-        ft_sharedptr<ft_game_hooks>            _hooks;
+        ft_sharedptr<game_hooks>            _hooks;
         mutable pt_recursive_mutex                       *_mutex;
         uint8_t                                _initialised_state;
-        static thread_local int32_t                _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_game_state() noexcept;
-        ~ft_game_state() noexcept;
-        ft_game_state(const ft_game_state &other) noexcept;
-        ft_game_state &operator=(const ft_game_state &other) noexcept = delete;
-        ft_game_state(ft_game_state &&other) noexcept;
-        ft_game_state &operator=(ft_game_state &&other) noexcept = delete;
+        game_state() noexcept;
+        ~game_state() noexcept;
+        game_state(const game_state &other) noexcept;
+        game_state &operator=(const game_state &other) noexcept = delete;
+        game_state(game_state &&other) noexcept;
+        game_state &operator=(game_state &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
-        int32_t move(ft_game_state &other) noexcept;
+        int32_t move(game_state &other) noexcept;
         int32_t destroy() noexcept;
 
-        ft_vector<ft_sharedptr<ft_world> > &get_worlds() noexcept;
+        ft_vector<ft_sharedptr<game_world> > &get_worlds() noexcept;
 
-        ft_vector<ft_sharedptr<ft_character> > &get_characters() noexcept;
+        ft_vector<ft_sharedptr<game_character> > &get_characters() noexcept;
 
         void set_variable(const ft_string &key, const ft_string &value) noexcept;
         const ft_string *get_variable(const ft_string &key) const noexcept;
         void remove_variable(const ft_string &key) noexcept;
         void clear_variables() noexcept;
 
-        int32_t add_character(const ft_sharedptr<ft_character> &character) noexcept;
+        int32_t add_character(const ft_sharedptr<game_character> &character) noexcept;
         void remove_character(ft_size_t index) noexcept;
 
-        void set_hooks(const ft_sharedptr<ft_game_hooks> &hooks) noexcept;
-        ft_sharedptr<ft_game_hooks> get_hooks() const noexcept;
+        void set_hooks(const ft_sharedptr<game_hooks> &hooks) noexcept;
+        ft_sharedptr<game_hooks> get_hooks() const noexcept;
         void reset_hooks() noexcept;
 
-        void dispatch_item_crafted(ft_character &character, ft_item &item) const noexcept;
-        void dispatch_character_damaged(ft_character &character, int32_t damage, uint8_t type) const noexcept;
-        void dispatch_event_triggered(ft_world &world, ft_event &event) const noexcept;
+        void dispatch_item_crafted(game_character &character, game_item &item) const noexcept;
+        void dispatch_character_damaged(game_character &character, int32_t damage, uint8_t type) const noexcept;
+        void dispatch_event_triggered(game_world &world, game_event &event) const noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

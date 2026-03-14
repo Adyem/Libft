@@ -6,9 +6,9 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_experience_table::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_experience_table::_last_error = FT_ERR_SUCCESS;
 
-ft_experience_table::ft_experience_table() noexcept
+game_experience_table::game_experience_table() noexcept
     : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -16,7 +16,7 @@ ft_experience_table::ft_experience_table() noexcept
     return ;
 }
 
-ft_experience_table::ft_experience_table(const ft_experience_table &other) noexcept
+game_experience_table::game_experience_table(const game_experience_table &other) noexcept
     : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -25,7 +25,7 @@ ft_experience_table::ft_experience_table(const ft_experience_table &other) noexc
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_experience_table::ft_experience_table(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_experience_table::game_experience_table(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -55,7 +55,7 @@ ft_experience_table::ft_experience_table(const ft_experience_table &other) noexc
     return ;
 }
 
-ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept
+game_experience_table::game_experience_table(game_experience_table &&other) noexcept
     : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -63,7 +63,7 @@ ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_experience_table::ft_experience_table(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_experience_table::game_experience_table(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -84,17 +84,17 @@ ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept
     return ;
 }
 
-ft_experience_table::~ft_experience_table() noexcept
+game_experience_table::~game_experience_table() noexcept
 {
     (void)this->destroy();
     return ;
 }
 
-int32_t ft_experience_table::initialize() noexcept
+int32_t game_experience_table::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_experience_table::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_experience_table::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -105,7 +105,7 @@ int32_t ft_experience_table::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::destroy() noexcept
+int32_t game_experience_table::destroy() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -137,7 +137,7 @@ int32_t ft_experience_table::destroy() noexcept
     return (first_error);
 }
 
-int32_t ft_experience_table::move(ft_experience_table &other) noexcept
+int32_t game_experience_table::move(game_experience_table &other) noexcept
 {
     int32_t destroy_error;
     int32_t initialize_error;
@@ -148,7 +148,7 @@ int32_t ft_experience_table::move(ft_experience_table &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_experience_table::move",
+        errno_abort_lifecycle(other._initialised_state, "game_experience_table::move",
             "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -182,11 +182,11 @@ int32_t ft_experience_table::move(ft_experience_table &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_experience_table::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -197,7 +197,7 @@ int32_t ft_experience_table::lock_internal(ft_bool *lock_acquired) const noexcep
     return (FT_ERR_SUCCESS);
 }
 
-void ft_experience_table::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_experience_table::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -207,13 +207,13 @@ void ft_experience_table::unlock_internal(ft_bool lock_acquired) const noexcept
 }
 
 
-int32_t ft_experience_table::set_error(int32_t error_code) noexcept
+uint32_t game_experience_table::set_error(uint32_t error_code) noexcept
 {
-    ft_experience_table::_last_error = error_code;
+    game_experience_table::_last_error = error_code;
     return (error_code);
 }
 
-ft_bool ft_experience_table::is_valid(int32_t count, const int32_t *array) const noexcept
+ft_bool game_experience_table::is_valid(int32_t count, const int32_t *array) const noexcept
 {
     if (!array || count <= 1)
         return (FT_TRUE);
@@ -229,7 +229,7 @@ ft_bool ft_experience_table::is_valid(int32_t count, const int32_t *array) const
     return (FT_TRUE);
 }
 
-int32_t ft_experience_table::resize_locked(int32_t new_count,
+int32_t game_experience_table::resize_locked(int32_t new_count,
         ft_bool validate_existing) noexcept
 {
     this->set_error(FT_ERR_SUCCESS);
@@ -282,33 +282,33 @@ int32_t ft_experience_table::resize_locked(int32_t new_count,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::get_count() const noexcept
+int32_t game_experience_table::get_count() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t count_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_count");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_count");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(lock_error);
+        const_cast<game_experience_table *>(this)->set_error(lock_error);
         return (0);
     }
     count_value = this->_count;
-    const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
+    const_cast<game_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (count_value);
 }
 
-int32_t ft_experience_table::resize(int32_t new_count) noexcept
+int32_t game_experience_table::resize(int32_t new_count) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::resize");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::resize");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -321,66 +321,66 @@ int32_t ft_experience_table::resize(int32_t new_count) noexcept
     return (result);
 }
 
-int32_t ft_experience_table::get_level(int32_t experience) const noexcept
+int32_t game_experience_table::get_level(int32_t experience) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t level;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_level");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(lock_error);
+        const_cast<game_experience_table *>(this)->set_error(lock_error);
         return (0);
     }
     if (!this->_levels || this->_count == 0)
     {
-        const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
+        const_cast<game_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
         this->unlock_internal(lock_acquired);
         return (0);
     }
     level = 0;
     while (level < this->_count && experience >= this->_levels[level])
         ++level;
-    const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
+    const_cast<game_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (level);
 }
 
-int32_t ft_experience_table::get_value(int32_t index) const noexcept
+int32_t game_experience_table::get_value(int32_t index) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_value");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_value");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(lock_error);
+        const_cast<game_experience_table *>(this)->set_error(lock_error);
         return (0);
     }
     if (index < 0 || index >= this->_count || !this->_levels)
     {
-        const_cast<ft_experience_table *>(this)->set_error(FT_ERR_OUT_OF_RANGE);
+        const_cast<game_experience_table *>(this)->set_error(FT_ERR_OUT_OF_RANGE);
         this->unlock_internal(lock_acquired);
         return (0);
     }
     value = this->_levels[index];
-    const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
+    const_cast<game_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
 
-void ft_experience_table::set_value(int32_t index, int32_t value) noexcept
+void game_experience_table::set_value(int32_t index, int32_t value) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::set_value");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::set_value");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -406,14 +406,14 @@ void ft_experience_table::set_value(int32_t index, int32_t value) noexcept
     return ;
 }
 
-int32_t ft_experience_table::set_levels(const int32_t *levels, int32_t count) noexcept
+int32_t game_experience_table::set_levels(const int32_t *levels, int32_t count) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t resize_result;
     int32_t level_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::set_levels");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::set_levels");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -451,7 +451,7 @@ int32_t ft_experience_table::set_levels(const int32_t *levels, int32_t count) no
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::generate_levels_total(int32_t count, int32_t base,
+int32_t game_experience_table::generate_levels_total(int32_t count, int32_t base,
         double multiplier) noexcept
 {
     ft_bool lock_acquired;
@@ -460,7 +460,7 @@ int32_t ft_experience_table::generate_levels_total(int32_t count, int32_t base,
     double value;
     int32_t level_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::generate_levels_total");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::generate_levels_total");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -502,7 +502,7 @@ int32_t ft_experience_table::generate_levels_total(int32_t count, int32_t base,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::generate_levels_scaled(int32_t count, int32_t base,
+int32_t game_experience_table::generate_levels_scaled(int32_t count, int32_t base,
         double multiplier) noexcept
 {
     ft_bool lock_acquired;
@@ -512,7 +512,7 @@ int32_t ft_experience_table::generate_levels_scaled(int32_t count, int32_t base,
     double total;
     int32_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::generate_levels_scaled");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::generate_levels_scaled");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -555,23 +555,23 @@ int32_t ft_experience_table::generate_levels_scaled(int32_t count, int32_t base,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::check_for_error() const noexcept
+int32_t game_experience_table::check_for_error() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::check_for_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::check_for_error");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(lock_error);
+        const_cast<game_experience_table *>(this)->set_error(lock_error);
         return (lock_error);
     }
     if (!this->_levels)
     {
-        const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
+        const_cast<game_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
         this->unlock_internal(lock_acquired);
         return (FT_ERR_SUCCESS);
     }
@@ -580,37 +580,37 @@ int32_t ft_experience_table::check_for_error() const noexcept
     {
         if (this->_levels[index] <= this->_levels[index - 1])
         {
-            const_cast<ft_experience_table *>(this)->set_error(FT_ERR_CONFIGURATION);
+            const_cast<game_experience_table *>(this)->set_error(FT_ERR_CONFIGURATION);
             this->unlock_internal(lock_acquired);
             return (this->_levels[index]);
         }
         ++index;
     }
-    const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
+    const_cast<game_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::get_error() const noexcept
+int32_t game_experience_table::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_error");
-    return (ft_experience_table::_last_error);
+        errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_error");
+    return (game_experience_table::_last_error);
 }
 
-const char *ft_experience_table::get_error_str() const noexcept
+const char *game_experience_table::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_error_str");
+        errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-int32_t ft_experience_table::enable_thread_safety() noexcept
+int32_t game_experience_table::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -631,7 +631,7 @@ int32_t ft_experience_table::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_experience_table::disable_thread_safety() noexcept
+int32_t game_experience_table::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -644,7 +644,7 @@ int32_t ft_experience_table::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_experience_table::is_thread_safe() const noexcept
+ft_bool game_experience_table::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }

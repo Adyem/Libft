@@ -6,7 +6,7 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_rarity_band
+class game_rarity_band
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -17,26 +17,26 @@ class ft_rarity_band
         double   _value_multiplier;
         pt_recursive_mutex *_mutex;
         uint8_t  _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
 
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_rarity_band() noexcept;
-        virtual ~ft_rarity_band() noexcept;
-        ft_rarity_band(const ft_rarity_band &other) noexcept;
-        ft_rarity_band &operator=(const ft_rarity_band &other) noexcept = delete;
-        ft_rarity_band(ft_rarity_band &&other) noexcept;
-        ft_rarity_band &operator=(ft_rarity_band &&other) noexcept = delete;
+        game_rarity_band() noexcept;
+        virtual ~game_rarity_band() noexcept;
+        game_rarity_band(const game_rarity_band &other) noexcept;
+        game_rarity_band &operator=(const game_rarity_band &other) noexcept = delete;
+        game_rarity_band(game_rarity_band &&other) noexcept;
+        game_rarity_band &operator=(game_rarity_band &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_rarity_band &other) noexcept;
-        int32_t initialize(ft_rarity_band &&other) noexcept;
-        int32_t move(ft_rarity_band &other) noexcept;
+        int32_t initialize(const game_rarity_band &other) noexcept;
+        int32_t initialize(game_rarity_band &&other) noexcept;
+        int32_t move(game_rarity_band &other) noexcept;
         int32_t initialize(int32_t rarity, double value_multiplier) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;

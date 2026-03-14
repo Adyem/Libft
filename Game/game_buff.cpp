@@ -4,9 +4,9 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 
-thread_local int32_t ft_buff::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_buff::_last_error = FT_ERR_SUCCESS;
 
-ft_buff::ft_buff() noexcept
+game_buff::game_buff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -15,7 +15,7 @@ ft_buff::ft_buff() noexcept
     return ;
 }
 
-ft_buff::ft_buff(const ft_buff &other) noexcept
+game_buff::game_buff(const game_buff &other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -24,7 +24,7 @@ ft_buff::ft_buff(const ft_buff &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_buff::ft_buff(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_buff::game_buff(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -42,7 +42,7 @@ ft_buff::ft_buff(const ft_buff &other) noexcept
     return ;
 }
 
-ft_buff::ft_buff(ft_buff &&other) noexcept
+game_buff::game_buff(game_buff &&other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -51,7 +51,7 @@ ft_buff::ft_buff(ft_buff &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_buff::ft_buff(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_buff::game_buff(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -69,7 +69,7 @@ ft_buff::ft_buff(ft_buff &&other) noexcept
     return ;
 }
 
-ft_buff::~ft_buff() noexcept
+game_buff::~game_buff() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
@@ -78,11 +78,11 @@ ft_buff::~ft_buff() noexcept
     return ;
 }
 
-int32_t ft_buff::initialize() noexcept
+int32_t game_buff::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_buff::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_buff::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_id = 0;
@@ -96,7 +96,7 @@ int32_t ft_buff::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_buff::initialize(const ft_buff &other) noexcept
+int32_t game_buff::initialize(const game_buff &other) noexcept
 {
     int32_t destroy_error;
 
@@ -104,7 +104,7 @@ int32_t ft_buff::initialize(const ft_buff &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_buff::initialize(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_buff::initialize(copy)",
             "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -135,12 +135,12 @@ int32_t ft_buff::initialize(const ft_buff &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_buff::initialize(ft_buff &&other) noexcept
+int32_t game_buff::initialize(game_buff &&other) noexcept
 {
     return (this->move(other));
 }
 
-int32_t ft_buff::move(ft_buff &other) noexcept
+int32_t game_buff::move(game_buff &other) noexcept
 {
     int32_t destroy_error;
 
@@ -148,7 +148,7 @@ int32_t ft_buff::move(ft_buff &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_buff::move",
+        errno_abort_lifecycle(other._initialised_state, "game_buff::move",
             "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -184,7 +184,7 @@ int32_t ft_buff::move(ft_buff &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_buff::destroy() noexcept
+int32_t game_buff::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -205,12 +205,12 @@ int32_t ft_buff::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_buff::enable_thread_safety() noexcept
+int32_t game_buff::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -234,7 +234,7 @@ int32_t ft_buff::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_buff::disable_thread_safety() noexcept
+int32_t game_buff::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -250,12 +250,12 @@ int32_t ft_buff::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_buff::is_thread_safe() const noexcept
+ft_bool game_buff::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_buff::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_buff::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -269,7 +269,7 @@ int32_t ft_buff::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_buff::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_buff::unlock_internal(ft_bool lock_acquired) const noexcept
 {
     if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
@@ -277,48 +277,48 @@ int32_t ft_buff::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_buff::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_buff::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::lock");
     return (this->lock_internal(lock_acquired));
 }
 
-void ft_buff::unlock(ft_bool lock_acquired) const noexcept
+void game_buff::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int32_t ft_buff::set_error(int32_t error_code) noexcept
+uint32_t game_buff::set_error(uint32_t error_code) noexcept
 {
-    ft_buff::_last_error = error_code;
+    game_buff::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_buff::get_error() const noexcept
+int32_t game_buff::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_buff::get_error");
-    return (ft_buff::_last_error);
+            "game_buff::get_error");
+    return (game_buff::_last_error);
 }
 
-const char *ft_buff::get_error_str() const noexcept
+const char *game_buff::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_buff::get_error_str");
-    return (ft_strerror(ft_buff::_last_error));
+            "game_buff::get_error_str");
+    return (ft_strerror(game_buff::_last_error));
 }
 
-int32_t ft_buff::get_id() const noexcept
+int32_t game_buff::get_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::get_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::get_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -328,12 +328,12 @@ int32_t ft_buff::get_id() const noexcept
     return (value);
 }
 
-void ft_buff::set_id(int32_t id) noexcept
+void game_buff::set_id(int32_t id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::set_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::set_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -344,13 +344,13 @@ void ft_buff::set_id(int32_t id) noexcept
     return ;
 }
 
-int32_t ft_buff::get_duration() const noexcept
+int32_t game_buff::get_duration() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::get_duration");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::get_duration");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -364,12 +364,12 @@ int32_t ft_buff::get_duration() const noexcept
     return (value);
 }
 
-void ft_buff::set_duration(int32_t duration) noexcept
+void game_buff::set_duration(int32_t duration) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::set_duration");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::set_duration");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -384,12 +384,12 @@ void ft_buff::set_duration(int32_t duration) noexcept
     return ;
 }
 
-void ft_buff::add_duration(int32_t duration) noexcept
+void game_buff::add_duration(int32_t duration) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::add_duration");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::add_duration");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -404,12 +404,12 @@ void ft_buff::add_duration(int32_t duration) noexcept
     return ;
 }
 
-void ft_buff::sub_duration(int32_t duration) noexcept
+void game_buff::sub_duration(int32_t duration) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::sub_duration");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::sub_duration");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -424,13 +424,13 @@ void ft_buff::sub_duration(int32_t duration) noexcept
     return ;
 }
 
-int32_t ft_buff::get_modifier1() const noexcept
+int32_t game_buff::get_modifier1() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::get_modifier1");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::get_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -440,12 +440,12 @@ int32_t ft_buff::get_modifier1() const noexcept
     return (value);
 }
 
-void ft_buff::set_modifier1(int32_t mod) noexcept
+void game_buff::set_modifier1(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::set_modifier1");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::set_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -455,12 +455,12 @@ void ft_buff::set_modifier1(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::add_modifier1(int32_t mod) noexcept
+void game_buff::add_modifier1(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::add_modifier1");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::add_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -470,12 +470,12 @@ void ft_buff::add_modifier1(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::sub_modifier1(int32_t mod) noexcept
+void game_buff::sub_modifier1(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::sub_modifier1");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::sub_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -485,13 +485,13 @@ void ft_buff::sub_modifier1(int32_t mod) noexcept
     return ;
 }
 
-int32_t ft_buff::get_modifier2() const noexcept
+int32_t game_buff::get_modifier2() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::get_modifier2");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::get_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -501,12 +501,12 @@ int32_t ft_buff::get_modifier2() const noexcept
     return (value);
 }
 
-void ft_buff::set_modifier2(int32_t mod) noexcept
+void game_buff::set_modifier2(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::set_modifier2");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::set_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -516,12 +516,12 @@ void ft_buff::set_modifier2(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::add_modifier2(int32_t mod) noexcept
+void game_buff::add_modifier2(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::add_modifier2");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::add_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -531,12 +531,12 @@ void ft_buff::add_modifier2(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::sub_modifier2(int32_t mod) noexcept
+void game_buff::sub_modifier2(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::sub_modifier2");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::sub_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -546,13 +546,13 @@ void ft_buff::sub_modifier2(int32_t mod) noexcept
     return ;
 }
 
-int32_t ft_buff::get_modifier3() const noexcept
+int32_t game_buff::get_modifier3() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::get_modifier3");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::get_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -562,12 +562,12 @@ int32_t ft_buff::get_modifier3() const noexcept
     return (value);
 }
 
-void ft_buff::set_modifier3(int32_t mod) noexcept
+void game_buff::set_modifier3(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::set_modifier3");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::set_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -577,12 +577,12 @@ void ft_buff::set_modifier3(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::add_modifier3(int32_t mod) noexcept
+void game_buff::add_modifier3(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::add_modifier3");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::add_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -592,12 +592,12 @@ void ft_buff::add_modifier3(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::sub_modifier3(int32_t mod) noexcept
+void game_buff::sub_modifier3(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::sub_modifier3");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::sub_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -607,13 +607,13 @@ void ft_buff::sub_modifier3(int32_t mod) noexcept
     return ;
 }
 
-int32_t ft_buff::get_modifier4() const noexcept
+int32_t game_buff::get_modifier4() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::get_modifier4");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::get_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -623,12 +623,12 @@ int32_t ft_buff::get_modifier4() const noexcept
     return (value);
 }
 
-void ft_buff::set_modifier4(int32_t mod) noexcept
+void game_buff::set_modifier4(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::set_modifier4");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::set_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -638,12 +638,12 @@ void ft_buff::set_modifier4(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::add_modifier4(int32_t mod) noexcept
+void game_buff::add_modifier4(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::add_modifier4");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::add_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -653,12 +653,12 @@ void ft_buff::add_modifier4(int32_t mod) noexcept
     return ;
 }
 
-void ft_buff::sub_modifier4(int32_t mod) noexcept
+void game_buff::sub_modifier4(int32_t mod) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_buff::sub_modifier4");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_buff::sub_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

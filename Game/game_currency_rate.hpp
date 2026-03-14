@@ -6,7 +6,7 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_currency_rate
+class game_currency_rate
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -18,25 +18,25 @@ class ft_currency_rate
         int32_t      _display_precision;
         pt_recursive_mutex *_mutex;
         uint8_t  _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_currency_rate() noexcept;
-        virtual ~ft_currency_rate() noexcept;
-        ft_currency_rate(const ft_currency_rate &other) noexcept;
-        ft_currency_rate &operator=(const ft_currency_rate &other) noexcept = delete;
-        ft_currency_rate(ft_currency_rate &&other) noexcept;
-        ft_currency_rate &operator=(ft_currency_rate &&other) noexcept = delete;
+        game_currency_rate() noexcept;
+        virtual ~game_currency_rate() noexcept;
+        game_currency_rate(const game_currency_rate &other) noexcept;
+        game_currency_rate &operator=(const game_currency_rate &other) noexcept = delete;
+        game_currency_rate(game_currency_rate &&other) noexcept;
+        game_currency_rate &operator=(game_currency_rate &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_currency_rate &other) noexcept;
-        int32_t initialize(ft_currency_rate &&other) noexcept;
-        int32_t move(ft_currency_rate &other) noexcept;
+        int32_t initialize(const game_currency_rate &other) noexcept;
+        int32_t initialize(game_currency_rate &&other) noexcept;
+        int32_t move(game_currency_rate &other) noexcept;
         int32_t initialize(int32_t currency_id, double rate_to_base,
             int32_t display_precision) noexcept;
         int32_t destroy() noexcept;

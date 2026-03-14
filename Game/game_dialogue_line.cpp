@@ -1,5 +1,5 @@
 #include "../PThread/pthread_internal.hpp"
-#include "ft_dialogue_line.hpp"
+#include "game_dialogue_line.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
@@ -20,15 +20,15 @@ static void game_dialogue_copy_int_vector(const ft_vector<int32_t> &source,
     return ;
 }
 
-thread_local int32_t ft_dialogue_line::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_dialogue_line::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_dialogue_line::set_error(int32_t error_code) noexcept
+uint32_t game_dialogue_line::set_error(uint32_t error_code) noexcept
 {
-    ft_dialogue_line::_last_error = error_code;
+    game_dialogue_line::_last_error = error_code;
     return (error_code);
 }
 
-ft_dialogue_line::ft_dialogue_line() noexcept
+game_dialogue_line::game_dialogue_line() noexcept
     : _line_id(0), _speaker(), _text(), _next_line_ids(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -36,7 +36,7 @@ ft_dialogue_line::ft_dialogue_line() noexcept
     return ;
 }
 
-ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept
+game_dialogue_line::game_dialogue_line(const game_dialogue_line &other) noexcept
     : _line_id(0), _speaker(), _text(), _next_line_ids(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -46,7 +46,7 @@ ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_dialogue_line::ft_dialogue_line(copy)",
+            "game_dialogue_line::game_dialogue_line(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -77,7 +77,7 @@ ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept
     return ;
 }
 
-ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept
+game_dialogue_line::game_dialogue_line(game_dialogue_line &&other) noexcept
     : _line_id(0), _speaker(), _text(), _next_line_ids(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -86,7 +86,7 @@ ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_dialogue_line::ft_dialogue_line(move)",
+            "game_dialogue_line::game_dialogue_line(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -107,17 +107,17 @@ ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept
     return ;
 }
 
-ft_dialogue_line::~ft_dialogue_line() noexcept
+game_dialogue_line::~game_dialogue_line() noexcept
 {
     (void)this->destroy();
     return ;
 }
 
-int32_t ft_dialogue_line::initialize() noexcept
+int32_t game_dialogue_line::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_dialogue_line::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_dialogue_line::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -130,13 +130,13 @@ int32_t ft_dialogue_line::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_dialogue_line::initialize(int32_t line_id, const ft_string &speaker,
+int32_t game_dialogue_line::initialize(int32_t line_id, const ft_string &speaker,
     const ft_string &text, const ft_vector<int32_t> &next_line_ids) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::initialize(values)");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::initialize(values)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -153,7 +153,7 @@ int32_t ft_dialogue_line::initialize(int32_t line_id, const ft_string &speaker,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_dialogue_line::destroy() noexcept
+int32_t game_dialogue_line::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -172,7 +172,7 @@ int32_t ft_dialogue_line::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_dialogue_line::move(ft_dialogue_line &other) noexcept
+int32_t game_dialogue_line::move(game_dialogue_line &other) noexcept
 {
     int32_t destroy_error;
     int32_t initialize_error;
@@ -183,7 +183,7 @@ int32_t ft_dialogue_line::move(ft_dialogue_line &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_dialogue_line::move",
+        errno_abort_lifecycle(other._initialised_state, "game_dialogue_line::move",
             "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -215,11 +215,11 @@ int32_t ft_dialogue_line::move(ft_dialogue_line &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_dialogue_line::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_dialogue_line::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -230,7 +230,7 @@ int32_t ft_dialogue_line::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_dialogue_line::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_dialogue_line::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -239,13 +239,13 @@ void ft_dialogue_line::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_dialogue_line::get_line_id() const noexcept
+int32_t game_dialogue_line::get_line_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::get_line_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::get_line_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -259,12 +259,12 @@ int32_t ft_dialogue_line::get_line_id() const noexcept
     return (result);
 }
 
-void ft_dialogue_line::set_line_id(int32_t line_id) noexcept
+void game_dialogue_line::set_line_id(int32_t line_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::set_line_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::set_line_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -278,13 +278,13 @@ void ft_dialogue_line::set_line_id(int32_t line_id) noexcept
     return ;
 }
 
-const ft_string &ft_dialogue_line::get_speaker() const noexcept
+const ft_string &game_dialogue_line::get_speaker() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     const ft_string *result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::get_speaker");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::get_speaker");
     result = &this->_speaker;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -298,12 +298,12 @@ const ft_string &ft_dialogue_line::get_speaker() const noexcept
     return (*result);
 }
 
-void ft_dialogue_line::set_speaker(const ft_string &speaker) noexcept
+void game_dialogue_line::set_speaker(const ft_string &speaker) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::set_speaker");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::set_speaker");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -317,13 +317,13 @@ void ft_dialogue_line::set_speaker(const ft_string &speaker) noexcept
     return ;
 }
 
-const ft_string &ft_dialogue_line::get_text() const noexcept
+const ft_string &game_dialogue_line::get_text() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     const ft_string *result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::get_text");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::get_text");
     result = &this->_text;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -337,12 +337,12 @@ const ft_string &ft_dialogue_line::get_text() const noexcept
     return (*result);
 }
 
-void ft_dialogue_line::set_text(const ft_string &text) noexcept
+void game_dialogue_line::set_text(const ft_string &text) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::set_text");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::set_text");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -356,13 +356,13 @@ void ft_dialogue_line::set_text(const ft_string &text) noexcept
     return ;
 }
 
-const ft_vector<int32_t> &ft_dialogue_line::get_next_line_ids() const noexcept
+const ft_vector<int32_t> &game_dialogue_line::get_next_line_ids() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     const ft_vector<int32_t> *result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::get_next_line_ids const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::get_next_line_ids const");
     result = &this->_next_line_ids;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -376,13 +376,13 @@ const ft_vector<int32_t> &ft_dialogue_line::get_next_line_ids() const noexcept
     return (*result);
 }
 
-ft_vector<int32_t> &ft_dialogue_line::get_next_line_ids() noexcept
+ft_vector<int32_t> &game_dialogue_line::get_next_line_ids() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_vector<int32_t> *result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::get_next_line_ids");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::get_next_line_ids");
     result = &this->_next_line_ids;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -396,12 +396,12 @@ ft_vector<int32_t> &ft_dialogue_line::get_next_line_ids() noexcept
     return (*result);
 }
 
-void ft_dialogue_line::set_next_line_ids(const ft_vector<int32_t> &next_line_ids) noexcept
+void game_dialogue_line::set_next_line_ids(const ft_vector<int32_t> &next_line_ids) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::set_next_line_ids");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::set_next_line_ids");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -415,12 +415,12 @@ void ft_dialogue_line::set_next_line_ids(const ft_vector<int32_t> &next_line_ids
     return ;
 }
 
-int32_t ft_dialogue_line::enable_thread_safety() noexcept
+int32_t game_dialogue_line::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -444,7 +444,7 @@ int32_t ft_dialogue_line::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_dialogue_line::disable_thread_safety() noexcept
+int32_t game_dialogue_line::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -457,24 +457,24 @@ int32_t ft_dialogue_line::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_dialogue_line::is_thread_safe() const noexcept
+ft_bool game_dialogue_line::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dialogue_line::is_thread_safe");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_line::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_dialogue_line::get_error() const noexcept
+int32_t game_dialogue_line::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_dialogue_line::get_error");
-    return (ft_dialogue_line::_last_error);
+            "game_dialogue_line::get_error");
+    return (game_dialogue_line::_last_error);
 }
 
-const char *ft_dialogue_line::get_error_str() const noexcept
+const char *game_dialogue_line::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_dialogue_line::get_error_str");
+            "game_dialogue_line::get_error_str");
     return (ft_strerror(this->get_error()));
 }

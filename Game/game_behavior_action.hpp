@@ -4,7 +4,7 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
-class ft_behavior_action
+class game_behavior_action
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -15,29 +15,29 @@ class ft_behavior_action
         double           _weight;
         double           _cooldown_seconds;
         uint8_t _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
-        static int32_t lock_pair(const ft_behavior_action &first, const ft_behavior_action &second,
+        static int32_t lock_pair(const game_behavior_action &first, const game_behavior_action &second,
                 ft_bool *first_locked,
                 ft_bool *second_locked);
 
     public:
-        ft_behavior_action() noexcept;
-        ft_behavior_action(const ft_behavior_action &other) noexcept;
-        ft_behavior_action(ft_behavior_action &&other) noexcept;
-        virtual ~ft_behavior_action() noexcept;
-        ft_behavior_action &operator=(const ft_behavior_action &other) noexcept = delete;
-        ft_behavior_action &operator=(ft_behavior_action &&other) noexcept = delete;
+        game_behavior_action() noexcept;
+        game_behavior_action(const game_behavior_action &other) noexcept;
+        game_behavior_action(game_behavior_action &&other) noexcept;
+        virtual ~game_behavior_action() noexcept;
+        game_behavior_action &operator=(const game_behavior_action &other) noexcept = delete;
+        game_behavior_action &operator=(game_behavior_action &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
         int32_t initialize(int32_t action_id, double weight, double cooldown_seconds) noexcept;
-        int32_t initialize(const ft_behavior_action &other) noexcept;
-        int32_t initialize(ft_behavior_action &&other) noexcept;
-        int32_t move(ft_behavior_action &other) noexcept;
+        int32_t initialize(const game_behavior_action &other) noexcept;
+        int32_t initialize(game_behavior_action &&other) noexcept;
+        int32_t move(game_behavior_action &other) noexcept;
         int32_t destroy() noexcept;
 
         int32_t enable_thread_safety() noexcept;

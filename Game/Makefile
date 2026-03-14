@@ -78,19 +78,19 @@ HEADERS := game_map3d.hpp \
         game_pathfinding.hpp \
         game_crafting.hpp \
         game_data_catalog.hpp \
-        ft_dialogue_line.hpp \
-        ft_dialogue_script.hpp \
+        game_dialogue_line.hpp \
+        game_dialogue_script.hpp \
         game_dialogue_table.hpp \
         game_behavior_action.hpp \
         game_behavior_profile.hpp \
         game_behavior_table.hpp \
-        ft_region_definition.hpp \
-        ft_world_region.hpp \
+        game_region_definition.hpp \
+        game_world_region.hpp \
         game_world_registry.hpp \
-        ft_price_definition.hpp \
-        ft_rarity_band.hpp \
-        ft_vendor_profile.hpp \
-        ft_currency_rate.hpp \
+        game_price_definition.hpp \
+        game_rarity_band.hpp \
+        game_vendor_profile.hpp \
+        game_currency_rate.hpp \
         game_economy_table.hpp \
         game_progress_tracker.hpp \
         game_hooks.hpp \

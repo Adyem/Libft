@@ -1,13 +1,13 @@
 #include "../PThread/pthread_internal.hpp"
-#include "ft_vendor_profile.hpp"
+#include "game_vendor_profile.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_vendor_profile::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_vendor_profile::_last_error = FT_ERR_SUCCESS;
 
-ft_vendor_profile::ft_vendor_profile() noexcept
+game_vendor_profile::game_vendor_profile() noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
       _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -16,7 +16,7 @@ ft_vendor_profile::ft_vendor_profile() noexcept
     return ;
 }
 
-ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
+game_vendor_profile::game_vendor_profile(const game_vendor_profile &other) noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
       _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -25,7 +25,7 @@ ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_vendor_profile::ft_vendor_profile(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_vendor_profile::game_vendor_profile(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -46,7 +46,7 @@ ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
     return ;
 }
 
-ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
+game_vendor_profile::game_vendor_profile(game_vendor_profile &&other) noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
       _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -55,7 +55,7 @@ ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_vendor_profile::ft_vendor_profile(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_vendor_profile::game_vendor_profile(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -76,7 +76,7 @@ ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
     return ;
 }
 
-ft_vendor_profile::~ft_vendor_profile() noexcept
+game_vendor_profile::~game_vendor_profile() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
@@ -85,17 +85,17 @@ ft_vendor_profile::~ft_vendor_profile() noexcept
     return ;
 }
 
-int32_t ft_vendor_profile::set_error(int32_t error_code) noexcept
+uint32_t game_vendor_profile::set_error(uint32_t error_code) noexcept
 {
-    ft_vendor_profile::_last_error = error_code;
+    game_vendor_profile::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_vendor_profile::initialize() noexcept
+int32_t game_vendor_profile::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_vendor_profile::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "game_vendor_profile::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -108,19 +108,32 @@ int32_t ft_vendor_profile::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_vendor_profile::initialize(const ft_vendor_profile &other) noexcept
+int32_t game_vendor_profile::initialize(const game_vendor_profile &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_vendor_profile::initialize(copy)",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_vendor_profile::initialize(copy)",
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
         return (FT_ERR_SUCCESS);
     }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -146,17 +159,33 @@ int32_t ft_vendor_profile::initialize(const ft_vendor_profile &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_vendor_profile::initialize(ft_vendor_profile &&other) noexcept
+int32_t game_vendor_profile::initialize(game_vendor_profile &&other) noexcept
 {
-    return (this->initialize(static_cast<const ft_vendor_profile &>(other)));
+    return (this->move(other));
 }
 
-int32_t ft_vendor_profile::move(ft_vendor_profile &other) noexcept
+int32_t game_vendor_profile::move(game_vendor_profile &other) noexcept
 {
-    return (this->initialize(static_cast<ft_vendor_profile &&>(other)));
+    int32_t initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_vendor_profile::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_vendor_profile &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_vendor_profile::initialize(int32_t vendor_id, double buy_markup,
+int32_t game_vendor_profile::initialize(int32_t vendor_id, double buy_markup,
     double sell_multiplier, double tax_rate) noexcept
 {
     int32_t initialize_error;
@@ -184,7 +213,7 @@ int32_t ft_vendor_profile::initialize(int32_t vendor_id, double buy_markup,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_vendor_profile::destroy() noexcept
+int32_t game_vendor_profile::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -203,12 +232,12 @@ int32_t ft_vendor_profile::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_vendor_profile::enable_thread_safety() noexcept
+int32_t game_vendor_profile::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -232,7 +261,7 @@ int32_t ft_vendor_profile::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_vendor_profile::disable_thread_safety() noexcept
+int32_t game_vendor_profile::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
     int32_t destroy_error;
@@ -250,16 +279,16 @@ int32_t ft_vendor_profile::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_vendor_profile::is_thread_safe() const noexcept
+ft_bool game_vendor_profile::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_vendor_profile::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_vendor_profile::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -274,9 +303,9 @@ int32_t ft_vendor_profile::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_vendor_profile::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_vendor_profile::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::unlock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::unlock_internal");
     if (lock_acquired == FT_FALSE)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -286,29 +315,28 @@ int32_t ft_vendor_profile::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_vendor_profile::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_vendor_profile::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
 }
 
-void ft_vendor_profile::unlock(ft_bool lock_acquired) const noexcept
+void game_vendor_profile::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::unlock");
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::unlock");
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int32_t ft_vendor_profile::get_vendor_id() const noexcept
+int32_t game_vendor_profile::get_vendor_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_vendor_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::get_vendor_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -322,12 +350,12 @@ int32_t ft_vendor_profile::get_vendor_id() const noexcept
     return (value);
 }
 
-void ft_vendor_profile::set_vendor_id(int32_t vendor_id) noexcept
+void game_vendor_profile::set_vendor_id(int32_t vendor_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_vendor_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::set_vendor_id");
     if (vendor_id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -346,13 +374,13 @@ void ft_vendor_profile::set_vendor_id(int32_t vendor_id) noexcept
     return ;
 }
 
-double ft_vendor_profile::get_buy_markup() const noexcept
+double game_vendor_profile::get_buy_markup() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_buy_markup");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::get_buy_markup");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -366,12 +394,12 @@ double ft_vendor_profile::get_buy_markup() const noexcept
     return (value);
 }
 
-void ft_vendor_profile::set_buy_markup(double buy_markup) noexcept
+void game_vendor_profile::set_buy_markup(double buy_markup) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_buy_markup");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::set_buy_markup");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -385,13 +413,13 @@ void ft_vendor_profile::set_buy_markup(double buy_markup) noexcept
     return ;
 }
 
-double ft_vendor_profile::get_sell_multiplier() const noexcept
+double game_vendor_profile::get_sell_multiplier() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_sell_multiplier");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::get_sell_multiplier");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -405,12 +433,12 @@ double ft_vendor_profile::get_sell_multiplier() const noexcept
     return (value);
 }
 
-void ft_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
+void game_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_sell_multiplier");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::set_sell_multiplier");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -424,13 +452,13 @@ void ft_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
     return ;
 }
 
-double ft_vendor_profile::get_tax_rate() const noexcept
+double game_vendor_profile::get_tax_rate() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_tax_rate");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::get_tax_rate");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -444,12 +472,12 @@ double ft_vendor_profile::get_tax_rate() const noexcept
     return (value);
 }
 
-void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
+void game_vendor_profile::set_tax_rate(double tax_rate) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_tax_rate");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_vendor_profile::set_tax_rate");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -464,18 +492,18 @@ void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
 }
 
 
-int32_t ft_vendor_profile::get_error() const noexcept
+int32_t game_vendor_profile::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_vendor_profile::get_error");
-    return (ft_vendor_profile::_last_error);
+            "game_vendor_profile::get_error");
+    return (static_cast<int32_t>(game_vendor_profile::_last_error));
 }
 
-const char *ft_vendor_profile::get_error_str() const noexcept
+const char *game_vendor_profile::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_vendor_profile::get_error_str");
-    return (ft_strerror(ft_vendor_profile::_last_error));
+            "game_vendor_profile::get_error_str");
+    return (ft_strerror(game_vendor_profile::_last_error));
 }

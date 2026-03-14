@@ -512,14 +512,14 @@ Parser/dom.hpp
 Parser/parser_document_backend.cpp
 
 ## Game
-Game/ft_currency_rate.hpp
-Game/ft_dialogue_line.hpp
-Game/ft_dialogue_script.hpp
-Game/ft_price_definition.hpp
-Game/ft_rarity_band.hpp
-Game/ft_region_definition.hpp
-Game/ft_vendor_profile.hpp
-Game/ft_world_region.hpp
+Game/game_currency_rate.hpp
+Game/game_dialogue_line.hpp
+Game/game_dialogue_script.hpp
+Game/game_price_definition.hpp
+Game/game_rarity_band.hpp
+Game/game_region_definition.hpp
+Game/game_vendor_profile.hpp
+Game/game_world_region.hpp
 Game/game_achievement.cpp
 Game/game_achievement.hpp
 Game/game_behavior_action.cpp

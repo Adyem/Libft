@@ -1,7 +1,7 @@
 #include "game_character.hpp"
 #include "../Errno/errno.hpp"
 
-void ft_character::add_coins(int32_t coins) noexcept
+void game_character::add_coins(int32_t coins) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -25,7 +25,7 @@ void ft_character::add_coins(int32_t coins) noexcept
     return ;
 }
 
-void ft_character::sub_coins(int32_t coins) noexcept
+void game_character::sub_coins(int32_t coins) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -49,7 +49,7 @@ void ft_character::sub_coins(int32_t coins) noexcept
     return ;
 }
 
-void ft_character::add_valor(int32_t valor) noexcept
+void game_character::add_valor(int32_t valor) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -73,7 +73,7 @@ void ft_character::add_valor(int32_t valor) noexcept
     return ;
 }
 
-void ft_character::sub_valor(int32_t valor) noexcept
+void game_character::sub_valor(int32_t valor) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -97,7 +97,7 @@ void ft_character::sub_valor(int32_t valor) noexcept
     return ;
 }
 
-void ft_character::add_experience(int32_t experience) noexcept
+void game_character::add_experience(int32_t experience) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -121,7 +121,7 @@ void ft_character::add_experience(int32_t experience) noexcept
     return ;
 }
 
-void ft_character::sub_experience(int32_t experience) noexcept
+void game_character::sub_experience(int32_t experience) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -145,7 +145,7 @@ void ft_character::sub_experience(int32_t experience) noexcept
     return ;
 }
 
-int32_t ft_character::add_skill(const ft_skill &skill) noexcept
+int32_t game_character::add_skill(const game_skill &skill) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -163,7 +163,7 @@ int32_t ft_character::add_skill(const ft_skill &skill) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_character::remove_skill(int32_t id) noexcept
+void game_character::remove_skill(int32_t id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;

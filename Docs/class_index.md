@@ -267,35 +267,35 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `ft_behavior_profile`
 
-## Game/ft_currency_rate.hpp
+## Game/game_currency_rate.hpp
 
 - `ft_currency_rate`
 
-## Game/ft_dialogue_line.hpp
+## Game/game_dialogue_line.hpp
 
 - `ft_dialogue_line`
 
-## Game/ft_dialogue_script.hpp
+## Game/game_dialogue_script.hpp
 
 - `ft_dialogue_script`
 
-## Game/ft_price_definition.hpp
+## Game/game_price_definition.hpp
 
 - `ft_price_definition`
 
-## Game/ft_rarity_band.hpp
+## Game/game_rarity_band.hpp
 
 - `ft_rarity_band`
 
-## Game/ft_region_definition.hpp
+## Game/game_region_definition.hpp
 
 - `ft_region_definition`
 
-## Game/ft_vendor_profile.hpp
+## Game/game_vendor_profile.hpp
 
 - `ft_vendor_profile`
 
-## Game/ft_world_region.hpp
+## Game/game_world_region.hpp
 
 - `ft_world_region`
 

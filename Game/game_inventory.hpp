@@ -16,14 +16,14 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_inventory
+class game_inventory
 {
     #ifdef LIBFT_TEST_BUILD
         public:
     #else
         private:
     #endif
-        ft_map<int32_t, ft_sharedptr<ft_item> > _items;
+        ft_map<int32_t, ft_sharedptr<game_item> > _items;
         ft_size_t                              _capacity;
         ft_size_t                              _used_slots;
         int32_t                                 _weight_limit;
@@ -31,28 +31,28 @@ class ft_inventory
         int32_t                                 _next_slot;
         pt_recursive_mutex                           *_mutex;
         uint8_t                             _initialised_state;
-        static thread_local int32_t             _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
 
-        ft_bool check_item_valid(const ft_sharedptr<ft_item> &item) const noexcept;
+        ft_bool check_item_valid(const ft_sharedptr<game_item> &item) const noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_inventory() noexcept;
-        ft_inventory(const ft_inventory &other) noexcept;
-        ft_inventory(ft_inventory &&other) noexcept;
-        virtual ~ft_inventory() noexcept;
-        ft_inventory &operator=(const ft_inventory &other) noexcept = delete;
-        ft_inventory &operator=(ft_inventory &&other) noexcept = delete;
+        game_inventory() noexcept;
+        game_inventory(const game_inventory &other) noexcept;
+        game_inventory(game_inventory &&other) noexcept;
+        virtual ~game_inventory() noexcept;
+        game_inventory &operator=(const game_inventory &other) noexcept = delete;
+        game_inventory &operator=(game_inventory &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
         int32_t initialize(ft_size_t capacity, int32_t weight_limit) noexcept;
-        int32_t initialize(const ft_inventory &other) noexcept;
-        int32_t initialize(ft_inventory &&other) noexcept;
-        int32_t move(ft_inventory &other) noexcept;
+        int32_t initialize(const game_inventory &other) noexcept;
+        int32_t initialize(game_inventory &&other) noexcept;
+        int32_t move(game_inventory &other) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
@@ -60,8 +60,8 @@ class ft_inventory
         int32_t lock(ft_bool *lock_acquired) const noexcept;
         void unlock(ft_bool lock_acquired) const noexcept;
 
-        ft_map<int32_t, ft_sharedptr<ft_item> >       &get_items() noexcept;
-        const ft_map<int32_t, ft_sharedptr<ft_item> > &get_items() const noexcept;
+        ft_map<int32_t, ft_sharedptr<game_item> >       &get_items() noexcept;
+        const ft_map<int32_t, ft_sharedptr<game_item> > &get_items() const noexcept;
 
         ft_size_t get_capacity() const noexcept;
         void   resize(ft_size_t capacity) noexcept;
@@ -73,7 +73,7 @@ class ft_inventory
         int32_t    get_current_weight() const noexcept;
         void   set_current_weight(int32_t weight) noexcept;
 
-        int32_t  add_item(const ft_sharedptr<ft_item> &item) noexcept;
+        int32_t  add_item(const ft_sharedptr<game_item> &item) noexcept;
         void remove_item(int32_t slot) noexcept;
 
         int32_t  count_item(int32_t item_id) const noexcept;

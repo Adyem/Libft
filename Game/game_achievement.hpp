@@ -7,7 +7,7 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
-class ft_goal
+class game_goal
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -18,24 +18,24 @@ class ft_goal
         int32_t              _progress;
         mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_goal() noexcept;
-        ft_goal(const ft_goal &other) noexcept;
-        ft_goal(ft_goal &&other) noexcept;
-        ~ft_goal() noexcept;
-        ft_goal &operator=(const ft_goal &other) = delete;
-        ft_goal &operator=(ft_goal &&other) = delete;
+        game_goal() noexcept;
+        game_goal(const game_goal &other) noexcept;
+        game_goal(game_goal &&other) noexcept;
+        ~game_goal() noexcept;
+        game_goal &operator=(const game_goal &other) = delete;
+        game_goal &operator=(game_goal &&other) = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_goal &other) noexcept;
-        int32_t initialize(ft_goal &&other) noexcept;
-        int32_t move(ft_goal &other) noexcept;
+        int32_t initialize(const game_goal &other) noexcept;
+        int32_t initialize(game_goal &&other) noexcept;
+        int32_t move(game_goal &other) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
@@ -53,7 +53,7 @@ class ft_goal
         const char *get_error_str() const noexcept;
 };
 
-class ft_achievement
+class game_achievement
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -61,27 +61,27 @@ class ft_achievement
         private:
     #endif
         int32_t              _id;
-        ft_map<int32_t, ft_goal> _goals;
+        ft_map<int32_t, game_goal> _goals;
         mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_achievement() noexcept;
-        ft_achievement(const ft_achievement &other) noexcept;
-        ft_achievement(ft_achievement &&other) noexcept;
-        virtual ~ft_achievement() noexcept;
-        ft_achievement &operator=(const ft_achievement &other) = delete;
-        ft_achievement &operator=(ft_achievement &&other) = delete;
+        game_achievement() noexcept;
+        game_achievement(const game_achievement &other) noexcept;
+        game_achievement(game_achievement &&other) noexcept;
+        virtual ~game_achievement() noexcept;
+        game_achievement &operator=(const game_achievement &other) = delete;
+        game_achievement &operator=(game_achievement &&other) = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_achievement &other) noexcept;
-        int32_t initialize(ft_achievement &&other) noexcept;
-        int32_t move(ft_achievement &other) noexcept;
+        int32_t initialize(const game_achievement &other) noexcept;
+        int32_t initialize(game_achievement &&other) noexcept;
+        int32_t move(game_achievement &other) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
@@ -92,9 +92,9 @@ class ft_achievement
         int32_t get_id() const noexcept;
         void set_id(int32_t id) noexcept;
 
-        ft_map<int32_t, ft_goal>       &get_goals() noexcept;
-        const ft_map<int32_t, ft_goal> &get_goals() const noexcept;
-        void set_goals(const ft_map<int32_t, ft_goal> &goals) noexcept;
+        ft_map<int32_t, game_goal>       &get_goals() noexcept;
+        const ft_map<int32_t, game_goal> &get_goals() const noexcept;
+        void set_goals(const ft_map<int32_t, game_goal> &goals) noexcept;
         int32_t get_goal(int32_t id) const noexcept;
         void set_goal(int32_t id, int32_t goal) noexcept;
 

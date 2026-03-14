@@ -24,10 +24,10 @@ struct ft_game_hook_metadata
 
 struct ft_game_hook_context
 {
-    ft_world *world;
-    ft_character *character;
-    ft_item *item;
-    ft_event *event;
+    game_world *world;
+    game_character *character;
+    game_item *item;
+    game_event *event;
     int32_t integer_payload;
     uint8_t small_payload;
 };
@@ -43,27 +43,27 @@ extern const char *ft_game_hook_item_crafted_identifier;
 extern const char *ft_game_hook_character_damaged_identifier;
 extern const char *ft_game_hook_event_triggered_identifier;
 
-ft_function<void(ft_game_hook_context&)> ft_game_hook_make_character_item_adapter(ft_function<void(ft_character&, ft_item&)> &&callback) noexcept;
-ft_function<void(ft_game_hook_context&)> ft_game_hook_make_character_damage_adapter(ft_function<void(ft_character&, int32_t, uint8_t)> &&callback) noexcept;
-ft_function<void(ft_game_hook_context&)> ft_game_hook_make_world_event_adapter(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept;
+ft_function<void(ft_game_hook_context&)> ft_game_hook_make_character_item_adapter(ft_function<void(game_character&, game_item&)> &&callback) noexcept;
+ft_function<void(ft_game_hook_context&)> ft_game_hook_make_character_damage_adapter(ft_function<void(game_character&, int32_t, uint8_t)> &&callback) noexcept;
+ft_function<void(ft_game_hook_context&)> ft_game_hook_make_world_event_adapter(ft_function<void(game_world&, game_event&)> &&callback) noexcept;
 
-class ft_game_hooks
+class game_hooks
 {
     #ifdef LIBFT_TEST_BUILD
         public:
     #else
         private:
     #endif
-        ft_function<void(ft_character&, ft_item&)> _legacy_item_crafted;
-        ft_function<void(ft_character&, int32_t, uint8_t)> _legacy_character_damaged;
-        ft_function<void(ft_world&, ft_event&)> _legacy_event_triggered;
+        ft_function<void(game_character&, game_item&)> _legacy_item_crafted;
+        ft_function<void(game_character&, int32_t, uint8_t)> _legacy_character_damaged;
+        ft_function<void(game_world&, game_event&)> _legacy_event_triggered;
         ft_map<ft_string, ft_vector<ft_game_hook_listener_entry> > _listener_catalog;
         ft_vector<ft_game_hook_metadata> _catalog_metadata;
         pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
 
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
@@ -75,17 +75,17 @@ class ft_game_hooks
         void append_metadata_unlocked(const ft_game_hook_metadata &metadata) noexcept;
 
     public:
-        ft_game_hooks() noexcept;
-        ~ft_game_hooks() noexcept;
-        ft_game_hooks(const ft_game_hooks &other) noexcept;
-        ft_game_hooks &operator=(const ft_game_hooks &other) noexcept = delete;
-        ft_game_hooks(ft_game_hooks &&other) noexcept;
-        ft_game_hooks &operator=(ft_game_hooks &&other) noexcept = delete;
+        game_hooks() noexcept;
+        ~game_hooks() noexcept;
+        game_hooks(const game_hooks &other) noexcept;
+        game_hooks &operator=(const game_hooks &other) noexcept = delete;
+        game_hooks(game_hooks &&other) noexcept;
+        game_hooks &operator=(game_hooks &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_game_hooks &other) noexcept;
-        int32_t initialize(ft_game_hooks &&other) noexcept;
-        int32_t move(ft_game_hooks &other) noexcept;
+        int32_t initialize(const game_hooks &other) noexcept;
+        int32_t initialize(game_hooks &&other) noexcept;
+        int32_t move(game_hooks &other) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
@@ -93,17 +93,17 @@ class ft_game_hooks
         int32_t lock(ft_bool *lock_acquired) const noexcept;
         void unlock(ft_bool lock_acquired) const noexcept;
 
-        void set_on_item_crafted(ft_function<void(ft_character&, ft_item&)> &&callback) noexcept;
-        void set_on_character_damaged(ft_function<void(ft_character&, int32_t, uint8_t)> &&callback) noexcept;
-        void set_on_event_triggered(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept;
+        void set_on_item_crafted(ft_function<void(game_character&, game_item&)> &&callback) noexcept;
+        void set_on_character_damaged(ft_function<void(game_character&, int32_t, uint8_t)> &&callback) noexcept;
+        void set_on_event_triggered(ft_function<void(game_world&, game_event&)> &&callback) noexcept;
 
-        ft_function<void(ft_character&, ft_item&)> get_on_item_crafted() const noexcept;
-        ft_function<void(ft_character&, int32_t, uint8_t)> get_on_character_damaged() const noexcept;
-        ft_function<void(ft_world&, ft_event&)> get_on_event_triggered() const noexcept;
+        ft_function<void(game_character&, game_item&)> get_on_item_crafted() const noexcept;
+        ft_function<void(game_character&, int32_t, uint8_t)> get_on_character_damaged() const noexcept;
+        ft_function<void(game_world&, game_event&)> get_on_event_triggered() const noexcept;
 
-        void invoke_on_item_crafted(ft_character &character, ft_item &item) const noexcept;
-        void invoke_on_character_damaged(ft_character &character, int32_t damage, uint8_t type) const noexcept;
-        void invoke_on_event_triggered(ft_world &world, ft_event &event) const noexcept;
+        void invoke_on_item_crafted(game_character &character, game_item &item) const noexcept;
+        void invoke_on_character_damaged(game_character &character, int32_t damage, uint8_t type) const noexcept;
+        void invoke_on_event_triggered(game_world &world, game_event &event) const noexcept;
 
         void register_listener(const ft_game_hook_metadata &metadata, int32_t priority,
             ft_function<void(ft_game_hook_context&)> &&callback) noexcept;

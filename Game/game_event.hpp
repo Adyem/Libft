@@ -6,9 +6,9 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
-class ft_world;
+class game_world;
 
-class ft_event
+class game_event
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -21,27 +21,27 @@ class ft_event
         int32_t _modifier2;
         int32_t _modifier3;
         int32_t _modifier4;
-        ft_function<void(ft_world&, ft_event&)> _callback;
+        ft_function<void(game_world&, game_event&)> _callback;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
 
-        friend struct ft_event_compare_ptr;
+        friend struct game_event_compare_ptr;
 
     public:
-        ft_event() noexcept;
-        virtual ~ft_event() noexcept;
+        game_event() noexcept;
+        virtual ~game_event() noexcept;
         int32_t initialize() noexcept;
-        int32_t move(ft_event &other) noexcept;
+        int32_t move(game_event &other) noexcept;
         int32_t destroy() noexcept;
-        ft_event(const ft_event &other) noexcept;
-        ft_event &operator=(const ft_event &other) noexcept = delete;
-        ft_event(ft_event &&other) noexcept;
-        ft_event &operator=(ft_event &&other) noexcept = delete;
+        game_event(const game_event &other) noexcept;
+        game_event &operator=(const game_event &other) noexcept = delete;
+        game_event(game_event &&other) noexcept;
+        game_event &operator=(game_event &&other) noexcept = delete;
 
         int32_t get_id() const noexcept;
         void set_id(int32_t id) noexcept;
@@ -71,8 +71,8 @@ class ft_event
         void add_modifier4(int32_t mod) noexcept;
         void sub_modifier4(int32_t mod) noexcept;
 
-        const ft_function<void(ft_world&, ft_event&)> &get_callback() const noexcept;
-        void set_callback(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept;
+        const ft_function<void(game_world&, game_event&)> &get_callback() const noexcept;
+        void set_callback(ft_function<void(game_world&, game_event&)> &&callback) noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

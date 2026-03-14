@@ -7,7 +7,7 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_world_region
+class game_world_region
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -18,26 +18,26 @@ class ft_world_region
         ft_vector<int32_t>  _region_ids;
         pt_recursive_mutex       *_mutex;
         uint8_t         _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
 
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_world_region() noexcept;
-        virtual ~ft_world_region() noexcept;
-        ft_world_region(const ft_world_region &other) noexcept;
-        ft_world_region &operator=(const ft_world_region &other) = delete;
-        ft_world_region(ft_world_region &&other) noexcept;
-        ft_world_region &operator=(ft_world_region &&other) = delete;
+        game_world_region() noexcept;
+        virtual ~game_world_region() noexcept;
+        game_world_region(const game_world_region &other) noexcept;
+        game_world_region &operator=(const game_world_region &other) = delete;
+        game_world_region(game_world_region &&other) noexcept;
+        game_world_region &operator=(game_world_region &&other) = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_world_region &other) noexcept;
-        int32_t initialize(ft_world_region &&other) noexcept;
-        int32_t move(ft_world_region &other) noexcept;
+        int32_t initialize(const game_world_region &other) noexcept;
+        int32_t initialize(game_world_region &&other) noexcept;
+        int32_t move(game_world_region &other) noexcept;
         int32_t initialize(int32_t world_id, const ft_vector<int32_t> &region_ids) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;

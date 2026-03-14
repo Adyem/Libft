@@ -11,10 +11,10 @@
 #include "../Template/shared_ptr.hpp"
 #include <cstdio>
 
-json_group *serialize_character(const ft_character &character);
-json_group *serialize_inventory(const ft_inventory &inventory);
-json_group *serialize_equipment(const ft_character &character);
-json_group *serialize_quest(const ft_quest &quest);
+json_group *serialize_character(const game_character &character);
+json_group *serialize_inventory(const game_inventory &inventory);
+json_group *serialize_equipment(const game_character &character);
+json_group *serialize_quest(const game_quest &quest);
 
 static int32_t add_item_field(json_group *group, const ft_string &key, int32_t value)
 {
@@ -28,7 +28,7 @@ static int32_t add_item_field(json_group *group, const ft_string &key, int32_t v
     return (FT_ERR_SUCCESS);
 }
 
-static int32_t serialize_item_fields(json_group *group, const ft_item &item, const ft_string &item_prefix)
+static int32_t serialize_item_fields(json_group *group, const game_item &item, const ft_string &item_prefix)
 {
     ft_string key_max = item_prefix;
     key_max += "_max_stack";
@@ -85,7 +85,7 @@ static int32_t serialize_item_fields(json_group *group, const ft_item &item, con
     return (FT_ERR_SUCCESS);
 }
 
-json_group *serialize_inventory(const ft_inventory &inventory)
+json_group *serialize_inventory(const game_inventory &inventory)
 {
     json_group *group = json_create_json_group("inventory");
     if (!group)
@@ -131,8 +131,8 @@ json_group *serialize_inventory(const ft_inventory &inventory)
             break ;
         }
         json_add_item_to_group(group, count_item);
-        const Pair<int32_t, ft_sharedptr<ft_item> > *items_end = inventory.get_items().end();
-        const Pair<int32_t, ft_sharedptr<ft_item> > *item_start = items_end;
+        const Pair<int32_t, ft_sharedptr<game_item> > *items_end = inventory.get_items().end();
+        const Pair<int32_t, ft_sharedptr<game_item> > *item_start = items_end;
         if (item_count > 0)
         {
             if (!items_end)
@@ -179,14 +179,14 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     return (group);
 }
 
-json_group *serialize_equipment(const ft_character &character)
+json_group *serialize_equipment(const game_character &character)
 {
     json_group *group = json_create_json_group("equipment");
     if (!group)
     {
         return (ft_nullptr);
     }
-    ft_sharedptr<ft_item> head = character.get_equipped_item(EQUIP_HEAD);
+    ft_sharedptr<game_item> head = character.get_equipped_item(EQUIP_HEAD);
     int32_t head_present_value;
 
     if (head)
@@ -211,7 +211,7 @@ json_group *serialize_equipment(const ft_character &character)
         json_free_groups(group);
         return (ft_nullptr);
     }
-    ft_sharedptr<ft_item> chest = character.get_equipped_item(EQUIP_CHEST);
+    ft_sharedptr<game_item> chest = character.get_equipped_item(EQUIP_CHEST);
     int32_t chest_present_value;
 
     if (chest)
@@ -236,7 +236,7 @@ json_group *serialize_equipment(const ft_character &character)
         json_free_groups(group);
         return (ft_nullptr);
     }
-    ft_sharedptr<ft_item> weapon = character.get_equipped_item(EQUIP_WEAPON);
+    ft_sharedptr<game_item> weapon = character.get_equipped_item(EQUIP_WEAPON);
     int32_t weapon_present_value;
 
     if (weapon)
@@ -264,7 +264,7 @@ json_group *serialize_equipment(const ft_character &character)
     return (group);
 }
 
-json_group *serialize_quest(const ft_quest &quest)
+json_group *serialize_quest(const game_quest &quest)
 {
     json_group *group = json_create_json_group("quest");
     if (!group)
@@ -324,8 +324,8 @@ json_group *serialize_quest(const ft_quest &quest)
             break ;
         }
         json_add_item_to_group(group, item);
-        const ft_vector<ft_sharedptr<ft_item> > &reward_items = quest.get_reward_items();
-        const ft_sharedptr<ft_item> *item_start = reward_items.begin();
+        const ft_vector<ft_sharedptr<game_item> > &reward_items = quest.get_reward_items();
+        const ft_sharedptr<game_item> *item_start = reward_items.begin();
         if (item_count > 0 && !item_start)
         {
             has_error = FT_TRUE;

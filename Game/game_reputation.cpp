@@ -4,31 +4,31 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 
-thread_local int32_t ft_reputation::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_reputation::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_reputation::set_error(int32_t error_code) noexcept
+uint32_t game_reputation::set_error(uint32_t error_code) noexcept
 {
-    ft_reputation::_last_error = error_code;
+    game_reputation::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_reputation::get_error() const noexcept
+int32_t game_reputation::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_reputation::get_error");
-    return (ft_reputation::_last_error);
+            "game_reputation::get_error");
+    return (game_reputation::_last_error);
 }
 
-const char *ft_reputation::get_error_str() const noexcept
+const char *game_reputation::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_reputation::get_error_str");
-    return (ft_strerror(ft_reputation::_last_error));
+            "game_reputation::get_error_str");
+    return (ft_strerror(game_reputation::_last_error));
 }
 
-ft_reputation::ft_reputation() noexcept
+game_reputation::game_reputation() noexcept
     : _milestones(), _reps(), _total_rep(0), _current_rep(0),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -36,7 +36,7 @@ ft_reputation::ft_reputation() noexcept
     return ;
 }
 
-ft_reputation::ft_reputation(const ft_reputation &other) noexcept
+game_reputation::game_reputation(const game_reputation &other) noexcept
     : _milestones(), _reps(), _total_rep(0), _current_rep(0),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -44,7 +44,7 @@ ft_reputation::ft_reputation(const ft_reputation &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_reputation::ft_reputation(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_reputation::game_reputation(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -62,7 +62,7 @@ ft_reputation::ft_reputation(const ft_reputation &other) noexcept
     return ;
 }
 
-ft_reputation::ft_reputation(ft_reputation &&other) noexcept
+game_reputation::game_reputation(game_reputation &&other) noexcept
     : _milestones(), _reps(), _total_rep(0), _current_rep(0),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -70,7 +70,7 @@ ft_reputation::ft_reputation(ft_reputation &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_reputation::ft_reputation(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_reputation::game_reputation(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -88,7 +88,7 @@ ft_reputation::ft_reputation(ft_reputation &&other) noexcept
     return ;
 }
 
-ft_reputation::~ft_reputation() noexcept
+game_reputation::~game_reputation() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
@@ -97,14 +97,14 @@ ft_reputation::~ft_reputation() noexcept
     return ;
 }
 
-int32_t ft_reputation::initialize() noexcept
+int32_t game_reputation::initialize() noexcept
 {
     int32_t milestones_error;
     int32_t reps_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_reputation::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_reputation::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -130,7 +130,7 @@ int32_t ft_reputation::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_reputation::initialize(const ft_map<int32_t, int32_t> &milestones,
+int32_t game_reputation::initialize(const ft_map<int32_t, int32_t> &milestones,
     int32_t total) noexcept
 {
     int32_t initialize_error;
@@ -151,7 +151,7 @@ int32_t ft_reputation::initialize(const ft_map<int32_t, int32_t> &milestones,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_reputation::initialize(const ft_reputation &other) noexcept
+int32_t game_reputation::initialize(const game_reputation &other) noexcept
 {
     int32_t initialize_error;
     int32_t destroy_error;
@@ -160,7 +160,7 @@ int32_t ft_reputation::initialize(const ft_reputation &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_reputation::initialize(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_reputation::initialize(copy)",
             "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -191,12 +191,12 @@ int32_t ft_reputation::initialize(const ft_reputation &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_reputation::initialize(ft_reputation &&other) noexcept
+int32_t game_reputation::initialize(game_reputation &&other) noexcept
 {
     return (this->move(other));
 }
 
-int32_t ft_reputation::move(ft_reputation &other) noexcept
+int32_t game_reputation::move(game_reputation &other) noexcept
 {
     int32_t destroy_error;
 
@@ -204,7 +204,7 @@ int32_t ft_reputation::move(ft_reputation &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_reputation::move",
+        errno_abort_lifecycle(other._initialised_state, "game_reputation::move",
             "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -236,7 +236,7 @@ int32_t ft_reputation::move(ft_reputation &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_reputation::destroy() noexcept
+int32_t game_reputation::destroy() noexcept
 {
     int32_t milestones_error;
     int32_t reps_error;
@@ -268,12 +268,12 @@ int32_t ft_reputation::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_reputation::enable_thread_safety() noexcept
+int32_t game_reputation::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -297,7 +297,7 @@ int32_t ft_reputation::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_reputation::disable_thread_safety() noexcept
+int32_t game_reputation::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
     int32_t destroy_error;
@@ -315,16 +315,16 @@ int32_t ft_reputation::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_reputation::is_thread_safe() const noexcept
+ft_bool game_reputation::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_reputation::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_reputation::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -339,9 +339,9 @@ int32_t ft_reputation::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_reputation::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_reputation::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::unlock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::unlock_internal");
     if (lock_acquired == FT_FALSE)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -352,26 +352,26 @@ int32_t ft_reputation::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_reputation::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_reputation::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::lock");
     return (this->lock_internal(lock_acquired));
 }
 
-void ft_reputation::unlock(ft_bool lock_acquired) const noexcept
+void game_reputation::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int32_t ft_reputation::get_total_rep() const noexcept
+int32_t game_reputation::get_total_rep() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t total;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_total_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_total_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -385,13 +385,13 @@ int32_t ft_reputation::get_total_rep() const noexcept
     return (total);
 }
 
-void ft_reputation::set_total_rep(int32_t rep) noexcept
+void game_reputation::set_total_rep(int32_t rep) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_bool valid;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::set_total_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::set_total_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -410,12 +410,12 @@ void ft_reputation::set_total_rep(int32_t rep) noexcept
     return ;
 }
 
-void ft_reputation::add_total_rep(int32_t rep) noexcept
+void game_reputation::add_total_rep(int32_t rep) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::add_total_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::add_total_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -429,12 +429,12 @@ void ft_reputation::add_total_rep(int32_t rep) noexcept
     return ;
 }
 
-void ft_reputation::sub_total_rep(int32_t rep) noexcept
+void game_reputation::sub_total_rep(int32_t rep) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::sub_total_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::sub_total_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -448,13 +448,13 @@ void ft_reputation::sub_total_rep(int32_t rep) noexcept
     return ;
 }
 
-int32_t ft_reputation::get_current_rep() const noexcept
+int32_t game_reputation::get_current_rep() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t current;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_current_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_current_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -468,13 +468,13 @@ int32_t ft_reputation::get_current_rep() const noexcept
     return (current);
 }
 
-void ft_reputation::set_current_rep(int32_t rep) noexcept
+void game_reputation::set_current_rep(int32_t rep) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_bool valid;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::set_current_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::set_current_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -493,12 +493,12 @@ void ft_reputation::set_current_rep(int32_t rep) noexcept
     return ;
 }
 
-void ft_reputation::add_current_rep(int32_t rep) noexcept
+void game_reputation::add_current_rep(int32_t rep) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::add_current_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::add_current_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -512,12 +512,12 @@ void ft_reputation::add_current_rep(int32_t rep) noexcept
     return ;
 }
 
-void ft_reputation::sub_current_rep(int32_t rep) noexcept
+void game_reputation::sub_current_rep(int32_t rep) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::sub_current_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::sub_current_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -531,12 +531,12 @@ void ft_reputation::sub_current_rep(int32_t rep) noexcept
     return ;
 }
 
-ft_map<int32_t, int32_t> &ft_reputation::get_milestones() noexcept
+ft_map<int32_t, int32_t> &game_reputation::get_milestones() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_milestones");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_milestones");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -549,12 +549,12 @@ ft_map<int32_t, int32_t> &ft_reputation::get_milestones() noexcept
     return (this->_milestones);
 }
 
-const ft_map<int32_t, int32_t> &ft_reputation::get_milestones() const noexcept
+const ft_map<int32_t, int32_t> &game_reputation::get_milestones() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_milestones const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_milestones const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -567,12 +567,12 @@ const ft_map<int32_t, int32_t> &ft_reputation::get_milestones() const noexcept
     return (this->_milestones);
 }
 
-void ft_reputation::set_milestones(const ft_map<int32_t, int32_t> &milestones) noexcept
+void game_reputation::set_milestones(const ft_map<int32_t, int32_t> &milestones) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::set_milestones");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::set_milestones");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -586,11 +586,11 @@ void ft_reputation::set_milestones(const ft_map<int32_t, int32_t> &milestones) n
     return ;
 }
 
-int32_t ft_reputation::get_milestone(int32_t id) const noexcept
+int32_t game_reputation::get_milestone(int32_t id) const noexcept
 {
     const Pair<int32_t, int32_t> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_milestone");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_milestone");
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
@@ -615,13 +615,13 @@ int32_t ft_reputation::get_milestone(int32_t id) const noexcept
     return (value);
 }
 
-void ft_reputation::set_milestone(int32_t id, int32_t value) noexcept
+void game_reputation::set_milestone(int32_t id, int32_t value) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     Pair<int32_t, int32_t> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::set_milestone");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::set_milestone");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -639,12 +639,12 @@ void ft_reputation::set_milestone(int32_t id, int32_t value) noexcept
     return ;
 }
 
-ft_map<int32_t, int32_t> &ft_reputation::get_reps() noexcept
+ft_map<int32_t, int32_t> &game_reputation::get_reps() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_reps");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_reps");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -657,12 +657,12 @@ ft_map<int32_t, int32_t> &ft_reputation::get_reps() noexcept
     return (this->_reps);
 }
 
-const ft_map<int32_t, int32_t> &ft_reputation::get_reps() const noexcept
+const ft_map<int32_t, int32_t> &game_reputation::get_reps() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_reps const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_reps const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -675,12 +675,12 @@ const ft_map<int32_t, int32_t> &ft_reputation::get_reps() const noexcept
     return (this->_reps);
 }
 
-void ft_reputation::set_reps(const ft_map<int32_t, int32_t> &reps) noexcept
+void game_reputation::set_reps(const ft_map<int32_t, int32_t> &reps) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::set_reps");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::set_reps");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -694,14 +694,14 @@ void ft_reputation::set_reps(const ft_map<int32_t, int32_t> &reps) noexcept
     return ;
 }
 
-int32_t ft_reputation::get_rep(int32_t id) const noexcept
+int32_t game_reputation::get_rep(int32_t id) const noexcept
 {
     const Pair<int32_t, int32_t> *entry;
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::get_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::get_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -722,13 +722,13 @@ int32_t ft_reputation::get_rep(int32_t id) const noexcept
     return (value);
 }
 
-void ft_reputation::set_rep(int32_t id, int32_t value) noexcept
+void game_reputation::set_rep(int32_t id, int32_t value) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     Pair<int32_t, int32_t> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_reputation::set_rep");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_reputation::set_rep");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

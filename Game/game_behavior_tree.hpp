@@ -6,149 +6,149 @@
 #include "../Template/function.hpp"
 #include "../Errno/errno.hpp"
 
-class ft_character;
+class game_character;
 
 #define FT_BEHAVIOR_STATUS_RUNNING 0
 #define FT_BEHAVIOR_STATUS_SUCCESS 1
 #define FT_BEHAVIOR_STATUS_FAILURE 2
 
-class ft_behavior_context
+class game_behavior_context
 {
     #ifdef LIBFT_TEST_BUILD
         public:
     #else
         private:
     #endif
-        ft_character        *_character;
+        game_character        *_character;
         void                *_user_data;
 
     public:
-        ft_behavior_context() noexcept;
-        ft_behavior_context(const ft_behavior_context &other) noexcept;
-        ft_behavior_context(ft_behavior_context &&other) noexcept;
-        ~ft_behavior_context() noexcept;
-        ft_behavior_context &operator=(const ft_behavior_context &other) noexcept = delete;
-        ft_behavior_context &operator=(ft_behavior_context &&other) noexcept = delete;
+        game_behavior_context() noexcept;
+        game_behavior_context(const game_behavior_context &other) noexcept;
+        game_behavior_context(game_behavior_context &&other) noexcept;
+        ~game_behavior_context() noexcept;
+        game_behavior_context &operator=(const game_behavior_context &other) noexcept = delete;
+        game_behavior_context &operator=(game_behavior_context &&other) noexcept = delete;
 
-        ft_character *get_character() const noexcept;
-        void set_character(ft_character *character) noexcept;
+        game_character *get_character() const noexcept;
+        void set_character(game_character *character) noexcept;
 
         void *get_user_data() const noexcept;
         void set_user_data(void *user_data) noexcept;
 };
 
-class ft_behavior_node
+class game_behavior_node
 {
     protected:
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
     public:
-        ft_behavior_node() noexcept;
-        ft_behavior_node(const ft_behavior_node &other) noexcept;
-        ft_behavior_node(ft_behavior_node &&other) noexcept;
-        virtual ~ft_behavior_node() noexcept;
-        ft_behavior_node &operator=(const ft_behavior_node &other) noexcept = delete;
-        ft_behavior_node &operator=(ft_behavior_node &&other) noexcept = delete;
+        game_behavior_node() noexcept;
+        game_behavior_node(const game_behavior_node &other) noexcept;
+        game_behavior_node(game_behavior_node &&other) noexcept;
+        virtual ~game_behavior_node() noexcept;
+        game_behavior_node &operator=(const game_behavior_node &other) noexcept = delete;
+        game_behavior_node &operator=(game_behavior_node &&other) noexcept = delete;
 
-        virtual int32_t tick(ft_behavior_context &context) noexcept = 0;
+        virtual int32_t tick(game_behavior_context &context) noexcept = 0;
 
         int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
-class ft_behavior_action : public ft_behavior_node
+class game_behavior_action : public game_behavior_node
 {
     #ifdef LIBFT_TEST_BUILD
         public:
     #else
         private:
     #endif
-        ft_function<int32_t(ft_behavior_context &)> _callback;
+        ft_function<int32_t(game_behavior_context &)> _callback;
 
     public:
-        ft_behavior_action() noexcept;
-        ft_behavior_action(const ft_behavior_action &other) noexcept;
-        ft_behavior_action(ft_behavior_action &&other) noexcept;
-        virtual ~ft_behavior_action() noexcept;
-        ft_behavior_action &operator=(const ft_behavior_action &other) noexcept = delete;
+        game_behavior_action() noexcept;
+        game_behavior_action(const game_behavior_action &other) noexcept;
+        game_behavior_action(game_behavior_action &&other) noexcept;
+        virtual ~game_behavior_action() noexcept;
+        game_behavior_action &operator=(const game_behavior_action &other) noexcept = delete;
 
-        void set_callback(const ft_function<int32_t(ft_behavior_context &)> &callback) noexcept;
-        const ft_function<int32_t(ft_behavior_context &)> &get_callback() const noexcept;
+        void set_callback(const ft_function<int32_t(game_behavior_context &)> &callback) noexcept;
+        const ft_function<int32_t(game_behavior_context &)> &get_callback() const noexcept;
 
-        virtual int32_t tick(ft_behavior_context &context) noexcept;
+        virtual int32_t tick(game_behavior_context &context) noexcept;
 };
 
-class ft_behavior_composite : public ft_behavior_node
+class game_behavior_composite : public game_behavior_node
 {
     protected:
-        ft_vector<ft_sharedptr<ft_behavior_node> > _children;
+        ft_vector<ft_sharedptr<game_behavior_node> > _children;
 
-        ft_bool validate_child(const ft_sharedptr<ft_behavior_node> &child) const noexcept;
+        ft_bool validate_child(const ft_sharedptr<game_behavior_node> &child) const noexcept;
 
     public:
-        ft_behavior_composite() noexcept;
-        ft_behavior_composite(const ft_behavior_composite &other) noexcept;
-        ft_behavior_composite(ft_behavior_composite &&other) noexcept;
-        virtual ~ft_behavior_composite() noexcept;
-        ft_behavior_composite &operator=(const ft_behavior_composite &other) noexcept = delete;
+        game_behavior_composite() noexcept;
+        game_behavior_composite(const game_behavior_composite &other) noexcept;
+        game_behavior_composite(game_behavior_composite &&other) noexcept;
+        virtual ~game_behavior_composite() noexcept;
+        game_behavior_composite &operator=(const game_behavior_composite &other) noexcept = delete;
 
-        void add_child(const ft_sharedptr<ft_behavior_node> &child) noexcept;
+        void add_child(const ft_sharedptr<game_behavior_node> &child) noexcept;
         void clear_children() noexcept;
-        ft_vector<ft_sharedptr<ft_behavior_node> > &get_children() noexcept;
-        const ft_vector<ft_sharedptr<ft_behavior_node> > &get_children() const noexcept;
+        ft_vector<ft_sharedptr<game_behavior_node> > &get_children() noexcept;
+        const ft_vector<ft_sharedptr<game_behavior_node> > &get_children() const noexcept;
 };
 
-class ft_behavior_selector : public ft_behavior_composite
+class game_behavior_selector : public game_behavior_composite
 {
     public:
-        ft_behavior_selector() noexcept;
-        ft_behavior_selector(const ft_behavior_selector &other) noexcept;
-        ft_behavior_selector(ft_behavior_selector &&other) noexcept;
-        virtual ~ft_behavior_selector() noexcept;
-        ft_behavior_selector &operator=(const ft_behavior_selector &other) noexcept = delete;
+        game_behavior_selector() noexcept;
+        game_behavior_selector(const game_behavior_selector &other) noexcept;
+        game_behavior_selector(game_behavior_selector &&other) noexcept;
+        virtual ~game_behavior_selector() noexcept;
+        game_behavior_selector &operator=(const game_behavior_selector &other) noexcept = delete;
 
-        virtual int32_t tick(ft_behavior_context &context) noexcept;
+        virtual int32_t tick(game_behavior_context &context) noexcept;
 };
 
-class ft_behavior_sequence : public ft_behavior_composite
+class game_behavior_sequence : public game_behavior_composite
 {
     public:
-        ft_behavior_sequence() noexcept;
-        ft_behavior_sequence(const ft_behavior_sequence &other) noexcept;
-        ft_behavior_sequence(ft_behavior_sequence &&other) noexcept;
-        virtual ~ft_behavior_sequence() noexcept;
-        ft_behavior_sequence &operator=(const ft_behavior_sequence &other) noexcept = delete;
+        game_behavior_sequence() noexcept;
+        game_behavior_sequence(const game_behavior_sequence &other) noexcept;
+        game_behavior_sequence(game_behavior_sequence &&other) noexcept;
+        virtual ~game_behavior_sequence() noexcept;
+        game_behavior_sequence &operator=(const game_behavior_sequence &other) noexcept = delete;
 
-        virtual int32_t tick(ft_behavior_context &context) noexcept;
+        virtual int32_t tick(game_behavior_context &context) noexcept;
 };
 
-class ft_behavior_tree
+class game_behavior_tree
 {
     #ifdef LIBFT_TEST_BUILD
         public:
     #else
         private:
     #endif
-        ft_sharedptr<ft_behavior_node> _root;
-        static thread_local int32_t         _last_error;
+        ft_sharedptr<game_behavior_node> _root;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
     public:
-        ft_behavior_tree() noexcept;
-        ft_behavior_tree(const ft_behavior_tree &other) noexcept;
-        ft_behavior_tree(ft_behavior_tree &&other) noexcept;
-        ~ft_behavior_tree() noexcept;
-        ft_behavior_tree &operator=(const ft_behavior_tree &other) noexcept = delete;
-        ft_behavior_tree &operator=(ft_behavior_tree &&other) noexcept = delete;
+        game_behavior_tree() noexcept;
+        game_behavior_tree(const game_behavior_tree &other) noexcept;
+        game_behavior_tree(game_behavior_tree &&other) noexcept;
+        ~game_behavior_tree() noexcept;
+        game_behavior_tree &operator=(const game_behavior_tree &other) noexcept = delete;
+        game_behavior_tree &operator=(game_behavior_tree &&other) noexcept = delete;
 
-        void set_root(const ft_sharedptr<ft_behavior_node> &root) noexcept;
-        ft_sharedptr<ft_behavior_node> &get_root() noexcept;
-        const ft_sharedptr<ft_behavior_node> &get_root() const noexcept;
+        void set_root(const ft_sharedptr<game_behavior_node> &root) noexcept;
+        ft_sharedptr<game_behavior_node> &get_root() noexcept;
+        const ft_sharedptr<game_behavior_node> &get_root() const noexcept;
 
-        int32_t tick(ft_behavior_context &context) noexcept;
+        int32_t tick(game_behavior_context &context) noexcept;
 
         int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;

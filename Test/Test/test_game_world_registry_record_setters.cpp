@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Game/ft_region_definition.hpp"
-#include "../../Game/ft_world_region.hpp"
+#include "../../Game/game_region_definition.hpp"
+#include "../../Game/game_world_region.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD

@@ -10,7 +10,7 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_quest
+class game_quest
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -23,26 +23,26 @@ class ft_quest
         ft_string                       _description;
         ft_string                       _objective;
         int32_t                             _reward_experience;
-        ft_vector<ft_sharedptr<ft_item> > _reward_items;
+        ft_vector<ft_sharedptr<game_item> > _reward_items;
         mutable pt_recursive_mutex               *_mutex;
-        static thread_local int32_t                    _last_error;
+        static thread_local uint32_t _last_error;
         uint8_t                         _initialised_state;
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_quest() noexcept;
-        ft_quest(const ft_quest &other) noexcept;
-        ft_quest(ft_quest &&other) noexcept;
-        virtual ~ft_quest() noexcept;
-        ft_quest &operator=(const ft_quest &other) = delete;
-        ft_quest &operator=(ft_quest &&other) = delete;
+        game_quest() noexcept;
+        game_quest(const game_quest &other) noexcept;
+        game_quest(game_quest &&other) noexcept;
+        virtual ~game_quest() noexcept;
+        game_quest &operator=(const game_quest &other) = delete;
+        game_quest &operator=(game_quest &&other) = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_quest &other) noexcept;
-        int32_t initialize(ft_quest &&other) noexcept;
-        int32_t move(ft_quest &other) noexcept;
+        int32_t initialize(const game_quest &other) noexcept;
+        int32_t initialize(game_quest &&other) noexcept;
+        int32_t move(game_quest &other) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
@@ -68,9 +68,9 @@ class ft_quest
         int32_t get_reward_experience() const noexcept;
         void set_reward_experience(int32_t experience) noexcept;
 
-        ft_vector<ft_sharedptr<ft_item> >       &get_reward_items() noexcept;
-        const ft_vector<ft_sharedptr<ft_item> > &get_reward_items() const noexcept;
-        void set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) noexcept;
+        ft_vector<ft_sharedptr<game_item> >       &get_reward_items() noexcept;
+        const ft_vector<ft_sharedptr<game_item> > &get_reward_items() const noexcept;
+        void set_reward_items(const ft_vector<ft_sharedptr<game_item> > &items) noexcept;
 
         ft_bool is_complete() const noexcept;
         void advance_phase() noexcept;

@@ -1,13 +1,13 @@
 #include "../PThread/pthread_internal.hpp"
-#include "ft_rarity_band.hpp"
+#include "game_rarity_band.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_rarity_band::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_rarity_band::_last_error = FT_ERR_SUCCESS;
 
-ft_rarity_band::ft_rarity_band() noexcept
+game_rarity_band::game_rarity_band() noexcept
     : _rarity(0), _value_multiplier(1.0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -15,7 +15,7 @@ ft_rarity_band::ft_rarity_band() noexcept
     return ;
 }
 
-ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept
+game_rarity_band::game_rarity_band(const game_rarity_band &other) noexcept
     : _rarity(0), _value_multiplier(1.0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -23,7 +23,7 @@ ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_rarity_band::ft_rarity_band(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_rarity_band::game_rarity_band(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -44,7 +44,7 @@ ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept
     return ;
 }
 
-ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept
+game_rarity_band::game_rarity_band(game_rarity_band &&other) noexcept
     : _rarity(0), _value_multiplier(1.0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -52,7 +52,7 @@ ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_rarity_band::ft_rarity_band(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_rarity_band::game_rarity_band(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -73,7 +73,7 @@ ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept
     return ;
 }
 
-ft_rarity_band::~ft_rarity_band() noexcept
+game_rarity_band::~game_rarity_band() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
@@ -82,17 +82,17 @@ ft_rarity_band::~ft_rarity_band() noexcept
     return ;
 }
 
-int32_t ft_rarity_band::set_error(int32_t error_code) noexcept
+uint32_t game_rarity_band::set_error(uint32_t error_code) noexcept
 {
-    ft_rarity_band::_last_error = error_code;
+    game_rarity_band::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_rarity_band::initialize() noexcept
+int32_t game_rarity_band::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_rarity_band::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "game_rarity_band::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -103,19 +103,32 @@ int32_t ft_rarity_band::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_rarity_band::initialize(const ft_rarity_band &other) noexcept
+int32_t game_rarity_band::initialize(const game_rarity_band &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_rarity_band::initialize(copy)",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_rarity_band::initialize(copy)",
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
         return (FT_ERR_SUCCESS);
     }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -139,17 +152,33 @@ int32_t ft_rarity_band::initialize(const ft_rarity_band &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_rarity_band::initialize(ft_rarity_band &&other) noexcept
+int32_t game_rarity_band::initialize(game_rarity_band &&other) noexcept
 {
-    return (this->initialize(static_cast<const ft_rarity_band &>(other)));
+    return (this->move(other));
 }
 
-int32_t ft_rarity_band::move(ft_rarity_band &other) noexcept
+int32_t game_rarity_band::move(game_rarity_band &other) noexcept
 {
-    return (this->initialize(static_cast<ft_rarity_band &&>(other)));
+    int32_t initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_rarity_band::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_rarity_band &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_rarity_band::initialize(int32_t rarity, double value_multiplier) noexcept
+int32_t game_rarity_band::initialize(int32_t rarity, double value_multiplier) noexcept
 {
     int32_t initialize_error;
 
@@ -174,7 +203,7 @@ int32_t ft_rarity_band::initialize(int32_t rarity, double value_multiplier) noex
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_rarity_band::destroy() noexcept
+int32_t game_rarity_band::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -191,12 +220,12 @@ int32_t ft_rarity_band::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_rarity_band::enable_thread_safety() noexcept
+int32_t game_rarity_band::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_rarity_band::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_rarity_band::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -220,7 +249,7 @@ int32_t ft_rarity_band::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_rarity_band::disable_thread_safety() noexcept
+int32_t game_rarity_band::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -236,12 +265,12 @@ int32_t ft_rarity_band::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_rarity_band::is_thread_safe() const noexcept
+ft_bool game_rarity_band::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_rarity_band::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_rarity_band::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -259,7 +288,7 @@ int32_t ft_rarity_band::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_rarity_band::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_rarity_band::unlock_internal(ft_bool lock_acquired) const noexcept
 {
     if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
@@ -267,65 +296,64 @@ int32_t ft_rarity_band::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_rarity_band::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_rarity_band::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_rarity_band::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_rarity_band::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
 }
 
-void ft_rarity_band::unlock(ft_bool lock_acquired) const noexcept
+void game_rarity_band::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_rarity_band::unlock");
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    errno_abort_if_uninitialised(this->_initialised_state, "game_rarity_band::unlock");
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int32_t ft_rarity_band::get_rarity() const noexcept
+int32_t game_rarity_band::get_rarity() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_rarity_band::get_rarity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_rarity_band::get_rarity");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_rarity);
 }
 
-void ft_rarity_band::set_rarity(int32_t rarity) noexcept
+void game_rarity_band::set_rarity(int32_t rarity) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_rarity_band::set_rarity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_rarity_band::set_rarity");
     this->_rarity = rarity;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-double ft_rarity_band::get_value_multiplier() const noexcept
+double game_rarity_band::get_value_multiplier() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_rarity_band::get_value_multiplier");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_rarity_band::get_value_multiplier");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_value_multiplier);
 }
 
-void ft_rarity_band::set_value_multiplier(double value_multiplier) noexcept
+void game_rarity_band::set_value_multiplier(double value_multiplier) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_rarity_band::set_value_multiplier");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_rarity_band::set_value_multiplier");
     this->_value_multiplier = value_multiplier;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 
-int32_t ft_rarity_band::get_error() const noexcept
+int32_t game_rarity_band::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_rarity_band::get_error");
-    return (ft_rarity_band::_last_error);
+            "game_rarity_band::get_error");
+    return (static_cast<int32_t>(game_rarity_band::_last_error));
 }
 
-const char *ft_rarity_band::get_error_str() const noexcept
+const char *game_rarity_band::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_rarity_band::get_error_str");
+            "game_rarity_band::get_error_str");
     return (ft_strerror(this->get_error()));
 }

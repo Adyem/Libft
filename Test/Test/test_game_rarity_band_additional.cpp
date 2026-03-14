@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Game/ft_rarity_band.hpp"
+#include "../../Game/game_rarity_band.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD

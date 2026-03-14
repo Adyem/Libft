@@ -4,31 +4,31 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 
-thread_local int32_t ft_quest::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_quest::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_quest::set_error(int32_t error_code) noexcept
+uint32_t game_quest::set_error(uint32_t error_code) noexcept
 {
-    ft_quest::_last_error = error_code;
+    game_quest::_last_error = error_code;
     return (error_code);
 }
 
-int32_t    ft_quest::get_error() const noexcept
+int32_t    game_quest::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_quest::get_error");
-    return (ft_quest::_last_error);
+            "game_quest::get_error");
+    return (game_quest::_last_error);
 }
 
-const char    *ft_quest::get_error_str() const noexcept
+const char    *game_quest::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_quest::get_error_str");
-    return (ft_strerror(ft_quest::_last_error));
+            "game_quest::get_error_str");
+    return (ft_strerror(game_quest::_last_error));
 }
 
-ft_quest::ft_quest() noexcept
+game_quest::game_quest() noexcept
     : _id(0), _phases(0), _current_phase(0), _description(), _objective(),
       _reward_experience(0), _reward_items(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -37,7 +37,7 @@ ft_quest::ft_quest() noexcept
     return ;
 }
 
-ft_quest::ft_quest(const ft_quest &other) noexcept
+game_quest::game_quest(const game_quest &other) noexcept
     : _id(0), _phases(0), _current_phase(0), _description(), _objective(),
       _reward_experience(0), _reward_items(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -46,7 +46,7 @@ ft_quest::ft_quest(const ft_quest &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_quest::ft_quest(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_quest::game_quest(copy)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -64,7 +64,7 @@ ft_quest::ft_quest(const ft_quest &other) noexcept
     return ;
 }
 
-ft_quest::ft_quest(ft_quest &&other) noexcept
+game_quest::game_quest(game_quest &&other) noexcept
     : _id(0), _phases(0), _current_phase(0), _description(), _objective(),
       _reward_experience(0), _reward_items(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -73,7 +73,7 @@ ft_quest::ft_quest(ft_quest &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_quest::ft_quest(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_quest::game_quest(move)",
             "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -91,7 +91,7 @@ ft_quest::ft_quest(ft_quest &&other) noexcept
     return ;
 }
 
-ft_quest::~ft_quest() noexcept
+game_quest::~game_quest() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
@@ -99,7 +99,7 @@ ft_quest::~ft_quest() noexcept
     return ;
 }
 
-int32_t ft_quest::initialize() noexcept
+int32_t game_quest::initialize() noexcept
 {
     int32_t description_error;
     int32_t objective_error;
@@ -107,7 +107,7 @@ int32_t ft_quest::initialize() noexcept
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_quest::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_quest::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -144,14 +144,14 @@ int32_t ft_quest::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_quest::initialize(const ft_quest &other) noexcept
+int32_t game_quest::initialize(const game_quest &other) noexcept
 {
     int32_t initialize_error;
     int32_t copy_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_quest::initialize(copy)", "source object is uninitialised");
+        errno_abort_lifecycle(other._initialised_state, "game_quest::initialize(copy)", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -192,12 +192,12 @@ int32_t ft_quest::initialize(const ft_quest &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_quest::initialize(ft_quest &&other) noexcept
+int32_t game_quest::initialize(game_quest &&other) noexcept
 {
     return (this->move(other));
 }
 
-int32_t ft_quest::move(ft_quest &other) noexcept
+int32_t game_quest::move(game_quest &other) noexcept
 {
     int32_t initialize_error;
 
@@ -205,11 +205,11 @@ int32_t ft_quest::move(ft_quest &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_quest::move", "source object is uninitialised");
+        errno_abort_lifecycle(other._initialised_state, "game_quest::move", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    initialize_error = this->initialize(static_cast<const ft_quest &>(other));
+    initialize_error = this->initialize(static_cast<const game_quest &>(other));
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
     (void)other.destroy();
@@ -217,7 +217,7 @@ int32_t ft_quest::move(ft_quest &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_quest::destroy() noexcept
+int32_t game_quest::destroy() noexcept
 {
     int32_t description_error;
     int32_t objective_error;
@@ -255,12 +255,12 @@ int32_t ft_quest::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_quest::enable_thread_safety() noexcept
+int32_t game_quest::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -284,7 +284,7 @@ int32_t ft_quest::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_quest::disable_thread_safety() noexcept
+int32_t game_quest::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
     int32_t destroy_error;
@@ -302,12 +302,12 @@ int32_t ft_quest::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_quest::is_thread_safe() const noexcept
+ft_bool game_quest::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_quest::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_quest::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -325,7 +325,7 @@ int32_t ft_quest::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_quest::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_quest::unlock_internal(ft_bool lock_acquired) const noexcept
 {
     if (lock_acquired == FT_FALSE)
     {
@@ -338,25 +338,25 @@ int32_t ft_quest::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_quest::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_quest::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::lock");
     return (this->lock_internal(lock_acquired));
 }
 
-void ft_quest::unlock(ft_bool lock_acquired) const noexcept
+void game_quest::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int32_t ft_quest::get_id() const noexcept
+int32_t game_quest::get_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -370,13 +370,13 @@ int32_t ft_quest::get_id() const noexcept
     return (identifier);
 }
 
-void ft_quest::set_id(int32_t id) noexcept
+void game_quest::set_id(int32_t id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_bool valid;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::set_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::set_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -395,12 +395,12 @@ void ft_quest::set_id(int32_t id) noexcept
     return ;
 }
 
-int32_t ft_quest::get_phases() const noexcept
+int32_t game_quest::get_phases() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_phases");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_phases");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -414,13 +414,13 @@ int32_t ft_quest::get_phases() const noexcept
     return (phases_value);
 }
 
-void ft_quest::set_phases(int32_t phases) noexcept
+void game_quest::set_phases(int32_t phases) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_bool valid;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::set_phases");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::set_phases");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -443,12 +443,12 @@ void ft_quest::set_phases(int32_t phases) noexcept
     return ;
 }
 
-int32_t ft_quest::get_current_phase() const noexcept
+int32_t game_quest::get_current_phase() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_current_phase");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_current_phase");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -462,13 +462,13 @@ int32_t ft_quest::get_current_phase() const noexcept
     return (phase_value);
 }
 
-void ft_quest::set_current_phase(int32_t phase) noexcept
+void game_quest::set_current_phase(int32_t phase) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_bool valid;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::set_current_phase");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::set_current_phase");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -487,19 +487,19 @@ void ft_quest::set_current_phase(int32_t phase) noexcept
     return ;
 }
 
-const ft_string &ft_quest::get_description() const noexcept
+const ft_string &game_quest::get_description() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_description");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_description");
     return (this->_description);
 }
 
-void ft_quest::set_description(const ft_string &description) noexcept
+void game_quest::set_description(const ft_string &description) noexcept
 {
     ft_bool lock_acquired;
 
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::set_description");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::set_description");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -513,19 +513,19 @@ void ft_quest::set_description(const ft_string &description) noexcept
     return ;
 }
 
-const ft_string &ft_quest::get_objective() const noexcept
+const ft_string &game_quest::get_objective() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_objective");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_objective");
     return (this->_objective);
 }
 
-void ft_quest::set_objective(const ft_string &objective) noexcept
+void game_quest::set_objective(const ft_string &objective) noexcept
 {
     ft_bool lock_acquired;
 
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::set_objective");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::set_objective");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -539,20 +539,20 @@ void ft_quest::set_objective(const ft_string &objective) noexcept
     return ;
 }
 
-int32_t ft_quest::get_reward_experience() const noexcept
+int32_t game_quest::get_reward_experience() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_reward_experience");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_reward_experience");
     return (this->_reward_experience);
 }
 
-void ft_quest::set_reward_experience(int32_t experience) noexcept
+void game_quest::set_reward_experience(int32_t experience) noexcept
 {
     ft_bool lock_acquired;
 
     int32_t lock_error;
     ft_bool valid;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::set_reward_experience");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::set_reward_experience");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -571,26 +571,26 @@ void ft_quest::set_reward_experience(int32_t experience) noexcept
     return ;
 }
 
-ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() noexcept
+ft_vector<ft_sharedptr<game_item> > &game_quest::get_reward_items() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_reward_items");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_reward_items");
     return (this->_reward_items);
 }
 
-const ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() const noexcept
+const ft_vector<ft_sharedptr<game_item> > &game_quest::get_reward_items() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::get_reward_items const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::get_reward_items const");
     return (this->_reward_items);
 }
 
-void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) noexcept
+void game_quest::set_reward_items(const ft_vector<ft_sharedptr<game_item> > &items) noexcept
 {
     ft_bool lock_acquired;
 
     int32_t lock_error;
     int32_t copy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::set_reward_items");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::set_reward_items");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -609,9 +609,9 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
     return ;
 }
 
-ft_bool ft_quest::is_complete() const noexcept
+ft_bool game_quest::is_complete() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::is_complete");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::is_complete");
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_bool result;
@@ -629,11 +629,11 @@ ft_bool ft_quest::is_complete() const noexcept
     return (result);
 }
 
-void ft_quest::advance_phase() noexcept
+void game_quest::advance_phase() noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_quest::advance_phase");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_quest::advance_phase");
     int32_t lock_error;
 
     lock_acquired = FT_FALSE;

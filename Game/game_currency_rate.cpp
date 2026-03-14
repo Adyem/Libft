@@ -1,13 +1,13 @@
 #include "../PThread/pthread_internal.hpp"
-#include "ft_currency_rate.hpp"
+#include "game_currency_rate.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_currency_rate::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_currency_rate::_last_error = FT_ERR_SUCCESS;
 
-ft_currency_rate::ft_currency_rate() noexcept
+game_currency_rate::game_currency_rate() noexcept
     : _currency_id(0), _rate_to_base(1.0), _display_precision(2),
       _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -16,7 +16,7 @@ ft_currency_rate::ft_currency_rate() noexcept
     return ;
 }
 
-ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept
+game_currency_rate::game_currency_rate(const game_currency_rate &other) noexcept
     : _currency_id(0), _rate_to_base(1.0), _display_precision(2),
       _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -25,7 +25,7 @@ ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_currency_rate::ft_currency_rate(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_currency_rate::game_currency_rate(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -46,7 +46,7 @@ ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept
     return ;
 }
 
-ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept
+game_currency_rate::game_currency_rate(game_currency_rate &&other) noexcept
     : _currency_id(0), _rate_to_base(1.0), _display_precision(2),
       _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -55,7 +55,7 @@ ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_currency_rate::ft_currency_rate(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_currency_rate::game_currency_rate(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -76,7 +76,7 @@ ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept
     return ;
 }
 
-ft_currency_rate::~ft_currency_rate() noexcept
+game_currency_rate::~game_currency_rate() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
@@ -85,11 +85,11 @@ ft_currency_rate::~ft_currency_rate() noexcept
     return ;
 }
 
-int32_t ft_currency_rate::initialize() noexcept
+int32_t game_currency_rate::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_currency_rate::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "game_currency_rate::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -101,11 +101,11 @@ int32_t ft_currency_rate::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_currency_rate::initialize(const ft_currency_rate &other) noexcept
+int32_t game_currency_rate::initialize(const game_currency_rate &other) noexcept
 {
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_currency_rate::initialize(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_currency_rate::initialize(copy)",
             "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -122,17 +122,17 @@ int32_t ft_currency_rate::initialize(const ft_currency_rate &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_currency_rate::initialize(ft_currency_rate &&other) noexcept
+int32_t game_currency_rate::initialize(game_currency_rate &&other) noexcept
 {
-    return (this->initialize(static_cast<const ft_currency_rate &>(other)));
+    return (this->move(other));
 }
 
-int32_t ft_currency_rate::move(ft_currency_rate &other) noexcept
+int32_t game_currency_rate::move(game_currency_rate &other) noexcept
 {
-    return (this->initialize(static_cast<ft_currency_rate &&>(other)));
+    return (this->initialize(static_cast<game_currency_rate &&>(other)));
 }
 
-int32_t ft_currency_rate::initialize(int32_t currency_id, double rate_to_base,
+int32_t game_currency_rate::initialize(int32_t currency_id, double rate_to_base,
     int32_t display_precision) noexcept
 {
     int32_t initialize_error;
@@ -150,7 +150,7 @@ int32_t ft_currency_rate::initialize(int32_t currency_id, double rate_to_base,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_currency_rate::destroy() noexcept
+int32_t game_currency_rate::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -168,12 +168,12 @@ int32_t ft_currency_rate::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_currency_rate::enable_thread_safety() noexcept
+int32_t game_currency_rate::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -197,7 +197,7 @@ int32_t ft_currency_rate::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_currency_rate::disable_thread_safety() noexcept
+int32_t game_currency_rate::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -213,12 +213,12 @@ int32_t ft_currency_rate::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_currency_rate::is_thread_safe() const noexcept
+ft_bool game_currency_rate::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_currency_rate::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_currency_rate::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -236,7 +236,7 @@ int32_t ft_currency_rate::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_currency_rate::unlock_internal(ft_bool lock_acquired) const noexcept
+int32_t game_currency_rate::unlock_internal(ft_bool lock_acquired) const noexcept
 {
     if (lock_acquired == FT_FALSE)
     {
@@ -247,86 +247,85 @@ int32_t ft_currency_rate::unlock_internal(ft_bool lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_currency_rate::lock(ft_bool *lock_acquired) const noexcept
+int32_t game_currency_rate::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
 }
 
-void ft_currency_rate::unlock(ft_bool lock_acquired) const noexcept
+void game_currency_rate::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::unlock");
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::unlock");
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int32_t ft_currency_rate::get_currency_id() const noexcept
+int32_t game_currency_rate::get_currency_id() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::get_currency_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::get_currency_id");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_currency_id);
 }
 
-void ft_currency_rate::set_currency_id(int32_t currency_id) noexcept
+void game_currency_rate::set_currency_id(int32_t currency_id) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::set_currency_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::set_currency_id");
     this->_currency_id = currency_id;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-double ft_currency_rate::get_rate_to_base() const noexcept
+double game_currency_rate::get_rate_to_base() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::get_rate_to_base");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::get_rate_to_base");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_rate_to_base);
 }
 
-void ft_currency_rate::set_rate_to_base(double rate_to_base) noexcept
+void game_currency_rate::set_rate_to_base(double rate_to_base) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::set_rate_to_base");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::set_rate_to_base");
     this->_rate_to_base = rate_to_base;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-int32_t ft_currency_rate::get_display_precision() const noexcept
+int32_t game_currency_rate::get_display_precision() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::get_display_precision");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::get_display_precision");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_display_precision);
 }
 
-void ft_currency_rate::set_display_precision(int32_t display_precision) noexcept
+void game_currency_rate::set_display_precision(int32_t display_precision) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_currency_rate::set_display_precision");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_currency_rate::set_display_precision");
     this->_display_precision = display_precision;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 
-int32_t ft_currency_rate::set_error(int32_t error_code) noexcept
+uint32_t game_currency_rate::set_error(uint32_t error_code) noexcept
 {
-    ft_currency_rate::_last_error = error_code;
+    game_currency_rate::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_currency_rate::get_error() const noexcept
+int32_t game_currency_rate::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_currency_rate::get_error");
-    return (ft_currency_rate::_last_error);
+            "game_currency_rate::get_error");
+    return (static_cast<int32_t>(game_currency_rate::_last_error));
 }
 
-const char *ft_currency_rate::get_error_str() const noexcept
+const char *game_currency_rate::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_currency_rate::get_error_str");
-    return (ft_strerror(ft_currency_rate::_last_error));
+            "game_currency_rate::get_error_str");
+    return (ft_strerror(game_currency_rate::_last_error));
 }

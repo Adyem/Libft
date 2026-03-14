@@ -6,7 +6,7 @@
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
-class ft_buff
+class game_buff
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -21,24 +21,24 @@ class ft_buff
         int32_t              _modifier4;
         mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_buff() noexcept;
-        ft_buff(const ft_buff &other) noexcept;
-        ft_buff(ft_buff &&other) noexcept;
-        virtual ~ft_buff() noexcept;
-        ft_buff &operator=(const ft_buff &other) = delete;
-        ft_buff &operator=(ft_buff &&other) = delete;
+        game_buff() noexcept;
+        game_buff(const game_buff &other) noexcept;
+        game_buff(game_buff &&other) noexcept;
+        virtual ~game_buff() noexcept;
+        game_buff &operator=(const game_buff &other) = delete;
+        game_buff &operator=(game_buff &&other) = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_buff &other) noexcept;
-        int32_t initialize(ft_buff &&other) noexcept;
-        int32_t move(ft_buff &other) noexcept;
+        int32_t initialize(const game_buff &other) noexcept;
+        int32_t initialize(game_buff &&other) noexcept;
+        int32_t move(game_buff &other) noexcept;
         int32_t destroy() noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;

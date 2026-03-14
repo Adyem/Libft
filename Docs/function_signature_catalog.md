@@ -2070,7 +2070,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_error(int error_code) const noexcept;`
 - `void set_profile_id(int profile_id) noexcept;`
 
-### Game/ft_currency_rate.hpp
+### Game/game_currency_rate.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `double get_rate_to_base() const noexcept;`
@@ -2086,7 +2086,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_error(int error_code) const noexcept;`
 - `void set_rate_to_base(double rate_to_base) noexcept;`
 
-### Game/ft_dialogue_line.hpp
+### Game/game_dialogue_line.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `const ft_string &get_speaker() const noexcept;`
@@ -2104,7 +2104,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_speaker(const ft_string &speaker) noexcept;`
 - `void set_text(const ft_string &text) noexcept;`
 
-### Game/ft_dialogue_script.hpp
+### Game/game_dialogue_script.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `const ft_string &get_summary() const noexcept;`
@@ -2125,7 +2125,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_summary(const ft_string &summary) noexcept;`
 - `void set_title(const ft_string &title) noexcept;`
 
-### Game/ft_price_definition.hpp
+### Game/game_price_definition.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `int get_base_value() const noexcept;`
@@ -2144,7 +2144,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_minimum_value(int minimum_value) noexcept;`
 - `void set_rarity(int rarity) noexcept;`
 
-### Game/ft_rarity_band.hpp
+### Game/game_rarity_band.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `double get_value_multiplier() const noexcept;`
@@ -2158,7 +2158,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_rarity(int rarity) noexcept;`
 - `void set_value_multiplier(double value_multiplier) noexcept;`
 
-### Game/ft_region_definition.hpp
+### Game/game_region_definition.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `const ft_string &get_description() const noexcept;`
@@ -2175,7 +2175,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_recommended_level(int recommended_level) noexcept;`
 - `void set_region_id(int region_id) noexcept;`
 
-### Game/ft_vendor_profile.hpp
+### Game/game_vendor_profile.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `double get_buy_markup() const noexcept;`
@@ -2193,7 +2193,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void set_tax_rate(double tax_rate) noexcept;`
 - `void set_vendor_id(int vendor_id) noexcept;`
 
-### Game/ft_world_region.hpp
+### Game/game_world_region.hpp
 
 - `const char *get_error_str() const noexcept;`
 - `const ft_vector<int> &get_region_ids() const noexcept;`
@@ -10726,7 +10726,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_behavior_profile(ft_behavior_profile &&other) noexcept;`
 - `ft_behavior_profile(int profile_id, double aggression_weight, double caution_weight, const ft_vector<ft_behavior_action> &actions) noexcept;`
 
-### Game/ft_currency_rate.hpp
+### Game/game_currency_rate.hpp
 
 - `ft_currency_rate() = default;`
 - `ft_currency_rate() noexcept;`
@@ -10734,21 +10734,21 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_currency_rate(ft_currency_rate &&other) noexcept;`
 - `ft_currency_rate(int currency_id, double rate_to_base, int display_precision) noexcept;`
 
-### Game/ft_dialogue_line.hpp
+### Game/game_dialogue_line.hpp
 
 - `ft_dialogue_line() noexcept;`
 - `ft_dialogue_line(const ft_dialogue_line &other) noexcept;`
 - `ft_dialogue_line(ft_dialogue_line &&other) noexcept;`
 - `ft_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text, const ft_vector<int> &next_line_ids) noexcept;`
 
-### Game/ft_dialogue_script.hpp
+### Game/game_dialogue_script.hpp
 
 - `ft_dialogue_script() noexcept;`
 - `ft_dialogue_script(const ft_dialogue_script &other) noexcept;`
 - `ft_dialogue_script(ft_dialogue_script &&other) noexcept;`
 - `ft_dialogue_script(int script_id, const ft_string &title, const ft_string &summary, int start_line_id, const ft_vector<ft_dialogue_line> &lines) noexcept;`
 
-### Game/ft_price_definition.hpp
+### Game/game_price_definition.hpp
 
 - `ft_price_definition() = default;`
 - `ft_price_definition() noexcept;`
@@ -10756,7 +10756,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_price_definition(ft_price_definition &&other) noexcept;`
 - `ft_price_definition(int item_id, int rarity, int base_value, int minimum_value, int maximum_value) noexcept;`
 
-### Game/ft_rarity_band.hpp
+### Game/game_rarity_band.hpp
 
 - `ft_rarity_band() = default;`
 - `ft_rarity_band() noexcept;`
@@ -10764,14 +10764,14 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_rarity_band(ft_rarity_band &&other) noexcept;`
 - `ft_rarity_band(int rarity, double value_multiplier) noexcept;`
 
-### Game/ft_region_definition.hpp
+### Game/game_region_definition.hpp
 
 - `ft_region_definition() noexcept;`
 - `ft_region_definition(const ft_region_definition &other) noexcept;`
 - `ft_region_definition(ft_region_definition &&other) noexcept;`
 - `ft_region_definition(int region_id, const ft_string &name, const ft_string &description, int recommended_level) noexcept;`
 
-### Game/ft_vendor_profile.hpp
+### Game/game_vendor_profile.hpp
 
 - `ft_vendor_profile() = default;`
 - `ft_vendor_profile() noexcept;`
@@ -10779,7 +10779,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_vendor_profile(ft_vendor_profile &&other) noexcept;`
 - `ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept;`
 
-### Game/ft_world_region.hpp
+### Game/game_world_region.hpp
 
 - `ft_world_region() noexcept;`
 - `ft_world_region(const ft_world_region &other) noexcept;`

@@ -5,13 +5,13 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_behavior_action::_last_error = FT_ERR_SUCCESS;
-int32_t ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_behavior_action &second,
+thread_local uint32_t game_behavior_action::_last_error = FT_ERR_SUCCESS;
+int32_t game_behavior_action::lock_pair(const game_behavior_action &first, const game_behavior_action &second,
         ft_bool *first_locked,
         ft_bool *second_locked)
 {
-    const ft_behavior_action *ordered_first;
-    const ft_behavior_action *ordered_second;
+    const game_behavior_action *ordered_first;
+    const game_behavior_action *ordered_second;
     int32_t lock_error;
     ft_bool swapped;
 
@@ -28,7 +28,7 @@ int32_t ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_
     swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
-        const ft_behavior_action *temporary;
+        const game_behavior_action *temporary;
 
         temporary = ordered_first;
         ordered_first = ordered_second;
@@ -74,21 +74,21 @@ int32_t ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_
     }
 }
 
-ft_behavior_action::ft_behavior_action() noexcept
+game_behavior_action::game_behavior_action() noexcept
     : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     return ;
 }
 
-ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
+game_behavior_action::game_behavior_action(const game_behavior_action &other) noexcept
     : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_behavior_action::ft_behavior_action(copy)",
+            "game_behavior_action::game_behavior_action(copy)",
             "source object is not initialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
@@ -96,27 +96,27 @@ ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
     return ;
 }
 
-ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
+game_behavior_action::game_behavior_action(game_behavior_action &&other) noexcept
     : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_behavior_action::ft_behavior_action(move)",
+            "game_behavior_action::game_behavior_action(move)",
             "source object is not initialised");
     }
-    if (this->initialize(static_cast<ft_behavior_action &&>(other)) != FT_ERR_SUCCESS)
+    if (this->initialize(static_cast<game_behavior_action &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-int32_t ft_behavior_action::initialize() noexcept
+int32_t game_behavior_action::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state,
-            "ft_behavior_action::initialize",
+            "game_behavior_action::initialize",
             "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -129,13 +129,13 @@ int32_t ft_behavior_action::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_action::initialize(int32_t action_id, double weight,
+int32_t game_behavior_action::initialize(int32_t action_id, double weight,
     double cooldown_seconds) noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state,
-            "ft_behavior_action::initialize",
+            "game_behavior_action::initialize",
             "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -148,13 +148,13 @@ int32_t ft_behavior_action::initialize(int32_t action_id, double weight,
     return (FT_ERR_SUCCESS);
 }
 
-ft_behavior_action::~ft_behavior_action() noexcept
+game_behavior_action::~game_behavior_action() noexcept
 {
     (void)this->destroy();
     return ;
 }
 
-int32_t ft_behavior_action::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_behavior_action::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
@@ -168,7 +168,7 @@ int32_t ft_behavior_action::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_behavior_action::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_behavior_action::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -177,7 +177,7 @@ void ft_behavior_action::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_behavior_action::initialize(const ft_behavior_action &other) noexcept
+int32_t game_behavior_action::initialize(const game_behavior_action &other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
@@ -187,7 +187,7 @@ int32_t ft_behavior_action::initialize(const ft_behavior_action &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_behavior_action::initialize(copy)",
+            "game_behavior_action::initialize(copy)",
             "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -214,7 +214,7 @@ int32_t ft_behavior_action::initialize(const ft_behavior_action &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_action::initialize(ft_behavior_action &&other) noexcept
+int32_t game_behavior_action::initialize(game_behavior_action &&other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
@@ -224,7 +224,7 @@ int32_t ft_behavior_action::initialize(ft_behavior_action &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_behavior_action::initialize(move)",
+            "game_behavior_action::initialize(move)",
             "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
@@ -256,7 +256,7 @@ int32_t ft_behavior_action::initialize(ft_behavior_action &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_action::move(ft_behavior_action &other) noexcept
+int32_t game_behavior_action::move(game_behavior_action &other) noexcept
 {
     int32_t destroy_error;
 
@@ -265,10 +265,10 @@ int32_t ft_behavior_action::move(ft_behavior_action &other) noexcept
     destroy_error = this->destroy();
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
-    return (this->initialize(static_cast<ft_behavior_action &&>(other)));
+    return (this->initialize(static_cast<game_behavior_action &&>(other)));
 }
 
-int32_t ft_behavior_action::destroy() noexcept
+int32_t game_behavior_action::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -286,7 +286,7 @@ int32_t ft_behavior_action::destroy() noexcept
     return (disable_error);
 }
 
-int32_t ft_behavior_action::enable_thread_safety() noexcept
+int32_t game_behavior_action::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
@@ -306,7 +306,7 @@ int32_t ft_behavior_action::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_behavior_action::disable_thread_safety() noexcept
+int32_t game_behavior_action::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
@@ -318,12 +318,12 @@ int32_t ft_behavior_action::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_behavior_action::is_thread_safe() const noexcept
+ft_bool game_behavior_action::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_behavior_action::get_action_id() const noexcept
+int32_t game_behavior_action::get_action_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -333,16 +333,16 @@ int32_t ft_behavior_action::get_action_id() const noexcept
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_behavior_action *>(this)->set_error(lock_error);
+        const_cast<game_behavior_action *>(this)->set_error(lock_error);
         return (0);
     }
     action_id = this->_action_id;
-    const_cast<ft_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
+    const_cast<game_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (action_id);
 }
 
-void ft_behavior_action::set_action_id(int32_t action_id) noexcept
+void game_behavior_action::set_action_id(int32_t action_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -360,7 +360,7 @@ void ft_behavior_action::set_action_id(int32_t action_id) noexcept
     return ;
 }
 
-double ft_behavior_action::get_weight() const noexcept
+double game_behavior_action::get_weight() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -370,16 +370,16 @@ double ft_behavior_action::get_weight() const noexcept
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_behavior_action *>(this)->set_error(lock_error);
+        const_cast<game_behavior_action *>(this)->set_error(lock_error);
         return (0.0);
     }
     weight = this->_weight;
-    const_cast<ft_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
+    const_cast<game_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (weight);
 }
 
-void ft_behavior_action::set_weight(double weight) noexcept
+void game_behavior_action::set_weight(double weight) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -397,7 +397,7 @@ void ft_behavior_action::set_weight(double weight) noexcept
     return ;
 }
 
-double ft_behavior_action::get_cooldown_seconds() const noexcept
+double game_behavior_action::get_cooldown_seconds() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -407,16 +407,16 @@ double ft_behavior_action::get_cooldown_seconds() const noexcept
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_behavior_action *>(this)->set_error(lock_error);
+        const_cast<game_behavior_action *>(this)->set_error(lock_error);
         return (0.0);
     }
     cooldown_seconds = this->_cooldown_seconds;
-    const_cast<ft_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
+    const_cast<game_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (cooldown_seconds);
 }
 
-void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
+void game_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -434,24 +434,24 @@ void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
     return ;
 }
 
-int32_t ft_behavior_action::get_error() const noexcept
+int32_t game_behavior_action::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_behavior_action::get_error");
-    return (ft_behavior_action::_last_error);
+            "game_behavior_action::get_error");
+    return (game_behavior_action::_last_error);
 }
 
-const char *ft_behavior_action::get_error_str() const noexcept
+const char *game_behavior_action::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_behavior_action::get_error_str");
-    return (ft_strerror(ft_behavior_action::_last_error));
+            "game_behavior_action::get_error_str");
+    return (ft_strerror(game_behavior_action::_last_error));
 }
 
-int32_t ft_behavior_action::set_error(int32_t error_code) noexcept
+uint32_t game_behavior_action::set_error(uint32_t error_code) noexcept
 {
-    ft_behavior_action::_last_error = error_code;
+    game_behavior_action::_last_error = error_code;
     return (error_code);
 }

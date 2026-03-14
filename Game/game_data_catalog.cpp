@@ -7,99 +7,99 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int32_t ft_item_definition::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_item_definition::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_item_definition::set_error(int32_t error_code) noexcept
+uint32_t game_item_definition::set_error(uint32_t error_code) noexcept
 {
-    ft_item_definition::_last_error = error_code;
+    game_item_definition::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_item_definition::get_error() const noexcept
+int32_t game_item_definition::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_item_definition::get_error");
-    return (ft_item_definition::_last_error);
+            "game_item_definition::get_error");
+    return (game_item_definition::_last_error);
 }
 
-const char *ft_item_definition::get_error_str() const noexcept
+const char *game_item_definition::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_item_definition::get_error_str");
+            "game_item_definition::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-thread_local int32_t ft_loadout_entry::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_loadout_entry::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_loadout_entry::set_error(int32_t error_code) noexcept
+uint32_t game_loadout_entry::set_error(uint32_t error_code) noexcept
 {
-    ft_loadout_entry::_last_error = error_code;
+    game_loadout_entry::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_loadout_entry::get_error() const noexcept
+int32_t game_loadout_entry::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_loadout_entry::get_error");
-    return (ft_loadout_entry::_last_error);
+            "game_loadout_entry::get_error");
+    return (game_loadout_entry::_last_error);
 }
 
-const char *ft_loadout_entry::get_error_str() const noexcept
+const char *game_loadout_entry::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_loadout_entry::get_error_str");
+            "game_loadout_entry::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-thread_local int32_t ft_loadout_blueprint::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_loadout_blueprint::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_loadout_blueprint::set_error(int32_t error_code) noexcept
+uint32_t game_loadout_blueprint::set_error(uint32_t error_code) noexcept
 {
-    ft_loadout_blueprint::_last_error = error_code;
+    game_loadout_blueprint::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_loadout_blueprint::get_error() const noexcept
+int32_t game_loadout_blueprint::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_loadout_blueprint::get_error");
-    return (ft_loadout_blueprint::_last_error);
+            "game_loadout_blueprint::get_error");
+    return (game_loadout_blueprint::_last_error);
 }
 
-const char *ft_loadout_blueprint::get_error_str() const noexcept
+const char *game_loadout_blueprint::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_loadout_blueprint::get_error_str");
+            "game_loadout_blueprint::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-thread_local int32_t ft_recipe_blueprint::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_recipe_blueprint::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_recipe_blueprint::set_error(int32_t error_code) noexcept
+uint32_t game_recipe_blueprint::set_error(uint32_t error_code) noexcept
 {
-    ft_recipe_blueprint::_last_error = error_code;
+    game_recipe_blueprint::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_recipe_blueprint::get_error() const noexcept
+int32_t game_recipe_blueprint::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_recipe_blueprint::get_error");
-    return (ft_recipe_blueprint::_last_error);
+            "game_recipe_blueprint::get_error");
+    return (game_recipe_blueprint::_last_error);
 }
 
-const char *ft_recipe_blueprint::get_error_str() const noexcept
+const char *game_recipe_blueprint::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_recipe_blueprint::get_error_str");
+            "game_recipe_blueprint::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
@@ -109,11 +109,11 @@ static void game_data_catalog_sleep_backoff()
     return ;
 }
 
-static void game_data_catalog_copy_crafting_vector(const ft_vector<ft_crafting_ingredient> &source,
-        ft_vector<ft_crafting_ingredient> &destination)
+static void game_data_catalog_copy_crafting_vector(const ft_vector<game_crafting_ingredient> &source,
+        ft_vector<game_crafting_ingredient> &destination)
 {
-    ft_vector<ft_crafting_ingredient>::const_iterator entry;
-    ft_vector<ft_crafting_ingredient>::const_iterator end;
+    ft_vector<game_crafting_ingredient>::const_iterator entry;
+    ft_vector<game_crafting_ingredient>::const_iterator end;
 
     destination.clear();
     entry = source.begin();
@@ -126,11 +126,11 @@ static void game_data_catalog_copy_crafting_vector(const ft_vector<ft_crafting_i
     return ;
 }
 
-static void game_data_catalog_copy_loadout_vector(const ft_vector<ft_loadout_entry> &source,
-        ft_vector<ft_loadout_entry> &destination)
+static void game_data_catalog_copy_loadout_vector(const ft_vector<game_loadout_entry> &source,
+        ft_vector<game_loadout_entry> &destination)
 {
-    ft_vector<ft_loadout_entry>::const_iterator entry;
-    ft_vector<ft_loadout_entry>::const_iterator end;
+    ft_vector<game_loadout_entry>::const_iterator entry;
+    ft_vector<game_loadout_entry>::const_iterator end;
 
     destination.clear();
     entry = source.begin();
@@ -143,13 +143,13 @@ static void game_data_catalog_copy_loadout_vector(const ft_vector<ft_loadout_ent
     return ;
 }
 
-int32_t ft_item_definition::lock_pair(const ft_item_definition &first,
-        const ft_item_definition &second,
+int32_t game_item_definition::lock_pair(const game_item_definition &first,
+        const game_item_definition &second,
         ft_bool *first_locked,
         ft_bool *second_locked)
 {
-    const ft_item_definition *ordered_first;
-    const ft_item_definition *ordered_second;
+    const game_item_definition *ordered_first;
+    const game_item_definition *ordered_second;
     int32_t lock_error;
     ft_bool swapped;
 
@@ -164,7 +164,7 @@ int32_t ft_item_definition::lock_pair(const ft_item_definition &first,
     swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
-        const ft_item_definition *temporary;
+        const game_item_definition *temporary;
 
         temporary = ordered_first;
         ordered_first = ordered_second;
@@ -210,7 +210,7 @@ int32_t ft_item_definition::lock_pair(const ft_item_definition &first,
     }
 }
 
-ft_item_definition::ft_item_definition() noexcept
+game_item_definition::game_item_definition() noexcept
     : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0),
       _slot_requirement(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -218,7 +218,7 @@ ft_item_definition::ft_item_definition() noexcept
     return ;
 }
 
-ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept
+game_item_definition::game_item_definition(const game_item_definition &other) noexcept
     : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0),
       _slot_requirement(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -226,7 +226,7 @@ ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_item_definition::ft_item_definition(copy)",
+            "game_item_definition::game_item_definition(copy)",
             "source object is not initialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
@@ -234,7 +234,7 @@ ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept
     return ;
 }
 
-ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept
+game_item_definition::game_item_definition(game_item_definition &&other) noexcept
     : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0),
       _slot_requirement(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -242,15 +242,15 @@ ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_item_definition::ft_item_definition(move)",
+            "game_item_definition::game_item_definition(move)",
             "source object is not initialised");
     }
-    if (this->initialize(static_cast<ft_item_definition &&>(other)) != FT_ERR_SUCCESS)
+    if (this->initialize(static_cast<game_item_definition &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-ft_item_definition::~ft_item_definition() noexcept
+game_item_definition::~game_item_definition() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
@@ -258,7 +258,7 @@ ft_item_definition::~ft_item_definition() noexcept
     return ;
 }
 
-int32_t ft_item_definition::enable_thread_safety() noexcept
+int32_t game_item_definition::enable_thread_safety() noexcept
 {
     int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
@@ -286,7 +286,7 @@ int32_t ft_item_definition::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_item_definition::disable_thread_safety() noexcept
+int32_t game_item_definition::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
@@ -304,16 +304,16 @@ int32_t ft_item_definition::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_item_definition::is_thread_safe() const noexcept
+ft_bool game_item_definition::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_item_definition::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_item_definition::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -328,7 +328,7 @@ int32_t ft_item_definition::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_item_definition::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_item_definition::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -337,11 +337,11 @@ void ft_item_definition::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_item_definition::initialize() noexcept
+int32_t game_item_definition::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_item_definition::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_item_definition::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_item_id = 0;
@@ -355,12 +355,12 @@ int32_t ft_item_definition::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_item_definition::initialize(int32_t item_id, int32_t rarity, int32_t max_stack,
+int32_t game_item_definition::initialize(int32_t item_id, int32_t rarity, int32_t max_stack,
     int32_t width, int32_t height, int32_t weight, int32_t slot_requirement) noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_item_definition::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_item_definition::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_item_id = item_id;
@@ -374,21 +374,21 @@ int32_t ft_item_definition::initialize(int32_t item_id, int32_t rarity, int32_t 
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_item_definition::initialize(const ft_item_definition &other) noexcept
+int32_t game_item_definition::initialize(const game_item_definition &other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
 
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_item_definition::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_item_definition::initialize(copy)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_item_definition::initialize(copy)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_item_definition::initialize(copy)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     other_locked = FT_FALSE;
@@ -410,21 +410,21 @@ int32_t ft_item_definition::initialize(const ft_item_definition &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_item_definition::initialize(ft_item_definition &&other) noexcept
+int32_t game_item_definition::initialize(game_item_definition &&other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
 
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_item_definition::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_item_definition::initialize(move)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_item_definition::initialize(move)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_item_definition::initialize(move)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     other_locked = FT_FALSE;
@@ -453,12 +453,12 @@ int32_t ft_item_definition::initialize(ft_item_definition &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_item_definition::move(ft_item_definition &other) noexcept
+int32_t game_item_definition::move(game_item_definition &other) noexcept
 {
-    return (this->initialize(static_cast<ft_item_definition &&>(other)));
+    return (this->initialize(static_cast<game_item_definition &&>(other)));
 }
 
-int32_t ft_item_definition::destroy() noexcept
+int32_t game_item_definition::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -477,13 +477,13 @@ int32_t ft_item_definition::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_item_definition::get_item_id() const noexcept
+int32_t game_item_definition::get_item_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::get_item_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::get_item_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -497,12 +497,12 @@ int32_t ft_item_definition::get_item_id() const noexcept
     return (identifier);
 }
 
-void ft_item_definition::set_item_id(int32_t item_id) noexcept
+void game_item_definition::set_item_id(int32_t item_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::set_item_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::set_item_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -516,13 +516,13 @@ void ft_item_definition::set_item_id(int32_t item_id) noexcept
     return ;
 }
 
-int32_t ft_item_definition::get_rarity() const noexcept
+int32_t game_item_definition::get_rarity() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t rarity_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::get_rarity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::get_rarity");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -536,12 +536,12 @@ int32_t ft_item_definition::get_rarity() const noexcept
     return (rarity_value);
 }
 
-void ft_item_definition::set_rarity(int32_t rarity) noexcept
+void game_item_definition::set_rarity(int32_t rarity) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::set_rarity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::set_rarity");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -555,13 +555,13 @@ void ft_item_definition::set_rarity(int32_t rarity) noexcept
     return ;
 }
 
-int32_t ft_item_definition::get_max_stack() const noexcept
+int32_t game_item_definition::get_max_stack() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::get_max_stack");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::get_max_stack");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -575,12 +575,12 @@ int32_t ft_item_definition::get_max_stack() const noexcept
     return (value);
 }
 
-void ft_item_definition::set_max_stack(int32_t max_stack) noexcept
+void game_item_definition::set_max_stack(int32_t max_stack) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::set_max_stack");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::set_max_stack");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -594,13 +594,13 @@ void ft_item_definition::set_max_stack(int32_t max_stack) noexcept
     return ;
 }
 
-int32_t ft_item_definition::get_width() const noexcept
+int32_t game_item_definition::get_width() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t width_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::get_width");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::get_width");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -614,12 +614,12 @@ int32_t ft_item_definition::get_width() const noexcept
     return (width_value);
 }
 
-void ft_item_definition::set_width(int32_t width) noexcept
+void game_item_definition::set_width(int32_t width) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::set_width");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::set_width");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -634,13 +634,13 @@ void ft_item_definition::set_width(int32_t width) noexcept
 }
 
 
-int32_t ft_item_definition::get_height() const noexcept
+int32_t game_item_definition::get_height() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t height_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::get_height");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::get_height");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -654,12 +654,12 @@ int32_t ft_item_definition::get_height() const noexcept
     return (height_value);
 }
 
-void ft_item_definition::set_height(int32_t height) noexcept
+void game_item_definition::set_height(int32_t height) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::set_height");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::set_height");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -673,13 +673,13 @@ void ft_item_definition::set_height(int32_t height) noexcept
     return ;
 }
 
-int32_t ft_item_definition::get_weight() const noexcept
+int32_t game_item_definition::get_weight() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t weight_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::get_weight");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::get_weight");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -693,12 +693,12 @@ int32_t ft_item_definition::get_weight() const noexcept
     return (weight_value);
 }
 
-void ft_item_definition::set_weight(int32_t weight) noexcept
+void game_item_definition::set_weight(int32_t weight) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::set_weight");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::set_weight");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -712,13 +712,13 @@ void ft_item_definition::set_weight(int32_t weight) noexcept
     return ;
 }
 
-int32_t ft_item_definition::get_slot_requirement() const noexcept
+int32_t game_item_definition::get_slot_requirement() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t slot_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::get_slot_requirement");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::get_slot_requirement");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -732,12 +732,12 @@ int32_t ft_item_definition::get_slot_requirement() const noexcept
     return (slot_value);
 }
 
-void ft_item_definition::set_slot_requirement(int32_t slot_requirement) noexcept
+void game_item_definition::set_slot_requirement(int32_t slot_requirement) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_item_definition::set_slot_requirement");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_item_definition::set_slot_requirement");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -753,13 +753,13 @@ void ft_item_definition::set_slot_requirement(int32_t slot_requirement) noexcept
 
 
 
-int32_t ft_recipe_blueprint::lock_pair(const ft_recipe_blueprint &first,
-        const ft_recipe_blueprint &second,
+int32_t game_recipe_blueprint::lock_pair(const game_recipe_blueprint &first,
+        const game_recipe_blueprint &second,
         ft_bool *first_locked,
         ft_bool *second_locked)
 {
-    const ft_recipe_blueprint *ordered_first;
-    const ft_recipe_blueprint *ordered_second;
+    const game_recipe_blueprint *ordered_first;
+    const game_recipe_blueprint *ordered_second;
     int32_t lock_error;
     ft_bool swapped;
 
@@ -774,7 +774,7 @@ int32_t ft_recipe_blueprint::lock_pair(const ft_recipe_blueprint &first,
     swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
-        const ft_recipe_blueprint *temporary;
+        const game_recipe_blueprint *temporary;
 
         temporary = ordered_first;
         ordered_first = ordered_second;
@@ -820,21 +820,21 @@ int32_t ft_recipe_blueprint::lock_pair(const ft_recipe_blueprint &first,
     }
 }
 
-ft_recipe_blueprint::ft_recipe_blueprint() noexcept
+game_recipe_blueprint::game_recipe_blueprint() noexcept
     : _recipe_id(0), _result_item_id(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     return ;
 }
 
-ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexcept
+game_recipe_blueprint::game_recipe_blueprint(const game_recipe_blueprint &other) noexcept
     : _recipe_id(0), _result_item_id(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_recipe_blueprint::ft_recipe_blueprint(copy)",
+            "game_recipe_blueprint::game_recipe_blueprint(copy)",
             "source object is not initialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
@@ -842,22 +842,22 @@ ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexc
     return ;
 }
 
-ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept
+game_recipe_blueprint::game_recipe_blueprint(game_recipe_blueprint &&other) noexcept
     : _recipe_id(0), _result_item_id(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_recipe_blueprint::ft_recipe_blueprint(move)",
+            "game_recipe_blueprint::game_recipe_blueprint(move)",
             "source object is not initialised");
     }
-    if (this->initialize(static_cast<ft_recipe_blueprint &&>(other)) != FT_ERR_SUCCESS)
+    if (this->initialize(static_cast<game_recipe_blueprint &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-ft_recipe_blueprint::~ft_recipe_blueprint() noexcept
+game_recipe_blueprint::~game_recipe_blueprint() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
@@ -865,7 +865,7 @@ ft_recipe_blueprint::~ft_recipe_blueprint() noexcept
     return ;
 }
 
-int32_t ft_recipe_blueprint::enable_thread_safety() noexcept
+int32_t game_recipe_blueprint::enable_thread_safety() noexcept
 {
     int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
@@ -893,7 +893,7 @@ int32_t ft_recipe_blueprint::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_recipe_blueprint::disable_thread_safety() noexcept
+int32_t game_recipe_blueprint::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
@@ -911,16 +911,16 @@ int32_t ft_recipe_blueprint::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_recipe_blueprint::is_thread_safe() const noexcept
+ft_bool game_recipe_blueprint::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_recipe_blueprint::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_recipe_blueprint::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -935,7 +935,7 @@ int32_t ft_recipe_blueprint::lock_internal(ft_bool *lock_acquired) const noexcep
     return (FT_ERR_SUCCESS);
 }
 
-void ft_recipe_blueprint::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_recipe_blueprint::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -944,13 +944,13 @@ void ft_recipe_blueprint::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_recipe_blueprint::initialize() noexcept
+int32_t game_recipe_blueprint::initialize() noexcept
 {
     int32_t vector_initialize_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_recipe_blueprint::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_recipe_blueprint::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_ingredients.initialize();
@@ -966,14 +966,14 @@ int32_t ft_recipe_blueprint::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_recipe_blueprint::initialize(int32_t recipe_id, int32_t result_item_id,
-    const ft_vector<ft_crafting_ingredient> &ingredients) noexcept
+int32_t game_recipe_blueprint::initialize(int32_t recipe_id, int32_t result_item_id,
+    const ft_vector<game_crafting_ingredient> &ingredients) noexcept
 {
     int32_t vector_initialize_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_recipe_blueprint::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_recipe_blueprint::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_ingredients.initialize();
@@ -989,7 +989,7 @@ int32_t ft_recipe_blueprint::initialize(int32_t recipe_id, int32_t result_item_i
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_recipe_blueprint::initialize(const ft_recipe_blueprint &other) noexcept
+int32_t game_recipe_blueprint::initialize(const game_recipe_blueprint &other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
@@ -997,14 +997,14 @@ int32_t ft_recipe_blueprint::initialize(const ft_recipe_blueprint &other) noexce
 
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_recipe_blueprint::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_recipe_blueprint::initialize(copy)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_recipe_blueprint::initialize(copy)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_recipe_blueprint::initialize(copy)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_ingredients.initialize();
@@ -1029,7 +1029,7 @@ int32_t ft_recipe_blueprint::initialize(const ft_recipe_blueprint &other) noexce
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_recipe_blueprint::initialize(ft_recipe_blueprint &&other) noexcept
+int32_t game_recipe_blueprint::initialize(game_recipe_blueprint &&other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
@@ -1037,14 +1037,14 @@ int32_t ft_recipe_blueprint::initialize(ft_recipe_blueprint &&other) noexcept
 
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_recipe_blueprint::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_recipe_blueprint::initialize(move)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_recipe_blueprint::initialize(move)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_recipe_blueprint::initialize(move)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_ingredients.initialize();
@@ -1072,12 +1072,12 @@ int32_t ft_recipe_blueprint::initialize(ft_recipe_blueprint &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_recipe_blueprint::move(ft_recipe_blueprint &other) noexcept
+int32_t game_recipe_blueprint::move(game_recipe_blueprint &other) noexcept
 {
-    return (this->initialize(static_cast<ft_recipe_blueprint &&>(other)));
+    return (this->initialize(static_cast<game_recipe_blueprint &&>(other)));
 }
 
-int32_t ft_recipe_blueprint::destroy() noexcept
+int32_t game_recipe_blueprint::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -1093,13 +1093,13 @@ int32_t ft_recipe_blueprint::destroy() noexcept
 }
 
 
-int32_t ft_recipe_blueprint::get_recipe_id() const noexcept
+int32_t game_recipe_blueprint::get_recipe_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::get_recipe_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::get_recipe_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1113,12 +1113,12 @@ int32_t ft_recipe_blueprint::get_recipe_id() const noexcept
     return (identifier);
 }
 
-void ft_recipe_blueprint::set_recipe_id(int32_t recipe_id) noexcept
+void game_recipe_blueprint::set_recipe_id(int32_t recipe_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::set_recipe_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::set_recipe_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1132,13 +1132,13 @@ void ft_recipe_blueprint::set_recipe_id(int32_t recipe_id) noexcept
     return ;
 }
 
-int32_t ft_recipe_blueprint::get_result_item_id() const noexcept
+int32_t game_recipe_blueprint::get_result_item_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t item_id;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::get_result_item_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::get_result_item_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1152,12 +1152,12 @@ int32_t ft_recipe_blueprint::get_result_item_id() const noexcept
     return (item_id);
 }
 
-void ft_recipe_blueprint::set_result_item_id(int32_t result_item_id) noexcept
+void game_recipe_blueprint::set_result_item_id(int32_t result_item_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::set_result_item_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::set_result_item_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1171,12 +1171,12 @@ void ft_recipe_blueprint::set_result_item_id(int32_t result_item_id) noexcept
     return ;
 }
 
-ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() noexcept
+ft_vector<game_crafting_ingredient> &game_recipe_blueprint::get_ingredients() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::get_ingredients");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::get_ingredients");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1189,12 +1189,12 @@ ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() noexce
     return (this->_ingredients);
 }
 
-const ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() const noexcept
+const ft_vector<game_crafting_ingredient> &game_recipe_blueprint::get_ingredients() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::get_ingredients const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::get_ingredients const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1207,12 +1207,12 @@ const ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() 
     return (this->_ingredients);
 }
 
-void ft_recipe_blueprint::set_ingredients(const ft_vector<ft_crafting_ingredient> &ingredients) noexcept
+void game_recipe_blueprint::set_ingredients(const ft_vector<game_crafting_ingredient> &ingredients) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_recipe_blueprint::set_ingredients");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_recipe_blueprint::set_ingredients");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1227,13 +1227,13 @@ void ft_recipe_blueprint::set_ingredients(const ft_vector<ft_crafting_ingredient
 }
 
 
-int32_t ft_loadout_entry::lock_pair(const ft_loadout_entry &first,
-        const ft_loadout_entry &second,
+int32_t game_loadout_entry::lock_pair(const game_loadout_entry &first,
+        const game_loadout_entry &second,
         ft_bool *first_locked,
         ft_bool *second_locked)
 {
-    const ft_loadout_entry *ordered_first;
-    const ft_loadout_entry *ordered_second;
+    const game_loadout_entry *ordered_first;
+    const game_loadout_entry *ordered_second;
     int32_t lock_error;
     ft_bool swapped;
 
@@ -1248,7 +1248,7 @@ int32_t ft_loadout_entry::lock_pair(const ft_loadout_entry &first,
     swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
-        const ft_loadout_entry *temporary;
+        const game_loadout_entry *temporary;
 
         temporary = ordered_first;
         ordered_first = ordered_second;
@@ -1294,7 +1294,7 @@ int32_t ft_loadout_entry::lock_pair(const ft_loadout_entry &first,
     }
 }
 
-ft_loadout_entry::ft_loadout_entry() noexcept
+game_loadout_entry::game_loadout_entry() noexcept
     : _slot(0), _item_id(0), _quantity(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -1302,7 +1302,7 @@ ft_loadout_entry::ft_loadout_entry() noexcept
     return ;
 }
 
-ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept
+game_loadout_entry::game_loadout_entry(const game_loadout_entry &other) noexcept
     : _slot(0), _item_id(0), _quantity(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -1310,7 +1310,7 @@ ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_loadout_entry::ft_loadout_entry(copy)",
+            "game_loadout_entry::game_loadout_entry(copy)",
             "source object is not initialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
@@ -1318,7 +1318,7 @@ ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept
     return ;
 }
 
-ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept
+game_loadout_entry::game_loadout_entry(game_loadout_entry &&other) noexcept
     : _slot(0), _item_id(0), _quantity(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -1326,15 +1326,15 @@ ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_loadout_entry::ft_loadout_entry(move)",
+            "game_loadout_entry::game_loadout_entry(move)",
             "source object is not initialised");
     }
-    if (this->initialize(static_cast<ft_loadout_entry &&>(other)) != FT_ERR_SUCCESS)
+    if (this->initialize(static_cast<game_loadout_entry &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-ft_loadout_entry::~ft_loadout_entry() noexcept
+game_loadout_entry::~game_loadout_entry() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
@@ -1342,7 +1342,7 @@ ft_loadout_entry::~ft_loadout_entry() noexcept
     return ;
 }
 
-int32_t ft_loadout_entry::enable_thread_safety() noexcept
+int32_t game_loadout_entry::enable_thread_safety() noexcept
 {
     int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
@@ -1370,7 +1370,7 @@ int32_t ft_loadout_entry::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_entry::disable_thread_safety() noexcept
+int32_t game_loadout_entry::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
@@ -1388,16 +1388,16 @@ int32_t ft_loadout_entry::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_loadout_entry::is_thread_safe() const noexcept
+ft_bool game_loadout_entry::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_loadout_entry::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_loadout_entry::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_entry::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_entry::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -1412,7 +1412,7 @@ int32_t ft_loadout_entry::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_loadout_entry::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_loadout_entry::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -1421,11 +1421,11 @@ void ft_loadout_entry::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_loadout_entry::initialize() noexcept
+int32_t game_loadout_entry::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_entry::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_entry::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_slot = 0;
@@ -1436,11 +1436,11 @@ int32_t ft_loadout_entry::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_entry::initialize(int32_t slot, int32_t item_id, int32_t quantity) noexcept
+int32_t game_loadout_entry::initialize(int32_t slot, int32_t item_id, int32_t quantity) noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_entry::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_entry::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_slot = slot;
@@ -1451,20 +1451,20 @@ int32_t ft_loadout_entry::initialize(int32_t slot, int32_t item_id, int32_t quan
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_entry::initialize(const ft_loadout_entry &other) noexcept
+int32_t game_loadout_entry::initialize(const game_loadout_entry &other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_loadout_entry::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_entry::initialize(copy)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_entry::initialize(copy)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_entry::initialize(copy)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     other_locked = FT_FALSE;
@@ -1483,20 +1483,20 @@ int32_t ft_loadout_entry::initialize(const ft_loadout_entry &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_entry::initialize(ft_loadout_entry &&other) noexcept
+int32_t game_loadout_entry::initialize(game_loadout_entry &&other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_loadout_entry::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_entry::initialize(move)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_entry::initialize(move)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_entry::initialize(move)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     other_locked = FT_FALSE;
@@ -1517,12 +1517,12 @@ int32_t ft_loadout_entry::initialize(ft_loadout_entry &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_entry::move(ft_loadout_entry &other) noexcept
+int32_t game_loadout_entry::move(game_loadout_entry &other) noexcept
 {
-    return (this->initialize(static_cast<ft_loadout_entry &&>(other)));
+    return (this->initialize(static_cast<game_loadout_entry &&>(other)));
 }
 
-int32_t ft_loadout_entry::destroy() noexcept
+int32_t game_loadout_entry::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -1538,13 +1538,13 @@ int32_t ft_loadout_entry::destroy() noexcept
 }
 
 
-int32_t ft_loadout_entry::get_slot() const noexcept
+int32_t game_loadout_entry::get_slot() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t slot_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_entry::get_slot");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_entry::get_slot");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1558,11 +1558,11 @@ int32_t ft_loadout_entry::get_slot() const noexcept
     return (slot_value);
 }
 
-void ft_loadout_entry::set_slot(int32_t slot) noexcept
+void game_loadout_entry::set_slot(int32_t slot) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_entry::set_slot");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_entry::set_slot");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1576,13 +1576,13 @@ void ft_loadout_entry::set_slot(int32_t slot) noexcept
     return ;
 }
 
-int32_t ft_loadout_entry::get_item_id() const noexcept
+int32_t game_loadout_entry::get_item_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t item_id;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_entry::get_item_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_entry::get_item_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1596,11 +1596,11 @@ int32_t ft_loadout_entry::get_item_id() const noexcept
     return (item_id);
 }
 
-void ft_loadout_entry::set_item_id(int32_t item_id) noexcept
+void game_loadout_entry::set_item_id(int32_t item_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_entry::set_item_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_entry::set_item_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1614,13 +1614,13 @@ void ft_loadout_entry::set_item_id(int32_t item_id) noexcept
     return ;
 }
 
-int32_t ft_loadout_entry::get_quantity() const noexcept
+int32_t game_loadout_entry::get_quantity() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t quantity_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_entry::get_quantity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_entry::get_quantity");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1634,12 +1634,12 @@ int32_t ft_loadout_entry::get_quantity() const noexcept
     return (quantity_value);
 }
 
-void ft_loadout_entry::set_quantity(int32_t quantity) noexcept
+void game_loadout_entry::set_quantity(int32_t quantity) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_entry::set_quantity");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_entry::set_quantity");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1654,13 +1654,13 @@ void ft_loadout_entry::set_quantity(int32_t quantity) noexcept
 }
 
 
-int32_t ft_loadout_blueprint::lock_pair(const ft_loadout_blueprint &first,
-        const ft_loadout_blueprint &second,
+int32_t game_loadout_blueprint::lock_pair(const game_loadout_blueprint &first,
+        const game_loadout_blueprint &second,
         ft_bool *first_locked,
         ft_bool *second_locked)
 {
-    const ft_loadout_blueprint *ordered_first;
-    const ft_loadout_blueprint *ordered_second;
+    const game_loadout_blueprint *ordered_first;
+    const game_loadout_blueprint *ordered_second;
     int32_t lock_error;
     ft_bool swapped;
 
@@ -1675,7 +1675,7 @@ int32_t ft_loadout_blueprint::lock_pair(const ft_loadout_blueprint &first,
     swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
-        const ft_loadout_blueprint *temporary;
+        const game_loadout_blueprint *temporary;
 
         temporary = ordered_first;
         ordered_first = ordered_second;
@@ -1721,7 +1721,7 @@ int32_t ft_loadout_blueprint::lock_pair(const ft_loadout_blueprint &first,
     }
 }
 
-ft_loadout_blueprint::ft_loadout_blueprint() noexcept
+game_loadout_blueprint::game_loadout_blueprint() noexcept
     : _loadout_id(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -1729,7 +1729,7 @@ ft_loadout_blueprint::ft_loadout_blueprint() noexcept
     return ;
 }
 
-ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) noexcept
+game_loadout_blueprint::game_loadout_blueprint(const game_loadout_blueprint &other) noexcept
     : _loadout_id(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -1737,7 +1737,7 @@ ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) no
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_loadout_blueprint::ft_loadout_blueprint(copy)",
+            "game_loadout_blueprint::game_loadout_blueprint(copy)",
             "source object is not initialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
@@ -1745,7 +1745,7 @@ ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) no
     return ;
 }
 
-ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcept
+game_loadout_blueprint::game_loadout_blueprint(game_loadout_blueprint &&other) noexcept
     : _loadout_id(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -1753,15 +1753,15 @@ ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcep
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_loadout_blueprint::ft_loadout_blueprint(move)",
+            "game_loadout_blueprint::game_loadout_blueprint(move)",
             "source object is not initialised");
     }
-    if (this->initialize(static_cast<ft_loadout_blueprint &&>(other)) != FT_ERR_SUCCESS)
+    if (this->initialize(static_cast<game_loadout_blueprint &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-ft_loadout_blueprint::~ft_loadout_blueprint() noexcept
+game_loadout_blueprint::~game_loadout_blueprint() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
@@ -1769,7 +1769,7 @@ ft_loadout_blueprint::~ft_loadout_blueprint() noexcept
     return ;
 }
 
-int32_t ft_loadout_blueprint::enable_thread_safety() noexcept
+int32_t game_loadout_blueprint::enable_thread_safety() noexcept
 {
     int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
@@ -1797,7 +1797,7 @@ int32_t ft_loadout_blueprint::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_blueprint::disable_thread_safety() noexcept
+int32_t game_loadout_blueprint::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
@@ -1815,16 +1815,16 @@ int32_t ft_loadout_blueprint::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_loadout_blueprint::is_thread_safe() const noexcept
+ft_bool game_loadout_blueprint::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_loadout_blueprint::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_loadout_blueprint::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_blueprint::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_blueprint::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -1839,7 +1839,7 @@ int32_t ft_loadout_blueprint::lock_internal(ft_bool *lock_acquired) const noexce
     return (FT_ERR_SUCCESS);
 }
 
-void ft_loadout_blueprint::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_loadout_blueprint::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -1848,13 +1848,13 @@ void ft_loadout_blueprint::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_loadout_blueprint::initialize() noexcept
+int32_t game_loadout_blueprint::initialize() noexcept
 {
     int32_t vector_initialize_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_blueprint::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_blueprint::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_entries.initialize();
@@ -1870,14 +1870,14 @@ int32_t ft_loadout_blueprint::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_blueprint::initialize(int32_t loadout_id,
-    const ft_vector<ft_loadout_entry> &entries) noexcept
+int32_t game_loadout_blueprint::initialize(int32_t loadout_id,
+    const ft_vector<game_loadout_entry> &entries) noexcept
 {
     int32_t vector_initialize_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_blueprint::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_blueprint::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_entries.initialize();
@@ -1893,7 +1893,7 @@ int32_t ft_loadout_blueprint::initialize(int32_t loadout_id,
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_blueprint::initialize(const ft_loadout_blueprint &other) noexcept
+int32_t game_loadout_blueprint::initialize(const game_loadout_blueprint &other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
@@ -1901,14 +1901,14 @@ int32_t ft_loadout_blueprint::initialize(const ft_loadout_blueprint &other) noex
 
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_loadout_blueprint::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_blueprint::initialize(copy)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_blueprint::initialize(copy)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_blueprint::initialize(copy)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_entries.initialize();
@@ -1933,7 +1933,7 @@ int32_t ft_loadout_blueprint::initialize(const ft_loadout_blueprint &other) noex
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_blueprint::initialize(ft_loadout_blueprint &&other) noexcept
+int32_t game_loadout_blueprint::initialize(game_loadout_blueprint &&other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
@@ -1941,14 +1941,14 @@ int32_t ft_loadout_blueprint::initialize(ft_loadout_blueprint &&other) noexcept
 
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_loadout_blueprint::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_blueprint::initialize(move)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_loadout_blueprint::initialize(move)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_loadout_blueprint::initialize(move)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     vector_initialize_error = this->_entries.initialize();
@@ -1974,12 +1974,12 @@ int32_t ft_loadout_blueprint::initialize(ft_loadout_blueprint &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_loadout_blueprint::move(ft_loadout_blueprint &other) noexcept
+int32_t game_loadout_blueprint::move(game_loadout_blueprint &other) noexcept
 {
-    return (this->initialize(static_cast<ft_loadout_blueprint &&>(other)));
+    return (this->initialize(static_cast<game_loadout_blueprint &&>(other)));
 }
 
-int32_t ft_loadout_blueprint::destroy() noexcept
+int32_t game_loadout_blueprint::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -1994,13 +1994,13 @@ int32_t ft_loadout_blueprint::destroy() noexcept
 }
 
 
-int32_t ft_loadout_blueprint::get_loadout_id() const noexcept
+int32_t game_loadout_blueprint::get_loadout_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_blueprint::get_loadout_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_blueprint::get_loadout_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -2014,12 +2014,12 @@ int32_t ft_loadout_blueprint::get_loadout_id() const noexcept
     return (identifier);
 }
 
-void ft_loadout_blueprint::set_loadout_id(int32_t loadout_id) noexcept
+void game_loadout_blueprint::set_loadout_id(int32_t loadout_id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_blueprint::set_loadout_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_blueprint::set_loadout_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -2033,26 +2033,26 @@ void ft_loadout_blueprint::set_loadout_id(int32_t loadout_id) noexcept
     return ;
 }
 
-ft_vector<ft_loadout_entry> &ft_loadout_blueprint::get_entries() noexcept
+ft_vector<game_loadout_entry> &game_loadout_blueprint::get_entries() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_blueprint::get_entries");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_blueprint::get_entries");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_entries);
 }
 
-const ft_vector<ft_loadout_entry> &ft_loadout_blueprint::get_entries() const noexcept
+const ft_vector<game_loadout_entry> &game_loadout_blueprint::get_entries() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_blueprint::get_entries const");
-    const_cast<ft_loadout_blueprint *>(this)->set_error(FT_ERR_SUCCESS);
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_blueprint::get_entries const");
+    const_cast<game_loadout_blueprint *>(this)->set_error(FT_ERR_SUCCESS);
     return (this->_entries);
 }
 
-void ft_loadout_blueprint::set_entries(const ft_vector<ft_loadout_entry> &entries) noexcept
+void game_loadout_blueprint::set_entries(const ft_vector<game_loadout_entry> &entries) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_loadout_blueprint::set_entries");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_loadout_blueprint::set_entries");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -2066,37 +2066,37 @@ void ft_loadout_blueprint::set_entries(const ft_vector<ft_loadout_entry> &entrie
     return ;
 }
 
-thread_local int32_t ft_data_catalog::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_data_catalog::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_data_catalog::set_error(int32_t error_code) noexcept
+uint32_t game_data_catalog::set_error(uint32_t error_code) noexcept
 {
-    ft_data_catalog::_last_error = error_code;
+    game_data_catalog::_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_data_catalog::get_error() const noexcept
+int32_t game_data_catalog::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_data_catalog::get_error");
-    return (ft_data_catalog::_last_error);
+            "game_data_catalog::get_error");
+    return (game_data_catalog::_last_error);
 }
 
-const char *ft_data_catalog::get_error_str() const noexcept
+const char *game_data_catalog::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_data_catalog::get_error_str");
+            "game_data_catalog::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-int32_t ft_data_catalog::lock_pair(const ft_data_catalog &first,
-        const ft_data_catalog &second,
+int32_t game_data_catalog::lock_pair(const game_data_catalog &first,
+        const game_data_catalog &second,
         ft_bool *first_locked,
         ft_bool *second_locked)
 {
-    const ft_data_catalog *ordered_first;
-    const ft_data_catalog *ordered_second;
+    const game_data_catalog *ordered_first;
+    const game_data_catalog *ordered_second;
     int32_t lock_error;
     ft_bool swapped;
 
@@ -2111,7 +2111,7 @@ int32_t ft_data_catalog::lock_pair(const ft_data_catalog &first,
     swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
-        const ft_data_catalog *temporary;
+        const game_data_catalog *temporary;
 
         temporary = ordered_first;
         ordered_first = ordered_second;
@@ -2158,7 +2158,7 @@ int32_t ft_data_catalog::lock_pair(const ft_data_catalog &first,
 }
 
 
-ft_data_catalog::ft_data_catalog() noexcept
+game_data_catalog::game_data_catalog() noexcept
     : _item_definitions(), _recipes(), _loadouts(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -2166,7 +2166,7 @@ ft_data_catalog::ft_data_catalog() noexcept
     return ;
 }
 
-ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept
+game_data_catalog::game_data_catalog(const game_data_catalog &other) noexcept
     : _item_definitions(), _recipes(), _loadouts(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -2174,7 +2174,7 @@ ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_data_catalog::ft_data_catalog(copy)",
+            "game_data_catalog::game_data_catalog(copy)",
             "source object is not initialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
@@ -2182,7 +2182,7 @@ ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept
     return ;
 }
 
-ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept
+game_data_catalog::game_data_catalog(game_data_catalog &&other) noexcept
     : _item_definitions(), _recipes(), _loadouts(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
@@ -2190,15 +2190,15 @@ ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
-            "ft_data_catalog::ft_data_catalog(move)",
+            "game_data_catalog::game_data_catalog(move)",
             "source object is not initialised");
     }
-    if (this->initialize(static_cast<ft_data_catalog &&>(other)) != FT_ERR_SUCCESS)
+    if (this->initialize(static_cast<game_data_catalog &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
-ft_data_catalog::~ft_data_catalog() noexcept
+game_data_catalog::~game_data_catalog() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
@@ -2206,7 +2206,7 @@ ft_data_catalog::~ft_data_catalog() noexcept
     return ;
 }
 
-int32_t ft_data_catalog::enable_thread_safety() noexcept
+int32_t game_data_catalog::enable_thread_safety() noexcept
 {
     int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
@@ -2234,7 +2234,7 @@ int32_t ft_data_catalog::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::disable_thread_safety() noexcept
+int32_t game_data_catalog::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
@@ -2252,16 +2252,16 @@ int32_t ft_data_catalog::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_data_catalog::is_thread_safe() const noexcept
+ft_bool game_data_catalog::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_data_catalog::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_data_catalog::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -2276,7 +2276,7 @@ int32_t ft_data_catalog::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_data_catalog::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_data_catalog::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
     if (lock_acquired == FT_FALSE)
@@ -2285,12 +2285,12 @@ void ft_data_catalog::unlock_internal(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-int32_t ft_data_catalog::initialize() noexcept
+int32_t game_data_catalog::initialize() noexcept
 {
     int32_t init_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_data_catalog::initialize", "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_data_catalog::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     init_error = this->_item_definitions.initialize();
@@ -2321,20 +2321,20 @@ int32_t ft_data_catalog::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::initialize(const ft_data_catalog &other) noexcept
+int32_t game_data_catalog::initialize(const game_data_catalog &other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_data_catalog::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_data_catalog::initialize(copy)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_data_catalog::initialize(copy)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_data_catalog::initialize(copy)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this->_item_definitions.initialize() != FT_ERR_SUCCESS
@@ -2365,20 +2365,20 @@ int32_t ft_data_catalog::initialize(const ft_data_catalog &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::initialize(ft_data_catalog &&other) noexcept
+int32_t game_data_catalog::initialize(game_data_catalog &&other) noexcept
 {
     ft_bool other_locked;
     int32_t lock_error;
     if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_data_catalog::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_data_catalog::initialize(move)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_data_catalog::initialize(move)", "destination object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_data_catalog::initialize(move)", "destination object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this->_item_definitions.initialize() != FT_ERR_SUCCESS
@@ -2412,12 +2412,12 @@ int32_t ft_data_catalog::initialize(ft_data_catalog &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::move(ft_data_catalog &other) noexcept
+int32_t game_data_catalog::move(game_data_catalog &other) noexcept
 {
-    return (this->initialize(static_cast<ft_data_catalog &&>(other)));
+    return (this->initialize(static_cast<game_data_catalog &&>(other)));
 }
 
-int32_t ft_data_catalog::destroy() noexcept
+int32_t game_data_catalog::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -2432,49 +2432,49 @@ int32_t ft_data_catalog::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-ft_map<int32_t, ft_item_definition> &ft_data_catalog::get_item_definitions() noexcept
+ft_map<int32_t, game_item_definition> &game_data_catalog::get_item_definitions() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::get_item_definitions");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::get_item_definitions");
     return (this->_item_definitions);
 }
 
-const ft_map<int32_t, ft_item_definition> &ft_data_catalog::get_item_definitions() const noexcept
+const ft_map<int32_t, game_item_definition> &game_data_catalog::get_item_definitions() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::get_item_definitions const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::get_item_definitions const");
     return (this->_item_definitions);
 }
 
-ft_map<int32_t, ft_recipe_blueprint> &ft_data_catalog::get_recipes() noexcept
+ft_map<int32_t, game_recipe_blueprint> &game_data_catalog::get_recipes() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::get_recipes");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::get_recipes");
     return (this->_recipes);
 }
 
-const ft_map<int32_t, ft_recipe_blueprint> &ft_data_catalog::get_recipes() const noexcept
+const ft_map<int32_t, game_recipe_blueprint> &game_data_catalog::get_recipes() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::get_recipes const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::get_recipes const");
     return (this->_recipes);
 }
 
-ft_map<int32_t, ft_loadout_blueprint> &ft_data_catalog::get_loadouts() noexcept
+ft_map<int32_t, game_loadout_blueprint> &game_data_catalog::get_loadouts() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::get_loadouts");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::get_loadouts");
     return (this->_loadouts);
 }
 
-const ft_map<int32_t, ft_loadout_blueprint> &ft_data_catalog::get_loadouts() const noexcept
+const ft_map<int32_t, game_loadout_blueprint> &game_data_catalog::get_loadouts() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::get_loadouts const");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::get_loadouts const");
     return (this->_loadouts);
 }
 
-int32_t ft_data_catalog::register_item_definition(const ft_item_definition &definition) noexcept
+int32_t game_data_catalog::register_item_definition(const game_item_definition &definition) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::register_item_definition");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::register_item_definition");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -2489,13 +2489,13 @@ int32_t ft_data_catalog::register_item_definition(const ft_item_definition &defi
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::register_recipe(const ft_recipe_blueprint &recipe) noexcept
+int32_t game_data_catalog::register_recipe(const game_recipe_blueprint &recipe) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::register_recipe");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::register_recipe");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -2510,13 +2510,13 @@ int32_t ft_data_catalog::register_recipe(const ft_recipe_blueprint &recipe) noex
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::register_loadout(const ft_loadout_blueprint &loadout) noexcept
+int32_t game_data_catalog::register_loadout(const game_loadout_blueprint &loadout) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::register_loadout");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::register_loadout");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -2531,14 +2531,14 @@ int32_t ft_data_catalog::register_loadout(const ft_loadout_blueprint &loadout) n
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::fetch_item_definition(int32_t item_id, ft_item_definition &definition) const noexcept
+int32_t game_data_catalog::fetch_item_definition(int32_t item_id, game_item_definition &definition) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    const ft_data_catalog *self;
-    const Pair<int32_t, ft_item_definition> *entry;
+    const game_data_catalog *self;
+    const Pair<int32_t, game_item_definition> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::fetch_item_definition");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::fetch_item_definition");
     self = this;
     lock_acquired = FT_FALSE;
     lock_error = self->lock_internal(&lock_acquired);
@@ -2565,14 +2565,14 @@ int32_t ft_data_catalog::fetch_item_definition(int32_t item_id, ft_item_definiti
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::fetch_recipe(int32_t recipe_id, ft_recipe_blueprint &recipe) const noexcept
+int32_t game_data_catalog::fetch_recipe(int32_t recipe_id, game_recipe_blueprint &recipe) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    const ft_data_catalog *self;
-    const Pair<int32_t, ft_recipe_blueprint> *entry;
+    const game_data_catalog *self;
+    const Pair<int32_t, game_recipe_blueprint> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::fetch_recipe");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::fetch_recipe");
     self = this;
     lock_acquired = FT_FALSE;
     lock_error = self->lock_internal(&lock_acquired);
@@ -2599,14 +2599,14 @@ int32_t ft_data_catalog::fetch_recipe(int32_t recipe_id, ft_recipe_blueprint &re
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_data_catalog::fetch_loadout(int32_t loadout_id, ft_loadout_blueprint &loadout) const noexcept
+int32_t game_data_catalog::fetch_loadout(int32_t loadout_id, game_loadout_blueprint &loadout) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    const ft_data_catalog *self;
-    const Pair<int32_t, ft_loadout_blueprint> *entry;
+    const game_data_catalog *self;
+    const Pair<int32_t, game_loadout_blueprint> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_data_catalog::fetch_loadout");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_data_catalog::fetch_loadout");
     self = this;
     lock_acquired = FT_FALSE;
     lock_error = self->lock_internal(&lock_acquired);

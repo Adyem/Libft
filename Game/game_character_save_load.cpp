@@ -6,7 +6,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Printf/printf.hpp"
 
-json_group *serialize_character(const ft_character &character)
+json_group *serialize_character(const game_character &character)
 {
     json_group *group = json_create_json_group("character");
     if (!group)
@@ -139,7 +139,7 @@ json_group *serialize_character(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
-    const ft_map<int32_t, ft_skill> &skills = character.get_skills();
+    const ft_map<int32_t, game_skill> &skills = character.get_skills();
     json_item *count = json_create_item("skill_count", static_cast<int32_t>(skills.size()));
     if (!count)
     {
@@ -149,13 +149,13 @@ json_group *serialize_character(const ft_character &character)
     json_add_item_to_group(group, count);
     ft_size_t skill_index = 0;
     ft_size_t skill_count = skills.size();
-    const Pair<int32_t, ft_skill> *skills_end = skills.end();
+    const Pair<int32_t, game_skill> *skills_end = skills.end();
     if (skill_count > 0 && !skills_end)
     {
         json_free_groups(group);
         return (ft_nullptr);
     }
-    const Pair<int32_t, ft_skill> *skill_start = skills_end;
+    const Pair<int32_t, game_skill> *skill_start = skills_end;
     if (skill_count > 0)
         skill_start = skills_end - skill_count;
     while (skill_index < skill_count)
@@ -242,7 +242,7 @@ json_group *serialize_character(const ft_character &character)
     return (group);
 }
 
-int32_t deserialize_character(ft_character &character, json_group *group)
+int32_t deserialize_character(game_character &character, json_group *group)
 {
     json_item *item = json_find_item(group, "hit_points");
     if (item)
@@ -339,7 +339,7 @@ int32_t deserialize_character(ft_character &character, json_group *group)
             {
                 return (FT_ERR_GAME_GENERAL_ERROR);
             }
-            ft_skill skill;
+            game_skill skill;
             skill.set_id(ft_atoi(id_item->value));
             skill.set_level(ft_atoi(level_item->value));
             skill.set_cooldown(ft_atoi(cool_item->value));

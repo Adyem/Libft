@@ -30,7 +30,7 @@ static void game_event_scheduler_telemetry_emit(const char *event_name,
     return ;
 }
 
-static void game_event_scheduler_telemetry_update_state(ft_event_scheduler_telemetry_state &state,
+static void game_event_scheduler_telemetry_update_state(game_event_scheduler_telemetry_state &state,
         const t_event_scheduler_profile &profile) noexcept
 {
     state.last_update_count = profile.update_count;
@@ -43,7 +43,7 @@ static void game_event_scheduler_telemetry_update_state(ft_event_scheduler_telem
     return ;
 }
 
-void game_event_scheduler_telemetry_state_initialize(ft_event_scheduler_telemetry_state &state,
+void game_event_scheduler_telemetry_state_initialize(game_event_scheduler_telemetry_state &state,
         const char *scheduler_name) noexcept
 {
     state.scheduler_name = scheduler_name;
@@ -51,7 +51,7 @@ void game_event_scheduler_telemetry_state_initialize(ft_event_scheduler_telemetr
     return ;
 }
 
-void game_event_scheduler_telemetry_state_reset(ft_event_scheduler_telemetry_state &state) noexcept
+void game_event_scheduler_telemetry_state_reset(game_event_scheduler_telemetry_state &state) noexcept
 {
     state.last_update_count = 0;
     state.last_events_processed = 0;
@@ -63,7 +63,7 @@ void game_event_scheduler_telemetry_state_reset(ft_event_scheduler_telemetry_sta
     return ;
 }
 
-void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &state,
+void game_event_scheduler_telemetry_record(game_event_scheduler_telemetry_state &state,
         const t_event_scheduler_profile &profile) noexcept
 {
     int64_t delta_updates;
@@ -183,8 +183,8 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
     return ;
 }
 
-void game_event_scheduler_publish_telemetry(ft_event_scheduler &scheduler,
-        ft_event_scheduler_telemetry_state &state) noexcept
+void game_event_scheduler_publish_telemetry(game_event_scheduler &scheduler,
+        game_event_scheduler_telemetry_state &state) noexcept
 {
     t_event_scheduler_profile profile;
     scheduler.snapshot_profile(profile);

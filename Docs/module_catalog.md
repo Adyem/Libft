@@ -3018,7 +3018,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_currency_rate.hpp
+### Game/game_currency_rate.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`
@@ -3035,7 +3035,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_dialogue_line.hpp
+### Game/game_dialogue_line.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`
@@ -3054,7 +3054,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_dialogue_script.hpp
+### Game/game_dialogue_script.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`
@@ -3076,7 +3076,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_price_definition.hpp
+### Game/game_price_definition.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`
@@ -3096,7 +3096,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_rarity_band.hpp
+### Game/game_rarity_band.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`
@@ -3111,7 +3111,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_region_definition.hpp
+### Game/game_region_definition.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`
@@ -3129,7 +3129,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_vendor_profile.hpp
+### Game/game_vendor_profile.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`
@@ -3148,7 +3148,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const noexcept`
 - Defines: _None_
 
-### Game/ft_world_region.hpp
+### Game/game_world_region.hpp
 
 - Declares:
   - `void set_error(int error_code) const noexcept`

@@ -5,7 +5,7 @@
 #include "../PThread/mutex.hpp"
 #include <cstdint>
 
-class ft_experience_table
+class game_experience_table
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -14,11 +14,11 @@ class ft_experience_table
     #endif
         int32_t             *_levels;
         int32_t             _count;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         ft_bool is_valid(int32_t count, const int32_t *array) const noexcept;
         int32_t resize_locked(int32_t new_count,
                           ft_bool validate_existing = FT_TRUE) noexcept;
@@ -26,16 +26,16 @@ class ft_experience_table
         void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_experience_table() noexcept;
-        ~ft_experience_table() noexcept;
-        ft_experience_table(const ft_experience_table &other) noexcept;
-        ft_experience_table &operator=(const ft_experience_table &other) noexcept = delete;
-        ft_experience_table(ft_experience_table &&other) noexcept;
-        ft_experience_table &operator=(ft_experience_table &&other) noexcept = delete;
+        game_experience_table() noexcept;
+        ~game_experience_table() noexcept;
+        game_experience_table(const game_experience_table &other) noexcept;
+        game_experience_table &operator=(const game_experience_table &other) noexcept = delete;
+        game_experience_table(game_experience_table &&other) noexcept;
+        game_experience_table &operator=(game_experience_table &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
         int32_t destroy() noexcept;
-        int32_t move(ft_experience_table &other) noexcept;
+        int32_t move(game_experience_table &other) noexcept;
         int32_t  get_count() const noexcept;
         int32_t  get_level(int32_t experience) const noexcept;
         int32_t  get_value(int32_t index) const noexcept;

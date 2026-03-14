@@ -8,48 +8,48 @@
 #include "../PThread/mutex.hpp"
 #include <cstdint>
 
-enum ft_equipment_slot
+enum game_equipment_slot
 {
     EQUIP_HEAD,
     EQUIP_CHEST,
     EQUIP_WEAPON
 };
 
-class ft_equipment
+class game_equipment
 {
     #ifdef LIBFT_TEST_BUILD
         public:
     #else
         private:
     #endif
-        ft_sharedptr<ft_item> _head;
-        ft_sharedptr<ft_item> _chest;
-        ft_sharedptr<ft_item> _weapon;
+        ft_sharedptr<game_item> _head;
+        ft_sharedptr<game_item> _chest;
+        ft_sharedptr<game_item> _weapon;
         mutable pt_recursive_mutex      *_mutex;
         uint8_t _initialised_state;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
-        ft_bool validate_item(const ft_sharedptr<ft_item> &item) const noexcept;
+        ft_bool validate_item(const ft_sharedptr<game_item> &item) const noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
-        ft_equipment() noexcept;
-        virtual ~ft_equipment() noexcept;
-        ft_equipment(const ft_equipment &other) noexcept;
-        ft_equipment &operator=(const ft_equipment &other) noexcept = delete;
-        ft_equipment(ft_equipment &&other) noexcept;
-        ft_equipment &operator=(ft_equipment &&other) noexcept = delete;
+        game_equipment() noexcept;
+        virtual ~game_equipment() noexcept;
+        game_equipment(const game_equipment &other) noexcept;
+        game_equipment &operator=(const game_equipment &other) noexcept = delete;
+        game_equipment(game_equipment &&other) noexcept;
+        game_equipment &operator=(game_equipment &&other) noexcept = delete;
         int32_t initialize() noexcept;
         int32_t destroy() noexcept;
-        int32_t move(ft_equipment &other) noexcept;
+        int32_t move(game_equipment &other) noexcept;
 
-        int32_t equip(int32_t slot, const ft_sharedptr<ft_item> &item) noexcept;
+        int32_t equip(int32_t slot, const ft_sharedptr<game_item> &item) noexcept;
         void unequip(int32_t slot) noexcept;
-        ft_sharedptr<ft_item> get_item(int32_t slot) noexcept;
-        ft_sharedptr<ft_item> get_item(int32_t slot) const noexcept;
+        ft_sharedptr<game_item> get_item(int32_t slot) noexcept;
+        ft_sharedptr<game_item> get_item(int32_t slot) const noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

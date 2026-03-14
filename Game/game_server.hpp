@@ -14,7 +14,7 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
-class ft_game_server
+class game_server
 {
     #ifdef LIBFT_TEST_BUILD
         public:
@@ -22,13 +22,13 @@ class ft_game_server
         private:
     #endif
         ft_websocket_server *_server;
-        ft_sharedptr<ft_world> _world;
+        ft_sharedptr<game_world> _world;
         ft_map<int32_t, int32_t>   _clients;
         ft_string          _auth_token;
         void              (*_on_join)(int32_t);
         void              (*_on_leave)(int32_t);
         mutable pt_recursive_mutex    *_mutex;
-        static thread_local int32_t        _last_error;
+        static thread_local uint32_t _last_error;
         uint8_t                       _initialised_state;
         int32_t handle_message_locked(int32_t client_handle,
                 const ft_string &message) noexcept;
@@ -37,23 +37,23 @@ class ft_game_server
         void leave_client_locked(int32_t client_id) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
-        static int32_t set_error(int32_t error_code) noexcept;
+        static uint32_t set_error(uint32_t error_code) noexcept;
         int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
     public:
-        ft_game_server() noexcept;
-        ft_game_server(const ft_game_server &other) noexcept;
-        ft_game_server(ft_game_server &&other) noexcept;
-        virtual ~ft_game_server();
-        ft_game_server &operator=(const ft_game_server &other) noexcept = delete;
-        ft_game_server &operator=(ft_game_server &&other) noexcept = delete;
+        game_server() noexcept;
+        game_server(const game_server &other) noexcept;
+        game_server(game_server &&other) noexcept;
+        virtual ~game_server();
+        game_server &operator=(const game_server &other) noexcept = delete;
+        game_server &operator=(game_server &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
-        int32_t initialize(const ft_sharedptr<ft_world> &world,
+        int32_t initialize(const ft_sharedptr<game_world> &world,
             const char *auth_token = ft_nullptr) noexcept;
         int32_t destroy() noexcept;
-        int32_t move(ft_game_server &other) noexcept;
+        int32_t move(game_server &other) noexcept;
 
         void set_join_callback(void (*callback)(int32_t)) noexcept;
         void set_leave_callback(void (*callback)(int32_t)) noexcept;

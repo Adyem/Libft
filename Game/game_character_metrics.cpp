@@ -3,7 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
-void ft_character::emit_game_metric(const char *event_name, const char *attribute,
+void game_character::emit_game_metric(const char *event_name, const char *attribute,
     int64_t delta_value, int64_t total_value, const char *unit) const noexcept
 {
     ft_game_observability_sample sample;
@@ -13,7 +13,7 @@ void ft_character::emit_game_metric(const char *event_name, const char *attribut
     if (delta_value == 0)
         return ;
     sample.labels.event_name = event_name;
-    sample.labels.entity = "ft_character";
+    sample.labels.entity = "game_character";
     sample.labels.attribute = attribute;
     sample.delta_value = delta_value;
     sample.total_value = total_value;

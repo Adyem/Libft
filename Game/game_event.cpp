@@ -7,9 +7,9 @@
 #include <climits>
 #include <new>
 
-thread_local int32_t ft_event::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t game_event::_last_error = FT_ERR_SUCCESS;
 
-ft_event::ft_event() noexcept
+game_event::game_event() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _callback(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -18,7 +18,7 @@ ft_event::ft_event() noexcept
     return ;
 }
 
-ft_event::ft_event(const ft_event &other) noexcept
+game_event::game_event(const game_event &other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _callback(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -27,7 +27,7 @@ ft_event::ft_event(const ft_event &other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_event::ft_event(copy)",
+        errno_abort_lifecycle(other._initialised_state, "game_event::game_event(copy)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -57,7 +57,7 @@ ft_event::ft_event(const ft_event &other) noexcept
     return ;
 }
 
-ft_event::ft_event(ft_event &&other) noexcept
+game_event::game_event(game_event &&other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _callback(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -66,7 +66,7 @@ ft_event::ft_event(ft_event &&other) noexcept
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_event::ft_event(move)",
+        errno_abort_lifecycle(other._initialised_state, "game_event::game_event(move)",
             "source object is not initialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
@@ -87,18 +87,18 @@ ft_event::ft_event(ft_event &&other) noexcept
     return ;
 }
 
-ft_event::~ft_event() noexcept
+game_event::~game_event() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-int32_t ft_event::initialize() noexcept
+int32_t game_event::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "ft_event::initialize", "already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "game_event::initialize", "already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -108,13 +108,13 @@ int32_t ft_event::initialize() noexcept
     this->_modifier2 = 0;
     this->_modifier3 = 0;
     this->_modifier4 = 0;
-    this->_callback = ft_function<void(ft_world&, ft_event&)>();
+    this->_callback = ft_function<void(game_world&, game_event&)>();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_event::move(ft_event &other) noexcept
+int32_t game_event::move(game_event &other) noexcept
 {
     int32_t destroy_error;
     int32_t initialize_error;
@@ -127,7 +127,7 @@ int32_t ft_event::move(ft_event &other) noexcept
     }
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_event::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_event::move", "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -159,14 +159,14 @@ int32_t ft_event::move(ft_event &other) noexcept
     other._modifier2 = 0;
     other._modifier3 = 0;
     other._modifier4 = 0;
-    other._callback = ft_function<void(ft_world&, ft_event&)>();
+    other._callback = ft_function<void(game_world&, game_event&)>();
     source_error = other.get_error();
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_event::destroy() noexcept
+int32_t game_event::destroy() noexcept
 {
     int32_t disable_error;
 
@@ -182,17 +182,17 @@ int32_t ft_event::destroy() noexcept
     this->_modifier2 = 0;
     this->_modifier3 = 0;
     this->_modifier4 = 0;
-    this->_callback = ft_function<void(ft_world&, ft_event&)>();
+    this->_callback = ft_function<void(game_world&, game_event&)>();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);
 }
 
-int32_t ft_event::lock_internal(ft_bool *lock_acquired) const noexcept
+int32_t game_event::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_event::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -207,17 +207,17 @@ int32_t ft_event::lock_internal(ft_bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_event::unlock_internal(ft_bool lock_acquired) const noexcept
+void game_event::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event::unlock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_event::unlock_internal");
     if (lock_acquired == FT_FALSE)
         return ;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
-int32_t ft_event::get_id() const noexcept
+int32_t game_event::get_id() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -233,7 +233,7 @@ int32_t ft_event::get_id() const noexcept
     return (value);
 }
 
-void ft_event::set_id(int32_t id) noexcept
+void game_event::set_id(int32_t id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -256,7 +256,7 @@ void ft_event::set_id(int32_t id) noexcept
     return ;
 }
 
-int32_t ft_event::get_duration() const noexcept
+int32_t game_event::get_duration() const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -272,7 +272,7 @@ int32_t ft_event::get_duration() const noexcept
     return (value);
 }
 
-void ft_event::set_duration(int32_t duration) noexcept
+void game_event::set_duration(int32_t duration) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -295,7 +295,7 @@ void ft_event::set_duration(int32_t duration) noexcept
     return ;
 }
 
-int32_t ft_event::add_duration(int32_t duration) noexcept
+int32_t game_event::add_duration(int32_t duration) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -324,7 +324,7 @@ int32_t ft_event::add_duration(int32_t duration) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_event::sub_duration(int32_t duration) noexcept
+void game_event::sub_duration(int32_t duration) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
@@ -348,133 +348,133 @@ void ft_event::sub_duration(int32_t duration) noexcept
     return ;
 }
 
-int32_t ft_event::get_modifier1() const noexcept
+int32_t game_event::get_modifier1() const noexcept
 {
     this->set_error(FT_ERR_SUCCESS);
     return (this->_modifier1);
 }
 
-void ft_event::set_modifier1(int32_t mod) noexcept
+void game_event::set_modifier1(int32_t mod) noexcept
 {
     this->_modifier1 = mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::add_modifier1(int32_t mod) noexcept
+void game_event::add_modifier1(int32_t mod) noexcept
 {
     this->_modifier1 += mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::sub_modifier1(int32_t mod) noexcept
+void game_event::sub_modifier1(int32_t mod) noexcept
 {
     this->_modifier1 -= mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-int32_t ft_event::get_modifier2() const noexcept
+int32_t game_event::get_modifier2() const noexcept
 {
     this->set_error(FT_ERR_SUCCESS);
     return (this->_modifier2);
 }
 
-void ft_event::set_modifier2(int32_t mod) noexcept
+void game_event::set_modifier2(int32_t mod) noexcept
 {
     this->_modifier2 = mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::add_modifier2(int32_t mod) noexcept
+void game_event::add_modifier2(int32_t mod) noexcept
 {
     this->_modifier2 += mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::sub_modifier2(int32_t mod) noexcept
+void game_event::sub_modifier2(int32_t mod) noexcept
 {
     this->_modifier2 -= mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-int32_t ft_event::get_modifier3() const noexcept
+int32_t game_event::get_modifier3() const noexcept
 {
     this->set_error(FT_ERR_SUCCESS);
     return (this->_modifier3);
 }
 
-void ft_event::set_modifier3(int32_t mod) noexcept
+void game_event::set_modifier3(int32_t mod) noexcept
 {
     this->_modifier3 = mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::add_modifier3(int32_t mod) noexcept
+void game_event::add_modifier3(int32_t mod) noexcept
 {
     this->_modifier3 += mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::sub_modifier3(int32_t mod) noexcept
+void game_event::sub_modifier3(int32_t mod) noexcept
 {
     this->_modifier3 -= mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-int32_t ft_event::get_modifier4() const noexcept
+int32_t game_event::get_modifier4() const noexcept
 {
     this->set_error(FT_ERR_SUCCESS);
     return (this->_modifier4);
 }
 
-void ft_event::set_modifier4(int32_t mod) noexcept
+void game_event::set_modifier4(int32_t mod) noexcept
 {
     this->_modifier4 = mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::add_modifier4(int32_t mod) noexcept
+void game_event::add_modifier4(int32_t mod) noexcept
 {
     this->_modifier4 += mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void ft_event::sub_modifier4(int32_t mod) noexcept
+void game_event::sub_modifier4(int32_t mod) noexcept
 {
     this->_modifier4 -= mod;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-const ft_function<void(ft_world&, ft_event&)> &ft_event::get_callback() const noexcept
+const ft_function<void(game_world&, game_event&)> &game_event::get_callback() const noexcept
 {
     this->set_error(FT_ERR_SUCCESS);
     return (this->_callback);
 }
 
-void ft_event::set_callback(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept
+void game_event::set_callback(ft_function<void(game_world&, game_event&)> &&callback) noexcept
 {
     this->_callback = ft_move(callback);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-int32_t ft_event::enable_thread_safety() noexcept
+int32_t game_event::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_event::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -495,11 +495,11 @@ int32_t ft_event::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int32_t ft_event::disable_thread_safety() noexcept
+int32_t game_event::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event::disable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_event::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -512,30 +512,30 @@ int32_t ft_event::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-ft_bool ft_event::is_thread_safe() const noexcept
+ft_bool game_event::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event::is_thread_safe");
+    errno_abort_if_uninitialised(this->_initialised_state, "game_event::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_event::get_error() const noexcept
+int32_t game_event::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_event::get_error");
-    return (ft_event::_last_error);
+            "game_event::get_error");
+    return (game_event::_last_error);
 }
 
-const char *ft_event::get_error_str() const noexcept
+const char *game_event::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
-            "ft_event::get_error_str");
-    return (ft_strerror(ft_event::_last_error));
+            "game_event::get_error_str");
+    return (ft_strerror(game_event::_last_error));
 }
 
-int32_t ft_event::set_error(int32_t error_code) noexcept
+uint32_t game_event::set_error(uint32_t error_code) noexcept
 {
-    ft_event::_last_error = error_code;
+    game_event::_last_error = error_code;
     return (error_code);
 }
