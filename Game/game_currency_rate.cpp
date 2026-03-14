@@ -26,7 +26,7 @@ game_currency_rate::game_currency_rate(const game_currency_rate &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_currency_rate::game_currency_rate(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -56,7 +56,7 @@ game_currency_rate::game_currency_rate(game_currency_rate &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_currency_rate::game_currency_rate(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -103,15 +103,26 @@ int32_t game_currency_rate::initialize() noexcept
 
 int32_t game_currency_rate::initialize(const game_currency_rate &other) noexcept
 {
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    int32_t destroy_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_currency_rate::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
         return (FT_ERR_SUCCESS);
     }
     this->_currency_id = other._currency_id;

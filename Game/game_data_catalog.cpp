@@ -20,7 +20,7 @@ int32_t game_item_definition::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_item_definition::get_error");
-    return (game_item_definition::_last_error);
+    return (static_cast<int32_t>(game_item_definition::_last_error));
 }
 
 const char *game_item_definition::get_error_str() const noexcept
@@ -44,7 +44,7 @@ int32_t game_loadout_entry::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_loadout_entry::get_error");
-    return (game_loadout_entry::_last_error);
+    return (static_cast<int32_t>(game_loadout_entry::_last_error));
 }
 
 const char *game_loadout_entry::get_error_str() const noexcept
@@ -68,7 +68,7 @@ int32_t game_loadout_blueprint::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_loadout_blueprint::get_error");
-    return (game_loadout_blueprint::_last_error);
+    return (static_cast<int32_t>(game_loadout_blueprint::_last_error));
 }
 
 const char *game_loadout_blueprint::get_error_str() const noexcept
@@ -92,7 +92,7 @@ int32_t game_recipe_blueprint::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_recipe_blueprint::get_error");
-    return (game_recipe_blueprint::_last_error);
+    return (static_cast<int32_t>(game_recipe_blueprint::_last_error));
 }
 
 const char *game_recipe_blueprint::get_error_str() const noexcept
@@ -227,7 +227,7 @@ game_item_definition::game_item_definition(const game_item_definition &other) no
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_item_definition::game_item_definition(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -243,7 +243,7 @@ game_item_definition::game_item_definition(game_item_definition &&other) noexcep
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_item_definition::game_item_definition(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(static_cast<game_item_definition &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -377,19 +377,30 @@ int32_t game_item_definition::initialize(int32_t item_id, int32_t rarity, int32_
 int32_t game_item_definition::initialize(const game_item_definition &other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_item_definition::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_item_definition::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_item_definition::initialize(copy)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     other_locked = FT_FALSE;
     lock_error = other.lock_internal(&other_locked);
@@ -413,19 +424,30 @@ int32_t game_item_definition::initialize(const game_item_definition &other) noex
 int32_t game_item_definition::initialize(game_item_definition &&other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_item_definition::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_item_definition::initialize(move)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_item_definition::initialize(move)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     other_locked = FT_FALSE;
     lock_error = other.lock_internal(&other_locked);
@@ -448,6 +470,7 @@ int32_t game_item_definition::initialize(game_item_definition &&other) noexcept
     other._height = 0;
     other._weight = 0;
     other._slot_requirement = 0;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     other.unlock_internal(other_locked);
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -835,7 +858,7 @@ game_recipe_blueprint::game_recipe_blueprint(const game_recipe_blueprint &other)
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_recipe_blueprint::game_recipe_blueprint(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -850,7 +873,7 @@ game_recipe_blueprint::game_recipe_blueprint(game_recipe_blueprint &&other) noex
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_recipe_blueprint::game_recipe_blueprint(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(static_cast<game_recipe_blueprint &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -992,20 +1015,31 @@ int32_t game_recipe_blueprint::initialize(int32_t recipe_id, int32_t result_item
 int32_t game_recipe_blueprint::initialize(const game_recipe_blueprint &other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t vector_initialize_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_recipe_blueprint::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_recipe_blueprint::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_recipe_blueprint::initialize(copy)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     vector_initialize_error = this->_ingredients.initialize();
     if (vector_initialize_error != FT_ERR_SUCCESS)
@@ -1032,20 +1066,31 @@ int32_t game_recipe_blueprint::initialize(const game_recipe_blueprint &other) no
 int32_t game_recipe_blueprint::initialize(game_recipe_blueprint &&other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t vector_initialize_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_recipe_blueprint::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_recipe_blueprint::initialize(move)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_recipe_blueprint::initialize(move)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     vector_initialize_error = this->_ingredients.initialize();
     if (vector_initialize_error != FT_ERR_SUCCESS)
@@ -1067,6 +1112,7 @@ int32_t game_recipe_blueprint::initialize(game_recipe_blueprint &&other) noexcep
     other._recipe_id = 0;
     other._result_item_id = 0;
     other._ingredients.clear();
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     other.unlock_internal(other_locked);
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -1311,7 +1357,7 @@ game_loadout_entry::game_loadout_entry(const game_loadout_entry &other) noexcept
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_loadout_entry::game_loadout_entry(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -1327,7 +1373,7 @@ game_loadout_entry::game_loadout_entry(game_loadout_entry &&other) noexcept
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_loadout_entry::game_loadout_entry(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(static_cast<game_loadout_entry &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -1454,18 +1500,29 @@ int32_t game_loadout_entry::initialize(int32_t slot, int32_t item_id, int32_t qu
 int32_t game_loadout_entry::initialize(const game_loadout_entry &other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_loadout_entry::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_entry::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_loadout_entry::initialize(copy)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     other_locked = FT_FALSE;
     lock_error = other.lock_internal(&other_locked);
@@ -1486,18 +1543,29 @@ int32_t game_loadout_entry::initialize(const game_loadout_entry &other) noexcept
 int32_t game_loadout_entry::initialize(game_loadout_entry &&other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_loadout_entry::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_entry::initialize(move)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_loadout_entry::initialize(move)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     other_locked = FT_FALSE;
     lock_error = other.lock_internal(&other_locked);
@@ -1512,6 +1580,7 @@ int32_t game_loadout_entry::initialize(game_loadout_entry &&other) noexcept
     other._slot = 0;
     other._item_id = 0;
     other._quantity = 0;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     other.unlock_internal(other_locked);
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -1738,7 +1807,7 @@ game_loadout_blueprint::game_loadout_blueprint(const game_loadout_blueprint &oth
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_loadout_blueprint::game_loadout_blueprint(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -1754,7 +1823,7 @@ game_loadout_blueprint::game_loadout_blueprint(game_loadout_blueprint &&other) n
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_loadout_blueprint::game_loadout_blueprint(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(static_cast<game_loadout_blueprint &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -1896,20 +1965,31 @@ int32_t game_loadout_blueprint::initialize(int32_t loadout_id,
 int32_t game_loadout_blueprint::initialize(const game_loadout_blueprint &other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t vector_initialize_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_loadout_blueprint::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_blueprint::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_loadout_blueprint::initialize(copy)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     vector_initialize_error = this->_entries.initialize();
     if (vector_initialize_error != FT_ERR_SUCCESS)
@@ -1936,20 +2016,31 @@ int32_t game_loadout_blueprint::initialize(const game_loadout_blueprint &other) 
 int32_t game_loadout_blueprint::initialize(game_loadout_blueprint &&other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
     int32_t vector_initialize_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_loadout_blueprint::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_loadout_blueprint::initialize(move)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_loadout_blueprint::initialize(move)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     vector_initialize_error = this->_entries.initialize();
     if (vector_initialize_error != FT_ERR_SUCCESS)
@@ -1969,6 +2060,7 @@ int32_t game_loadout_blueprint::initialize(game_loadout_blueprint &&other) noexc
     game_data_catalog_copy_loadout_vector(other._entries, this->_entries);
     other._loadout_id = 0;
     other._entries.clear();
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     other.unlock_internal(other_locked);
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -2079,7 +2171,7 @@ int32_t game_data_catalog::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_data_catalog::get_error");
-    return (game_data_catalog::_last_error);
+    return (static_cast<int32_t>(game_data_catalog::_last_error));
 }
 
 const char *game_data_catalog::get_error_str() const noexcept
@@ -2175,7 +2267,7 @@ game_data_catalog::game_data_catalog(const game_data_catalog &other) noexcept
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_data_catalog::game_data_catalog(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -2191,7 +2283,7 @@ game_data_catalog::game_data_catalog(game_data_catalog &&other) noexcept
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_data_catalog::game_data_catalog(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(static_cast<game_data_catalog &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -2324,18 +2416,29 @@ int32_t game_data_catalog::initialize() noexcept
 int32_t game_data_catalog::initialize(const game_data_catalog &other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_data_catalog::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_data_catalog::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_data_catalog::initialize(copy)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     if (this->_item_definitions.initialize() != FT_ERR_SUCCESS
         || this->_recipes.initialize() != FT_ERR_SUCCESS
@@ -2368,18 +2471,29 @@ int32_t game_data_catalog::initialize(const game_data_catalog &other) noexcept
 int32_t game_data_catalog::initialize(game_data_catalog &&other) noexcept
 {
     ft_bool other_locked;
+    int32_t destroy_error;
     int32_t lock_error;
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_data_catalog::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_data_catalog::initialize(move)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_data_catalog::initialize(move)", "destination object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     if (this->_item_definitions.initialize() != FT_ERR_SUCCESS
         || this->_recipes.initialize() != FT_ERR_SUCCESS
@@ -2407,6 +2521,7 @@ int32_t game_data_catalog::initialize(game_data_catalog &&other) noexcept
     other._item_definitions.clear();
     other._recipes.clear();
     other._loadouts.clear();
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     other.unlock_internal(other_locked);
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);

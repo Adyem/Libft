@@ -24,7 +24,7 @@ game_rarity_band::game_rarity_band(const game_rarity_band &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_rarity_band::game_rarity_band(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -53,7 +53,7 @@ game_rarity_band::game_rarity_band(game_rarity_band &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_rarity_band::game_rarity_band(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;

@@ -148,7 +148,7 @@ int32_t game_map3d::move(game_map3d &other)
     }
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_map3d::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_map3d::move", "source object is uninitialised");
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
@@ -306,8 +306,7 @@ int32_t game_map3d::lock(ft_bool *lock_acquired) const noexcept
 void game_map3d::unlock(ft_bool lock_acquired) const noexcept
 {
     errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::unlock");
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 

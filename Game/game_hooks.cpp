@@ -19,7 +19,7 @@ int32_t game_hooks::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_hooks::get_error");
-    return (game_hooks::_last_error);
+    return (static_cast<int32_t>(game_hooks::_last_error));
 }
 
 const char *game_hooks::get_error_str() const noexcept
@@ -92,7 +92,7 @@ game_hooks::game_hooks(const game_hooks &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_hooks::game_hooks(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
@@ -118,7 +118,7 @@ game_hooks::game_hooks(game_hooks &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_hooks::game_hooks(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
@@ -180,6 +180,7 @@ int32_t game_hooks::initialize() noexcept
 int32_t game_hooks::initialize(const game_hooks &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     ft_size_t count;
     ft_size_t index;
     const Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *entry;
@@ -187,16 +188,37 @@ int32_t game_hooks::initialize(const game_hooks &other) noexcept
     const ft_game_hook_metadata *metadata_entry;
     const ft_game_hook_metadata *metadata_end;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_hooks::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -230,14 +252,28 @@ int32_t game_hooks::initialize(const game_hooks &other) noexcept
 
 int32_t game_hooks::initialize(game_hooks &&other) noexcept
 {
-    int32_t result = this->initialize(static_cast<const game_hooks &>(other));
-    this->set_error(result);
-    return (result);
+    return (this->move(other));
 }
 
 int32_t game_hooks::move(game_hooks &other) noexcept
 {
-    return (this->initialize(static_cast<game_hooks &&>(other)));
+    int32_t initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_hooks::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_hooks &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t game_hooks::destroy() noexcept
@@ -350,9 +386,7 @@ int32_t game_hooks::lock(ft_bool *lock_acquired) const noexcept
 void game_hooks::unlock(ft_bool lock_acquired) const noexcept
 {
     errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::unlock");
-    int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 

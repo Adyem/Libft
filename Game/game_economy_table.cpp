@@ -24,7 +24,7 @@ game_economy_table::game_economy_table(const game_economy_table &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_economy_table::game_economy_table(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -53,7 +53,7 @@ game_economy_table::game_economy_table(game_economy_table &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_economy_table::game_economy_table(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -137,6 +137,7 @@ int32_t game_economy_table::initialize() noexcept
 int32_t game_economy_table::initialize(const game_economy_table &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     ft_size_t count;
     ft_size_t index;
     const Pair<int32_t, game_price_definition> *price_entry;
@@ -148,15 +149,27 @@ int32_t game_economy_table::initialize(const game_economy_table &other) noexcept
     const Pair<int32_t, game_currency_rate> *currency_entry;
     const Pair<int32_t, game_currency_rate> *currency_end;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_economy_table::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
         return (FT_ERR_SUCCESS);
     }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -222,10 +235,10 @@ int32_t game_economy_table::initialize(game_economy_table &&other) noexcept
 {
     int32_t initialize_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_economy_table::initialize(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)

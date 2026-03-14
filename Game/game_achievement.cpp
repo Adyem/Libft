@@ -136,16 +136,38 @@ int32_t game_goal::initialize() noexcept
 int32_t game_goal::initialize(const game_goal &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_goal::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_goal::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -512,21 +534,43 @@ int32_t game_achievement::initialize() noexcept
 int32_t game_achievement::initialize(const game_achievement &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     const Pair<int32_t, game_goal> *goal_entry;
     const Pair<int32_t, game_goal> *goals_end;
     game_goal                   new_goal;
     ft_size_t                    goals_count;
     ft_size_t                    index;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_achievement::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_achievement::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)

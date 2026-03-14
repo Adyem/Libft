@@ -43,7 +43,7 @@ game_behavior_profile::game_behavior_profile(const game_behavior_profile &other)
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_behavior_profile::game_behavior_profile(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -73,7 +73,7 @@ game_behavior_profile::game_behavior_profile(game_behavior_profile &&other) noex
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_behavior_profile::game_behavior_profile(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -122,17 +122,31 @@ int32_t game_behavior_profile::initialize() noexcept
 int32_t game_behavior_profile::initialize(const game_behavior_profile &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_behavior_profile::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-        (void)this->destroy();
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);

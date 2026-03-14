@@ -28,7 +28,7 @@ game_event::game_event(const game_event &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_event::game_event(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -67,7 +67,7 @@ game_event::game_event(game_event &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_event::game_event(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -127,7 +127,7 @@ int32_t game_event::move(game_event &other) noexcept
     }
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_event::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_event::move", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -523,7 +523,7 @@ int32_t game_event::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_event::get_error");
-    return (game_event::_last_error);
+    return (static_cast<int32_t>(game_event::_last_error));
 }
 
 const char *game_event::get_error_str() const noexcept

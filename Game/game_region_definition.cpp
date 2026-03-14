@@ -26,7 +26,7 @@ game_region_definition::game_region_definition(const game_region_definition &oth
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_region_definition::game_region_definition(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -56,7 +56,7 @@ game_region_definition::game_region_definition(game_region_definition &&other) n
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_region_definition::game_region_definition(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -126,16 +126,29 @@ int32_t game_region_definition::initialize() noexcept
 int32_t game_region_definition::initialize(const game_region_definition &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_region_definition::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
         return (FT_ERR_SUCCESS);
     }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

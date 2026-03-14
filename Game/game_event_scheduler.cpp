@@ -227,7 +227,7 @@ int32_t game_event_scheduler::move(game_event_scheduler &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_event_scheduler::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_event_scheduler::move", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -576,7 +576,7 @@ int32_t game_event_scheduler::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_event_scheduler::get_error");
-    return (game_event_scheduler::_last_error);
+    return (static_cast<int32_t>(game_event_scheduler::_last_error));
 }
 
 const char *game_event_scheduler::get_error_str() const noexcept

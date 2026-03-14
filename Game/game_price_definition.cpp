@@ -26,7 +26,7 @@ game_price_definition::game_price_definition(const game_price_definition &other)
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_price_definition::game_price_definition(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -56,7 +56,7 @@ game_price_definition::game_price_definition(game_price_definition &&other) noex
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_price_definition::game_price_definition(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -112,17 +112,39 @@ int32_t game_price_definition::initialize() noexcept
 int32_t game_price_definition::initialize(const game_price_definition &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_price_definition::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -141,12 +163,28 @@ int32_t game_price_definition::initialize(const game_price_definition &other) no
 
 int32_t game_price_definition::initialize(game_price_definition &&other) noexcept
 {
-    return (this->initialize(static_cast<const game_price_definition &>(other)));
+    return (this->move(other));
 }
 
 int32_t game_price_definition::move(game_price_definition &other) noexcept
 {
-    return (this->initialize(static_cast<game_price_definition &&>(other)));
+    int32_t initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_price_definition::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_price_definition &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t game_price_definition::initialize(int32_t item_id, int32_t rarity, int32_t base_value,
@@ -279,8 +317,7 @@ int32_t game_price_definition::lock(ft_bool *lock_acquired) const noexcept
 void game_price_definition::unlock(ft_bool lock_acquired) const noexcept
 {
     errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::unlock");
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -365,7 +402,7 @@ int32_t game_price_definition::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_price_definition::get_error");
-    return (game_price_definition::_last_error);
+    return (static_cast<int32_t>(game_price_definition::_last_error));
 }
 
 const char *game_price_definition::get_error_str() const noexcept

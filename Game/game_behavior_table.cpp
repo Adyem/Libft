@@ -24,7 +24,7 @@ game_behavior_table::game_behavior_table(const game_behavior_table &other) noexc
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_behavior_table::game_behavior_table(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -53,7 +53,7 @@ game_behavior_table::game_behavior_table(game_behavior_table &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_behavior_table::game_behavior_table(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -101,19 +101,35 @@ int32_t game_behavior_table::initialize() noexcept
 int32_t game_behavior_table::initialize(const game_behavior_table &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     ft_size_t count;
     ft_size_t index;
     const Pair<int32_t, game_behavior_profile> *entry;
     const Pair<int32_t, game_behavior_profile> *entry_end;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_behavior_table::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -133,12 +149,27 @@ int32_t game_behavior_table::initialize(const game_behavior_table &other) noexce
 
 int32_t game_behavior_table::initialize(game_behavior_table &&other) noexcept
 {
-    return (this->initialize(static_cast<const game_behavior_table &>(other)));
+    return (this->move(other));
 }
 
 int32_t game_behavior_table::move(game_behavior_table &other) noexcept
 {
-    return (this->initialize(static_cast<game_behavior_table &&>(other)));
+    int32_t initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_behavior_table::move",
+            "source object is uninitialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_behavior_table &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t game_behavior_table::destroy() noexcept
@@ -327,7 +358,7 @@ int32_t game_behavior_table::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_behavior_table::get_error");
-    return (game_behavior_table::_last_error);
+    return (static_cast<int32_t>(game_behavior_table::_last_error));
 }
 
 const char *game_behavior_table::get_error_str() const noexcept

@@ -141,7 +141,7 @@ int32_t game_resistance::move(game_resistance &other) noexcept
     }
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_resistance::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_resistance::move", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -365,7 +365,7 @@ int32_t game_resistance::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_resistance::get_error");
-    return (game_resistance::_last_error);
+    return (static_cast<int32_t>(game_resistance::_last_error));
 }
 
 const char *game_resistance::get_error_str() const noexcept

@@ -18,7 +18,7 @@ int32_t game_progress_tracker::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_progress_tracker::get_error");
-    return (game_progress_tracker::_last_error);
+    return (static_cast<int32_t>(game_progress_tracker::_last_error));
 }
 
 const char *game_progress_tracker::get_error_str() const noexcept
@@ -46,7 +46,7 @@ game_progress_tracker::game_progress_tracker(const game_progress_tracker &other)
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_progress_tracker::game_progress_tracker(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -75,7 +75,7 @@ game_progress_tracker::game_progress_tracker(game_progress_tracker &&other) noex
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_progress_tracker::game_progress_tracker(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -138,6 +138,7 @@ int32_t game_progress_tracker::initialize() noexcept
 int32_t game_progress_tracker::initialize(const game_progress_tracker &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     ft_size_t count;
     ft_size_t index;
     const Pair<int32_t, game_achievement> *achievement_entry;
@@ -145,16 +146,25 @@ int32_t game_progress_tracker::initialize(const game_progress_tracker &other) no
     const Pair<int32_t, game_quest> *quest_entry;
     const Pair<int32_t, game_quest> *quest_end;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_progress_tracker::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -184,12 +194,28 @@ int32_t game_progress_tracker::initialize(const game_progress_tracker &other) no
 
 int32_t game_progress_tracker::initialize(game_progress_tracker &&other) noexcept
 {
-    return (this->initialize(static_cast<const game_progress_tracker &>(other)));
+    return (this->move(other));
 }
 
 int32_t game_progress_tracker::move(game_progress_tracker &other) noexcept
 {
-    return (this->initialize(static_cast<game_progress_tracker &&>(other)));
+    int32_t initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_progress_tracker::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_progress_tracker &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t game_progress_tracker::destroy() noexcept

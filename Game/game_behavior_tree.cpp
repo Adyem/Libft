@@ -83,7 +83,7 @@ uint32_t game_behavior_node::set_error(uint32_t error_code) noexcept
 
 int32_t game_behavior_node::get_error() const noexcept
 {
-    return (game_behavior_node::_last_error);
+    return (static_cast<int32_t>(game_behavior_node::_last_error));
 }
 
 const char *game_behavior_node::get_error_str() const noexcept
@@ -403,7 +403,7 @@ int32_t game_behavior_tree::tick(game_behavior_context &context) noexcept
 
 int32_t game_behavior_tree::get_error() const noexcept
 {
-    return (game_behavior_tree::_last_error);
+    return (static_cast<int32_t>(game_behavior_tree::_last_error));
 }
 
 const char *game_behavior_tree::get_error_str() const noexcept

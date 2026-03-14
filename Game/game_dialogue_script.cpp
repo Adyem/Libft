@@ -120,7 +120,7 @@ game_dialogue_script::game_dialogue_script(const game_dialogue_script &other) no
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_dialogue_script::game_dialogue_script(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
@@ -146,7 +146,7 @@ game_dialogue_script::game_dialogue_script(game_dialogue_script &&other) noexcep
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_dialogue_script::game_dialogue_script(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
@@ -207,12 +207,22 @@ int32_t game_dialogue_script::initialize() noexcept
 int32_t game_dialogue_script::initialize(const game_dialogue_script &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_dialogue_script::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
@@ -235,36 +245,27 @@ int32_t game_dialogue_script::initialize(const game_dialogue_script &other) noex
 
 int32_t game_dialogue_script::initialize(game_dialogue_script &&other) noexcept
 {
-    int32_t initialize_error;
-
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_dialogue_script::initialize(move)",
-            "source object is not initialised");
-        return (FT_ERR_INVALID_STATE);
-    }
-    if (this == &other)
-        return (FT_ERR_SUCCESS);
-    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-    {
-        initialize_error = this->destroy();
-        if (initialize_error != FT_ERR_SUCCESS)
-            return (initialize_error);
-    }
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-        return (initialize_error);
-    this->_script_id = other._script_id;
-    this->_title = other._title;
-    this->_summary = other._summary;
-    this->_start_line_id = other._start_line_id;
-    game_dialogue_copy_line_vector(other._lines, this->_lines);
-    return (FT_ERR_SUCCESS);
+    return (this->move(other));
 }
 
 int32_t game_dialogue_script::move(game_dialogue_script &other) noexcept
 {
-    return (this->initialize(static_cast<game_dialogue_script &&>(other)));
+    int32_t initialize_error;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_dialogue_script::move",
+            "source object is uninitialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_dialogue_script &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t game_dialogue_script::initialize(int32_t script_id, const ft_string &title,
@@ -495,7 +496,7 @@ int32_t game_dialogue_script::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_dialogue_script::get_error");
-    return (game_dialogue_script::_last_error);
+    return (static_cast<int32_t>(game_dialogue_script::_last_error));
 }
 
 const char *game_dialogue_script::get_error_str() const noexcept

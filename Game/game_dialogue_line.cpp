@@ -47,7 +47,7 @@ game_dialogue_line::game_dialogue_line(const game_dialogue_line &other) noexcept
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_dialogue_line::game_dialogue_line(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -87,7 +87,7 @@ game_dialogue_line::game_dialogue_line(game_dialogue_line &&other) noexcept
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_dialogue_line::game_dialogue_line(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -184,7 +184,7 @@ int32_t game_dialogue_line::move(game_dialogue_line &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_dialogue_line::move",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -468,7 +468,7 @@ int32_t game_dialogue_line::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_dialogue_line::get_error");
-    return (game_dialogue_line::_last_error);
+    return (static_cast<int32_t>(game_dialogue_line::_last_error));
 }
 
 const char *game_dialogue_line::get_error_str() const noexcept

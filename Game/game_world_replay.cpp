@@ -93,7 +93,7 @@ game_world_replay_session::game_world_replay_session(
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_world_replay_session::game_world_replay_session(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
@@ -131,7 +131,7 @@ game_world_replay_session::game_world_replay_session(
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_world_replay_session::game_world_replay_session(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
@@ -191,7 +191,7 @@ int32_t game_world_replay_session::move(game_world_replay_session &other) noexce
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_world_replay_session::move",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)

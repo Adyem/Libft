@@ -24,7 +24,7 @@ game_world_registry::game_world_registry(const game_world_registry &other) noexc
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_world_registry::game_world_registry(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -53,7 +53,7 @@ game_world_registry::game_world_registry(game_world_registry &&other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_world_registry::game_world_registry(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
@@ -123,6 +123,7 @@ int32_t game_world_registry::initialize() noexcept
 int32_t game_world_registry::initialize(const game_world_registry &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
     ft_size_t count;
     ft_size_t index;
     const Pair<int32_t, game_region_definition> *region_entry;
@@ -130,15 +131,27 @@ int32_t game_world_registry::initialize(const game_world_registry &other) noexce
     const Pair<int32_t, game_world_region> *world_entry;
     const Pair<int32_t, game_world_region> *world_end;
 
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "game_world_registry::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
         return (FT_ERR_SUCCESS);
     }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -182,12 +195,28 @@ int32_t game_world_registry::initialize(const game_world_registry &other) noexce
 
 int32_t game_world_registry::initialize(game_world_registry &&other) noexcept
 {
-    return (this->initialize(static_cast<const game_world_registry &>(other)));
+    return (this->move(other));
 }
 
 int32_t game_world_registry::move(game_world_registry &other) noexcept
 {
-    return (this->initialize(static_cast<game_world_registry &&>(other)));
+    int32_t initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_world_registry::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_world_registry &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t game_world_registry::destroy() noexcept
@@ -299,8 +328,7 @@ int32_t game_world_registry::lock(ft_bool *lock_acquired) const noexcept
 void game_world_registry::unlock(ft_bool lock_acquired) const noexcept
 {
     errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::unlock");
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -316,8 +344,7 @@ int32_t game_world_registry::register_region(const game_region_definition &regio
         return (FT_ERR_INVALID_STATE);
     }
     this->_regions.insert(region.get_region_id(), region);
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
@@ -333,8 +360,7 @@ int32_t game_world_registry::register_world(const game_world_region &world_regio
         return (FT_ERR_INVALID_STATE);
     }
     this->_world_regions.insert(world_region.get_world_id(), world_region);
-    const int32_t unlock_result = this->unlock_internal(lock_acquired);
-    (void)unlock_result;
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
@@ -454,7 +480,7 @@ int32_t game_world_registry::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_world_registry::get_error");
-    return (game_world_registry::_last_error);
+    return (static_cast<int32_t>(game_world_registry::_last_error));
 }
 
 const char *game_world_registry::get_error_str() const noexcept

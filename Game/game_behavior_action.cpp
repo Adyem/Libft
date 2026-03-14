@@ -89,7 +89,7 @@ game_behavior_action::game_behavior_action(const game_behavior_action &other) no
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_behavior_action::game_behavior_action(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -104,7 +104,7 @@ game_behavior_action::game_behavior_action(game_behavior_action &&other) noexcep
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_behavior_action::game_behavior_action(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
     }
     if (this->initialize(static_cast<game_behavior_action &&>(other)) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -188,7 +188,7 @@ int32_t game_behavior_action::initialize(const game_behavior_action &other) noex
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_behavior_action::initialize(copy)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -225,7 +225,7 @@ int32_t game_behavior_action::initialize(game_behavior_action &&other) noexcept
     {
         errno_abort_lifecycle(other._initialised_state,
             "game_behavior_action::initialize(move)",
-            "source object is not initialised");
+            "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
@@ -439,7 +439,7 @@ int32_t game_behavior_action::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_behavior_action::get_error");
-    return (game_behavior_action::_last_error);
+    return (static_cast<int32_t>(game_behavior_action::_last_error));
 }
 
 const char *game_behavior_action::get_error_str() const noexcept

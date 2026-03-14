@@ -19,7 +19,7 @@ int32_t game_crafting_ingredient::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_crafting_ingredient::get_error");
-    return (game_crafting_ingredient::_last_error);
+    return (static_cast<int32_t>(game_crafting_ingredient::_last_error));
 }
 
 const char *game_crafting_ingredient::get_error_str() const noexcept
@@ -41,7 +41,7 @@ int32_t game_crafting::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_crafting::get_error");
-    return (game_crafting::_last_error);
+    return (static_cast<int32_t>(game_crafting::_last_error));
 }
 
 const char *game_crafting::get_error_str() const noexcept
@@ -190,7 +190,7 @@ int32_t game_crafting::move(game_crafting &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_crafting::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_crafting::move", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }

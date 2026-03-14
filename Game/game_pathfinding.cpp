@@ -174,17 +174,29 @@ int32_t game_path_step::initialize() noexcept
 
 int32_t game_path_step::initialize(const game_path_step &other) noexcept
 {
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    int32_t destroy_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_path_step::initialize(copy)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_path_step::initialize(copy)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_path_step::initialize(copy)", "called while object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     this->_x = other._x;
     this->_y = other._y;
@@ -195,17 +207,29 @@ int32_t game_path_step::initialize(const game_path_step &other) noexcept
 
 int32_t game_path_step::initialize(game_path_step &&other) noexcept
 {
-    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
+    int32_t destroy_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_path_step::initialize(move)", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_path_step::initialize(move)", "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(static_cast<uint32_t>(other.get_error()));
+        return (FT_ERR_SUCCESS);
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        errno_abort_lifecycle(this->_initialised_state, "game_path_step::initialize(move)", "called while object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
     this->_x = other._x;
     this->_y = other._y;
@@ -534,7 +558,7 @@ int32_t game_pathfinding::move(game_pathfinding &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "game_pathfinding::move", "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "game_pathfinding::move", "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }

@@ -301,7 +301,7 @@ int32_t game_buff::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_buff::get_error");
-    return (game_buff::_last_error);
+    return (static_cast<int32_t>(game_buff::_last_error));
 }
 
 const char *game_buff::get_error_str() const noexcept

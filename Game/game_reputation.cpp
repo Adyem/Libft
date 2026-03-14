@@ -17,7 +17,7 @@ int32_t game_reputation::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised(this->_initialised_state,
             "game_reputation::get_error");
-    return (game_reputation::_last_error);
+    return (static_cast<int32_t>(game_reputation::_last_error));
 }
 
 const char *game_reputation::get_error_str() const noexcept
