@@ -3,20 +3,21 @@
 #if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
 #include "../Errno/errno.hpp"
-#include "encryption_blake2.hpp"
+#include "../CPP_class/class_nullptr.hpp"
+#include "encryption.hpp"
 
-static int blake2_hash_internal(const EVP_MD *algorithm, const void *data,
-    size_t length, unsigned char *digest, size_t digest_length,
-    size_t max_length)
+static int32_t blake2_hash_internal(const EVP_MD *algorithm, const void *data,
+    ft_size_t length, uint8_t *digest, ft_size_t digest_length,
+    ft_size_t max_length)
 {
     EVP_MD_CTX  *context;
-    unsigned int output_length;
+    uint32_t output_length;
 
-    if (digest == NULL)
+    if (digest == ft_nullptr)
     {
         return (FT_ERR_INVALID_POINTER);
     }
-    if (length > 0 && data == NULL)
+    if (length > 0 && data == ft_nullptr)
     {
         return (FT_ERR_INVALID_POINTER);
     }
@@ -24,16 +25,16 @@ static int blake2_hash_internal(const EVP_MD *algorithm, const void *data,
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (algorithm == NULL)
+    if (algorithm == ft_nullptr)
     {
         return (FT_ERR_INVALID_OPERATION);
     }
     context = EVP_MD_CTX_new();
-    if (context == NULL)
+    if (context == ft_nullptr)
     {
         return (FT_ERR_NO_MEMORY);
     }
-    if (EVP_DigestInit_ex(context, algorithm, NULL) != 1)
+    if (EVP_DigestInit_ex(context, algorithm, ft_nullptr) != 1)
     {
         EVP_MD_CTX_free(context);
         return (FT_ERR_INITIALIZATION_FAILED);
@@ -58,22 +59,22 @@ static int blake2_hash_internal(const EVP_MD *algorithm, const void *data,
         return (FT_ERR_INTERNAL);
     }
     EVP_MD_CTX_free(context);
-    if (static_cast<size_t>(output_length) != digest_length)
+    if (static_cast<ft_size_t>(output_length) != digest_length)
     {
         return (FT_ERR_INTERNAL);
     }
     return (FT_ERR_SUCCESS);
 }
 
-int blake2b_hash(const void *data, size_t length, unsigned char *digest,
-    size_t digest_length)
+int32_t blake2b_hash(const void *data, ft_size_t length, uint8_t *digest,
+    ft_size_t digest_length)
 {
     return (blake2_hash_internal(EVP_blake2b512(), data, length, digest,
             digest_length, 64));
 }
 
-int blake2s_hash(const void *data, size_t length, unsigned char *digest,
-    size_t digest_length)
+int32_t blake2s_hash(const void *data, ft_size_t length, uint8_t *digest,
+    ft_size_t digest_length)
 {
     return (blake2_hash_internal(EVP_blake2s256(), data, length, digest,
             digest_length, 32));

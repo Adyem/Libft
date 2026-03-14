@@ -13,48 +13,45 @@ class rng_stream
         std::mt19937 _engine;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        void    abort_lifecycle_error(const char *method_name, const char *reason) const;
-        void    abort_if_not_initialised(const char *method_name) const;
-        int     random_int_unlocked();
-        float   random_float_unlocked();
+        int32_t random_int_unlocked();
+        float random_float_unlocked();
 
     public:
-        rng_stream();
-        explicit rng_stream(uint32_t seed_value);
-        rng_stream(const rng_stream &other) = delete;
-        rng_stream &operator=(const rng_stream &other) = delete;
-        rng_stream(rng_stream &&other) noexcept = delete;
+        rng_stream() noexcept;
+        rng_stream(const rng_stream &other) noexcept;
+        rng_stream(rng_stream &&other) noexcept;
+        rng_stream &operator=(const rng_stream &other) noexcept = delete;
         rng_stream &operator=(rng_stream &&other) noexcept = delete;
-        ~rng_stream();
+        ~rng_stream() noexcept;
 
-        int     initialize();
-        int     initialize(const rng_stream &other);
-        int     initialize(rng_stream &&other);
-        int     destroy();
-        int     enable_thread_safety();
-        int     disable_thread_safety();
-        bool    is_thread_safe() const;
+        int32_t initialize() noexcept;
+        int32_t initialize(const rng_stream &other) noexcept;
+        int32_t initialize(rng_stream &&other) noexcept;
+        int32_t destroy() noexcept;
+        uint32_t move(rng_stream &other) noexcept;
 
-        int     reseed(uint32_t seed_value);
-        int     reseed_from_string(const char *seed_string);
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 
-        Pair<int, int> random_int();
-        Pair<int, int> dice_roll(int number, int faces);
-        Pair<int, float> random_float();
-        Pair<int, float> random_normal();
-        Pair<int, float> random_exponential(float lambda_value);
-        Pair<int, int> random_poisson(double lambda_value);
-        Pair<int, int> random_binomial(int trial_count, double success_probability);
-        Pair<int, int> random_geometric(double success_probability);
-        Pair<int, float> random_gamma(float shape, float scale);
-        Pair<int, float> random_beta(float alpha, float beta);
-        Pair<int, float> random_chi_squared(float degrees_of_freedom);
+        int32_t reseed(uint32_t seed_value) noexcept;
+        int32_t reseed_from_string(const char *seed_string) noexcept;
+
+        Pair<int32_t, int32_t> random_int();
+        Pair<int32_t, int32_t> dice_roll(int32_t number, int32_t faces);
+        Pair<int32_t, float> random_float();
+        Pair<int32_t, float> random_normal();
+        Pair<int32_t, float> random_exponential(float lambda_value);
+        Pair<int32_t, int32_t> random_poisson(double lambda_value);
+        Pair<int32_t, int32_t> random_binomial(int32_t trial_count,
+            double success_probability);
+        Pair<int32_t, int32_t> random_geometric(double success_probability);
+        Pair<int32_t, float> random_gamma(float shape, float scale);
+        Pair<int32_t, float> random_beta(float alpha, float beta);
+        Pair<int32_t, float> random_chi_squared(float degrees_of_freedom);
 
 #ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex   *get_mutex_for_validation() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
 #endif
 };
 

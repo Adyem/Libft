@@ -3,6 +3,7 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../CMA/CMA.hpp"
@@ -16,37 +17,43 @@ class ft_loot_entry
 {
     private:
         ElementType *_item;
-        int _weight;
-        int _rarity;
+        int32_t _weight;
+        int32_t _rarity;
         mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialised_state;
 
-        int lock_entry(bool *lock_acquired) const noexcept;
-        int unlock_entry(bool lock_acquired) const noexcept;
+        int32_t lock_entry(ft_bool *lock_acquired) const noexcept;
+        void unlock_entry(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_loot_entry() noexcept;
-        ft_loot_entry(ElementType *item, int weight, int rarity) noexcept;
+        ft_loot_entry(const ft_loot_entry &other) noexcept;
+        ft_loot_entry(ft_loot_entry &&other) noexcept;
         ~ft_loot_entry() noexcept;
 
-        ft_loot_entry(const ft_loot_entry &other) = delete;
         ft_loot_entry &operator=(const ft_loot_entry &other) = delete;
-        ft_loot_entry(ft_loot_entry &&other) = delete;
         ft_loot_entry &operator=(ft_loot_entry &&other) = delete;
 
-        int enable_thread_safety();
-        int disable_thread_safety();
-        bool is_thread_safe() const;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_loot_entry &other) noexcept;
+        int32_t initialize(ft_loot_entry &&other) noexcept;
+        int32_t destroy() noexcept;
+        uint32_t move(ft_loot_entry &other) noexcept;
 
-        int set_item(ElementType *item) noexcept;
-        Pair<int, ElementType *> get_item() const noexcept;
+        int32_t enable_thread_safety();
+        int32_t disable_thread_safety();
+        ft_bool is_thread_safe() const;
 
-        int set_weight(int weight) noexcept;
-        Pair<int, int> get_weight() const noexcept;
+        int32_t set_item(ElementType *item) noexcept;
+        Pair<int32_t,  ElementType *> get_item() const noexcept;
 
-        int set_rarity(int rarity) noexcept;
-        Pair<int, int> get_rarity() const noexcept;
+        int32_t set_weight(int32_t weight) noexcept;
+        Pair<int32_t,  int32_t> get_weight() const noexcept;
 
-        Pair<int, int> get_effective_weight() const noexcept;
+        int32_t set_rarity(int32_t rarity) noexcept;
+        Pair<int32_t,  int32_t> get_rarity() const noexcept;
+
+        Pair<int32_t,  int32_t> get_effective_weight() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
@@ -58,33 +65,40 @@ class ft_loot_table
 {
     private:
         ft_loot_entry<ElementType> **_entries;
-        size_t _size;
-        size_t _capacity;
+        ft_size_t _size;
+        ft_size_t _capacity;
         mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialised_state;
 
-        int lock_table(bool *lock_acquired) const noexcept;
-        int unlock_table(bool lock_acquired) const noexcept;
-        int reserve_capacity(size_t requested_capacity);
-        int compute_total_weight_locked(int *total_weight) const noexcept;
-        int locate_entry_by_roll_locked(int roll, size_t *result_index) const noexcept;
+        int32_t lock_table(ft_bool *lock_acquired) const noexcept;
+        void unlock_table(ft_bool lock_acquired) const noexcept;
+        int32_t reserve_capacity(ft_size_t requested_capacity);
+        int32_t compute_total_weight_locked(int32_t *total_weight) const noexcept;
+        int32_t locate_entry_by_roll_locked(int32_t roll_value, ft_size_t *result_index) const noexcept;
 
     public:
         ft_loot_table() noexcept;
+        ft_loot_table(const ft_loot_table &other) noexcept;
+        ft_loot_table(ft_loot_table &&other) noexcept;
         ~ft_loot_table() noexcept;
 
-        ft_loot_table(const ft_loot_table &other) = delete;
         ft_loot_table &operator=(const ft_loot_table &other) = delete;
-        ft_loot_table(ft_loot_table &&other) = delete;
         ft_loot_table &operator=(ft_loot_table &&other) = delete;
 
-        int enable_thread_safety();
-        int disable_thread_safety();
-        bool is_thread_safe() const;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_loot_table &other) noexcept;
+        int32_t initialize(ft_loot_table &&other) noexcept;
+        int32_t destroy() noexcept;
+        uint32_t move(ft_loot_table &other) noexcept;
 
-        int add_element(ElementType *elem, int weight, int rarity);
-        Pair<int, ElementType *> get_random_loot() const;
-        Pair<int, ElementType *> pop_random_loot();
-        size_t size() const noexcept;
+        int32_t enable_thread_safety();
+        int32_t disable_thread_safety();
+        ft_bool is_thread_safe() const;
+
+        int32_t add_element(ElementType *element_pointer, int32_t weight, int32_t rarity);
+        Pair<int32_t,  ElementType *> get_random_loot() const;
+        Pair<int32_t,  ElementType *> pop_random_loot();
+        ft_size_t size() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
@@ -97,36 +111,176 @@ ft_loot_entry<ElementType>::ft_loot_entry() noexcept
     , _weight(1)
     , _rarity(0)
     , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     return ;
 }
 
 template<typename ElementType>
-ft_loot_entry<ElementType>::ft_loot_entry(ElementType *item, int weight, int rarity) noexcept
-    : _item(item)
+ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry &other) noexcept
+    : _item(ft_nullptr)
     , _weight(1)
     , _rarity(0)
     , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    if (weight > 0)
-        this->_weight = weight;
-    if (rarity >= 0)
-        this->_rarity = rarity;
+    (void)this->initialize(other);
+    return ;
+}
+
+template<typename ElementType>
+ft_loot_entry<ElementType>::ft_loot_entry(ft_loot_entry &&other) noexcept
+    : _item(ft_nullptr)
+    , _weight(1)
+    , _rarity(0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(static_cast<ft_loot_entry &&>(other));
     return ;
 }
 
 template<typename ElementType>
 ft_loot_entry<ElementType>::~ft_loot_entry() noexcept
 {
-    (void)this->disable_thread_safety();
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
     return ;
 }
 
 template<typename ElementType>
-int ft_loot_entry<ElementType>::enable_thread_safety()
+int32_t ft_loot_entry<ElementType>::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state, "ft_loot_entry::initialize",
+            "called while object is already initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_item = ft_nullptr;
+    this->_weight = 1;
+    this->_rarity = 0;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_loot_entry<ElementType>::initialize(const ft_loot_entry &other) noexcept
+{
+    int32_t operation_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_loot_entry::initialize(const ft_loot_entry &) source",
+            "source is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        operation_error = this->destroy();
+        if (operation_error != FT_ERR_SUCCESS)
+            return (operation_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    operation_error = this->initialize();
+    if (operation_error != FT_ERR_SUCCESS)
+        return (operation_error);
+    this->_item = other._item;
+    this->_weight = other._weight;
+    this->_rarity = other._rarity;
+    if (other._mutex != ft_nullptr)
+    {
+        operation_error = this->enable_thread_safety();
+        if (operation_error != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (operation_error);
+        }
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_loot_entry<ElementType>::initialize(ft_loot_entry &&other) noexcept
+{
+    int32_t operation_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_loot_entry::initialize(ft_loot_entry &&) source",
+            "source is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        operation_error = this->destroy();
+        if (operation_error != FT_ERR_SUCCESS)
+            return (operation_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    operation_error = this->initialize();
+    if (operation_error != FT_ERR_SUCCESS)
+        return (operation_error);
+    if (other._mutex != ft_nullptr)
+    {
+        operation_error = this->enable_thread_safety();
+        if (operation_error != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (operation_error);
+        }
+    }
+    this->_item = other._item;
+    this->_weight = other._weight;
+    this->_rarity = other._rarity;
+    other._item = ft_nullptr;
+    other._weight = 1;
+    other._rarity = 0;
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_loot_entry<ElementType>::destroy() noexcept
+{
+    int32_t destroy_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->disable_thread_safety();
+    this->_item = ft_nullptr;
+    this->_weight = 1;
+    this->_rarity = 0;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (destroy_error);
+}
+
+template<typename ElementType>
+uint32_t ft_loot_entry<ElementType>::move(ft_loot_entry &other) noexcept
+{
+    return (static_cast<uint32_t>(this->initialize(
+            static_cast<ft_loot_entry &&>(other))));
+}
+
+template<typename ElementType>
+int32_t ft_loot_entry<ElementType>::enable_thread_safety()
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -144,9 +298,9 @@ int ft_loot_entry<ElementType>::enable_thread_safety()
 }
 
 template<typename ElementType>
-int ft_loot_entry<ElementType>::disable_thread_safety()
+int32_t ft_loot_entry<ElementType>::disable_thread_safety()
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -157,166 +311,152 @@ int ft_loot_entry<ElementType>::disable_thread_safety()
 }
 
 template<typename ElementType>
-bool ft_loot_entry<ElementType>::is_thread_safe() const
+ft_bool ft_loot_entry<ElementType>::is_thread_safe() const
 {
     return (this->_mutex != ft_nullptr);
 }
 
 template<typename ElementType>
-int ft_loot_entry<ElementType>::lock_entry(bool *lock_acquired) const noexcept
+int32_t ft_loot_entry<ElementType>::lock_entry(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
-int ft_loot_entry<ElementType>::unlock_entry(bool lock_acquired) const noexcept
+void ft_loot_entry<ElementType>::unlock_entry(ft_bool lock_acquired) const noexcept
 {
-    if (lock_acquired == false)
-        return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
+    if (lock_acquired == FT_FALSE)
+        return ;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return ;
 }
 
 template<typename ElementType>
-int ft_loot_entry<ElementType>::set_item(ElementType *item) noexcept
+int32_t ft_loot_entry<ElementType>::set_item(ElementType *item) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_entry(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_item = item;
-    unlock_error = this->unlock_entry(lock_acquired);
-    return (unlock_error);
+    this->unlock_entry(lock_acquired);
+    return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_loot_entry<ElementType>::get_item() const noexcept
+Pair<int32_t,  ElementType *> ft_loot_entry<ElementType>::get_item() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     ElementType *item_pointer;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     item_pointer = ft_nullptr;
     lock_error = this->lock_entry(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(lock_error, item_pointer));
+        return (Pair<int32_t,  ElementType *>(lock_error, item_pointer));
     item_pointer = this->_item;
-    unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(unlock_error, ft_nullptr));
-    return (Pair<int, ElementType *>(FT_ERR_SUCCESS, item_pointer));
+    this->unlock_entry(lock_acquired);
+    return (Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, item_pointer));
 }
 
 template<typename ElementType>
-int ft_loot_entry<ElementType>::set_weight(int weight) noexcept
+int32_t ft_loot_entry<ElementType>::set_weight(int32_t weight) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
     if (weight <= 0)
         return (FT_ERR_INVALID_ARGUMENT);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_entry(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_weight = weight;
-    unlock_error = this->unlock_entry(lock_acquired);
-    return (unlock_error);
+    this->unlock_entry(lock_acquired);
+    return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
-Pair<int, int> ft_loot_entry<ElementType>::get_weight() const noexcept
+Pair<int32_t,  int32_t> ft_loot_entry<ElementType>::get_weight() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int unlock_error;
-    int weight_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t weight_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     weight_value = 0;
     lock_error = this->lock_entry(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (Pair<int, int>(lock_error, weight_value));
+        return (Pair<int32_t,  int32_t>(lock_error, weight_value));
     weight_value = this->_weight;
-    unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (Pair<int, int>(unlock_error, 0));
-    return (Pair<int, int>(FT_ERR_SUCCESS, weight_value));
+    this->unlock_entry(lock_acquired);
+    return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, weight_value));
 }
 
 template<typename ElementType>
-int ft_loot_entry<ElementType>::set_rarity(int rarity) noexcept
+int32_t ft_loot_entry<ElementType>::set_rarity(int32_t rarity) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int unlock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
     if (rarity < 0)
         rarity = 0;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_entry(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_rarity = rarity;
-    unlock_error = this->unlock_entry(lock_acquired);
-    return (unlock_error);
+    this->unlock_entry(lock_acquired);
+    return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
-Pair<int, int> ft_loot_entry<ElementType>::get_rarity() const noexcept
+Pair<int32_t,  int32_t> ft_loot_entry<ElementType>::get_rarity() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int unlock_error;
-    int rarity_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t rarity_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     rarity_value = 0;
     lock_error = this->lock_entry(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (Pair<int, int>(lock_error, rarity_value));
+        return (Pair<int32_t,  int32_t>(lock_error, rarity_value));
     rarity_value = this->_rarity;
-    unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (Pair<int, int>(unlock_error, 0));
-    return (Pair<int, int>(FT_ERR_SUCCESS, rarity_value));
+    this->unlock_entry(lock_acquired);
+    return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, rarity_value));
 }
 
 template<typename ElementType>
-Pair<int, int> ft_loot_entry<ElementType>::get_effective_weight() const noexcept
+Pair<int32_t,  int32_t> ft_loot_entry<ElementType>::get_effective_weight() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int unlock_error;
-    int effective_weight;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t effective_weight;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     effective_weight = 0;
     lock_error = this->lock_entry(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (Pair<int, int>(lock_error, effective_weight));
+        return (Pair<int32_t,  int32_t>(lock_error, effective_weight));
     effective_weight = this->_weight / (this->_rarity + 1);
     if (effective_weight < 1)
         effective_weight = 1;
-    unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (Pair<int, int>(unlock_error, 0));
-    return (Pair<int, int>(FT_ERR_SUCCESS, effective_weight));
+    this->unlock_entry(lock_acquired);
+    return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, effective_weight));
 }
 
 #ifdef LIBFT_TEST_BUILD
@@ -333,15 +473,206 @@ ft_loot_table<ElementType>::ft_loot_table() noexcept
     , _size(0)
     , _capacity(0)
     , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    return ;
+}
+
+template<typename ElementType>
+ft_loot_table<ElementType>::ft_loot_table(const ft_loot_table &other) noexcept
+    : _entries(ft_nullptr)
+    , _size(0)
+    , _capacity(0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(other);
+    return ;
+}
+
+template<typename ElementType>
+ft_loot_table<ElementType>::ft_loot_table(ft_loot_table &&other) noexcept
+    : _entries(ft_nullptr)
+    , _size(0)
+    , _capacity(0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(static_cast<ft_loot_table &&>(other));
     return ;
 }
 
 template<typename ElementType>
 ft_loot_table<ElementType>::~ft_loot_table() noexcept
 {
-    size_t index;
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    return ;
+}
 
+template<typename ElementType>
+int32_t ft_loot_table<ElementType>::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state, "ft_loot_table::initialize",
+            "called while object is already initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_entries = ft_nullptr;
+    this->_size = 0;
+    this->_capacity = 0;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_loot_table<ElementType>::initialize(const ft_loot_table &other) noexcept
+{
+    ft_bool lock_acquired;
+    int32_t operation_error;
+    ft_size_t index;
+    Pair<int32_t,  ElementType *> item_result;
+    Pair<int32_t,  int32_t> weight_result;
+    Pair<int32_t,  int32_t> rarity_result;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_loot_table::initialize(const ft_loot_table &) source",
+            "source is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        operation_error = this->destroy();
+        if (operation_error != FT_ERR_SUCCESS)
+            return (operation_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    operation_error = this->initialize();
+    if (operation_error != FT_ERR_SUCCESS)
+        return (operation_error);
+    lock_acquired = FT_FALSE;
+    operation_error = other.lock_table(&lock_acquired);
+    if (operation_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (operation_error);
+    }
+    if (other._mutex != ft_nullptr)
+    {
+        operation_error = this->enable_thread_safety();
+        if (operation_error != FT_ERR_SUCCESS)
+        {
+            other.unlock_table(lock_acquired);
+            (void)this->destroy();
+            return (operation_error);
+        }
+    }
+    index = 0;
+    while (index < other._size)
+    {
+        item_result = other._entries[index]->get_item();
+        weight_result = other._entries[index]->get_weight();
+        rarity_result = other._entries[index]->get_rarity();
+        if (item_result.key != FT_ERR_SUCCESS
+            || weight_result.key != FT_ERR_SUCCESS
+            || rarity_result.key != FT_ERR_SUCCESS)
+        {
+            other.unlock_table(lock_acquired);
+            (void)this->destroy();
+            return (FT_ERR_INVALID_STATE);
+        }
+        operation_error = this->add_element(item_result.value, weight_result.value, rarity_result.value);
+        if (operation_error != FT_ERR_SUCCESS)
+        {
+            other.unlock_table(lock_acquired);
+            (void)this->destroy();
+            return (operation_error);
+        }
+        index += 1;
+    }
+    other.unlock_table(lock_acquired);
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_loot_table<ElementType>::initialize(ft_loot_table &&other) noexcept
+{
+    ft_bool lock_acquired;
+    int32_t operation_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_loot_table::initialize(ft_loot_table &&) source",
+            "source is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        operation_error = this->destroy();
+        if (operation_error != FT_ERR_SUCCESS)
+            return (operation_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    operation_error = this->initialize();
+    if (operation_error != FT_ERR_SUCCESS)
+        return (operation_error);
+    lock_acquired = FT_FALSE;
+    operation_error = other.lock_table(&lock_acquired);
+    if (operation_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (operation_error);
+    }
+    if (other._mutex != ft_nullptr)
+    {
+        operation_error = this->enable_thread_safety();
+        if (operation_error != FT_ERR_SUCCESS)
+        {
+            other.unlock_table(lock_acquired);
+            (void)this->destroy();
+            return (operation_error);
+        }
+    }
+    this->_entries = other._entries;
+    this->_size = other._size;
+    this->_capacity = other._capacity;
+    other._entries = ft_nullptr;
+    other._size = 0;
+    other._capacity = 0;
+    other.unlock_table(lock_acquired);
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_loot_table<ElementType>::destroy() noexcept
+{
+    ft_size_t index;
+    int32_t thread_error;
+    int32_t first_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    first_error = FT_ERR_SUCCESS;
+    thread_error = this->disable_thread_safety();
+    if (thread_error != FT_ERR_SUCCESS)
+        first_error = thread_error;
     index = 0;
     while (index < this->_size)
     {
@@ -353,15 +684,22 @@ ft_loot_table<ElementType>::~ft_loot_table() noexcept
     this->_entries = ft_nullptr;
     this->_size = 0;
     this->_capacity = 0;
-    (void)this->disable_thread_safety();
-    return ;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (first_error);
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::enable_thread_safety()
+uint32_t ft_loot_table<ElementType>::move(ft_loot_table &other) noexcept
+{
+    return (static_cast<uint32_t>(this->initialize(
+            static_cast<ft_loot_table &&>(other))));
+}
+
+template<typename ElementType>
+int32_t ft_loot_table<ElementType>::enable_thread_safety()
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -379,9 +717,9 @@ int ft_loot_table<ElementType>::enable_thread_safety()
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::disable_thread_safety()
+int32_t ft_loot_table<ElementType>::disable_thread_safety()
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -392,39 +730,40 @@ int ft_loot_table<ElementType>::disable_thread_safety()
 }
 
 template<typename ElementType>
-bool ft_loot_table<ElementType>::is_thread_safe() const
+ft_bool ft_loot_table<ElementType>::is_thread_safe() const
 {
     return (this->_mutex != ft_nullptr);
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::lock_table(bool *lock_acquired) const noexcept
+int32_t ft_loot_table<ElementType>::lock_table(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::unlock_table(bool lock_acquired) const noexcept
+void ft_loot_table<ElementType>::unlock_table(ft_bool lock_acquired) const noexcept
 {
-    if (lock_acquired == false)
-        return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
+    if (lock_acquired == FT_FALSE)
+        return ;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return ;
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::reserve_capacity(size_t requested_capacity)
+int32_t ft_loot_table<ElementType>::reserve_capacity(ft_size_t requested_capacity)
 {
     ft_loot_entry<ElementType> **new_entries;
-    size_t index;
+    ft_size_t index;
 
     if (requested_capacity <= this->_capacity)
         return (FT_ERR_SUCCESS);
@@ -446,11 +785,11 @@ int ft_loot_table<ElementType>::reserve_capacity(size_t requested_capacity)
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::compute_total_weight_locked(int *total_weight) const noexcept
+int32_t ft_loot_table<ElementType>::compute_total_weight_locked(int32_t *total_weight) const noexcept
 {
-    size_t index;
-    int computed_total;
-    Pair<int, int> effective_weight;
+    ft_size_t index;
+    int32_t computed_total;
+    Pair<int32_t,  int32_t> effective_weight;
 
     if (total_weight == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -471,11 +810,11 @@ int ft_loot_table<ElementType>::compute_total_weight_locked(int *total_weight) c
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t *result_index) const noexcept
+int32_t ft_loot_table<ElementType>::locate_entry_by_roll_locked(int32_t roll_value, ft_size_t *result_index) const noexcept
 {
-    size_t index;
-    int accumulated;
-    Pair<int, int> effective_weight;
+    ft_size_t index;
+    int32_t accumulated;
+    Pair<int32_t,  int32_t> effective_weight;
 
     if (result_index == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -489,7 +828,7 @@ int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t *re
         if (INT_MAX - accumulated < effective_weight.value)
             return (FT_ERR_OUT_OF_RANGE);
         accumulated += effective_weight.value;
-        if (roll <= accumulated)
+        if (roll_value <= accumulated)
         {
             *result_index = index;
             return (FT_ERR_SUCCESS);
@@ -500,20 +839,19 @@ int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t *re
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::add_element(ElementType *elem, int weight, int rarity)
+int32_t ft_loot_table<ElementType>::add_element(ElementType *element_pointer, int32_t weight, int32_t rarity)
 {
-    bool lock_acquired;
-    int lock_error;
-    int operation_error;
-    int unlock_error;
-    size_t next_capacity;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t operation_error;
+    ft_size_t next_capacity;
     ft_loot_entry<ElementType> *entry_pointer;
 
     if (weight <= 0)
         return (FT_ERR_INVALID_ARGUMENT);
     if (rarity < 0)
         rarity = 0;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_table(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -527,38 +865,45 @@ int ft_loot_table<ElementType>::add_element(ElementType *elem, int weight, int r
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
-        entry_pointer = new (std::nothrow) ft_loot_entry<ElementType>(elem, weight, rarity);
+        entry_pointer = new (std::nothrow) ft_loot_entry<ElementType>();
         if (entry_pointer == ft_nullptr)
             operation_error = FT_ERR_NO_MEMORY;
         else
         {
-            this->_entries[this->_size] = entry_pointer;
-            this->_size += 1;
+            operation_error = entry_pointer->set_item(element_pointer);
+            if (operation_error == FT_ERR_SUCCESS)
+                operation_error = entry_pointer->set_weight(weight);
+            if (operation_error == FT_ERR_SUCCESS)
+                operation_error = entry_pointer->set_rarity(rarity);
+            if (operation_error != FT_ERR_SUCCESS)
+                delete entry_pointer;
+            else
+            {
+                this->_entries[this->_size] = entry_pointer;
+                this->_size += 1;
+            }
         }
     }
-    unlock_error = this->unlock_table(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_table(lock_acquired);
     return (operation_error);
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_loot_table<ElementType>::get_random_loot() const
+Pair<int32_t,  ElementType *> ft_loot_table<ElementType>::get_random_loot() const
 {
-    bool lock_acquired;
-    int lock_error;
-    int operation_error;
-    int unlock_error;
-    int total_weight;
-    int roll;
-    size_t selected_index;
-    Pair<int, ElementType *> loot_result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t operation_error;
+    int32_t total_weight;
+    int32_t roll_value;
+    ft_size_t selected_index;
+    Pair<int32_t,  ElementType *> loot_result;
 
-    loot_result = Pair<int, ElementType *>(FT_ERR_SUCCESS, ft_nullptr);
-    lock_acquired = false;
+    loot_result = Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, ft_nullptr);
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_table(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(lock_error, ft_nullptr));
+        return (Pair<int32_t,  ElementType *>(lock_error, ft_nullptr));
     operation_error = FT_ERR_SUCCESS;
     if (this->_size == 0)
         operation_error = FT_ERR_EMPTY;
@@ -569,45 +914,42 @@ Pair<int, ElementType *> ft_loot_table<ElementType>::get_random_loot() const
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
-        roll = ft_dice_roll(1, total_weight);
-        if (roll < 1)
+        roll_value = ft_dice_roll(1, total_weight);
+        if (roll_value < 1)
             operation_error = FT_ERR_OUT_OF_RANGE;
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
         selected_index = 0;
-        operation_error = this->locate_entry_by_roll_locked(roll, &selected_index);
+        operation_error = this->locate_entry_by_roll_locked(roll_value, &selected_index);
         if (operation_error == FT_ERR_SUCCESS)
             loot_result = this->_entries[selected_index]->get_item();
         if (operation_error == FT_ERR_SUCCESS && loot_result.key != FT_ERR_SUCCESS)
             operation_error = loot_result.key;
     }
-    unlock_error = this->unlock_table(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_table(lock_acquired);
     if (operation_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(operation_error, ft_nullptr));
-    return (Pair<int, ElementType *>(FT_ERR_SUCCESS, loot_result.value));
+        return (Pair<int32_t,  ElementType *>(operation_error, ft_nullptr));
+    return (Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, loot_result.value));
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_loot_table<ElementType>::pop_random_loot()
+Pair<int32_t,  ElementType *> ft_loot_table<ElementType>::pop_random_loot()
 {
-    bool lock_acquired;
-    int lock_error;
-    int operation_error;
-    int unlock_error;
-    int total_weight;
-    int roll;
-    size_t selected_index;
-    size_t index;
-    Pair<int, ElementType *> loot_result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t operation_error;
+    int32_t total_weight;
+    int32_t roll_value;
+    ft_size_t selected_index;
+    ft_size_t index;
+    Pair<int32_t,  ElementType *> loot_result;
 
-    loot_result = Pair<int, ElementType *>(FT_ERR_SUCCESS, ft_nullptr);
-    lock_acquired = false;
+    loot_result = Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, ft_nullptr);
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_table(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(lock_error, ft_nullptr));
+        return (Pair<int32_t,  ElementType *>(lock_error, ft_nullptr));
     operation_error = FT_ERR_SUCCESS;
     if (this->_size == 0)
         operation_error = FT_ERR_EMPTY;
@@ -618,14 +960,14 @@ Pair<int, ElementType *> ft_loot_table<ElementType>::pop_random_loot()
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
-        roll = ft_dice_roll(1, total_weight);
-        if (roll < 1)
+        roll_value = ft_dice_roll(1, total_weight);
+        if (roll_value < 1)
             operation_error = FT_ERR_OUT_OF_RANGE;
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
         selected_index = 0;
-        operation_error = this->locate_entry_by_roll_locked(roll, &selected_index);
+        operation_error = this->locate_entry_by_roll_locked(roll_value, &selected_index);
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
@@ -645,16 +987,14 @@ Pair<int, ElementType *> ft_loot_table<ElementType>::pop_random_loot()
         this->_size -= 1;
         this->_entries[this->_size] = ft_nullptr;
     }
-    unlock_error = this->unlock_table(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_table(lock_acquired);
     if (operation_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(operation_error, ft_nullptr));
-    return (Pair<int, ElementType *>(FT_ERR_SUCCESS, loot_result.value));
+        return (Pair<int32_t,  ElementType *>(operation_error, ft_nullptr));
+    return (Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, loot_result.value));
 }
 
 template<typename ElementType>
-size_t ft_loot_table<ElementType>::size() const noexcept
+ft_size_t ft_loot_table<ElementType>::size() const noexcept
 {
     return (this->_size);
 }

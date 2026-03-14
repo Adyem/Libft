@@ -139,30 +139,30 @@ json_group *serialize_character(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
-    const ft_map<int, ft_skill> &skills = character.get_skills();
-    json_item *count = json_create_item("skill_count", static_cast<int>(skills.size()));
+    const ft_map<int32_t, ft_skill> &skills = character.get_skills();
+    json_item *count = json_create_item("skill_count", static_cast<int32_t>(skills.size()));
     if (!count)
     {
         json_free_groups(group);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, count);
-    size_t skill_index = 0;
-    size_t skill_count = skills.size();
-    const Pair<int, ft_skill> *skills_end = skills.end();
+    ft_size_t skill_index = 0;
+    ft_size_t skill_count = skills.size();
+    const Pair<int32_t, ft_skill> *skills_end = skills.end();
     if (skill_count > 0 && !skills_end)
     {
         json_free_groups(group);
         return (ft_nullptr);
     }
-    const Pair<int, ft_skill> *skill_start = skills_end;
+    const Pair<int32_t, ft_skill> *skill_start = skills_end;
     if (skill_count > 0)
         skill_start = skills_end - skill_count;
     while (skill_index < skill_count)
     {
         char skill_index_buffer[32];
         if (pf_snprintf(skill_index_buffer, sizeof(skill_index_buffer), "%d",
-                static_cast<int>(skill_index)) < 0)
+                static_cast<int32_t>(skill_index)) < 0)
         {
             json_free_groups(group);
             return (ft_nullptr);
@@ -242,7 +242,7 @@ json_group *serialize_character(const ft_character &character)
     return (group);
 }
 
-int deserialize_character(ft_character &character, json_group *group)
+int32_t deserialize_character(ft_character &character, json_group *group)
 {
     json_item *item = json_find_item(group, "hit_points");
     if (item)
@@ -301,11 +301,11 @@ int deserialize_character(ft_character &character, json_group *group)
     json_item *count_item = json_find_item(group, "skill_count");
     if (count_item)
     {
-        int skill_count = ft_atoi(count_item->value);
-        int skill_index = 0;
+        int32_t skill_count = ft_atoi(count_item->value);
+        int32_t skill_index = 0;
         while (skill_index < skill_count)
         {
-            int add_skill_error;
+            int32_t add_skill_error;
             char skill_index_buffer[32];
             if (pf_snprintf(skill_index_buffer, sizeof(skill_index_buffer), "%d",
                     skill_index) < 0)

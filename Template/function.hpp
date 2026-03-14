@@ -45,7 +45,7 @@ class ft_function<ReturnType(Args...)>
         ft_function &operator=(ft_function &&other) noexcept;
 
         ReturnType   operator()(Args... args) const;
-        explicit operator bool() const noexcept;
+        operator ft_bool() const noexcept;
 };
 
 template <typename ReturnType, typename... Args>
@@ -218,7 +218,7 @@ ReturnType ft_function<ReturnType(Args...)>::operator()(Args... args) const
 }
 
 template <typename ReturnType, typename... Args>
-ft_function<ReturnType(Args...)>::operator bool() const noexcept
+ft_function<ReturnType(Args...)>::operator ft_bool() const noexcept
 {
     return (this->_callable != ft_nullptr && this->_invoke != ft_nullptr);
 }

@@ -4,26 +4,27 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 
-int ft_dice_roll(int number, int faces)
+int32_t ft_dice_roll(int32_t number, int32_t faces)
 {
+    int32_t zero_value;
+
+    zero_value = FT_ERR_SUCCESS;
     ft_init_random_engine();
     if (faces == 0 && number == 0)
-        return (0);
+        return (zero_value);
     if (faces < 1 || number < 1)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (faces == 1)
         return (number);
-    int result = 0;
-    int index = 0;
-    int roll = 0;
+    int32_t result = 0;
+    int32_t index = 0;
+    int32_t roll_value = 0;
     while (index < number)
     {
-        roll = ft_random_int();
-        if (roll < 0)
-            return (-1);
-        if (result > INT_MAX - ((roll % faces) + 1))
-            return (-1);
-        result += (roll % faces) + 1;
+        roll_value = ft_random_int();
+        if (result > INT_MAX - ((roll_value % faces) + 1))
+            return (FT_ERR_OUT_OF_RANGE);
+        result += (roll_value % faces) + 1;
         index++;
     }
     if (DEBUG == 1)

@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Template/thread_pool.hpp"
-#include "../../Template/cancellation.hpp"
+#include "../../CPP_class/thread_pool.hpp"
+#include "../../CPP_class/cancellation.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"

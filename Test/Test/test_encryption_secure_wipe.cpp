@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Encryption/encryption_secure_wipe.hpp"
+#include "../../Encryption/encryption.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"

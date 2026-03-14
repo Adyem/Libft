@@ -134,7 +134,7 @@ int32_t DataBuffer::write_value(const ValueType &value) noexcept
     while (index < length)
     {
         this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
-        int32_t push_error = ft_vector<uint8_t>::get_error();
+        int32_t push_error = this->_buffer.get_error();
         if (push_error != FT_ERR_SUCCESS)
         {
             cma_free(bytes);

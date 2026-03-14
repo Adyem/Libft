@@ -368,8 +368,8 @@ CPP_class/cpp_class_stringbuf.cpp
 
 ## Template
 Template/algorithm.hpp
-Template/bitset.hpp
-Template/cancellation.hpp
+CPP_class/bitset.hpp
+CPP_class/cancellation.hpp
 Template/circular_buffer.hpp
 Template/constructor.hpp
 Template/container_serialization.hpp
@@ -429,7 +429,7 @@ Template/template_compile_vector.cpp
 Template/template_concepts.hpp
 Template/template_optional.cpp
 Template/template_variant.cpp
-Template/thread_pool.hpp
+CPP_class/thread_pool.hpp
 Template/trie.hpp
 Template/tuple.hpp
 Template/unique_ptr.hpp
@@ -472,18 +472,9 @@ Encryption/Encryption_secure_wipe.cpp
 Encryption/Encryption_sha1.cpp
 Encryption/Encryption_sha256.cpp
 Encryption/Encryption_sha3.cpp
-Encryption/aes.hpp
-Encryption/basic_encryption.hpp
-Encryption/encryption_aead.hpp
-Encryption/encryption_blake2.hpp
-Encryption/encryption_hardware_acceleration.hpp
-Encryption/encryption_hmac_sha256.hpp
-Encryption/encryption_key_management.hpp
-Encryption/encryption_secure_wipe.hpp
-Encryption/encryption_sha1.hpp
-Encryption/encryption_sha256.hpp
-Encryption/encryption_sha3.hpp
-Encryption/rsa.hpp
+Encryption/encryption.hpp
+Encryption/encryption_internal.hpp
+Encryption/encryption_aead_context.hpp
 
 ## RNG
 RNG/RNG_dice_roll.cpp

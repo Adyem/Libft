@@ -8,58 +8,54 @@
 
 class ft_currency_rate
 {
-    private:
-        int      _currency_id;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t      _currency_id;
         double   _rate_to_base;
-        int      _display_precision;
+        int32_t      _display_precision;
         pt_recursive_mutex *_mutex;
         uint8_t  _initialised_state;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_currency_rate() noexcept;
         virtual ~ft_currency_rate() noexcept;
-        ft_currency_rate(const ft_currency_rate &other) noexcept = delete;
+        ft_currency_rate(const ft_currency_rate &other) noexcept;
         ft_currency_rate &operator=(const ft_currency_rate &other) noexcept = delete;
-        ft_currency_rate(ft_currency_rate &&other) noexcept = delete;
+        ft_currency_rate(ft_currency_rate &&other) noexcept;
         ft_currency_rate &operator=(ft_currency_rate &&other) noexcept = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_currency_rate &other) noexcept;
-        int initialize(ft_currency_rate &&other) noexcept;
-        int initialize(int currency_id, double rate_to_base,
-            int display_precision) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_currency_rate &other) noexcept;
+        int32_t initialize(ft_currency_rate &&other) noexcept;
+        int32_t move(ft_currency_rate &other) noexcept;
+        int32_t initialize(int32_t currency_id, double rate_to_base,
+            int32_t display_precision) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int get_currency_id() const noexcept;
-        void set_currency_id(int currency_id) noexcept;
+        int32_t get_currency_id() const noexcept;
+        void set_currency_id(int32_t currency_id) noexcept;
 
         double get_rate_to_base() const noexcept;
         void set_rate_to_base(double rate_to_base) noexcept;
 
-        int get_display_precision() const noexcept;
-        void set_display_precision(int display_precision) noexcept;
+        int32_t get_display_precision() const noexcept;
+        void set_display_precision(int32_t display_precision) noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

@@ -1,9 +1,8 @@
 #include "document.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 
 #include <cstdio>
 #include <cstddef>
@@ -12,55 +11,36 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 
-static thread_local int g_json_document_last_error = FT_ERR_SUCCESS;
-static thread_local pt_mutex *g_json_document_locked_mutex = ft_nullptr;
+static thread_local int32_t g_json_document_last_error = FT_ERR_SUCCESS;
+static thread_local pt_recursive_mutex *g_json_document_locked_mutex = ft_nullptr;
 
-static void json_document_push_error(int error_code)
+static void json_document_set_error(int32_t error_code)
 {
     g_json_document_last_error = error_code;
     return ;
 }
 
 #define JSON_DOCUMENT_ERROR_RETURN(code, value) \
-    do { json_document_push_error(code); return (value); } while (0)
+    do { json_document_set_error(code); return (value); } while (0)
 
 #define JSON_DOCUMENT_SUCCESS_RETURN(value) \
-    do { json_document_push_error(FT_ERR_SUCCESS); return (value); } while (0)
+    do { json_document_set_error(FT_ERR_SUCCESS); return (value); } while (0)
 
-static int json_document_last_error(void)
+static int32_t json_document_last_error(void)
 {
     return (g_json_document_last_error);
 }
 
-void json_document::abort_lifecycle_error(const char *method_name, const char *reason) const
+static char *json_document_unescape_pointer_token(const char *start, ft_size_t length) noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "json_document lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
-
-void json_document::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == json_document::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialised");
-    return ;
-}
-
-static char *json_document_unescape_pointer_token(const char *start, size_t length) noexcept
-{
-    if (!start && length != 0)
+    if (!start && length != FT_ERR_SUCCESS)
         JSON_DOCUMENT_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
-    size_t allocation_size = length + 1;
+    ft_size_t allocation_size = length + 1;
     char *token = static_cast<char *>(cma_malloc(allocation_size));
     if (!token)
         JSON_DOCUMENT_ERROR_RETURN(FT_ERR_NO_MEMORY, ft_nullptr);
-    size_t input_index = 0;
-    size_t output_index = 0;
+    ft_size_t input_index = 0;
+    ft_size_t output_index = 0;
     while (input_index < length)
     {
         char current_character = start[input_index];
@@ -95,39 +75,30 @@ static char *json_document_unescape_pointer_token(const char *start, size_t leng
 
 static void json_document_finalize_guard() noexcept
 {
-    int operation_error = json_document_last_error();
-    int guard_error;
+    int32_t operation_error = json_document_last_error();
 
-        if (g_json_document_locked_mutex != ft_nullptr)
+    if (g_json_document_locked_mutex != ft_nullptr)
     {
-        guard_error = pt_mutex_unlock_if_not_null(g_json_document_locked_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(g_json_document_locked_mutex);
         g_json_document_locked_mutex = ft_nullptr;
-    }
-    else
-        guard_error = FT_ERR_SUCCESS;
-
-    if (guard_error != FT_ERR_SUCCESS)
-    {
-        json_document_push_error(guard_error);
-        return ;
     }
     if (operation_error != FT_ERR_SUCCESS)
     {
-        json_document_push_error(operation_error);
+        json_document_set_error(operation_error);
         return ;
     }
-    json_document_push_error(FT_ERR_SUCCESS);
+    json_document_set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-void json_document::set_error_unlocked(int error_code) const noexcept
+void json_document::set_error_unlocked(int32_t error_code) const noexcept
 {
-    json_document_push_error(error_code);
+    json_document_set_error(error_code);
     this->_error_code = error_code;
     return ;
 }
 
-void json_document::set_error(int error_code) const noexcept
+void json_document::set_error(int32_t error_code) const noexcept
 {
     this->set_error_unlocked(error_code);
     return ;
@@ -148,7 +119,7 @@ char *json_document::write_to_string_unlocked() const noexcept
     result = json_write_to_string(this->_groups);
     if (!result)
     {
-        int current_error;
+        int32_t current_error;
 
         current_error = json_document_last_error();
         if (current_error == FT_ERR_SUCCESS)
@@ -164,65 +135,196 @@ json_document::json_document() noexcept
     : _groups(ft_nullptr)
     , _error_code(FT_ERR_SUCCESS)
     , _mutex(ft_nullptr)
-    , _initialised_state(json_document::_state_uninitialised)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error_unlocked(FT_ERR_SUCCESS);
+    return ;
+}
+
+json_document::json_document(const json_document &other) noexcept
+    : _groups(ft_nullptr)
+    , _error_code(FT_ERR_SUCCESS)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(other);
+    return ;
+}
+
+json_document::json_document(json_document &&other) noexcept
+    : _groups(ft_nullptr)
+    , _error_code(FT_ERR_SUCCESS)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(static_cast<json_document &&>(other));
     return ;
 }
 
 json_document::~json_document() noexcept
 {
-    if (this->_initialised_state == json_document::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-int json_document::initialize() noexcept
+int32_t json_document::initialize() noexcept
 {
-    if (this->_initialised_state == json_document::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("json_document::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "json_document::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_initialised_state = json_document::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error_unlocked(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int json_document::destroy() noexcept
+int32_t json_document::initialize(const json_document &other) noexcept
 {
-    int lock_error;
-    int unlock_error;
-    int disable_error;
+    int32_t operation_error;
+    char *serialized_content;
+    int32_t current_error;
 
-    if (this->_initialised_state != json_document::_state_initialised)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "json_document::initialize(const json_document &) source",
+            "source is not initialised");
         return (FT_ERR_INVALID_STATE);
-    lock_error = FT_ERR_SUCCESS;
-    unlock_error = FT_ERR_SUCCESS;
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        operation_error = this->destroy();
+        if (operation_error != FT_ERR_SUCCESS)
+            return (operation_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    operation_error = this->initialize();
+    if (operation_error != FT_ERR_SUCCESS)
+        return (operation_error);
+    serialized_content = other.write_to_string();
+    if (serialized_content == ft_nullptr)
+    {
+        current_error = json_document_last_error();
+        if (current_error == FT_ERR_SUCCESS)
+            current_error = FT_ERR_NO_MEMORY;
+        (void)this->destroy();
+        return (current_error);
+    }
+    operation_error = this->read_from_string(serialized_content);
+    cma_free(serialized_content);
+    if (operation_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (operation_error);
+    }
+    if (other._mutex != ft_nullptr)
+    {
+        operation_error = this->enable_thread_safety();
+        if (operation_error != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (operation_error);
+        }
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t json_document::initialize(json_document &&other) noexcept
+{
+    int32_t operation_error;
+    int32_t lock_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "json_document::initialize(json_document &&) source",
+            "source is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        operation_error = this->destroy();
+        if (operation_error != FT_ERR_SUCCESS)
+            return (operation_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    operation_error = this->initialize();
+    if (operation_error != FT_ERR_SUCCESS)
+        return (operation_error);
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (lock_error);
+    }
+    if (other._mutex != ft_nullptr)
+    {
+        operation_error = this->enable_thread_safety();
+        if (operation_error != FT_ERR_SUCCESS)
+        {
+            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+            (void)this->destroy();
+            return (operation_error);
+        }
+    }
+    this->_groups = other._groups;
+    this->_error_code = other._error_code;
+    other._groups = ft_nullptr;
+    other._error_code = FT_ERR_SUCCESS;
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t json_document::destroy() noexcept
+{
+    int32_t lock_error;
+    int32_t disable_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         this->clear_unlocked();
-    if (lock_error == FT_ERR_SUCCESS)
-        unlock_error = pt_mutex_unlock_if_not_null(this->_mutex);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (unlock_error);
     disable_error = this->disable_thread_safety();
-    this->_initialised_state = json_document::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (disable_error);
 }
 
-int json_document::enable_thread_safety() noexcept
+uint32_t json_document::move(json_document &other) noexcept
 {
-    pt_mutex *mutex_pointer;
-    int initialize_error;
+    return (static_cast<uint32_t>(this->initialize(
+            static_cast<json_document &&>(other))));
+}
 
-    this->abort_if_not_initialised("json_document::enable_thread_safety");
+int32_t json_document::enable_thread_safety() noexcept
+{
+    pt_recursive_mutex *mutex_pointer;
+    int32_t initialize_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "json_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -235,11 +337,12 @@ int json_document::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int json_document::disable_thread_safety() noexcept
+int32_t json_document::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
-    this->abort_if_not_initialised("json_document::disable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "json_document::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -248,26 +351,18 @@ int json_document::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool json_document::is_thread_safe() const noexcept
+ft_bool json_document::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_mutex *json_document::get_mutex_for_validation() const noexcept
-{
-    this->abort_if_not_initialised("json_document::get_mutex_for_validation");
-    return (this->_mutex);
-}
-#endif
-
 json_group *json_document::create_group(const char *name) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_group *group;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -299,11 +394,11 @@ json_group *json_document::create_group(const char *name) noexcept
 
 json_item *json_document::create_item(const char *key, const char *value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -335,11 +430,11 @@ json_item *json_document::create_item(const char *key, const char *value) noexce
 
 json_item *json_document::create_item(const char *key, const ft_big_number &value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -369,13 +464,13 @@ json_item *json_document::create_item(const char *key, const ft_big_number &valu
     return (item);
 }
 
-json_item *json_document::create_item(const char *key, const int value) noexcept
+json_item *json_document::create_item(const char *key, const int32_t value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -405,13 +500,13 @@ json_item *json_document::create_item(const char *key, const int value) noexcept
     return (item);
 }
 
-json_item *json_document::create_item(const char *key, const bool value) noexcept
+json_item *json_document::create_item(const char *key, const ft_bool value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -443,9 +538,9 @@ json_item *json_document::create_item(const char *key, const bool value) noexcep
 
 void json_document::add_item(json_group *group, json_item *item) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -468,9 +563,9 @@ void json_document::add_item(json_group *group, json_item *item) noexcept
 
 void json_document::append_group(json_group *group) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -491,29 +586,29 @@ void json_document::append_group(json_group *group) noexcept
     return ;
 }
 
-int json_document::write_to_file(const char *file_path) const noexcept
+int32_t json_document::write_to_file(const char *file_path) const noexcept
 {
-    int lock_error;
-    int result;
-    int current_error;
+    int32_t lock_error;
+    int32_t result;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         json_document_finalize_guard();
-        return (-1);
+        return (lock_error);
     }
     if (!file_path)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         json_document_finalize_guard();
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     result = json_write_to_file(file_path, this->_groups);
-    if (result != 0)
+    if (result != FT_ERR_SUCCESS)
     {
         current_error = json_document_last_error();
         if (current_error == FT_ERR_SUCCESS)
@@ -524,30 +619,34 @@ int json_document::write_to_file(const char *file_path) const noexcept
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
     json_document_finalize_guard();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int json_document::write_to_backend(ft_document_sink &sink) const noexcept
+int32_t json_document::write_to_backend(ft_document_sink &sink) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     char *serialized_content;
-    size_t serialized_length;
-    int write_result;
+    ft_size_t serialized_length;
+    int32_t write_result;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         json_document_finalize_guard();
-        return (-1);
+        return (lock_error);
     }
     serialized_content = this->write_to_string_unlocked();
     if (!serialized_content)
     {
+        current_error = this->_error_code;
+        if (current_error == FT_ERR_SUCCESS)
+            current_error = FT_ERR_NO_MEMORY;
         json_document_finalize_guard();
-        return (-1);
+        return (current_error);
     }
     serialized_length = ft_strlen(serialized_content);
     write_result = sink.write_all(serialized_content, serialized_length);
@@ -556,19 +655,19 @@ int json_document::write_to_backend(ft_document_sink &sink) const noexcept
     {
         this->set_error_unlocked(write_result);
         json_document_finalize_guard();
-        return (-1);
+        return (write_result);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
     json_document_finalize_guard();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 char *json_document::write_to_string() const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     char *result;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -582,27 +681,27 @@ char *json_document::write_to_string() const noexcept
     return (result);
 }
 
-int json_document::read_from_file(const char *file_path) noexcept
+int32_t json_document::read_from_file(const char *file_path) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_group *groups;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         json_document_finalize_guard();
-        return (-1);
+        return (lock_error);
     }
     if (!file_path)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         json_document_finalize_guard();
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     this->clear_unlocked();
     groups = json_read_from_file(file_path);
@@ -613,28 +712,28 @@ int json_document::read_from_file(const char *file_path) noexcept
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
         json_document_finalize_guard();
-        return (-1);
+        return (current_error);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
     json_document_finalize_guard();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int json_document::read_from_backend(ft_document_source &source) noexcept
+int32_t json_document::read_from_backend(ft_document_source &source) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_group *groups;
-    int error_code;
+    int32_t error_code;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         json_document_finalize_guard();
-        return (-1);
+        return (lock_error);
     }
     this->clear_unlocked();
     groups = json_read_from_backend(source);
@@ -645,36 +744,36 @@ int json_document::read_from_backend(ft_document_source &source) noexcept
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(error_code);
         json_document_finalize_guard();
-        return (-1);
+        return (error_code);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
     json_document_finalize_guard();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int json_document::read_from_file_streaming(const char *file_path, size_t buffer_capacity) noexcept
+int32_t json_document::read_from_file_streaming(const char *file_path, ft_size_t buffer_capacity) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     FILE *file;
     json_group *groups;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         json_document_finalize_guard();
-        return (-1);
+        return (lock_error);
     }
-    if (!file_path || buffer_capacity == 0)
+    if (!file_path || buffer_capacity == FT_ERR_SUCCESS)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         json_document_finalize_guard();
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     file = fopen(file_path, "rb");
     if (!file)
@@ -682,7 +781,7 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_IO);
         json_document_finalize_guard();
-        return (-1);
+        return (FT_ERR_IO);
     }
     this->clear_unlocked();
     groups = json_read_from_file_stream(file, buffer_capacity);
@@ -694,35 +793,35 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
         json_document_finalize_guard();
-        return (-1);
+        return (current_error);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
     json_document_finalize_guard();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int json_document::read_from_string(const char *content) noexcept
+int32_t json_document::read_from_string(const char *content) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_group *groups;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         json_document_finalize_guard();
-        return (-1);
+        return (lock_error);
     }
     if (!content)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         json_document_finalize_guard();
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     this->clear_unlocked();
     groups = json_read_from_string(content);
@@ -733,20 +832,20 @@ int json_document::read_from_string(const char *content) noexcept
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
         json_document_finalize_guard();
-        return (-1);
+        return (current_error);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
     json_document_finalize_guard();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 json_group *json_document::find_group(const char *name) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_group *group;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -769,10 +868,10 @@ json_group *json_document::find_group(const char *name) const noexcept
 
 json_item *json_document::find_item(json_group *group, const char *key) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -807,7 +906,7 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
     }
     const char *cursor = pointer;
     json_group *current_group = ft_nullptr;
-    bool expecting_group = true;
+    ft_bool expecting_group = FT_TRUE;
     while (*cursor)
     {
         if (*cursor != '/')
@@ -819,8 +918,8 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
         const char *segment_start = cursor;
         while (*cursor && *cursor != '/')
             cursor += 1;
-        size_t segment_length = static_cast<size_t>(cursor - segment_start);
-        if (segment_length == 0)
+        ft_size_t segment_length = static_cast<ft_size_t>(cursor - segment_start);
+        if (segment_length == FT_ERR_SUCCESS)
         {
             this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
@@ -834,15 +933,15 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
         if (expecting_group)
         {
             json_group *group_iterator = this->_groups;
-            bool found_group = false;
+            ft_bool found_group = FT_FALSE;
             while (group_iterator)
             {
                 const char *group_name = group_iterator->name;
                 if (!group_name)
                     group_name = "";
-                if (ft_strcmp(group_name, token) == 0)
+                if (ft_strcmp(group_name, token) == FT_ERR_SUCCESS)
                 {
-                    found_group = true;
+                    found_group = FT_TRUE;
                     break ;
                 }
                 group_iterator = group_iterator->next;
@@ -854,7 +953,7 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
                 return (ft_nullptr);
             }
             current_group = group_iterator;
-            expecting_group = false;
+            expecting_group = FT_FALSE;
             if (*cursor == '\0')
             {
                 this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
@@ -870,7 +969,7 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
             const char *item_key = item_iterator->key;
             if (!item_key)
                 item_key = "";
-            if (ft_strcmp(item_key, token) == 0)
+            if (ft_strcmp(item_key, token) == FT_ERR_SUCCESS)
                 break ;
             item_iterator = item_iterator->next;
         }
@@ -894,10 +993,10 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
 
 json_item *json_document::find_item_by_pointer(const char *pointer) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -913,10 +1012,10 @@ json_item *json_document::find_item_by_pointer(const char *pointer) const noexce
 
 const char *json_document::get_value_by_pointer(const char *pointer) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -944,9 +1043,9 @@ const char *json_document::get_value_by_pointer(const char *pointer) const noexc
 
 void json_document::remove_group(const char *name) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -969,9 +1068,9 @@ void json_document::remove_group(const char *name) noexcept
 
 void json_document::remove_item(json_group *group, const char *key) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -994,11 +1093,11 @@ void json_document::remove_item(json_group *group, const char *key) noexcept
 
 void json_document::update_item(json_group *group, const char *key, const char *value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -1035,13 +1134,13 @@ void json_document::update_item(json_group *group, const char *key, const char *
     return ;
 }
 
-void json_document::update_item(json_group *group, const char *key, const int value) noexcept
+void json_document::update_item(json_group *group, const char *key, const int32_t value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -1078,13 +1177,13 @@ void json_document::update_item(json_group *group, const char *key, const int va
     return ;
 }
 
-void json_document::update_item(json_group *group, const char *key, const bool value) noexcept
+void json_document::update_item(json_group *group, const char *key, const ft_bool value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -1123,11 +1222,11 @@ void json_document::update_item(json_group *group, const char *key, const bool v
 
 void json_document::update_item(json_group *group, const char *key, const ft_big_number &value) noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_item *item;
-    int current_error;
+    int32_t current_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -1166,9 +1265,9 @@ void json_document::update_item(json_group *group, const char *key, const ft_big
 
 void json_document::clear() noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -1184,10 +1283,10 @@ void json_document::clear() noexcept
 
 json_group *json_document::get_groups() const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     json_group *groups;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -1202,19 +1301,22 @@ json_group *json_document::get_groups() const noexcept
     return (groups);
 }
 
-void json_document::set_manual_error(int error_code) noexcept
+void json_document::set_manual_error(int32_t error_code) noexcept
 {
-    this->abort_if_not_initialised("json_document::set_manual_error");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "json_document::set_manual_error");
     this->set_error(error_code);
     return ;
 }
 
-int json_document::get_error() const noexcept
+int32_t json_document::get_error() const noexcept
 {
-    int lock_error;
-    int error_value;
+    int32_t lock_error;
+    int32_t error_value;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "json_document::get_error");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
@@ -1230,10 +1332,12 @@ int json_document::get_error() const noexcept
 
 const char *json_document::get_error_str() const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
     const char *error_string;
 
-    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "json_document::get_error_str");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)

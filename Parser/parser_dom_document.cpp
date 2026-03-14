@@ -5,75 +5,69 @@
 #include "../PThread/pthread.hpp"
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
 
 ft_dom_document::ft_dom_document() noexcept
     : _root(ft_nullptr), _mutex(ft_nullptr),
-      _initialised_state(ft_dom_document::_state_uninitialised)
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    return ;
+}
+
+ft_dom_document::ft_dom_document(const ft_dom_document &other) noexcept
+    : _root(other._root), _mutex(ft_nullptr),
+      _initialised_state(other._initialised_state)
+{
+    return ;
+}
+
+ft_dom_document::ft_dom_document(ft_dom_document &&other) noexcept
+    : _root(other._root), _mutex(ft_nullptr),
+      _initialised_state(other._initialised_state)
 {
     return ;
 }
 
 ft_dom_document::~ft_dom_document() noexcept
 {
-    if (this->_initialised_state == ft_dom_document::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-void ft_dom_document::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_dom_document lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
 
-void ft_dom_document::abort_if_not_initialised(const char *method_name) const
+int32_t ft_dom_document::initialize() noexcept
 {
-    if (this->_initialised_state == ft_dom_document::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-int ft_dom_document::initialize() noexcept
-{
-    if (this->_initialised_state == ft_dom_document::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_dom_document::initialize",
-            "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_dom_document::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_root = ft_nullptr;
-    this->_initialised_state = ft_dom_document::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dom_document::destroy() noexcept
+int32_t ft_dom_document::destroy() noexcept
 {
-    int disable_error;
+    int32_t disable_error;
 
-    if (this->_initialised_state != ft_dom_document::_state_initialised)
-        return (FT_ERR_INVALID_STATE);
-    this->clear();
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
     disable_error = this->disable_thread_safety();
-    this->_initialised_state = ft_dom_document::_state_destroyed;
+    this->clear();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (disable_error);
 }
 
-int ft_dom_document::enable_thread_safety() noexcept
+int32_t ft_dom_document::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_dom_document::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -89,9 +83,9 @@ int ft_dom_document::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dom_document::disable_thread_safety() noexcept
+int32_t ft_dom_document::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -101,14 +95,14 @@ int ft_dom_document::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_dom_document::is_thread_safe() const noexcept
+ft_bool ft_dom_document::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_dom_document::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_dom_document::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
@@ -120,32 +114,33 @@ int ft_dom_document::lock_internal(bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_dom_document::unlock_internal(bool lock_acquired) const noexcept
+int32_t ft_dom_document::unlock_internal(ft_bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_dom_document::lock(bool *lock_acquired) const noexcept
+int32_t ft_dom_document::lock(ft_bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_dom_document::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::lock");
     return (this->lock_internal(lock_acquired));
 }
 
-void ft_dom_document::unlock(bool lock_acquired) const noexcept
+void ft_dom_document::unlock(ft_bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_dom_document::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_dom_document::set_root(ft_dom_node *root) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_dom_document::set_root");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::set_root");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -159,11 +154,11 @@ void ft_dom_document::set_root(ft_dom_node *root) noexcept
 
 ft_dom_node *ft_dom_document::get_root() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     ft_dom_node *root_pointer;
 
-    this->abort_if_not_initialised("ft_dom_document::get_root");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::get_root");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -175,10 +170,10 @@ ft_dom_node *ft_dom_document::get_root() const noexcept
 
 void ft_dom_document::clear() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_dom_document::clear");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::clear");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -191,11 +186,3 @@ void ft_dom_document::clear() noexcept
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_dom_document::get_mutex_for_validation() const noexcept
-{
-    this->abort_if_not_initialised("ft_dom_document::get_mutex_for_validation");
-    return (this->_mutex);
-}
-#endif

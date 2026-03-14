@@ -26,38 +26,38 @@
 # include <sys/select.h>
 #endif
 
-static std::atomic<size_t> g_api_async_last_request_size(0);
-static std::atomic<size_t> g_api_async_last_bytes_sent(0);
-static std::atomic<size_t> g_api_async_last_bytes_received(0);
-static std::atomic<int> g_api_async_last_send_state(0);
-static std::atomic<int> g_api_async_last_send_timeout(0);
-static std::atomic<int> g_api_async_last_receive_state(0);
-static std::atomic<int> g_api_async_last_receive_timeout(0);
+static std::atomic<ft_size_t> g_api_async_last_request_size(0);
+static std::atomic<ft_size_t> g_api_async_last_bytes_sent(0);
+static std::atomic<ft_size_t> g_api_async_last_bytes_received(0);
+static std::atomic<int32_t> g_api_async_last_send_state(0);
+static std::atomic<int32_t> g_api_async_last_send_timeout(0);
+static std::atomic<int32_t> g_api_async_last_receive_state(0);
+static std::atomic<int32_t> g_api_async_last_receive_timeout(0);
 
-static bool api_request_string_ends_with_crlf(const ft_string &value)
+static ft_bool api_request_string_ends_with_crlf(const ft_string &value)
 {
-    size_t length;
+    ft_size_t length;
     const char *character_pointer;
 
     length = value.size();
     if (length < 2)
-        return (false);
+        return (FT_FALSE);
     character_pointer = value.at(length - 2);
     if (character_pointer == ft_nullptr)
-        return (false);
+        return (FT_FALSE);
     if (*character_pointer != '\r')
-        return (false);
+        return (FT_FALSE);
     character_pointer = value.at(length - 1);
     if (character_pointer == ft_nullptr)
-        return (false);
+        return (FT_FALSE);
     if (*character_pointer != '\n')
-        return (false);
-    return (true);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
 static void api_request_trim_header_block(ft_string &headers)
 {
-    size_t length;
+    ft_size_t length;
     const char *character_pointer;
 
     length = headers.size();
@@ -115,61 +115,61 @@ static void api_request_reset_async_debug_counters(void)
 
 struct api_async_request
 {
-    char *ip;
+    char *ip_address;
     uint16_t port;
     char *method;
     char *path;
     json_group *payload;
     char *headers;
-    int timeout;
+    int32_t timeout;
     api_callback callback;
     void *user_data;
 };
 
-static bool api_async_build_request(const api_async_request &data,
+static ft_bool api_async_build_request(const api_async_request &data,
         ft_string &request)
 {
     ft_string body_string;
     char *temporary_string;
     if (request.initialize() != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     request.clear();
     if (body_string.initialize() != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     body_string.clear();
-    if (!data.method || !data.path || !data.ip)
+    if (!data.method || !data.path || !data.ip_address)
     {
-        return (false);
+        return (FT_FALSE);
     }
     request += data.method;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         request.clear();
-        return (false);
+        return (FT_FALSE);
     }
     request += " ";
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         request.clear();
-        return (false);
+        return (FT_FALSE);
     }
     request += data.path;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         request.clear();
-        return (false);
+        return (FT_FALSE);
     }
     request += " HTTP/1.1\r\nHost: ";
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         request.clear();
-        return (false);
+        return (FT_FALSE);
     }
-    request += data.ip;
+    request += data.ip_address;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         request.clear();
-        return (false);
+        return (FT_FALSE);
     }
     if (data.headers && data.headers[0])
     {
@@ -179,7 +179,7 @@ static bool api_async_build_request(const api_async_request &data,
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             request.clear();
-            return (false);
+            return (FT_FALSE);
         }
         api_request_trim_header_block(headers_string);
         if (!headers_string.empty())
@@ -188,7 +188,7 @@ static bool api_async_build_request(const api_async_request &data,
             if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 request.clear();
-                return (false);
+                return (FT_FALSE);
             }
         }
     }
@@ -198,32 +198,32 @@ static bool api_async_build_request(const api_async_request &data,
         if (!temporary_string)
         {
             request.clear();
-            return (false);
+            return (FT_FALSE);
         }
         body_string = temporary_string;
         cma_free(temporary_string);
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             request.clear();
-            return (false);
+            return (FT_FALSE);
         }
         request += "\r\nContent-Type: application/json";
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             request.clear();
-            return (false);
+            return (FT_FALSE);
         }
         if (!api_append_content_length_header(request, body_string.size()))
         {
             request.clear();
-            return (false);
+            return (FT_FALSE);
         }
     }
     request += "\r\nConnection: keep-alive\r\n\r\n";
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         request.clear();
-        return (false);
+        return (FT_FALSE);
     }
     if (data.payload)
     {
@@ -231,18 +231,18 @@ static bool api_async_build_request(const api_async_request &data,
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             request.clear();
-            return (false);
+            return (FT_FALSE);
         }
     }
-    return (true);
+    return (FT_TRUE);
 }
 
-static int api_async_calculate_send_timeout(const ft_string &request,
-        int timeout_ms)
+static int32_t api_async_calculate_send_timeout(const ft_string &request,
+        int32_t timeout_ms)
 {
-    int computed_timeout;
-    size_t request_size;
-    size_t request_kib;
+    int32_t computed_timeout;
+    ft_size_t request_size;
+    ft_size_t request_kib;
 
     computed_timeout = timeout_ms;
     request_size = request.size();
@@ -253,10 +253,10 @@ static int api_async_calculate_send_timeout(const ft_string &request,
             request_kib += 1;
         if (request_kib > 0)
         {
-            if (request_kib > static_cast<size_t>(INT_MAX))
+            if (request_kib > static_cast<ft_size_t>(INT_MAX))
                 computed_timeout = INT_MAX;
-            else if (static_cast<int>(request_kib) > computed_timeout)
-                computed_timeout = static_cast<int>(request_kib);
+            else if (static_cast<int32_t>(request_kib) > computed_timeout)
+                computed_timeout = static_cast<int32_t>(request_kib);
         }
     }
     if (computed_timeout < 10000)
@@ -264,13 +264,13 @@ static int api_async_calculate_send_timeout(const ft_string &request,
     return (computed_timeout);
 }
 
-static int api_async_calculate_receive_timeout(
-        const ft_string &request, int timeout_ms, int send_timeout_ms)
+static int32_t api_async_calculate_receive_timeout(
+        const ft_string &request, int32_t timeout_ms, int32_t send_timeout_ms)
 {
-    long long computed_timeout;
-    size_t request_size;
-    size_t request_kib;
-    long long extra_timeout;
+    int64_t computed_timeout;
+    ft_size_t request_size;
+    ft_size_t request_kib;
+    int64_t extra_timeout;
 
     computed_timeout = timeout_ms;
     if (computed_timeout < 0)
@@ -286,15 +286,15 @@ static int api_async_calculate_receive_timeout(
             request_kib += 1;
         if (request_kib > 0)
         {
-            if (request_kib > static_cast<size_t>(INT_MAX))
+            if (request_kib > static_cast<ft_size_t>(INT_MAX))
                 extra_timeout = INT_MAX;
             else
-                extra_timeout = static_cast<long long>(request_kib);
+                extra_timeout = static_cast<int64_t>(request_kib);
         }
     }
     if (extra_timeout > 0)
     {
-        if (computed_timeout > static_cast<long long>(INT_MAX) - extra_timeout)
+        if (computed_timeout > static_cast<int64_t>(INT_MAX) - extra_timeout)
             computed_timeout = INT_MAX;
         else
             computed_timeout += extra_timeout;
@@ -303,18 +303,18 @@ static int api_async_calculate_receive_timeout(
         computed_timeout = 15000;
     if (computed_timeout > INT_MAX)
         computed_timeout = INT_MAX;
-    return (static_cast<int>(computed_timeout));
+    return (static_cast<int32_t>(computed_timeout));
 }
 
 static void api_async_worker(api_async_request *data)
 {
     ft_string request_string;
-    int status;
+    int32_t status;
     char *result_body;
-    bool request_prepared;
-    int send_timeout_ms;
-    int receive_timeout_ms;
-    size_t body_length;
+    ft_bool request_prepared;
+    int32_t send_timeout_ms;
+    int32_t receive_timeout_ms;
+    ft_size_t body_length;
 
     if (!data)
         return ;
@@ -331,7 +331,7 @@ static void api_async_worker(api_async_request *data)
     g_api_async_last_receive_timeout.store(receive_timeout_ms);
     if (request_prepared)
     {
-        result_body = api_request_string_host(data->ip, data->port,
+        result_body = api_request_string_host(data->ip_address, data->port,
                 data->method, data->path, data->payload, data->headers,
                 &status, data->timeout);
     }
@@ -352,8 +352,8 @@ static void api_async_worker(api_async_request *data)
     }
     if (data->callback)
         data->callback(result_body, status, data->user_data);
-    if (data->ip)
-        cma_free(data->ip);
+    if (data->ip_address)
+        cma_free(data->ip_address);
     if (data->method)
         cma_free(data->method);
     if (data->path)
@@ -364,64 +364,64 @@ static void api_async_worker(api_async_request *data)
     return ;
 }
 
-size_t  api_debug_get_last_async_request_size(void)
+ft_size_t  api_debug_get_last_async_request_size(void)
 {
     return (g_api_async_last_request_size.load());
 }
 
-size_t  api_debug_get_last_async_bytes_sent(void)
+ft_size_t  api_debug_get_last_async_bytes_sent(void)
 {
     return (g_api_async_last_bytes_sent.load());
 }
 
-int     api_debug_get_last_async_send_state(void)
+int32_t     api_debug_get_last_async_send_state(void)
 {
     return (g_api_async_last_send_state.load());
 }
 
-int     api_debug_get_last_async_send_timeout(void)
+int32_t     api_debug_get_last_async_send_timeout(void)
 {
     return (g_api_async_last_send_timeout.load());
 }
 
-size_t  api_debug_get_last_async_bytes_received(void)
+ft_size_t  api_debug_get_last_async_bytes_received(void)
 {
     return (g_api_async_last_bytes_received.load());
 }
 
-int     api_debug_get_last_async_receive_state(void)
+int32_t     api_debug_get_last_async_receive_state(void)
 {
     return (g_api_async_last_receive_state.load());
 }
 
-int     api_debug_get_last_async_receive_timeout(void)
+int32_t     api_debug_get_last_async_receive_timeout(void)
 {
     return (g_api_async_last_receive_timeout.load());
 }
 
-bool    api_request_string_async(const char *ip, uint16_t port,
+ft_bool    api_request_string_async(const char *ip_address, uint16_t port,
         const char *method, const char *path, api_callback callback,
-        void *user_data, json_group *payload, const char *headers, int timeout)
+        void *user_data, json_group *payload, const char *headers, int32_t timeout)
 {
-    if (!ip || !method || !path || !callback)
+    if (!ip_address || !method || !path || !callback)
     {
-        return (false);
+        return (FT_FALSE);
     }
     const api_transport_hooks *hooks;
 
     hooks = api_get_transport_hooks();
     if (hooks && hooks->request_string_async)
     {
-        return (hooks->request_string_async(ip, port, method, path, callback,
+        return (hooks->request_string_async(ip_address, port, method, path, callback,
                 user_data, payload, headers, timeout, hooks->user_data));
     }
     api_async_request *data = static_cast<api_async_request*>(cma_malloc(sizeof(api_async_request)));
     if (!data)
     {
-        return (false);
+        return (FT_FALSE);
     }
     ft_bzero(data, sizeof(api_async_request));
-    data->ip = adv_strdup(ip);
+    data->ip_address = adv_strdup(ip_address);
     data->method = adv_strdup(method);
     data->path = adv_strdup(path);
     if (headers)
@@ -431,10 +431,10 @@ bool    api_request_string_async(const char *ip, uint16_t port,
     data->timeout = timeout;
     data->callback = callback;
     data->user_data = user_data;
-    if (!data->ip || !data->method || !data->path || (headers && !data->headers))
+    if (!data->ip_address || !data->method || !data->path || (headers && !data->headers))
     {
-        if (data->ip)
-            cma_free(data->ip);
+        if (data->ip_address)
+            cma_free(data->ip_address);
         if (data->method)
             cma_free(data->method);
         if (data->path)
@@ -442,11 +442,11 @@ bool    api_request_string_async(const char *ip, uint16_t port,
         if (data->headers)
             cma_free(data->headers);
         cma_free(data);
-        return (false);
+        return (FT_FALSE);
     }
     ft_thread thread_worker(api_async_worker, data);
     thread_worker.detach();
-    return (true);
+    return (FT_TRUE);
 }
 
 struct api_json_async_data
@@ -455,7 +455,7 @@ struct api_json_async_data
     void *user_data;
 };
 
-static void api_json_async_wrapper(char *body, int status, void *user_data)
+static void api_json_async_wrapper(char *body, int32_t status, void *user_data)
 {
     api_json_async_data *data;
     json_group *json_body;
@@ -474,50 +474,50 @@ static void api_json_async_wrapper(char *body, int status, void *user_data)
     return ;
 }
 
-bool    api_request_json_async(const char *ip, uint16_t port,
+ft_bool    api_request_json_async(const char *ip_address, uint16_t port,
         const char *method, const char *path, api_json_callback callback,
-        void *user_data, json_group *payload, const char *headers, int timeout)
+        void *user_data, json_group *payload, const char *headers, int32_t timeout)
 {
     api_json_async_data *data;
 
-    if (!ip || !method || !path || !callback)
+    if (!ip_address || !method || !path || !callback)
     {
-        return (false);
+        return (FT_FALSE);
     }
     data = static_cast<api_json_async_data*>(cma_malloc(sizeof(api_json_async_data)));
     if (!data)
     {
-        return (false);
+        return (FT_FALSE);
     }
     data->callback = callback;
     data->user_data = user_data;
-    if (!api_request_string_async(ip, port, method, path, api_json_async_wrapper,
+    if (!api_request_string_async(ip_address, port, method, path, api_json_async_wrapper,
             data, payload, headers, timeout))
     {
         cma_free(data);
-        return (false);
+        return (FT_FALSE);
     }
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    api_request_string_http2_async(const char *ip, uint16_t port,
+ft_bool    api_request_string_http2_async(const char *ip_address, uint16_t port,
         const char *method, const char *path, api_callback callback,
-        void *user_data, json_group *payload, const char *headers, int timeout,
-        bool *used_http2)
+        void *user_data, json_group *payload, const char *headers, int32_t timeout,
+        ft_bool *used_http2)
 {
     if (used_http2)
-        *used_http2 = false;
-    return (api_request_string_async(ip, port, method, path, callback,
+        *used_http2 = FT_FALSE;
+    return (api_request_string_async(ip_address, port, method, path, callback,
             user_data, payload, headers, timeout));
 }
 
-bool    api_request_string_tls_http2_async(const char *host, uint16_t port,
+ft_bool    api_request_string_tls_http2_async(const char *host, uint16_t port,
         const char *method, const char *path, api_callback callback,
-        void *user_data, json_group *payload, const char *headers, int timeout,
-        bool *used_http2)
+        void *user_data, json_group *payload, const char *headers, int32_t timeout,
+        ft_bool *used_http2)
 {
     if (used_http2)
-        *used_http2 = false;
+        *used_http2 = FT_FALSE;
 #if NETWORKING_HAS_OPENSSL
     return (api_request_string_tls_async(host, port, method, path, callback,
             user_data, payload, headers, timeout));
@@ -531,28 +531,28 @@ bool    api_request_string_tls_http2_async(const char *host, uint16_t port,
     (void)payload;
     (void)headers;
     (void)timeout;
-    return (false);
+    return (FT_FALSE);
 #endif
 }
 
-bool    api_request_json_http2_async(const char *ip, uint16_t port,
+ft_bool    api_request_json_http2_async(const char *ip_address, uint16_t port,
         const char *method, const char *path, api_json_callback callback,
-        void *user_data, json_group *payload, const char *headers, int timeout,
-        bool *used_http2)
+        void *user_data, json_group *payload, const char *headers, int32_t timeout,
+        ft_bool *used_http2)
 {
     if (used_http2)
-        *used_http2 = false;
-    return (api_request_json_async(ip, port, method, path, callback,
+        *used_http2 = FT_FALSE;
+    return (api_request_json_async(ip_address, port, method, path, callback,
             user_data, payload, headers, timeout));
 }
 
-bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
+ft_bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
         const char *method, const char *path, api_json_callback callback,
-        void *user_data, json_group *payload, const char *headers, int timeout,
-        bool *used_http2)
+        void *user_data, json_group *payload, const char *headers, int32_t timeout,
+        ft_bool *used_http2)
 {
     if (used_http2)
-        *used_http2 = false;
+        *used_http2 = FT_FALSE;
 #if NETWORKING_HAS_OPENSSL
     return (api_request_json_tls_async(host, port, method, path, callback,
             user_data, payload, headers, timeout));
@@ -566,6 +566,6 @@ bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
     (void)payload;
     (void)headers;
     (void)timeout;
-    return (false);
+    return (FT_FALSE);
 #endif
 }

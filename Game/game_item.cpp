@@ -2,11 +2,12 @@
 #include "game_item.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int ft_item_modifier::_last_error = FT_ERR_SUCCESS;
-thread_local int ft_item::_last_error = FT_ERR_SUCCESS;
-static int game_item_reset_modifier(ft_item_modifier &modifier)
+thread_local int32_t ft_item_modifier::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_item::_last_error = FT_ERR_SUCCESS;
+static int32_t game_item_reset_modifier(ft_item_modifier &modifier)
 {
     modifier.set_id(0);
     modifier.set_value(0);
@@ -14,47 +15,89 @@ static int game_item_reset_modifier(ft_item_modifier &modifier)
 }
 
 ft_item_modifier::ft_item_modifier() noexcept
-    : _id(0), _value(0), _mutex(ft_nullptr)
+    : _id(0), _value(0), _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _mutex(ft_nullptr)
 {
+    return ;
+}
+
+ft_item_modifier::ft_item_modifier(const ft_item_modifier &other) noexcept
+    : _id(0), _value(0), _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _mutex(ft_nullptr)
+{
+    int32_t initialize_error;
+
+    initialize_error = this->initialize(other);
+    this->set_error(initialize_error);
+    return ;
+}
+
+ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept
+    : _id(0), _value(0), _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _mutex(ft_nullptr)
+{
+    int32_t initialize_error;
+
+    initialize_error = this->initialize(static_cast<ft_item_modifier &&>(other));
+    this->set_error(initialize_error);
     return ;
 }
 
 ft_item_modifier::~ft_item_modifier() noexcept
 {
-    (void)this->disable_thread_safety();
+    (void)this->destroy();
     return ;
 }
 
-void ft_item_modifier::set_error(int error_code) const noexcept
+int32_t ft_item_modifier::set_error(int32_t error_code) noexcept
 {
     ft_item_modifier::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
-int ft_item_modifier::initialize() noexcept
+int32_t ft_item_modifier::initialize() noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state,
+            "ft_item_modifier::initialize",
+            "called while object is already initialised");
     this->_id = 0;
     this->_value = 0;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item_modifier::initialize(int id, int value) noexcept
+int32_t ft_item_modifier::initialize(int32_t id, int32_t value) noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state,
+            "ft_item_modifier::initialize",
+            "called while object is already initialised");
     this->_id = id;
     this->_value = value;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item_modifier::initialize(const ft_item_modifier &other) noexcept
+int32_t ft_item_modifier::initialize(const ft_item_modifier &other) noexcept
 {
-    int lock_error;
-    int unlock_error;
+    int32_t lock_error;
 
     if (this == &other)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_item_modifier::initialize(copy)",
+            "source object is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
         return (FT_ERR_SUCCESS);
     }
     lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
@@ -65,24 +108,29 @@ int ft_item_modifier::initialize(const ft_item_modifier &other) noexcept
     }
     this->_id = other._id;
     this->_value = other._value;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return (unlock_error);
-    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item_modifier::initialize(ft_item_modifier &&other) noexcept
+int32_t ft_item_modifier::initialize(ft_item_modifier &&other) noexcept
 {
-    int lock_error;
-    int unlock_error;
+    int32_t lock_error;
 
     if (this == &other)
     {
         this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_item_modifier::initialize(move)",
+            "source object is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
         return (FT_ERR_SUCCESS);
     }
     lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
@@ -93,21 +141,47 @@ int ft_item_modifier::initialize(ft_item_modifier &&other) noexcept
     }
     this->_id = other._id;
     this->_value = other._value;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._id = 0;
     other._value = 0;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return (unlock_error);
-    }
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item_modifier::enable_thread_safety() noexcept
+int32_t ft_item_modifier::move(ft_item_modifier &other) noexcept
 {
-    int initialize_error;
+    int32_t destroy_error;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    return (this->initialize(static_cast<ft_item_modifier &&>(other)));
+}
+
+int32_t ft_item_modifier::destroy() noexcept
+{
+    int32_t disable_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    disable_error = this->disable_thread_safety();
+    this->_id = 0;
+    this->_value = 0;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(disable_error);
+    return (disable_error);
+}
+
+int32_t ft_item_modifier::enable_thread_safety() noexcept
+{
+    int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
 
     if (this->_mutex != ft_nullptr)
@@ -133,9 +207,9 @@ int ft_item_modifier::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item_modifier::disable_thread_safety() noexcept
+int32_t ft_item_modifier::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
 
     if (this->_mutex == ft_nullptr)
@@ -151,16 +225,15 @@ int ft_item_modifier::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_item_modifier::is_thread_safe() const noexcept
+ft_bool ft_item_modifier::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_item_modifier::get_id() const noexcept
+int32_t ft_item_modifier::get_id() const noexcept
 {
-    int modifier_id;
-    int lock_error;
-    int unlock_error;
+    int32_t modifier_id;
+    int32_t lock_error;
 
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -169,20 +242,14 @@ int ft_item_modifier::get_id() const noexcept
         return (0);
     }
     modifier_id = this->_id;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return (0);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return (modifier_id);
 }
 
-void ft_item_modifier::set_id(int id) noexcept
+void ft_item_modifier::set_id(int32_t id) noexcept
 {
-    int lock_error;
-    int unlock_error;
+    int32_t lock_error;
 
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -191,21 +258,15 @@ void ft_item_modifier::set_id(int id) noexcept
         return ;
     }
     this->_id = id;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return ;
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-int ft_item_modifier::get_value() const noexcept
+int32_t ft_item_modifier::get_value() const noexcept
 {
-    int modifier_value;
-    int lock_error;
-    int unlock_error;
+    int32_t modifier_value;
+    int32_t lock_error;
 
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -214,20 +275,14 @@ int ft_item_modifier::get_value() const noexcept
         return (0);
     }
     modifier_value = this->_value;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return (0);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return (modifier_value);
 }
 
-void ft_item_modifier::set_value(int value) noexcept
+void ft_item_modifier::set_value(int32_t value) noexcept
 {
-    int lock_error;
-    int unlock_error;
+    int32_t lock_error;
 
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -236,23 +291,24 @@ void ft_item_modifier::set_value(int value) noexcept
         return ;
     }
     this->_value = value;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return ;
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-int ft_item_modifier::get_error() const noexcept
+int32_t ft_item_modifier::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_item_modifier::get_error");
     return (ft_item_modifier::_last_error);
 }
 
 const char *ft_item_modifier::get_error_str() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_item_modifier::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
@@ -262,49 +318,46 @@ static void game_item_sleep_backoff()
     return ;
 }
 
-int ft_item::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_item::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-void ft_item::unlock_internal(bool lock_acquired) const noexcept
+void ft_item::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return ;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        const_cast<ft_item *>(this)->set_error(unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
-int ft_item::lock_pair(const ft_item &first, const ft_item &second,
-        bool *first_locked, bool *second_locked)
+int32_t ft_item::lock_pair(const ft_item &first, const ft_item &second,
+        ft_bool *first_locked, ft_bool *second_locked)
 {
     const ft_item *ordered_first;
     const ft_item *ordered_second;
-    int lock_error;
-    bool swapped;
+    int32_t lock_error;
+    ft_bool swapped;
 
     if (first_locked != ft_nullptr)
-        *first_locked = false;
+        *first_locked = FT_FALSE;
     if (second_locked != ft_nullptr)
-        *second_locked = false;
+        *second_locked = FT_FALSE;
     if (&first == &second)
         return (first.lock_internal(first_locked));
     ordered_first = &first;
     ordered_second = &second;
-    swapped = false;
+    swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
         const ft_item *temporary;
@@ -312,15 +365,15 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
         temporary = ordered_first;
         ordered_first = ordered_second;
         ordered_second = temporary;
-        swapped = true;
+        swapped = FT_TRUE;
     }
-    while (true)
+    while (FT_TRUE)
     {
-        bool lower_locked;
-        bool upper_locked;
+        ft_bool lower_locked;
+        ft_bool upper_locked;
 
-        lower_locked = false;
-        upper_locked = false;
+        lower_locked = FT_FALSE;
+        upper_locked = FT_FALSE;
         lock_error = ordered_first->lock_internal(&lower_locked);
         if (lock_error != FT_ERR_SUCCESS)
             return (lock_error);
@@ -356,20 +409,51 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
 ft_item::ft_item() noexcept
     : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
       _width(1), _height(1), _modifier1(), _modifier2(),
-      _modifier3(), _modifier4(), _mutex(ft_nullptr)
+      _modifier3(), _modifier4(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-ft_item::~ft_item() noexcept
+ft_item::ft_item(const ft_item &other) noexcept
+    : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
+      _width(1), _height(1), _modifier1(), _modifier2(),
+      _modifier3(), _modifier4(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
-    (void)this->disable_thread_safety();
+    int32_t initialize_error;
+
+    initialize_error = this->initialize(other);
+    this->set_error(initialize_error);
     return ;
 }
 
-int ft_item::initialize() noexcept
+ft_item::ft_item(ft_item &&other) noexcept
+    : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
+      _width(1), _height(1), _modifier1(), _modifier2(),
+      _modifier3(), _modifier4(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
+    int32_t initialize_error;
+
+    initialize_error = this->initialize(static_cast<ft_item &&>(other));
+    this->set_error(initialize_error);
+    return ;
+}
+
+ft_item::~ft_item() noexcept
+{
+    (void)this->destroy();
+    return ;
+}
+
+int32_t ft_item::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state,
+            "ft_item::initialize",
+            "called while object is already initialised");
     this->_max_stack = 0;
     this->_stack_size = 0;
     this->_item_id = 0;
@@ -380,19 +464,30 @@ int ft_item::initialize() noexcept
     (void)this->_modifier2.initialize();
     (void)this->_modifier3.initialize();
     (void)this->_modifier4.initialize();
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item::initialize(const ft_item &other) noexcept
+int32_t ft_item::initialize(const ft_item &other) noexcept
 {
-    bool other_locked;
-    int lock_error;
-    int modifier_error;
+    ft_bool other_locked;
+    int32_t lock_error;
+    int32_t modifier_error;
 
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    other_locked = false;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_item::initialize(copy)",
+            "source object is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    other_locked = FT_FALSE;
     lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -407,32 +502,55 @@ int ft_item::initialize(const ft_item &other) noexcept
     this->_height = other._height;
     modifier_error = this->_modifier1.initialize(other._modifier1);
     if (modifier_error != FT_ERR_SUCCESS)
+    {
+        other.unlock_internal(other_locked);
         return (modifier_error);
+    }
     modifier_error = this->_modifier2.initialize(other._modifier2);
     if (modifier_error != FT_ERR_SUCCESS)
+    {
+        other.unlock_internal(other_locked);
         return (modifier_error);
+    }
     modifier_error = this->_modifier3.initialize(other._modifier3);
     if (modifier_error != FT_ERR_SUCCESS)
+    {
+        other.unlock_internal(other_locked);
         return (modifier_error);
+    }
     modifier_error = this->_modifier4.initialize(other._modifier4);
     if (modifier_error != FT_ERR_SUCCESS)
+    {
+        other.unlock_internal(other_locked);
         return (modifier_error);
+    }
     this->set_error(other.get_error());
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other.unlock_internal(other_locked);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item::initialize(ft_item &&other) noexcept
+int32_t ft_item::initialize(ft_item &&other) noexcept
 {
-    bool this_locked;
-    bool other_locked;
-    int lock_error;
-    int modifier_error;
+    ft_bool this_locked;
+    ft_bool other_locked;
+    int32_t lock_error;
+    int32_t modifier_error;
 
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    this_locked = false;
-    other_locked = false;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_item::initialize(move)",
+            "source object is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    this_locked = FT_FALSE;
+    other_locked = FT_FALSE;
     lock_error = ft_item::lock_pair(*this, other, &this_locked, &other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -517,14 +635,53 @@ int ft_item::initialize(ft_item &&other) noexcept
         return (modifier_error);
     }
     other.set_error(FT_ERR_SUCCESS);
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->unlock_internal(this_locked);
     other.unlock_internal(other_locked);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item::enable_thread_safety() noexcept
+int32_t ft_item::move(ft_item &other) noexcept
 {
-    int initialize_error;
+    int32_t destroy_error;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    return (this->initialize(static_cast<ft_item &&>(other)));
+}
+
+int32_t ft_item::destroy() noexcept
+{
+    int32_t disable_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    disable_error = this->disable_thread_safety();
+    this->_max_stack = 0;
+    this->_stack_size = 0;
+    this->_item_id = 0;
+    this->_rarity = 0;
+    this->_width = 1;
+    this->_height = 1;
+    (void)this->_modifier1.destroy();
+    (void)this->_modifier2.destroy();
+    (void)this->_modifier3.destroy();
+    (void)this->_modifier4.destroy();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(disable_error);
+    return (disable_error);
+}
+
+int32_t ft_item::enable_thread_safety() noexcept
+{
+    int32_t initialize_error;
     pt_recursive_mutex *new_mutex;
 
     if (this->_mutex != ft_nullptr)
@@ -542,9 +699,9 @@ int ft_item::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item::disable_thread_safety() noexcept
+int32_t ft_item::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
     pt_recursive_mutex *old_mutex;
 
     if (this->_mutex == ft_nullptr)
@@ -556,18 +713,18 @@ int ft_item::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_item::is_thread_safe() const noexcept
+ft_bool ft_item::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_item::get_max_stack() const noexcept
+int32_t ft_item::get_max_stack() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int max_stack_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t max_stack_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -580,12 +737,12 @@ int ft_item::get_max_stack() const noexcept
     return (max_stack_value);
 }
 
-void ft_item::set_max_stack(int max) noexcept
+void ft_item::set_max_stack(int32_t max) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -598,13 +755,13 @@ void ft_item::set_max_stack(int max) noexcept
     return ;
 }
 
-int ft_item::get_stack_size() const noexcept
+int32_t ft_item::get_stack_size() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int stack_size_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t stack_size_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -617,12 +774,12 @@ int ft_item::get_stack_size() const noexcept
     return (stack_size_value);
 }
 
-void ft_item::set_stack_size(int amount) noexcept
+void ft_item::set_stack_size(int32_t amount) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -635,12 +792,12 @@ void ft_item::set_stack_size(int amount) noexcept
     return ;
 }
 
-void ft_item::add_to_stack(int amount) noexcept
+void ft_item::add_to_stack(int32_t amount) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -655,12 +812,12 @@ void ft_item::add_to_stack(int amount) noexcept
     return ;
 }
 
-void ft_item::sub_from_stack(int amount) noexcept
+void ft_item::sub_from_stack(int32_t amount) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -675,13 +832,13 @@ void ft_item::sub_from_stack(int amount) noexcept
     return ;
 }
 
-int ft_item::get_item_id() const noexcept
+int32_t ft_item::get_item_id() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int item_identifier;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t item_identifier;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -694,12 +851,12 @@ int ft_item::get_item_id() const noexcept
     return (item_identifier);
 }
 
-void ft_item::set_item_id(int id) noexcept
+void ft_item::set_item_id(int32_t id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -712,13 +869,13 @@ void ft_item::set_item_id(int id) noexcept
     return ;
 }
 
-int ft_item::get_width() const noexcept
+int32_t ft_item::get_width() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int width_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t width_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -731,12 +888,12 @@ int ft_item::get_width() const noexcept
     return (width_value);
 }
 
-void ft_item::set_width(int width) noexcept
+void ft_item::set_width(int32_t width) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -749,13 +906,13 @@ void ft_item::set_width(int width) noexcept
     return ;
 }
 
-int ft_item::get_height() const noexcept
+int32_t ft_item::get_height() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int height_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t height_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -768,12 +925,12 @@ int ft_item::get_height() const noexcept
     return (height_value);
 }
 
-void ft_item::set_height(int height) noexcept
+void ft_item::set_height(int32_t height) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -786,13 +943,13 @@ void ft_item::set_height(int height) noexcept
     return ;
 }
 
-int ft_item::get_rarity() const noexcept
+int32_t ft_item::get_rarity() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int rarity_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t rarity_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -805,12 +962,12 @@ int ft_item::get_rarity() const noexcept
     return (rarity_value);
 }
 
-void ft_item::set_rarity(int rarity) noexcept
+void ft_item::set_rarity(int32_t rarity) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -823,13 +980,13 @@ void ft_item::set_rarity(int rarity) noexcept
     return ;
 }
 
-int ft_item::get_modifier1(ft_item_modifier &modifier) const noexcept
+int32_t ft_item::get_modifier1(ft_item_modifier &modifier) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -850,11 +1007,11 @@ int ft_item::get_modifier1(ft_item_modifier &modifier) const noexcept
 
 void ft_item::set_modifier1(const ft_item_modifier &mod) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -880,14 +1037,14 @@ void ft_item::set_modifier1(const ft_item_modifier &mod) noexcept
     return ;
 }
 
-int ft_item::get_modifier1_id() const noexcept
+int32_t ft_item::get_modifier1_id() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_identifier;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_identifier;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -907,13 +1064,13 @@ int ft_item::get_modifier1_id() const noexcept
     return (modifier_identifier);
 }
 
-void ft_item::set_modifier1_id(int id) noexcept
+void ft_item::set_modifier1_id(int32_t id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -933,14 +1090,14 @@ void ft_item::set_modifier1_id(int id) noexcept
     return ;
 }
 
-int ft_item::get_modifier1_value() const noexcept
+int32_t ft_item::get_modifier1_value() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_value;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_value;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -960,13 +1117,13 @@ int ft_item::get_modifier1_value() const noexcept
     return (modifier_value);
 }
 
-void ft_item::set_modifier1_value(int value) noexcept
+void ft_item::set_modifier1_value(int32_t value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -986,13 +1143,13 @@ void ft_item::set_modifier1_value(int value) noexcept
     return ;
 }
 
-int ft_item::get_modifier2(ft_item_modifier &modifier) const noexcept
+int32_t ft_item::get_modifier2(ft_item_modifier &modifier) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1013,11 +1170,11 @@ int ft_item::get_modifier2(ft_item_modifier &modifier) const noexcept
 
 void ft_item::set_modifier2(const ft_item_modifier &mod) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1043,14 +1200,14 @@ void ft_item::set_modifier2(const ft_item_modifier &mod) noexcept
     return ;
 }
 
-int ft_item::get_modifier2_id() const noexcept
+int32_t ft_item::get_modifier2_id() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_identifier;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_identifier;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1070,13 +1227,13 @@ int ft_item::get_modifier2_id() const noexcept
     return (modifier_identifier);
 }
 
-void ft_item::set_modifier2_id(int id) noexcept
+void ft_item::set_modifier2_id(int32_t id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1096,14 +1253,14 @@ void ft_item::set_modifier2_id(int id) noexcept
     return ;
 }
 
-int ft_item::get_modifier2_value() const noexcept
+int32_t ft_item::get_modifier2_value() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_value;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_value;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1123,13 +1280,13 @@ int ft_item::get_modifier2_value() const noexcept
     return (modifier_value);
 }
 
-void ft_item::set_modifier2_value(int value) noexcept
+void ft_item::set_modifier2_value(int32_t value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1149,13 +1306,13 @@ void ft_item::set_modifier2_value(int value) noexcept
     return ;
 }
 
-int ft_item::get_modifier3(ft_item_modifier &modifier) const noexcept
+int32_t ft_item::get_modifier3(ft_item_modifier &modifier) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1176,11 +1333,11 @@ int ft_item::get_modifier3(ft_item_modifier &modifier) const noexcept
 
 void ft_item::set_modifier3(const ft_item_modifier &mod) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1206,14 +1363,14 @@ void ft_item::set_modifier3(const ft_item_modifier &mod) noexcept
     return ;
 }
 
-int ft_item::get_modifier3_id() const noexcept
+int32_t ft_item::get_modifier3_id() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_identifier;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_identifier;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1233,13 +1390,13 @@ int ft_item::get_modifier3_id() const noexcept
     return (modifier_identifier);
 }
 
-void ft_item::set_modifier3_id(int id) noexcept
+void ft_item::set_modifier3_id(int32_t id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1259,14 +1416,14 @@ void ft_item::set_modifier3_id(int id) noexcept
     return ;
 }
 
-int ft_item::get_modifier3_value() const noexcept
+int32_t ft_item::get_modifier3_value() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_value;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_value;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1286,13 +1443,13 @@ int ft_item::get_modifier3_value() const noexcept
     return (modifier_value);
 }
 
-void ft_item::set_modifier3_value(int value) noexcept
+void ft_item::set_modifier3_value(int32_t value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1312,13 +1469,13 @@ void ft_item::set_modifier3_value(int value) noexcept
     return ;
 }
 
-int ft_item::get_modifier4(ft_item_modifier &modifier) const noexcept
+int32_t ft_item::get_modifier4(ft_item_modifier &modifier) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1339,11 +1496,11 @@ int ft_item::get_modifier4(ft_item_modifier &modifier) const noexcept
 
 void ft_item::set_modifier4(const ft_item_modifier &mod) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1369,14 +1526,14 @@ void ft_item::set_modifier4(const ft_item_modifier &mod) noexcept
     return ;
 }
 
-int ft_item::get_modifier4_id() const noexcept
+int32_t ft_item::get_modifier4_id() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_identifier;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_identifier;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1396,13 +1553,13 @@ int ft_item::get_modifier4_id() const noexcept
     return (modifier_identifier);
 }
 
-void ft_item::set_modifier4_id(int id) noexcept
+void ft_item::set_modifier4_id(int32_t id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1422,14 +1579,14 @@ void ft_item::set_modifier4_id(int id) noexcept
     return ;
 }
 
-int ft_item::get_modifier4_value() const noexcept
+int32_t ft_item::get_modifier4_value() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_value;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_value;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1449,13 +1606,13 @@ int ft_item::get_modifier4_value() const noexcept
     return (modifier_value);
 }
 
-void ft_item::set_modifier4_value(int value) noexcept
+void ft_item::set_modifier4_value(int32_t value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int modifier_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t modifier_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1475,18 +1632,24 @@ void ft_item::set_modifier4_value(int value) noexcept
     return ;
 }
 
-void ft_item::set_error(int err) const noexcept
+int32_t ft_item::set_error(int32_t error_code) noexcept
 {
-    ft_item::_last_error = err;
-    return ;
+    ft_item::_last_error = error_code;
+    return (error_code);
 }
 
-int ft_item::get_error() const noexcept
+int32_t ft_item::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_item::get_error");
     return (ft_item::_last_error);
 }
 
 const char *ft_item::get_error_str() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_item::get_error_str");
     return (ft_strerror(this->get_error()));
 }

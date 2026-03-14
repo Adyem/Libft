@@ -12,88 +12,94 @@
 
 struct ft_crafting_ingredient
 {
-    private:
-        int             _item_id;
-        int             _count;
-        int             _rarity;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t             _item_id;
+        int32_t             _count;
+        int32_t             _rarity;
+        uint8_t             _initialised_state;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        int  lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
+        int32_t  lock_internal(ft_bool *lock_acquired) const noexcept;
+        void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_crafting_ingredient() noexcept;
+        ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept;
+        ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept;
         virtual ~ft_crafting_ingredient() noexcept;
-        ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept = delete;
         ft_crafting_ingredient &operator=(const ft_crafting_ingredient &other) noexcept = delete;
-        ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept = delete;
         ft_crafting_ingredient &operator=(ft_crafting_ingredient &&other) noexcept = delete;
 
-        int initialize(const ft_crafting_ingredient &other) noexcept;
-        int initialize(ft_crafting_ingredient &&other) noexcept;
-        int initialize(int item_id, int count, int rarity) noexcept;
+        int32_t initialize(const ft_crafting_ingredient &other) noexcept;
+        int32_t initialize(ft_crafting_ingredient &&other) noexcept;
+        int32_t move(ft_crafting_ingredient &other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t initialize(int32_t item_id, int32_t count, int32_t rarity) noexcept;
 
-        int  enable_thread_safety() noexcept;
-        int  disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
+        int32_t  enable_thread_safety() noexcept;
+        int32_t  disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 
-        int get_item_id() const noexcept;
-        void set_item_id(int item_id) noexcept;
+        int32_t get_item_id() const noexcept;
+        void set_item_id(int32_t item_id) noexcept;
 
-        int get_count() const noexcept;
-        void set_count(int count) noexcept;
+        int32_t get_count() const noexcept;
+        void set_count(int32_t count) noexcept;
 
-        int get_rarity() const noexcept;
-        void set_rarity(int rarity) noexcept;
+        int32_t get_rarity() const noexcept;
+        void set_rarity(int32_t rarity) noexcept;
 
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 class ft_crafting
 {
-    private:
-        static const uint8_t                        _state_uninitialised = 0;
-        static const uint8_t                        _state_destroyed = 1;
-        static const uint8_t                        _state_initialised = 2;
-        ft_map<int, ft_vector<ft_crafting_ingredient>> _recipes;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        ft_map<int32_t, ft_vector<ft_crafting_ingredient>> _recipes;
         uint8_t                                     _initialised_state;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
-        void abort_lifecycle_error(const char *method_name,
-                    const char *reason) const noexcept;
-        void abort_if_not_initialised(const char *method_name) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        int  lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
+        int32_t  lock_internal(ft_bool *lock_acquired) const noexcept;
+        void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_crafting() noexcept;
+        ft_crafting(const ft_crafting &other) noexcept;
+        ft_crafting(ft_crafting &&other) noexcept;
         virtual ~ft_crafting() noexcept;
-        ft_crafting(const ft_crafting &other) noexcept = delete;
         ft_crafting &operator=(const ft_crafting &other) noexcept = delete;
-        ft_crafting(ft_crafting &&other) noexcept = delete;
         ft_crafting &operator=(ft_crafting &&other) noexcept = delete;
 
-        int  enable_thread_safety() noexcept;
-        int  disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
+        int32_t  enable_thread_safety() noexcept;
+        int32_t  disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 
-        ft_map<int, ft_vector<ft_crafting_ingredient>>       &get_recipes() noexcept;
-        const ft_map<int, ft_vector<ft_crafting_ingredient>> &get_recipes() const noexcept;
+        ft_map<int32_t, ft_vector<ft_crafting_ingredient>>       &get_recipes() noexcept;
+        const ft_map<int32_t, ft_vector<ft_crafting_ingredient>> &get_recipes() const noexcept;
 
-        int  get_error() const noexcept;
+        int32_t  get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
-        int register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept;
-        int craft_item(ft_inventory &inventory, int recipe_id, const ft_sharedptr<ft_item> &result) noexcept;
-        int initialize() noexcept;
-        int destroy() noexcept;
+        int32_t register_recipe(int32_t recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept;
+        int32_t craft_item(ft_inventory &inventory, int32_t recipe_id, const ft_sharedptr<ft_item> &result) noexcept;
+        int32_t initialize() noexcept;
+        int32_t destroy() noexcept;
+        int32_t move(ft_crafting &other) noexcept;
 };
 
 #endif

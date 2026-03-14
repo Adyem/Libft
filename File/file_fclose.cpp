@@ -3,7 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdio>
 
-int ft_fclose(FILE *stream)
+int32_t ft_fclose(FILE *stream)
 {
     if (stream == ft_nullptr)
         return (EOF);

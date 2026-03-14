@@ -10,12 +10,12 @@ static void log_close_report(void)
 
 void ft_log_close()
 {
-    ft_log_enable_remote_health(false);
-    size_t index;
+    ft_log_enable_remote_health(FT_FALSE);
+    ft_size_t entry_index;
     ft_vector<s_log_sink> sinks_snapshot;
-    size_t sink_count;
-    int    clear_error;
-    int    lock_error;
+    ft_size_t sink_count;
+    int32_t    clear_error;
+    int32_t    lock_error;
 
     lock_error = logger_lock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
@@ -35,12 +35,12 @@ void ft_log_close()
         log_close_report();
         return ;
     }
-    index = 0;
-    while (index < sink_count)
+    entry_index = 0;
+    while (entry_index < sink_count)
     {
         s_log_sink entry;
 
-        entry = g_sinks[index];
+        entry = g_sinks[entry_index];
         if (g_sinks.get_error() != FT_ERR_SUCCESS)
         {
             lock_error = logger_unlock_sinks();
@@ -64,7 +64,7 @@ void ft_log_close()
             log_close_report();
             return ;
         }
-        index++;
+        entry_index++;
     }
     g_sinks.clear();
     clear_error = g_sinks.get_error();
@@ -79,7 +79,7 @@ void ft_log_close()
         log_close_report();
         return ;
     }
-    size_t snapshot_count;
+    ft_size_t snapshot_count;
 
     snapshot_count = sinks_snapshot.size();
     if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
@@ -87,22 +87,22 @@ void ft_log_close()
         log_close_report();
         return ;
     }
-    index = 0;
-    while (index < snapshot_count)
+    entry_index = 0;
+    while (entry_index < snapshot_count)
     {
         s_log_sink entry;
 
-        entry = sinks_snapshot[index];
+        entry = sinks_snapshot[entry_index];
         if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
         {
             log_close_report();
             return ;
         }
-        bool sink_lock_acquired;
-        int  sink_error;
-        int  sink_lock_error;
+        ft_bool sink_lock_acquired;
+        int32_t  sink_error;
+        int32_t  sink_lock_error;
 
-        sink_lock_acquired = false;
+        sink_lock_acquired = FT_FALSE;
         sink_error = FT_ERR_SUCCESS;
         sink_lock_error = log_sink_lock(&entry, &sink_lock_acquired);
         if (sink_lock_error != FT_ERR_SUCCESS)
@@ -110,16 +110,16 @@ void ft_log_close()
         else if (entry.function == ft_file_sink)
         {
             s_file_sink *sink;
-            bool         file_sink_lock_acquired;
-            int          file_lock_error;
+            ft_bool         file_sink_lock_acquired;
+            int32_t          file_lock_error;
 
             sink = static_cast<s_file_sink *>(entry.user_data);
             if (sink)
             {
-                file_sink_lock_acquired = false;
+                file_sink_lock_acquired = FT_FALSE;
                 file_lock_error = file_sink_lock(sink, &file_sink_lock_acquired);
                 if (file_lock_error != FT_ERR_SUCCESS)
-                    file_sink_lock_acquired = false;
+                    file_sink_lock_acquired = FT_FALSE;
                 close(sink->file_descriptor);
                 sink->file_descriptor = -1;
                 if (file_sink_lock_acquired)
@@ -133,16 +133,16 @@ void ft_log_close()
         else if (entry.function == ft_network_sink)
         {
             s_network_sink *sink;
-            bool            network_lock_acquired;
-            int             network_lock_error;
+            ft_bool            network_lock_acquired;
+            int32_t             network_lock_error;
 
             sink = static_cast<s_network_sink *>(entry.user_data);
             if (sink)
             {
-                network_lock_acquired = false;
+                network_lock_acquired = FT_FALSE;
                 network_lock_error = network_sink_lock(sink, &network_lock_acquired);
                 if (network_lock_error != FT_ERR_SUCCESS)
-                    network_lock_acquired = false;
+                    network_lock_acquired = FT_FALSE;
                 cmp_close(sink->socket_fd);
                 sink->socket_fd = -1;
                 if (network_lock_acquired)
@@ -159,7 +159,7 @@ void ft_log_close()
             log_close_report();
             return ;
         }
-        index++;
+        entry_index++;
     }
     log_close_report();
     return ;

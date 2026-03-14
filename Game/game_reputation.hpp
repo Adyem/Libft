@@ -9,73 +9,67 @@
 
 class ft_reputation
 {
-    private:
-        ft_map<int, int>  _milestones;
-        ft_map<int, int>  _reps;
-        int               _total_rep;
-        int               _current_rep;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        ft_map<int32_t, int32_t>  _milestones;
+        ft_map<int32_t, int32_t>  _reps;
+        int32_t               _total_rep;
+        int32_t               _current_rep;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local int    _last_error;
+        static thread_local int32_t    _last_error;
         uint8_t           _initialised_state;
-
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-
-        void abort_lifecycle_error(const char *method_name,
-                const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        void set_error(int error_code) const noexcept;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_reputation() noexcept;
+        ft_reputation(const ft_reputation &other) noexcept;
+        ft_reputation(ft_reputation &&other) noexcept;
         virtual ~ft_reputation() noexcept;
-        ft_reputation(const ft_reputation &other) = delete;
         ft_reputation &operator=(const ft_reputation &other) = delete;
-        ft_reputation(ft_reputation &&other) = delete;
         ft_reputation &operator=(ft_reputation &&other) = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_map<int, int> &milestones, int total = 0) noexcept;
-        int initialize(const ft_reputation &other) noexcept;
-        int initialize(ft_reputation &&other) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_map<int32_t, int32_t> &milestones, int32_t total = 0) noexcept;
+        int32_t initialize(const ft_reputation &other) noexcept;
+        int32_t initialize(ft_reputation &&other) noexcept;
+        int32_t move(ft_reputation &other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int get_total_rep() const noexcept;
-        void set_total_rep(int rep) noexcept;
-        void add_total_rep(int rep) noexcept;
-        void sub_total_rep(int rep) noexcept;
+        int32_t get_total_rep() const noexcept;
+        void set_total_rep(int32_t rep) noexcept;
+        void add_total_rep(int32_t rep) noexcept;
+        void sub_total_rep(int32_t rep) noexcept;
 
-        int get_current_rep() const noexcept;
-        void set_current_rep(int rep) noexcept;
-        void add_current_rep(int rep) noexcept;
-        void sub_current_rep(int rep) noexcept;
+        int32_t get_current_rep() const noexcept;
+        void set_current_rep(int32_t rep) noexcept;
+        void add_current_rep(int32_t rep) noexcept;
+        void sub_current_rep(int32_t rep) noexcept;
 
-        ft_map<int, int>       &get_milestones() noexcept;
-        const ft_map<int, int> &get_milestones() const noexcept;
-        void set_milestones(const ft_map<int, int> &milestones) noexcept;
-        int get_milestone(int id) const noexcept;
-        void set_milestone(int id, int value) noexcept;
+        ft_map<int32_t, int32_t>       &get_milestones() noexcept;
+        const ft_map<int32_t, int32_t> &get_milestones() const noexcept;
+        void set_milestones(const ft_map<int32_t, int32_t> &milestones) noexcept;
+        int32_t get_milestone(int32_t id) const noexcept;
+        void set_milestone(int32_t id, int32_t value) noexcept;
 
-        ft_map<int, int>       &get_reps() noexcept;
-        const ft_map<int, int> &get_reps() const noexcept;
-        void set_reps(const ft_map<int, int> &reps) noexcept;
-        int get_rep(int id) const noexcept;
-        void set_rep(int id, int value) noexcept;
+        ft_map<int32_t, int32_t>       &get_reps() noexcept;
+        const ft_map<int32_t, int32_t> &get_reps() const noexcept;
+        void set_reps(const ft_map<int32_t, int32_t> &reps) noexcept;
+        int32_t get_rep(int32_t id) const noexcept;
+        void set_rep(int32_t id, int32_t value) noexcept;
 
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 #endif

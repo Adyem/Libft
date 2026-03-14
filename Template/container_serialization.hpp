@@ -24,17 +24,17 @@ int32_t default_string_serializer(const ElementType &value, ft_string &output) n
     {
         output = value;
         if (ft_string::get_error() != FT_ERR_SUCCESS)
-            return (-1);
-        return (0);
+            return (FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_SUCCESS);
     }
     else if constexpr (std::is_same<ElementType, const char *>::value)
     {
         if (value == ft_nullptr)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         output = value;
         if (ft_string::get_error() != FT_ERR_SUCCESS)
-            return (-1);
-        return (0);
+            return (FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_SUCCESS);
     }
     else if constexpr (std::is_integral<ElementType>::value)
     {
@@ -46,22 +46,22 @@ int32_t default_string_serializer(const ElementType &value, ft_string &output) n
             format_result = std::snprintf(number_buffer, sizeof(number_buffer),
                     "%" FT_PRId64, static_cast<int64_t>(value));
             if (format_result <= 0)
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             output = number_buffer;
             if (ft_string::get_error() != FT_ERR_SUCCESS)
-                return (-1);
-            return (0);
+                return (FT_ERR_INVALID_ARGUMENT);
+            return (FT_ERR_SUCCESS);
         }
         else
         {
             format_result = std::snprintf(number_buffer, sizeof(number_buffer),
                     "%" FT_PRIu64, static_cast<uint64_t>(value));
             if (format_result <= 0)
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             output = number_buffer;
             if (ft_string::get_error() != FT_ERR_SUCCESS)
-                return (-1);
-            return (0);
+                return (FT_ERR_INVALID_ARGUMENT);
+            return (FT_ERR_SUCCESS);
         }
     }
     else if constexpr (std::is_floating_point<ElementType>::value)
@@ -72,26 +72,26 @@ int32_t default_string_serializer(const ElementType &value, ft_string &output) n
         format_result = std::snprintf(number_buffer, sizeof(number_buffer),
                 "%.17g", static_cast<double>(value));
         if (format_result <= 0)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         output = number_buffer;
         if (ft_string::get_error() != FT_ERR_SUCCESS)
-            return (-1);
-        return (0);
+            return (FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_SUCCESS);
     }
-    return (-1);
+    return (FT_ERR_INVALID_ARGUMENT);
 }
 
 template <typename ElementType>
 int32_t default_string_deserializer(const char *value_string, ElementType &output) noexcept
 {
     if (value_string == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if constexpr (std::is_same<ElementType, ft_string>::value)
     {
         output = value_string;
         if (ft_string::get_error() != FT_ERR_SUCCESS)
-            return (-1);
-        return (0);
+            return (FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_SUCCESS);
     }
     else if constexpr (std::is_integral<ElementType>::value)
     {
@@ -104,13 +104,13 @@ int32_t default_string_deserializer(const char *value_string, ElementType &outpu
 
             parsed_value = ft_strtol(value_string, &end_pointer, 10);
             if (end_pointer == value_string || end_pointer == ft_nullptr)
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             if (parsed_value < static_cast<int64_t>(std::numeric_limits<ElementType>::min()))
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             if (parsed_value > static_cast<int64_t>(std::numeric_limits<ElementType>::max()))
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             output = static_cast<ElementType>(parsed_value);
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
         else
         {
@@ -118,11 +118,11 @@ int32_t default_string_deserializer(const char *value_string, ElementType &outpu
 
             parsed_value = ft_strtoul(value_string, &end_pointer, 10);
             if (end_pointer == value_string || end_pointer == ft_nullptr)
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             if (parsed_value > static_cast<uint64_t>(std::numeric_limits<ElementType>::max()))
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             output = static_cast<ElementType>(parsed_value);
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
     }
     else if constexpr (std::is_floating_point<ElementType>::value)
@@ -133,11 +133,11 @@ int32_t default_string_deserializer(const char *value_string, ElementType &outpu
         errno = 0;
         parsed_value = std::strtod(value_string, &end_pointer);
         if (end_pointer == value_string || errno == ERANGE)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         output = static_cast<ElementType>(parsed_value);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
-    return (-1);
+    return (FT_ERR_INVALID_ARGUMENT);
 }
 
 template <typename ElementType, typename Serializer>
@@ -154,10 +154,10 @@ int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
 
     output_group = ft_nullptr;
     if (group_name == ft_nullptr || count_key == ft_nullptr || item_prefix == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     group = json_create_json_group(group_name);
     if (group == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     total_size = values.size();
     index = 0;
     while (index < total_size)
@@ -171,7 +171,7 @@ int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
         if (serializer(element, value_string) != 0)
         {
             json_free_groups(group);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         {
             char index_buffer[32];
@@ -182,26 +182,26 @@ int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
             if (format_result <= 0)
             {
                 json_free_groups(group);
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             index_string = index_buffer;
         }
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             json_free_groups(group);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         key_string += index_string;
         if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             json_free_groups(group);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         item = json_create_item(key_string.c_str(), value_string.c_str());
         if (item == ft_nullptr)
         {
             json_free_groups(group);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         json_add_item_to_group(group, item);
         ++index;
@@ -213,12 +213,12 @@ int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
         if (count_item == ft_nullptr)
         {
             json_free_groups(group);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         json_add_item_to_group(group, count_item);
     }
     output_group = group;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
@@ -246,14 +246,14 @@ int32_t ft_vector_deserialize_json(json_group *group,
     ft_vector<ElementType> parsed_values;
 
     if (group == ft_nullptr || count_key == ft_nullptr || item_prefix == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     count_item = json_find_item(group, count_key);
     if (count_item == ft_nullptr || count_item->value == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     errno = 0;
     expected_count = ft_strtol(count_item->value, ft_nullptr, 10);
     if (expected_count < 0)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     index = 0;
     while (index < static_cast<ft_size_t>(expected_count))
     {
@@ -269,24 +269,24 @@ int32_t ft_vector_deserialize_json(json_group *group,
             format_result = std::snprintf(index_buffer, sizeof(index_buffer),
                     "%" FT_PRIu64, static_cast<uint64_t>(index));
             if (format_result <= 0)
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             index_string = index_buffer;
         }
         if (ft_string::get_error() != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         key_string += index_string;
         if (ft_string::get_error() != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         value_item = json_find_item(group, key_string.c_str());
         if (value_item == ft_nullptr || value_item->value == ft_nullptr)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         if (deserializer(value_item->value, element) != 0)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         parsed_values.push_back(element);
         ++index;
     }
     output = ft_move(parsed_values);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
@@ -311,7 +311,7 @@ int32_t ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     output_value = ft_nullptr;
     list_value = new (std::nothrow) yaml_value();
     if (list_value == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     list_value->set_type(YAML_LIST);
     total_size = values.size();
     index = 0;
@@ -325,21 +325,21 @@ int32_t ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         if (entry == ft_nullptr)
         {
             yaml_free(list_value);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         entry->set_type(YAML_SCALAR);
         if (serializer(element, serialized_value) != 0)
         {
             delete entry;
             yaml_free(list_value);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         entry->set_scalar(serialized_value);
         list_value->add_list_item(entry);
         ++index;
     }
     output_value = list_value;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
@@ -362,7 +362,7 @@ int32_t ft_vector_deserialize_yaml(const yaml_value &value,
     ft_vector<ElementType> parsed;
 
     if (value.get_type() != YAML_LIST)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     total = children.size();
     index = 0;
     while (index < total)
@@ -373,17 +373,17 @@ int32_t ft_vector_deserialize_yaml(const yaml_value &value,
 
         child = children[index];
         if (child == ft_nullptr)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         if (child->get_type() != YAML_SCALAR)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         scalar = child->get_scalar();
         if (deserializer(scalar.c_str(), element) != 0)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         parsed.push_back(element);
         ++index;
     }
     output = ft_move(parsed);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>

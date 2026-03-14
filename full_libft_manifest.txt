@@ -17,11 +17,11 @@ CPP_class/class_stringbuf.hpp
 Compression/compression.hpp
 Config/config.hpp
 CrossProcess/cross_process.hpp
-Encryption/basic_encryption.hpp
-Encryption/encryption_aead.hpp
+Encryption/encryption.hpp
+Encryption/encryption_internal.hpp
+Encryption/encryption_aead_context.hpp
 Encryption/encryption_hardware_acceleration.hpp
-Encryption/encryption_key_management.hpp
-Encryption/encryption_secure_wipe.hpp
+Encryption/encryption_hmac_sha256.hpp
 Errno/errno.hpp
 File/open_dir.hpp
 Game/game_achievement.hpp
@@ -79,8 +79,8 @@ ReadLine/readline.hpp
 ReadLine/readline_internal.hpp
 System_utils/system_utils.hpp
 Template/algorithm.hpp
-Template/bitset.hpp
-Template/cancellation.hpp
+CPP_class/bitset.hpp
+CPP_class/cancellation.hpp
 Template/circular_buffer.hpp
 Template/constructor.hpp
 Template/deque.hpp
@@ -103,7 +103,7 @@ Template/shared_ptr.hpp
 Template/stack.hpp
 Template/static_cast.hpp
 Template/swap.hpp
-Template/thread_pool.hpp
+CPP_class/thread_pool.hpp
 Template/trie.hpp
 Template/tuple.hpp
 Template/unique_ptr.hpp

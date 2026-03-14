@@ -12,11 +12,11 @@
 # include <sys/socket.h>
 #endif
 
-int networking_check_socket_after_send(int socket_fd)
+int32_t networking_check_socket_after_send(int32_t socket_fd)
 {
-    int attempt_count;
-    int attempt_limit;
-    bool disconnect_detected;
+    int32_t attempt_count;
+    int32_t attempt_limit;
+    ft_bool disconnect_detected;
 
     if (socket_fd < 0)
     {
@@ -25,11 +25,11 @@ int networking_check_socket_after_send(int socket_fd)
     }
     attempt_limit = 3;
     attempt_count = 0;
-    disconnect_detected = false;
+    disconnect_detected = FT_FALSE;
     while (attempt_count < attempt_limit)
     {
-        int poll_descriptor;
-        int poll_result;
+        int32_t poll_descriptor;
+        int32_t poll_result;
         char peek_buffer;
         ssize_t recv_result;
 
@@ -39,7 +39,7 @@ int networking_check_socket_after_send(int socket_fd)
         if (poll_result < 0)
         {
 #ifdef _WIN32
-            int last_error;
+            int32_t last_error;
 
             last_error = WSAGetLastError();
             if (last_error == WSAEINTR)
@@ -65,13 +65,13 @@ int networking_check_socket_after_send(int socket_fd)
         recv_result = nw_recv(socket_fd, &peek_buffer, 1, MSG_PEEK);
         if (recv_result == 0)
         {
-            disconnect_detected = true;
+            disconnect_detected = FT_TRUE;
             break ;
         }
         if (recv_result < 0)
         {
 #ifdef _WIN32
-            int last_error;
+            int32_t last_error;
 
             last_error = WSAGetLastError();
             if (last_error == WSAEWOULDBLOCK || last_error == WSAEINTR)
@@ -90,9 +90,9 @@ int networking_check_socket_after_send(int socket_fd)
         }
         break ;
     }
-    int socket_error;
+    int32_t socket_error;
 #ifdef _WIN32
-    int option_length;
+    int32_t option_length;
 
     socket_error = 0;
     option_length = sizeof(socket_error);
@@ -132,11 +132,11 @@ int networking_check_socket_after_send(int socket_fd)
 }
 
 #if NETWORKING_HAS_OPENSSL
-int networking_check_ssl_after_send(SSL *ssl_connection)
+int32_t networking_check_ssl_after_send(SSL *ssl_connection)
 {
-    int attempt_count;
-    int attempt_limit;
-    int socket_fd;
+    int32_t attempt_count;
+    int32_t attempt_limit;
+    int32_t socket_fd;
 
     if (ssl_connection == NULL)
     {
@@ -154,10 +154,10 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
     while (attempt_count < attempt_limit)
     {
         char peek_buffer;
-        int peek_result;
-        int ssl_error;
-        int poll_descriptor;
-        int poll_result;
+        int32_t peek_result;
+        int32_t ssl_error;
+        int32_t poll_descriptor;
+        int32_t poll_result;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         poll_descriptor = socket_fd;
@@ -165,7 +165,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
         if (poll_result < 0)
         {
 #ifdef _WIN32
-            int last_error;
+            int32_t last_error;
 
             last_error = WSAGetLastError();
             if (last_error == WSAEINTR)
@@ -210,7 +210,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
 #ifdef _WIN32
         if (ssl_error == SSL_ERROR_SYSCALL)
         {
-            int last_error;
+            int32_t last_error;
 
             last_error = WSAGetLastError();
             if (last_error == WSAEWOULDBLOCK || last_error == WSAEINTR)

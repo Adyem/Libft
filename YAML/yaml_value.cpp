@@ -2,57 +2,52 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
-
-void yaml_value::abort_lifecycle_error(const char *method_name,
-    const char *reason) const noexcept
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "yaml_value lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void yaml_value::abort_if_not_initialised(const char *method_name) const noexcept
-{
-    if (this->_state == yaml_value::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
 
 yaml_value::yaml_value() noexcept
 {
-    this->_state = yaml_value::_state_uninitialised;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     this->_mutex = ft_nullptr;
     this->_type = YAML_SCALAR;
     this->_scalar = "";
     return ;
 }
 
+yaml_value::yaml_value(const yaml_value &other) noexcept
+{
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    this->_mutex = ft_nullptr;
+    this->_type = YAML_SCALAR;
+    this->_scalar = "";
+    (void)this->initialize(other);
+    return ;
+}
+
+yaml_value::yaml_value(yaml_value &&other) noexcept
+{
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    this->_mutex = ft_nullptr;
+    this->_type = YAML_SCALAR;
+    this->_scalar = "";
+    (void)this->initialize(static_cast<yaml_value &&>(other));
+    return ;
+}
+
 yaml_value::~yaml_value() noexcept
 {
-    if (this->_state == yaml_value::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-int yaml_value::initialize() noexcept
+int32_t yaml_value::initialize() noexcept
 {
-    int map_error;
+    int32_t map_error;
 
-    if (this->_state == yaml_value::_state_initialised)
-    {
-        this->abort_lifecycle_error("yaml_value::initialize",
-            "initialize called while already initialised");
-    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state,
+            "yaml_value::initialize", "initialize called while already initialised");
     this->_type = YAML_SCALAR;
     this->_scalar = "";
     this->_list.clear();
@@ -60,28 +55,75 @@ int yaml_value::initialize() noexcept
     map_error = this->_map.initialize();
     if (map_error != FT_ERR_SUCCESS)
     {
-        this->_state = yaml_value::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (map_error);
     }
-    this->_state = yaml_value::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int yaml_value::destroy() noexcept
+int32_t yaml_value::initialize(const yaml_value &other) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-
-    if (this->_state != yaml_value::_state_initialised)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "yaml_value::initialize(const yaml_value &) source",
+            "source is not initialised");
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
-    lock_acquired = false;
+    this->_type = other._type;
+    this->_scalar = other._scalar;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t yaml_value::initialize(yaml_value &&other) noexcept
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "yaml_value::initialize(yaml_value &&) source",
+            "source is not initialised");
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
+    this->_type = other._type;
+    this->_scalar = other._scalar;
+    other._type = YAML_SCALAR;
+    other._scalar = "";
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t yaml_value::destroy() noexcept
+{
+    ft_bool lock_acquired;
+    int32_t lock_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error == FT_ERR_SUCCESS)
     {
         if (this->_type == YAML_LIST)
         {
-            size_t list_index;
-            size_t list_size;
+            ft_size_t list_index;
+            ft_size_t list_size;
 
             list_index = 0;
             list_size = this->_list.size();
@@ -96,8 +138,8 @@ int yaml_value::destroy() noexcept
         }
         else if (this->_type == YAML_MAP)
         {
-            size_t key_index;
-            size_t key_count;
+            ft_size_t key_index;
+            ft_size_t key_count;
 
             key_index = 0;
             key_count = this->_map_keys.size();
@@ -112,166 +154,172 @@ int yaml_value::destroy() noexcept
             }
         }
     }
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     this->_list.clear();
     this->_map_keys.clear();
     (void)this->_map.destroy();
     (void)this->disable_thread_safety();
-    this->_state = yaml_value::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
+}
+
+uint32_t yaml_value::move(yaml_value &other) noexcept
+{
+    return (static_cast<uint32_t>(this->initialize(static_cast<yaml_value &&>(other))));
 }
 
 void yaml_value::set_type(yaml_type type) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("yaml_value::set_type");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::set_type");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_type = type;
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return ;
 }
 
 yaml_type yaml_value::get_type() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     yaml_type value_type;
 
-    this->abort_if_not_initialised("yaml_value::get_type");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::get_type");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_type);
     value_type = this->_type;
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return (value_type);
 }
 
 void yaml_value::set_scalar(const ft_string &value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("yaml_value::set_scalar");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::set_scalar");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_type = YAML_SCALAR;
     this->_scalar = value;
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return ;
 }
 
 const ft_string &yaml_value::get_scalar() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     const ft_string *scalar_pointer;
 
-    this->abort_if_not_initialised("yaml_value::get_scalar");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::get_scalar");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_scalar);
     scalar_pointer = &this->_scalar;
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return (*scalar_pointer);
 }
 
 void yaml_value::add_list_item(yaml_value *item) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("yaml_value::add_list_item");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::add_list_item");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_type = YAML_LIST;
     this->_list.push_back(item);
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return ;
 }
 
 const ft_vector<yaml_value*> &yaml_value::get_list() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     const ft_vector<yaml_value*> *list_pointer;
 
-    this->abort_if_not_initialised("yaml_value::get_list");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::get_list");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_list);
     list_pointer = &this->_list;
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return (*list_pointer);
 }
 
 void yaml_value::add_map_item(const ft_string &key, yaml_value *value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("yaml_value::add_map_item");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::add_map_item");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_type = YAML_MAP;
     this->_map.insert(key, value);
     this->_map_keys.push_back(key);
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return ;
 }
 
 const ft_map<ft_string, yaml_value*> &yaml_value::get_map() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     const ft_map<ft_string, yaml_value*> *map_pointer;
 
-    this->abort_if_not_initialised("yaml_value::get_map");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::get_map");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_map);
     map_pointer = &this->_map;
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return (*map_pointer);
 }
 
 const ft_vector<ft_string> &yaml_value::get_map_keys() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     const ft_vector<ft_string> *map_keys_pointer;
 
-    this->abort_if_not_initialised("yaml_value::get_map_keys");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "yaml_value::get_map_keys");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_map_keys);
     map_keys_pointer = &this->_map_keys;
-    (void)this->unlock(lock_acquired);
+    this->unlock(lock_acquired);
     return (*map_keys_pointer);
 }
 
-int yaml_value::enable_thread_safety() noexcept
+int32_t yaml_value::enable_thread_safety() noexcept
 {
     void *memory_pointer;
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("yaml_value::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "yaml_value::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     memory_pointer = cma_malloc(sizeof(pt_recursive_mutex));
@@ -289,11 +337,12 @@ int yaml_value::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int yaml_value::disable_thread_safety() noexcept
+int32_t yaml_value::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
-    this->abort_if_not_initialised("yaml_value::disable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "yaml_value::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -303,35 +352,29 @@ int yaml_value::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool yaml_value::is_thread_safe() const noexcept
+ft_bool yaml_value::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int yaml_value::lock(bool *lock_acquired) const noexcept
+int32_t yaml_value::lock(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-int yaml_value::unlock(bool lock_acquired) const noexcept
+void yaml_value::unlock(ft_bool lock_acquired) const noexcept
 {
-    if (lock_acquired == false)
-        return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
+    if (lock_acquired == FT_FALSE)
+        return ;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return ;
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *yaml_value::get_mutex_for_validation() const noexcept
-{
-    return (this->_mutex);
-}
-#endif

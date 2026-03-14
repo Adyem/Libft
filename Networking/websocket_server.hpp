@@ -16,43 +16,48 @@ class ft_socket;
 
 class ft_websocket_server
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        void abort_lifecycle_error(const char *method_name, const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
         struct s_connection_state
         {
-            bool _permessage_deflate_enabled;
+            ft_bool _permessage_deflate_enabled;
         };
 
         ft_socket *_server_socket;
         mutable pt_recursive_mutex *_mutex;
-        ft_map<int, s_connection_state> _connection_states;
+        ft_map<int32_t, s_connection_state> _connection_states;
 
-        void store_connection_state_locked(int client_fd, bool permessage_deflate_enabled);
-        void remove_connection_state_locked(int client_fd);
-        bool connection_supports_permessage_deflate_locked(int client_fd) const;
-        int perform_handshake_locked(int client_fd);
-        int receive_frame_locked(int client_fd, ft_string &message);
-        int send_pong_locked(int client_fd, const unsigned char *payload, std::size_t length);
+        void store_connection_state_locked(int32_t client_fd, ft_bool permessage_deflate_enabled);
+        void remove_connection_state_locked(int32_t client_fd);
+        ft_bool connection_supports_permessage_deflate_locked(int32_t client_fd) const;
+        int32_t perform_handshake_locked(int32_t client_fd);
+        int32_t receive_frame_locked(int32_t client_fd, ft_string &message);
+        int32_t send_pong_locked(int32_t client_fd, const unsigned char *payload, ft_size_t length);
 
     public:
-        ft_websocket_server();
-        ~ft_websocket_server();
-        ft_websocket_server(const ft_websocket_server &other) = delete;
+        ft_websocket_server() noexcept;
+        ~ft_websocket_server() noexcept;
+        ft_websocket_server(const ft_websocket_server &other) noexcept;
+        ft_websocket_server(ft_websocket_server &&other) noexcept;
         ft_websocket_server &operator=(const ft_websocket_server &other) = delete;
-        ft_websocket_server(ft_websocket_server &&other) noexcept = delete;
         ft_websocket_server &operator=(ft_websocket_server &&other) noexcept = delete;
+        int32_t move(ft_websocket_server &other) noexcept;
 
-        int initialize();
-        int destroy();
-        int start(const char *ip, uint16_t port, int address_family = AF_INET, bool non_blocking = false);
-        int run_once(int &client_fd, ft_string &message);
-        int send_text(int client_fd, const ft_string &message);
-        int get_port(unsigned short &port_value) const;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_websocket_server &other) noexcept;
+        int32_t initialize(ft_websocket_server &&other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t start(const char *ip_address, uint16_t port, int32_t address_family = AF_INET, ft_bool non_blocking = FT_FALSE);
+        int32_t run_once(int32_t &client_fd, ft_string &message);
+        int32_t send_text(int32_t client_fd, const ft_string &message);
+        int32_t get_port(uint16_t &port_value) const;
 };
 
 #endif

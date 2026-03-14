@@ -14,10 +14,10 @@ struct file_dirent
 struct file_dir;
 
 file_dir *file_opendir(const char *directory_path);
-int file_closedir(file_dir *directory_stream);
+int32_t file_closedir(file_dir *directory_stream);
 file_dirent *file_readdir(file_dir *directory_stream);
 
-int file_dir_exists(const char *rel_path);
-int file_create_directory(const char *path, mode_t mode);
+int32_t file_dir_exists(const char *rel_path);
+int32_t file_create_directory(const char *path, mode_t mode);
 
 #endif

@@ -10,75 +10,74 @@ class ft_world;
 
 class ft_event
 {
-    private:
-        int _id;
-        int _duration;
-        int _modifier1;
-        int _modifier2;
-        int _modifier3;
-        int _modifier4;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t _id;
+        int32_t _duration;
+        int32_t _modifier1;
+        int32_t _modifier2;
+        int32_t _modifier3;
+        int32_t _modifier4;
         ft_function<void(ft_world&, ft_event&)> _callback;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static thread_local int _last_error;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
+        static thread_local int32_t _last_error;
 
-        void set_error(int err) const noexcept;
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        void unlock_internal(ft_bool lock_acquired) const noexcept;
 
         friend struct ft_event_compare_ptr;
 
     public:
         ft_event() noexcept;
         virtual ~ft_event() noexcept;
-        int initialize() noexcept;
-        int destroy() noexcept;
-        ft_event(const ft_event &other) noexcept = delete;
+        int32_t initialize() noexcept;
+        int32_t move(ft_event &other) noexcept;
+        int32_t destroy() noexcept;
+        ft_event(const ft_event &other) noexcept;
         ft_event &operator=(const ft_event &other) noexcept = delete;
-        ft_event(ft_event &&other) noexcept = delete;
+        ft_event(ft_event &&other) noexcept;
         ft_event &operator=(ft_event &&other) noexcept = delete;
 
-        int get_id() const noexcept;
-        void set_id(int id) noexcept;
+        int32_t get_id() const noexcept;
+        void set_id(int32_t id) noexcept;
 
-        int get_duration() const noexcept;
-        void set_duration(int duration) noexcept;
-        int add_duration(int duration) noexcept;
-        void sub_duration(int duration) noexcept;
+        int32_t get_duration() const noexcept;
+        void set_duration(int32_t duration) noexcept;
+        int32_t add_duration(int32_t duration) noexcept;
+        void sub_duration(int32_t duration) noexcept;
 
-        int get_modifier1() const noexcept;
-        void set_modifier1(int mod) noexcept;
-        void add_modifier1(int mod) noexcept;
-        void sub_modifier1(int mod) noexcept;
+        int32_t get_modifier1() const noexcept;
+        void set_modifier1(int32_t mod) noexcept;
+        void add_modifier1(int32_t mod) noexcept;
+        void sub_modifier1(int32_t mod) noexcept;
 
-        int get_modifier2() const noexcept;
-        void set_modifier2(int mod) noexcept;
-        void add_modifier2(int mod) noexcept;
-        void sub_modifier2(int mod) noexcept;
+        int32_t get_modifier2() const noexcept;
+        void set_modifier2(int32_t mod) noexcept;
+        void add_modifier2(int32_t mod) noexcept;
+        void sub_modifier2(int32_t mod) noexcept;
 
-        int get_modifier3() const noexcept;
-        void set_modifier3(int mod) noexcept;
-        void add_modifier3(int mod) noexcept;
-        void sub_modifier3(int mod) noexcept;
+        int32_t get_modifier3() const noexcept;
+        void set_modifier3(int32_t mod) noexcept;
+        void add_modifier3(int32_t mod) noexcept;
+        void sub_modifier3(int32_t mod) noexcept;
 
-        int get_modifier4() const noexcept;
-        void set_modifier4(int mod) noexcept;
-        void add_modifier4(int mod) noexcept;
-        void sub_modifier4(int mod) noexcept;
+        int32_t get_modifier4() const noexcept;
+        void set_modifier4(int32_t mod) noexcept;
+        void add_modifier4(int32_t mod) noexcept;
+        void sub_modifier4(int32_t mod) noexcept;
 
         const ft_function<void(ft_world&, ft_event&)> &get_callback() const noexcept;
         void set_callback(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

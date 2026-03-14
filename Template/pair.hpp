@@ -206,8 +206,8 @@ struct ft_integral_constant
     typedef ft_integral_constant type;
 };
 
-typedef ft_integral_constant<bool, true> ft_true_type;
-typedef ft_integral_constant<bool, false> ft_false_type;
+typedef ft_integral_constant<ft_bool, FT_TRUE> ft_true_type;
+typedef ft_integral_constant<ft_bool, FT_FALSE> ft_false_type;
 
 template <typename Type>
 struct ft_remove_reference
@@ -317,20 +317,20 @@ struct ft_is_function<ReturnType(Arguments..., ...)>
 {
 };
 
-template <typename Type, bool IsArray, bool IsFunction>
+template <typename Type, ft_bool IsArray, ft_bool IsFunction>
 struct ft_decay_selector
 {
     typedef typename ft_remove_cv<Type>::type type;
 };
 
 template <typename Type>
-struct ft_decay_selector<Type, true, false>
+struct ft_decay_selector<Type, FT_TRUE, FT_FALSE>
 {
     typedef typename ft_remove_extent<Type>::type *type;
 };
 
 template <typename Type>
-struct ft_decay_selector<Type, false, true>
+struct ft_decay_selector<Type, FT_FALSE, FT_TRUE>
 {
     typedef typename ft_add_pointer<Type>::type type;
 };

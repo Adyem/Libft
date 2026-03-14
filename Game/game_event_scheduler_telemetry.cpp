@@ -4,15 +4,15 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <limits>
 
-static const long long g_event_scheduler_ns_per_second = 1000000000LL;
+static const int64_t g_event_scheduler_ns_per_second = 1000000000LL;
 
 static void game_event_scheduler_telemetry_emit(const char *event_name,
         const char *attribute,
-        long long delta_value,
-        long long total_value,
+        int64_t delta_value,
+        int64_t total_value,
         const char *unit,
-        int error_code,
-        bool success,
+        int32_t error_code,
+        ft_bool success,
         const char *entity) noexcept
 {
     ft_game_observability_sample sample;
@@ -66,15 +66,15 @@ void game_event_scheduler_telemetry_state_reset(ft_event_scheduler_telemetry_sta
 void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &state,
         const t_event_scheduler_profile &profile) noexcept
 {
-    long long delta_updates;
-    long long delta_processed;
-    long long delta_processing_ns;
-    long long events_per_update;
-    long long events_per_second;
-    long long queue_depth_value;
-    long long latency_value;
-    bool metrics_changed;
-    bool success;
+    int64_t delta_updates;
+    int64_t delta_processed;
+    int64_t delta_processing_ns;
+    int64_t events_per_update;
+    int64_t events_per_second;
+    int64_t queue_depth_value;
+    int64_t latency_value;
+    ft_bool metrics_changed;
+    ft_bool success;
 
     if (state.scheduler_name == ft_nullptr)
     {
@@ -97,7 +97,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
     delta_processing_ns = profile.total_processing_ns - state.last_total_processing_ns;
     if (delta_processing_ns < 0)
         delta_processing_ns = profile.total_processing_ns;
-    long long adjusted_processing_ns;
+    int64_t adjusted_processing_ns;
 
     adjusted_processing_ns = delta_processing_ns;
     if (delta_updates > 0
@@ -105,10 +105,10 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
         && state.last_last_update_ns > 0
         && profile.last_update_processing_ns < state.last_last_update_ns)
     {
-        long long maximum_value;
-        long long projected_processing_ns;
+        int64_t maximum_value;
+        int64_t projected_processing_ns;
 
-        maximum_value = std::numeric_limits<long long>::max();
+        maximum_value = std::numeric_limits<int64_t>::max();
         if (profile.last_update_processing_ns > 0
             && delta_updates > maximum_value / profile.last_update_processing_ns)
             projected_processing_ns = maximum_value;
@@ -118,15 +118,15 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
             adjusted_processing_ns = projected_processing_ns;
     }
     delta_processing_ns = adjusted_processing_ns;
-    metrics_changed = false;
+    metrics_changed = FT_FALSE;
     if (delta_updates > 0)
-        metrics_changed = true;
+        metrics_changed = FT_TRUE;
     if (delta_processed > 0)
-        metrics_changed = true;
+        metrics_changed = FT_TRUE;
     if (profile.max_queue_depth != state.last_max_queue_depth)
-        metrics_changed = true;
+        metrics_changed = FT_TRUE;
     if (profile.last_update_processing_ns != state.last_last_update_ns)
-        metrics_changed = true;
+        metrics_changed = FT_TRUE;
     if (!metrics_changed)
     {
         game_event_scheduler_telemetry_update_state(state, profile);
@@ -143,7 +143,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
         if (events_per_second < 0)
             events_per_second = 0;
     }
-    queue_depth_value = static_cast<long long>(profile.max_queue_depth);
+    queue_depth_value = static_cast<int64_t>(profile.max_queue_depth);
     latency_value = profile.last_update_processing_ns;
     success = profile.last_error_code == FT_ERR_SUCCESS;
     game_event_scheduler_telemetry_emit("event_scheduler.throughput",

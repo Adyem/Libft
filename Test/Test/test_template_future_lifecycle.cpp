@@ -84,7 +84,7 @@ FT_TEST(test_ft_future_wait_and_error_on_invalid,
     result_value = future_value.get();
     FT_ASSERT_EQ(0, result_value);
     FT_ASSERT_EQ(false, future_value.valid());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, future_value.last_error_code());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, future_value.get_error());
     return (1);
 }
 

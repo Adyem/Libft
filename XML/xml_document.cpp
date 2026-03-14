@@ -3,11 +3,10 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <cstdio>
 #include <cerrno>
 #include <new>
@@ -20,6 +19,14 @@ struct xml_namespace_entry
     xml_namespace_entry *next_local;
 };
 
+thread_local uint32_t xml_document::_last_error = static_cast<uint32_t>(FT_ERR_SUCCESS);
+
+uint32_t xml_document::set_error(uint32_t error_code) noexcept
+{
+    xml_document::_last_error = error_code;
+    return (error_code);
+}
+
 static const char *skip_whitespace(const char *string)
 {
     while (string && (*string == ' ' || *string == '\n' || *string == '\t' || *string == '\r'))
@@ -27,7 +34,7 @@ static const char *skip_whitespace(const char *string)
     return (string);
 }
 
-static int  is_xml_whitespace(char character)
+static int32_t  is_xml_whitespace(char character)
 {
     if (character == ' ')
         return (1);
@@ -37,15 +44,15 @@ static int  is_xml_whitespace(char character)
         return (1);
     if (character == '\r')
         return (1);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-static char *duplicate_range(const char *start, size_t length)
+static char *duplicate_range(const char *start, ft_size_t length)
 {
     char *copy = static_cast<char *>(cma_malloc(length + 1));
     if (!copy)
         return (ft_nullptr);
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < length)
     {
         copy[index] = start[index];
@@ -55,7 +62,7 @@ static char *duplicate_range(const char *start, size_t length)
     return (copy);
 }
 
-static int translate_vector_error(int error_code)
+static int32_t translate_vector_error(int32_t error_code)
 {
     if (error_code == FT_ERR_SUCCESS)
         return (FT_ERR_SUCCESS);
@@ -71,8 +78,8 @@ static const char *xml_skip_whitespace_range(const char *cursor, const char *end
     return (cursor);
 }
 
-static int xml_add_namespace_binding(xml_node *node, const char *prefix,
-        size_t prefix_length, const char *uri,
+static int32_t xml_add_namespace_binding(xml_node *node, const char *prefix,
+        ft_size_t prefix_length, const char *uri,
         const xml_namespace_entry **active_scope)
 {
     xml_namespace_entry *entry;
@@ -80,7 +87,7 @@ static int xml_add_namespace_binding(xml_node *node, const char *prefix,
     entry = new (std::nothrow) xml_namespace_entry();
     if (!entry)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     entry->prefix = ft_nullptr;
     if (prefix && prefix_length > 0)
@@ -89,22 +96,22 @@ static int xml_add_namespace_binding(xml_node *node, const char *prefix,
         if (!entry->prefix)
         {
             delete entry;
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
     }
-    entry->uri = duplicate_range(uri, static_cast<size_t>(ft_strlen(uri)));
+    entry->uri = duplicate_range(uri, static_cast<ft_size_t>(ft_strlen(uri)));
     if (!entry->uri)
     {
         if (entry->prefix)
             cma_free(entry->prefix);
         delete entry;
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     entry->parent = *active_scope;
     entry->next_local = node->namespace_bindings;
     node->namespace_bindings = entry;
     *active_scope = entry;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 static const char *xml_resolve_namespace_uri(
@@ -127,9 +134,9 @@ static const char *xml_resolve_namespace_uri(
     return (ft_nullptr);
 }
 
-static int xml_parse_attributes(xml_node *node, const char *start,
+static int32_t xml_parse_attributes(xml_node *node, const char *start,
         const char *end, const xml_namespace_entry *scope_head,
-        const xml_namespace_entry **out_scope, int *error_code_out)
+        const xml_namespace_entry **out_scope, int32_t *error_code_out)
 {
     const char                *cursor;
     const xml_namespace_entry *active_scope;
@@ -151,7 +158,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
         const char *name_start;
         const char *name_end;
         char       *attribute_name;
-        bool        has_value;
+        ft_bool        has_value;
         char       *attribute_value;
 
         name_start = cursor;
@@ -165,18 +172,18 @@ static int xml_parse_attributes(xml_node *node, const char *start,
         {
             if (error_code_out)
                 *error_code_out = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
         attribute_name = duplicate_range(name_start,
-                static_cast<size_t>(name_end - name_start));
+                static_cast<ft_size_t>(name_end - name_start));
         if (!attribute_name)
         {
             if (error_code_out)
                 *error_code_out = FT_ERR_NO_MEMORY;
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
         cursor = xml_skip_whitespace_range(cursor, end);
-        has_value = false;
+        has_value = FT_FALSE;
         attribute_value = ft_nullptr;
         if (cursor && cursor < end && *cursor == '=')
         {
@@ -191,7 +198,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                 cma_free(attribute_name);
                 if (error_code_out)
                     *error_code_out = FT_ERR_INVALID_ARGUMENT;
-                return (-1);
+                return (FT_ERR_INTERNAL);
             }
             quote_character = '\0';
             if (*cursor == '"' || *cursor == '\'')
@@ -219,27 +226,27 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                     cma_free(attribute_name);
                     if (error_code_out)
                         *error_code_out = FT_ERR_INVALID_ARGUMENT;
-                    return (-1);
+                    return (FT_ERR_INTERNAL);
                 }
             }
             attribute_value = duplicate_range(value_start,
-                    static_cast<size_t>(value_end - value_start));
+                    static_cast<ft_size_t>(value_end - value_start));
             if (!attribute_value)
             {
                 cma_free(attribute_name);
                 if (error_code_out)
                     *error_code_out = FT_ERR_NO_MEMORY;
-                return (-1);
+                return (FT_ERR_INTERNAL);
             }
-            has_value = true;
+            has_value = FT_TRUE;
             if (quote_character != '\0' && cursor < end && *cursor == quote_character)
                 cursor++;
         }
-        bool        is_namespace;
+        ft_bool        is_namespace;
         const char *namespace_prefix_pointer;
-        size_t      namespace_prefix_length;
+        ft_size_t      namespace_prefix_length;
 
-        is_namespace = false;
+        is_namespace = FT_FALSE;
         namespace_prefix_pointer = ft_nullptr;
         namespace_prefix_length = 0;
         if (attribute_name[0] == 'x' && attribute_name[1] == 'm'
@@ -247,17 +254,17 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             && attribute_name[4] == 's')
         {
             if (attribute_name[5] == '\0')
-                is_namespace = true;
+                is_namespace = FT_TRUE;
             else if (attribute_name[5] == ':' && attribute_name[6] != '\0')
             {
                 const char *prefix_end;
 
-                is_namespace = true;
+                is_namespace = FT_TRUE;
                 namespace_prefix_pointer = attribute_name + 6;
                 prefix_end = namespace_prefix_pointer;
                 while (*prefix_end)
                     prefix_end++;
-                namespace_prefix_length = static_cast<size_t>(prefix_end
+                namespace_prefix_length = static_cast<ft_size_t>(prefix_end
                         - namespace_prefix_pointer);
             }
             else if (attribute_name[5] == ':' && attribute_name[6] == '\0')
@@ -267,7 +274,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                     cma_free(attribute_value);
                 if (error_code_out)
                     *error_code_out = FT_ERR_INVALID_ARGUMENT;
-                return (-1);
+                return (FT_ERR_INTERNAL);
             }
         }
         if (is_namespace)
@@ -279,7 +286,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                     cma_free(attribute_value);
                 if (error_code_out)
                     *error_code_out = FT_ERR_INVALID_ARGUMENT;
-                return (-1);
+                return (FT_ERR_INTERNAL);
             }
             if (xml_add_namespace_binding(node, namespace_prefix_pointer,
                     namespace_prefix_length, attribute_value, &active_scope) != 0)
@@ -288,11 +295,11 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                 cma_free(attribute_value);
                 if (error_code_out)
                     *error_code_out = FT_ERR_NO_MEMORY;
-                return (-1);
+                return (FT_ERR_INTERNAL);
             }
         }
         node->attributes.insert(attribute_name, attribute_value);
-        int attribute_error = node->attributes.get_error();
+        int32_t attribute_error = node->attributes.get_error();
         if (attribute_error != FT_ERR_SUCCESS)
         {
             if (attribute_value)
@@ -300,14 +307,14 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             cma_free(attribute_name);
             if (error_code_out)
                 *error_code_out = attribute_error;
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
     }
     if (out_scope)
         *out_scope = active_scope;
     if (error_code_out)
         *error_code_out = FT_ERR_SUCCESS;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 xml_node::xml_node() noexcept
@@ -320,8 +327,8 @@ xml_node::xml_node() noexcept
 
 xml_node::~xml_node() noexcept
 {
-    size_t child_index = 0;
-    size_t child_size = this->children.size();
+    ft_size_t child_index = 0;
+    ft_size_t child_size = this->children.size();
     while (child_index < child_size)
     {
         xml_node *child = this->children[child_index];
@@ -365,7 +372,7 @@ xml_node::~xml_node() noexcept
 }
 
 static const char *parse_node(const char *string, xml_node **out_node,
-        const xml_namespace_entry *scope_head, int *error_code_out)
+        const xml_namespace_entry *scope_head, int32_t *error_code_out)
 {
     if (error_code_out)
         *error_code_out = FT_ERR_SUCCESS;
@@ -380,7 +387,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
     const char *name_start = string;
     while (*string && *string != '>' && *string != ' ' && *string != '/')
         string++;
-    size_t name_length = static_cast<size_t>(string - name_start);
+    ft_size_t name_length = static_cast<ft_size_t>(string - name_start);
     char *name = duplicate_range(name_start, name_length);
     if (!name)
     {
@@ -400,7 +407,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
     const char *colon_position = ft_strchr(node->name, ':');
     if (colon_position)
     {
-        size_t prefix_length = static_cast<size_t>(colon_position - node->name);
+        ft_size_t prefix_length = static_cast<ft_size_t>(colon_position - node->name);
         if (prefix_length == 0 || colon_position[1] == '\0')
         {
             delete node;
@@ -417,7 +424,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
             return (ft_nullptr);
         }
         node->local_name = duplicate_range(colon_position + 1,
-                static_cast<size_t>(ft_strlen(colon_position + 1)));
+                static_cast<ft_size_t>(ft_strlen(colon_position + 1)));
         if (!node->local_name)
         {
             delete node;
@@ -430,7 +437,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
     {
         node->namespace_prefix = ft_nullptr;
         node->local_name = duplicate_range(node->name,
-                static_cast<size_t>(ft_strlen(node->name)));
+                static_cast<ft_size_t>(ft_strlen(node->name)));
         if (!node->local_name)
         {
             delete node;
@@ -439,7 +446,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
             return (ft_nullptr);
         }
     }
-    int prepare_result = xml_node_prepare_thread_safety(node);
+    int32_t prepare_result = xml_node_prepare_thread_safety(node);
     if (prepare_result != 0)
     {
         delete node;
@@ -470,7 +477,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
         return (ft_nullptr);
     }
     const char *tag_end = string;
-    int self_closing = 0;
+    int32_t self_closing = 0;
     const char *attribute_start = name_start + name_length;
     const char *attribute_end = tag_end;
     if (attribute_end > attribute_start)
@@ -491,7 +498,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
     const xml_namespace_entry *active_scope = scope_head;
     if (attribute_end > attribute_start)
     {
-        int attribute_error = FT_ERR_SUCCESS;
+        int32_t attribute_error = FT_ERR_SUCCESS;
 
         if (xml_parse_attributes(node, attribute_start, attribute_end,
                 scope_head, &active_scope, &attribute_error) != 0)
@@ -499,7 +506,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
             delete node;
             if (error_code_out)
             {
-                int reported_error;
+                int32_t reported_error;
 
                 if (attribute_error != FT_ERR_SUCCESS)
                     reported_error = attribute_error;
@@ -540,7 +547,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
         while (1)
         {
             xml_node *child = ft_nullptr;
-            int child_error = FT_ERR_SUCCESS;
+            int32_t child_error = FT_ERR_SUCCESS;
 
             string = parse_node(string, &child, active_scope, &child_error);
             if (!string)
@@ -548,7 +555,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
                 delete node;
                 if (error_code_out)
                 {
-                    int reported_error;
+                    int32_t reported_error;
 
                     if (child_error != FT_ERR_SUCCESS)
                         reported_error = child_error;
@@ -559,7 +566,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
                 return (ft_nullptr);
             }
             node->children.push_back(child);
-            int children_error_code = ft_vector<xml_node *>::get_error();
+            int32_t children_error_code = static_cast<int32_t>(node->children.get_error());
             if (children_error_code != FT_ERR_SUCCESS)
             {
                 delete child;
@@ -577,7 +584,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
     {
         while (*string && !(*string == '<' && string[1] == '/'))
             string++;
-        size_t text_length = static_cast<size_t>(string - text_start);
+        ft_size_t text_length = static_cast<ft_size_t>(string - text_start);
         node->text = duplicate_range(text_start, text_length);
         if (!node->text && text_length > 0)
         {
@@ -599,8 +606,8 @@ static const char *parse_node(const char *string, xml_node **out_node,
     const char *closing_name_start = string;
     while (*string && *string != '>' && !is_xml_whitespace(*string))
         string++;
-    size_t closing_name_length = static_cast<size_t>(string - closing_name_start);
-    size_t opening_name_length = ft_strlen(node->name);
+    ft_size_t closing_name_length = static_cast<ft_size_t>(string - closing_name_start);
+    ft_size_t opening_name_length = ft_strlen(node->name);
     if (closing_name_length != opening_name_length)
     {
         delete node;
@@ -608,7 +615,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
             *error_code_out = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    size_t name_index = 0;
+    ft_size_t name_index = 0;
     while (name_index < closing_name_length)
     {
         if (closing_name_start[name_index] != node->name[name_index])
@@ -648,64 +655,127 @@ static const char *parse_node(const char *string, xml_node **out_node,
 
 xml_document::xml_document() noexcept
     : _root(ft_nullptr), _mutex(ft_nullptr),
-    _initialised_state(xml_document::_state_uninitialised)
+    _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    return ;
+}
+
+xml_document::xml_document(const xml_document &other) noexcept
+    : _root(ft_nullptr), _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "xml_document::xml_document(copy)", "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+xml_document::xml_document(xml_document &&other) noexcept
+    : _root(ft_nullptr), _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "xml_document::xml_document(move)", "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(static_cast<xml_document &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 xml_document::~xml_document() noexcept
 {
-    if (this->_initialised_state == xml_document::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-void xml_document::abort_lifecycle_error(const char *method_name,
-    const char *reason) const noexcept
+int32_t xml_document::initialize() noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "xml_document lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void xml_document::abort_if_not_initialised(const char *method_name) const noexcept
-{
-    if (this->_initialised_state == xml_document::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-int xml_document::initialize() noexcept
-{
-    if (this->_initialised_state == xml_document::_state_initialised)
-    {
-        this->abort_lifecycle_error("xml_document::initialize",
-            "called while object is already initialised");
-        return (FT_ERR_INVALID_STATE);
-    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "xml_document::initialize", "called while object is already initialised");
     this->_root = ft_nullptr;
     this->_mutex = ft_nullptr;
-    this->_initialised_state = xml_document::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->record_operation_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int xml_document::destroy() noexcept
+int32_t xml_document::initialize(const xml_document &other) noexcept
 {
-    int disable_error;
-    int lock_error;
-    bool lock_acquired;
+    char *serialized_content;
+    int32_t load_error;
 
-    if (this->_initialised_state != xml_document::_state_initialised)
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "xml_document::initialize(copy)", "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        if (this->destroy() != FT_ERR_SUCCESS)
+            return (FT_ERR_INTERNAL);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    serialized_content = other.write_to_string();
+    if (serialized_content == ft_nullptr)
+        return (FT_ERR_INTERNAL);
+    load_error = this->load_from_string(serialized_content);
+    cma_free(serialized_content);
+    return (load_error);
+}
+
+int32_t xml_document::initialize(xml_document &&other) noexcept
+{
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "xml_document::initialize(move)", "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        if (this->destroy() != FT_ERR_SUCCESS)
+            return (FT_ERR_INTERNAL);
+    }
+    return (this->move(other));
+}
+
+int32_t xml_document::move(xml_document &other) noexcept
+{
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "xml_document::move", "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    this->_root = other._root;
+    other._root = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t xml_document::destroy() noexcept
+{
+    int32_t disable_error;
+    int32_t lock_error;
+    ft_bool lock_acquired;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (FT_ERR_INVALID_STATE);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error == FT_ERR_SUCCESS && this->_root != ft_nullptr)
     {
@@ -713,35 +783,28 @@ int xml_document::destroy() noexcept
         this->_root = ft_nullptr;
     }
     if (lock_acquired)
-        this->unlock(true);
+        this->unlock(FT_TRUE);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
-    this->_initialised_state = xml_document::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 
-void xml_document::record_operation_error(int error_code) const noexcept
+void xml_document::record_operation_error(int32_t error_code) const noexcept
 {
-    (void)error_code;
+    (void)xml_document::set_error(static_cast<uint32_t>(error_code));
     return ;
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_mutex *xml_document::get_mutex_for_validation() const noexcept
+int32_t xml_document::load_from_string(const char *xml) noexcept
 {
-    return (this->_mutex);
-}
-#endif
+    int32_t lock_error;
+    int32_t parse_error;
+    ft_bool lock_acquired;
 
-int xml_document::load_from_string(const char *xml) noexcept
-{
-    int lock_error;
-    int parse_error;
-    bool lock_acquired;
-
-    this->abort_if_not_initialised("xml_document::load_from_string");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::load_from_string");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -764,7 +827,7 @@ int xml_document::load_from_string(const char *xml) noexcept
     const char *end = parse_node(xml, &node, ft_nullptr, &parse_error);
     if (!end)
     {
-        int error_code;
+        int32_t error_code;
 
         error_code = parse_error;
         if (error_code == FT_ERR_SUCCESS)
@@ -787,13 +850,13 @@ int xml_document::load_from_string(const char *xml) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-static int read_file_content(const char *file_path, char **out_content)
+static int32_t read_file_content(const char *file_path, char **out_content)
 {
     errno = 0;
     FILE *file = std::fopen(file_path, "rb");
     if (!file)
     {
-        int error_code;
+        int32_t error_code;
 
         if (errno != 0)
             error_code = cmp_map_system_error_to_ft(errno);
@@ -804,7 +867,7 @@ static int read_file_content(const char *file_path, char **out_content)
     errno = 0;
     if (std::fseek(file, 0, SEEK_END) != 0)
     {
-        int error_code;
+        int32_t error_code;
 
         if (errno != 0)
             error_code = cmp_map_system_error_to_ft(errno);
@@ -813,7 +876,7 @@ static int read_file_content(const char *file_path, char **out_content)
         std::fclose(file);
         return (error_code);
     }
-    long size = std::ftell(file);
+    int64_t size = std::ftell(file);
     if (size <= 0)
     {
         std::fclose(file);
@@ -822,7 +885,7 @@ static int read_file_content(const char *file_path, char **out_content)
     errno = 0;
     if (std::fseek(file, 0, SEEK_SET) != 0)
     {
-        int error_code;
+        int32_t error_code;
 
         if (errno != 0)
             error_code = cmp_map_system_error_to_ft(errno);
@@ -831,19 +894,19 @@ static int read_file_content(const char *file_path, char **out_content)
         std::fclose(file);
         return (error_code);
     }
-    char *buffer = static_cast<char *>(cma_malloc(static_cast<size_t>(size) + 1));
+    char *buffer = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(size) + 1));
     if (!buffer)
     {
         std::fclose(file);
         return (FT_ERR_NO_MEMORY);
     }
     errno = 0;
-    size_t read_size = std::fread(buffer, 1, static_cast<size_t>(size), file);
+    ft_size_t read_size = std::fread(buffer, 1, static_cast<ft_size_t>(size), file);
     std::fclose(file);
-    if (read_size != static_cast<size_t>(size))
+    if (read_size != static_cast<ft_size_t>(size))
     {
         cma_free(buffer);
-        int error_code;
+        int32_t error_code;
 
         if (errno != 0)
             error_code = cmp_map_system_error_to_ft(errno);
@@ -856,12 +919,12 @@ static int read_file_content(const char *file_path, char **out_content)
     return (FT_ERR_SUCCESS);
 }
 
-int xml_document::load_from_file(const char *file_path) noexcept
+int32_t xml_document::load_from_file(const char *file_path) noexcept
 {
     char *content;
-    int   result;
+    int32_t   result;
 
-    this->abort_if_not_initialised("xml_document::load_from_file");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::load_from_file");
     content = ft_nullptr;
     result = read_file_content(file_path, &content);
     if (result != FT_ERR_SUCCESS)
@@ -876,12 +939,12 @@ int xml_document::load_from_file(const char *file_path) noexcept
     return (result);
 }
 
-int xml_document::load_from_backend(ft_document_source &source) noexcept
+int32_t xml_document::load_from_backend(ft_document_source &source) noexcept
 {
     ft_string content;
-    int read_result;
+    int32_t read_result;
 
-    this->abort_if_not_initialised("xml_document::load_from_backend");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::load_from_backend");
     read_result = source.read_all(content);
     if (read_result != FT_ERR_SUCCESS)
     {
@@ -895,8 +958,8 @@ static void append_string(ft_vector<char> &buffer, const char *string)
 {
     if (!string)
         return ;
-    size_t index = 0;
-    size_t length = ft_strlen(string);
+    ft_size_t index = 0;
+    ft_size_t length = ft_strlen(string);
     while (index < length)
     {
         buffer.push_back(string[index]);
@@ -925,12 +988,12 @@ static void append_node_qualified_name(const xml_node *node, ft_vector<char> &bu
     return ;
 }
 
-static int write_node(const xml_node *node, ft_vector<char> &buffer)
+static int32_t write_node(const xml_node *node, ft_vector<char> &buffer)
 {
     if (!node)
         return (FT_ERR_INVALID_ARGUMENT);
-    bool lock_acquired = false;
-    int lock_status = xml_node_lock(node, &lock_acquired);
+    ft_bool lock_acquired = FT_FALSE;
+    int32_t lock_status = xml_node_lock(node, &lock_acquired);
 
     if (lock_status != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
@@ -939,11 +1002,11 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
     buffer.push_back('>');
     if (node->text)
         append_string(buffer, node->text);
-    size_t index = 0;
-    size_t size = node->children.size();
+    ft_size_t index = 0;
+    ft_size_t size = node->children.size();
     while (index < size)
     {
-        int child_status = write_node(node->children[index], buffer);
+        int32_t child_status = write_node(node->children[index], buffer);
 
         if (child_status != FT_ERR_SUCCESS)
         {
@@ -962,11 +1025,11 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
 
 char *xml_document::write_to_string() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("xml_document::write_to_string");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::write_to_string");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -980,44 +1043,44 @@ char *xml_document::write_to_string() const noexcept
         return (ft_nullptr);
     }
     char *result = ft_nullptr;
-    int error_code = FT_ERR_SUCCESS;
+    int32_t error_code = FT_ERR_SUCCESS;
     {
         ft_vector<char> buffer;
-        int write_status;
-        int buffer_error;
+        int32_t write_status;
+        int32_t buffer_error;
 
         write_status = write_node(this->_root, buffer);
         if (write_status != FT_ERR_SUCCESS)
             error_code = write_status;
         if (error_code == FT_ERR_SUCCESS)
         {
-            buffer_error = ft_vector<char>::get_error();
+            buffer_error = static_cast<int32_t>(buffer.get_error());
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESS)
         {
             buffer.push_back('\n');
-            buffer_error = ft_vector<char>::get_error();
+            buffer_error = static_cast<int32_t>(buffer.get_error());
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESS)
         {
             buffer.push_back('\0');
-            buffer_error = ft_vector<char>::get_error();
+            buffer_error = static_cast<int32_t>(buffer.get_error());
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESS)
         {
-            size_t length = buffer.size();
+            ft_size_t length = buffer.size();
             result = static_cast<char *>(cma_malloc(length));
             if (!result)
                 error_code = FT_ERR_NO_MEMORY;
             else
             {
-                size_t index = 0;
+                ft_size_t index = 0;
                 while (index < length)
                 {
                     result[index] = buffer[index];
@@ -1039,12 +1102,12 @@ char *xml_document::write_to_string() const noexcept
     return (result);
 }
 
-int xml_document::write_to_file(const char *file_path) const noexcept
+int32_t xml_document::write_to_file(const char *file_path) const noexcept
 {
     char *content;
-    int   error_code;
+    int32_t   error_code;
 
-    this->abort_if_not_initialised("xml_document::write_to_file");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::write_to_file");
     content = this->write_to_string();
     if (!content)
     {
@@ -1064,9 +1127,9 @@ int xml_document::write_to_file(const char *file_path) const noexcept
         cma_free(content);
         return (error_code);
     }
-    size_t length = ft_strlen(content);
+    ft_size_t length = ft_strlen(content);
     errno = 0;
-    size_t written = std::fwrite(content, 1, length, file);
+    ft_size_t written = std::fwrite(content, 1, length, file);
     if (written != length)
     {
         if (errno != 0)
@@ -1094,20 +1157,20 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
+int32_t xml_document::write_to_backend(ft_document_sink &sink) const noexcept
 {
     char *content;
-    size_t length;
-    int write_result;
+    ft_size_t length;
+    int32_t write_result;
 
-    this->abort_if_not_initialised("xml_document::write_to_backend");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::write_to_backend");
     content = this->write_to_string();
     if (!content)
         return (this->get_error());
     length = ft_strlen(content);
     write_result = sink.write_all(content, length);
     cma_free(content);
-    int final_error = write_result;
+    int32_t final_error = write_result;
     if (final_error != FT_ERR_SUCCESS)
     {
         this->record_operation_error(final_error);
@@ -1119,11 +1182,11 @@ int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
 
 xml_node *xml_document::get_root() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("xml_document::get_root");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::get_root");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1135,31 +1198,31 @@ xml_node *xml_document::get_root() const noexcept
     return (this->_root);
 }
 
-void xml_document::set_manual_error(int error_code) noexcept
+void xml_document::set_manual_error(int32_t error_code) noexcept
 {
-    this->abort_if_not_initialised("xml_document::set_manual_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::set_manual_error");
     this->record_operation_error(error_code);
     return ;
 }
 
-int xml_document::get_error() const noexcept
+int32_t xml_document::get_error() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("xml_document::get_error");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::get_error");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->unlock(lock_acquired);
-    return (FT_ERR_SUCCESS);
+    return (static_cast<int32_t>(xml_document::_last_error));
 }
 
 const char *xml_document::get_error_str() const noexcept
 {
-    this->abort_if_not_initialised("xml_document::get_error_str");
-    int error_code = this->get_error();
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::get_error_str");
+    int32_t error_code = this->get_error();
     const char *message = ft_strerror(error_code);
 
     if (message == ft_nullptr)
@@ -1167,18 +1230,18 @@ const char *xml_document::get_error_str() const noexcept
     return (message);
 }
 
-int xml_document::enable_thread_safety() noexcept
+int32_t xml_document::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
-    int mutex_error;
+    pt_recursive_mutex *mutex_pointer;
+    int32_t mutex_error;
 
-    this->abort_if_not_initialised("xml_document::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::enable_thread_safety");
     if (this->_mutex)
     {
         this->record_operation_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (!mutex_pointer)
     {
         this->record_operation_error(FT_ERR_NO_MEMORY);
@@ -1196,11 +1259,11 @@ int xml_document::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int xml_document::disable_thread_safety() noexcept
+int32_t xml_document::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
-    this->abort_if_not_initialised("xml_document::disable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::disable_thread_safety");
     if (!this->_mutex)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -1210,21 +1273,21 @@ int xml_document::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool xml_document::is_thread_safe() const noexcept
+ft_bool xml_document::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int xml_document::lock(bool *lock_acquired) const noexcept
+int32_t xml_document::lock(ft_bool *lock_acquired) const noexcept
 {
-    bool has_mutex;
-    int mutex_result;
-    this->abort_if_not_initialised("xml_document::lock");
+    ft_bool has_mutex;
+    int32_t mutex_result;
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::lock");
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     has_mutex = (this->_mutex != ft_nullptr);
-    mutex_result = pt_mutex_lock_if_not_null(this->_mutex);
-    int reported_error;
+    mutex_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    int32_t reported_error;
 
     reported_error = mutex_result;
     if (reported_error != FT_ERR_SUCCESS)
@@ -1233,25 +1296,17 @@ int xml_document::lock(bool *lock_acquired) const noexcept
         return (reported_error);
     }
     if (lock_acquired && has_mutex)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     this->record_operation_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-void xml_document::unlock(bool lock_acquired) const noexcept
+void xml_document::unlock(ft_bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("xml_document::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::unlock");
     if (!lock_acquired)
         return ;
-    int mutex_result = pt_mutex_unlock_if_not_null(this->_mutex);
-    int reported_error;
-
-    reported_error = mutex_result;
-    if (reported_error != FT_ERR_SUCCESS)
-    {
-        this->record_operation_error(reported_error);
-        return ;
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->record_operation_error(FT_ERR_SUCCESS);
     return ;
 }

@@ -5,17 +5,17 @@
 #include "../Basic/basic.hpp"
 #include <new>
 
-int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
+int32_t ft_log_set_remote_sink(const char *host, uint16_t port, ft_bool use_tcp)
 {
     s_network_sink *sink;
     struct sockaddr_in address;
-    int socket_fd;
-    int socket_type;
-    int error_code;
+    int32_t socket_fd;
+    int32_t socket_type;
+    int32_t error_code_value;
 
     if (!host)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     socket_type = SOCK_DGRAM;
     if (use_tcp)
@@ -23,7 +23,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     socket_fd = nw_socket(AF_INET, socket_type, 0);
     if (socket_fd < 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     ft_memset(&address, 0, sizeof(address));
     address.sin_family = AF_INET;
@@ -31,14 +31,14 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     if (nw_inet_pton(AF_INET, host, &address.sin_addr) != 1)
     {
         su_close(socket_fd);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (use_tcp)
     {
         if (nw_connect(socket_fd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)) != 0)
         {
             su_close(socket_fd);
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
     }
     else
@@ -49,7 +49,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     if (!sink)
     {
         su_close(socket_fd);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     sink->socket_fd = socket_fd;
     sink->send_function = nw_send;
@@ -60,39 +60,39 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     {
         su_close(socket_fd);
         delete sink;
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    error_code = network_sink_prepare_thread_safety(sink);
-    if (error_code != FT_ERR_SUCCESS)
+    error_code_value = network_sink_prepare_thread_safety(sink);
+    if (error_code_value != FT_ERR_SUCCESS)
     {
         su_close(socket_fd);
         delete sink;
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (ft_log_add_sink(ft_network_sink, sink) != 0)
     {
-        error_code = FT_ERR_SUCCESS;
+        error_code_value = FT_ERR_SUCCESS;
         su_close(socket_fd);
         network_sink_teardown_thread_safety(sink);
         delete sink;
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        if (error_code_value == FT_ERR_SUCCESS)
+            error_code_value = FT_ERR_INVALID_ARGUMENT;
+        return (FT_ERR_INTERNAL);
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_network_sink(const char *message, void *user_data)
 {
     s_network_sink *sink;
-    size_t message_length;
-    size_t total_bytes_sent;
-    bool   lock_acquired;
+    ft_size_t message_length;
+    ft_size_t total_bytes_sent;
+    ft_bool   lock_acquired;
 
     sink = static_cast<s_network_sink *>(user_data);
     if (!sink || !message)
         return ;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (network_sink_lock(sink, &lock_acquired) != 0)
         return ;
     if (sink->socket_fd < 0)
@@ -118,7 +118,7 @@ void ft_network_sink(const char *message, void *user_data)
             sink->send_function = ft_nullptr;
             goto cleanup;
         }
-        total_bytes_sent += static_cast<size_t>(send_result);
+        total_bytes_sent += static_cast<ft_size_t>(send_result);
     }
 
 cleanup:

@@ -2,29 +2,30 @@
 #include "game_pathfinding.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-static size_t distance_component(size_t left_value, size_t right_value)
+static ft_size_t distance_component(ft_size_t left_value, ft_size_t right_value)
 {
     if (left_value > right_value)
         return (left_value - right_value);
     return (right_value - left_value);
 }
 
-thread_local int ft_path_step::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_path_step::_last_error = FT_ERR_SUCCESS;
 
 #ifdef LIBFT_TEST_BUILD
 
-int ft_path_step_test_helper::ensure_thread_safe(ft_path_step &step) noexcept
+int32_t ft_path_step_test_helper::ensure_thread_safe(ft_path_step &step) noexcept
 {
     if (step._mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (step.enable_thread_safety());
 }
 
-int ft_path_step_test_helper::lock(ft_path_step &step) noexcept
+int32_t ft_path_step_test_helper::lock(ft_path_step &step) noexcept
 {
-    int ensure_error;
+    int32_t ensure_error;
 
     ensure_error = ft_path_step_test_helper::ensure_thread_safe(step);
     if (ensure_error != FT_ERR_SUCCESS)
@@ -32,24 +33,25 @@ int ft_path_step_test_helper::lock(ft_path_step &step) noexcept
     return (pt_recursive_mutex_lock_if_not_null(step._mutex));
 }
 
-int ft_path_step_test_helper::unlock(ft_path_step &step) noexcept
+int32_t ft_path_step_test_helper::unlock(ft_path_step &step) noexcept
 {
-    return (pt_recursive_mutex_unlock_if_not_null(step._mutex));
+    (void)pt_recursive_mutex_unlock_if_not_null(step._mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_path_step_test_helper::is_locked(const ft_path_step &step) noexcept
+ft_bool ft_path_step_test_helper::is_locked(const ft_path_step &step) noexcept
 {
     return (step._mutex != ft_nullptr && step._mutex->lockState());
 }
 
-bool ft_path_step_test_helper::is_owned_by_thread(const ft_path_step &step,
+ft_bool ft_path_step_test_helper::is_owned_by_thread(const ft_path_step &step,
     pthread_t thread_id) noexcept
 {
     return (step._mutex != ft_nullptr
         && step._mutex->is_owned_by_thread(thread_id));
 }
 
-int ft_path_step_test_helper::get_mutex_error(const ft_path_step &step) noexcept
+int32_t ft_path_step_test_helper::get_mutex_error(const ft_path_step &step) noexcept
 {
     if (step._mutex == ft_nullptr)
         return (FT_ERR_INVALID_STATE);
@@ -58,39 +60,18 @@ int ft_path_step_test_helper::get_mutex_error(const ft_path_step &step) noexcept
 
 #endif
 
-void ft_path_step::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_path_step lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_path_step::set_error(int error_code) const noexcept
+void ft_path_step::set_error(int32_t error_code) const noexcept
 {
     ft_path_step::_last_error = error_code;
     return ;
 }
 
-void ft_path_step::abort_if_not_initialised(const char *method_name) const
+int32_t ft_path_step::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    if (this->_initialised_state == ft_path_step::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-int ft_path_step::lock_internal(bool *lock_acquired) const noexcept
-{
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -98,128 +79,174 @@ int ft_path_step::lock_internal(bool *lock_acquired) const noexcept
         return (lock_error);
     }
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::unlock_internal(bool lock_acquired) const noexcept
+int32_t ft_path_step::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return (unlock_error);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
 ft_path_step::ft_path_step() noexcept
     : _x(0), _y(0), _z(0), _mutex(ft_nullptr),
-      _initialised_state(ft_path_step::_state_uninitialised)
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
+ft_path_step::ft_path_step(const ft_path_step &other) noexcept
+    : _x(0), _y(0), _z(0), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_path_step::ft_path_step(copy)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_path_step::ft_path_step(ft_path_step &&other) noexcept
+    : _x(0), _y(0), _z(0), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_path_step::ft_path_step(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
 ft_path_step::~ft_path_step() noexcept
 {
-    if (this->_initialised_state != ft_path_step::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
     (void)this->destroy();
     return ;
 }
 
-int ft_path_step::initialize() noexcept
+int32_t ft_path_step::initialize() noexcept
 {
-    if (this->_initialised_state == ft_path_step::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_path_step::initialize",
-            "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_path_step::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_initialised_state = ft_path_step::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::initialize(const ft_path_step &other) noexcept
+int32_t ft_path_step::initialize(const ft_path_step &other) noexcept
 {
-    if (other._initialised_state != ft_path_step::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        other.abort_lifecycle_error("ft_path_step::initialize(copy)",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "ft_path_step::initialize(copy)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialised_state == ft_path_step::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_path_step::initialize(copy)",
-            "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_path_step::initialize(copy)", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_initialised_state = ft_path_step::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::initialize(ft_path_step &&other) noexcept
+int32_t ft_path_step::initialize(ft_path_step &&other) noexcept
 {
-    if (other._initialised_state != ft_path_step::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        other.abort_lifecycle_error("ft_path_step::initialize(move)",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state, "ft_path_step::initialize(move)", "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialised_state == ft_path_step::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_path_step::initialize(move)",
-            "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_path_step::initialize(move)", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_initialised_state = ft_path_step::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._x = 0;
     other._y = 0;
     other._z = 0;
-    other._initialised_state = ft_path_step::_state_destroyed;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::destroy() noexcept
+int32_t ft_path_step::move(ft_path_step &other) noexcept
 {
-    int disable_error;
+    return (this->initialize(static_cast<ft_path_step &&>(other)));
+}
 
-    if (this->_initialised_state != ft_path_step::_state_initialised)
+int32_t ft_path_step::destroy() noexcept
+{
+    int32_t disable_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_x = 0;
     this->_y = 0;
     this->_z = 0;
-    this->_initialised_state = ft_path_step::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);
 }
 
-int ft_path_step::enable_thread_safety() noexcept
+int32_t ft_path_step::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_path_step::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -243,10 +270,10 @@ int ft_path_step::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::disable_thread_safety() noexcept
+int32_t ft_path_step::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
     {
@@ -261,145 +288,117 @@ int ft_path_step::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_path_step::is_thread_safe() const noexcept
+ft_bool ft_path_step::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept
+int32_t ft_path_step::set_coordinates(ft_size_t x, ft_size_t y, ft_size_t z) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_path_step::set_coordinates");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_coordinates");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::set_x(size_t x) noexcept
+int32_t ft_path_step::set_x(ft_size_t x) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_path_step::set_x");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_x");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_x = x;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::set_y(size_t y) noexcept
+int32_t ft_path_step::set_y(ft_size_t y) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_path_step::set_y");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_y");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_y = y;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_path_step::set_z(size_t z) noexcept
+int32_t ft_path_step::set_z(ft_size_t z) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_path_step::set_z");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::set_z");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_z = z;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-size_t ft_path_step::get_x() const noexcept
+ft_size_t ft_path_step::get_x() const noexcept
 {
-    this->abort_if_not_initialised("ft_path_step::get_x");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::get_x");
     return (this->_x);
 }
 
-size_t ft_path_step::get_y() const noexcept
+ft_size_t ft_path_step::get_y() const noexcept
 {
-    this->abort_if_not_initialised("ft_path_step::get_y");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::get_y");
     return (this->_y);
 }
 
-size_t ft_path_step::get_z() const noexcept
+ft_size_t ft_path_step::get_z() const noexcept
 {
-    this->abort_if_not_initialised("ft_path_step::get_z");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_path_step::get_z");
     return (this->_z);
 }
 
-int ft_path_step::get_error() const noexcept
+int32_t ft_path_step::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_path_step::get_error");
     return (ft_path_step::_last_error);
 }
 
 const char *ft_path_step::get_error_str() const noexcept
 {
-    return (ft_strerror(this->get_error()));
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_path_step::get_error_str");
+    return (ft_strerror(ft_path_step::_last_error));
 }
 
-void ft_pathfinding::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_pathfinding lifecycle error: %s: %s\n", method_name,
-        reason);
-    su_abort();
-    return ;
-}
+thread_local int32_t ft_pathfinding::_last_error = FT_ERR_SUCCESS;
 
-void ft_pathfinding::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == ft_pathfinding::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-thread_local int ft_pathfinding::_last_error = FT_ERR_SUCCESS;
-
-void ft_pathfinding::set_error(int error_code) const noexcept
+void ft_pathfinding::set_error(int32_t error_code) const noexcept
 {
     ft_pathfinding::_last_error = error_code;
     return ;
 }
 
-int ft_pathfinding::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_pathfinding::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -407,80 +406,175 @@ int ft_pathfinding::lock_internal(bool *lock_acquired) const noexcept
         return (lock_error);
     }
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_pathfinding::unlock_internal(bool lock_acquired) const noexcept
+int32_t ft_pathfinding::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(unlock_error);
-        return (unlock_error);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
 ft_pathfinding::ft_pathfinding() noexcept
-    : _current_path(), _needs_replan(false), _mutex(ft_nullptr),
-      _initialised_state(ft_pathfinding::_state_uninitialised)
+    : _current_path(), _needs_replan(FT_FALSE), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+ft_pathfinding::ft_pathfinding(const ft_pathfinding &other)
+    : _current_path(), _needs_replan(FT_FALSE), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_pathfinding::ft_pathfinding(copy)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    this->_needs_replan = other._needs_replan;
+    this->set_error(other.get_error());
+    return ;
+}
+
+ft_pathfinding::ft_pathfinding(ft_pathfinding &&other)
+    : _current_path(), _needs_replan(FT_FALSE), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_pathfinding::ft_pathfinding(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 ft_pathfinding::~ft_pathfinding()
 {
-    if (this->_initialised_state != ft_pathfinding::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
     (void)this->destroy();
     return ;
 }
 
-int ft_pathfinding::initialize() noexcept
+int32_t ft_pathfinding::initialize() noexcept
 {
-    if (this->_initialised_state == ft_pathfinding::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_pathfinding::initialize",
-            "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_pathfinding::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_needs_replan = false;
+    this->_needs_replan = FT_FALSE;
     this->_current_path.clear();
-    this->_initialised_state = ft_pathfinding::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_pathfinding::destroy() noexcept
+int32_t ft_pathfinding::destroy() noexcept
 {
-    int disable_error;
+    int32_t disable_error;
 
-    if (this->_initialised_state != ft_pathfinding::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_current_path.clear();
-    this->_needs_replan = false;
-    this->_initialised_state = ft_pathfinding::_state_destroyed;
+    this->_needs_replan = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);
 }
 
-int ft_pathfinding::enable_thread_safety() noexcept
+int32_t ft_pathfinding::move(ft_pathfinding &other) noexcept
+{
+    int32_t destroy_error;
+    ft_size_t index;
+    ft_size_t count;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_pathfinding::move", "source object is not initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    destroy_error = this->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(destroy_error);
+        return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    this->_current_path.clear();
+    index = 0;
+    count = other._current_path.size();
+    while (index < count)
+    {
+        this->_current_path.push_back(other._current_path[index]);
+        index += 1;
+    }
+    this->_needs_replan = other._needs_replan;
+    this->_mutex = other._mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._current_path.clear();
+    other._needs_replan = FT_FALSE;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(other.get_error());
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_pathfinding::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_pathfinding::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -504,10 +598,10 @@ int ft_pathfinding::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_pathfinding::disable_thread_safety() noexcept
+int32_t ft_pathfinding::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
     {
@@ -522,36 +616,33 @@ int ft_pathfinding::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_pathfinding::is_thread_safe() const noexcept
+ft_bool ft_pathfinding::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_pathfinding::lock(bool *lock_acquired) const noexcept
+int32_t ft_pathfinding::lock(ft_bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_pathfinding::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::lock");
     return (this->lock_internal(lock_acquired));
 }
 
-void ft_pathfinding::unlock(bool lock_acquired) const noexcept
+void ft_pathfinding::unlock(ft_bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_pathfinding::unlock");
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::unlock");
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z,
-    int value) noexcept
+void ft_pathfinding::update_obstacle(ft_size_t x, ft_size_t y, ft_size_t z,
+    int32_t value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    size_t index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t index;
 
     (void)value;
-    this->abort_if_not_initialised("ft_pathfinding::update_obstacle");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::update_obstacle");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -565,42 +656,36 @@ void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z,
             && this->_current_path[index].get_y() == y
             && this->_current_path[index].get_z() == z)
         {
-            this->_needs_replan = true;
+            this->_needs_replan = FT_TRUE;
             this->set_error(FT_ERR_SUCCESS);
-            int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
             return ;
         }
         index += 1;
     }
     this->set_error(FT_ERR_SUCCESS);
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int ft_pathfinding::recalculate_path(const ft_map3d &grid,
-    size_t start_x, size_t start_y, size_t start_z,
-    size_t goal_x, size_t goal_y, size_t goal_z,
+int32_t ft_pathfinding::recalculate_path(const ft_map3d &grid,
+    ft_size_t start_x, ft_size_t start_y, ft_size_t start_z,
+    ft_size_t goal_x, ft_size_t goal_y, ft_size_t goal_z,
     ft_vector<ft_path_step> &out_path) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int result;
-    size_t index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t result;
+    ft_size_t index;
 
-    this->abort_if_not_initialised("ft_pathfinding::recalculate_path");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_pathfinding::recalculate_path");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (lock_error);
     }
-    if (this->_needs_replan == false && this->_current_path.size() > 0)
+    if (this->_needs_replan == FT_FALSE && this->_current_path.size() > 0)
     {
         out_path.clear();
         index = 0;
@@ -610,11 +695,8 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
             index += 1;
         }
         this->set_error(FT_ERR_SUCCESS);
-        int unlock_error;
 
-        unlock_error = this->unlock_internal(lock_acquired);
-        if (unlock_error != FT_ERR_SUCCESS)
-            this->set_error(unlock_error);
+        (void)this->unlock_internal(lock_acquired);
         return (FT_ERR_SUCCESS);
     }
     result = this->astar_grid(grid, start_x, start_y, start_z,
@@ -628,35 +710,32 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
             this->_current_path.push_back(out_path[index]);
             index += 1;
         }
-        this->_needs_replan = false;
+        this->_needs_replan = FT_FALSE;
     }
     else
-        this->_needs_replan = true;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+        this->_needs_replan = FT_TRUE;
+    (void)this->unlock_internal(lock_acquired);
     this->set_error(result);
     return (result);
 }
 
-int ft_pathfinding::astar_grid(const ft_map3d &grid,
-    size_t start_x, size_t start_y, size_t start_z,
-    size_t goal_x, size_t goal_y, size_t goal_z,
+int32_t ft_pathfinding::astar_grid(const ft_map3d &grid,
+    ft_size_t start_x, ft_size_t start_y, ft_size_t start_z,
+    ft_size_t goal_x, ft_size_t goal_y, ft_size_t goal_z,
     ft_vector<ft_path_step> &out_path) const noexcept
 {
     struct node
     {
-        size_t  x;
-        size_t  y;
-        size_t  z;
-        int     g;
-        int     f;
-        int     parent;
+        ft_size_t  x;
+        ft_size_t  y;
+        ft_size_t  z;
+        int32_t     g;
+        int32_t     f;
+        int32_t     parent;
     };
 
     ft_vector<node> nodes;
-    ft_vector<size_t> open_set;
+    ft_vector<ft_size_t> open_set;
 
     if (start_x >= grid.get_width() || start_y >= grid.get_height()
         || start_z >= grid.get_depth() || goal_x >= grid.get_width()
@@ -670,7 +749,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
     start_node.y = start_y;
     start_node.z = start_z;
     start_node.g = 0;
-    start_node.f = static_cast<int>(distance_component(start_x, goal_x)
+    start_node.f = static_cast<int32_t>(distance_component(start_x, goal_x)
             + distance_component(start_y, goal_y)
             + distance_component(start_z, goal_z));
     start_node.parent = -1;
@@ -679,9 +758,9 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
 
     while (open_set.size() > 0)
     {
-        size_t best_open;
-        size_t open_index;
-        size_t current_index;
+        ft_size_t best_open;
+        ft_size_t open_index;
+        ft_size_t current_index;
 
         best_open = 0;
         open_index = 0;
@@ -697,11 +776,11 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
             && nodes[current_index].z == goal_z)
         {
             ft_vector<ft_path_step> reverse_path;
-            size_t trace_index;
-            size_t reverse_index;
+            ft_size_t trace_index;
+            ft_size_t reverse_index;
 
             trace_index = current_index;
-            while (true)
+            while (FT_TRUE)
             {
                 ft_path_step step;
 
@@ -711,7 +790,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                 reverse_path.push_back(step);
                 if (nodes[trace_index].parent == -1)
                     break ;
-                trace_index = static_cast<size_t>(nodes[trace_index].parent);
+                trace_index = static_cast<ft_size_t>(nodes[trace_index].parent);
             }
             reverse_index = reverse_path.size();
             while (reverse_index > 0)
@@ -724,17 +803,17 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
 
         open_set.erase(open_set.begin() + best_open);
 
-        int direction_x[6] = {1, -1, 0, 0, 0, 0};
-        int direction_y[6] = {0, 0, 1, -1, 0, 0};
-        int direction_z[6] = {0, 0, 0, 0, 1, -1};
-        size_t neighbor_index;
+        int32_t direction_x[6] = {1, -1, 0, 0, 0, 0};
+        int32_t direction_y[6] = {0, 0, 1, -1, 0, 0};
+        int32_t direction_z[6] = {0, 0, 0, 0, 1, -1};
+        ft_size_t neighbor_index;
 
         neighbor_index = 0;
         while (neighbor_index < 6)
         {
-            size_t neighbor_x;
-            size_t neighbor_y;
-            size_t neighbor_z;
+            ft_size_t neighbor_x;
+            ft_size_t neighbor_y;
+            ft_size_t neighbor_z;
 
             neighbor_x = nodes[current_index].x;
             neighbor_y = nodes[current_index].y;
@@ -755,11 +834,11 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                 && neighbor_z < grid.get_depth()
                 && grid.get(neighbor_x, neighbor_y, neighbor_z) == 0)
             {
-                bool found;
-                size_t search_index;
-                int tentative_g;
+                ft_bool found;
+                ft_size_t search_index;
+                int32_t tentative_g;
 
-                found = false;
+                found = FT_FALSE;
                 search_index = 0;
                 while (search_index < nodes.size())
                 {
@@ -767,7 +846,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                         && nodes[search_index].y == neighbor_y
                         && nodes[search_index].z == neighbor_z)
                     {
-                        found = true;
+                        found = FT_TRUE;
                         break ;
                     }
                     search_index += 1;
@@ -778,11 +857,11 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                     if (tentative_g < nodes[search_index].g)
                     {
                         nodes[search_index].g = tentative_g;
-                        nodes[search_index].f = tentative_g + static_cast<int>(
+                        nodes[search_index].f = tentative_g + static_cast<int32_t>(
                                 distance_component(neighbor_x, goal_x)
                                 + distance_component(neighbor_y, goal_y)
                                 + distance_component(neighbor_z, goal_z));
-                        nodes[search_index].parent = static_cast<int>(current_index);
+                        nodes[search_index].parent = static_cast<int32_t>(current_index);
                     }
                 }
                 else
@@ -793,11 +872,11 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                     new_node.y = neighbor_y;
                     new_node.z = neighbor_z;
                     new_node.g = tentative_g;
-                    new_node.f = tentative_g + static_cast<int>(
+                    new_node.f = tentative_g + static_cast<int32_t>(
                             distance_component(neighbor_x, goal_x)
                             + distance_component(neighbor_y, goal_y)
                             + distance_component(neighbor_z, goal_z));
-                    new_node.parent = static_cast<int>(current_index);
+                    new_node.parent = static_cast<int32_t>(current_index);
                     nodes.push_back(new_node);
                     open_set.push_back(nodes.size() - 1);
                 }
@@ -808,13 +887,13 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
     return (FT_ERR_GAME_INVALID_MOVE);
 }
 
-int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
-    size_t start_vertex, size_t goal_vertex,
-    ft_vector<size_t> &out_path) const noexcept
+int32_t ft_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
+    ft_size_t start_vertex, ft_size_t goal_vertex,
+    ft_vector<ft_size_t> &out_path) const noexcept
 {
-    ft_vector<int> distance;
-    ft_vector<int> previous;
-    ft_vector<size_t> queue;
+    ft_vector<int32_t> distance;
+    ft_vector<int32_t> previous;
+    ft_vector<ft_size_t> queue;
 
     out_path.clear();
     if (start_vertex >= graph.size() || goal_vertex >= graph.size())
@@ -827,9 +906,9 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
 
     while (queue.size() > 0)
     {
-        size_t best_queue;
-        size_t queue_index;
-        size_t current;
+        ft_size_t best_queue;
+        ft_size_t queue_index;
+        ft_size_t current;
 
         best_queue = 0;
         queue_index = 0;
@@ -844,22 +923,22 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
         if (current == goal_vertex)
             break ;
 
-        ft_vector<size_t> neighbors;
-        size_t neighbor_index;
+        ft_vector<ft_size_t> neighbors;
+        ft_size_t neighbor_index;
 
         graph.neighbors(current, neighbors);
         neighbor_index = 0;
         while (neighbor_index < neighbors.size())
         {
-            size_t neighbor;
-            int alternative_distance;
+            ft_size_t neighbor;
+            int32_t alternative_distance;
 
             neighbor = neighbors[neighbor_index];
             alternative_distance = distance[current] + 1;
             if (distance[neighbor] == -1 || alternative_distance < distance[neighbor])
             {
                 distance[neighbor] = alternative_distance;
-                previous[neighbor] = static_cast<int>(current);
+                previous[neighbor] = static_cast<int32_t>(current);
                 queue.push_back(neighbor);
             }
             neighbor_index += 1;
@@ -869,16 +948,16 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
     if (distance[goal_vertex] == -1)
         return (FT_ERR_GAME_INVALID_MOVE);
 
-    ft_vector<size_t> reverse_path;
-    size_t vertex;
+    ft_vector<ft_size_t> reverse_path;
+    ft_size_t vertex;
 
     vertex = goal_vertex;
-    while (true)
+    while (FT_TRUE)
     {
         reverse_path.push_back(vertex);
         if (vertex == start_vertex)
             break ;
-        vertex = static_cast<size_t>(previous[vertex]);
+        vertex = static_cast<ft_size_t>(previous[vertex]);
     }
     while (reverse_path.size() > 0)
     {
@@ -888,19 +967,18 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
     return (FT_ERR_SUCCESS);
 }
 
-int ft_pathfinding::get_error() const noexcept
+int32_t ft_pathfinding::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_pathfinding::get_error");
     return (ft_pathfinding::_last_error);
 }
 
 const char *ft_pathfinding::get_error_str() const noexcept
 {
-    return (ft_strerror(this->get_error()));
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_pathfinding::get_error_str");
+    return (ft_strerror(ft_pathfinding::_last_error));
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_pathfinding::get_mutex_for_validation() const noexcept
-{
-    return (this->_mutex);
-}
-#endif

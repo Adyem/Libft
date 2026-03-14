@@ -13,36 +13,36 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 
-static thread_local int g_json_writer_last_error = FT_ERR_SUCCESS;
+static thread_local int32_t g_json_writer_last_error = FT_ERR_SUCCESS;
 
-static void json_writer_push_error(int error_code)
+static void json_writer_set_error(int32_t error_code)
 {
     g_json_writer_last_error = error_code;
     return ;
 }
 
 #define JSON_WRITER_ERROR_RETURN(code, value) \
-    do { json_writer_push_error(code); return (value); } while (0)
+    do { json_writer_set_error(code); return (value); } while (0)
 
 #define JSON_WRITER_SUCCESS_RETURN(value) \
-    do { json_writer_push_error(FT_ERR_SUCCESS); return (value); } while (0)
+    do { json_writer_set_error(FT_ERR_SUCCESS); return (value); } while (0)
 
 static char *json_writer_return_failure(void)
 {
     if (g_json_writer_last_error == FT_ERR_SUCCESS)
-        json_writer_push_error(FT_ERR_NO_MEMORY);
+        json_writer_set_error(FT_ERR_NO_MEMORY);
     return (ft_nullptr);
 }
 
-int json_write_to_file(const char *file_path, json_group *groups)
+int32_t json_write_to_file(const char *file_path, json_group *groups)
 {
     if (!file_path)
     {
         JSON_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
-    int file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int32_t file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
-        return (-1);
+        return (FT_ERR_INVALID_STATE);
     pf_printf_fd(file_descriptor, "{\n");
     json_group *group_iterator = groups;
     while (group_iterator)
@@ -52,15 +52,15 @@ int json_write_to_file(const char *file_path, json_group *groups)
         while (item_iterator)
         {
             const char *value_text = item_iterator->value;
-            bool is_big_number_value = false;
-            if (item_iterator->is_big_number == true && item_iterator->big_number)
+            ft_bool is_big_number_value = FT_FALSE;
+            if (item_iterator->is_big_number == FT_TRUE && item_iterator->big_number)
             {
                 value_text = item_iterator->big_number->c_str();
-                is_big_number_value = true;
+                is_big_number_value = FT_TRUE;
             }
             if (item_iterator->next)
             {
-                if (is_big_number_value == true)
+                if (is_big_number_value == FT_TRUE)
                     pf_printf_fd(file_descriptor,
                         "    \"%s\": %s,\n", item_iterator->key, value_text);
                 else
@@ -69,7 +69,7 @@ int json_write_to_file(const char *file_path, json_group *groups)
             }
             else
             {
-                if (is_big_number_value == true)
+                if (is_big_number_value == FT_TRUE)
                     pf_printf_fd(file_descriptor,
                         "    \"%s\": %s\n", item_iterator->key, value_text);
                 else
@@ -85,27 +85,27 @@ int json_write_to_file(const char *file_path, json_group *groups)
         group_iterator = group_iterator->next;
     }
     pf_printf_fd(file_descriptor, "}\n");
-    if (cmp_close(file_descriptor) != 0)
-        return (-1);
+    if (cmp_close(file_descriptor) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
     JSON_WRITER_SUCCESS_RETURN(0);
 }
 
-int json_write_to_backend(ft_document_sink &sink, json_group *groups)
+int32_t json_write_to_backend(ft_document_sink &sink, json_group *groups)
 {
     char *serialized_content;
-    size_t serialized_length;
-    int write_result;
+    ft_size_t serialized_length;
+    int32_t write_result;
 
     serialized_content = json_write_to_string(groups);
     if (!serialized_content)
-        return (-1);
+        return (FT_ERR_INVALID_STATE);
     serialized_length = ft_strlen(serialized_content);
     write_result = sink.write_all(serialized_content, serialized_length);
     cma_free(serialized_content);
     if (write_result != FT_ERR_SUCCESS)
     {
-        json_writer_push_error(write_result);
-        return (-1);
+        json_writer_set_error(write_result);
+        return (FT_ERR_INVALID_STATE);
     }
     JSON_WRITER_SUCCESS_RETURN(0);
 }
@@ -134,22 +134,22 @@ char *json_write_to_string(json_group *groups)
         while (item_iterator)
         {
             const char *value_text = item_iterator->value;
-            bool is_big_number_value = false;
-            if (item_iterator->is_big_number == true && item_iterator->big_number)
+            ft_bool is_big_number_value = FT_FALSE;
+            if (item_iterator->is_big_number == FT_TRUE && item_iterator->big_number)
             {
                 value_text = item_iterator->big_number->c_str();
-                is_big_number_value = true;
+                is_big_number_value = FT_TRUE;
             }
             if (item_iterator->next)
             {
-                if (is_big_number_value == true)
+                if (is_big_number_value == FT_TRUE)
                     line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, ",\n");
                 else
                     line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\",\n");
             }
             else
             {
-                if (is_big_number_value == true)
+                if (is_big_number_value == FT_TRUE)
                     line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, "\n");
                 else
                     line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\"\n");
@@ -199,7 +199,7 @@ char *json_write_to_string(json_group *groups)
     JSON_WRITER_SUCCESS_RETURN(result);
 }
 
-int json_document_write_to_file(const char *file_path, const json_document &document)
+int32_t json_document_write_to_file(const char *file_path, const json_document &document)
 {
     return (document.write_to_file(file_path));
 }
@@ -209,7 +209,7 @@ char *json_document_write_to_string(const json_document &document)
     return (document.write_to_string());
 }
 
-int json_document_write_to_backend(ft_document_sink &sink, const json_document &document)
+int32_t json_document_write_to_backend(ft_document_sink &sink, const json_document &document)
 {
     return (document.write_to_backend(sink));
 }

@@ -2,7 +2,7 @@
 
 ## Security Rationale
 
-`be_getEncryptionKey` reads entropy from the operating system to avoid
+`be_get_encryption_key` reads entropy from the operating system to avoid
 predictable keys. On Unix systems the function pulls random bytes from
 `/dev/urandom`; on Windows it uses `CryptGenRandom`. If these sources are
 unavailable, it falls back to `ft_random_seed` to preserve variability.
@@ -16,7 +16,7 @@ by the compiler. The helper funnels operating-system specific primitives
 through `cmp_secure_memzero`, falling back to volatile writes when no dedicated
 API is available. `encryption_secure_wipe_string` erases null-terminated
 strings, including the terminator byte, so secrets retrieved with
-`be_getEncryptionKey` can be scrubbed once they are no longer required.
+`be_get_encryption_key` can be scrubbed once they are no longer required.
 
 ## Key management helpers
 

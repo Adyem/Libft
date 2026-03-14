@@ -12,10 +12,10 @@
 struct api_circuit_state
 {
     ft_string key;
-    int failure_count;
-    long long open_until_ms;
-    bool half_open;
-    int half_open_success_count;
+    int32_t failure_count;
+    int64_t open_until_ms;
+    ft_bool half_open;
+    int32_t half_open_success_count;
 };
 
 static ft_vector<api_circuit_state> &api_retry_circuit_get_states(void)
@@ -41,20 +41,20 @@ static pt_mutex *api_retry_circuit_get_mutex(void)
     return (circuit_mutex);
 }
 
-static long long api_retry_circuit_now(void)
+static int64_t api_retry_circuit_now(void)
 {
-    long long now_value;
+    int64_t now_value;
 
     now_value = time_monotonic();
     return (now_value);
 }
 
-static long long api_retry_circuit_compute_deadline(long long now_ms,
-    int cooldown_ms)
+static int64_t api_retry_circuit_compute_deadline(int64_t now_ms,
+    int32_t cooldown_ms)
 {
-    long long cooldown_value;
+    int64_t cooldown_value;
 
-    cooldown_value = static_cast<long long>(cooldown_ms);
+    cooldown_value = static_cast<int64_t>(cooldown_ms);
     if (cooldown_value <= 0)
         return (now_ms);
     if (cooldown_value > (LLONG_MAX - now_ms))
@@ -62,24 +62,24 @@ static long long api_retry_circuit_compute_deadline(long long now_ms,
     return (now_ms + cooldown_value);
 }
 
-static bool api_retry_circuit_keys_match(const ft_string &lhs,
+static ft_bool api_retry_circuit_keys_match(const ft_string &lhs,
     const char *rhs)
 {
     const char *lhs_cstr;
 
     lhs_cstr = lhs.c_str();
     if (!lhs_cstr || !rhs)
-        return (false);
+        return (FT_FALSE);
     if (ft_strcmp(lhs_cstr, rhs) == 0)
-        return (true);
-    return (false);
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
 static api_circuit_state *api_retry_circuit_find_state(
     ft_vector<api_circuit_state> &states, const ft_string &key)
 {
     const char *key_cstr;
-    size_t index;
+    ft_size_t index;
 
     key_cstr = key.c_str();
     if (!key_cstr)
@@ -109,10 +109,10 @@ static api_circuit_state *api_retry_circuit_get_state(
     new_state.key = key;
     new_state.failure_count = 0;
     new_state.open_until_ms = 0;
-    new_state.half_open = false;
+    new_state.half_open = FT_FALSE;
     new_state.half_open_success_count = 0;
     states.push_back(new_state);
-    size_t last_index;
+    ft_size_t last_index;
 
     last_index = states.size();
     if (last_index == 0)
@@ -120,22 +120,22 @@ static api_circuit_state *api_retry_circuit_get_state(
     return (&states[last_index - 1]);
 }
 
-bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
-    const api_retry_policy *retry_policy, int &error_code)
+ft_bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
+    const api_retry_policy *retry_policy, int32_t &error_code)
 {
     pt_mutex *circuit_mutex;
-    int threshold;
+    int32_t threshold;
     const char *key_cstr;
 
     circuit_mutex = api_retry_circuit_get_mutex();
     threshold = api_retry_get_circuit_threshold(retry_policy);
     if (threshold <= 0)
-        return (true);
+        return (FT_TRUE);
     key_cstr = handle.key.c_str();
     if (!key_cstr || key_cstr[0] == '\0')
-        return (true);
+        return (FT_TRUE);
     if (circuit_mutex->lock() != FT_ERR_SUCCESS)
-        return (true);
+        return (FT_TRUE);
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
     api_circuit_state *state;
 
@@ -143,33 +143,33 @@ bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     if (!state)
     {
         (void)circuit_mutex->unlock();
-        return (true);
+        return (FT_TRUE);
     }
-    long long now_ms;
+    int64_t now_ms;
 
     now_ms = api_retry_circuit_now();
     if (state->open_until_ms > now_ms)
     {
         error_code = FT_ERR_API_CIRCUIT_OPEN;
         (void)circuit_mutex->unlock();
-        return (false);
+        return (FT_FALSE);
     }
     if (state->open_until_ms != 0 && state->open_until_ms <= now_ms)
     {
         state->open_until_ms = 0;
-        state->half_open = true;
+        state->half_open = FT_TRUE;
         state->half_open_success_count = 0;
         state->failure_count = 0;
     }
     (void)circuit_mutex->unlock();
-    return (true);
+    return (FT_TRUE);
 }
 
 void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
     const api_retry_policy *retry_policy)
 {
     pt_mutex *circuit_mutex;
-    int threshold;
+    int32_t threshold;
     const char *key_cstr;
 
     circuit_mutex = api_retry_circuit_get_mutex();
@@ -194,7 +194,7 @@ void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
     state->open_until_ms = 0;
     if (state->half_open)
     {
-        int required_successes;
+        int32_t required_successes;
 
         required_successes = api_retry_get_half_open_successes(retry_policy);
         if (required_successes <= 0)
@@ -202,7 +202,7 @@ void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
         state->half_open_success_count += 1;
         if (state->half_open_success_count >= required_successes)
         {
-            state->half_open = false;
+            state->half_open = FT_FALSE;
             state->half_open_success_count = 0;
         }
     }
@@ -216,7 +216,7 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
     const api_retry_policy *retry_policy)
 {
     pt_mutex *circuit_mutex;
-    int threshold;
+    int32_t threshold;
     const char *key_cstr;
 
     circuit_mutex = api_retry_circuit_get_mutex();
@@ -237,14 +237,14 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
         (void)circuit_mutex->unlock();
         return ;
     }
-    long long now_ms;
-    int cooldown_ms;
+    int64_t now_ms;
+    int32_t cooldown_ms;
 
     now_ms = api_retry_circuit_now();
     cooldown_ms = api_retry_get_circuit_cooldown(retry_policy);
     if (state->half_open)
     {
-        state->half_open = false;
+        state->half_open = FT_FALSE;
         state->half_open_success_count = 0;
         state->failure_count = threshold;
         state->open_until_ms = api_retry_circuit_compute_deadline(now_ms,
@@ -257,7 +257,7 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
     if (state->failure_count >= threshold)
     {
         state->failure_count = threshold;
-        state->half_open = false;
+        state->half_open = FT_FALSE;
         state->half_open_success_count = 0;
         state->open_until_ms = api_retry_circuit_compute_deadline(now_ms,
                 cooldown_ms);

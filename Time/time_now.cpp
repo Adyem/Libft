@@ -7,7 +7,7 @@
 t_time  time_now(void)
 {
     std::time_t standard_time;
-    int error_code;
+    int32_t error_code;
 
     standard_time = ::time(ft_nullptr);
     if (standard_time == static_cast<std::time_t>(-1))

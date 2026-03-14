@@ -17,23 +17,23 @@ static uint64_t rng_initialize_state(uint64_t base_seed, uint64_t stream_identif
     return (state);
 }
 
-int rng_stream_seed(uint64_t base_seed, uint64_t stream_identifier, uint64_t *stream_seed)
+int32_t rng_stream_seed(uint64_t base_seed, uint64_t stream_identifier, uint64_t *stream_seed)
 {
     if (stream_seed == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
     *stream_seed = rng_splitmix64_next(&state);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uint32_t *buffer, size_t count)
+int32_t rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uint32_t *buffer, ft_size_t count)
 {
     if (buffer == ft_nullptr && count > 0)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (count == 0)
-        return (0);
+        return (FT_ERR_SUCCESS);
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < count)
     {
         uint64_t mixed_value = rng_splitmix64_next(&state);
@@ -45,21 +45,21 @@ int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uin
             index++;
         }
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int rng_stream_seed_from_string(const char *seed_string, uint64_t stream_identifier, uint64_t *stream_seed)
+int32_t rng_stream_seed_from_string(const char *seed_string, uint64_t stream_identifier, uint64_t *stream_seed)
 {
     if (seed_string == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     uint32_t base_seed_32 = ft_random_seed(seed_string);
     return (rng_stream_seed(static_cast<uint64_t>(base_seed_32), stream_identifier, stream_seed));
 }
 
-int rng_stream_seed_sequence_from_string(const char *seed_string, uint64_t stream_identifier, uint32_t *buffer, size_t count)
+int32_t rng_stream_seed_sequence_from_string(const char *seed_string, uint64_t stream_identifier, uint32_t *buffer, ft_size_t count)
 {
     if (seed_string == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     uint32_t base_seed_32 = ft_random_seed(seed_string);
     return (rng_stream_seed_sequence(static_cast<uint64_t>(base_seed_32), stream_identifier, buffer, count));
 }

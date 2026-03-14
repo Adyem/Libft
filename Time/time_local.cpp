@@ -7,16 +7,16 @@ void    time_local(t_time time_value, t_time_info *out)
 {
     std::time_t    standard_time;
     std::tm        temporary;
-    bool           lock_acquired;
-    int            lock_error;
-    int            error_code;
+    ft_bool           lock_acquired;
+    int32_t            lock_error;
+    int32_t            error_code;
 
     if (!out)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = time_info_lock(out, &lock_acquired);
     error_code = FT_ERR_SUCCESS;
     if (lock_error != 0 || error_code != FT_ERR_SUCCESS)

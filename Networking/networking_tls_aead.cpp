@@ -9,7 +9,7 @@ static const EVP_CIPHER *networking_tls_resolve_cipher(const SSL_CIPHER *cipher)
 {
     if (cipher == NULL)
         return (NULL);
-    int cipher_nid;
+    int32_t cipher_nid;
 
     cipher_nid = SSL_CIPHER_get_cipher_nid(cipher);
     if (cipher_nid == NID_aes_128_gcm)
@@ -23,16 +23,16 @@ static const EVP_CIPHER *networking_tls_resolve_cipher(const SSL_CIPHER *cipher)
     return (NULL);
 }
 
-static bool networking_tls_prepare_buffer(ft_vector<unsigned char> &buffer,
-        size_t length)
+static ft_bool networking_tls_prepare_buffer(ft_vector<unsigned char> &buffer,
+        ft_size_t length)
 {
     buffer.resize(length, 0);
-    if (ft_vector<unsigned char>::get_error() != FT_ERR_SUCCESS)
-        return (false);
-    return (true);
+    if (buffer.get_error() != FT_ERR_SUCCESS)
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
-bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
+ft_bool    networking_tls_export_aead_keys(SSL *ssl_session, ft_bool outbound,
         ft_vector<unsigned char> &send_key,
         ft_vector<unsigned char> &send_iv,
         ft_vector<unsigned char> &receive_key,
@@ -40,42 +40,42 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
 {
     const SSL_CIPHER *cipher;
     const EVP_CIPHER *evp_cipher;
-    int key_length_value;
-    int iv_length_value;
-    size_t key_length;
-    size_t iv_length;
-    size_t material_length;
+    int32_t key_length_value;
+    int32_t iv_length_value;
+    ft_size_t key_length;
+    ft_size_t iv_length;
+    ft_size_t material_length;
     ft_vector<unsigned char> material;
     unsigned char *material_data;
     const char *label;
-    size_t label_length;
+    ft_size_t label_length;
 
     if (ssl_session == NULL)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     cipher = SSL_get_current_cipher(ssl_session);
     evp_cipher = networking_tls_resolve_cipher(cipher);
     if (evp_cipher == NULL)
     {
         (void)(FT_ERR_UNSUPPORTED_TYPE);
-        return (false);
+        return (FT_FALSE);
     }
     key_length_value = EVP_CIPHER_key_length(evp_cipher);
     iv_length_value = EVP_CIPHER_iv_length(evp_cipher);
     if (key_length_value <= 0 || iv_length_value <= 0)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
-    key_length = static_cast<size_t>(key_length_value);
-    iv_length = static_cast<size_t>(iv_length_value);
+    key_length = static_cast<ft_size_t>(key_length_value);
+    iv_length = static_cast<ft_size_t>(iv_length_value);
     material_length = (key_length + iv_length) * 2;
     if (!networking_tls_prepare_buffer(material, material_length))
     {
         (void)(FT_ERR_NO_MEMORY);
-        return (false);
+        return (FT_FALSE);
     }
     if (material.size() > 0)
         material_data = material.begin();
@@ -89,28 +89,28 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
                 label, label_length, NULL, 0, 0) != 1)
         {
             (void)(FT_ERR_INTERNAL);
-            return (false);
+            return (FT_FALSE);
         }
     }
     if (!networking_tls_prepare_buffer(send_key, key_length))
     {
         (void)(FT_ERR_NO_MEMORY);
-        return (false);
+        return (FT_FALSE);
     }
     if (!networking_tls_prepare_buffer(send_iv, iv_length))
     {
         (void)(FT_ERR_NO_MEMORY);
-        return (false);
+        return (FT_FALSE);
     }
     if (!networking_tls_prepare_buffer(receive_key, key_length))
     {
         (void)(FT_ERR_NO_MEMORY);
-        return (false);
+        return (FT_FALSE);
     }
     if (!networking_tls_prepare_buffer(receive_iv, iv_length))
     {
         (void)(FT_ERR_NO_MEMORY);
-        return (false);
+        return (FT_FALSE);
     }
     const unsigned char *cursor;
     const unsigned char *first_key;
@@ -150,10 +150,10 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
         }
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, bool outbound,
+ft_bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, ft_bool outbound,
         encryption_aead_context &send_context,
         encryption_aead_context &receive_context,
         ft_vector<unsigned char> &send_iv,
@@ -164,29 +164,29 @@ bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, bool outbound,
 
     if (!networking_tls_export_aead_keys(ssl_session, outbound, send_key,
             send_iv, receive_key, receive_iv))
-        return (false);
+        return (FT_FALSE);
     if (send_key.size() == 0 || receive_key.size() == 0)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     if (send_iv.size() == 0 || receive_iv.size() == 0)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     if (send_context.initialize() != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     if (receive_context.initialize() != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     if (send_context.initialize_encrypt(send_key.begin(), send_key.size(),
             send_iv.begin(), send_iv.size()) != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     if (receive_context.initialize_decrypt(receive_key.begin(),
             receive_key.size(), receive_iv.begin(), receive_iv.size()) != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
 #endif

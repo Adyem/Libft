@@ -16,7 +16,7 @@ json_group *serialize_inventory(const ft_inventory &inventory);
 json_group *serialize_equipment(const ft_character &character);
 json_group *serialize_quest(const ft_quest &quest);
 
-static int add_item_field(json_group *group, const ft_string &key, int value)
+static int32_t add_item_field(json_group *group, const ft_string &key, int32_t value)
 {
     json_item *json_item_ptr = json_create_item(key.c_str(), value);
     if (!json_item_ptr)
@@ -28,7 +28,7 @@ static int add_item_field(json_group *group, const ft_string &key, int value)
     return (FT_ERR_SUCCESS);
 }
 
-static int serialize_item_fields(json_group *group, const ft_item &item, const ft_string &item_prefix)
+static int32_t serialize_item_fields(json_group *group, const ft_item &item, const ft_string &item_prefix)
 {
     ft_string key_max = item_prefix;
     key_max += "_max_stack";
@@ -92,78 +92,78 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     {
         return (ft_nullptr);
     }
-    bool has_error = false;
+    ft_bool has_error = FT_FALSE;
     do
     {
-        json_item *capacity_item = json_create_item("capacity", static_cast<int>(inventory.get_capacity()));
+        json_item *capacity_item = json_create_item("capacity", static_cast<int32_t>(inventory.get_capacity()));
         if (!capacity_item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, capacity_item);
         json_item *weight_limit_item = json_create_item("weight_limit", inventory.get_weight_limit());
         if (!weight_limit_item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, weight_limit_item);
         json_item *current_weight_item = json_create_item("current_weight", inventory.get_current_weight());
         if (!current_weight_item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, current_weight_item);
-        json_item *used_slots_item = json_create_item("used_slots", static_cast<int>(inventory.get_used()));
+        json_item *used_slots_item = json_create_item("used_slots", static_cast<int32_t>(inventory.get_used()));
         if (!used_slots_item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, used_slots_item);
-        size_t item_count = inventory.get_items().size();
-        json_item *count_item = json_create_item("item_count", static_cast<int>(item_count));
+        ft_size_t item_count = inventory.get_items().size();
+        json_item *count_item = json_create_item("item_count", static_cast<int32_t>(item_count));
         if (!count_item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, count_item);
-        const Pair<int, ft_sharedptr<ft_item> > *items_end = inventory.get_items().end();
-        const Pair<int, ft_sharedptr<ft_item> > *item_start = items_end;
+        const Pair<int32_t, ft_sharedptr<ft_item> > *items_end = inventory.get_items().end();
+        const Pair<int32_t, ft_sharedptr<ft_item> > *item_start = items_end;
         if (item_count > 0)
         {
             if (!items_end)
             {
-                has_error = true;
+                has_error = FT_TRUE;
                 break ;
             }
             item_start = items_end - item_count;
         }
-        size_t item_index = 0;
+        ft_size_t item_index = 0;
         while (item_index < item_count)
         {
             char item_index_string[32];
 
             std::snprintf(item_index_string, sizeof(item_index_string), "%d",
-                static_cast<int>(item_index));
+                static_cast<int32_t>(item_index));
             ft_string item_prefix;
             if (item_prefix.initialize("item_") != FT_ERR_SUCCESS)
             {
-                has_error = true;
+                has_error = FT_TRUE;
                 break ;
             }
             item_prefix += item_index_string;
             if (!item_start[item_index].value)
             {
-                has_error = true;
+                has_error = FT_TRUE;
                 break ;
             }
             if (serialize_item_fields(group, *item_start[item_index].value, item_prefix) != FT_ERR_SUCCESS)
             {
-                has_error = true;
+                has_error = FT_TRUE;
                 break ;
             }
             item_index++;
@@ -187,7 +187,7 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> head = character.get_equipped_item(EQUIP_HEAD);
-    int head_present_value;
+    int32_t head_present_value;
 
     if (head)
         head_present_value = 1;
@@ -212,7 +212,7 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> chest = character.get_equipped_item(EQUIP_CHEST);
-    int chest_present_value;
+    int32_t chest_present_value;
 
     if (chest)
         chest_present_value = 1;
@@ -237,7 +237,7 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> weapon = character.get_equipped_item(EQUIP_WEAPON);
-    int weapon_present_value;
+    int32_t weapon_present_value;
 
     if (weapon)
         weapon_present_value = 1;
@@ -271,56 +271,56 @@ json_group *serialize_quest(const ft_quest &quest)
     {
         return (ft_nullptr);
     }
-    bool has_error = false;
+    ft_bool has_error = FT_FALSE;
     do
     {
         json_item *item = json_create_item("id", quest.get_id());
         if (!item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("phases", quest.get_phases());
         if (!item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("current_phase", quest.get_current_phase());
         if (!item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("description", quest.get_description().c_str());
         if (!item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("objective", quest.get_objective().c_str());
         if (!item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("reward_experience", quest.get_reward_experience());
         if (!item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, item);
-        size_t item_count = quest.get_reward_items().size();
-        item = json_create_item("reward_item_count", static_cast<int>(item_count));
+        ft_size_t item_count = quest.get_reward_items().size();
+        item = json_create_item("reward_item_count", static_cast<int32_t>(item_count));
         if (!item)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
         json_add_item_to_group(group, item);
@@ -328,31 +328,31 @@ json_group *serialize_quest(const ft_quest &quest)
         const ft_sharedptr<ft_item> *item_start = reward_items.begin();
         if (item_count > 0 && !item_start)
         {
-            has_error = true;
+            has_error = FT_TRUE;
             break ;
         }
-        size_t item_index = 0;
+        ft_size_t item_index = 0;
         while (item_index < item_count)
         {
             char item_index_string[32];
 
             std::snprintf(item_index_string, sizeof(item_index_string), "%d",
-                static_cast<int>(item_index));
+                static_cast<int32_t>(item_index));
             ft_string item_prefix;
             if (item_prefix.initialize("reward_item_") != FT_ERR_SUCCESS)
             {
-                has_error = true;
+                has_error = FT_TRUE;
                 break ;
             }
             item_prefix += item_index_string;
             if (!item_start[item_index])
             {
-                has_error = true;
+                has_error = FT_TRUE;
                 break ;
             }
             if (serialize_item_fields(group, *item_start[item_index], item_prefix) != FT_ERR_SUCCESS)
             {
-                has_error = true;
+                has_error = FT_TRUE;
                 break ;
             }
             item_index++;

@@ -1,8 +1,7 @@
 #ifndef JSON_STREAM_EVENTS_HPP
 #define JSON_STREAM_EVENTS_HPP
 
-#include <cstddef>
-#include <stdbool.h>
+#include "../Errno/errno.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,17 +25,17 @@ typedef enum json_stream_event_type
 typedef struct json_stream_scalar
 {
     const char *data;
-    size_t length;
+    ft_size_t length;
 } json_stream_scalar;
 
 typedef struct json_stream_event
 {
     json_stream_event_type type;
     json_stream_scalar value;
-    bool bool_value;
+    ft_bool bool_value;
 } json_stream_event;
 
-typedef int (*json_stream_event_callback)(void *user_data, const json_stream_event *event);
+typedef int32_t (*json_stream_event_callback)(void *user_data, const json_stream_event *event);
 
 #ifdef __cplusplus
 }

@@ -9,9 +9,10 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 
-static int config_lock_if_enabled(config_data *config, bool *lock_acquired)
+static int32_t config_lock_if_enabled(const config_data *config,
+    ft_bool *lock_acquired)
 {
-    int lock_result;
+    int32_t lock_result;
 
     if (!config)
         return (FT_ERR_SUCCESS);
@@ -19,35 +20,35 @@ static int config_lock_if_enabled(config_data *config, bool *lock_acquired)
     if (lock_result == FT_ERR_SUCCESS && lock_acquired)
     {
         if (config->mutex != ft_nullptr)
-            *lock_acquired = true;
+            *lock_acquired = FT_TRUE;
     }
     return (lock_result);
 }
 
-static void config_unlock_guard(config_data *config, bool lock_acquired)
+static void config_unlock_guard(const config_data *config, ft_bool lock_acquired)
 {
-    if (!config || !lock_acquired)
+    if (!config || lock_acquired == FT_FALSE)
         return ;
     (void)pt_mutex_unlock_if_not_null(config->mutex);
     return ;
 }
 
-static int config_handle_write_failure(FILE *file)
+static int32_t config_handle_write_failure(FILE *file)
 {
     if (file)
         ft_fclose(file);
     return (FT_ERR_IO);
 }
 
-static int config_write_ini(const config_data *config, const char *filename)
+static int32_t config_write_ini(const config_data *config, const char *filename)
 {
     FILE *file;
     const char *last_section;
-    size_t entry_index;
+    ft_size_t entry_index;
 
     file = ft_fopen(filename, "w");
     if (!file)
-        return (-1);
+        return (FT_ERR_FILE_OPEN_FAILED);
     last_section = ft_nullptr;
     entry_index = 0;
     while (config && entry_index < config->entry_count)
@@ -89,8 +90,8 @@ static int config_write_ini(const config_data *config, const char *filename)
         ++entry_index;
     }
     if (ft_fclose(file) == EOF)
-        return (-1);
-    return (0);
+        return (FT_ERR_IO);
+    return (FT_ERR_SUCCESS);
 }
 
 static json_group *config_find_or_create_group(json_group **groups_head, const char *section_name)
@@ -127,10 +128,10 @@ static json_group *config_find_or_create_group(json_group **groups_head, const c
     return (new_group);
 }
 
-static int config_write_json(const config_data *config, const char *filename)
+static int32_t config_write_json(const config_data *config, const char *filename)
 {
     json_group *groups;
-    size_t entry_index;
+    ft_size_t entry_index;
 
     groups = ft_nullptr;
     entry_index = 0;
@@ -140,64 +141,65 @@ static int config_write_json(const config_data *config, const char *filename)
         if (!entry->key || !entry->value)
         {
             json_free_groups(groups);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         json_group *group = config_find_or_create_group(&groups, entry->section);
         if (!group)
         {
             json_free_groups(groups);
-            return (-1);
+            return (FT_ERR_NO_MEMORY);
         }
         json_item *item = json_create_item(entry->key, entry->value);
         if (!item)
         {
             json_free_groups(groups);
-            return (-1);
+            return (FT_ERR_NO_MEMORY);
         }
         json_add_item_to_group(group, item);
         ++entry_index;
     }
-    if (json_write_to_file(filename, groups) != 0)
+    if (json_write_to_file(filename, groups) != FT_ERR_SUCCESS)
     {
         json_free_groups(groups);
-        return (-1);
+        return (FT_ERR_IO);
     }
     json_free_groups(groups);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int config_write_file(const config_data *config, const char *filename)
+int32_t config_write_file(const config_data *config, const char *filename)
 {
     const char *extension;
-    bool mutex_locked = false;
-    int lock_error;
+    ft_bool mutex_locked;
+    int32_t lock_error;
 
+    mutex_locked = FT_FALSE;
     if (!config || !filename)
     {
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    lock_error = config_lock_if_enabled(const_cast<config_data*>(config), &mutex_locked);
+    lock_error = config_lock_if_enabled(config, &mutex_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (-1);
+        return (lock_error);
     }
     if (config->entry_count && !config->entries)
     {
-        config_unlock_guard(const_cast<config_data*>(config), mutex_locked);
-        return (-1);
+        config_unlock_guard(config, mutex_locked);
+        return (FT_ERR_INVALID_STATE);
     }
     extension = ft_strrchr(filename, '.');
     if (extension && ft_strcmp(extension, ".json") == 0)
     {
-        int write_result;
+        int32_t write_result;
 
         write_result = config_write_json(config, filename);
-        config_unlock_guard(const_cast<config_data*>(config), mutex_locked);
+        config_unlock_guard(config, mutex_locked);
         return (write_result);
     }
-    int write_result;
+    int32_t write_result;
 
     write_result = config_write_ini(config, filename);
-    config_unlock_guard(const_cast<config_data*>(config), mutex_locked);
+    config_unlock_guard(config, mutex_locked);
     return (write_result);
 }

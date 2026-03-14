@@ -4,10 +4,10 @@
 #include "../Basic/basic.hpp"
 #include <new>
 
-static int xml_dom_report_error(int error_code) noexcept
+static int32_t xml_dom_report_error(int32_t error_code) noexcept
 {
     (void)error_code;
-    return (-1);
+    return (FT_ERR_INTERNAL);
 }
 
 static void xml_dom_record_success(void) noexcept
@@ -15,7 +15,7 @@ static void xml_dom_record_success(void) noexcept
     return ;
 }
 
-static int xml_dom_last_error(void) noexcept
+static int32_t xml_dom_last_error(void) noexcept
 {
     return (FT_ERR_INTERNAL);
 }
@@ -28,9 +28,9 @@ static void xml_dom_delete_node(ft_dom_node *node) noexcept
     return ;
 }
 
-static int xml_dom_populate_node(const xml_node *source, ft_dom_node *target) noexcept;
+static int32_t xml_dom_populate_node(const xml_node *source, ft_dom_node *target) noexcept;
 
-static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *target) noexcept
+static int32_t xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *target) noexcept
 {
     const char *node_name;
 
@@ -44,25 +44,25 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         node_name = local_name;
     }
     if (target->set_name(node_name) != 0)
-        return (-1);
+        return (FT_ERR_INTERNAL);
     target->set_type(FT_DOM_NODE_ELEMENT);
     if (source->namespace_prefix && source->namespace_prefix[0] != '\0')
     {
         if (target->add_attribute("xml:prefix", source->namespace_prefix) != 0)
-            return (-1);
+            return (FT_ERR_INTERNAL);
     }
     if (source->namespace_uri && source->namespace_uri[0] != '\0')
     {
         if (target->add_attribute("xml:ns", source->namespace_uri) != 0)
-            return (-1);
+            return (FT_ERR_INTERNAL);
     }
     if (source->text && source->text[0] != '\0')
     {
         if (target->set_value(source->text) != 0)
-            return (-1);
+            return (FT_ERR_INTERNAL);
     }
     ft_unordered_map<char*, char*>::const_iterator attribute_iterator = source->attributes.begin();
-    int attribute_error_code = source->attributes.get_error();
+    int32_t attribute_error_code = source->attributes.get_error();
     if (attribute_error_code != FT_ERR_SUCCESS)
         return (xml_dom_report_error(attribute_error_code));
     ft_unordered_map<char*, char*>::const_iterator attribute_end = source->attributes.end();
@@ -82,11 +82,11 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         if (!attribute_value)
             attribute_value = "";
         if (target->add_attribute(attribute_name, attribute_value) != 0)
-            return (-1);
+            return (FT_ERR_INTERNAL);
         ++attribute_iterator;
     }
-    size_t index;
-    size_t count;
+    ft_size_t index;
+    ft_size_t count;
 
     index = 0;
     count = source->children.size();
@@ -95,9 +95,9 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         xml_node *child_source;
 
         child_source = source->children[index];
-        int child_error_code;
+        int32_t child_error_code;
 
-        child_error_code = ft_vector<xml_node *>::get_error();
+        child_error_code = static_cast<int32_t>(source->children.get_error());
         if (child_error_code != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_error_code));
         if (!child_source)
@@ -113,37 +113,37 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         if (xml_dom_populate_node(child_source, child_target) != 0)
         {
             xml_dom_delete_node(child_target);
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
         if (target->add_child(child_target) != 0)
         {
             xml_dom_delete_node(child_target);
-            return (-1);
+            return (FT_ERR_INTERNAL);
         }
         index += 1;
     }
     xml_dom_record_success();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-static int xml_dom_populate_node(const xml_node *source, ft_dom_node *target) noexcept
+static int32_t xml_dom_populate_node(const xml_node *source, ft_dom_node *target) noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
     if (!source || !target)
     {
         return (xml_dom_report_error(FT_ERR_INVALID_ARGUMENT));
     }
     if (xml_node_lock(source, &lock_acquired) != 0)
-        return (-1);
-    int status;
+        return (FT_ERR_INTERNAL);
+    int32_t status;
 
     status = xml_dom_populate_node_locked(source, target);
     xml_node_unlock(source, lock_acquired);
     return (status);
 }
 
-int xml_document_to_dom(const xml_document &document, ft_dom_document &dom) noexcept
+int32_t xml_document_to_dom(const xml_document &document, ft_dom_document &dom) noexcept
 {
     dom.clear();
     xml_node *root_node;
@@ -161,33 +161,33 @@ int xml_document_to_dom(const xml_document &document, ft_dom_document &dom) noex
     if (xml_dom_populate_node(root_node, dom_root) != 0)
     {
         xml_dom_delete_node(dom_root);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     dom.set_root(dom_root);
     xml_dom_record_success();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-static int xml_dom_check_string_error(const ft_string &value) noexcept
+static int32_t xml_dom_check_string_error(const ft_string &value) noexcept
 {
-    int error_code;
+    int32_t error_code;
 
     (void)value;
     error_code = ft_string::get_error();
     return (error_code);
 }
 
-static int xml_dom_append_text(ft_string &output, const char *text) noexcept
+static int32_t xml_dom_append_text(ft_string &output, const char *text) noexcept
 {
     if (!text)
-        return (0);
+        return (FT_ERR_SUCCESS);
     output += text;
     if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-        return (-1);
-    return (0);
+        return (FT_ERR_INTERNAL);
+    return (FT_ERR_SUCCESS);
 }
 
-static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
+static int32_t xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
 {
     const ft_string &node_name = node->get_name();
     const char *name_cstr;
@@ -197,15 +197,15 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
         return (xml_dom_report_error(FT_ERR_INVALID_ARGUMENT));
     output += "<";
     if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_INTERNAL);
     output += node_name;
     if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_INTERNAL);
     const ft_vector<ft_string> &attribute_keys = node->get_attribute_keys();
     const ft_vector<ft_string> &attribute_values = node->get_attribute_values();
 
-    size_t attribute_index;
-    size_t attribute_count;
+    ft_size_t attribute_index;
+    ft_size_t attribute_count;
 
     attribute_index = 0;
     attribute_count = attribute_keys.size();
@@ -214,51 +214,51 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
         const ft_string &attribute_name = attribute_keys[attribute_index];
         const ft_string &attribute_value = attribute_values[attribute_index];
 
-        int attribute_keys_error;
+        int32_t attribute_keys_error;
 
-        attribute_keys_error = ft_vector<ft_string>::get_error();
+        attribute_keys_error = static_cast<int32_t>(attribute_keys.get_error());
         if (attribute_keys_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_keys_error));
-        int attribute_values_error;
+        int32_t attribute_values_error;
 
-        attribute_values_error = ft_vector<ft_string>::get_error();
+        attribute_values_error = static_cast<int32_t>(attribute_values.get_error());
         if (attribute_values_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_values_error));
         output += " ";
         if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_INTERNAL);
         output += attribute_name;
         if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_INTERNAL);
         output += "=\"";
         if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_INTERNAL);
         output += attribute_value;
         if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_INTERNAL);
         output += "\"";
         if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_INTERNAL);
         attribute_index += 1;
     }
     const ft_vector<ft_dom_node*> &children = node->get_children();
     const ft_string &value = node->get_value();
-    bool has_children;
-    bool has_value;
+    ft_bool has_children;
+    ft_bool has_value;
 
     has_children = children.size() > 0;
     has_value = value.size() > 0;
-    int children_error_code;
+    int32_t children_error_code;
 
-    children_error_code = ft_vector<ft_dom_node *>::get_error();
+    children_error_code = static_cast<int32_t>(children.get_error());
     if (children_error_code != FT_ERR_SUCCESS)
         return (xml_dom_report_error(children_error_code));
     if (!has_children && !has_value)
     {
     output += "/>";
     if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
-        return (-1);
-    return (0);
+        return (FT_ERR_INTERNAL);
+    return (FT_ERR_SUCCESS);
     }
     output += ">";
     if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
@@ -266,10 +266,10 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
     if (has_value)
     {
         if (xml_dom_append_text(output, value.c_str()) != 0)
-            return (-1);
+            return (FT_ERR_INTERNAL);
     }
-    size_t index;
-    size_t count;
+    ft_size_t index;
+    ft_size_t count;
 
     index = 0;
     count = children.size();
@@ -277,13 +277,13 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
     {
         ft_dom_node *child_node = children[index];
 
-        int child_vector_error;
+        int32_t child_vector_error;
 
-        child_vector_error = ft_vector<ft_dom_node *>::get_error();
+        child_vector_error = static_cast<int32_t>(children.get_error());
         if (child_vector_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_vector_error));
         if (xml_dom_serialize_node(child_node, output) != 0)
-            return (-1);
+            return (FT_ERR_INTERNAL);
         index += 1;
     }
     output += "</";
@@ -296,10 +296,10 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
     if (xml_dom_check_string_error(output) != FT_ERR_SUCCESS)
         return (xml_dom_report_error(xml_dom_last_error()));
     xml_dom_record_success();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int xml_document_from_dom(const ft_dom_document &dom, xml_document &document) noexcept
+int32_t xml_document_from_dom(const ft_dom_document &dom, xml_document &document) noexcept
 {
     ft_dom_node *root_node;
 
@@ -307,21 +307,21 @@ int xml_document_from_dom(const ft_dom_document &dom, xml_document &document) no
     if (!root_node)
     {
         document.set_manual_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     ft_string serialized;
 
     serialized = "";
-    int string_error = xml_dom_check_string_error(serialized);
+    int32_t string_error = xml_dom_check_string_error(serialized);
     if (string_error != FT_ERR_SUCCESS)
     {
         document.set_manual_error(string_error);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (xml_dom_serialize_node(root_node, serialized) != 0)
     {
         document.set_manual_error(xml_dom_last_error());
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     const char *xml_content;
 
@@ -329,9 +329,9 @@ int xml_document_from_dom(const ft_dom_document &dom, xml_document &document) no
     if (!xml_content)
     {
         document.set_manual_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (document.load_from_string(xml_content) != 0)
-        return (-1);
-    return (0);
+        return (FT_ERR_INTERNAL);
+    return (FT_ERR_SUCCESS);
 }

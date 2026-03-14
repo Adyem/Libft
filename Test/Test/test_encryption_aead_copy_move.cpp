@@ -4,7 +4,7 @@
 #endif
 #define private public
 #define protected public
-#include "../../Encryption/encryption_aead.hpp"
+#include "../../Encryption/encryption.hpp"
 #undef private
 #undef protected
 #include "../../Template/move.hpp"
@@ -85,7 +85,7 @@ FT_TEST(test_encryption_aead_thread_safe_contexts_have_independent_mutexes,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
     locker_thread = std::thread([&first, &lock_acquired, &release_lock, &lock_result]() -> void {
-        pt_recursive_mutex *mutex = first.get_mutex_for_validation();
+        pt_recursive_mutex *mutex = first._mutex;
         if (mutex == ft_nullptr)
             return ;
         lock_result.store(mutex->lock());

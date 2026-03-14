@@ -5,77 +5,77 @@
 
 static pthread_mutex_t g_lock_contention_mutex;
 static pthread_once_t g_lock_contention_once = PTHREAD_ONCE_INIT;
-static int g_lock_contention_mutex_init_error = 0;
-static bool g_lock_contention_sampling_enabled = true;
-static unsigned int g_lock_contention_sample_interval_ms = 250;
-static long g_lock_contention_last_sample_ms = 0;
-static long g_lock_contention_priority_threshold_ms = 500;
-static size_t g_lock_contention_total_samples = 0;
-static size_t g_lock_contention_priority_inversions = 0;
-static size_t g_lock_contention_skipped_samples = 0;
+static int32_t g_lock_contention_mutex_init_error = 0;
+static ft_bool g_lock_contention_sampling_enabled = FT_TRUE;
+static uint32_t g_lock_contention_sample_interval_ms = 250;
+static int64_t g_lock_contention_last_sample_ms = 0;
+static int64_t g_lock_contention_priority_threshold_ms = 500;
+static ft_size_t g_lock_contention_total_samples = 0;
+static ft_size_t g_lock_contention_priority_inversions = 0;
+static ft_size_t g_lock_contention_skipped_samples = 0;
 static double g_lock_contention_wait_total_ms = 0.0;
-static size_t g_lock_contention_wait_observations = 0;
-static long g_lock_contention_longest_wait_ms = 0;
+static ft_size_t g_lock_contention_wait_observations = 0;
+static int64_t g_lock_contention_longest_wait_ms = 0;
 
 static void logger_lock_contention_initialize_mutex()
 {
-    int init_result;
+    int32_t initialization_status;
 
-    init_result = pthread_mutex_init(&g_lock_contention_mutex, ft_nullptr);
-    if (init_result != 0)
+    initialization_status = pthread_mutex_init(&g_lock_contention_mutex, ft_nullptr);
+    if (initialization_status != 0)
     {
-        g_lock_contention_mutex_init_error = init_result;
+        g_lock_contention_mutex_init_error = initialization_status;
         return ;
     }
     g_lock_contention_mutex_init_error = 0;
     return ;
 }
 
-static int logger_lock_contention_lock()
+static int32_t logger_lock_contention_lock()
 {
-    int once_result;
-    int lock_result;
+    int32_t once_status;
+    int32_t lock_status;
 
-    once_result = pthread_once(&g_lock_contention_once, logger_lock_contention_initialize_mutex);
-    if (once_result != 0)
+    once_status = pthread_once(&g_lock_contention_once, logger_lock_contention_initialize_mutex);
+    if (once_status != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (g_lock_contention_mutex_init_error != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    lock_result = pthread_mutex_lock(&g_lock_contention_mutex);
-    if (lock_result != 0)
+    lock_status = pthread_mutex_lock(&g_lock_contention_mutex);
+    if (lock_status != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-static int logger_lock_contention_unlock()
+static int32_t logger_lock_contention_unlock()
 {
-    int once_result;
-    int unlock_result;
+    int32_t once_status;
+    int32_t unlock_status;
 
-    once_result = pthread_once(&g_lock_contention_once, logger_lock_contention_initialize_mutex);
-    if (once_result != 0)
+    once_status = pthread_once(&g_lock_contention_once, logger_lock_contention_initialize_mutex);
+    if (once_status != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (g_lock_contention_mutex_init_error != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    unlock_result = pthread_mutex_unlock(&g_lock_contention_mutex);
-    if (unlock_result != 0)
+    unlock_status = pthread_mutex_unlock(&g_lock_contention_mutex);
+    if (unlock_status != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-void ft_log_enable_lock_contention_sampling(bool enable)
+void ft_log_enable_lock_contention_sampling(ft_bool enable)
 {
     if (logger_lock_contention_lock() != 0)
         return ;
@@ -86,7 +86,7 @@ void ft_log_enable_lock_contention_sampling(bool enable)
     return ;
 }
 
-void ft_log_set_lock_contention_sampling_interval(unsigned int interval_ms)
+void ft_log_set_lock_contention_sampling_interval(uint32_t interval_ms)
 {
     if (logger_lock_contention_lock() != 0)
         return ;
@@ -95,7 +95,7 @@ void ft_log_set_lock_contention_sampling_interval(unsigned int interval_ms)
     return ;
 }
 
-void ft_log_set_lock_contention_priority_threshold(long threshold_ms)
+void ft_log_set_lock_contention_priority_threshold(int64_t threshold_ms)
 {
     if (threshold_ms < 0)
         threshold_ms = 0;
@@ -106,7 +106,7 @@ void ft_log_set_lock_contention_priority_threshold(long threshold_ms)
     return ;
 }
 
-static void logger_lock_contention_record_sample(long wait_duration_ms, bool priority_inversion, bool skipped)
+static void logger_lock_contention_record_sample(int64_t wait_duration_ms, ft_bool priority_inversion, ft_bool skipped)
 {
     g_lock_contention_total_samples += 1;
     if (priority_inversion)
@@ -120,96 +120,95 @@ static void logger_lock_contention_record_sample(long wait_duration_ms, bool pri
     return ;
 }
 
-int ft_log_sample_lock_contention(s_log_lock_contention_sample *samples, size_t capacity, size_t *count)
+int32_t ft_log_sample_lock_contention(s_log_lock_contention_sample *samples, ft_size_t capacity, ft_size_t *entry_count)
 {
     pt_lock_wait_snapshot_vector waiters;
-    size_t index;
-    size_t output_index;
-    long now_ms;
+    ft_size_t entry_index;
+    ft_size_t output_index;
+    int64_t now_ms;
 
-    if (count)
-        *count = 0;
+    if (entry_count)
+        *entry_count = 0;
     if ((samples == ft_nullptr && capacity > 0) || capacity == 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (logger_lock_contention_lock() != 0)
-        return (-1);
+        return (FT_ERR_INTERNAL);
     if (!g_lock_contention_sampling_enabled)
     {
         logger_lock_contention_unlock();
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     now_ms = time_now_ms();
     if (g_lock_contention_sample_interval_ms > 0 && g_lock_contention_last_sample_ms != 0)
     {
-        long elapsed_ms;
+        int64_t elapsed_ms;
 
         elapsed_ms = now_ms - g_lock_contention_last_sample_ms;
-        if (elapsed_ms >= 0 && elapsed_ms < static_cast<long>(g_lock_contention_sample_interval_ms))
+        if (elapsed_ms >= 0 && elapsed_ms < static_cast<int64_t>(g_lock_contention_sample_interval_ms))
         {
             logger_lock_contention_unlock();
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
     }
     g_lock_contention_last_sample_ms = now_ms;
     if (!pt_lock_tracking::snapshot_waiters(waiters))
     {
         logger_lock_contention_unlock();
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    index = 0;
+    entry_index = 0;
     output_index = 0;
-    while (index < waiters.size)
+    while (entry_index < waiters.size)
     {
         s_pt_lock_wait_snapshot snapshot_entry;
-        long wait_duration_ms;
-        bool priority_inversion;
+        int64_t wait_duration_ms;
+        ft_bool priority_inversion;
 
-        snapshot_entry = waiters.data[index];
+        snapshot_entry = waiters.data[entry_index];
         wait_duration_ms = 0;
         if (snapshot_entry.wait_started_ms > 0 && now_ms >= snapshot_entry.wait_started_ms)
             wait_duration_ms = now_ms - snapshot_entry.wait_started_ms;
-        priority_inversion = false;
+        priority_inversion = FT_FALSE;
         if (wait_duration_ms >= g_lock_contention_priority_threshold_ms
             && snapshot_entry.owner_thread != 0 && snapshot_entry.waiting_thread != 0)
         {
-            priority_inversion = true;
+            priority_inversion = FT_TRUE;
         }
         if (output_index < capacity)
         {
             s_log_lock_contention_sample sample;
 
-            sample.mutex_pointer = static_cast<pthread_mutex_t *>(
-                    const_cast<void *>(snapshot_entry.mutex_pointer));
+            sample.mutex_pointer = snapshot_entry.mutex_pointer;
             sample.owner_thread = snapshot_entry.owner_thread;
             sample.waiting_thread = snapshot_entry.waiting_thread;
             sample.wait_duration_ms = wait_duration_ms;
             sample.priority_inversion = priority_inversion;
             samples[output_index] = sample;
-            logger_lock_contention_record_sample(wait_duration_ms, priority_inversion, false);
+            logger_lock_contention_record_sample(wait_duration_ms, priority_inversion, FT_FALSE);
             output_index += 1;
         }
         else
-            logger_lock_contention_record_sample(wait_duration_ms, priority_inversion, true);
-        index += 1;
+            logger_lock_contention_record_sample(wait_duration_ms, priority_inversion, FT_TRUE);
+        entry_index += 1;
     }
-    if (count)
-        *count = output_index;
+    if (entry_count)
+        *entry_count = output_index;
     logger_lock_contention_unlock();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_log_lock_contention_get_statistics(s_log_lock_contention_statistics *statistics)
+int32_t ft_log_lock_contention_get_statistics(s_log_lock_contention_statistics *statistics)
 {
     double average_ms;
 
     if (!statistics)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (logger_lock_contention_lock() != 0)
-        return (-1);
+        return (FT_ERR_INTERNAL);
     statistics->total_samples = g_lock_contention_total_samples;
     statistics->priority_inversions = g_lock_contention_priority_inversions;
     statistics->skipped_samples = g_lock_contention_skipped_samples;
@@ -219,7 +218,7 @@ int ft_log_lock_contention_get_statistics(s_log_lock_contention_statistics *stat
         average_ms = g_lock_contention_wait_total_ms / static_cast<double>(g_lock_contention_wait_observations);
     statistics->average_wait_ms = average_ms;
     logger_lock_contention_unlock();
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_log_lock_contention_reset_statistics()

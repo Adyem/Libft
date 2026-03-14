@@ -1,7 +1,7 @@
 #ifndef JSON_SCHEMA_HPP
 #define JSON_SCHEMA_HPP
 
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 struct json_group;
 
@@ -16,19 +16,19 @@ typedef struct json_schema_field
 {
     const char *key;
     json_type   type;
-    bool        required;
+    ft_bool        required;
     struct json_schema_field *next;
-    mutable pt_mutex *_mutex;
-    mutable int _error_code;
+    mutable pt_recursive_mutex *_mutex;
+    mutable int32_t _error_code;
 } json_schema_field;
 
 typedef struct json_schema
 {
     json_schema_field *fields;
-    mutable pt_mutex *_mutex;
-    mutable int _error_code;
+    mutable pt_recursive_mutex *_mutex;
+    mutable int32_t _error_code;
 } json_schema;
 
-bool        json_validate_schema(json_group *group, const json_schema &schema);
+ft_bool        json_validate_schema(json_group *group, const json_schema &schema);
 
 #endif

@@ -3,93 +3,234 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int ft_experience_table::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_experience_table::_last_error = FT_ERR_SUCCESS;
 
 ft_experience_table::ft_experience_table() noexcept
-    : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr)
+    : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-ft_experience_table::~ft_experience_table()
+ft_experience_table::ft_experience_table(const ft_experience_table &other) noexcept
+    : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    bool lock_acquired;
-    int lock_error;
+    int32_t initialize_error;
+    int32_t set_levels_error;
 
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        this->_levels = ft_nullptr;
-        this->_count = 0;
-        this->set_error(lock_error);
-        (void)this->disable_thread_safety();
+        errno_abort_lifecycle(other._initialised_state, "ft_experience_table::ft_experience_table(copy)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
-    if (this->_levels)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(initialize_error);
+        return ;
+    }
+    set_levels_error = this->set_levels(other._levels, other._count);
+    if (set_levels_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        this->set_error(set_levels_error);
+        return ;
+    }
+    this->set_error(other.get_error());
+    return ;
+}
+
+ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept
+    : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_experience_table::ft_experience_table(move)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+    }
+    return ;
+}
+
+ft_experience_table::~ft_experience_table() noexcept
+{
+    (void)this->destroy();
+    return ;
+}
+
+int32_t ft_experience_table::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state, "ft_experience_table::initialize", "called while object is already initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_levels = ft_nullptr;
+    this->_count = 0;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_experience_table::destroy() noexcept
+{
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t disable_error;
+    int32_t first_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    first_error = FT_ERR_SUCCESS;
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        first_error = lock_error;
+    }
+    if (lock_error == FT_ERR_SUCCESS && this->_levels)
         cma_free(this->_levels);
     this->_levels = ft_nullptr;
     this->_count = 0;
-    this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
-    (void)this->disable_thread_safety();
-    return ;
+    disable_error = this->disable_thread_safety();
+    if (first_error == FT_ERR_SUCCESS && disable_error != FT_ERR_SUCCESS)
+        first_error = disable_error;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(first_error);
+    return (first_error);
 }
 
-int ft_experience_table::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_experience_table::move(ft_experience_table &other) noexcept
 {
-    int lock_error;
+    int32_t destroy_error;
+    int32_t initialize_error;
+    int32_t source_error;
+    int32_t source_disable_error;
 
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_experience_table::move",
+            "source object is not initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    destroy_error = this->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    this->_levels = other._levels;
+    this->_count = other._count;
+    source_error = other.get_error();
+    other._levels = ft_nullptr;
+    other._count = 0;
+    source_disable_error = other.disable_thread_safety();
+    if (source_disable_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(source_disable_error);
+        return (source_disable_error);
+    }
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    other.set_error(source_error);
+    this->set_error(source_error);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_experience_table::lock_internal(ft_bool *lock_acquired) const noexcept
+{
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::lock_internal");
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-void ft_experience_table::unlock_internal(bool lock_acquired) const noexcept
+void ft_experience_table::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return ;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        const_cast<ft_experience_table *>(this)->set_error(unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 
-void ft_experience_table::set_error(int err) const noexcept
+int32_t ft_experience_table::set_error(int32_t error_code) noexcept
 {
-    ft_experience_table::_last_error = err;
-    return ;
+    ft_experience_table::_last_error = error_code;
+    return (error_code);
 }
 
-bool ft_experience_table::is_valid(int count, const int *array) const noexcept
+ft_bool ft_experience_table::is_valid(int32_t count, const int32_t *array) const noexcept
 {
     if (!array || count <= 1)
-        return (true);
-    int index;
+        return (FT_TRUE);
+    int32_t index;
 
     index = 1;
     while (index < count)
     {
         if (array[index] <= array[index - 1])
-            return (false);
+            return (FT_FALSE);
         ++index;
     }
-    return (true);
+    return (FT_TRUE);
 }
 
-int ft_experience_table::resize_locked(int new_count,
-        bool validate_existing) noexcept
+int32_t ft_experience_table::resize_locked(int32_t new_count,
+        ft_bool validate_existing) noexcept
 {
     this->set_error(FT_ERR_SUCCESS);
     if (new_count <= 0)
@@ -100,12 +241,12 @@ int ft_experience_table::resize_locked(int new_count,
         this->_count = 0;
         return (FT_ERR_SUCCESS);
     }
-    int old_count;
-    int *new_levels;
+    int32_t old_count;
+    int32_t *new_levels;
 
     old_count = this->_count;
-    new_levels = static_cast<int*>(cma_realloc(this->_levels,
-                sizeof(int) * new_count));
+    new_levels = static_cast<int32_t*>(cma_realloc(this->_levels,
+                sizeof(int32_t) * new_count));
     if (!new_levels)
     {
         this->set_error(FT_ERR_NO_MEMORY);
@@ -113,7 +254,7 @@ int ft_experience_table::resize_locked(int new_count,
     }
     if (new_count > old_count)
     {
-        int index;
+        int32_t index;
 
         index = old_count;
         while (index < new_count)
@@ -126,7 +267,7 @@ int ft_experience_table::resize_locked(int new_count,
     this->_count = new_count;
     if (validate_existing)
     {
-        int check_count;
+        int32_t check_count;
 
         check_count = old_count;
         if (old_count > new_count)
@@ -141,13 +282,14 @@ int ft_experience_table::resize_locked(int new_count,
     return (FT_ERR_SUCCESS);
 }
 
-int ft_experience_table::get_count() const noexcept
+int32_t ft_experience_table::get_count() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int count_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t count_value;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_count");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -160,13 +302,14 @@ int ft_experience_table::get_count() const noexcept
     return (count_value);
 }
 
-int ft_experience_table::resize(int new_count) noexcept
+int32_t ft_experience_table::resize(int32_t new_count) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t result;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::resize");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -178,13 +321,14 @@ int ft_experience_table::resize(int new_count) noexcept
     return (result);
 }
 
-int ft_experience_table::get_level(int experience) const noexcept
+int32_t ft_experience_table::get_level(int32_t experience) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int level;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t level;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_level");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -205,13 +349,14 @@ int ft_experience_table::get_level(int experience) const noexcept
     return (level);
 }
 
-int ft_experience_table::get_value(int index) const noexcept
+int32_t ft_experience_table::get_value(int32_t index) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t value;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_value");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -230,12 +375,13 @@ int ft_experience_table::get_value(int index) const noexcept
     return (value);
 }
 
-void ft_experience_table::set_value(int index, int value) noexcept
+void ft_experience_table::set_value(int32_t index, int32_t value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::set_value");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -260,14 +406,15 @@ void ft_experience_table::set_value(int index, int value) noexcept
     return ;
 }
 
-int ft_experience_table::set_levels(const int *levels, int count) noexcept
+int32_t ft_experience_table::set_levels(const int32_t *levels, int32_t count) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int resize_result;
-    int level_index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t resize_result;
+    int32_t level_index;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::set_levels");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -281,7 +428,7 @@ int ft_experience_table::set_levels(const int *levels, int count) noexcept
         this->unlock_internal(lock_acquired);
         return (resize_result);
     }
-    resize_result = this->resize_locked(count, false);
+    resize_result = this->resize_locked(count, FT_FALSE);
     if (resize_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
@@ -304,16 +451,17 @@ int ft_experience_table::set_levels(const int *levels, int count) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_experience_table::generate_levels_total(int count, int base,
+int32_t ft_experience_table::generate_levels_total(int32_t count, int32_t base,
         double multiplier) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int resize_result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t resize_result;
     double value;
-    int level_index;
+    int32_t level_index;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::generate_levels_total");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -329,7 +477,7 @@ int ft_experience_table::generate_levels_total(int count, int base,
         this->unlock_internal(lock_acquired);
         return (resize_result);
     }
-    resize_result = this->resize_locked(count, false);
+    resize_result = this->resize_locked(count, FT_FALSE);
     if (resize_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
@@ -339,7 +487,7 @@ int ft_experience_table::generate_levels_total(int count, int base,
     level_index = 0;
     while (level_index < count)
     {
-        this->_levels[level_index] = static_cast<int>(value);
+        this->_levels[level_index] = static_cast<int32_t>(value);
         value *= multiplier;
         ++level_index;
     }
@@ -354,17 +502,18 @@ int ft_experience_table::generate_levels_total(int count, int base,
     return (FT_ERR_SUCCESS);
 }
 
-int ft_experience_table::generate_levels_scaled(int count, int base,
+int32_t ft_experience_table::generate_levels_scaled(int32_t count, int32_t base,
         double multiplier) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int resize_result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t resize_result;
     double increment;
     double total;
-    int index;
+    int32_t index;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::generate_levels_scaled");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -378,7 +527,7 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
         this->unlock_internal(lock_acquired);
         return (resize_result);
     }
-    resize_result = this->resize_locked(count, false);
+    resize_result = this->resize_locked(count, FT_FALSE);
     if (resize_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
@@ -386,13 +535,13 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
     }
     increment = static_cast<double>(base);
     total = static_cast<double>(base);
-    this->_levels[0] = static_cast<int>(total);
+    this->_levels[0] = static_cast<int32_t>(total);
     index = 1;
     while (index < count)
     {
         increment *= multiplier;
         total += increment;
-        this->_levels[index] = static_cast<int>(total);
+        this->_levels[index] = static_cast<int32_t>(total);
         ++index;
     }
     if (!this->is_valid(this->_count, this->_levels))
@@ -406,13 +555,14 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
     return (FT_ERR_SUCCESS);
 }
 
-int ft_experience_table::check_for_error() const noexcept
+int32_t ft_experience_table::check_for_error() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t index;
 
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::check_for_error");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -423,7 +573,7 @@ int ft_experience_table::check_for_error() const noexcept
     {
         const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
         this->unlock_internal(lock_acquired);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     index = 1;
     while (index < this->_count)
@@ -438,24 +588,29 @@ int ft_experience_table::check_for_error() const noexcept
     }
     const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_experience_table::get_error() const noexcept
+int32_t ft_experience_table::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_error");
     return (ft_experience_table::_last_error);
 }
 
 const char *ft_experience_table::get_error_str() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
-int ft_experience_table::enable_thread_safety() noexcept
+int32_t ft_experience_table::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_experience_table::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -476,9 +631,9 @@ int ft_experience_table::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_experience_table::disable_thread_safety() noexcept
+int32_t ft_experience_table::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -489,7 +644,7 @@ int ft_experience_table::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_experience_table::is_thread_safe() const noexcept
+ft_bool ft_experience_table::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }

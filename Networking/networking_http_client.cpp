@@ -31,33 +31,33 @@ struct http_stream_state
 {
     ft_string           header_buffer;
     ft_string           headers;
-    int                 status_code;
-    bool                headers_ready;
-    bool                keep_alive_allowed;
-    bool                has_content_length;
-    size_t              expected_body_length;
-    size_t              received_body_length;
-    bool                saw_chunked_encoding;
-    bool                http_1_1;
+    int32_t                 status_code;
+    ft_bool                headers_ready;
+    ft_bool                keep_alive_allowed;
+    ft_bool                has_content_length;
+    ft_size_t              expected_body_length;
+    ft_size_t              received_body_length;
+    ft_bool                saw_chunked_encoding;
+    ft_bool                http_1_1;
     http_response_handler handler;
 };
 
 struct http_buffer_adapter_state
 {
     ft_string   *response;
-    bool        header_appended;
-    size_t      body_bytes;
-    int         status_code;
+    ft_bool        header_appended;
+    ft_size_t      body_bytes;
+    int32_t         status_code;
 };
 
-static http_buffer_adapter_state g_http_buffer_adapter_state = { NULL, false, 0, 0 };
+static http_buffer_adapter_state g_http_buffer_adapter_state = { NULL, FT_FALSE, 0, 0 };
 
 struct http_client_connection_entry
 {
     ft_string               host;
     ft_string               port;
-    bool                    use_ssl;
-    int                     socket_fd;
+    ft_bool                    use_ssl;
+    int32_t                     socket_fd;
     SSL_CTX                 *ssl_context;
     SSL                     *ssl_connection;
     t_monotonic_time_point  last_used;
@@ -66,17 +66,17 @@ struct http_client_connection_entry
 struct http_client_active_connection
 {
     http_client_connection_entry   entry;
-    bool                            from_pool;
-    bool                            store_allowed;
+    ft_bool                            from_pool;
+    ft_bool                            store_allowed;
 };
 
 static pt_mutex g_http_client_pool_mutex;
 static std::vector<http_client_connection_entry> g_http_client_pool_entries;
-static size_t g_http_client_pool_max_idle = 8;
-static long long g_http_client_pool_idle_timeout_ms = 30000;
-static size_t g_http_client_pool_acquire_calls = 0;
-static size_t g_http_client_pool_reuse_hits = 0;
-static size_t g_http_client_pool_acquire_misses = 0;
+static ft_size_t g_http_client_pool_max_idle = 8;
+static int64_t g_http_client_pool_idle_timeout_ms = 30000;
+static ft_size_t g_http_client_pool_acquire_calls = 0;
+static ft_size_t g_http_client_pool_reuse_hits = 0;
+static ft_size_t g_http_client_pool_acquire_misses = 0;
 
 static void http_client_pool_reset_active(http_client_active_connection &connection)
 {
@@ -85,9 +85,9 @@ static void http_client_pool_reset_active(http_client_active_connection &connect
     connection.entry.ssl_connection = NULL;
     connection.entry.host.clear();
     connection.entry.port.clear();
-    connection.entry.use_ssl = false;
-    connection.from_pool = false;
-    connection.store_allowed = true;
+    connection.entry.use_ssl = FT_FALSE;
+    connection.from_pool = FT_FALSE;
+    connection.store_allowed = FT_TRUE;
     return ;
 }
 
@@ -111,20 +111,20 @@ static void http_client_pool_dispose_entry(http_client_connection_entry &entry)
     }
     entry.host.clear();
     entry.port.clear();
-    entry.use_ssl = false;
+    entry.use_ssl = FT_FALSE;
     entry.last_used = time_monotonic_point_now();
     return ;
 }
 
 static void http_client_pool_prune_locked(t_monotonic_time_point now)
 {
-    size_t index;
+    ft_size_t index;
 
     index = 0;
     while (index < g_http_client_pool_entries.size())
     {
         http_client_connection_entry &candidate = g_http_client_pool_entries[index];
-        long long idle_time_ms;
+        int64_t idle_time_ms;
 
         idle_time_ms = time_monotonic_point_diff_ms(candidate.last_used, now);
         if (idle_time_ms < 0)
@@ -140,20 +140,20 @@ static void http_client_pool_prune_locked(t_monotonic_time_point now)
     return ;
 }
 
-static void http_client_pool_release_connection(http_client_active_connection &connection, bool allow_reuse)
+static void http_client_pool_release_connection(http_client_active_connection &connection, ft_bool allow_reuse)
 {
     if (connection.entry.socket_fd < 0)
     {
         http_client_pool_reset_active(connection);
         return ;
     }
-    if (allow_reuse == false || connection.store_allowed == false)
+    if (allow_reuse == FT_FALSE || connection.store_allowed == FT_FALSE)
     {
         http_client_pool_dispose_entry(connection.entry);
         http_client_pool_reset_active(connection);
         return ;
     }
-    int lock_error;
+    int32_t lock_error;
     t_monotonic_time_point now;
 
     lock_error = g_http_client_pool_mutex.lock();
@@ -181,16 +181,16 @@ static void http_client_pool_release_connection(http_client_active_connection &c
 
 static void http_client_pool_disable_store(http_client_active_connection &connection)
 {
-    connection.store_allowed = false;
+    connection.store_allowed = FT_FALSE;
     return ;
 }
 
-static int http_client_pool_acquire_connection(const char *host, const char *port,
-    bool use_ssl, http_client_active_connection &connection, bool &reused)
+static int32_t http_client_pool_acquire_connection(const char *host, const char *port,
+    ft_bool use_ssl, http_client_active_connection &connection, ft_bool &reused)
 {
-    int lock_error;
+    int32_t lock_error;
     t_monotonic_time_point now;
-    size_t index;
+    ft_size_t index;
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -206,11 +206,11 @@ static int http_client_pool_acquire_connection(const char *host, const char *por
         if (candidate.use_ssl == use_ssl && candidate.host == host && candidate.port == port)
         {
             connection.entry = candidate;
-            connection.from_pool = true;
-            connection.store_allowed = true;
+            connection.from_pool = FT_TRUE;
+            connection.store_allowed = FT_TRUE;
             g_http_client_pool_entries.erase(g_http_client_pool_entries.begin() + index);
             g_http_client_pool_reuse_hits++;
-            reused = true;
+            reused = FT_TRUE;
             (void)g_http_client_pool_mutex.unlock();
             return (FT_ERR_SUCCESS);
         }
@@ -225,16 +225,16 @@ static int http_client_pool_acquire_connection(const char *host, const char *por
     connection.entry.ssl_context = NULL;
     connection.entry.ssl_connection = NULL;
     connection.entry.last_used = now;
-    connection.from_pool = false;
-    connection.store_allowed = true;
-    reused = false;
+    connection.from_pool = FT_FALSE;
+    connection.store_allowed = FT_TRUE;
+    reused = FT_FALSE;
     return (FT_ERR_SUCCESS);
 }
 
 static void http_client_trim_string(ft_string &value)
 {
-    size_t start_index;
-    size_t end_index;
+    ft_size_t start_index;
+    ft_size_t end_index;
 
     start_index = 0;
     while (start_index < value.size()
@@ -253,7 +253,7 @@ static void http_client_trim_string(ft_string &value)
 
 static void http_client_to_lower(ft_string &value)
 {
-    size_t index;
+    ft_size_t index;
     char *mutable_data;
 
     index = 0;
@@ -275,16 +275,16 @@ static void http_client_to_lower(ft_string &value)
 static void http_client_parse_header_metadata(http_stream_state &state)
 {
     const char  *header_data;
-    size_t      header_limit;
-    size_t      offset;
+    ft_size_t      header_limit;
+    ft_size_t      offset;
     ft_string   status_prefix;
 
-    state.keep_alive_allowed = false;
-    state.has_content_length = false;
+    state.keep_alive_allowed = FT_FALSE;
+    state.has_content_length = FT_FALSE;
     state.expected_body_length = 0;
     state.received_body_length = 0;
-    state.saw_chunked_encoding = false;
-    state.http_1_1 = false;
+    state.saw_chunked_encoding = FT_FALSE;
+    state.http_1_1 = FT_FALSE;
     header_limit = state.headers.size();
     header_data = state.headers.c_str();
     if (header_limit >= 8)
@@ -292,16 +292,16 @@ static void http_client_parse_header_metadata(http_stream_state &state)
         status_prefix.assign(header_data, 8);
         if (status_prefix == "HTTP/1.1")
         {
-            state.http_1_1 = true;
-            state.keep_alive_allowed = true;
+            state.http_1_1 = FT_TRUE;
+            state.keep_alive_allowed = FT_TRUE;
         }
     }
     offset = 0;
     while (offset < header_limit)
     {
-        size_t line_length;
+        ft_size_t line_length;
         const char *line_start;
-        size_t colon_index;
+        ft_size_t colon_index;
         ft_string header_name;
         ft_string header_value;
         ft_string lowered_value;
@@ -335,15 +335,15 @@ static void http_client_parse_header_metadata(http_stream_state &state)
             lowered_value = header_value;
             http_client_to_lower(lowered_value);
             if (lowered_value.find("close") != ft_string::npos)
-                state.keep_alive_allowed = false;
+                state.keep_alive_allowed = FT_FALSE;
             else if (lowered_value.find("keep-alive") != ft_string::npos)
-                state.keep_alive_allowed = true;
+                state.keep_alive_allowed = FT_TRUE;
             continue ;
         }
         if (header_name == "content-length")
         {
-            size_t digit_index;
-            unsigned long long parsed_length;
+            ft_size_t digit_index;
+            uint64_t parsed_length;
 
             digit_index = 0;
             parsed_length = 0;
@@ -351,11 +351,11 @@ static void http_client_parse_header_metadata(http_stream_state &state)
                 && ft_isdigit(static_cast<unsigned char>(header_value[digit_index])) != 0)
             {
                 parsed_length = (parsed_length * 10)
-                    + static_cast<unsigned long long>(header_value[digit_index] - '0');
+                    + static_cast<uint64_t>(header_value[digit_index] - '0');
                 digit_index++;
             }
-            state.has_content_length = true;
-            state.expected_body_length = static_cast<size_t>(parsed_length);
+            state.has_content_length = FT_TRUE;
+            state.expected_body_length = static_cast<ft_size_t>(parsed_length);
             continue ;
         }
         if (header_name == "transfer-encoding")
@@ -364,22 +364,22 @@ static void http_client_parse_header_metadata(http_stream_state &state)
             http_client_to_lower(lowered_value);
             if (lowered_value.find("chunked") != ft_string::npos)
             {
-                state.saw_chunked_encoding = true;
-                state.keep_alive_allowed = false;
+                state.saw_chunked_encoding = FT_TRUE;
+                state.keep_alive_allowed = FT_FALSE;
             }
         }
     }
-    if (state.has_content_length == false)
-        state.keep_alive_allowed = false;
-    if (state.saw_chunked_encoding != false)
-        state.keep_alive_allowed = false;
+    if (state.has_content_length == FT_FALSE)
+        state.keep_alive_allowed = FT_FALSE;
+    if (state.saw_chunked_encoding != FT_FALSE)
+        state.keep_alive_allowed = FT_FALSE;
     return ;
 }
 
 void http_client_pool_flush(void)
 {
-    int lock_error;
-    size_t index;
+    int32_t lock_error;
+    ft_size_t index;
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -395,9 +395,9 @@ void http_client_pool_flush(void)
     return ;
 }
 
-void http_client_pool_set_max_idle(size_t max_idle)
+void http_client_pool_set_max_idle(ft_size_t max_idle)
 {
-    int lock_error;
+    int32_t lock_error;
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -405,7 +405,7 @@ void http_client_pool_set_max_idle(size_t max_idle)
     g_http_client_pool_max_idle = max_idle;
     if (g_http_client_pool_entries.size() > g_http_client_pool_max_idle)
     {
-        size_t index;
+        ft_size_t index;
 
         index = g_http_client_pool_max_idle;
         while (index < g_http_client_pool_entries.size())
@@ -419,10 +419,10 @@ void http_client_pool_set_max_idle(size_t max_idle)
     return ;
 }
 
-size_t http_client_pool_get_idle_count(void)
+ft_size_t http_client_pool_get_idle_count(void)
 {
-    int lock_error;
-    size_t idle_count;
+    int32_t lock_error;
+    ft_size_t idle_count;
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -434,7 +434,7 @@ size_t http_client_pool_get_idle_count(void)
 
 void http_client_pool_debug_reset_counters(void)
 {
-    int lock_error;
+    int32_t lock_error;
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -446,10 +446,10 @@ void http_client_pool_debug_reset_counters(void)
     return ;
 }
 
-size_t http_client_pool_debug_get_reuse_count(void)
+ft_size_t http_client_pool_debug_get_reuse_count(void)
 {
-    int lock_error;
-    size_t reuse_count;
+    int32_t lock_error;
+    ft_size_t reuse_count;
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -459,10 +459,10 @@ size_t http_client_pool_debug_get_reuse_count(void)
     return (reuse_count);
 }
 
-size_t http_client_pool_debug_get_miss_count(void)
+ft_size_t http_client_pool_debug_get_miss_count(void)
 {
-    int lock_error;
-    size_t miss_count;
+    int32_t lock_error;
+    ft_size_t miss_count;
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -472,17 +472,17 @@ size_t http_client_pool_debug_get_miss_count(void)
     return (miss_count);
 }
 
-static int http_client_wait_for_socket_ready(int socket_fd, bool wait_for_write)
+static int32_t http_client_wait_for_socket_ready(int32_t socket_fd, ft_bool wait_for_write)
 {
-    int poll_descriptor;
-    int poll_result;
+    int32_t poll_descriptor;
+    int32_t poll_result;
 
     if (socket_fd < 0)
     {
         return (-1);
     }
     poll_descriptor = socket_fd;
-    if (wait_for_write != false)
+    if (wait_for_write != FT_FALSE)
         poll_result = nw_poll(NULL, 0, &poll_descriptor, 1, 1000);
     else
         poll_result = nw_poll(&poll_descriptor, 1, NULL, 0, 1000);
@@ -498,7 +498,7 @@ static int http_client_wait_for_socket_ready(int socket_fd, bool wait_for_write)
     return (0);
 }
 
-static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX **ssl_context, SSL **ssl_connection)
+static int32_t http_client_initialize_ssl(int32_t socket_fd, const char *host, SSL_CTX **ssl_context, SSL **ssl_connection)
 {
     SSL_CTX *local_context;
     SSL *local_connection;
@@ -527,15 +527,15 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
         SSL_CTX_free(local_context);
         return (FT_ERR_INVALID_OPERATION);
     }
-    bool selected_http2;
-    int alpn_error;
+    ft_bool selected_http2;
+    int32_t alpn_error;
 
     if (!http2_select_alpn_protocol(local_connection, selected_http2, alpn_error))
     (void)selected_http2;
     (void)alpn_error;
     if (host != NULL && host[0] != '\0')
     {
-        long control_result;
+        int64_t control_result;
 
         control_result = SSL_ctrl(local_connection, SSL_CTRL_SET_TLSEXT_HOSTNAME,
             TLSEXT_NAMETYPE_host_name, const_cast<char *>(host));
@@ -575,15 +575,15 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
     return (FT_ERR_SUCCESS);
 }
 
-static int http_client_establish_connection(const char *host, const char *port_string,
-    bool use_ssl, http_client_active_connection &connection)
+static int32_t http_client_establish_connection(const char *host, const char *port_string,
+    ft_bool use_ssl, http_client_active_connection &connection)
 {
     struct addrinfo address_hints;
     struct addrinfo *address_info;
     struct addrinfo *current_info;
-    int socket_fd;
-    int result;
-    int resolver_status;
+    int32_t socket_fd;
+    int32_t result;
+    int32_t resolver_status;
 
     if (connection.entry.socket_fd >= 0)
         return (FT_ERR_SUCCESS);
@@ -624,7 +624,7 @@ static int http_client_establish_connection(const char *host, const char *port_s
     }
     connection.entry.socket_fd = socket_fd;
     connection.entry.use_ssl = use_ssl;
-    if (use_ssl != false)
+    if (use_ssl != FT_FALSE)
     {
         if (http_client_initialize_ssl(socket_fd, host, &connection.entry.ssl_context,
             &connection.entry.ssl_connection) != FT_ERR_SUCCESS)
@@ -664,9 +664,9 @@ static int http_client_establish_connection(const char *host, const char *port_s
     return (FT_ERR_SUCCESS);
 }
 
-int http_client_send_plain_request(int socket_fd, const char *buffer, size_t length)
+int32_t http_client_send_plain_request(int32_t socket_fd, const char *buffer, ft_size_t length)
 {
-    size_t total_sent;
+    ft_size_t total_sent;
     ssize_t send_result;
 
     total_sent = 0;
@@ -675,17 +675,17 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
         send_result = nw_send(socket_fd, buffer + total_sent, length - total_sent, 0);
         if (send_result < 0)
         {
-            int wait_result;
+            int32_t wait_result;
 
 #ifdef _WIN32
-            int last_error;
+            int32_t last_error;
 
             last_error = WSAGetLastError();
             if (last_error == WSAEINTR)
                 continue ;
             if (last_error == WSAEWOULDBLOCK)
             {
-                wait_result = http_client_wait_for_socket_ready(socket_fd, true);
+                wait_result = http_client_wait_for_socket_ready(socket_fd, FT_TRUE);
                 if (wait_result < 0)
                     return (FT_ERR_INVALID_OPERATION);
                 continue ;
@@ -695,7 +695,7 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
                 continue ;
             if (errno == EWOULDBLOCK || errno == EAGAIN)
             {
-                wait_result = http_client_wait_for_socket_ready(socket_fd, true);
+                wait_result = http_client_wait_for_socket_ready(socket_fd, FT_TRUE);
                 if (wait_result < 0)
                     return (FT_ERR_INVALID_OPERATION);
                 continue ;
@@ -707,18 +707,18 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
         {
             return (FT_ERR_INVALID_OPERATION);
         }
-        total_sent += static_cast<size_t>(send_result);
+        total_sent += static_cast<ft_size_t>(send_result);
     }
     if (networking_check_socket_after_send(socket_fd) != 0)
         return (FT_ERR_INVALID_OPERATION);
     return (FT_ERR_SUCCESS);
 }
 
-int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t length)
+int32_t http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, ft_size_t length)
 {
-    size_t total_sent;
+    ft_size_t total_sent;
     ssize_t send_result;
-    int socket_fd;
+    int32_t socket_fd;
 
     socket_fd = -1;
     if (ssl_connection != NULL)
@@ -729,13 +729,13 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
         send_result = nw_ssl_write(ssl_connection, buffer + total_sent, length - total_sent);
         if (send_result <= 0)
         {
-            int ssl_error;
-            int wait_result;
+            int32_t ssl_error;
+            int32_t wait_result;
 
-            ssl_error = SSL_get_error(ssl_connection, static_cast<int>(send_result));
+            ssl_error = SSL_get_error(ssl_connection, static_cast<int32_t>(send_result));
             if (ssl_error == SSL_ERROR_WANT_READ || ssl_error == SSL_ERROR_WANT_WRITE)
             {
-                bool wait_for_write;
+                ft_bool wait_for_write;
 
                 wait_for_write = (ssl_error == SSL_ERROR_WANT_WRITE);
                 wait_result = http_client_wait_for_socket_ready(socket_fd, wait_for_write);
@@ -746,14 +746,14 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
             if (ssl_error == SSL_ERROR_SYSCALL)
             {
 #ifdef _WIN32
-                int last_error;
+                int32_t last_error;
 
                 last_error = WSAGetLastError();
                 if (last_error == WSAEINTR)
                     continue ;
                 if (last_error == WSAEWOULDBLOCK)
                 {
-                    wait_result = http_client_wait_for_socket_ready(socket_fd, true);
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, FT_TRUE);
                     if (wait_result < 0)
                         return (FT_ERR_INVALID_OPERATION);
                     continue ;
@@ -767,7 +767,7 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
                     continue ;
                 if (errno == EWOULDBLOCK || errno == EAGAIN)
                 {
-                    wait_result = http_client_wait_for_socket_ready(socket_fd, true);
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, FT_TRUE);
                     if (wait_result < 0)
                         return (FT_ERR_INVALID_OPERATION);
                     continue ;
@@ -780,7 +780,7 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
             }
             return (FT_ERR_INVALID_OPERATION);
         }
-        total_sent += static_cast<size_t>(send_result);
+        total_sent += static_cast<ft_size_t>(send_result);
     }
     if (networking_check_ssl_after_send(ssl_connection) != 0)
         return (FT_ERR_INVALID_OPERATION);
@@ -792,21 +792,21 @@ static void http_client_stream_state_init(http_stream_state &state, http_respons
     state.header_buffer.clear();
     state.headers.clear();
     state.status_code = 0;
-    state.headers_ready = false;
-    state.keep_alive_allowed = false;
-    state.has_content_length = false;
+    state.headers_ready = FT_FALSE;
+    state.keep_alive_allowed = FT_FALSE;
+    state.has_content_length = FT_FALSE;
     state.expected_body_length = 0;
     state.received_body_length = 0;
-    state.saw_chunked_encoding = false;
-    state.http_1_1 = false;
+    state.saw_chunked_encoding = FT_FALSE;
+    state.http_1_1 = FT_FALSE;
     state.handler = handler;
     return ;
 }
 
-static int http_client_parse_status(const ft_string &headers)
+static int32_t http_client_parse_status(const ft_string &headers)
 {
     const char  *header_cstr;
-    size_t      index;
+    ft_size_t      index;
 
     header_cstr = headers.c_str();
     index = 0;
@@ -819,16 +819,16 @@ static int http_client_parse_status(const ft_string &headers)
     return (ft_atoi(header_cstr + index));
 }
 
-static int http_client_stream_handle_header(http_stream_state &state)
+static int32_t http_client_stream_handle_header(http_stream_state &state)
 {
     const char  *terminator;
-    size_t      header_length;
-    size_t      body_length;
+    ft_size_t      header_length;
+    ft_size_t      body_length;
 
     terminator = ft_strstr(state.header_buffer.c_str(), "\r\n\r\n");
     if (terminator == NULL)
         return (0);
-    header_length = static_cast<size_t>(terminator - state.header_buffer.c_str()) + 4;
+    header_length = static_cast<ft_size_t>(terminator - state.header_buffer.c_str()) + 4;
     state.headers = state.header_buffer;
     if (state.headers.size() > header_length)
         state.headers.erase(header_length, state.headers.size() - header_length);
@@ -838,13 +838,13 @@ static int http_client_stream_handle_header(http_stream_state &state)
     if (body_length > 0 && state.handler != NULL)
     {
         const char *body_ptr;
-        size_t deliver_length;
+        ft_size_t deliver_length;
 
         body_ptr = state.header_buffer.c_str() + header_length;
         deliver_length = body_length;
-        if (state.has_content_length != false)
+        if (state.has_content_length != FT_FALSE)
         {
-            size_t remaining_bytes;
+            ft_size_t remaining_bytes;
 
             if (state.expected_body_length > state.received_body_length)
                 remaining_bytes = state.expected_body_length - state.received_body_length;
@@ -853,31 +853,31 @@ static int http_client_stream_handle_header(http_stream_state &state)
             if (deliver_length > remaining_bytes)
             {
                 deliver_length = remaining_bytes;
-                state.keep_alive_allowed = false;
+                state.keep_alive_allowed = FT_FALSE;
             }
             state.received_body_length += deliver_length;
         }
         if (deliver_length > 0)
-            state.handler(state.status_code, state.headers, body_ptr, deliver_length, false);
+            state.handler(state.status_code, state.headers, body_ptr, deliver_length, FT_FALSE);
         if (deliver_length < body_length)
-            state.keep_alive_allowed = false;
+            state.keep_alive_allowed = FT_FALSE;
     }
     state.header_buffer.clear();
-    state.headers_ready = true;
+    state.headers_ready = FT_TRUE;
     return (1);
 }
 
-static int http_client_receive_stream(http_client_active_connection &connection,
-    http_response_handler handler, bool &allow_keep_alive)
+static int32_t http_client_receive_stream(http_client_active_connection &connection,
+    http_response_handler handler, ft_bool &allow_keep_alive)
 {
     char                buffer[1024];
     ssize_t             bytes_received;
     http_stream_state   state;
-    int                 socket_fd;
+    int32_t                 socket_fd;
     SSL                 *ssl_connection;
-    bool                use_ssl;
+    ft_bool                use_ssl;
 
-    allow_keep_alive = false;
+    allow_keep_alive = FT_FALSE;
     if (handler == NULL)
     {
         return (FT_ERR_INVALID_ARGUMENT);
@@ -888,19 +888,19 @@ static int http_client_receive_stream(http_client_active_connection &connection,
     use_ssl = connection.entry.use_ssl;
     while (1)
     {
-        if (use_ssl != false)
+        if (use_ssl != FT_FALSE)
             bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
         else
             bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received > 0)
         {
             buffer[bytes_received] = '\0';
-            if (state.headers_ready == false)
+            if (state.headers_ready == FT_FALSE)
             {
-                state.header_buffer.append(buffer, static_cast<size_t>(bytes_received));
+                state.header_buffer.append(buffer, static_cast<ft_size_t>(bytes_received));
                 if (http_client_stream_handle_header(state) != 0)
                 {
-                    if (state.has_content_length != false
+                    if (state.has_content_length != FT_FALSE
                         && state.received_body_length >= state.expected_body_length)
                         break ;
                     continue ;
@@ -908,12 +908,12 @@ static int http_client_receive_stream(http_client_active_connection &connection,
             }
             else
             {
-                size_t deliver_size;
+                ft_size_t deliver_size;
 
-                deliver_size = static_cast<size_t>(bytes_received);
-                if (state.has_content_length != false)
+                deliver_size = static_cast<ft_size_t>(bytes_received);
+                if (state.has_content_length != FT_FALSE)
                 {
-                    size_t remaining_bytes;
+                    ft_size_t remaining_bytes;
 
                     if (state.expected_body_length > state.received_body_length)
                         remaining_bytes = state.expected_body_length - state.received_body_length;
@@ -922,28 +922,28 @@ static int http_client_receive_stream(http_client_active_connection &connection,
                     if (deliver_size > remaining_bytes)
                     {
                         deliver_size = remaining_bytes;
-                        state.keep_alive_allowed = false;
+                        state.keep_alive_allowed = FT_FALSE;
                     }
                     state.received_body_length += deliver_size;
                 }
                 if (deliver_size > 0)
-                    state.handler(state.status_code, state.headers, buffer, deliver_size, false);
+                    state.handler(state.status_code, state.headers, buffer, deliver_size, FT_FALSE);
             }
-            if (state.has_content_length != false
+            if (state.has_content_length != FT_FALSE
                 && state.received_body_length >= state.expected_body_length)
                 break ;
         }
         else
         {
-            if (use_ssl != false)
+            if (use_ssl != FT_FALSE)
             {
-                int ssl_error;
+                int32_t ssl_error;
 
-                ssl_error = SSL_get_error(ssl_connection, static_cast<int>(bytes_received));
+                ssl_error = SSL_get_error(ssl_connection, static_cast<int32_t>(bytes_received));
                 if (ssl_error == SSL_ERROR_WANT_READ || ssl_error == SSL_ERROR_WANT_WRITE)
                 {
-                    int wait_result;
-                    bool wait_for_write;
+                    int32_t wait_result;
+                    ft_bool wait_for_write;
 
                     wait_for_write = (ssl_error == SSL_ERROR_WANT_WRITE);
                     wait_result = http_client_wait_for_socket_ready(socket_fd, wait_for_write);
@@ -953,61 +953,61 @@ static int http_client_receive_stream(http_client_active_connection &connection,
                 }
                 if (ssl_error == SSL_ERROR_ZERO_RETURN)
                 {
-                    state.keep_alive_allowed = false;
+                    state.keep_alive_allowed = FT_FALSE;
                     break ;
                 }
                 if (ssl_error == SSL_ERROR_SYSCALL)
                 {
 #ifdef _WIN32
-                    int last_error;
+                    int32_t last_error;
 
                     last_error = WSAGetLastError();
                     if (last_error == WSAEINTR)
                         continue ;
                     if (last_error == WSAEWOULDBLOCK)
                     {
-                        int wait_result;
+                        int32_t wait_result;
 
-                        wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, FT_FALSE);
                         if (wait_result < 0)
                             return (FT_ERR_INVALID_OPERATION);
                         continue ;
                     }
 #else
-                    int last_error;
+                    int32_t last_error;
 
                     last_error = errno;
                     if (last_error == EINTR)
                         continue ;
                     if (last_error == EWOULDBLOCK || last_error == EAGAIN)
                     {
-                        int wait_result;
+                        int32_t wait_result;
 
-                        wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, FT_FALSE);
                         if (wait_result < 0)
                             return (FT_ERR_INVALID_OPERATION);
                         continue ;
                     }
 #endif
-                    state.keep_alive_allowed = false;
+                    state.keep_alive_allowed = FT_FALSE;
                     return (FT_ERR_INVALID_OPERATION);
                 }
-                state.keep_alive_allowed = false;
+                state.keep_alive_allowed = FT_FALSE;
                 return (FT_ERR_INVALID_OPERATION);
             }
             if (bytes_received < 0)
             {
 #ifdef _WIN32
-                int last_error;
+                int32_t last_error;
 
                 last_error = WSAGetLastError();
                 if (last_error == WSAEINTR)
                     continue ;
                 if (last_error == WSAEWOULDBLOCK)
                 {
-                    int wait_result;
+                    int32_t wait_result;
 
-                    wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, FT_FALSE);
                     if (wait_result < 0)
                         return (FT_ERR_INVALID_OPERATION);
                     continue ;
@@ -1015,16 +1015,16 @@ static int http_client_receive_stream(http_client_active_connection &connection,
                 if (last_error == WSAECONNRESET)
                     break ;
 #else
-                int last_error;
+                int32_t last_error;
 
                 last_error = errno;
                 if (last_error == EINTR)
                     continue ;
                 if (last_error == EWOULDBLOCK || last_error == EAGAIN)
                 {
-                    int wait_result;
+                    int32_t wait_result;
 
-                    wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, FT_FALSE);
                     if (wait_result < 0)
                         return (FT_ERR_INVALID_OPERATION);
                     continue ;
@@ -1032,49 +1032,49 @@ static int http_client_receive_stream(http_client_active_connection &connection,
                 if (last_error == ECONNRESET)
                     break ;
 #endif
-                state.keep_alive_allowed = false;
+                state.keep_alive_allowed = FT_FALSE;
                 return (FT_ERR_INVALID_OPERATION);
             }
-            state.keep_alive_allowed = false;
+            state.keep_alive_allowed = FT_FALSE;
             break ;
         }
     }
-    if (state.headers_ready == false && state.header_buffer.empty() == false)
+    if (state.headers_ready == FT_FALSE && state.header_buffer.empty() == FT_FALSE)
     {
         const char *body_ptr;
 
         body_ptr = state.header_buffer.c_str();
         state.handler(state.status_code, state.headers, body_ptr,
-            state.header_buffer.size(), false);
+            state.header_buffer.size(), FT_FALSE);
     }
-    state.handler(state.status_code, state.headers, "", 0, true);
-    if (state.headers_ready != false && state.keep_alive_allowed != false
-        && state.has_content_length != false
+    state.handler(state.status_code, state.headers, "", 0, FT_TRUE);
+    if (state.headers_ready != FT_FALSE && state.keep_alive_allowed != FT_FALSE
+        && state.has_content_length != FT_FALSE
         && state.received_body_length >= state.expected_body_length)
-        allow_keep_alive = true;
+        allow_keep_alive = FT_TRUE;
     else
-        allow_keep_alive = false;
+        allow_keep_alive = FT_FALSE;
     return (FT_ERR_SUCCESS);
 }
 
-static void http_client_buffering_adapter(int status_code, const ft_string &headers,
-    const char *body_chunk, size_t chunk_size, bool finished)
+static void http_client_buffering_adapter(int32_t status_code, const ft_string &headers,
+    const char *body_chunk, ft_size_t chunk_size, ft_bool finished)
 {
     if (g_http_buffer_adapter_state.response == NULL)
         return ;
     if (status_code != 0)
         g_http_buffer_adapter_state.status_code = status_code;
-    if (g_http_buffer_adapter_state.header_appended == false && headers.empty() == false)
+    if (g_http_buffer_adapter_state.header_appended == FT_FALSE && headers.empty() == FT_FALSE)
     {
         g_http_buffer_adapter_state.response->append(headers);
-        g_http_buffer_adapter_state.header_appended = true;
+        g_http_buffer_adapter_state.header_appended = FT_TRUE;
     }
     if (chunk_size > 0)
     {
         g_http_buffer_adapter_state.response->append(body_chunk);
         g_http_buffer_adapter_state.body_bytes += chunk_size;
     }
-    if (finished != false && status_code != 0)
+    if (finished != FT_FALSE && status_code != 0)
         g_http_buffer_adapter_state.status_code = status_code;
     return ;
 }
@@ -1082,20 +1082,20 @@ static void http_client_buffering_adapter(int status_code, const ft_string &head
 static void http_client_reset_buffer_adapter_state(void)
 {
     g_http_buffer_adapter_state.response = NULL;
-    g_http_buffer_adapter_state.header_appended = false;
+    g_http_buffer_adapter_state.header_appended = FT_FALSE;
     g_http_buffer_adapter_state.body_bytes = 0;
     g_http_buffer_adapter_state.status_code = 0;
     return ;
 }
 
-static int http_client_finish_with_metrics(const char *method, const char *host,
-    const char *path, size_t request_bytes, int result,
+static int32_t http_client_finish_with_metrics(const char *method, const char *host,
+    const char *path, ft_size_t request_bytes, int32_t result,
     t_monotonic_time_point start_time)
 {
     ft_networking_observability_sample sample;
     t_monotonic_time_point finish_time;
-    long long duration_ms;
-    int error_code;
+    int64_t duration_ms;
+    int32_t error_code;
 
     finish_time = time_monotonic_point_now();
     duration_ms = time_monotonic_point_diff_ms(start_time, finish_time);
@@ -1115,12 +1115,12 @@ static int http_client_finish_with_metrics(const char *method, const char *host,
     sample.error_code = error_code;
     if (error_code == FT_ERR_SUCCESS)
     {
-        sample.success = true;
+        sample.success = FT_TRUE;
         sample.error_tag = "ok";
     }
     else
     {
-        sample.success = false;
+        sample.success = FT_FALSE;
         sample.error_tag = ft_strerror(error_code);
     }
     observability_networking_metrics_record(sample);
@@ -1128,14 +1128,14 @@ static int http_client_finish_with_metrics(const char *method, const char *host,
     return (result);
 }
 
-int http_get_stream(const char *host, const char *path, http_response_handler handler,
-    bool use_ssl, const char *custom_port)
+int32_t http_get_stream(const char *host, const char *path, http_response_handler handler,
+    ft_bool use_ssl, const char *custom_port)
 {
     const char *port_string;
     ft_string request;
     http_client_active_connection connection;
-    bool allow_keep_alive;
-    int attempt;
+    ft_bool allow_keep_alive;
+    int32_t attempt;
 
     if (handler == NULL)
     {
@@ -1151,17 +1151,17 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
     attempt = 0;
     while (attempt < 2)
     {
-        bool reused_connection;
-        int send_result;
-        int receive_result;
+        ft_bool reused_connection;
+        int32_t send_result;
+        int32_t receive_result;
 
         if (http_client_pool_acquire_connection(host, port_string, use_ssl,
             connection, reused_connection) != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_OPERATION);
         if (http_client_establish_connection(host, port_string, use_ssl, connection) != FT_ERR_SUCCESS)
         {
-            http_client_pool_release_connection(connection, false);
-            if (reused_connection != false)
+            http_client_pool_release_connection(connection, FT_FALSE);
+            if (reused_connection != FT_FALSE)
             {
                 attempt++;
                 continue ;
@@ -1174,7 +1174,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
         request.append(" HTTP/1.1\r\nHost: ");
         request.append(host);
         request.append("\r\nConnection: keep-alive\r\n\r\n");
-        if (use_ssl != false)
+        if (use_ssl != FT_FALSE)
             send_result = http_client_send_ssl_request(connection.entry.ssl_connection,
                 request.c_str(), request.size());
         else
@@ -1183,8 +1183,8 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
         if (send_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
-            http_client_pool_release_connection(connection, false);
-            if (reused_connection != false)
+            http_client_pool_release_connection(connection, FT_FALSE);
+            if (reused_connection != FT_FALSE)
             {
                 attempt++;
                 continue ;
@@ -1195,8 +1195,8 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
         if (receive_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
-            http_client_pool_release_connection(connection, false);
-            if (reused_connection != false)
+            http_client_pool_release_connection(connection, FT_FALSE);
+            if (reused_connection != FT_FALSE)
             {
                 attempt++;
                 continue ;
@@ -1209,36 +1209,36 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
     return (FT_ERR_INVALID_OPERATION);
 }
 
-int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
+int32_t http_get(const char *host, const char *path, ft_string &response, ft_bool use_ssl, const char *custom_port)
 {
     t_monotonic_time_point start_time;
-    int result;
+    int32_t result;
 
     start_time = time_monotonic_point_now();
     response.clear();
     g_http_buffer_adapter_state.response = &response;
-    g_http_buffer_adapter_state.header_appended = false;
+    g_http_buffer_adapter_state.header_appended = FT_FALSE;
     g_http_buffer_adapter_state.body_bytes = 0;
     g_http_buffer_adapter_state.status_code = 0;
     result = http_get_stream(host, path, http_client_buffering_adapter, use_ssl, custom_port);
     return (http_client_finish_with_metrics("GET", host, path, 0, result, start_time));
 }
 
-int http_post(const char *host, const char *path, const ft_string &body, ft_string &response, bool use_ssl, const char *custom_port)
+int32_t http_post(const char *host, const char *path, const ft_string &body, ft_string &response, ft_bool use_ssl, const char *custom_port)
 {
     t_monotonic_time_point start_time;
     const char *port_string;
     ft_string request;
     char length_string[32];
     http_client_active_connection connection;
-    bool allow_keep_alive;
-    int attempt;
-    size_t body_length;
+    ft_bool allow_keep_alive;
+    int32_t attempt;
+    ft_size_t body_length;
 
     start_time = time_monotonic_point_now();
     response.clear();
     g_http_buffer_adapter_state.response = &response;
-    g_http_buffer_adapter_state.header_appended = false;
+    g_http_buffer_adapter_state.header_appended = FT_FALSE;
     g_http_buffer_adapter_state.body_bytes = 0;
     g_http_buffer_adapter_state.status_code = 0;
     if (custom_port != NULL && custom_port[0] != '\0')
@@ -1253,17 +1253,17 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     attempt = 0;
     while (attempt < 2)
     {
-        bool reused_connection;
-        int send_result;
-        int receive_result;
+        ft_bool reused_connection;
+        int32_t send_result;
+        int32_t receive_result;
 
         if (http_client_pool_acquire_connection(host, port_string, use_ssl,
             connection, reused_connection) != FT_ERR_SUCCESS)
             return (http_client_finish_with_metrics("POST", host, path, body_length, FT_ERR_INVALID_OPERATION, start_time));
         if (http_client_establish_connection(host, port_string, use_ssl, connection) != FT_ERR_SUCCESS)
         {
-            http_client_pool_release_connection(connection, false);
-            if (reused_connection != false)
+            http_client_pool_release_connection(connection, FT_FALSE);
+            if (reused_connection != FT_FALSE)
             {
                 attempt++;
                 continue ;
@@ -1279,7 +1279,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         request.append(length_string);
         request.append("\r\nConnection: keep-alive\r\n\r\n");
         request.append(body);
-        if (use_ssl != false)
+        if (use_ssl != FT_FALSE)
             send_result = http_client_send_ssl_request(connection.entry.ssl_connection,
                 request.c_str(), request.size());
         else
@@ -1288,8 +1288,8 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         if (send_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
-            http_client_pool_release_connection(connection, false);
-            if (reused_connection != false)
+            http_client_pool_release_connection(connection, FT_FALSE);
+            if (reused_connection != FT_FALSE)
             {
                 attempt++;
                 continue ;
@@ -1301,8 +1301,8 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         if (receive_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
-            http_client_pool_release_connection(connection, false);
-            if (reused_connection != false)
+            http_client_pool_release_connection(connection, FT_FALSE);
+            if (reused_connection != FT_FALSE)
             {
                 attempt++;
                 continue ;

@@ -7,9 +7,9 @@
 # include <ws2tcpip.h>
 #endif
 
-int api_request_set_resolve_error(int resolver_status)
+int32_t api_request_set_resolve_error(int32_t resolver_status)
 {
-    int error_code = FT_ERR_SOCKET_RESOLVE_FAILED;
+    int32_t error_code = FT_ERR_SOCKET_RESOLVE_FAILED;
 
 #ifdef EAI_BADFLAGS
     if (resolver_status == EAI_BADFLAGS)
@@ -61,7 +61,7 @@ int api_request_set_resolve_error(int resolver_status)
 #ifdef _WIN32
         return (cmp_map_system_error_to_ft(WSAGetLastError()));
 #else
-        int system_error = errno;
+        int32_t system_error = errno;
 
         if (system_error != 0)
             return (cmp_map_system_error_to_ft(system_error));
@@ -73,29 +73,29 @@ int api_request_set_resolve_error(int resolver_status)
     return (error_code);
 }
 
-bool api_is_configuration_socket_error(int error_code)
+ft_bool api_is_configuration_socket_error(int32_t error_code)
 {
     if (error_code == FT_ERR_CONFIGURATION)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_FAILED)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_AGAIN)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_FAIL)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_BAD_FLAGS)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_FAMILY)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_SOCKTYPE)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_SERVICE)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_MEMORY)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_NO_NAME)
-        return (true);
+        return (FT_TRUE);
     if (error_code == FT_ERR_SOCKET_RESOLVE_OVERFLOW)
-        return (true);
-    return (false);
+        return (FT_TRUE);
+    return (FT_FALSE);
 }

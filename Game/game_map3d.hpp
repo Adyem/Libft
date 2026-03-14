@@ -12,63 +12,57 @@ class ft_pathfinding;
 
 class ft_map3d
 {
-    private:
-        int       ***_data;
-        size_t      _width;
-        size_t      _height;
-        size_t      _depth;
-        int         _initial_value;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t       ***_data;
+        ft_size_t      _width;
+        ft_size_t      _height;
+        ft_size_t      _depth;
+        int32_t         _initial_value;
         pt_recursive_mutex   *_mutex;
         uint8_t     _initialised_state;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
+        void    set_error(int32_t error_code) const noexcept;
+        int32_t     lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t     unlock_internal(ft_bool lock_acquired) const noexcept;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-
-        void    abort_lifecycle_error(const char *method_name,
-                    const char *reason) const;
-        void    abort_if_not_initialised(const char *method_name) const;
-        void    set_error(int error_code) const noexcept;
-        int     lock_internal(bool *lock_acquired) const noexcept;
-        int     unlock_internal(bool lock_acquired) const noexcept;
-
-        void    allocate(size_t width, size_t height, size_t depth, int value);
+        void    allocate(ft_size_t width, ft_size_t height, ft_size_t depth, int32_t value);
         void    deallocate();
 
     public:
         ft_map3d();
+        ft_map3d(const ft_map3d &other);
+        ft_map3d(ft_map3d &&other);
         ~ft_map3d();
-        ft_map3d(const ft_map3d &other) = delete;
         ft_map3d &operator=(const ft_map3d &other) = delete;
-        ft_map3d(ft_map3d &&other) = delete;
         ft_map3d &operator=(ft_map3d &&other) = delete;
 
-        int     initialize();
-        int     initialize(size_t width, size_t height, size_t depth, int value);
-        int     destroy();
-        int     enable_thread_safety() noexcept;
-        int     disable_thread_safety() noexcept;
-        bool    is_thread_safe() const noexcept;
-        int     lock(bool *lock_acquired) const noexcept;
-        void    unlock(bool lock_acquired) const noexcept;
+        int32_t     initialize();
+        int32_t     initialize(ft_size_t width, ft_size_t height, ft_size_t depth, int32_t value);
+        int32_t     move(ft_map3d &other);
+        int32_t     destroy();
+        int32_t     enable_thread_safety() noexcept;
+        int32_t     disable_thread_safety() noexcept;
+        ft_bool    is_thread_safe() const noexcept;
+        int32_t     lock(ft_bool *lock_acquired) const noexcept;
+        void    unlock(ft_bool lock_acquired) const noexcept;
 
-        int     get_error() const noexcept;
+        int32_t     get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
-        void    resize(size_t width, size_t height, size_t depth, int value = 0);
-        int     get(size_t x, size_t y, size_t z) const;
-        void    set(size_t x, size_t y, size_t z, int value);
-        int     is_obstacle(size_t x, size_t y, size_t z) const;
-        void    toggle_obstacle(size_t x, size_t y, size_t z,
+        void    resize(ft_size_t width, ft_size_t height, ft_size_t depth, int32_t value = 0);
+        int32_t     get(ft_size_t x, ft_size_t y, ft_size_t z) const;
+        void    set(ft_size_t x, ft_size_t y, ft_size_t z, int32_t value);
+        ft_bool    is_obstacle(ft_size_t x, ft_size_t y, ft_size_t z) const;
+        void    toggle_obstacle(ft_size_t x, ft_size_t y, ft_size_t z,
                     ft_pathfinding *listener = ft_nullptr);
-        size_t  get_width() const;
-        size_t  get_height() const;
-        size_t  get_depth() const;
+        ft_size_t  get_width() const;
+        ft_size_t  get_height() const;
+        ft_size_t  get_depth() const;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 #endif

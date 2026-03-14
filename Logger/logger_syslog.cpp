@@ -2,23 +2,23 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-int ft_log_set_syslog(const char *identifier)
+int32_t ft_log_set_syslog(const char *identifier)
 {
     if (cmp_syslog_open(identifier) != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (ft_log_add_sink(ft_syslog_sink, ft_nullptr) != 0)
     {
-        int error_code;
+        int32_t error_code_value;
 
         cmp_syslog_close();
-        error_code = FT_ERR_SUCCESS;
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        error_code_value = FT_ERR_SUCCESS;
+        if (error_code_value == FT_ERR_SUCCESS)
+            error_code_value = FT_ERR_INVALID_ARGUMENT;
+        return (FT_ERR_INTERNAL);
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_syslog_sink(const char *message, void *user_data)

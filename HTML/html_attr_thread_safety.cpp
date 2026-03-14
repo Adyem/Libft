@@ -1,20 +1,20 @@
 #include <new>
 
-#include "parser.hpp"
+#include "html_parser.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 
-int html_attr_prepare_thread_safety(html_attr *attribute)
+int32_t html_attr_prepare_thread_safety(html_attr *attribute)
 {
     pt_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
     if (!attribute)
         return (FT_ERR_INVALID_ARGUMENT);
     if (attribute->thread_safe_enabled && attribute->mutex)
-        return (0);
+        return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (!mutex_pointer)
         return (FT_ERR_NO_MEMORY);
@@ -25,8 +25,8 @@ int html_attr_prepare_thread_safety(html_attr *attribute)
         return (initialize_error);
     }
     attribute->mutex = mutex_pointer;
-    attribute->thread_safe_enabled = true;
-    return (0);
+    attribute->thread_safe_enabled = FT_TRUE;
+    return (FT_ERR_SUCCESS);
 }
 
 void html_attr_teardown_thread_safety(html_attr *attribute)
@@ -39,31 +39,31 @@ void html_attr_teardown_thread_safety(html_attr *attribute)
         delete attribute->mutex;
         attribute->mutex = ft_nullptr;
     }
-    attribute->thread_safe_enabled = false;
+    attribute->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
+int32_t html_attr_lock(const html_attr *attribute, ft_bool *lock_acquired)
 {
     html_attr *mutable_attribute;
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!attribute)
         return (FT_ERR_INVALID_ARGUMENT);
     mutable_attribute = const_cast<html_attr *>(attribute);
     if (!mutable_attribute->thread_safe_enabled || !mutable_attribute->mutex)
-        return (0);
+        return (FT_ERR_SUCCESS);
     lock_error = pt_mutex_lock_if_not_null(mutable_attribute->mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired)
-        *lock_acquired = true;
-    return (0);
+        *lock_acquired = FT_TRUE;
+    return (FT_ERR_SUCCESS);
 }
 
-void html_attr_unlock(const html_attr *attribute, bool lock_acquired)
+void html_attr_unlock(const html_attr *attribute, ft_bool lock_acquired)
 {
     html_attr *mutable_attribute;
 
@@ -76,11 +76,11 @@ void html_attr_unlock(const html_attr *attribute, bool lock_acquired)
     return ;
 }
 
-bool html_attr_is_thread_safe_enabled(const html_attr *attribute)
+ft_bool html_attr_is_thread_safe_enabled(const html_attr *attribute)
 {
     if (!attribute)
-        return (false);
+        return (FT_FALSE);
     if (!attribute->thread_safe_enabled || !attribute->mutex)
-        return (false);
-    return (true);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }

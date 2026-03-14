@@ -18,7 +18,11 @@ uint32_t ft_random_uint32(void)
 
     error_code = rng_secure_bytes(byte_buffer, 4);
     if (error_code != FT_ERR_SUCCESS)
-        return (0);
+    {
+        random_value = static_cast<uint32_t>(ft_random_int()) & 0xFFFFU;
+        random_value |= (static_cast<uint32_t>(ft_random_int()) & 0xFFFFU) << 16;
+        return (random_value);
+    }
     random_value = 0;
     index = 0;
     while (index < 4)

@@ -1,7 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Encryption/encryption_blake2.hpp"
-#include "../../Encryption/encryption_sha3.hpp"
-#include "../../Encryption/encryption_hmac_sha256.hpp"
+#include "../../Encryption/encryption.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 

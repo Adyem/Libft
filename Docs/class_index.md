@@ -854,11 +854,11 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `s_test_case`
 
-## Template/bitset.hpp
+## CPP_class/bitset.hpp
 
 - `ft_bitset`
 
-## Template/cancellation.hpp
+## CPP_class/cancellation.hpp
 
 - `ft_cancellation_source`
 - `ft_cancellation_state`
@@ -968,7 +968,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `ft_string_view`
 
-## Template/thread_pool.hpp
+## CPP_class/thread_pool.hpp
 
 - `ft_thread_pool`
 

@@ -18,16 +18,16 @@ static void time_duration_ms_disable_thread_safety(t_duration_milliseconds *dura
         std::free(duration->mutex);
         duration->mutex = ft_nullptr;
     }
-    duration->thread_safe_enabled = false;
+    duration->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-static int  time_duration_ms_report_result(int error_code)
+static int32_t  time_duration_ms_report_result(int32_t error_code)
 {
     return (error_code);
 }
 
-int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
+int32_t time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
 {
     pt_mutex    *mutex_pointer;
     void        *memory;
@@ -41,7 +41,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
         return (time_duration_ms_report_result(FT_ERR_NO_MEMORY));
     mutex_pointer = new(memory) pt_mutex();
     {
-        int mutex_error;
+        int32_t mutex_error;
 
         if (mutex_pointer == ft_nullptr)
             mutex_error = FT_ERR_SUCCESS;
@@ -56,7 +56,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
         }
     }
     duration->mutex = mutex_pointer;
-    duration->thread_safe_enabled = true;
+    duration->thread_safe_enabled = FT_TRUE;
     return (time_duration_ms_report_result(FT_ERR_SUCCESS));
 }
 
@@ -68,30 +68,30 @@ void    time_duration_ms_teardown_thread_safety(t_duration_milliseconds *duratio
     return ;
 }
 
-int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_acquired)
+int32_t time_duration_ms_lock(const t_duration_milliseconds *duration, ft_bool *lock_acquired)
 {
     t_duration_milliseconds  *mutable_duration;
 
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!duration)
         return (time_duration_ms_report_result(FT_ERR_INVALID_ARGUMENT));
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
     if (!mutable_duration->thread_safe_enabled || !mutable_duration->mutex)
         return (time_duration_ms_report_result(FT_ERR_SUCCESS));
     {
-        int lock_error;
+        int32_t lock_error;
 
         lock_error = pt_mutex_lock_if_not_null(mutable_duration->mutex);
         if (lock_error != FT_ERR_SUCCESS)
             return (time_duration_ms_report_result(lock_error));
     }
     if (lock_acquired)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (time_duration_ms_report_result(FT_ERR_SUCCESS));
 }
 
-void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lock_acquired)
+void    time_duration_ms_unlock(const t_duration_milliseconds *duration, ft_bool lock_acquired)
 {
     t_duration_milliseconds  *mutable_duration;
 
@@ -112,7 +112,7 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
         return ;
     }
     {
-        int unlock_error;
+        int32_t unlock_error;
 
         unlock_error = pt_mutex_unlock_if_not_null(mutable_duration->mutex);
         if (unlock_error != FT_ERR_SUCCESS)
@@ -125,18 +125,18 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
     return ;
 }
 
-bool    time_duration_ms_is_thread_safe(const t_duration_milliseconds *duration)
+ft_bool    time_duration_ms_is_thread_safe(const t_duration_milliseconds *duration)
 {
     if (!duration)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     if (!duration->thread_safe_enabled || !duration->mutex)
     {
         (void)(FT_ERR_SUCCESS);
-        return (false);
+        return (FT_FALSE);
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }

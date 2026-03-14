@@ -1,7 +1,6 @@
 #include <stdint.h>
-#include <cstddef>
-#include "aes.hpp"
-#include "encryption_hardware_acceleration.hpp"
+#include "encryption.hpp"
+#include "encryption_internal.hpp"
 
 static const uint8_t s_box[256] = {
     0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
@@ -47,7 +46,7 @@ static const uint8_t rcon[11] = {
 
 static void sub_bytes(uint8_t *state)
 {
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < 16)
     {
         state[index] = s_box[state[index]];
@@ -58,7 +57,7 @@ static void sub_bytes(uint8_t *state)
 
 static void inv_sub_bytes(uint8_t *state)
 {
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < 16)
     {
         state[index] = inv_s_box[state[index]];
@@ -69,53 +68,53 @@ static void inv_sub_bytes(uint8_t *state)
 
 static void shift_rows(uint8_t *state)
 {
-    uint8_t temp;
-    uint8_t temp_two;
+    uint8_t temporary_value;
+    uint8_t secondary_temporary_value;
 
-    temp = state[1];
+    temporary_value = state[1];
     state[1] = state[5];
     state[5] = state[9];
     state[9] = state[13];
-    state[13] = temp;
+    state[13] = temporary_value;
 
-    temp = state[2];
-    temp_two = state[6];
+    temporary_value = state[2];
+    secondary_temporary_value = state[6];
     state[2] = state[10];
     state[6] = state[14];
-    state[10] = temp;
-    state[14] = temp_two;
+    state[10] = temporary_value;
+    state[14] = secondary_temporary_value;
 
-    temp = state[3];
+    temporary_value = state[3];
     state[3] = state[15];
     state[15] = state[11];
     state[11] = state[7];
-    state[7] = temp;
+    state[7] = temporary_value;
     return ;
 }
 
 static void inv_shift_rows(uint8_t *state)
 {
-    uint8_t temp;
-    uint8_t temp_two;
+    uint8_t temporary_value;
+    uint8_t secondary_temporary_value;
 
-    temp = state[13];
+    temporary_value = state[13];
     state[13] = state[9];
     state[9] = state[5];
     state[5] = state[1];
-    state[1] = temp;
+    state[1] = temporary_value;
 
-    temp = state[2];
-    temp_two = state[6];
+    temporary_value = state[2];
+    secondary_temporary_value = state[6];
     state[2] = state[10];
     state[6] = state[14];
-    state[10] = temp;
-    state[14] = temp_two;
+    state[10] = temporary_value;
+    state[14] = secondary_temporary_value;
 
-    temp = state[3];
+    temporary_value = state[3];
     state[3] = state[7];
     state[7] = state[11];
     state[11] = state[15];
-    state[15] = temp;
+    state[15] = temporary_value;
     return ;
 }
 
@@ -152,20 +151,32 @@ static void mix_columns(uint8_t *state)
     while (column < 4)
     {
         uint8_t index = column * 4;
-        uint8_t s0 = state[index];
-        uint8_t s1 = state[index + 1];
-        uint8_t s2 = state[index + 2];
-        uint8_t s3 = state[index + 3];
+        uint8_t state_value_zero = state[index];
+        uint8_t state_value_one = state[index + 1];
+        uint8_t state_value_two = state[index + 2];
+        uint8_t state_value_three = state[index + 3];
+        uint8_t result_value_zero;
+        uint8_t result_value_one;
+        uint8_t result_value_two;
+        uint8_t result_value_three;
 
-        uint8_t r0 = xtime(s0) ^ (xtime(s1) ^ s1) ^ s2 ^ s3;
-        uint8_t r1 = s0 ^ xtime(s1) ^ (xtime(s2) ^ s2) ^ s3;
-        uint8_t r2 = s0 ^ s1 ^ xtime(s2) ^ (xtime(s3) ^ s3);
-        uint8_t r3 = (xtime(s0) ^ s0) ^ s1 ^ s2 ^ xtime(s3);
+        result_value_zero = xtime(state_value_zero)
+            ^ (xtime(state_value_one) ^ state_value_one)
+            ^ state_value_two ^ state_value_three;
+        result_value_one = state_value_zero ^ xtime(state_value_one)
+            ^ (xtime(state_value_two) ^ state_value_two)
+            ^ state_value_three;
+        result_value_two = state_value_zero ^ state_value_one
+            ^ xtime(state_value_two)
+            ^ (xtime(state_value_three) ^ state_value_three);
+        result_value_three = (xtime(state_value_zero) ^ state_value_zero)
+            ^ state_value_one ^ state_value_two
+            ^ xtime(state_value_three);
 
-        state[index] = r0;
-        state[index + 1] = r1;
-        state[index + 2] = r2;
-        state[index + 3] = r3;
+        state[index] = result_value_zero;
+        state[index + 1] = result_value_one;
+        state[index + 2] = result_value_two;
+        state[index + 3] = result_value_three;
 
         ++column;
     }
@@ -178,20 +189,36 @@ static void inv_mix_columns(uint8_t *state)
     while (column < 4)
     {
         uint8_t index = column * 4;
-        uint8_t s0 = state[index];
-        uint8_t s1 = state[index + 1];
-        uint8_t s2 = state[index + 2];
-        uint8_t s3 = state[index + 3];
+        uint8_t state_value_zero = state[index];
+        uint8_t state_value_one = state[index + 1];
+        uint8_t state_value_two = state[index + 2];
+        uint8_t state_value_three = state[index + 3];
+        uint8_t result_value_zero;
+        uint8_t result_value_one;
+        uint8_t result_value_two;
+        uint8_t result_value_three;
 
-        uint8_t r0 = multiply(s0, 0x0e) ^ multiply(s1, 0x0b) ^ multiply(s2, 0x0d) ^ multiply(s3, 0x09);
-        uint8_t r1 = multiply(s0, 0x09) ^ multiply(s1, 0x0e) ^ multiply(s2, 0x0b) ^ multiply(s3, 0x0d);
-        uint8_t r2 = multiply(s0, 0x0d) ^ multiply(s1, 0x09) ^ multiply(s2, 0x0e) ^ multiply(s3, 0x0b);
-        uint8_t r3 = multiply(s0, 0x0b) ^ multiply(s1, 0x0d) ^ multiply(s2, 0x09) ^ multiply(s3, 0x0e);
+        result_value_zero = multiply(state_value_zero, 0x0e)
+            ^ multiply(state_value_one, 0x0b)
+            ^ multiply(state_value_two, 0x0d)
+            ^ multiply(state_value_three, 0x09);
+        result_value_one = multiply(state_value_zero, 0x09)
+            ^ multiply(state_value_one, 0x0e)
+            ^ multiply(state_value_two, 0x0b)
+            ^ multiply(state_value_three, 0x0d);
+        result_value_two = multiply(state_value_zero, 0x0d)
+            ^ multiply(state_value_one, 0x09)
+            ^ multiply(state_value_two, 0x0e)
+            ^ multiply(state_value_three, 0x0b);
+        result_value_three = multiply(state_value_zero, 0x0b)
+            ^ multiply(state_value_one, 0x0d)
+            ^ multiply(state_value_two, 0x09)
+            ^ multiply(state_value_three, 0x0e);
 
-        state[index] = r0;
-        state[index + 1] = r1;
-        state[index + 2] = r2;
-        state[index + 3] = r3;
+        state[index] = result_value_zero;
+        state[index + 1] = result_value_one;
+        state[index + 2] = result_value_two;
+        state[index + 3] = result_value_three;
 
         ++column;
     }
@@ -200,7 +227,7 @@ static void inv_mix_columns(uint8_t *state)
 
 static void add_round_key(uint8_t *state, const uint8_t *round_key)
 {
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < 16)
     {
         state[index] ^= round_key[index];
@@ -211,46 +238,49 @@ static void add_round_key(uint8_t *state, const uint8_t *round_key)
 
 static void key_expansion(const uint8_t *key, uint8_t *round_keys)
 {
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < 16)
     {
         round_keys[index] = key[index];
         ++index;
     }
-    size_t bytes_generated = 16;
-    size_t rcon_iteration = 1;
-    uint8_t temp[4];
+    ft_size_t bytes_generated = 16;
+    ft_size_t rcon_iteration = 1;
+    uint8_t temporary_word[4];
     while (bytes_generated < 176)
     {
-        size_t temp_index = 0;
-        while (temp_index < 4)
+        ft_size_t temporary_word_index = 0;
+        while (temporary_word_index < 4)
         {
-            temp[temp_index] = round_keys[bytes_generated - 4 + temp_index];
-            ++temp_index;
+            temporary_word[temporary_word_index] = round_keys[bytes_generated
+                - 4 + temporary_word_index];
+            ++temporary_word_index;
         }
         if (bytes_generated % 16 == 0)
         {
-            uint8_t byte_temp = temp[0];
-            temp[0] = temp[1];
-            temp[1] = temp[2];
-            temp[2] = temp[3];
-            temp[3] = byte_temp;
+            uint8_t temporary_byte = temporary_word[0];
+            temporary_word[0] = temporary_word[1];
+            temporary_word[1] = temporary_word[2];
+            temporary_word[2] = temporary_word[3];
+            temporary_word[3] = temporary_byte;
 
-            size_t s_index = 0;
-            while (s_index < 4)
+            ft_size_t substitution_index = 0;
+            while (substitution_index < 4)
             {
-                temp[s_index] = s_box[temp[s_index]];
-                ++s_index;
+                temporary_word[substitution_index]
+                    = s_box[temporary_word[substitution_index]];
+                ++substitution_index;
             }
-            temp[0] ^= rcon[rcon_iteration];
+            temporary_word[0] ^= rcon[rcon_iteration];
             ++rcon_iteration;
         }
-        temp_index = 0;
-        while (temp_index < 4)
+        temporary_word_index = 0;
+        while (temporary_word_index < 4)
         {
-            round_keys[bytes_generated] = round_keys[bytes_generated - 16] ^ temp[temp_index];
+            round_keys[bytes_generated] = round_keys[bytes_generated - 16]
+                ^ temporary_word[temporary_word_index];
             ++bytes_generated;
-            ++temp_index;
+            ++temporary_word_index;
         }
     }
     return ;
@@ -295,7 +325,7 @@ void aes_encrypt_software(uint8_t *block, const uint8_t *key)
 void aes_decrypt_software(uint8_t *block, const uint8_t *key)
 {
     uint8_t round_keys[176];
-    int round;
+    int32_t round;
 
     key_expansion(key, round_keys);
     round = 10;
@@ -311,4 +341,3 @@ void aes_decrypt_software(uint8_t *block, const uint8_t *key)
     }
     return ;
 }
-

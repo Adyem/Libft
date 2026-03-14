@@ -1,21 +1,21 @@
-#include "parser.hpp"
+#include "html_parser.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 #include "../Advanced/advanced.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 
-static int normalize_selector_value(char *value_string)
+static int32_t normalize_selector_value(char *value_string)
 {
-    size_t value_length;
+    ft_size_t value_length;
     char opening_character;
     char closing_character;
 
     if (!value_string)
-        return (0);
+        return (FT_ERR_SUCCESS);
     value_length = ft_strlen_size_t(value_string);
     if (value_length < 2)
-        return (0);
+        return (FT_ERR_SUCCESS);
     opening_character = value_string[0];
     closing_character = value_string[value_length - 1];
     if ((opening_character == '"' && closing_character == '"')
@@ -24,21 +24,21 @@ static int normalize_selector_value(char *value_string)
         ft_memmove(value_string, value_string + 1, value_length - 1);
         value_string[value_length - 2] = '\0';
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-html_node *html_find_by_tag(html_node *nodeList, const char *tagName)
+html_node *html_find_by_tag(html_node *node_list, const char *tag_name)
 {
     html_node *current_node;
 
-    current_node = nodeList;
+    current_node = node_list;
     while (current_node)
     {
         html_node *next_node;
-        bool       lock_acquired;
-        int        lock_status;
+        ft_bool       lock_acquired;
+        int32_t        lock_status;
 
-        lock_acquired = false;
+        lock_acquired = FT_FALSE;
         lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
         if (lock_status != 0)
@@ -46,12 +46,12 @@ html_node *html_find_by_tag(html_node *nodeList, const char *tagName)
             current_node = next_node;
             continue ;
         }
-        if (current_node->tag && ft_strcmp(current_node->tag, tagName) == 0)
+        if (current_node->tag && ft_strcmp(current_node->tag, tag_name) == 0)
         {
             html_node_unlock(current_node, lock_acquired);
             return (current_node);
         }
-        html_node *found = html_find_by_tag(current_node->children, tagName);
+        html_node *found = html_find_by_tag(current_node->children, tag_name);
 
         html_node_unlock(current_node, lock_acquired);
         if (found)
@@ -61,18 +61,18 @@ html_node *html_find_by_tag(html_node *nodeList, const char *tagName)
     return (ft_nullptr);
 }
 
-html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *value)
+html_node *html_find_by_attr(html_node *node_list, const char *key, const char *value)
 {
     html_node *current_node;
 
-    current_node = nodeList;
+    current_node = node_list;
     while (current_node)
     {
         html_node *next_node;
-        bool       lock_acquired;
-        int        lock_status;
+        ft_bool       lock_acquired;
+        int32_t        lock_status;
 
-        lock_acquired = false;
+        lock_acquired = FT_FALSE;
         lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
         if (lock_status != 0)
@@ -84,11 +84,11 @@ html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *v
 
         while (attribute)
         {
-            bool       attribute_lock_acquired;
-            int        attribute_lock_status;
+            ft_bool       attribute_lock_acquired;
+            int32_t        attribute_lock_status;
             html_attr *next_attribute;
 
-            attribute_lock_acquired = false;
+            attribute_lock_acquired = FT_FALSE;
             attribute_lock_status = html_attr_lock(attribute, &attribute_lock_acquired);
             if (attribute_lock_status != 0)
             {
@@ -118,18 +118,18 @@ html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *v
     return (ft_nullptr);
 }
 
-html_node *html_find_by_text(html_node *nodeList, const char *textContent)
+html_node *html_find_by_text(html_node *node_list, const char *text_content)
 {
     html_node *current_node;
 
-    current_node = nodeList;
+    current_node = node_list;
     while (current_node)
     {
         html_node *next_node;
-        bool       lock_acquired;
-        int        lock_status;
+        ft_bool       lock_acquired;
+        int32_t        lock_status;
 
-        lock_acquired = false;
+        lock_acquired = FT_FALSE;
         lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
         if (lock_status != 0)
@@ -137,12 +137,12 @@ html_node *html_find_by_text(html_node *nodeList, const char *textContent)
             current_node = next_node;
             continue ;
         }
-        if (current_node->text && ft_strcmp(current_node->text, textContent) == 0)
+        if (current_node->text && ft_strcmp(current_node->text, text_content) == 0)
         {
             html_node_unlock(current_node, lock_acquired);
             return (current_node);
         }
-        html_node *found = html_find_by_text(current_node->children, textContent);
+        html_node *found = html_find_by_text(current_node->children, text_content);
 
         html_node_unlock(current_node, lock_acquired);
         if (found)
@@ -152,20 +152,20 @@ html_node *html_find_by_text(html_node *nodeList, const char *textContent)
     return (ft_nullptr);
 }
 
-size_t html_count_nodes_by_tag(html_node *nodeList, const char *tagName)
+ft_size_t html_count_nodes_by_tag(html_node *node_list, const char *tag_name)
 {
-    size_t count;
+    ft_size_t count;
     html_node *current_node;
 
     count = 0;
-    current_node = nodeList;
+    current_node = node_list;
     while (current_node)
     {
         html_node *next_node;
-        bool       lock_acquired;
-        int        lock_status;
+        ft_bool       lock_acquired;
+        int32_t        lock_status;
 
-        lock_acquired = false;
+        lock_acquired = FT_FALSE;
         lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
         if (lock_status != 0)
@@ -173,9 +173,9 @@ size_t html_count_nodes_by_tag(html_node *nodeList, const char *tagName)
             current_node = next_node;
             continue ;
         }
-        if (current_node->tag && ft_strcmp(current_node->tag, tagName) == 0)
+        if (current_node->tag && ft_strcmp(current_node->tag, tag_name) == 0)
             ++count;
-        count += html_count_nodes_by_tag(current_node->children, tagName);
+        count += html_count_nodes_by_tag(current_node->children, tag_name);
         html_node_unlock(current_node, lock_acquired);
         current_node = next_node;
     }
@@ -204,10 +204,10 @@ html_node *html_find_by_selector(html_node *node_list, const char *selector)
         equal_sign = ft_strchr(selector + 1, '=');
         if (equal_sign && equal_sign < close_bracket)
         {
-            key = adv_strndup(selector + 1, static_cast<size_t>(equal_sign - selector - 1));
+            key = adv_strndup(selector + 1, static_cast<ft_size_t>(equal_sign - selector - 1));
             if (!key)
                 return (ft_nullptr);
-            value = adv_strndup(equal_sign + 1, static_cast<size_t>(close_bracket - equal_sign - 1));
+            value = adv_strndup(equal_sign + 1, static_cast<ft_size_t>(close_bracket - equal_sign - 1));
             if (!value)
             {
                 cma_free(key);
@@ -224,7 +224,7 @@ html_node *html_find_by_selector(html_node *node_list, const char *selector)
             cma_free(value);
             return (result);
         }
-        key = adv_strndup(selector + 1, static_cast<size_t>(close_bracket - selector - 1));
+        key = adv_strndup(selector + 1, static_cast<ft_size_t>(close_bracket - selector - 1));
         if (!key)
             return (ft_nullptr);
         result = html_find_by_attr(node_list, key, ft_nullptr);

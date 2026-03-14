@@ -6,6 +6,7 @@
 #include "move.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
@@ -25,17 +26,9 @@ class ft_map
         mutable pt_recursive_mutex* _mutex;
         uint8_t                     _initialised_state;
         ft_size_t                      _initial_capacity;
-        static thread_local int32_t _last_error;
+        static thread_local uint32_t _last_error;
 
-        static const uint8_t        _state_uninitialised = 0;
-        static const uint8_t        _state_destroyed = 1;
-        static const uint8_t        _state_initialised = 2;
-
-        int32_t set_error(int32_t error_code) const noexcept;
-
-        void    abort_lifecycle_error(const char *method_name,
-                    const char *reason) const;
-        void    abort_if_not_initialised(const char *method_name) const;
+        uint32_t set_error(uint32_t error_code) const noexcept;
 
         ft_bool    ensure_capacity(ft_size_t desired_capacity);
         ft_size_t  find_index(const Key& key) const;
@@ -81,15 +74,16 @@ class ft_map
 
     public:
         ft_map(ft_size_t initial_capacity = 10);
+        ft_map(const ft_map<Key, MappedType>& other);
+        ft_map(ft_map<Key, MappedType>&& other);
         ~ft_map();
 
-        ft_map(const ft_map& other) = delete;
         ft_map& operator=(const ft_map& other);
-        ft_map(ft_map&& other) = delete;
         ft_map& operator=(ft_map&& other);
 
         int32_t     initialize();
         int32_t     destroy();
+        uint32_t    move(ft_map& other);
 
         int32_t copy_from(const ft_map& other);
         int32_t move_from(ft_map& other);
@@ -116,7 +110,7 @@ class ft_map
 
         int8_t      compare(const ft_map& other) const;
 
-            int32_t get_error() const noexcept;
+            uint32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
@@ -126,9 +120,96 @@ ft_map<Key, MappedType>::ft_map(ft_size_t initial_capacity)
     , _capacity(initial_capacity)
     , _size(0)
     , _mutex(ft_nullptr)
-    , _initialised_state(ft_map<Key, MappedType>::_state_uninitialised)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _initial_capacity(initial_capacity)
 {
+    return ;
+}
+
+template <typename Key, typename MappedType>
+ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
+    : _data(ft_nullptr)
+    , _capacity(other._initial_capacity)
+    , _size(0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+    , _initial_capacity(other._initial_capacity)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_map::ft_map(copy)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize() != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->copy_from(other) != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    return ;
+}
+
+template <typename Key, typename MappedType>
+ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other)
+    : _data(ft_nullptr)
+    , _capacity(other._initial_capacity)
+    , _size(0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+    , _initial_capacity(other._initial_capacity)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_map::ft_map(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize() != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->move_from(other) != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    return ;
+}
+
+template <typename Key, typename MappedType>
+ft_map<Key, MappedType>::~ft_map()
+{
+    uint32_t previous_error;
+
+    previous_error = ft_map<Key, MappedType>::_last_error;
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)this->set_error(previous_error);
+        return ;
+    }
+    (void)this->destroy();
+    (void)this->set_error(previous_error);
     return ;
 }
 
@@ -138,13 +219,13 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(
 {
     if (this == &other)
         return (*this);
-    if (other._initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_map::operator=(const ft_map&)",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_map::operator=(const ft_map&)", "source object is not initialised");
         return (*this);
     }
-    if (this->_initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         (void)this->initialize();
     (void)this->copy_from(other);
     return (*this);
@@ -156,60 +237,24 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(
 {
     if (this == &other)
         return (*this);
-    if (other._initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_map::operator=(ft_map&&)",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_map::operator=(ft_map&&)", "source object is not initialised");
         return (*this);
     }
-    if (this->_initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         (void)this->initialize();
     (void)this->move_from(other);
     return (*this);
 }
 
 template <typename Key, typename MappedType>
-ft_map<Key, MappedType>::~ft_map()
-{
-    if (this->_initialised_state != ft_map<Key, MappedType>::_state_initialised)
-    {
-        this->_initialised_state = ft_map<Key, MappedType>::_state_destroyed;
-        return ;
-    }
-    (void)this->destroy();
-    return ;
-}
-
-template <typename Key, typename MappedType>
-void ft_map<Key, MappedType>::abort_lifecycle_error(const char *method_name,
-        const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_map lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
-
-template <typename Key, typename MappedType>
-void ft_map<Key, MappedType>::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == ft_map<Key, MappedType>::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::initialize()
 {
-    if (this->_initialised_state == ft_map<Key, MappedType>::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_map::initialize",
-            "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_map::initialize", "called while object is already initialised");
         return (this->set_error(FT_ERR_INVALID_STATE));
     }
     this->_capacity = this->_initial_capacity;
@@ -221,7 +266,7 @@ int32_t ft_map<Key, MappedType>::initialize()
         if (raw_memory == ft_nullptr)
         {
             this->_capacity = 0;
-            this->_initialised_state = ft_map<Key, MappedType>::_state_destroyed;
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
             return (FT_ERR_NO_MEMORY);
         }
         this->_data = static_cast<Pair<Key, MappedType> *>(raw_memory);
@@ -235,22 +280,28 @@ int32_t ft_map<Key, MappedType>::initialize()
             this->_data = ft_nullptr;
         }
         this->_capacity = 0;
-        this->_initialised_state = ft_map<Key, MappedType>::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (this->set_error(thread_error));
     }
-    this->_initialised_state = ft_map<Key, MappedType>::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (this->set_error(FT_ERR_SUCCESS));
 }
 
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::destroy()
 {
-    if (this->_initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    int32_t first_error;
+    int32_t clear_error;
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->_initialised_state = ft_map<Key, MappedType>::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (this->set_error(FT_ERR_SUCCESS));
     }
+    first_error = this->disable_thread_safety();
     this->clear();
+    clear_error = static_cast<int32_t>(this->get_error());
+    if (first_error == FT_ERR_SUCCESS && clear_error != FT_ERR_SUCCESS)
+        first_error = clear_error;
     if (this->_data != ft_nullptr)
     {
         cma_free(this->_data);
@@ -258,23 +309,28 @@ int32_t ft_map<Key, MappedType>::destroy()
     }
     this->_capacity = 0;
     this->_size = 0;
-    const int32_t disable_error = this->disable_thread_safety();
-    this->_initialised_state = ft_map<Key, MappedType>::_state_destroyed;
-    return (this->set_error(disable_error));
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (this->set_error(first_error));
+}
+
+template <typename Key, typename MappedType>
+uint32_t ft_map<Key, MappedType>::move(ft_map<Key, MappedType>& other)
+{
+    return (this->set_error(static_cast<uint32_t>(this->move_from(other))));
 }
 
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::copy_from(const ft_map<Key, MappedType>& other)
 {
-    if (other._initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_map::copy_from",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_map::copy_from", "source object is not initialised");
         return (this->set_error(FT_ERR_INVALID_STATE));
     }
     if (this == &other)
         return (this->set_error(FT_ERR_SUCCESS));
-    if (this->_initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->_initial_capacity = other._capacity;
         int32_t init_error = this->initialize();
@@ -310,15 +366,15 @@ int32_t ft_map<Key, MappedType>::copy_from(const ft_map<Key, MappedType>& other)
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::move_from(ft_map<Key, MappedType>& other)
 {
-    if (other._initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_map::move_from",
-            "source object is not initialised");
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_map::move_from", "source object is not initialised");
         return (this->set_error(FT_ERR_INVALID_STATE));
     }
     if (this == &other)
         return (this->set_error(FT_ERR_SUCCESS));
-    if (this->_initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->_initial_capacity = 0;
         int32_t init_error = this->initialize();
@@ -349,13 +405,13 @@ int32_t ft_map<Key, MappedType>::move_from(ft_map<Key, MappedType>& other)
 template <typename Key, typename MappedType>
 ft_bool ft_map<Key, MappedType>::ensure_capacity(ft_size_t desired_capacity)
 {
-    this->abort_if_not_initialised("ft_map::ensure_capacity");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::ensure_capacity");
     if (desired_capacity <= this->_capacity)
-        return (true);
+        return (FT_TRUE);
     void *raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * desired_capacity);
 
     if (raw_memory == ft_nullptr)
-        return (false);
+        return (FT_FALSE);
     Pair<Key, MappedType> *new_data = static_cast<Pair<Key, MappedType> *>(raw_memory);
     ft_size_t index = 0;
 
@@ -379,7 +435,7 @@ ft_bool ft_map<Key, MappedType>::ensure_capacity(ft_size_t desired_capacity)
                     cleanup_index++;
                 }
                 cma_free(new_data);
-                return (false);
+                return (FT_FALSE);
             }
         }
         else
@@ -391,13 +447,13 @@ ft_bool ft_map<Key, MappedType>::ensure_capacity(ft_size_t desired_capacity)
         cma_free(this->_data);
     this->_data = new_data;
     this->_capacity = desired_capacity;
-    return (true);
+    return (FT_TRUE);
 }
 
 template <typename Key, typename MappedType>
 ft_size_t ft_map<Key, MappedType>::find_index(const Key& key) const
 {
-    this->abort_if_not_initialised("ft_map::find_index");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::find_index");
     ft_size_t index = 0;
 
     while (index < this->_size)
@@ -438,7 +494,7 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::end_pointer_unlocked() con
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::lock_internal(ft_bool *lock_acquired) const
 {
-    this->abort_if_not_initialised("ft_map::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     if (this->_mutex == ft_nullptr)
@@ -455,7 +511,7 @@ int32_t ft_map<Key, MappedType>::lock_internal(ft_bool *lock_acquired) const
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::unlock_internal(ft_bool lock_acquired) const
 {
-    this->abort_if_not_initialised("ft_map::unlock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::unlock_internal");
     if (!lock_acquired || this->_mutex == ft_nullptr)
     {
         return (this->set_error(FT_ERR_SUCCESS));
@@ -523,7 +579,7 @@ void ft_map<Key, MappedType>::unlock_pair(const ft_map<Key, MappedType> &other,
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 {
-    this->abort_if_not_initialised("ft_map::insert");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::insert");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
 
@@ -608,7 +664,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
 {
-    this->abort_if_not_initialised("ft_map::insert_move");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::insert_move");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
 
@@ -693,7 +749,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
 template <typename Key, typename MappedType>
 Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key)
 {
-    this->abort_if_not_initialised("ft_map::find");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::find");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
     Pair<Key, MappedType>* result;
@@ -717,7 +773,7 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key)
 template <typename Key, typename MappedType>
 const Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key) const
 {
-    this->abort_if_not_initialised("ft_map::find_const");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::find_const");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
     const Pair<Key, MappedType>* result;
@@ -741,7 +797,7 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key) const
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::remove(const Key& key)
 {
-    this->abort_if_not_initialised("ft_map::remove");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::remove");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
 
@@ -798,7 +854,7 @@ void ft_map<Key, MappedType>::remove(const Key& key)
 template <typename Key, typename MappedType>
 ft_bool ft_map<Key, MappedType>::empty() const
 {
-    this->abort_if_not_initialised("ft_map::empty");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::empty");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
     ft_bool    is_empty;
@@ -806,7 +862,7 @@ ft_bool ft_map<Key, MappedType>::empty() const
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        return (true);
+        return (FT_TRUE);
     }
     is_empty = (this->_size == 0);
     (void)this->unlock_internal(lock_acquired);
@@ -817,7 +873,7 @@ ft_bool ft_map<Key, MappedType>::empty() const
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::clear()
 {
-    if (this->_initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
@@ -836,7 +892,7 @@ void ft_map<Key, MappedType>::clear()
 template <typename Key, typename MappedType>
 ft_size_t ft_map<Key, MappedType>::size() const
 {
-    this->abort_if_not_initialised("ft_map::size");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::size");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
     ft_size_t current_size;
@@ -855,7 +911,7 @@ ft_size_t ft_map<Key, MappedType>::size() const
 template <typename Key, typename MappedType>
 ft_size_t ft_map<Key, MappedType>::capacity() const
 {
-    this->abort_if_not_initialised("ft_map::capacity");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::capacity");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
     ft_size_t current_capacity;
@@ -874,7 +930,7 @@ ft_size_t ft_map<Key, MappedType>::capacity() const
 template <typename Key, typename MappedType>
 Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
 {
-    this->abort_if_not_initialised("ft_map::end");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::end");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
     Pair<Key, MappedType>* result;
@@ -893,7 +949,7 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
 template <typename Key, typename MappedType>
 const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
 {
-    this->abort_if_not_initialised("ft_map::end_const");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::end_const");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
     const Pair<Key, MappedType>* result;
@@ -912,7 +968,7 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
 template <typename Key, typename MappedType>
 MappedType& ft_map<Key, MappedType>::at(const Key& key)
 {
-    this->abort_if_not_initialised("ft_map::at");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::at");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
 
@@ -938,7 +994,7 @@ MappedType& ft_map<Key, MappedType>::at(const Key& key)
 template <typename Key, typename MappedType>
 const MappedType& ft_map<Key, MappedType>::at(const Key& key) const
 {
-    this->abort_if_not_initialised("ft_map::at_const");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::at_const");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = this->lock_internal(&lock_acquired);
 
@@ -964,6 +1020,7 @@ const MappedType& ft_map<Key, MappedType>::at(const Key& key) const
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::enable_thread_safety()
 {
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (this->set_error(FT_ERR_SUCCESS));
     this->_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -982,6 +1039,7 @@ int32_t ft_map<Key, MappedType>::enable_thread_safety()
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::disable_thread_safety()
 {
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (this->set_error(FT_ERR_SUCCESS));
     int32_t destroy_error = this->_mutex->destroy();
@@ -993,6 +1051,7 @@ int32_t ft_map<Key, MappedType>::disable_thread_safety()
 template <typename Key, typename MappedType>
 ft_bool ft_map<Key, MappedType>::is_thread_safe() const
 {
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::is_thread_safe");
     const ft_bool result = (this->_mutex != ft_nullptr);
     this->set_error(FT_ERR_SUCCESS);
     return (result);
@@ -1001,7 +1060,7 @@ ft_bool ft_map<Key, MappedType>::is_thread_safe() const
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::lock(ft_bool *lock_acquired) const
 {
-    this->abort_if_not_initialised("ft_map::lock");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     return (this->set_error(lock_result));
 }
@@ -1009,7 +1068,7 @@ int32_t ft_map<Key, MappedType>::lock(ft_bool *lock_acquired) const
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::unlock(ft_bool lock_acquired) const
 {
-    this->abort_if_not_initialised("ft_map::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::unlock");
     (void)this->unlock_internal(lock_acquired);
     return (this->set_error(FT_ERR_SUCCESS));
 }
@@ -1022,10 +1081,10 @@ int8_t ft_map<Key, MappedType>::compare(const ft_map<Key, MappedType>& other) co
         this->set_error(FT_ERR_SUCCESS);
         return (0);
     }
-    this->abort_if_not_initialised("ft_map::compare");
-    if (other._initialised_state != ft_map<Key, MappedType>::_state_initialised)
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::compare");
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error(
+        errno_abort_lifecycle(other._initialised_state,
             "ft_map::compare", "source object is not initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (-1);
@@ -1070,35 +1129,26 @@ int8_t ft_map<Key, MappedType>::compare(const ft_map<Key, MappedType>& other) co
 
 
 template <typename Key, typename MappedType>
-thread_local int32_t ft_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t ft_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename Key, typename MappedType>
-int32_t ft_map<Key, MappedType>::set_error(int32_t error_code) const noexcept
+uint32_t ft_map<Key, MappedType>::set_error(uint32_t error_code) const noexcept
 {
     ft_map<Key, MappedType>::_last_error = error_code;
     return (error_code);
 }
 
 template <typename Key, typename MappedType>
-int32_t ft_map<Key, MappedType>::get_error() const noexcept
+uint32_t ft_map<Key, MappedType>::get_error() const noexcept
 {
-    ft_bool lock_acquired = FT_FALSE;
-    int32_t lock_error = this->lock_internal(&lock_acquired);
-
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (lock_error);
-    }
-    const int32_t result = ft_map<Key, MappedType>::_last_error;
-    this->set_error(result);
-    (void)this->unlock_internal(lock_acquired);
-    return (result);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::get_error");
+    return (ft_map<Key, MappedType>::_last_error);
 }
 
 template <typename Key, typename MappedType>
 const char *ft_map<Key, MappedType>::get_error_str() const noexcept
 {
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 

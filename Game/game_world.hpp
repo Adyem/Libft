@@ -32,7 +32,11 @@ class ft_upgrade;
 
 class ft_world
 {
-    private:
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
         ft_sharedptr<ft_event_scheduler> _event_scheduler;
         ft_sharedptr<ft_world_registry> _world_registry;
         ft_sharedptr<ft_world_replay_session> _replay_session;
@@ -43,44 +47,38 @@ class ft_world
         ft_sharedptr<ft_quest> _quest;
         ft_sharedptr<ft_vendor_profile> _vendor_profile;
         ft_sharedptr<ft_upgrade> _upgrade;
-        static thread_local int        _last_error;
+        static thread_local int32_t        _last_error;
         uint8_t _initialised_state;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-
-        void set_error(int err) const noexcept;
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        bool propagate_scheduler_state_error() const noexcept;
-        bool propagate_registry_state_error() const noexcept;
-        bool propagate_replay_state_error() const noexcept;
-        bool propagate_economy_state_error() const noexcept;
-        bool propagate_crafting_state_error() const noexcept;
-        bool propagate_dialogue_state_error() const noexcept;
-        bool propagate_region_state_error() const noexcept;
-        bool propagate_quest_state_error() const noexcept;
-        bool propagate_vendor_profile_state_error() const noexcept;
-        bool propagate_upgrade_state_error() const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        ft_bool propagate_scheduler_state_error() const noexcept;
+        ft_bool propagate_registry_state_error() const noexcept;
+        ft_bool propagate_replay_state_error() const noexcept;
+        ft_bool propagate_economy_state_error() const noexcept;
+        ft_bool propagate_crafting_state_error() const noexcept;
+        ft_bool propagate_dialogue_state_error() const noexcept;
+        ft_bool propagate_region_state_error() const noexcept;
+        ft_bool propagate_quest_state_error() const noexcept;
+        ft_bool propagate_vendor_profile_state_error() const noexcept;
+        ft_bool propagate_upgrade_state_error() const noexcept;
         json_group *build_snapshot_groups(const ft_character &character,
-            const ft_inventory &inventory, int &error_code) const noexcept;
-        int restore_from_groups(json_group *groups, ft_character &character,
+            const ft_inventory &inventory, int32_t &error_code) const noexcept;
+        int32_t restore_from_groups(json_group *groups, ft_character &character,
             ft_inventory &inventory) noexcept;
 
     public:
         ft_world() noexcept;
+        ft_world(const ft_world &other) noexcept;
+        ft_world(ft_world &&other) noexcept;
         virtual ~ft_world() noexcept;
-        ft_world(const ft_world &other) noexcept = delete;
         ft_world &operator=(const ft_world &other) noexcept = delete;
-        ft_world(ft_world &&other) noexcept = delete;
         ft_world &operator=(ft_world &&other) noexcept = delete;
 
-        int initialize() noexcept;
-        int destroy() noexcept;
+        int32_t initialize() noexcept;
+        int32_t destroy() noexcept;
+        int32_t move(ft_world &other) noexcept;
         void schedule_event(const ft_sharedptr<ft_event> &event) noexcept;
-        void update_events(ft_sharedptr<ft_world> &self, int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
+        void update_events(ft_sharedptr<ft_world> &self, int32_t ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
 
         ft_sharedptr<ft_event_scheduler>       &get_event_scheduler() noexcept;
         const ft_sharedptr<ft_event_scheduler> &get_event_scheduler() const noexcept;
@@ -103,19 +101,19 @@ class ft_world
         ft_sharedptr<ft_upgrade>       &get_upgrade() noexcept;
         const ft_sharedptr<ft_upgrade> &get_upgrade() const noexcept;
 
-        int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
-        int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
-        int save_to_store(kv_store &store, const char *slot_key, const ft_character &character, const ft_inventory &inventory) const noexcept;
-        int load_from_store(kv_store &store, const char *slot_key, ft_character &character, ft_inventory &inventory) noexcept;
-        int save_to_buffer(ft_string &out_buffer, const ft_character &character, const ft_inventory &inventory) const noexcept;
-        int load_from_buffer(const char *buffer, ft_character &character, ft_inventory &inventory) noexcept;
+        int32_t save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
+        int32_t load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
+        int32_t save_to_store(kv_store &store, const char *slot_key, const ft_character &character, const ft_inventory &inventory) const noexcept;
+        int32_t load_from_store(kv_store &store, const char *slot_key, ft_character &character, ft_inventory &inventory) noexcept;
+        int32_t save_to_buffer(ft_string &out_buffer, const ft_character &character, const ft_inventory &inventory) const noexcept;
+        int32_t load_from_buffer(const char *buffer, ft_character &character, ft_inventory &inventory) noexcept;
 
-        int plan_route(const ft_map3d &grid,
-            size_t start_x, size_t start_y, size_t start_z,
-            size_t goal_x, size_t goal_y, size_t goal_z,
+        int32_t plan_route(const ft_map3d &grid,
+            ft_size_t start_x, ft_size_t start_y, ft_size_t start_z,
+            ft_size_t goal_x, ft_size_t goal_y, ft_size_t goal_z,
             ft_vector<ft_path_step> &path) const noexcept;
 
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

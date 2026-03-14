@@ -44,6 +44,16 @@ Lifecycle classes must expose a dedicated explicit move helper named exactly `mo
 Assignment operator exceptions:
 - `ft_string`: copy/move assignment is allowed for required string value semantics used by stream/conversion APIs.
 - `ft_big_number`: copy/move assignment is allowed for required arithmetic/proxy value semantics across the module.
+- `ft_map`, `ft_unordered_map`, `ft_sharedptr`, and `ft_uniqueptr`: copy/move assignment may be kept when needed for compatibility and required value/ownership semantics in existing call chains.
+- `ft_function`: copy/move assignment is allowed for callable wrapper value semantics and compatibility in callback pipelines.
+- `Pair` (`Template/pair.hpp`): copy/move assignment is allowed for pair value semantics in existing map/test call chains.
+- `Pool<T>::Object` (`Template/pool.hpp`): move assignment is allowed for pool handle transfer semantics.
+- Template proxy wrappers (for example `mapped_proxy`) may keep compatibility assignment operators used for operator-chain error propagation.
+
+Operator-overload and proxy exception:
+- Keep useful access/operator-chain overloads for `ft_vector`, `ft_map`, `ft_unordered_map`, `ft_sharedptr`, `ft_uniqueptr`, `ft_string`, `ft_big_number`, the SCMA handle class, and documented Math classes that already expose operator-based value semantics, including `operator[]`, `operator->`, and related dereference/value access overloads.
+- For classes that expose these operator-chain access paths, keep proxy classes (or equivalent proxy return wrappers) when needed to preserve error propagation across chained calls.
+- These overloads/proxy wrappers are explicitly allowed and are not considered violations of the default "delete assignment operators by default" rule when they serve error propagation or API compatibility.
 
 ### Class Skeleton Baseline
 
@@ -279,6 +289,22 @@ Dedicated testing-only mutex exposure helpers are not required. Prefer the `Test
 with no recursive mutex, errno helpers, or thread-safety toggles. Any new behavior should leave
 error handling and synchronization to callers rather than reintroducing state inside `ft_function`.
 
+### Template constructor compatibility exemptions
+
+In the `Template` module, existing value/container APIs may keep compatibility specialized constructors where those constructors are already part of established public usage. This exemption applies to:
+- `ft_vector`, `ft_deque`, `ft_set`, `ft_map`, `ft_unordered_map`, `ft_graph`, `ft_matrix`, `ft_circular_buffer`, and `ft_event_emitter` capacity/value configuration constructors.
+- `ft_optional`, `ft_variant`, and `ft_tuple` value-forwarding constructors used by template value semantics.
+- `ft_string_view` pointer/size view constructors.
+- `ft_sharedptr`, `ft_uniqueptr`, `ft_future`, and `Pool<T>::Object` compatibility constructors required by ownership/adapter call chains.
+- `ft_function` callable constructor and `Pair` key/value constructors.
+- Proxy/helper constructors in Template proxy classes (`reference_proxy`, `const_reference_proxy`, `value_proxy`, `char_proxy`, and similar proxy wrappers).
+
+These specialized constructors must keep constructor bodies thin and continue routing fallible setup through `initialize(...)` where applicable.
+
+### Template naming compatibility exemptions
+
+In the `Template` module, legacy public type names `Pair` (`Template/pair.hpp`) and `Iterator` (`Template/iterator.hpp`) are exempt from the snake_case naming rule for compatibility with existing API/test call chains.
+
 ### Deprecated Errno Stack
 
 `ft_errno` and the legacy thread-local global error stack helpers (`ft_global_error_stack_*`,
@@ -304,6 +330,20 @@ All functions that return an error code must return one of the following only:
 
 Functions must never invent ad-hoc numeric error codes outside the Errno module.
 Any new error code must be defined in the Errno `.hpp` file before use.
+
+### Signed Error Severity Model (Authoritative)
+
+Use signed error semantics consistently across the project:
+- `error_code < 0`: critical failure (for example memory allocation failures, lock/mutex failures, or low-level/internal/system failures).
+- `error_code == 0`: success (`FT_ERR_SUCCESS`).
+- `error_code > 0`: recoverable/non-critical outcome (for example not found, already exists, out of range, empty/full, retryable/would-block style outcomes).
+
+Checking rules:
+- First-level failure check remains `error_code != 0`.
+- When behavior differs by severity, classify after the non-zero check:
+  - critical path: `error_code < 0`
+  - recoverable path: `error_code > 0`
+- Do not treat all non-zero codes as critical by default.
 
 ### Initialize Return Contract
 

@@ -5,31 +5,31 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
-int log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
+int32_t log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
 {
     pt_mutex *mutex_pointer;
-    int initialize_result;
+    int32_t initialize_result;
 
     if (!metrics)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (metrics->thread_safe_enabled && metrics->mutex)
     {
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     mutex_pointer = new(std::nothrow) pt_mutex();
     if (!mutex_pointer)
-        return (-1);
+        return (FT_ERR_INTERNAL);
     initialize_result = mutex_pointer->initialize();
     if (initialize_result != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     metrics->mutex = mutex_pointer;
-    metrics->thread_safe_enabled = true;
-    return (0);
+    metrics->thread_safe_enabled = FT_TRUE;
+    return (FT_ERR_SUCCESS);
 }
 
 void log_async_metrics_teardown_thread_safety(s_log_async_metrics *metrics)
@@ -42,30 +42,30 @@ void log_async_metrics_teardown_thread_safety(s_log_async_metrics *metrics)
         delete metrics->mutex;
         metrics->mutex = ft_nullptr;
     }
-    metrics->thread_safe_enabled = false;
+    metrics->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-int log_async_metrics_lock(s_log_async_metrics *metrics, bool *lock_acquired)
+int32_t log_async_metrics_lock(s_log_async_metrics *metrics, ft_bool *lock_acquired)
 {
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!metrics)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (!metrics->thread_safe_enabled || !metrics->mutex)
     {
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     if (pt_mutex_lock_if_not_null(metrics->mutex) != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_INTERNAL);
     if (lock_acquired)
-        *lock_acquired = true;
-    return (0);
+        *lock_acquired = FT_TRUE;
+    return (FT_ERR_SUCCESS);
 }
 
-void log_async_metrics_unlock(s_log_async_metrics *metrics, bool lock_acquired)
+void log_async_metrics_unlock(s_log_async_metrics *metrics, ft_bool lock_acquired)
 {
     if (!metrics)
     {

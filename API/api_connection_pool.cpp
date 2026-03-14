@@ -25,11 +25,11 @@ struct api_pooled_connection
     SSL *tls_session;
     SSL_CTX *tls_context;
 #endif
-    bool uses_tls;
-    bool negotiated_http2;
-    long long idle_timestamp_ms;
+    ft_bool uses_tls;
+    ft_bool negotiated_http2;
+    int64_t idle_timestamp_ms;
 
-    static void *operator new(size_t size) noexcept
+    static void *operator new(ft_size_t size) noexcept
     {
         void *pointer;
 
@@ -37,7 +37,7 @@ struct api_pooled_connection
         return (pointer);
     }
 
-    static void *operator new(size_t size, const std::nothrow_t&) noexcept
+    static void *operator new(ft_size_t size, const std::nothrow_t&) noexcept
     {
         return (api_pooled_connection::operator new(size));
     }
@@ -59,12 +59,12 @@ struct api_pooled_connection
 struct api_connection_pool_storage
 {
     api_pooled_connection **entries;
-    size_t entry_count;
-    size_t entry_capacity;
+    ft_size_t entry_count;
+    ft_size_t entry_capacity;
 };
 
 static void api_connection_pool_dispose_entry(api_pooled_connection &entry);
-static bool api_connection_pool_socket_is_alive(ft_socket &socket);
+static ft_bool api_connection_pool_socket_is_alive(ft_socket &socket);
 
 static api_connection_pool_storage &api_connection_pool_get_storage(void)
 {
@@ -93,58 +93,58 @@ static pt_mutex &api_connection_pool_get_tls_mutex(void)
     return (tls_mutex);
 }
 
-static bool api_connection_pool_tls_register(SSL *tls_session)
+static ft_bool api_connection_pool_tls_register(SSL *tls_session)
 {
     std::set<SSL*> &tls_registry = api_connection_pool_get_tls_registry();
-    std::pair<std::set<SSL*>::iterator, bool> insert_result;
+    std::pair<std::set<SSL*>::iterator, ft_bool> insert_result;
     if (!tls_session)
-        return (true);
+        return (FT_TRUE);
     if (api_connection_pool_get_tls_mutex().lock() != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     insert_result = tls_registry.insert(tls_session);
     (void)api_connection_pool_get_tls_mutex().unlock();
     if (!insert_result.second)
-        return (false);
-    return (true);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
-static bool api_connection_pool_tls_unregister(SSL *tls_session)
+static ft_bool api_connection_pool_tls_unregister(SSL *tls_session)
 {
     std::set<SSL*> &tls_registry = api_connection_pool_get_tls_registry();
     std::set<SSL*>::iterator iterator;
     if (!tls_session)
-        return (false);
+        return (FT_FALSE);
     if (api_connection_pool_get_tls_mutex().lock() != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     iterator = tls_registry.find(tls_session);
     if (iterator == tls_registry.end())
     {
         (void)api_connection_pool_get_tls_mutex().unlock();
-        return (false);
+        return (FT_FALSE);
     }
     tls_registry.erase(iterator);
     (void)api_connection_pool_get_tls_mutex().unlock();
-    return (true);
+    return (FT_TRUE);
 }
 #endif
 
-static bool api_connection_pool_socket_is_alive(ft_socket &socket)
+static ft_bool api_connection_pool_socket_is_alive(ft_socket &socket)
 {
-    int poll_descriptor;
-    int poll_result;
+    int32_t poll_descriptor;
+    int32_t poll_result;
     char peek_byte;
     ssize_t peek_result;
 
     poll_descriptor = socket.get_file_descriptor();
     if (poll_descriptor < 0)
-        return (false);
+        return (FT_FALSE);
     poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 50);
     if (poll_result < 0)
-        return (false);
+        return (FT_FALSE);
     if (poll_result == 0)
-        return (true);
+        return (FT_TRUE);
     if (poll_descriptor == -1)
-        return (false);
+        return (FT_FALSE);
     peek_byte = 0;
 #ifdef _WIN32
     peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK);
@@ -152,23 +152,23 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK | MSG_DONTWAIT);
 #endif
     if (peek_result > 0)
-        return (false);
+        return (FT_FALSE);
     if (peek_result == 0)
-        return (false);
+        return (FT_FALSE);
 #ifdef _WIN32
     if (WSAGetLastError() == WSAEWOULDBLOCK || WSAGetLastError() == WSAEINTR)
-        return (true);
+        return (FT_TRUE);
 #else
     if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
-        return (true);
+        return (FT_TRUE);
 #endif
-    return (false);
+    return (FT_FALSE);
 }
 
 #if NETWORKING_HAS_OPENSSL
-bool api_connection_pool_track_tls_session(SSL *tls_session)
+ft_bool api_connection_pool_track_tls_session(SSL *tls_session)
 {
-    bool registered;
+    ft_bool registered;
 
     registered = api_connection_pool_tls_register(tls_session);
     if (!registered)
@@ -179,9 +179,9 @@ bool api_connection_pool_track_tls_session(SSL *tls_session)
     return (registered);
 }
 
-bool api_connection_pool_untrack_tls_session(SSL *tls_session)
+ft_bool api_connection_pool_untrack_tls_session(SSL *tls_session)
 {
-    bool removed;
+    ft_bool removed;
 
     removed = api_connection_pool_tls_unregister(tls_session);
     return (removed);
@@ -190,7 +190,7 @@ bool api_connection_pool_untrack_tls_session(SSL *tls_session)
 
 static void api_connection_pool_clear_storage(api_connection_pool_storage &storage)
 {
-    size_t entry_index;
+    ft_size_t entry_index;
 
     entry_index = 0;
     while (entry_index < storage.entry_count)
@@ -221,37 +221,37 @@ static pt_mutex &api_connection_pool_get_mutex(void)
 
     return (connection_pool_mutex);
 }
-static size_t g_api_connection_max_idle = 8;
-static long long g_api_connection_idle_timeout_ms = 60000;
-static size_t g_api_connection_pool_acquire_calls = 0;
-static size_t g_api_connection_pool_reuse_hits = 0;
-static size_t g_api_connection_pool_acquire_misses = 0;
-static bool g_api_connection_pool_enabled = true;
+static ft_size_t g_api_connection_max_idle = 8;
+static int64_t g_api_connection_idle_timeout_ms = 60000;
+static ft_size_t g_api_connection_pool_acquire_calls = 0;
+static ft_size_t g_api_connection_pool_reuse_hits = 0;
+static ft_size_t g_api_connection_pool_acquire_misses = 0;
+static ft_bool g_api_connection_pool_enabled = FT_TRUE;
 
 struct api_connection_pool_dispose_snapshot
 {
-    bool socket_cleanup_allowed;
-    bool socket_is_open;
-    int socket_error;
-    size_t client_count;
+    ft_bool socket_cleanup_allowed;
+    ft_bool socket_is_open;
+    int32_t socket_error;
+    ft_size_t client_count;
 };
 
 static api_connection_pool_dispose_snapshot g_api_connection_pool_last_dispose_snapshot =
 {
-    false,
-    false,
+    FT_FALSE,
+    FT_FALSE,
     FT_ERR_SUCCESS,
     0
 };
 
 static void api_connection_pool_record_dispose_snapshot(
-    bool socket_cleanup_allowed,
-    bool socket_is_open,
-    int socket_error,
-    size_t client_count)
+    ft_bool socket_cleanup_allowed,
+    ft_bool socket_is_open,
+    int32_t socket_error,
+    ft_size_t client_count)
 {
-    int cleanup_allowed_flag;
-    int socket_open_flag;
+    int32_t cleanup_allowed_flag;
+    int32_t socket_open_flag;
 
     g_api_connection_pool_last_dispose_snapshot.socket_cleanup_allowed = socket_cleanup_allowed;
     g_api_connection_pool_last_dispose_snapshot.socket_is_open = socket_is_open;
@@ -268,7 +268,7 @@ static void api_connection_pool_record_dispose_snapshot(
         cleanup_allowed_flag,
         socket_open_flag,
         socket_error,
-        static_cast<unsigned long long>(client_count));
+        static_cast<uint64_t>(client_count));
     return ;
 }
 
@@ -282,7 +282,7 @@ static ft_string api_connection_pool_build_key(const char *host, uint16_t port,
     if (host)
         key = host;
     key += ":";
-    std::snprintf(port_buffer, sizeof(port_buffer), "%u", static_cast<unsigned int>(port));
+    std::snprintf(port_buffer, sizeof(port_buffer), "%u", static_cast<uint32_t>(port));
     key += port_buffer;
     key += ":";
     if (security_mode == api_connection_security_mode::TLS)
@@ -308,9 +308,9 @@ static void api_connection_pool_free_tls(SSL *tls_session, SSL_CTX *tls_context)
 
 static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
 {
-    bool socket_is_open;
-    size_t client_count;
-    int socket_error;
+    ft_bool socket_is_open;
+    ft_size_t client_count;
+    int32_t socket_error;
 
     socket_is_open = (entry.socket.get_file_descriptor() >= 0);
     client_count = 0;
@@ -329,11 +329,11 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     entry.tls_session = ft_nullptr;
     entry.tls_context = ft_nullptr;
 #endif
-    entry.uses_tls = false;
-    entry.negotiated_http2 = false;
+    entry.uses_tls = FT_FALSE;
+    entry.negotiated_http2 = FT_FALSE;
     entry.idle_timestamp_ms = 0;
     api_connection_pool_record_dispose_snapshot(
-        true,
+        FT_TRUE,
         socket_is_open,
         socket_error,
         client_count);
@@ -342,19 +342,19 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     return ;
 }
 
-bool api_connection_pool_acquire(api_connection_pool_handle &handle,
+ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         const char *host, uint16_t port,
         api_connection_security_mode security_mode,
         const char *security_identity)
 {
     ft_string key;
-    bool handle_lock_acquired;
+    ft_bool handle_lock_acquired;
 
-    handle_lock_acquired = false;
+    handle_lock_acquired = FT_FALSE;
     if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
     {
         g_api_connection_pool_acquire_misses++;
-        return (false);
+        return (FT_FALSE);
     }
 
     key = api_connection_pool_build_key(host, port, security_mode, security_identity);
@@ -364,30 +364,30 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
 #endif
-    handle.has_socket = false;
-    handle.from_pool = false;
-    handle.should_store = false;
-    handle.negotiated_http2 = false;
-    handle.plain_socket_validated = false;
+    handle.has_socket = FT_FALSE;
+    handle.from_pool = FT_FALSE;
+    handle.should_store = FT_FALSE;
+    handle.negotiated_http2 = FT_FALSE;
+    handle.plain_socket_validated = FT_FALSE;
     g_api_connection_pool_acquire_calls++;
     if (!g_api_connection_pool_enabled)
     {
         handle.unlock(handle_lock_acquired);
         g_api_connection_pool_acquire_misses++;
-        return (false);
+        return (FT_FALSE);
     }
-    handle.should_store = true;
-    handle.should_store = false;
+    handle.should_store = FT_TRUE;
+    handle.should_store = FT_FALSE;
     handle.unlock(handle_lock_acquired);
     g_api_connection_pool_acquire_misses++;
-    return (false);
+    return (FT_FALSE);
 }
 
 void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 {
-    bool handle_lock_acquired;
+    ft_bool handle_lock_acquired;
 
-    handle_lock_acquired = false;
+    handle_lock_acquired = FT_FALSE;
     if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
     if (!handle.has_socket)
@@ -433,28 +433,28 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     }
     handle.unlock(handle_lock_acquired);
     api_connection_pool_evict(handle);
-    handle_lock_acquired = false;
+    handle_lock_acquired = FT_FALSE;
     if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
 #if NETWORKING_HAS_OPENSSL
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
 #endif
-    handle.has_socket = false;
-    handle.from_pool = false;
-    handle.should_store = false;
-    handle.negotiated_http2 = false;
-    handle.plain_socket_timed_out = false;
-    handle.plain_socket_validated = false;
+    handle.has_socket = FT_FALSE;
+    handle.from_pool = FT_FALSE;
+    handle.should_store = FT_FALSE;
+    handle.negotiated_http2 = FT_FALSE;
+    handle.plain_socket_timed_out = FT_FALSE;
+    handle.plain_socket_validated = FT_FALSE;
     handle.unlock(handle_lock_acquired);
     return ;
 }
 
 void api_connection_pool_evict(api_connection_pool_handle &handle)
 {
-    bool handle_lock_acquired;
+    ft_bool handle_lock_acquired;
 
-    handle_lock_acquired = false;
+    handle_lock_acquired = FT_FALSE;
     if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
     if (!handle.has_socket)
@@ -465,7 +465,7 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
     if (handle.security_mode == api_connection_security_mode::TLS)
     {
 #if NETWORKING_HAS_OPENSSL
-        bool tls_removed;
+        ft_bool tls_removed;
 
         tls_removed = api_connection_pool_untrack_tls_session(handle.tls_session);
         if (tls_removed)
@@ -476,25 +476,25 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
     }
     handle.socket.disconnect_all_clients();
     handle.socket.close_socket();
-    handle.has_socket = false;
-    handle.from_pool = false;
-    handle.should_store = false;
-    handle.negotiated_http2 = false;
-    handle.plain_socket_timed_out = false;
-    handle.plain_socket_validated = false;
+    handle.has_socket = FT_FALSE;
+    handle.from_pool = FT_FALSE;
+    handle.should_store = FT_FALSE;
+    handle.negotiated_http2 = FT_FALSE;
+    handle.plain_socket_timed_out = FT_FALSE;
+    handle.plain_socket_validated = FT_FALSE;
     handle.unlock(handle_lock_acquired);
     return ;
 }
 
 void api_connection_pool_disable_store(api_connection_pool_handle &handle)
 {
-    bool handle_lock_acquired;
+    ft_bool handle_lock_acquired;
 
-    handle_lock_acquired = false;
+    handle_lock_acquired = FT_FALSE;
     if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    handle.should_store = false;
-    handle.negotiated_http2 = false;
+    handle.should_store = FT_FALSE;
+    handle.negotiated_http2 = FT_FALSE;
     handle.unlock(handle_lock_acquired);
     return ;
 }
@@ -502,7 +502,7 @@ void api_connection_pool_disable_store(api_connection_pool_handle &handle)
 void api_connection_pool_flush(void)
 {
     api_connection_pool_storage &storage = api_connection_pool_get_storage();
-    int lock_error;
+    int32_t lock_error;
 
     lock_error = api_connection_pool_get_mutex().lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -512,10 +512,10 @@ void api_connection_pool_flush(void)
     return ;
 }
 
-void api_connection_pool_set_enabled(bool enabled)
+void api_connection_pool_set_enabled(ft_bool enabled)
 {
     api_connection_pool_storage &storage = api_connection_pool_get_storage();
-    int lock_error;
+    int32_t lock_error;
 
     lock_error = api_connection_pool_get_mutex().lock();
     if (lock_error != FT_ERR_SUCCESS)
@@ -527,12 +527,12 @@ void api_connection_pool_set_enabled(bool enabled)
     return ;
 }
 
-bool api_connection_pool_is_enabled(void)
+ft_bool api_connection_pool_is_enabled(void)
 {
     return (g_api_connection_pool_enabled);
 }
 
-void api_connection_pool_set_max_idle(size_t max_idle)
+void api_connection_pool_set_max_idle(ft_size_t max_idle)
 {
     if (max_idle == 0)
         g_api_connection_max_idle = 0;
@@ -541,18 +541,18 @@ void api_connection_pool_set_max_idle(size_t max_idle)
     return ;
 }
 
-size_t api_connection_pool_get_max_idle(void)
+ft_size_t api_connection_pool_get_max_idle(void)
 {
     return (g_api_connection_max_idle);
 }
 
-void api_connection_pool_set_idle_timeout(long long idle_timeout_ms)
+void api_connection_pool_set_idle_timeout(int64_t idle_timeout_ms)
 {
     g_api_connection_idle_timeout_ms = idle_timeout_ms;
     return ;
 }
 
-long long api_connection_pool_get_idle_timeout(void)
+int64_t api_connection_pool_get_idle_timeout(void)
 {
     return (g_api_connection_idle_timeout_ms);
 }
@@ -565,17 +565,17 @@ void api_debug_reset_connection_pool_counters(void)
     return ;
 }
 
-size_t api_debug_get_connection_pool_acquires(void)
+ft_size_t api_debug_get_connection_pool_acquires(void)
 {
     return (g_api_connection_pool_acquire_calls);
 }
 
-size_t api_debug_get_connection_pool_reuses(void)
+ft_size_t api_debug_get_connection_pool_reuses(void)
 {
     return (g_api_connection_pool_reuse_hits);
 }
 
-size_t api_debug_get_connection_pool_misses(void)
+ft_size_t api_debug_get_connection_pool_misses(void)
 {
     return (g_api_connection_pool_acquire_misses);
 }

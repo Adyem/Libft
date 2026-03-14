@@ -64,7 +64,7 @@ int32_t DataBuffer::write_length_locked(ft_size_t length) noexcept
     while (index < sizeof(ft_size_t))
     {
         this->_buffer.push_back(pointer[index]);
-        int32_t push_error = ft_vector<uint8_t>::get_error();
+        int32_t push_error = this->_buffer.get_error();
         if (push_error != FT_ERR_SUCCESS)
             return (push_error);
         index++;
@@ -202,7 +202,7 @@ int32_t DataBuffer::initialize(const DataBuffer &other) noexcept
     while (index < other._buffer.size() && copy_error == FT_ERR_SUCCESS)
     {
         this->_buffer.push_back(other._buffer[index]);
-        copy_error = ft_vector<uint8_t>::get_error();
+        copy_error = this->_buffer.get_error();
         index++;
     }
     if (copy_error == FT_ERR_SUCCESS)
@@ -281,7 +281,7 @@ uint32_t DataBuffer::move(DataBuffer &other) noexcept
     while (index < other._buffer.size() && move_error == FT_ERR_SUCCESS)
     {
         this->_buffer.push_back(other._buffer[index]);
-        move_error = ft_vector<uint8_t>::get_error();
+        move_error = this->_buffer.get_error();
         index++;
     }
     if (move_error == FT_ERR_SUCCESS)

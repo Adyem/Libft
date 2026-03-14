@@ -426,7 +426,7 @@ int ft_blocking_queue<ElementType>::push(ElementType &&value)
         return (mutex_error);
     }
     was_empty = this->_storage.empty();
-    int storage_error = ft_queue<ElementType>::get_error();
+    int storage_error = this->_storage.get_error();
     if (storage_error != FT_ERR_SUCCESS)
     {
         this->_mutex.unlock();
@@ -434,7 +434,7 @@ int ft_blocking_queue<ElementType>::push(ElementType &&value)
         return (storage_error);
     }
     this->_storage.enqueue(ft_move(value));
-    storage_error = ft_queue<ElementType>::get_error();
+    storage_error = this->_storage.get_error();
     if (storage_error != FT_ERR_SUCCESS)
     {
         this->_mutex.unlock();
@@ -478,7 +478,7 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
         return (false);
     }
     is_empty = this->_storage.empty();
-    int storage_error = ft_queue<ElementType>::get_error();
+    int storage_error = this->_storage.get_error();
     if (storage_error != FT_ERR_SUCCESS)
     {
         this->_mutex.unlock();
@@ -492,7 +492,7 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
         return (false);
     }
     value = this->_storage.dequeue();
-    int dequeue_error = ft_queue<ElementType>::get_error();
+    int dequeue_error = this->_storage.get_error();
     if (dequeue_error != FT_ERR_SUCCESS)
     {
         this->_mutex.unlock();
@@ -530,7 +530,7 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
     while (true)
     {
         is_empty = this->_storage.empty();
-        int storage_error = ft_queue<ElementType>::get_error();
+        int storage_error = this->_storage.get_error();
         if (storage_error != FT_ERR_SUCCESS)
         {
             this->_mutex.unlock();
@@ -560,7 +560,7 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
         }
     }
     value = this->_storage.dequeue();
-    int dequeue_error = ft_queue<ElementType>::get_error();
+    int dequeue_error = this->_storage.get_error();
     if (dequeue_error != FT_ERR_SUCCESS)
     {
         this->_mutex.unlock();
@@ -626,14 +626,14 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         return (ft_future<return_type>());
     }
     promise_shared.reset(promise_raw, 1, false);
-    int promise_error = ft_sharedptr<promise_type>::get_error();
+    int promise_error = promise_shared.get_error();
 
     if (promise_error != FT_ERR_SUCCESS)
     {
         return (ft_future<return_type>());
     }
     {
-        int future_error = ft_sharedptr<promise_type>::get_error();
+        int future_error = promise_shared.get_error();
         if (future_error != FT_ERR_SUCCESS)
         {
             return (ft_future<return_type>(promise_shared));
@@ -716,7 +716,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     promise_shared.reset(promise_raw, 1, false);
-    int promise_error = ft_sharedptr<promise_type>::get_error();
+    int promise_error = promise_shared.get_error();
 
     if (promise_error != FT_ERR_SUCCESS)
     {
@@ -730,7 +730,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     {
-        int future_error = ft_sharedptr<promise_type>::get_error();
+        int future_error = promise_shared.get_error();
         if (future_error != FT_ERR_SUCCESS)
         {
             return (result_pair);
@@ -742,7 +742,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     state_shared.reset(state_raw, 1, false);
-    int state_error = ft_sharedptr<ft_scheduled_task_state>::get_error();
+    int state_error = state_shared.get_error();
 
     if (state_error != FT_ERR_SUCCESS)
     {
@@ -853,7 +853,7 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
         return (handle_result);
     }
     state_shared.reset(state_raw, 1, false);
-    int state_error = ft_sharedptr<ft_scheduled_task_state>::get_error();
+    int state_error = state_shared.get_error();
 
     if (state_error != FT_ERR_SUCCESS)
     {

@@ -4,23 +4,23 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 
-int nw_poll(int *read_file_descriptors, int read_count,
-            int *write_file_descriptors, int write_count,
-            int timeout_milliseconds)
+int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
+            int32_t *write_file_descriptors, int32_t write_count,
+            int32_t timeout_milliseconds)
 {
-    int epoll_descriptor;
+    int32_t epoll_descriptor;
     epoll_event event;
     epoll_event *events;
-    int index;
-    int maximum_events;
-    int valid_read_count;
-    int valid_write_count;
-    int ready_descriptors;
-    int ready_index;
-    int file_descriptor;
-    int search_index;
-    int *read_ready_flags;
-    int *write_ready_flags;
+    int32_t index;
+    int32_t maximum_events;
+    int32_t valid_read_count;
+    int32_t valid_write_count;
+    int32_t ready_descriptors;
+    int32_t ready_index;
+    int32_t file_descriptor;
+    int32_t search_index;
+    int32_t *read_ready_flags;
+    int32_t *write_ready_flags;
 
     epoll_descriptor = epoll_create1(0);
     if (epoll_descriptor == -1)
@@ -89,7 +89,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     write_ready_flags = ft_nullptr;
     if (read_file_descriptors && read_count > 0)
     {
-        read_ready_flags = static_cast<int *>(cma_malloc(sizeof(int) * read_count));
+        read_ready_flags = static_cast<int32_t *>(cma_malloc(sizeof(int32_t) * read_count));
         if (!read_ready_flags)
         {
             cma_free(events);
@@ -105,7 +105,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     }
     if (write_file_descriptors && write_count > 0)
     {
-        write_ready_flags = static_cast<int *>(cma_malloc(sizeof(int) * write_count));
+        write_ready_flags = static_cast<int32_t *>(cma_malloc(sizeof(int32_t) * write_count));
         if (!write_ready_flags)
         {
             if (read_ready_flags)

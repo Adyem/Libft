@@ -30,8 +30,8 @@ MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
 HEADERS := time.hpp \
-           fps.hpp \
-           timer.hpp
+           time_fps.hpp \
+           time_timer.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

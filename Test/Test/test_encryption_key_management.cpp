@@ -1,6 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Encryption/encryption_key_management.hpp"
-#include "../../Encryption/encryption_secure_wipe.hpp"
+#include "../../Encryption/encryption.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"

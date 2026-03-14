@@ -2,7 +2,7 @@
 #define NETWORKING_UDP_SOCKET_HPP
 
 #include "networking.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -15,40 +15,47 @@
 
 class udp_socket
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        void abort_lifecycle_error(const char *method_name, const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int     create_socket(const SocketConfig &config);
-        int     set_non_blocking(const SocketConfig &config);
-        int     set_timeouts(const SocketConfig &config);
-        int     configure_address(const SocketConfig &config);
-        int     bind_socket(const SocketConfig &config);
-        int     connect_socket(const SocketConfig &config);
+        int32_t create_socket(const SocketConfig &config);
+        int32_t set_non_blocking(const SocketConfig &config);
+        int32_t set_timeouts(const SocketConfig &config);
+        int32_t configure_address(const SocketConfig &config);
+        int32_t bind_socket(const SocketConfig &config);
+        int32_t connect_socket(const SocketConfig &config);
 
         struct sockaddr_storage _address;
-        int     _socket_fd;
-        mutable pt_mutex _mutex;
+        int32_t _socket_fd;
+        mutable pt_recursive_mutex *_mutex;
 
     public:
-        udp_socket();
-        ~udp_socket();
-        udp_socket(const udp_socket &other) = delete;
+        udp_socket() noexcept;
+        udp_socket(const udp_socket &other) noexcept;
+        udp_socket(udp_socket &&other) noexcept;
+        ~udp_socket() noexcept;
         udp_socket &operator=(const udp_socket &other) = delete;
-        udp_socket(udp_socket &&other) noexcept = delete;
         udp_socket &operator=(udp_socket &&other) noexcept = delete;
+        int32_t move(udp_socket &other) noexcept;
 
-        int     initialize(const SocketConfig &config);
-        ssize_t send_to(const void *data, size_t size, int flags,
+        int32_t initialize() noexcept;
+        int32_t initialize(const udp_socket &other) noexcept;
+        int32_t initialize(udp_socket &&other) noexcept;
+        int32_t initialize(const SocketConfig &config);
+        int32_t destroy() noexcept;
+        ssize_t send_to(const void *data, ft_size_t size, int32_t flags,
                         const struct sockaddr *dest_addr, socklen_t addr_len);
-        ssize_t receive_from(void *buffer, size_t size, int flags,
+        ssize_t receive_from(void *buffer, ft_size_t size, int32_t flags,
                              struct sockaddr *src_addr, socklen_t *addr_len);
-        bool    close_socket();
-        int     get_fd() const;
+        ft_bool close_socket();
+        int32_t get_fd() const;
         const struct sockaddr_storage &get_address() const;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 };
 
 #endif

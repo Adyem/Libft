@@ -3,9 +3,10 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 
-static int world_replay_collect_callbacks(ft_world &world,
+static int32_t world_replay_collect_callbacks(ft_world &world,
     ft_vector<ft_function<void(ft_world&, ft_event&)> > &callbacks) noexcept
 {
     ft_sharedptr<ft_event_scheduler> &scheduler = world.get_event_scheduler();
@@ -17,8 +18,8 @@ static int world_replay_collect_callbacks(ft_world &world,
     scheduler->dump_events(scheduled_events);
     if (scheduler->get_error() != FT_ERR_SUCCESS)
         return (scheduler->get_error());
-    size_t event_index;
-    size_t event_count;
+    ft_size_t event_index;
+    ft_size_t event_count;
 
     event_index = 0;
     event_count = scheduled_events.size();
@@ -30,14 +31,14 @@ static int world_replay_collect_callbacks(ft_world &world,
         if (scheduled_events[event_index]->get_error() != FT_ERR_SUCCESS)
             return (scheduled_events[event_index]->get_error());
         callbacks.push_back(event_callback);
-        if (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error() != FT_ERR_SUCCESS)
-            return (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error());
+        if (callbacks.get_error() != FT_ERR_SUCCESS)
+            return (static_cast<int32_t>(callbacks.get_error()));
         event_index++;
     }
     return (FT_ERR_SUCCESS);
 }
 
-static int world_replay_restore_callbacks(ft_world &world,
+static int32_t world_replay_restore_callbacks(ft_world &world,
     const ft_vector<ft_function<void(ft_world&, ft_event&)> > &callbacks) noexcept
 {
     ft_sharedptr<ft_event_scheduler> &scheduler = world.get_event_scheduler();
@@ -51,9 +52,9 @@ static int world_replay_restore_callbacks(ft_world &world,
     scheduler->dump_events(scheduled_events);
     if (scheduler->get_error() != FT_ERR_SUCCESS)
         return (scheduler->get_error());
-    size_t event_index;
-    size_t event_count;
-    size_t callback_count;
+    ft_size_t event_index;
+    ft_size_t event_count;
+    ft_size_t callback_count;
 
     callback_count = callbacks.size();
     event_index = 0;
@@ -74,97 +75,183 @@ static int world_replay_restore_callbacks(ft_world &world,
 
 ft_world_replay_session::ft_world_replay_session() noexcept
     : _snapshot_payload(), _event_callbacks(),
-      _initialised_state(ft_world_replay_session::_state_uninitialised)
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    return ;
+}
+
+ft_world_replay_session::ft_world_replay_session(
+    const ft_world_replay_session &other) noexcept
+    : _snapshot_payload(), _event_callbacks(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+    ft_size_t callback_index;
+    ft_size_t callback_count;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_world_replay_session::ft_world_replay_session(copy)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    this->_snapshot_payload = other._snapshot_payload;
+    this->_event_callbacks.clear();
+    callback_index = 0;
+    callback_count = other._event_callbacks.size();
+    while (callback_index < callback_count)
+    {
+        this->_event_callbacks.push_back(other._event_callbacks[callback_index]);
+        callback_index++;
+    }
+    return ;
+}
+
+ft_world_replay_session::ft_world_replay_session(
+    ft_world_replay_session &&other) noexcept
+    : _snapshot_payload(), _event_callbacks(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_world_replay_session::ft_world_replay_session(move)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 ft_world_replay_session::~ft_world_replay_session() noexcept
 {
-    if (this->_initialised_state == ft_world_replay_session::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-void ft_world_replay_session::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
+int32_t ft_world_replay_session::initialize() noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_world_replay_session lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
+    int32_t snapshot_error;
+    int32_t callbacks_error;
 
-void ft_world_replay_session::abort_if_not_initialised(
-    const char *method_name) const
-{
-    if (this->_initialised_state == ft_world_replay_session::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-int ft_world_replay_session::initialize() noexcept
-{
-    int snapshot_error;
-    int callbacks_error;
-
-    if (this->_initialised_state == ft_world_replay_session::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_world_replay_session::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "ft_world_replay_session::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     snapshot_error = this->_snapshot_payload.initialize();
     if (snapshot_error != FT_ERR_SUCCESS)
     {
-        this->_initialised_state = ft_world_replay_session::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (snapshot_error);
     }
     callbacks_error = this->_event_callbacks.initialize();
     if (callbacks_error != FT_ERR_SUCCESS)
     {
         (void)this->_snapshot_payload.destroy();
-        this->_initialised_state = ft_world_replay_session::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (callbacks_error);
     }
     this->_event_callbacks.clear();
-    this->_initialised_state = ft_world_replay_session::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_replay_session::destroy() noexcept
+int32_t ft_world_replay_session::move(ft_world_replay_session &other) noexcept
 {
-    int callbacks_error;
-    int snapshot_error;
+    int32_t initialize_error;
 
-    if (this->_initialised_state != ft_world_replay_session::_state_initialised)
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_world_replay_session::move",
+            "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    this->_snapshot_payload = other._snapshot_payload;
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
+    this->_event_callbacks.clear();
+    ft_size_t callback_index;
+    ft_size_t callback_count;
+
+    callback_index = 0;
+    callback_count = other._event_callbacks.size();
+    while (callback_index < callback_count)
+    {
+        this->_event_callbacks.push_back(other._event_callbacks[callback_index]);
+        if (this->_event_callbacks.get_error() != FT_ERR_SUCCESS)
+            return (static_cast<int32_t>(this->_event_callbacks.get_error()));
+        callback_index++;
+    }
+    other._snapshot_payload.clear();
+    other._event_callbacks.clear();
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_world_replay_session::destroy() noexcept
+{
+    int32_t callbacks_error;
+    int32_t snapshot_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
     this->_event_callbacks.clear();
     callbacks_error = this->_event_callbacks.destroy();
     snapshot_error = this->_snapshot_payload.destroy();
-    this->_initialised_state = ft_world_replay_session::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     if (callbacks_error != FT_ERR_SUCCESS)
         return (callbacks_error);
     return (snapshot_error);
 }
 
-int ft_world_replay_session::capture_snapshot(ft_world &world,
+int32_t ft_world_replay_session::capture_snapshot(ft_world &world,
     const ft_character &character, const ft_inventory &inventory) noexcept
 {
     ft_string snapshot_buffer;
-    int result;
+    int32_t result;
     ft_vector<ft_function<void(ft_world&, ft_event&)> > callback_snapshot;
-    int callback_result;
-    size_t callback_index;
-    size_t callback_count;
+    int32_t callback_result;
+    ft_size_t callback_index;
+    ft_size_t callback_count;
 
-    this->abort_if_not_initialised("ft_world_replay_session::capture_snapshot");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_replay_session::capture_snapshot");
     result = world.save_to_buffer(snapshot_buffer, character, inventory);
     if (result != FT_ERR_SUCCESS)
         return (result);
@@ -180,20 +267,20 @@ int ft_world_replay_session::capture_snapshot(ft_world &world,
     while (callback_index < callback_count)
     {
         this->_event_callbacks.push_back(callback_snapshot[callback_index]);
-        if (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error() != FT_ERR_SUCCESS)
-            return (ft_vector<ft_function<void(ft_world&, ft_event&)> >::get_error());
+        if (this->_event_callbacks.get_error() != FT_ERR_SUCCESS)
+            return (static_cast<int32_t>(this->_event_callbacks.get_error()));
         callback_index++;
     }
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_replay_session::restore_snapshot(ft_sharedptr<ft_world> &world_ptr,
+int32_t ft_world_replay_session::restore_snapshot(ft_sharedptr<ft_world> &world_ptr,
     ft_character &character, ft_inventory &inventory) noexcept
 {
-    int load_result;
-    int callback_result;
+    int32_t load_result;
+    int32_t callback_result;
 
-    this->abort_if_not_initialised("ft_world_replay_session::restore_snapshot");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_replay_session::restore_snapshot");
     if (!world_ptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (this->_snapshot_payload.empty())
@@ -212,13 +299,13 @@ int ft_world_replay_session::restore_snapshot(ft_sharedptr<ft_world> &world_ptr,
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_replay_session::replay_ticks(ft_sharedptr<ft_world> &world_ptr,
-    ft_character &character, ft_inventory &inventory, int ticks,
+int32_t ft_world_replay_session::replay_ticks(ft_sharedptr<ft_world> &world_ptr,
+    ft_character &character, ft_inventory &inventory, int32_t ticks,
     const char *log_file_path, ft_string *log_buffer) noexcept
 {
-    int restore_result;
+    int32_t restore_result;
 
-    this->abort_if_not_initialised("ft_world_replay_session::replay_ticks");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_replay_session::replay_ticks");
     restore_result = this->restore_snapshot(world_ptr, character, inventory);
     if (restore_result != FT_ERR_SUCCESS)
         return (restore_result);
@@ -226,20 +313,20 @@ int ft_world_replay_session::replay_ticks(ft_sharedptr<ft_world> &world_ptr,
     return (world_ptr->get_error());
 }
 
-int ft_world_replay_session::plan_route(ft_world &world, const ft_map3d &grid,
-    size_t start_x, size_t start_y, size_t start_z,
-    size_t goal_x, size_t goal_y, size_t goal_z,
+int32_t ft_world_replay_session::plan_route(ft_world &world, const ft_map3d &grid,
+    ft_size_t start_x, ft_size_t start_y, ft_size_t start_z,
+    ft_size_t goal_x, ft_size_t goal_y, ft_size_t goal_z,
     ft_vector<ft_path_step> &path) noexcept
 {
-    this->abort_if_not_initialised("ft_world_replay_session::plan_route");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_replay_session::plan_route");
     return (world.plan_route(grid, start_x, start_y, start_z,
             goal_x, goal_y, goal_z, path));
 }
 
-int ft_world_replay_session::import_snapshot(const ft_string &snapshot_payload)
+int32_t ft_world_replay_session::import_snapshot(const ft_string &snapshot_payload)
     noexcept
 {
-    this->abort_if_not_initialised("ft_world_replay_session::import_snapshot");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_replay_session::import_snapshot");
     this->_snapshot_payload = snapshot_payload;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
@@ -247,10 +334,10 @@ int ft_world_replay_session::import_snapshot(const ft_string &snapshot_payload)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_replay_session::export_snapshot(ft_string &out_snapshot) const
+int32_t ft_world_replay_session::export_snapshot(ft_string &out_snapshot) const
     noexcept
 {
-    this->abort_if_not_initialised("ft_world_replay_session::export_snapshot");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_replay_session::export_snapshot");
     out_snapshot = this->_snapshot_payload;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
@@ -259,7 +346,7 @@ int ft_world_replay_session::export_snapshot(ft_string &out_snapshot) const
 
 void ft_world_replay_session::clear_snapshot() noexcept
 {
-    this->abort_if_not_initialised("ft_world_replay_session::clear_snapshot");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_replay_session::clear_snapshot");
     this->_snapshot_payload.clear();
     this->_event_callbacks.clear();
     return ;

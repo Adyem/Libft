@@ -3,7 +3,7 @@
 
 struct api_transport_hooks_state
 {
-    bool enabled;
+    ft_bool enabled;
     api_transport_hooks hooks;
 };
 
@@ -27,24 +27,24 @@ static void api_transport_reset_hooks(api_transport_hooks &hooks)
     return ;
 }
 
-static api_transport_hooks_state g_api_transport_state = { false, {} };
+static api_transport_hooks_state g_api_transport_state = { FT_FALSE, {} };
 
 void    api_set_transport_hooks(const api_transport_hooks *hooks)
 {
     if (!hooks)
     {
-        g_api_transport_state.enabled = false;
+        g_api_transport_state.enabled = FT_FALSE;
         api_transport_reset_hooks(g_api_transport_state.hooks);
         return ;
     }
     g_api_transport_state.hooks = *hooks;
-    g_api_transport_state.enabled = true;
+    g_api_transport_state.enabled = FT_TRUE;
     return ;
 }
 
 void    api_clear_transport_hooks(void)
 {
-    g_api_transport_state.enabled = false;
+    g_api_transport_state.enabled = FT_FALSE;
     api_transport_reset_hooks(g_api_transport_state.hooks);
     return ;
 }

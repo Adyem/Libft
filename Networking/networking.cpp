@@ -1,4 +1,5 @@
 #include "networking.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -12,16 +13,16 @@
 # include <netinet/in.h>
 #endif
 
-SocketConfig::SocketConfig()
-    : _initialised_state(SocketConfig::_state_uninitialised),
+SocketConfig::SocketConfig() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
       _type(SocketType::SERVER),
       _ip(),
       _port(0),
       _backlog(0),
       _protocol(0),
       _address_family(0),
-      _reuse_address(false),
-      _non_blocking(false),
+      _reuse_address(FT_FALSE),
+      _non_blocking(FT_FALSE),
       _recv_timeout(0),
       _send_timeout(0),
       _multicast_group(),
@@ -30,71 +31,120 @@ SocketConfig::SocketConfig()
     return ;
 }
 
-void SocketConfig::abort_lifecycle_error(const char *method_name,
-    const char *reason) const noexcept
+SocketConfig::SocketConfig(const SocketConfig &other) noexcept
+    : SocketConfig()
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "SocketConfig lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "SocketConfig::SocketConfig(copy)",
+            "source is uninitialised");
+    (void)this->initialize(other);
     return ;
 }
 
-void SocketConfig::abort_if_not_initialised(const char *method_name) const noexcept
+SocketConfig::SocketConfig(SocketConfig &&other) noexcept
+    : SocketConfig()
 {
-    if (this->_initialised_state == SocketConfig::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialised");
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "SocketConfig::SocketConfig(move)",
+            "source is uninitialised");
+    (void)this->initialize(static_cast<SocketConfig &&>(other));
     return ;
 }
 
-int SocketConfig::initialize() noexcept
+int32_t SocketConfig::move(SocketConfig &other) noexcept
 {
-    if (this->_initialised_state == SocketConfig::_state_initialised)
-        this->abort_lifecycle_error("SocketConfig::initialize",
+    return (this->initialize(static_cast<SocketConfig &&>(other)));
+}
+
+int32_t SocketConfig::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "SocketConfig::initialize",
             "initialize called on initialised instance");
     this->_type = SocketType::SERVER;
-    std::strncpy(this->_ip, "127.0.0.1", sizeof(this->_ip) - 1);
+    ft_strncpy(this->_ip, "127.0.0.1", sizeof(this->_ip) - 1);
     this->_ip[sizeof(this->_ip) - 1] = '\0';
     this->_port = 8080;
     this->_backlog = 10;
     this->_protocol = IPPROTO_TCP;
     this->_address_family = AF_INET;
-    this->_reuse_address = true;
-    this->_non_blocking = false;
+    this->_reuse_address = FT_TRUE;
+    this->_non_blocking = FT_FALSE;
     this->_recv_timeout = 5000;
     this->_send_timeout = 5000;
     this->_multicast_group[0] = '\0';
     this->_multicast_interface[0] = '\0';
-    this->_initialised_state = SocketConfig::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int SocketConfig::destroy() noexcept
+int32_t SocketConfig::initialize(const SocketConfig &other) noexcept
 {
-    if (this->_initialised_state != SocketConfig::_state_initialised)
-        return (FT_ERR_INVALID_STATE);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "SocketConfig::initialize(const SocketConfig &)",
+            "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    this->_type = other._type;
+    ft_strncpy(this->_ip, other._ip, sizeof(this->_ip) - 1);
+    this->_ip[sizeof(this->_ip) - 1] = '\0';
+    this->_port = other._port;
+    this->_backlog = other._backlog;
+    this->_protocol = other._protocol;
+    this->_address_family = other._address_family;
+    this->_reuse_address = other._reuse_address;
+    this->_non_blocking = other._non_blocking;
+    this->_recv_timeout = other._recv_timeout;
+    this->_send_timeout = other._send_timeout;
+    ft_strncpy(this->_multicast_group, other._multicast_group, sizeof(this->_multicast_group) - 1);
+    this->_multicast_group[sizeof(this->_multicast_group) - 1] = '\0';
+    ft_strncpy(this->_multicast_interface, other._multicast_interface, sizeof(this->_multicast_interface) - 1);
+    this->_multicast_interface[sizeof(this->_multicast_interface) - 1] = '\0';
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t SocketConfig::initialize(SocketConfig &&other) noexcept
+{
+    int32_t initialize_error;
+
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    (void)other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t SocketConfig::destroy() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
     this->_ip[0] = '\0';
     this->_port = 0;
     this->_backlog = 0;
     this->_protocol = 0;
     this->_address_family = 0;
-    this->_reuse_address = false;
-    this->_non_blocking = false;
+    this->_reuse_address = FT_FALSE;
+    this->_non_blocking = FT_FALSE;
     this->_recv_timeout = 0;
     this->_send_timeout = 0;
     this->_multicast_group[0] = '\0';
     this->_multicast_interface[0] = '\0';
-    this->_initialised_state = SocketConfig::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 
-SocketConfig::~SocketConfig()
+SocketConfig::~SocketConfig() noexcept
 {
-    if (this->_initialised_state == SocketConfig::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }

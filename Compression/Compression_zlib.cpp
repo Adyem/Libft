@@ -7,9 +7,9 @@
 
 static const unsigned char g_compression_empty_input = 0;
 
-static bool compression_vector_operation_failed(void)
+static bool compression_vector_operation_failed(const ft_vector<unsigned char> &vector)
 {
-    return (ft_vector<unsigned char>::get_error() != FT_ERR_SUCCESS);
+    return (vector.get_error() != FT_ERR_SUCCESS);
 }
 
 static int compression_string_pop_error(const ft_string &)
@@ -24,7 +24,7 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
     if (size == 0)
     {
         destination.clear();
-        if (compression_vector_operation_failed())
+        if (compression_vector_operation_failed(destination))
             return (1);
         return (0);
     }
@@ -33,10 +33,10 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
         return (1);
     }
     destination.resize(size);
-    if (compression_vector_operation_failed())
+    if (compression_vector_operation_failed(destination))
         return (1);
     destination_data = destination.begin();
-    if (compression_vector_operation_failed())
+    if (compression_vector_operation_failed(destination))
         return (1);
     ft_memcpy(destination_data, buffer, size);
     return (0);
@@ -207,14 +207,14 @@ int ft_compress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vecto
     int                   store_status;
 
     input_size = input.size();
-    if (compression_vector_operation_failed())
+    if (compression_vector_operation_failed(input))
         return (1);
     if (input_size == 0)
         input_buffer = &g_compression_empty_input;
     else
     {
         input_buffer = input.begin();
-        if (compression_vector_operation_failed())
+        if (compression_vector_operation_failed(input))
             return (1);
     }
     compressed_size = 0;
@@ -237,14 +237,14 @@ int ft_decompress_vector_to_string(const ft_vector<unsigned char> &input, ft_str
     int                   assign_status;
 
     input_size = input.size();
-    if (compression_vector_operation_failed())
+    if (compression_vector_operation_failed(input))
         return (1);
     if (input_size == 0)
         input_buffer = &g_compression_empty_input;
     else
     {
         input_buffer = input.begin();
-        if (compression_vector_operation_failed())
+        if (compression_vector_operation_failed(input))
             return (1);
     }
     decompressed_size = 0;
@@ -267,14 +267,14 @@ int ft_decompress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vec
     int                   store_status;
 
     input_size = input.size();
-    if (compression_vector_operation_failed())
+    if (compression_vector_operation_failed(input))
         return (1);
     if (input_size == 0)
         input_buffer = &g_compression_empty_input;
     else
     {
         input_buffer = input.begin();
-        if (compression_vector_operation_failed())
+        if (compression_vector_operation_failed(input))
             return (1);
     }
     decompressed_size = 0;

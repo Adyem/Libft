@@ -6,6 +6,7 @@
 #include "../Template/swap.hpp"
 #include "../Template/pair.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "rng.hpp"
@@ -17,53 +18,216 @@ class ft_deck : public ft_vector<ElementType*>
 {
     private:
         mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialised_state;
 
-        int lock_deck(bool *lock_acquired) const;
-        int unlock_deck(bool lock_acquired) const;
+        int32_t lock_deck(ft_bool *lock_acquired) const;
+        void unlock_deck(ft_bool lock_acquired) const;
 
     public:
-        int enable_thread_safety();
-        int disable_thread_safety();
-        bool is_thread_safe() const;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_deck &other) noexcept;
+        int32_t initialize(ft_deck &&other) noexcept;
+        int32_t destroy() noexcept;
+        uint32_t move(ft_deck &other) noexcept;
+
+        int32_t enable_thread_safety();
+        int32_t disable_thread_safety();
+        ft_bool is_thread_safe() const;
         ft_deck() noexcept;
+        ft_deck(const ft_deck &other) noexcept;
+        ft_deck(ft_deck &&other) noexcept;
         ~ft_deck() noexcept;
 
-        ft_deck(const ft_deck&) = delete;
         ft_deck &operator=(const ft_deck&) = delete;
-
-        ft_deck(ft_deck&&) = delete;
         ft_deck &operator=(ft_deck&&) = delete;
 
-        Pair<int, ElementType *> pop_random_element() noexcept;
-        Pair<int, ElementType *> get_random_element() const noexcept;
-        int shuffle() noexcept;
-        Pair<int, ElementType *> draw_top_element() noexcept;
-        Pair<int, ElementType *> peek_top_element() const noexcept;
+        Pair<int32_t,  ElementType *> pop_random_element() noexcept;
+        Pair<int32_t,  ElementType *> get_random_element() const noexcept;
+        int32_t shuffle() noexcept;
+        Pair<int32_t,  ElementType *> draw_top_element() noexcept;
+        Pair<int32_t,  ElementType *> peek_top_element() const noexcept;
 };
 
 template<typename ElementType>
 ft_deck<ElementType>::ft_deck() noexcept
     : ft_vector<ElementType*>()
     , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    return ;
+}
+
+template<typename ElementType>
+ft_deck<ElementType>::ft_deck(const ft_deck &other) noexcept
+    : ft_vector<ElementType*>(other)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(other);
+    return ;
+}
+
+template<typename ElementType>
+ft_deck<ElementType>::ft_deck(ft_deck &&other) noexcept
+    : ft_vector<ElementType*>(static_cast<ft_vector<ElementType*> &&>(other))
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(static_cast<ft_deck &&>(other));
     return ;
 }
 
 template<typename ElementType>
 ft_deck<ElementType>::~ft_deck() noexcept
 {
-    (void)this->disable_thread_safety();
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
     return ;
 }
 
 template<typename ElementType>
-int ft_deck<ElementType>::enable_thread_safety()
+int32_t ft_deck<ElementType>::initialize() noexcept
+{
+    int32_t vector_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state, "ft_deck::initialize",
+            "called while object is already initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    vector_error = this->ft_vector<ElementType*>::initialize();
+    if (vector_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (vector_error);
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_deck<ElementType>::initialize(const ft_deck &other) noexcept
+{
+    int32_t vector_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_deck::initialize(const ft_deck &) source", "source is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        vector_error = this->destroy();
+        if (vector_error != FT_ERR_SUCCESS)
+            return (vector_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    vector_error = this->initialize();
+    if (vector_error != FT_ERR_SUCCESS)
+        return (vector_error);
+    vector_error = this->ft_vector<ElementType*>::copy_from(other);
+    if (vector_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (vector_error);
+    }
+    if (other._mutex != ft_nullptr)
+    {
+        vector_error = this->enable_thread_safety();
+        if (vector_error != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (vector_error);
+        }
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_deck<ElementType>::initialize(ft_deck &&other) noexcept
+{
+    int32_t vector_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_deck::initialize(ft_deck &&) source", "source is not initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        vector_error = this->destroy();
+        if (vector_error != FT_ERR_SUCCESS)
+            return (vector_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    vector_error = this->initialize();
+    if (vector_error != FT_ERR_SUCCESS)
+        return (vector_error);
+    vector_error = this->ft_vector<ElementType*>::initialize(
+            static_cast<ft_vector<ElementType*> &&>(other));
+    if (vector_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (vector_error);
+    }
+    if (other._mutex != ft_nullptr)
+    {
+        vector_error = this->enable_thread_safety();
+        if (vector_error != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (vector_error);
+        }
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+template<typename ElementType>
+int32_t ft_deck<ElementType>::destroy() noexcept
+{
+    int32_t thread_error;
+    int32_t vector_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    thread_error = this->disable_thread_safety();
+    vector_error = this->ft_vector<ElementType*>::destroy();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    if (thread_error != FT_ERR_SUCCESS)
+        return (thread_error);
+    return (vector_error);
+}
+
+template<typename ElementType>
+uint32_t ft_deck<ElementType>::move(ft_deck &other) noexcept
+{
+    return (static_cast<uint32_t>(this->initialize(static_cast<ft_deck &&>(other))));
+}
+
+template<typename ElementType>
+int32_t ft_deck<ElementType>::enable_thread_safety()
 {
     pt_recursive_mutex *mutex_pointer;
-    int base_result;
-    int mutex_error;
+    int32_t base_result;
+    int32_t mutex_error;
 
-    base_result = ft_vector<ElementType*>::enable_thread_safety();
+    base_result = this->ft_vector<ElementType*>::enable_thread_safety();
     if (base_result != FT_ERR_SUCCESS)
         return (base_result);
     if (this->_mutex != ft_nullptr)
@@ -82,10 +246,10 @@ int ft_deck<ElementType>::enable_thread_safety()
 }
 
 template<typename ElementType>
-int ft_deck<ElementType>::disable_thread_safety()
+int32_t ft_deck<ElementType>::disable_thread_safety()
 {
-    int destroy_error;
-    int base_error;
+    int32_t destroy_error;
+    int32_t base_error;
 
     destroy_error = FT_ERR_SUCCESS;
     if (this->_mutex != ft_nullptr)
@@ -94,263 +258,249 @@ int ft_deck<ElementType>::disable_thread_safety()
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    base_error = ft_vector<ElementType*>::destroy();
+    base_error = this->ft_vector<ElementType*>::disable_thread_safety();
     if (destroy_error != FT_ERR_SUCCESS)
         return (destroy_error);
     return (base_error);
 }
 
 template<typename ElementType>
-bool ft_deck<ElementType>::is_thread_safe() const
+ft_bool ft_deck<ElementType>::is_thread_safe() const
 {
     return (this->_mutex != ft_nullptr);
 }
 
 template<typename ElementType>
-int ft_deck<ElementType>::lock_deck(bool *lock_acquired) const
+int32_t ft_deck<ElementType>::lock_deck(ft_bool *lock_acquired) const
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
-int ft_deck<ElementType>::unlock_deck(bool lock_acquired) const
+void ft_deck<ElementType>::unlock_deck(ft_bool lock_acquired) const
 {
-    if (lock_acquired == false)
-        return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
+    if (lock_acquired == FT_FALSE)
+        return ;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return ;
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::pop_random_element() noexcept
+Pair<int32_t,  ElementType *> ft_deck<ElementType>::pop_random_element() noexcept
 {
-    bool lock_acquired;
-    int operation_error;
-    int unlock_error;
-    size_t deck_size;
-    int roll_result;
-    size_t index;
+    ft_bool lock_acquired;
+    int32_t operation_error;
+    ft_size_t deck_size;
+    int32_t roll_result;
+    ft_size_t index;
     ElementType *element;
 
     element = ft_nullptr;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     operation_error = this->lock_deck(&lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
-    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<size_t>(INT_MAX))
+    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<ft_size_t>(INT_MAX))
         operation_error = FT_ERR_OUT_OF_RANGE;
     if (operation_error == FT_ERR_SUCCESS)
     {
-        roll_result = ft_dice_roll(1, static_cast<int>(deck_size));
+        roll_result = ft_dice_roll(1, static_cast<int32_t>(deck_size));
         if (roll_result < 1)
             operation_error = FT_ERR_OUT_OF_RANGE;
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
-        index = static_cast<size_t>(roll_result - 1);
+        index = static_cast<ft_size_t>(roll_result - 1);
         element = this->release_at(index);
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
-    unlock_error = this->unlock_deck(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_deck(lock_acquired);
     if (operation_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(operation_error, ft_nullptr));
-    return (Pair<int, ElementType *>(FT_ERR_SUCCESS, element));
+        return (Pair<int32_t,  ElementType *>(operation_error, ft_nullptr));
+    return (Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, element));
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::get_random_element() const noexcept
+Pair<int32_t,  ElementType *> ft_deck<ElementType>::get_random_element() const noexcept
 {
-    bool lock_acquired;
-    int operation_error;
-    int unlock_error;
-    size_t deck_size;
-    int roll_result;
-    size_t index;
+    ft_bool lock_acquired;
+    int32_t operation_error;
+    ft_size_t deck_size;
+    int32_t roll_result;
+    ft_size_t index;
     ElementType *element;
 
     element = ft_nullptr;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     operation_error = this->lock_deck(&lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
-    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<size_t>(INT_MAX))
+    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<ft_size_t>(INT_MAX))
         operation_error = FT_ERR_OUT_OF_RANGE;
     if (operation_error == FT_ERR_SUCCESS)
     {
-        roll_result = ft_dice_roll(1, static_cast<int>(deck_size));
+        roll_result = ft_dice_roll(1, static_cast<int32_t>(deck_size));
         if (roll_result < 1)
             operation_error = FT_ERR_OUT_OF_RANGE;
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
-        index = static_cast<size_t>(roll_result - 1);
+        index = static_cast<ft_size_t>(roll_result - 1);
         element = (*this)[index];
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
-    unlock_error = this->unlock_deck(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_deck(lock_acquired);
     if (operation_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(operation_error, ft_nullptr));
-    return (Pair<int, ElementType *>(FT_ERR_SUCCESS, element));
+        return (Pair<int32_t,  ElementType *>(operation_error, ft_nullptr));
+    return (Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, element));
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::draw_top_element() noexcept
+Pair<int32_t,  ElementType *> ft_deck<ElementType>::draw_top_element() noexcept
 {
-    bool lock_acquired;
-    int operation_error;
-    int unlock_error;
-    size_t deck_size;
-    size_t index;
+    ft_bool lock_acquired;
+    int32_t operation_error;
+    ft_size_t deck_size;
+    ft_size_t index;
     ElementType *element;
 
     element = ft_nullptr;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     operation_error = this->lock_deck(&lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
-    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<size_t>(INT_MAX))
+    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<ft_size_t>(INT_MAX))
         operation_error = FT_ERR_OUT_OF_RANGE;
     if (operation_error == FT_ERR_SUCCESS)
     {
         index = deck_size - 1;
         element = this->release_at(index);
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
-    unlock_error = this->unlock_deck(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_deck(lock_acquired);
     if (operation_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(operation_error, ft_nullptr));
-    return (Pair<int, ElementType *>(FT_ERR_SUCCESS, element));
+        return (Pair<int32_t,  ElementType *>(operation_error, ft_nullptr));
+    return (Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, element));
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::peek_top_element() const noexcept
+Pair<int32_t,  ElementType *> ft_deck<ElementType>::peek_top_element() const noexcept
 {
-    bool lock_acquired;
-    int operation_error;
-    int unlock_error;
-    size_t deck_size;
-    size_t index;
+    ft_bool lock_acquired;
+    int32_t operation_error;
+    ft_size_t deck_size;
+    ft_size_t index;
     ElementType *element;
 
     element = ft_nullptr;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     operation_error = this->lock_deck(&lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
-    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<size_t>(INT_MAX))
+    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<ft_size_t>(INT_MAX))
         operation_error = FT_ERR_OUT_OF_RANGE;
     if (operation_error == FT_ERR_SUCCESS)
     {
         index = deck_size - 1;
         element = (*this)[index];
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
-    unlock_error = this->unlock_deck(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_deck(lock_acquired);
     if (operation_error != FT_ERR_SUCCESS)
-        return (Pair<int, ElementType *>(operation_error, ft_nullptr));
-    return (Pair<int, ElementType *>(FT_ERR_SUCCESS, element));
+        return (Pair<int32_t,  ElementType *>(operation_error, ft_nullptr));
+    return (Pair<int32_t,  ElementType *>(FT_ERR_SUCCESS, element));
 }
 
 template<typename ElementType>
-int ft_deck<ElementType>::shuffle() noexcept
+int32_t ft_deck<ElementType>::shuffle() noexcept
 {
-    bool lock_acquired;
-    int operation_error;
-    int unlock_error;
-    size_t deck_size;
-    size_t index;
-    int roll_result;
-    size_t random_index;
+    ft_bool lock_acquired;
+    int32_t operation_error;
+    ft_size_t deck_size;
+    ft_size_t index;
+    int32_t roll_result;
+    ft_size_t random_index;
     ElementType *first_element;
     ElementType *second_element;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     operation_error = this->lock_deck(&lock_acquired);
     if (operation_error == FT_ERR_SUCCESS)
     {
         deck_size = this->size();
-        operation_error = ft_vector<ElementType*>::get_error();
+        operation_error = this->get_error();
     }
     if (operation_error == FT_ERR_SUCCESS && deck_size == 0)
         operation_error = FT_ERR_EMPTY;
-    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<size_t>(INT_MAX))
+    if (operation_error == FT_ERR_SUCCESS && deck_size > static_cast<ft_size_t>(INT_MAX))
         operation_error = FT_ERR_OUT_OF_RANGE;
     if (operation_error == FT_ERR_SUCCESS)
     {
         index = deck_size - 1;
         while (index > 0)
         {
-            if (index + 1 > static_cast<size_t>(INT_MAX))
+            if (index + 1 > static_cast<ft_size_t>(INT_MAX))
             {
                 operation_error = FT_ERR_OUT_OF_RANGE;
                 break ;
             }
-            roll_result = ft_dice_roll(1, static_cast<int>(index + 1));
+            roll_result = ft_dice_roll(1, static_cast<int32_t>(index + 1));
             if (roll_result < 1)
             {
                 operation_error = FT_ERR_OUT_OF_RANGE;
                 break ;
             }
-            random_index = static_cast<size_t>(roll_result - 1);
+            random_index = static_cast<ft_size_t>(roll_result - 1);
             first_element = (*this)[index];
-            operation_error = ft_vector<ElementType*>::get_error();
+            operation_error = this->get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             second_element = (*this)[random_index];
-            operation_error = ft_vector<ElementType*>::get_error();
+            operation_error = this->get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             ft_swap(first_element, second_element);
             (*this)[index] = first_element;
-            operation_error = ft_vector<ElementType*>::get_error();
+            operation_error = this->get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             (*this)[random_index] = second_element;
-            operation_error = ft_vector<ElementType*>::get_error();
+            operation_error = this->get_error();
             if (operation_error != FT_ERR_SUCCESS)
                 break ;
             index -= 1;
         }
     }
-    unlock_error = this->unlock_deck(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    this->unlock_deck(lock_acquired);
     return (operation_error);
 }
 

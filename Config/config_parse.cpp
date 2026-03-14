@@ -5,36 +5,32 @@
 #include "../Advanced/advanced.hpp"
 #include "../File/file_utils.hpp"
 #include "../JSon/json.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
 #include <cstdio>
 
-static int config_mutex_lock(pt_mutex *mutex, bool *lock_acquired)
+static int32_t config_mutex_lock(pt_mutex *mutex, ft_bool *lock_acquired)
 {
-    int lock_result;
+    int32_t lock_result;
 
     lock_result = pt_mutex_lock_if_not_null(mutex);
     if (lock_result == FT_ERR_SUCCESS && lock_acquired)
     {
         if (mutex != ft_nullptr)
-            *lock_acquired = true;
+            *lock_acquired = FT_TRUE;
     }
     return (lock_result);
 }
 
-static int config_lock_if_enabled(config_data *config, bool *lock_acquired)
+static int32_t config_lock_if_enabled(config_data *config, ft_bool *lock_acquired)
 {
     if (!config || !config->mutex)
         return (FT_ERR_SUCCESS);
     return (config_mutex_lock(config->mutex, lock_acquired));
 }
-static int config_mutex_unlock(pt_mutex *mutex)
-{
-    return (pt_mutex_unlock_if_not_null(mutex));
-}
-
-static int config_mutex_create(pt_mutex **mutex_pointer)
+static int32_t config_mutex_create(pt_mutex **mutex_pointer)
 {
     if (!mutex_pointer)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -43,7 +39,7 @@ static int config_mutex_create(pt_mutex **mutex_pointer)
     pt_mutex *mutex = new (std::nothrow) pt_mutex();
     if (!mutex)
         return (FT_ERR_NO_MEMORY);
-    int initialize_error = mutex->initialize();
+    int32_t initialize_error = mutex->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex;
@@ -61,13 +57,14 @@ static void config_mutex_destroy(pt_mutex **mutex_pointer)
     mutex->destroy();
     delete mutex;
     *mutex_pointer = ft_nullptr;
+    return ;
 }
 
-static void config_unlock_guard(config_data *config, bool lock_acquired)
+static void config_unlock_guard(config_data *config, ft_bool lock_acquired)
 {
-    if (!config || !config->mutex || !lock_acquired)
+    if (!config || !config->mutex || lock_acquired == FT_FALSE)
         return ;
-    config_mutex_unlock(config->mutex);
+    (void)pt_mutex_unlock_if_not_null(config->mutex);
     return ;
 }
 
@@ -80,7 +77,7 @@ config_data *config_data_create()
     {
         return (ft_nullptr);
     }
-    if (config_data_prepare_thread_safety(config) != 0)
+    if (config_data_prepare_thread_safety(config) != FT_ERR_SUCCESS)
     {
         cma_free(config);
         return (ft_nullptr);
@@ -88,7 +85,7 @@ config_data *config_data_create()
     return (config);
 }
 
-int config_data_prepare_thread_safety(config_data *config)
+int32_t config_data_prepare_thread_safety(config_data *config)
 {
     if (!config)
     {
@@ -98,7 +95,7 @@ int config_data_prepare_thread_safety(config_data *config)
     {
         return (FT_ERR_SUCCESS);
     }
-    int mutex_error = config_mutex_create(&config->mutex);
+    int32_t mutex_error = config_mutex_create(&config->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
     {
         return (mutex_error);
@@ -118,10 +115,12 @@ static char *trim_whitespace(char *string)
 {
     if (!string)
         return (string);
-    while (*string && ft_isspace(static_cast<unsigned char>(*string)))
+    while (*string && ft_isspace(static_cast<int32_t>(
+                static_cast<uint8_t>(*string))))
         string++;
     char *end_pointer = string + ft_strlen(string);
-    while (end_pointer > string && ft_isspace(static_cast<unsigned char>(end_pointer[-1])))
+    while (end_pointer > string && ft_isspace(static_cast<int32_t>(
+                static_cast<uint8_t>(end_pointer[-1]))))
         end_pointer--;
     *end_pointer = '\0';
     return (string);
@@ -133,16 +132,19 @@ void config_data_free(config_data *config)
     {
         return ;
     }
-    bool mutex_locked = false;
-    size_t entry_index;
+    ft_bool mutex_locked;
+    ft_size_t entry_index;
+    ft_bool already_owned;
+    int32_t lock_result;
 
-    bool already_owned = false;
-    int lock_result = config_lock_if_enabled(config, &mutex_locked);
+    mutex_locked = FT_FALSE;
+    already_owned = FT_FALSE;
+    lock_result = config_lock_if_enabled(config, &mutex_locked);
     if (lock_result != FT_ERR_SUCCESS)
     {
         if (lock_result == FT_ERR_MUTEX_ALREADY_LOCKED && config->mutex)
         {
-            already_owned = true;
+            already_owned = FT_TRUE;
         }
         else
         {
@@ -161,8 +163,8 @@ void config_data_free(config_data *config)
         ++entry_index;
     }
     cma_free(config->entries);
-    if (already_owned)
-        config_mutex_unlock(config->mutex);
+    if (already_owned == FT_TRUE)
+        (void)pt_mutex_unlock_if_not_null(config->mutex);
     else
         config_unlock_guard(config, mutex_locked);
     config_data_teardown_thread_safety(config);
@@ -298,7 +300,7 @@ config_data *config_parse(const char *filename)
             new_entry->section = ft_nullptr;
         new_entry->key = key;
         new_entry->value = value;
-        if (config_entry_prepare_thread_safety(new_entry) != 0)
+        if (config_entry_prepare_thread_safety(new_entry) != FT_ERR_SUCCESS)
         {
             cma_free(new_entry->section);
             cma_free(new_entry->key);
@@ -336,7 +338,8 @@ static config_data *config_parse_json_internal(const char *filename)
     ft_fclose(file);
     if (!groups)
         return (ft_nullptr);
-    size_t count = 0;
+    ft_size_t count;
+    count = 0;
     json_group *group_pointer = groups;
     while (group_pointer)
     {
@@ -365,7 +368,8 @@ static config_data *config_parse_json_internal(const char *filename)
             return (ft_nullptr);
         }
     }
-    size_t index = 0;
+    ft_size_t index;
+    index = 0;
     group_pointer = groups;
     while (group_pointer)
     {
@@ -407,7 +411,7 @@ static config_data *config_parse_json_internal(const char *filename)
                     return (ft_nullptr);
                 }
             }
-            if (config_entry_prepare_thread_safety(entry) != 0)
+            if (config_entry_prepare_thread_safety(entry) != FT_ERR_SUCCESS)
             {
                 config->entry_count = index + 1;
                 config_data_free(config);
@@ -426,14 +430,16 @@ static config_data *config_parse_json_internal(const char *filename)
 
 config_data *config_load_env()
 {
-    extern char **environ;
+    char **environment_entries;
     config_data *config = config_data_create();
     if (!config)
         return (ft_nullptr);
-    size_t count = 0;
-    if (environ)
+    ft_size_t count;
+    count = 0;
+    environment_entries = cmp_get_environ_entries();
+    if (environment_entries)
     {
-        while (environ[count])
+        while (environment_entries[count])
             ++count;
     }
     if (!count)
@@ -447,10 +453,11 @@ config_data *config_load_env()
         cma_free(config);
         return (ft_nullptr);
     }
-    size_t index = 0;
+    ft_size_t index;
+    index = 0;
     while (index < count)
     {
-        char *pair = environ[index];
+        char *pair = environment_entries[index];
         char *equals_sign = ft_nullptr;
         if (pair)
             equals_sign = ft_strchr(pair, '=');
@@ -458,7 +465,7 @@ config_data *config_load_env()
         entry->mutex = ft_nullptr;
         if (equals_sign)
         {
-            size_t key_length = static_cast<size_t>(equals_sign - pair);
+            ft_size_t key_length = static_cast<ft_size_t>(equals_sign - pair);
             entry->key = static_cast<char*>(adv_calloc(key_length + 1, sizeof(char)));
             if (!entry->key)
             {
@@ -489,7 +496,7 @@ config_data *config_load_env()
             }
         }
         entry->section = ft_nullptr;
-        if (config_entry_prepare_thread_safety(entry) != 0)
+        if (config_entry_prepare_thread_safety(entry) != FT_ERR_SUCCESS)
         {
             config->entry_count = index + 1;
             config_data_free(config);

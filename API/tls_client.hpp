@@ -10,7 +10,7 @@
 #include "../Networking/openssl_support.hpp"
 #include <cstdint>
 
-typedef void (*api_callback)(char *body, int status, void *user_data);
+typedef void (*api_callback)(char *body, int32_t status, void *user_data);
 
 struct api_tls_certificate_diagnostics
 {
@@ -32,56 +32,61 @@ struct api_tls_handshake_diagnostics
 #if NETWORKING_HAS_OPENSSL
 class api_tls_client
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
         SSL_CTX *_ctx;
         SSL *_ssl;
-        int _sock;
+        int32_t _sock;
         ft_string _host;
         uint16_t _port;
-        int _timeout;
+        int32_t _timeout;
         mutable pt_recursive_mutex *_mutex;
-        bool _is_shutting_down;
+        ft_bool _is_shutting_down;
         ft_vector<ft_thread> _async_workers;
         api_tls_handshake_diagnostics _handshake_diagnostics;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const noexcept;
         void abort_if_not_initialised(const char *method_name) const noexcept;
-        bool populate_handshake_diagnostics();
+        ft_bool populate_handshake_diagnostics();
 
     public:
-        api_tls_client(const char *host, uint16_t port, int timeout = 60000);
-        api_tls_client(const api_tls_client &other) = delete;
+        api_tls_client() noexcept;
+        api_tls_client(const api_tls_client &other) noexcept;
         api_tls_client &operator=(const api_tls_client &other) = delete;
-        api_tls_client(api_tls_client &&other) = delete;
+        api_tls_client(api_tls_client &&other) noexcept;
         api_tls_client &operator=(api_tls_client &&other) = delete;
         ~api_tls_client();
-        int initialize() noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        bool is_valid() const;
+        int32_t initialize() noexcept;
+        int32_t initialize(const api_tls_client &other) noexcept;
+        int32_t initialize(api_tls_client &&other) noexcept;
+        int32_t initialize(const char *host, uint16_t port, int32_t timeout = 60000) noexcept;
+        int32_t destroy() noexcept;
+        uint32_t move(api_tls_client &other) noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        ft_bool is_valid() const;
 
         char *request(const char *method, const char *path,
                 json_group *payload = ft_nullptr,
-                      const char *headers = ft_nullptr, int *status = ft_nullptr);
+                      const char *headers = ft_nullptr, int32_t *status = ft_nullptr);
 
         json_group *request_json(const char *method, const char *path,
                                  json_group *payload = ft_nullptr,
                                  const char *headers = ft_nullptr,
-                                 int *status = ft_nullptr);
+                                 int32_t *status = ft_nullptr);
 
-        bool request_async(const char *method, const char *path,
+        ft_bool request_async(const char *method, const char *path,
                            json_group *payload = ft_nullptr,
                            const char *headers = ft_nullptr,
                            api_callback callback = ft_nullptr,
                            void *user_data = ft_nullptr);
-        bool refresh_handshake_diagnostics();
+        ft_bool refresh_handshake_diagnostics();
         const api_tls_handshake_diagnostics &get_handshake_diagnostics() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

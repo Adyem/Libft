@@ -1,46 +1,48 @@
 #ifndef HTML_DOCUMENT_HPP
 #define HTML_DOCUMENT_HPP
 
-#include "parser.hpp"
+#include "html_parser.hpp"
 #include <cstdint>
 
-class pt_mutex;
+class pt_recursive_mutex;
 
 class html_document
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         html_node *_root;
-        pt_mutex *_mutex;
-        uint8_t _state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-
-        void abort_lifecycle_error(const char *method_name,
-                    const char *reason) const noexcept;
-        void abort_if_not_initialised(const char *method_name) const noexcept;
+        static thread_local uint32_t _last_error;
+        pt_recursive_mutex *_mutex;
+        uint8_t _initialised_state;
+        static uint32_t set_error(uint32_t error_code) noexcept;
 
     public:
         html_document() noexcept;
+        html_document(const html_document &other) noexcept;
+        html_document(html_document &&other) noexcept;
         ~html_document() noexcept;
 
-        html_document(const html_document &) = delete;
         html_document &operator=(const html_document &) = delete;
-        html_document(html_document &&) = delete;
         html_document &operator=(html_document &&) = delete;
 
-        int         initialize() noexcept;
-        int         destroy() noexcept;
-        int         enable_thread_safety() noexcept;
-        int         disable_thread_safety() noexcept;
-        bool        is_thread_safe() const noexcept;
+        int32_t         initialize() noexcept;
+        int32_t         initialize(const html_document &other) noexcept;
+        int32_t         initialize(html_document &&other) noexcept;
+        int32_t         destroy() noexcept;
+        int32_t         move(html_document &other) noexcept;
+        int32_t         enable_thread_safety() noexcept;
+        int32_t         disable_thread_safety() noexcept;
+        ft_bool         is_thread_safe() const noexcept;
         html_node   *create_node(const char *tag_name, const char *text_content) noexcept;
         html_attr   *create_attr(const char *key, const char *value) noexcept;
         void        add_attr(html_node *target_node, html_attr *new_attribute) noexcept;
         void        remove_attr(html_node *target_node, const char *key) noexcept;
         void        add_child(html_node *parent_node, html_node *child_node) noexcept;
         void        append_node(html_node *new_node) noexcept;
-        int         write_to_file(const char *file_path) const noexcept;
+        int32_t         write_to_file(const char *file_path) const noexcept;
         char        *write_to_string() const noexcept;
         void        remove_nodes_by_tag(const char *tag_name) noexcept;
         void        remove_nodes_by_attr(const char *key, const char *value) noexcept;
@@ -49,14 +51,11 @@ class html_document
         html_node   *find_by_attr(const char *key, const char *value) const noexcept;
         html_node   *find_by_text(const char *text_content) const noexcept;
         html_node   *find_by_selector(const char *selector) const noexcept;
-        size_t      count_nodes_by_tag(const char *tag_name) const noexcept;
+        ft_size_t      count_nodes_by_tag(const char *tag_name) const noexcept;
         html_node   *get_root() const noexcept;
-        int         get_error() const noexcept;
+        int32_t         get_error() const noexcept;
         const char  *get_error_str() const noexcept;
         void        clear() noexcept;
-#ifdef LIBFT_TEST_BUILD
-        pt_mutex    *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 #endif

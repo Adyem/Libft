@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Template/thread_pool.hpp"
+#include "../../CPP_class/thread_pool.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include <atomic>

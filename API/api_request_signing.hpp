@@ -15,12 +15,12 @@ struct api_hmac_signature_input
 };
 
 #if NETWORKING_HAS_OPENSSL
-int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
-    const unsigned char *key, std::size_t key_length,
+int32_t api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
+    const unsigned char *key, ft_size_t key_length,
     ft_string &signature_output) noexcept;
 
-int api_apply_hmac_signature_header(const api_hmac_signature_input &input,
-    const unsigned char *key, std::size_t key_length,
+int32_t api_apply_hmac_signature_header(const api_hmac_signature_input &input,
+    const unsigned char *key, ft_size_t key_length,
     const char *header_name, ft_string &header_output) noexcept;
 
 struct api_oauth1_parameter
@@ -42,10 +42,10 @@ struct api_oauth1_parameters
     const char *signature_method;
     const char *version;
     const api_oauth1_parameter *additional_parameters;
-    std::size_t additional_parameter_count;
+    ft_size_t additional_parameter_count;
 };
 
-int api_build_oauth1_authorization_header(
+int32_t api_build_oauth1_authorization_header(
     const api_oauth1_parameters &parameters, ft_string &header_output) noexcept;
 #endif
 

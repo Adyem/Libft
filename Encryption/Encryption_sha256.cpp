@@ -1,9 +1,8 @@
 #include <stdint.h>
-#include <stddef.h>
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
-#include "encryption_sha256.hpp"
+#include "encryption.hpp"
 
 static uint32_t rotate_right(uint32_t value, uint32_t bits)
 {
@@ -21,23 +20,23 @@ static const uint32_t sha256_constants[64] = {
     0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 };
 
-void sha256_hash(const void *data, size_t length, unsigned char *digest)
+void sha256_hash(const void *data, ft_size_t length, uint8_t *digest)
 {
     uint32_t hash_values[8] = {
         0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
         0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19
     };
     uint64_t bit_length = length * 8;
-    size_t padded_length = length + 1;
+    ft_size_t padded_length = length + 1;
     while (padded_length % 64 != 56)
     {
         ++padded_length;
     }
-    unsigned char *message = static_cast<unsigned char *>(cma_malloc(padded_length + 8));
+    uint8_t *message = static_cast<uint8_t *>(cma_malloc(padded_length + 8));
     if (!message)
         return ;
-    size_t copy_index = 0;
-    const unsigned char *byte_data = static_cast<const unsigned char *>(data);
+    ft_size_t copy_index = 0;
+    const uint8_t *byte_data = static_cast<const uint8_t *>(data);
     while (copy_index < length)
     {
         message[copy_index] = byte_data[copy_index];
@@ -50,22 +49,22 @@ void sha256_hash(const void *data, size_t length, unsigned char *digest)
         message[copy_index] = 0;
         ++copy_index;
     }
-    message[padded_length] = static_cast<unsigned char>((bit_length >> 56) & 0xFF);
-    message[padded_length + 1] = static_cast<unsigned char>((bit_length >> 48) & 0xFF);
-    message[padded_length + 2] = static_cast<unsigned char>((bit_length >> 40) & 0xFF);
-    message[padded_length + 3] = static_cast<unsigned char>((bit_length >> 32) & 0xFF);
-    message[padded_length + 4] = static_cast<unsigned char>((bit_length >> 24) & 0xFF);
-    message[padded_length + 5] = static_cast<unsigned char>((bit_length >> 16) & 0xFF);
-    message[padded_length + 6] = static_cast<unsigned char>((bit_length >> 8) & 0xFF);
-    message[padded_length + 7] = static_cast<unsigned char>(bit_length & 0xFF);
-    size_t chunk_offset = 0;
+    message[padded_length] = static_cast<uint8_t>((bit_length >> 56) & 0xFF);
+    message[padded_length + 1] = static_cast<uint8_t>((bit_length >> 48) & 0xFF);
+    message[padded_length + 2] = static_cast<uint8_t>((bit_length >> 40) & 0xFF);
+    message[padded_length + 3] = static_cast<uint8_t>((bit_length >> 32) & 0xFF);
+    message[padded_length + 4] = static_cast<uint8_t>((bit_length >> 24) & 0xFF);
+    message[padded_length + 5] = static_cast<uint8_t>((bit_length >> 16) & 0xFF);
+    message[padded_length + 6] = static_cast<uint8_t>((bit_length >> 8) & 0xFF);
+    message[padded_length + 7] = static_cast<uint8_t>(bit_length & 0xFF);
+    ft_size_t chunk_offset = 0;
     while (chunk_offset < padded_length + 8)
     {
         uint32_t words[64];
-        size_t word_index = 0;
+        ft_size_t word_index = 0;
         while (word_index < 16)
         {
-            size_t byte_index = chunk_offset + word_index * 4;
+            ft_size_t byte_index = chunk_offset + word_index * 4;
             words[word_index] = (static_cast<uint32_t>(message[byte_index]) << 24) |
                 (static_cast<uint32_t>(message[byte_index + 1]) << 16) |
                 (static_cast<uint32_t>(message[byte_index + 2]) << 8) |
@@ -79,50 +78,58 @@ void sha256_hash(const void *data, size_t length, unsigned char *digest)
             words[word_index] = words[word_index - 16] + sigma_zero + words[word_index - 7] + sigma_one;
             ++word_index;
         }
-        uint32_t hash_a = hash_values[0];
-        uint32_t hash_b = hash_values[1];
-        uint32_t hash_c = hash_values[2];
-        uint32_t hash_d = hash_values[3];
-        uint32_t hash_e = hash_values[4];
-        uint32_t hash_f = hash_values[5];
-        uint32_t hash_g = hash_values[6];
-        uint32_t hash_h = hash_values[7];
+        uint32_t hash_working_value_a = hash_values[0];
+        uint32_t hash_working_value_b = hash_values[1];
+        uint32_t hash_working_value_c = hash_values[2];
+        uint32_t hash_working_value_d = hash_values[3];
+        uint32_t hash_working_value_e = hash_values[4];
+        uint32_t hash_working_value_f = hash_values[5];
+        uint32_t hash_working_value_g = hash_values[6];
+        uint32_t hash_working_value_h = hash_values[7];
         word_index = 0;
         while (word_index < 64)
         {
-            uint32_t big_sigma_one = rotate_right(hash_e, 6) ^ rotate_right(hash_e, 11) ^ rotate_right(hash_e, 25);
-            uint32_t choose = (hash_e & hash_f) ^ ((~hash_e) & hash_g);
-            uint32_t temp_one = hash_h + big_sigma_one + choose + sha256_constants[word_index] + words[word_index];
-            uint32_t big_sigma_zero = rotate_right(hash_a, 2) ^ rotate_right(hash_a, 13) ^ rotate_right(hash_a, 22);
-            uint32_t majority = (hash_a & hash_b) ^ (hash_a & hash_c) ^ (hash_b & hash_c);
-            uint32_t temp_two = big_sigma_zero + majority;
-            hash_h = hash_g;
-            hash_g = hash_f;
-            hash_f = hash_e;
-            hash_e = hash_d + temp_one;
-            hash_d = hash_c;
-            hash_c = hash_b;
-            hash_b = hash_a;
-            hash_a = temp_one + temp_two;
+            uint32_t big_sigma_one = rotate_right(hash_working_value_e, 6)
+                ^ rotate_right(hash_working_value_e, 11)
+                ^ rotate_right(hash_working_value_e, 25);
+            uint32_t choose = (hash_working_value_e & hash_working_value_f)
+                ^ ((~hash_working_value_e) & hash_working_value_g);
+            uint32_t temporary_sum_one = hash_working_value_h + big_sigma_one + choose
+                + sha256_constants[word_index] + words[word_index];
+            uint32_t big_sigma_zero = rotate_right(hash_working_value_a, 2)
+                ^ rotate_right(hash_working_value_a, 13)
+                ^ rotate_right(hash_working_value_a, 22);
+            uint32_t majority = (hash_working_value_a & hash_working_value_b)
+                ^ (hash_working_value_a & hash_working_value_c)
+                ^ (hash_working_value_b & hash_working_value_c);
+            uint32_t temporary_sum_two = big_sigma_zero + majority;
+            hash_working_value_h = hash_working_value_g;
+            hash_working_value_g = hash_working_value_f;
+            hash_working_value_f = hash_working_value_e;
+            hash_working_value_e = hash_working_value_d + temporary_sum_one;
+            hash_working_value_d = hash_working_value_c;
+            hash_working_value_c = hash_working_value_b;
+            hash_working_value_b = hash_working_value_a;
+            hash_working_value_a = temporary_sum_one + temporary_sum_two;
             ++word_index;
         }
-        hash_values[0] += hash_a;
-        hash_values[1] += hash_b;
-        hash_values[2] += hash_c;
-        hash_values[3] += hash_d;
-        hash_values[4] += hash_e;
-        hash_values[5] += hash_f;
-        hash_values[6] += hash_g;
-        hash_values[7] += hash_h;
+        hash_values[0] += hash_working_value_a;
+        hash_values[1] += hash_working_value_b;
+        hash_values[2] += hash_working_value_c;
+        hash_values[3] += hash_working_value_d;
+        hash_values[4] += hash_working_value_e;
+        hash_values[5] += hash_working_value_f;
+        hash_values[6] += hash_working_value_g;
+        hash_values[7] += hash_working_value_h;
         chunk_offset += 64;
     }
-    size_t digest_index = 0;
+    ft_size_t digest_index = 0;
     while (digest_index < 8)
     {
-        digest[digest_index * 4] = static_cast<unsigned char>((hash_values[digest_index] >> 24) & 0xFF);
-        digest[digest_index * 4 + 1] = static_cast<unsigned char>((hash_values[digest_index] >> 16) & 0xFF);
-        digest[digest_index * 4 + 2] = static_cast<unsigned char>((hash_values[digest_index] >> 8) & 0xFF);
-        digest[digest_index * 4 + 3] = static_cast<unsigned char>(hash_values[digest_index] & 0xFF);
+        digest[digest_index * 4] = static_cast<uint8_t>((hash_values[digest_index] >> 24) & 0xFF);
+        digest[digest_index * 4 + 1] = static_cast<uint8_t>((hash_values[digest_index] >> 16) & 0xFF);
+        digest[digest_index * 4 + 2] = static_cast<uint8_t>((hash_values[digest_index] >> 8) & 0xFF);
+        digest[digest_index * 4 + 3] = static_cast<uint8_t>(hash_values[digest_index] & 0xFF);
         ++digest_index;
     }
     cma_free(message);

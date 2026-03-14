@@ -2,6 +2,7 @@
 #define UNIQUE_PTR_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
@@ -15,499 +16,183 @@ class ft_uniqueptr
 {
     private:
         ManagedType                *_managed_pointer;
-        ft_size_t                      _array_size;
-        bool                        _is_array_type;
+        ft_size_t                  _array_size;
+        ft_bool                    _is_array_type;
         mutable pt_recursive_mutex *_mutex;
-        uint8_t                     _initialised_state;
-        static const uint8_t        _state_uninitialised = 0;
-        static const uint8_t        _state_destroyed = 1;
-        static const uint8_t        _state_initialised = 2;
-        static thread_local int32_t _last_error;
+        uint8_t                    _initialised_state;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept
-        {
-            _last_error = error_code;
-            return (error_code);
-        }
-
-        int32_t lock_internal(ft_bool *lock_acquired) const noexcept
-        {
-            if (lock_acquired != ft_nullptr)
-                *lock_acquired = FT_FALSE;
-            if (this->_mutex == ft_nullptr)
-                return (FT_ERR_SUCCESS);
-            if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
-                return (set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
-            if (lock_acquired != ft_nullptr)
-                *lock_acquired = FT_TRUE;
-            return (FT_ERR_SUCCESS);
-        }
-
-        void unlock_internal(ft_bool lock_acquired) const noexcept
-        {
-            if (lock_acquired == FT_FALSE)
-                return ;
-            if (this->_mutex == ft_nullptr)
-                return ;
-            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            return ;
-        }
-
-        void destroy_storage() noexcept
-        {
-            if (this->_managed_pointer == ft_nullptr)
-                return ;
-            if (this->_is_array_type)
-                delete[] this->_managed_pointer;
-            else
-                delete this->_managed_pointer;
-            this->_managed_pointer = ft_nullptr;
-            this->_array_size = 0;
-            this->_is_array_type = FT_FALSE;
-            return ;
-        }
+        static uint32_t set_error(uint32_t error_code) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        void unlock_internal(ft_bool lock_acquired) const noexcept;
+        void destroy_storage() noexcept;
 
     public:
         class reference_proxy
         {
             private:
                 ManagedType *_pointer;
-                int32_t      _error;
+                int32_t     _error;
 
             public:
-                reference_proxy(ManagedType *pointer, int32_t error) noexcept
-                    : _pointer(pointer), _error(error)
-                {
-                    return ;
-                }
-
+                reference_proxy(ManagedType *pointer, int32_t error) noexcept;
                 ~reference_proxy();
-
-                operator ManagedType&() const noexcept
-                {
-                    static ManagedType fallback = ManagedType();
-
-                    if (this->_pointer == ft_nullptr)
-                        return (fallback);
-                    return (*this->_pointer);
-                }
-
-                ManagedType *operator->() const noexcept
-                {
-                    return (this->_pointer);
-                }
-
-                int32_t get_error() const noexcept
-                {
-                    return (this->_error);
-                }
+                operator ManagedType&() const noexcept;
+                ManagedType *operator->() const noexcept;
+                uint32_t get_error() const noexcept;
         };
 
         class const_reference_proxy
         {
             private:
                 const ManagedType *_pointer;
-                int32_t            _error;
+                int32_t           _error;
 
             public:
                 const_reference_proxy(const ManagedType *pointer,
-                    int32_t error) noexcept
-                    : _pointer(pointer), _error(error)
-                {
-                    return ;
-                }
-
+                    int32_t error) noexcept;
                 ~const_reference_proxy();
-
-                operator const ManagedType&() const noexcept
-                {
-                    static ManagedType fallback = ManagedType();
-
-                    if (this->_pointer == ft_nullptr)
-                        return (fallback);
-                    return (*this->_pointer);
-                }
-
-                const ManagedType *operator->() const noexcept
-                {
-                    return (this->_pointer);
-                }
-
-                int32_t get_error() const noexcept
-                {
-                    return (this->_error);
-                }
+                operator const ManagedType&() const noexcept;
+                const ManagedType *operator->() const noexcept;
+                uint32_t get_error() const noexcept;
         };
 
-        ft_uniqueptr() noexcept
-            : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
-        {
-            set_error(FT_ERR_SUCCESS);
-            return ;
-        }
-
-        ft_uniqueptr(ManagedType *pointer, bool array_type = FT_FALSE,
-                ft_size_t array_size = 1) noexcept
-            : _managed_pointer(pointer), _array_size(array_size),
-              _is_array_type(array_type), _mutex(ft_nullptr),
-              _initialised_state(_state_initialised)
-        {
-            set_error(FT_ERR_SUCCESS);
-            return ;
-        }
-
-        explicit ft_uniqueptr(ft_size_t size) noexcept
-            : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
-        {
-            (void)this->initialize(size);
-            return ;
-        }
+        ft_uniqueptr() noexcept;
+        ft_uniqueptr(ManagedType *pointer, ft_bool array_type = FT_FALSE,
+            ft_size_t array_size = 1) noexcept;
+        explicit ft_uniqueptr(ft_size_t size) noexcept;
 
         template <typename... Args>
-        explicit ft_uniqueptr(std::in_place_t, Args&&... args)
-            : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(false),
-              _mutex(ft_nullptr), _initialised_state(_state_uninitialised)
-        {
-            (void)this->initialize_value(std::forward<Args>(args)...);
-            return ;
-        }
+        explicit ft_uniqueptr(std::in_place_t, Args&&... args);
 
-        ft_uniqueptr(const ft_uniqueptr &other) = delete;
-
-        ft_uniqueptr(ft_uniqueptr &&other) = delete;
-
+        ft_uniqueptr(const ft_uniqueptr &other);
+        ft_uniqueptr(ft_uniqueptr &&other) noexcept;
         ft_uniqueptr &operator=(const ft_uniqueptr &other) = delete;
+        ft_uniqueptr &operator=(ft_uniqueptr &&other) noexcept;
 
-        ft_uniqueptr &operator=(ft_uniqueptr &&other) noexcept
-        {
-            if (this == &other)
-                return (*this);
-            if (this->_initialised_state == _state_initialised)
-                (void)this->destroy();
-            this->_managed_pointer = other._managed_pointer;
-            this->_array_size = other._array_size;
-            this->_is_array_type = other._is_array_type;
-            this->_initialised_state = other._initialised_state;
-            other._managed_pointer = ft_nullptr;
-            other._array_size = 0;
-            other._is_array_type = FT_FALSE;
-            other._initialised_state = _state_destroyed;
-            set_error(FT_ERR_SUCCESS);
-            return (*this);
-        }
+        ~ft_uniqueptr();
 
-        ~ft_uniqueptr()
-        {
-            if (this->_initialised_state == _state_initialised)
-                (void)this->destroy();
-            if (this->_mutex != ft_nullptr)
-                (void)this->disable_thread_safety();
-            return ;
-        }
-
-        int32_t initialize() noexcept
-        {
-            if (this->_initialised_state == _state_initialised)
-                return (set_error(FT_ERR_INVALID_STATE));
-            this->_managed_pointer = ft_nullptr;
-            this->_array_size = 0;
-            this->_is_array_type = FT_FALSE;
-            this->_initialised_state = _state_initialised;
-            return (set_error(FT_ERR_SUCCESS));
-        }
-
-        int32_t initialize(ManagedType *pointer, bool array_type = FT_FALSE,
-                ft_size_t array_size = 1) noexcept
-        {
-            if (this->_initialised_state == _state_initialised)
-                return (set_error(FT_ERR_INVALID_STATE));
-            this->_managed_pointer = pointer;
-            this->_array_size = array_size;
-            this->_is_array_type = array_type;
-            this->_initialised_state = _state_initialised;
-            return (set_error(FT_ERR_SUCCESS));
-        }
-
-        int32_t initialize(ft_size_t size) noexcept
-        {
-            if (this->_initialised_state == _state_initialised)
-                return (set_error(FT_ERR_INVALID_STATE));
-            this->_managed_pointer = ft_nullptr;
-            this->_array_size = 0;
-            this->_is_array_type = FT_TRUE;
-            if (size > 0)
-            {
-                this->_managed_pointer = new (std::nothrow) ManagedType[size];
-                if (this->_managed_pointer == ft_nullptr)
-                {
-                    this->_initialised_state = _state_destroyed;
-                    return (set_error(FT_ERR_NO_MEMORY));
-                }
-            }
-            this->_array_size = size;
-            this->_initialised_state = _state_initialised;
-            return (set_error(FT_ERR_SUCCESS));
-        }
+        int32_t initialize() noexcept;
+        int32_t initialize(ManagedType *pointer, ft_bool array_type = FT_FALSE,
+            ft_size_t array_size = 1) noexcept;
+        int32_t initialize(ft_size_t size) noexcept;
 
         template <typename... Args>
-        int32_t initialize_value(Args&&... args) noexcept
-        {
-            if (this->_initialised_state == _state_initialised)
-                return (set_error(FT_ERR_INVALID_STATE));
-            this->_managed_pointer = new (std::nothrow)
-                ManagedType(std::forward<Args>(args)...);
-            if (this->_managed_pointer == ft_nullptr)
-            {
-                this->_initialised_state = _state_destroyed;
-                return (set_error(FT_ERR_NO_MEMORY));
-            }
-            this->_array_size = 1;
-            this->_is_array_type = FT_FALSE;
-            this->_initialised_state = _state_initialised;
-            return (set_error(FT_ERR_SUCCESS));
-        }
+        int32_t initialize_value(Args&&... args) noexcept;
 
-        int32_t destroy() noexcept
-        {
-            ft_bool lock_acquired;
-            int32_t lock_result;
+        int32_t destroy() noexcept;
+        uint32_t move(ft_uniqueptr<ManagedType> &other) noexcept;
 
-            if (this->_initialised_state != _state_initialised)
-                return (set_error(FT_ERR_SUCCESS));
-            lock_acquired = FT_FALSE;
-            lock_result = this->lock_internal(&lock_acquired);
-            if (lock_result != FT_ERR_SUCCESS)
-                return (lock_result);
-            this->destroy_storage();
-            this->_initialised_state = _state_destroyed;
-            this->unlock_internal(lock_acquired);
-            return (set_error(FT_ERR_SUCCESS));
-        }
+        reference_proxy operator*() noexcept;
+        const_reference_proxy operator*() const noexcept;
+        ManagedType *operator->() noexcept;
+        const ManagedType *operator->() const noexcept;
+        reference_proxy operator[](ft_size_t index) noexcept;
+        const_reference_proxy operator[](ft_size_t index) const noexcept;
 
-        reference_proxy operator*() noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-                return (reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_STATE)));
-            if (this->_managed_pointer == ft_nullptr)
-                return (reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_POINTER)));
-            return (reference_proxy(this->_managed_pointer,
-                    set_error(FT_ERR_SUCCESS)));
-        }
-
-        const_reference_proxy operator*() const noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-                return (const_reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_STATE)));
-            if (this->_managed_pointer == ft_nullptr)
-                return (const_reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_POINTER)));
-            return (const_reference_proxy(this->_managed_pointer,
-                    set_error(FT_ERR_SUCCESS)));
-        }
-
-        ManagedType *operator->() noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-            {
-                set_error(FT_ERR_INVALID_STATE);
-                return (ft_nullptr);
-            }
-            if (this->_managed_pointer == ft_nullptr)
-            {
-                set_error(FT_ERR_INVALID_POINTER);
-                return (ft_nullptr);
-            }
-            set_error(FT_ERR_SUCCESS);
-            return (this->_managed_pointer);
-        }
-
-        const ManagedType *operator->() const noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-            {
-                set_error(FT_ERR_INVALID_STATE);
-                return (ft_nullptr);
-            }
-            if (this->_managed_pointer == ft_nullptr)
-            {
-                set_error(FT_ERR_INVALID_POINTER);
-                return (ft_nullptr);
-            }
-            set_error(FT_ERR_SUCCESS);
-            return (this->_managed_pointer);
-        }
-
-        reference_proxy operator[](ft_size_t index) noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-                return (reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_STATE)));
-            if (this->_is_array_type == FT_FALSE || this->_managed_pointer == ft_nullptr)
-                return (reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_OPERATION)));
-            if (index >= this->_array_size)
-                return (reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_OUT_OF_RANGE)));
-            return (reference_proxy(&this->_managed_pointer[index],
-                    set_error(FT_ERR_SUCCESS)));
-        }
-
-        const_reference_proxy operator[](ft_size_t index) const noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-                return (const_reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_STATE)));
-            if (this->_is_array_type == FT_FALSE || this->_managed_pointer == ft_nullptr)
-                return (const_reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_INVALID_OPERATION)));
-            if (index >= this->_array_size)
-                return (const_reference_proxy(ft_nullptr,
-                        set_error(FT_ERR_OUT_OF_RANGE)));
-            return (const_reference_proxy(&this->_managed_pointer[index],
-                    set_error(FT_ERR_SUCCESS)));
-        }
-
-        ManagedType *get() noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-            {
-                set_error(FT_ERR_INVALID_STATE);
-                return (ft_nullptr);
-            }
-            set_error(FT_ERR_SUCCESS);
-            return (this->_managed_pointer);
-        }
-
-        const ManagedType *get() const noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-            {
-                set_error(FT_ERR_INVALID_STATE);
-                return (ft_nullptr);
-            }
-            set_error(FT_ERR_SUCCESS);
-            return (this->_managed_pointer);
-        }
-
-        ManagedType *release() noexcept
-        {
-            ManagedType *released_pointer;
-
-            if (this->_initialised_state != _state_initialised)
-            {
-                set_error(FT_ERR_INVALID_STATE);
-                return (ft_nullptr);
-            }
-            released_pointer = this->_managed_pointer;
-            this->_managed_pointer = ft_nullptr;
-            this->_array_size = 0;
-            this->_is_array_type = FT_FALSE;
-            set_error(FT_ERR_SUCCESS);
-            return (released_pointer);
-        }
-
+        ManagedType *get() noexcept;
+        const ManagedType *get() const noexcept;
+        ManagedType *release() noexcept;
         void reset(ManagedType *pointer = ft_nullptr, ft_size_t size = 1,
-                bool array_type = FT_FALSE) noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-            {
-                set_error(FT_ERR_INVALID_STATE);
-                return ;
-            }
-            this->destroy_storage();
-            this->_managed_pointer = pointer;
-            this->_array_size = size;
-            this->_is_array_type = array_type;
-            set_error(FT_ERR_SUCCESS);
-            return ;
-        }
+            ft_bool array_type = FT_FALSE) noexcept;
 
-        explicit operator bool() const noexcept
-        {
-            if (this->_initialised_state != _state_initialised)
-            {
-                set_error(FT_ERR_INVALID_STATE);
-                return (false);
-            }
-            set_error(FT_ERR_SUCCESS);
-            return (this->_managed_pointer != ft_nullptr);
-        }
+        operator ft_bool() const noexcept;
 
-        int32_t enable_thread_safety() noexcept
-        {
-            pt_recursive_mutex *new_mutex;
-            int32_t initialize_result;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-            if (this->_mutex != ft_nullptr)
-                return (set_error(FT_ERR_SUCCESS));
-            new_mutex = new (std::nothrow) pt_recursive_mutex();
-            if (new_mutex == ft_nullptr)
-                return (set_error(FT_ERR_NO_MEMORY));
-            initialize_result = new_mutex->initialize();
-            if (initialize_result != FT_ERR_SUCCESS)
-            {
-                delete new_mutex;
-                return (set_error(initialize_result));
-            }
-            this->_mutex = new_mutex;
-            return (set_error(FT_ERR_SUCCESS));
-        }
-
-        int32_t disable_thread_safety() noexcept
-        {
-            pt_recursive_mutex *mutex_pointer;
-            int32_t destroy_result;
-
-            mutex_pointer = this->_mutex;
-            if (mutex_pointer == ft_nullptr)
-                return (set_error(FT_ERR_SUCCESS));
-            this->_mutex = ft_nullptr;
-            destroy_result = mutex_pointer->destroy();
-            delete mutex_pointer;
-            if (destroy_result != FT_ERR_SUCCESS)
-                return (set_error(destroy_result));
-            return (set_error(FT_ERR_SUCCESS));
-        }
-
-        bool is_thread_safe() const noexcept
-        {
-            set_error(FT_ERR_SUCCESS);
-            return (this->_mutex != ft_nullptr);
-        }
-
-        int32_t lock(ft_bool *lock_acquired) const noexcept
-        {
-            int32_t lock_result;
-
-            lock_result = this->lock_internal(lock_acquired);
-            return (set_error(lock_result));
-        }
-
-        void unlock(ft_bool lock_acquired) const noexcept
-        {
-            this->unlock_internal(lock_acquired);
-            return ;
-        }
-
-        static int32_t get_error() noexcept
-        {
-            return (_last_error);
-        }
-
-        static const char *get_error_str() noexcept
-        {
-            return (ft_strerror(_last_error));
-        }
-
+        uint32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 template <typename ManagedType>
+uint32_t ft_uniqueptr<ManagedType>::set_error(uint32_t error_code) noexcept
+{
+    _last_error = error_code;
+    return (error_code);
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::lock_internal(ft_bool *lock_acquired) const noexcept
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = FT_FALSE;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
+        return (set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = FT_TRUE;
+    return (FT_ERR_SUCCESS);
+}
+
+template <typename ManagedType>
+void ft_uniqueptr<ManagedType>::unlock_internal(ft_bool lock_acquired) const noexcept
+{
+    if (lock_acquired == FT_FALSE)
+        return ;
+    if (this->_mutex == ft_nullptr)
+        return ;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return ;
+}
+
+template <typename ManagedType>
+void ft_uniqueptr<ManagedType>::destroy_storage() noexcept
+{
+    if (this->_managed_pointer == ft_nullptr)
+        return ;
+    if (this->_is_array_type)
+        delete[] this->_managed_pointer;
+    else
+        delete this->_managed_pointer;
+    this->_managed_pointer = ft_nullptr;
+    this->_array_size = 0;
+    this->_is_array_type = FT_FALSE;
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::reference_proxy::reference_proxy(ManagedType *pointer,
+    int32_t error) noexcept : _pointer(pointer), _error(error)
+{
+    return ;
+}
+
+template <typename ManagedType>
 ft_uniqueptr<ManagedType>::reference_proxy::~reference_proxy()
+{
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::reference_proxy::operator ManagedType&() const noexcept
+{
+    static ManagedType fallback = ManagedType();
+
+    if (this->_pointer == ft_nullptr)
+        return (fallback);
+    return (*this->_pointer);
+}
+
+template <typename ManagedType>
+ManagedType *ft_uniqueptr<ManagedType>::reference_proxy::operator->() const noexcept
+{
+    return (this->_pointer);
+}
+
+template <typename ManagedType>
+uint32_t ft_uniqueptr<ManagedType>::reference_proxy::get_error() const noexcept
+{
+    return (this->_error);
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::const_reference_proxy::const_reference_proxy(
+    const ManagedType *pointer, int32_t error) noexcept : _pointer(pointer), _error(error)
 {
     return ;
 }
@@ -519,6 +204,573 @@ ft_uniqueptr<ManagedType>::const_reference_proxy::~const_reference_proxy()
 }
 
 template <typename ManagedType>
-thread_local int32_t ft_uniqueptr<ManagedType>::_last_error = FT_ERR_SUCCESS;
+ft_uniqueptr<ManagedType>::const_reference_proxy::operator const ManagedType&() const noexcept
+{
+    static ManagedType fallback = ManagedType();
+
+    if (this->_pointer == ft_nullptr)
+        return (fallback);
+    return (*this->_pointer);
+}
+
+template <typename ManagedType>
+const ManagedType *ft_uniqueptr<ManagedType>::const_reference_proxy::operator->() const noexcept
+{
+    return (this->_pointer);
+}
+
+template <typename ManagedType>
+uint32_t ft_uniqueptr<ManagedType>::const_reference_proxy::get_error() const noexcept
+{
+    return (this->_error);
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::ft_uniqueptr() noexcept
+    : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
+      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::ft_uniqueptr(ManagedType *pointer, ft_bool array_type,
+    ft_size_t array_size) noexcept
+    : _managed_pointer(pointer), _array_size(array_size), _is_array_type(array_type),
+      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_INITIALISED)
+{
+    uint32_t previous_error;
+
+    previous_error = _last_error;
+    (void)this->initialize(pointer, array_type, array_size);
+    (void)set_error(previous_error);
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_size_t size) noexcept
+    : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
+      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    uint32_t previous_error;
+
+    previous_error = _last_error;
+    (void)this->initialize(size);
+    (void)set_error(previous_error);
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::ft_uniqueptr(const ft_uniqueptr<ManagedType> &other)
+    : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
+      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    uint32_t previous_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t index;
+
+    previous_error = _last_error;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_uniqueptr::ft_uniqueptr(copy)", "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    lock_acquired = FT_FALSE;
+    lock_error = other.lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (other._managed_pointer == ft_nullptr)
+    {
+        (void)other.unlock_internal(lock_acquired);
+        if (this->initialize() != FT_ERR_SUCCESS)
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (other._is_array_type == FT_TRUE)
+    {
+        this->_managed_pointer = new (std::nothrow) ManagedType[other._array_size];
+        if (this->_managed_pointer == ft_nullptr)
+        {
+            (void)other.unlock_internal(lock_acquired);
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            (void)set_error(previous_error);
+            return ;
+        }
+        this->_array_size = other._array_size;
+        this->_is_array_type = FT_TRUE;
+        index = 0;
+        while (index < this->_array_size)
+        {
+            this->_managed_pointer[index] = other._managed_pointer[index];
+            index += 1;
+        }
+    }
+    else
+    {
+        this->_managed_pointer = new (std::nothrow) ManagedType(*other._managed_pointer);
+        if (this->_managed_pointer == ft_nullptr)
+        {
+            (void)other.unlock_internal(lock_acquired);
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            (void)set_error(previous_error);
+            return ;
+        }
+        this->_array_size = 1;
+        this->_is_array_type = FT_FALSE;
+    }
+    (void)other.unlock_internal(lock_acquired);
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    (void)set_error(previous_error);
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr<ManagedType> &&other) noexcept
+    : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
+      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    uint32_t previous_error;
+
+    previous_error = _last_error;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_uniqueptr::ft_uniqueptr(move)", "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (this->move(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    (void)set_error(previous_error);
+    return ;
+}
+
+template <typename ManagedType>
+template <typename... Args>
+ft_uniqueptr<ManagedType>::ft_uniqueptr(std::in_place_t, Args&&... args)
+    : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
+      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    uint32_t previous_error;
+
+    previous_error = _last_error;
+    (void)this->initialize_value(std::forward<Args>(args)...);
+    (void)set_error(previous_error);
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType> &ft_uniqueptr<ManagedType>::operator=(
+    ft_uniqueptr &&other) noexcept
+{
+    if (this == &other)
+        return (*this);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    this->_managed_pointer = other._managed_pointer;
+    this->_array_size = other._array_size;
+    this->_is_array_type = other._is_array_type;
+    this->_initialised_state = other._initialised_state;
+    other._managed_pointer = ft_nullptr;
+    other._array_size = 0;
+    other._is_array_type = FT_FALSE;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    set_error(FT_ERR_SUCCESS);
+    return (*this);
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::~ft_uniqueptr()
+{
+    uint32_t previous_error;
+
+    previous_error = _last_error;
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (this->_mutex != ft_nullptr)
+        (void)this->disable_thread_safety();
+    (void)set_error(previous_error);
+    return ;
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (set_error(FT_ERR_INVALID_STATE));
+    this->_managed_pointer = ft_nullptr;
+    this->_array_size = 0;
+    this->_is_array_type = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::initialize(ManagedType *pointer,
+    ft_bool array_type, ft_size_t array_size) noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (set_error(FT_ERR_INVALID_STATE));
+    this->_managed_pointer = pointer;
+    this->_array_size = array_size;
+    this->_is_array_type = array_type;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::initialize(ft_size_t size) noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (set_error(FT_ERR_INVALID_STATE));
+    this->_managed_pointer = ft_nullptr;
+    this->_array_size = 0;
+    this->_is_array_type = FT_TRUE;
+    if (size > 0)
+    {
+        this->_managed_pointer = new (std::nothrow) ManagedType[size];
+        if (this->_managed_pointer == ft_nullptr)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (set_error(FT_ERR_NO_MEMORY));
+        }
+    }
+    this->_array_size = size;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+template <typename... Args>
+int32_t ft_uniqueptr<ManagedType>::initialize_value(Args&&... args) noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (set_error(FT_ERR_INVALID_STATE));
+    this->_managed_pointer = new (std::nothrow) ManagedType(std::forward<Args>(args)...);
+    if (this->_managed_pointer == ft_nullptr)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(FT_ERR_NO_MEMORY));
+    }
+    this->_array_size = 1;
+    this->_is_array_type = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::destroy() noexcept
+{
+    ft_bool lock_acquired;
+    int32_t lock_result;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (set_error(FT_ERR_SUCCESS));
+    lock_acquired = FT_FALSE;
+    lock_result = this->lock_internal(&lock_acquired);
+    if (lock_result != FT_ERR_SUCCESS)
+        return (lock_result);
+    this->destroy_storage();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->unlock_internal(lock_acquired);
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+uint32_t ft_uniqueptr<ManagedType>::move(ft_uniqueptr<ManagedType> &other) noexcept
+{
+    int32_t destroy_result;
+
+    if (this == &other)
+        return (set_error(FT_ERR_SUCCESS));
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_uniqueptr::move",
+            "source object is uninitialised");
+        return (set_error(FT_ERR_INVALID_STATE));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (set_error(destroy_result));
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_managed_pointer = ft_nullptr;
+        this->_array_size = 1;
+        this->_is_array_type = FT_FALSE;
+        this->_mutex = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(FT_ERR_SUCCESS));
+    }
+    this->_managed_pointer = other._managed_pointer;
+    this->_array_size = other._array_size;
+    this->_is_array_type = other._is_array_type;
+    this->_mutex = other._mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._managed_pointer = ft_nullptr;
+    other._array_size = 1;
+    other._is_array_type = FT_FALSE;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+typename ft_uniqueptr<ManagedType>::reference_proxy ft_uniqueptr<ManagedType>::operator*()
+    noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_STATE)));
+    if (this->_managed_pointer == ft_nullptr)
+        return (reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_POINTER)));
+    return (reference_proxy(this->_managed_pointer, set_error(FT_ERR_SUCCESS)));
+}
+
+template <typename ManagedType>
+typename ft_uniqueptr<ManagedType>::const_reference_proxy ft_uniqueptr<ManagedType>::operator*()
+    const noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (const_reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_STATE)));
+    if (this->_managed_pointer == ft_nullptr)
+        return (const_reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_POINTER)));
+    return (const_reference_proxy(this->_managed_pointer, set_error(FT_ERR_SUCCESS)));
+}
+
+template <typename ManagedType>
+ManagedType *ft_uniqueptr<ManagedType>::operator->() noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        set_error(FT_ERR_INVALID_STATE);
+        return (ft_nullptr);
+    }
+    if (this->_managed_pointer == ft_nullptr)
+    {
+        set_error(FT_ERR_INVALID_POINTER);
+        return (ft_nullptr);
+    }
+    set_error(FT_ERR_SUCCESS);
+    return (this->_managed_pointer);
+}
+
+template <typename ManagedType>
+const ManagedType *ft_uniqueptr<ManagedType>::operator->() const noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        set_error(FT_ERR_INVALID_STATE);
+        return (ft_nullptr);
+    }
+    if (this->_managed_pointer == ft_nullptr)
+    {
+        set_error(FT_ERR_INVALID_POINTER);
+        return (ft_nullptr);
+    }
+    set_error(FT_ERR_SUCCESS);
+    return (this->_managed_pointer);
+}
+
+template <typename ManagedType>
+typename ft_uniqueptr<ManagedType>::reference_proxy ft_uniqueptr<ManagedType>::operator[](
+    ft_size_t index) noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_STATE)));
+    if (this->_is_array_type == FT_FALSE || this->_managed_pointer == ft_nullptr)
+        return (reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_OPERATION)));
+    if (index >= this->_array_size)
+        return (reference_proxy(ft_nullptr, set_error(FT_ERR_OUT_OF_RANGE)));
+    return (reference_proxy(&this->_managed_pointer[index], set_error(FT_ERR_SUCCESS)));
+}
+
+template <typename ManagedType>
+typename ft_uniqueptr<ManagedType>::const_reference_proxy ft_uniqueptr<ManagedType>::operator[](
+    ft_size_t index) const noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (const_reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_STATE)));
+    if (this->_is_array_type == FT_FALSE || this->_managed_pointer == ft_nullptr)
+        return (const_reference_proxy(ft_nullptr, set_error(FT_ERR_INVALID_OPERATION)));
+    if (index >= this->_array_size)
+        return (const_reference_proxy(ft_nullptr, set_error(FT_ERR_OUT_OF_RANGE)));
+    return (const_reference_proxy(&this->_managed_pointer[index], set_error(FT_ERR_SUCCESS)));
+}
+
+template <typename ManagedType>
+ManagedType *ft_uniqueptr<ManagedType>::get() noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        set_error(FT_ERR_INVALID_STATE);
+        return (ft_nullptr);
+    }
+    set_error(FT_ERR_SUCCESS);
+    return (this->_managed_pointer);
+}
+
+template <typename ManagedType>
+const ManagedType *ft_uniqueptr<ManagedType>::get() const noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        set_error(FT_ERR_INVALID_STATE);
+        return (ft_nullptr);
+    }
+    set_error(FT_ERR_SUCCESS);
+    return (this->_managed_pointer);
+}
+
+template <typename ManagedType>
+ManagedType *ft_uniqueptr<ManagedType>::release() noexcept
+{
+    ManagedType *released_pointer;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        set_error(FT_ERR_INVALID_STATE);
+        return (ft_nullptr);
+    }
+    released_pointer = this->_managed_pointer;
+    this->_managed_pointer = ft_nullptr;
+    this->_array_size = 0;
+    this->_is_array_type = FT_FALSE;
+    set_error(FT_ERR_SUCCESS);
+    return (released_pointer);
+}
+
+template <typename ManagedType>
+void ft_uniqueptr<ManagedType>::reset(ManagedType *pointer, ft_size_t size,
+    ft_bool array_type) noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    this->destroy_storage();
+    this->_managed_pointer = pointer;
+    this->_array_size = size;
+    this->_is_array_type = array_type;
+    set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::operator ft_bool() const noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        set_error(FT_ERR_INVALID_STATE);
+        return (FT_FALSE);
+    }
+    set_error(FT_ERR_SUCCESS);
+    return (this->_managed_pointer != ft_nullptr);
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::enable_thread_safety() noexcept
+{
+    pt_recursive_mutex *new_mutex;
+    int32_t initialize_result;
+
+    if (this->_mutex != ft_nullptr)
+        return (set_error(FT_ERR_SUCCESS));
+    new_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (new_mutex == ft_nullptr)
+        return (set_error(FT_ERR_NO_MEMORY));
+    initialize_result = new_mutex->initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        return (set_error(initialize_result));
+    }
+    this->_mutex = new_mutex;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::disable_thread_safety() noexcept
+{
+    pt_recursive_mutex *mutex_pointer;
+    int32_t destroy_result;
+
+    mutex_pointer = this->_mutex;
+    if (mutex_pointer == ft_nullptr)
+        return (set_error(FT_ERR_SUCCESS));
+    this->_mutex = ft_nullptr;
+    destroy_result = mutex_pointer->destroy();
+    delete mutex_pointer;
+    if (destroy_result != FT_ERR_SUCCESS)
+        return (set_error(destroy_result));
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+ft_bool ft_uniqueptr<ManagedType>::is_thread_safe() const noexcept
+{
+    set_error(FT_ERR_SUCCESS);
+    return (this->_mutex != ft_nullptr);
+}
+
+template <typename ManagedType>
+int32_t ft_uniqueptr<ManagedType>::lock(ft_bool *lock_acquired) const noexcept
+{
+    int32_t lock_result;
+
+    lock_result = this->lock_internal(lock_acquired);
+    return (set_error(lock_result));
+}
+
+template <typename ManagedType>
+void ft_uniqueptr<ManagedType>::unlock(ft_bool lock_acquired) const noexcept
+{
+    this->unlock_internal(lock_acquired);
+    set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+template <typename ManagedType>
+uint32_t ft_uniqueptr<ManagedType>::get_error() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_uniqueptr::get_error");
+    return (_last_error);
+}
+
+template <typename ManagedType>
+const char *ft_uniqueptr<ManagedType>::get_error_str() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_uniqueptr::get_error_str");
+    return (ft_strerror(_last_error));
+}
+
+template <typename ManagedType>
+thread_local uint32_t ft_uniqueptr<ManagedType>::_last_error = FT_ERR_SUCCESS;
 
 #endif

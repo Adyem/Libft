@@ -4,34 +4,34 @@
 #include "../Errno/errno.hpp"
 #include <new>
 
-static thread_local int g_yaml_reader_error = FT_ERR_SUCCESS;
+static thread_local int32_t g_yaml_reader_error = FT_ERR_SUCCESS;
 
-static void yaml_reader_set_error(int error_code) noexcept
+static void yaml_reader_set_error(int32_t error_code) noexcept
 {
     g_yaml_reader_error = error_code;
     return ;
 }
 
-static int yaml_reader_take_error() noexcept
+static int32_t yaml_reader_take_error() noexcept
 {
     return (g_yaml_reader_error);
 }
 
-static int yaml_string_pop_error(void) noexcept
+static int32_t yaml_string_get_error(void) noexcept
 {
     return (ft_string::get_error());
 }
 
-static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index, int indent,
-    int *error_code_out) noexcept
+static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &index, int32_t indent,
+    int32_t *error_code_out) noexcept
 {
-    int error_code = FT_ERR_SUCCESS;
+    int32_t error_code = FT_ERR_SUCCESS;
     yaml_value *result = ft_nullptr;
     yaml_value *list_value = ft_nullptr;
     yaml_value *map_value = ft_nullptr;
-    size_t lines_count = lines.size();
-    size_t line_indent = 0;
-    int last_error;
+    ft_size_t lines_count = lines.size();
+    ft_size_t line_indent = 0;
+    int32_t last_error;
     if (error_code_out != ft_nullptr)
         *error_code_out = FT_ERR_SUCCESS;
     if (index >= lines_count)
@@ -46,7 +46,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
         error_code = last_error;
         goto error;
     }
-    if (line_indent != static_cast<size_t>(indent))
+    if (line_indent != static_cast<ft_size_t>(indent))
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
         goto error;
@@ -60,7 +60,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             goto error;
         }
         {
-            int string_error = yaml_string_pop_error();
+            int32_t string_error = yaml_string_get_error();
 
             if (string_error != FT_ERR_SUCCESS)
             {
@@ -77,7 +77,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             goto error;
         }
         {
-            int string_error = yaml_string_pop_error();
+            int32_t string_error = yaml_string_get_error();
 
             if (string_error != FT_ERR_SUCCESS)
             {
@@ -103,7 +103,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             }
             list_value->set_type(YAML_LIST);
             {
-                int yaml_value_error = yaml_reader_take_error();
+                int32_t yaml_value_error = yaml_reader_take_error();
 
                 if (yaml_value_error != FT_ERR_SUCCESS)
                 {
@@ -113,14 +113,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             }
             while (index < lines_count)
             {
-                size_t current_indent = yaml_count_indent(lines[index]);
+                ft_size_t current_indent = yaml_count_indent(lines[index]);
                 last_error = yaml_reader_take_error();
                 if (last_error != FT_ERR_SUCCESS)
                 {
                     error_code = last_error;
                     goto list_cleanup;
                 }
-                if (current_indent != static_cast<size_t>(indent))
+                if (current_indent != static_cast<ft_size_t>(indent))
                     break ;
                 ft_string item_line = yaml_substr_from(lines[index], current_indent);
                 last_error = yaml_reader_take_error();
@@ -130,7 +130,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto list_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -146,7 +146,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto list_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -165,7 +165,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto list_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -181,7 +181,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto list_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -199,7 +199,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     }
                     list_value->add_list_item(child);
                     {
-                        int yaml_value_error = yaml_reader_take_error();
+                        int32_t yaml_value_error = yaml_reader_take_error();
 
                         if (yaml_value_error != FT_ERR_SUCCESS)
                         {
@@ -210,18 +210,18 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                 }
                 else
                 {
-                    size_t inline_colon = yaml_find_char(item_line, ':');
+                    ft_size_t inline_colon = yaml_find_char(item_line, ':');
                     last_error = yaml_reader_take_error();
                     if (last_error != FT_ERR_SUCCESS)
                     {
                         error_code = last_error;
                         goto list_cleanup;
                     }
-                    if (inline_colon != static_cast<size_t>(-1))
+                    if (inline_colon != static_cast<ft_size_t>(-1))
                     {
                         yaml_value *map_child = new (std::nothrow) yaml_value();
-                        bool processing_current_line = true;
-                        int map_indent = indent + 2;
+                        ft_bool processing_current_line = FT_TRUE;
+                        int32_t map_indent = indent + 2;
 
                         if (map_child == ft_nullptr)
                         {
@@ -236,7 +236,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                         }
                         map_child->set_type(YAML_MAP);
                         {
-                            int yaml_value_error = yaml_reader_take_error();
+                            int32_t yaml_value_error = yaml_reader_take_error();
 
                             if (yaml_value_error != FT_ERR_SUCCESS)
                             {
@@ -245,15 +245,15 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 goto list_cleanup;
                             }
                         }
-                        while (true)
+                        while (FT_TRUE)
                         {
                             ft_string map_line;
 
-                            if (processing_current_line == true)
+                            if (processing_current_line == FT_TRUE)
                                 map_line = item_line;
                             else
                             {
-                                size_t child_indent;
+                                ft_size_t child_indent;
 
                                 if (index >= lines_count)
                                     break ;
@@ -265,7 +265,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                     delete map_child;
                                     goto list_cleanup;
                                 }
-                                if (child_indent != static_cast<size_t>(map_indent))
+                                if (child_indent != static_cast<ft_size_t>(map_indent))
                                     break ;
                                 map_line = yaml_substr_from(lines[index], child_indent);
                                 last_error = yaml_reader_take_error();
@@ -276,7 +276,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                     goto list_cleanup;
                                 }
                                 {
-                                    int string_error = yaml_string_pop_error();
+                                    int32_t string_error = yaml_string_get_error();
 
                                     if (string_error != FT_ERR_SUCCESS)
                                     {
@@ -286,7 +286,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                     }
                                 }
                             }
-                            size_t map_colon = yaml_find_char(map_line, ':');
+                            ft_size_t map_colon = yaml_find_char(map_line, ':');
                             last_error = yaml_reader_take_error();
                             if (last_error != FT_ERR_SUCCESS)
                             {
@@ -294,7 +294,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 delete map_child;
                                 goto list_cleanup;
                             }
-                            if (map_colon == static_cast<size_t>(-1))
+                            if (map_colon == static_cast<ft_size_t>(-1))
                             {
                                 error_code = FT_ERR_INVALID_ARGUMENT;
                                 delete map_child;
@@ -309,7 +309,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 goto list_cleanup;
                             }
                             {
-                                int string_error = yaml_string_pop_error();
+                                int32_t string_error = yaml_string_get_error();
 
                                 if (string_error != FT_ERR_SUCCESS)
                                 {
@@ -327,7 +327,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 goto list_cleanup;
                             }
                             {
-                                int string_error = yaml_string_pop_error();
+                                int32_t string_error = yaml_string_get_error();
 
                                 if (string_error != FT_ERR_SUCCESS)
                                 {
@@ -345,7 +345,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 goto list_cleanup;
                             }
                             {
-                                int string_error = yaml_string_pop_error();
+                                int32_t string_error = yaml_string_get_error();
 
                                 if (string_error != FT_ERR_SUCCESS)
                                 {
@@ -363,7 +363,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 goto list_cleanup;
                             }
                             {
-                                int string_error = yaml_string_pop_error();
+                                int32_t string_error = yaml_string_get_error();
 
                                 if (string_error != FT_ERR_SUCCESS)
                                 {
@@ -385,7 +385,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 }
                                 map_child->add_map_item(key, nested_child);
                                 {
-                                    int yaml_value_error = yaml_reader_take_error();
+                                    int32_t yaml_value_error = yaml_reader_take_error();
 
                                     if (yaml_value_error != FT_ERR_SUCCESS)
                                     {
@@ -414,7 +414,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 }
                                 scalar_child->set_scalar(value_part);
                                 {
-                                    int yaml_value_error = yaml_reader_take_error();
+                                    int32_t yaml_value_error = yaml_reader_take_error();
 
                                     if (yaml_value_error != FT_ERR_SUCCESS)
                                     {
@@ -426,7 +426,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 }
                                 map_child->add_map_item(key, scalar_child);
                                 {
-                                    int yaml_value_error = yaml_reader_take_error();
+                                    int32_t yaml_value_error = yaml_reader_take_error();
 
                                     if (yaml_value_error != FT_ERR_SUCCESS)
                                     {
@@ -437,14 +437,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 }
                                 index++;
                             }
-                            if (processing_current_line == true)
-                                processing_current_line = false;
+                            if (processing_current_line == FT_TRUE)
+                                processing_current_line = FT_FALSE;
                             else if (index >= lines_count)
                                 break ;
                         }
                         list_value->add_list_item(map_child);
                         {
-                            int yaml_value_error = yaml_reader_take_error();
+                            int32_t yaml_value_error = yaml_reader_take_error();
 
                             if (yaml_value_error != FT_ERR_SUCCESS)
                             {
@@ -469,7 +469,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     }
                     child->set_scalar(item_line);
                     {
-                        int yaml_value_error = yaml_reader_take_error();
+                        int32_t yaml_value_error = yaml_reader_take_error();
 
                         if (yaml_value_error != FT_ERR_SUCCESS)
                         {
@@ -480,7 +480,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     }
                     list_value->add_list_item(child);
                     {
-                        int yaml_value_error = yaml_reader_take_error();
+                        int32_t yaml_value_error = yaml_reader_take_error();
 
                         if (yaml_value_error != FT_ERR_SUCCESS)
                         {
@@ -495,14 +495,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             list_value = ft_nullptr;
             goto success;
         }
-        size_t colon_position = yaml_find_char(line, ':');
+        ft_size_t colon_position = yaml_find_char(line, ':');
         last_error = yaml_reader_take_error();
         if (last_error != FT_ERR_SUCCESS)
         {
             error_code = last_error;
             goto error;
         }
-        if (colon_position != static_cast<size_t>(-1))
+        if (colon_position != static_cast<ft_size_t>(-1))
         {
             map_value = new (std::nothrow) yaml_value();
             if (map_value == ft_nullptr)
@@ -520,14 +520,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             map_value->set_type(YAML_MAP);
             while (index < lines_count)
             {
-                size_t current_indent = yaml_count_indent(lines[index]);
+                ft_size_t current_indent = yaml_count_indent(lines[index]);
                 last_error = yaml_reader_take_error();
                 if (last_error != FT_ERR_SUCCESS)
                 {
                     error_code = last_error;
                     goto map_cleanup;
                 }
-                if (current_indent != static_cast<size_t>(indent))
+                if (current_indent != static_cast<ft_size_t>(indent))
                     break ;
                 ft_string pair_line = yaml_substr_from(lines[index], current_indent);
                 last_error = yaml_reader_take_error();
@@ -537,7 +537,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto map_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -545,14 +545,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                         goto map_cleanup;
                     }
                 }
-                size_t pair_colon = yaml_find_char(pair_line, ':');
+                ft_size_t pair_colon = yaml_find_char(pair_line, ':');
                 last_error = yaml_reader_take_error();
                 if (last_error != FT_ERR_SUCCESS)
                 {
                     error_code = last_error;
                     goto map_cleanup;
                 }
-                if (pair_colon == static_cast<size_t>(-1))
+                if (pair_colon == static_cast<ft_size_t>(-1))
                     break ;
                 ft_string key = yaml_substr(pair_line, 0, pair_colon);
                 last_error = yaml_reader_take_error();
@@ -562,7 +562,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto map_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -578,7 +578,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto map_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -594,7 +594,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto map_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -610,7 +610,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto map_cleanup;
                 }
                 {
-                    int string_error = yaml_string_pop_error();
+                    int32_t string_error = yaml_string_get_error();
 
                     if (string_error != FT_ERR_SUCCESS)
                     {
@@ -628,7 +628,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     }
                     map_value->add_map_item(key, child);
                     {
-                        int yaml_value_error = yaml_reader_take_error();
+                        int32_t yaml_value_error = yaml_reader_take_error();
 
                         if (yaml_value_error != FT_ERR_SUCCESS)
                         {
@@ -654,7 +654,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     }
                     child->set_scalar(value_part);
                     {
-                        int yaml_value_error = yaml_reader_take_error();
+                        int32_t yaml_value_error = yaml_reader_take_error();
 
                         if (yaml_value_error != FT_ERR_SUCCESS)
                         {
@@ -665,7 +665,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     }
                     map_value->add_map_item(key, child);
                     {
-                        int yaml_value_error = yaml_reader_take_error();
+                        int32_t yaml_value_error = yaml_reader_take_error();
 
                         if (yaml_value_error != FT_ERR_SUCCESS)
                         {
@@ -696,7 +696,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
     }
     scalar_value->set_scalar(line);
     {
-        int yaml_value_error = yaml_reader_take_error();
+        int32_t yaml_value_error = yaml_reader_take_error();
 
         if (yaml_value_error != FT_ERR_SUCCESS)
         {
@@ -741,16 +741,16 @@ error:
 yaml_value *yaml_read_from_string(const ft_string &content) noexcept
 {
     {
-        int string_error = yaml_string_pop_error();
+        int32_t string_error = yaml_string_get_error();
 
         if (string_error != FT_ERR_SUCCESS)
             return (ft_nullptr);
     }
     yaml_value *root = ft_nullptr;
-    int parse_error = FT_ERR_SUCCESS;
+    int32_t parse_error = FT_ERR_SUCCESS;
     {
         ft_vector<ft_string> lines;
-        int split_error;
+        int32_t split_error;
 
         split_error = yaml_split_lines(content, lines);
         yaml_reader_take_error();
@@ -761,7 +761,7 @@ yaml_value *yaml_read_from_string(const ft_string &content) noexcept
         }
         else
         {
-            size_t local_index;
+            ft_size_t local_index;
 
             local_index = 0;
             root = parse_value(lines, local_index, 0, &parse_error);
@@ -781,7 +781,7 @@ yaml_value *yaml_read_from_string(const ft_string &content) noexcept
 yaml_value *yaml_read_from_file(const char *file_path) noexcept
 {
     su_file *file = su_fopen(file_path);
-    int file_error = yaml_reader_take_error();
+    int32_t file_error = yaml_reader_take_error();
     if (file == ft_nullptr)
     {
         if (file_error == FT_ERR_SUCCESS)
@@ -791,20 +791,20 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
     }
     ft_string content;
     char buffer[1024];
-    int read_error;
-    size_t read_count;
+    int32_t read_error;
+    ft_size_t read_count;
 
     read_error = FT_ERR_SUCCESS;
     read_count = su_fread(buffer, 1, sizeof(buffer), file);
     read_error = yaml_reader_take_error();
     while (read_count > 0)
     {
-        size_t buffer_index = 0;
+        ft_size_t buffer_index = 0;
         while (buffer_index < read_count)
         {
             content.append(buffer[buffer_index]);
             {
-                int string_error = yaml_string_pop_error();
+                int32_t string_error = yaml_string_get_error();
 
                 if (string_error != FT_ERR_SUCCESS)
                 {
@@ -825,7 +825,7 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
         return (ft_nullptr);
     }
     yaml_value *result = yaml_read_from_string(content);
-    int parse_error = yaml_reader_take_error();
+    int32_t parse_error = yaml_reader_take_error();
     if (result == ft_nullptr)
     {
         if (parse_error == FT_ERR_SUCCESS)
@@ -840,7 +840,7 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
 yaml_value *yaml_read_from_backend(ft_document_source &source) noexcept
 {
     ft_string content;
-    int read_result;
+    int32_t read_result;
 
     read_result = source.read_all(content);
     if (read_result != FT_ERR_SUCCESS)

@@ -2,27 +2,27 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 
-static size_t   format_time_component(char *destination, size_t destination_size, int value, int minimum_width)
+static ft_size_t   format_time_component(char *destination, ft_size_t destination_size, int32_t value, int32_t minimum_width)
 {
     char                    reversed_digits[32];
-    size_t                  digit_count;
-    bool                    is_negative;
-    size_t                  required_length;
-    size_t                  index;
-    size_t                  copy_index;
-    long long               signed_value;
-    unsigned long long      magnitude;
+    ft_size_t                  digit_count;
+    ft_bool                    is_negative;
+    ft_size_t                  required_length;
+    ft_size_t                  index;
+    ft_size_t                  copy_index;
+    int64_t               signed_value;
+    uint64_t              magnitude;
 
     if (destination_size == 0)
         return (0);
     digit_count = 0;
-    is_negative = false;
+    is_negative = FT_FALSE;
     signed_value = value;
-    magnitude = static_cast<unsigned long long>(signed_value);
+    magnitude = static_cast<uint64_t>(signed_value);
     if (signed_value < 0)
     {
-        is_negative = true;
-        magnitude = static_cast<unsigned long long>(-signed_value);
+        is_negative = FT_TRUE;
+        magnitude = static_cast<uint64_t>(-signed_value);
     }
     if (magnitude == 0)
     {
@@ -56,8 +56,8 @@ static size_t   format_time_component(char *destination, size_t destination_size
         digit_count++;
     }
     required_length = digit_count;
-    if (minimum_width > static_cast<int>(required_length))
-        required_length = static_cast<size_t>(minimum_width);
+    if (minimum_width > static_cast<int32_t>(required_length))
+        required_length = static_cast<ft_size_t>(minimum_width);
     if (required_length >= destination_size)
     {
         (void)(FT_ERR_OUT_OF_RANGE);
@@ -81,25 +81,25 @@ static size_t   format_time_component(char *destination, size_t destination_size
     return (required_length);
 }
 
-size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info)
+ft_size_t  time_strftime(char *buffer, ft_size_t size, const char *format, const t_time_info *time_info)
 {
-    size_t  format_index;
-    size_t  output_index;
+    ft_size_t  format_index;
+    ft_size_t  output_index;
     char    number_buffer[16];
-    size_t  length;
-    int     value;
-    bool    lock_acquired;
-    int     lock_error;
-    bool    format_failed;
-    size_t  formatted_length;
-    int     error_code;
+    ft_size_t  length;
+    int32_t     value;
+    ft_bool    lock_acquired;
+    int32_t     lock_error;
+    ft_bool    format_failed;
+    ft_size_t  formatted_length;
+    int32_t     error_code;
 
     if (!buffer || size == 0 || !format || !time_info)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = time_info_lock(time_info, &lock_acquired);
     error_code = FT_ERR_SUCCESS;
     if (lock_error != 0 || error_code != FT_ERR_SUCCESS)
@@ -111,7 +111,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
     }
     format_index = 0;
     output_index = 0;
-    format_failed = false;
+    format_failed = FT_FALSE;
     while (format[format_index] && output_index + 1 < size)
     {
         if (format[format_index] == '%' && format[format_index + 1])
@@ -124,8 +124,8 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
             }
             else
             {
-                int minimum_width;
-                size_t number_index;
+                int32_t minimum_width;
+                ft_size_t number_index;
 
                 if (format[format_index + 1] == 'Y')
                     value = time_info->year + 1900;
@@ -156,7 +156,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                         buffer[output_index] = '\0';
                     else if (size > 0)
                         buffer[size - 1] = '\0';
-                    format_failed = true;
+                    format_failed = FT_TRUE;
                     break ;
                 }
                 if (error_code != FT_ERR_SUCCESS)
@@ -165,7 +165,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                         buffer[output_index] = '\0';
                     else if (size > 0)
                         buffer[size - 1] = '\0';
-                    format_failed = true;
+                    format_failed = FT_TRUE;
                     break ;
                 }
                 number_index = 0;

@@ -3,45 +3,54 @@
 
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
+#include <cstdint>
 
 class ft_experience_table
 {
-    private:
-        int             *_levels;
-        int             _count;
-        static thread_local int _last_error;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t             *_levels;
+        int32_t             _count;
+        static thread_local int32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialised_state;
 
-        void set_error(int err) const noexcept;
-        bool is_valid(int count, const int *array) const noexcept;
-        int resize_locked(int new_count,
-                          bool validate_existing = true) noexcept;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        ft_bool is_valid(int32_t count, const int32_t *array) const noexcept;
+        int32_t resize_locked(int32_t new_count,
+                          ft_bool validate_existing = FT_TRUE) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_experience_table() noexcept;
-        ~ft_experience_table();
-        ft_experience_table(const ft_experience_table &other) noexcept = delete;
+        ~ft_experience_table() noexcept;
+        ft_experience_table(const ft_experience_table &other) noexcept;
         ft_experience_table &operator=(const ft_experience_table &other) noexcept = delete;
-        ft_experience_table(ft_experience_table &&other) noexcept = delete;
+        ft_experience_table(ft_experience_table &&other) noexcept;
         ft_experience_table &operator=(ft_experience_table &&other) noexcept = delete;
 
-        int  get_count() const noexcept;
-        int  get_level(int experience) const noexcept;
-        int  get_value(int index) const noexcept;
-        void set_value(int index, int value) noexcept;
-        int  set_levels(const int *levels, int count) noexcept;
-        int  generate_levels_total(int count, int base,
+        int32_t initialize() noexcept;
+        int32_t destroy() noexcept;
+        int32_t move(ft_experience_table &other) noexcept;
+        int32_t  get_count() const noexcept;
+        int32_t  get_level(int32_t experience) const noexcept;
+        int32_t  get_value(int32_t index) const noexcept;
+        void set_value(int32_t index, int32_t value) noexcept;
+        int32_t  set_levels(const int32_t *levels, int32_t count) noexcept;
+        int32_t  generate_levels_total(int32_t count, int32_t base,
                                    double multiplier) noexcept;
-        int  generate_levels_scaled(int count, int base,
+        int32_t  generate_levels_scaled(int32_t count, int32_t base,
                                     double multiplier) noexcept;
-        int  resize(int new_count) noexcept;
-        int  enable_thread_safety() noexcept;
-        int  disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int  check_for_error() const noexcept;
-        int  get_error() const noexcept;
+        int32_t  resize(int32_t new_count) noexcept;
+        int32_t  enable_thread_safety() noexcept;
+        int32_t  disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t  check_for_error() const noexcept;
+        int32_t  get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

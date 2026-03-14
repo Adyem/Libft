@@ -13,7 +13,7 @@ const char *ft_level_to_str(t_log_level level)
     return ("");
 }
 
-int ft_log_level_to_severity(t_log_level level)
+int32_t ft_log_level_to_severity(t_log_level level)
 {
     if (level == LOG_LEVEL_DEBUG)
         return (10);
@@ -23,5 +23,5 @@ int ft_log_level_to_severity(t_log_level level)
         return (30);
     if (level == LOG_LEVEL_ERROR)
         return (40);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }

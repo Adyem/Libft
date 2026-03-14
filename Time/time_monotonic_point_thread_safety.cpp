@@ -18,16 +18,16 @@ static void time_monotonic_point_disable_thread_safety(t_monotonic_time_point *t
         std::free(time_point->mutex);
         time_point->mutex = ft_nullptr;
     }
-    time_point->thread_safe_enabled = false;
+    time_point->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-static int  time_monotonic_point_report_result(int error_code)
+static int32_t  time_monotonic_point_report_result(int32_t error_code)
 {
     return (error_code);
 }
 
-int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_point)
+int32_t time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_point)
 {
     pt_mutex    *mutex_pointer;
     void        *memory;
@@ -41,7 +41,7 @@ int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_poin
         return (time_monotonic_point_report_result(FT_ERR_NO_MEMORY));
     mutex_pointer = new(memory) pt_mutex();
     {
-        int mutex_error;
+        int32_t mutex_error;
 
         if (mutex_pointer == ft_nullptr)
             mutex_error = FT_ERR_SUCCESS;
@@ -56,7 +56,7 @@ int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_poin
         }
     }
     time_point->mutex = mutex_pointer;
-    time_point->thread_safe_enabled = true;
+    time_point->thread_safe_enabled = FT_TRUE;
     return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
 }
 
@@ -68,30 +68,30 @@ void    time_monotonic_point_teardown_thread_safety(t_monotonic_time_point *time
     return ;
 }
 
-int time_monotonic_point_lock(const t_monotonic_time_point *time_point, bool *lock_acquired)
+int32_t time_monotonic_point_lock(const t_monotonic_time_point *time_point, ft_bool *lock_acquired)
 {
     t_monotonic_time_point  *mutable_point;
 
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!time_point)
         return (time_monotonic_point_report_result(FT_ERR_INVALID_ARGUMENT));
     mutable_point = const_cast<t_monotonic_time_point *>(time_point);
     if (!mutable_point->thread_safe_enabled || !mutable_point->mutex)
         return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
     {
-        int lock_error;
+        int32_t lock_error;
 
         lock_error = pt_mutex_lock_if_not_null(mutable_point->mutex);
         if (lock_error != FT_ERR_SUCCESS)
             return (time_monotonic_point_report_result(lock_error));
     }
     if (lock_acquired)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
 }
 
-void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bool lock_acquired)
+void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, ft_bool lock_acquired)
 {
     t_monotonic_time_point  *mutable_point;
 
@@ -112,7 +112,7 @@ void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bo
         return ;
     }
     {
-        int unlock_error;
+        int32_t unlock_error;
 
         unlock_error = pt_mutex_unlock_if_not_null(mutable_point->mutex);
         if (unlock_error != FT_ERR_SUCCESS)
@@ -125,18 +125,18 @@ void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bo
     return ;
 }
 
-bool    time_monotonic_point_is_thread_safe(const t_monotonic_time_point *time_point)
+ft_bool    time_monotonic_point_is_thread_safe(const t_monotonic_time_point *time_point)
 {
     if (!time_point)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     if (!time_point->thread_safe_enabled || !time_point->mutex)
     {
         (void)(FT_ERR_SUCCESS);
-        return (false);
+        return (FT_FALSE);
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }

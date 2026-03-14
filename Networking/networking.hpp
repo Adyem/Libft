@@ -22,27 +22,27 @@
 # define NETWORKING_USE_SELECT 1
 #endif
 
-int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-int nw_listen(int sockfd, int backlog);
-typedef int (*t_nw_socket_hook)(int domain, int type, int protocol);
+int32_t nw_bind(int32_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
+int32_t nw_connect(int32_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
+int32_t nw_accept(int32_t sockfd, struct sockaddr *addr, socklen_t *addrlen);
+int32_t nw_listen(int32_t sockfd, int32_t backlog);
+typedef int32_t (*t_nw_socket_hook)(int32_t domain, int32_t type, int32_t protocol);
 
-int nw_socket(int domain, int type, int protocol);
-int nw_close(int sockfd);
-int nw_shutdown(int sockfd, int how);
+int32_t nw_socket(int32_t domain, int32_t type, int32_t protocol);
+int32_t nw_close(int32_t sockfd);
+int32_t nw_shutdown(int32_t sockfd, int32_t how);
 void nw_set_socket_hook(t_nw_socket_hook hook);
-ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags);
-ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags);
-ssize_t nw_sendto(int sockfd, const void *buf, size_t len, int flags,
+ssize_t nw_send(int32_t sockfd, const void *buf, ft_size_t len, int32_t flags);
+ssize_t nw_recv(int32_t sockfd, void *buf, ft_size_t len, int32_t flags);
+ssize_t nw_sendto(int32_t sockfd, const void *buf, ft_size_t len, int32_t flags,
                   const struct sockaddr *dest_addr, socklen_t addrlen);
-ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
+ssize_t nw_recvfrom(int32_t sockfd, void *buf, ft_size_t len, int32_t flags,
                     struct sockaddr *src_addr, socklen_t *addrlen);
-int nw_inet_pton(int family, const char *ip_address, void *destination);
-int nw_set_nonblocking(int socket_fd);
-int nw_poll(int *read_file_descriptors, int read_count,
-            int *write_file_descriptors, int write_count,
-            int timeout_milliseconds);
+int32_t nw_inet_pton(int32_t family, const char *ip_address, void *destination);
+int32_t nw_set_nonblocking(int32_t socket_fd);
+int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
+            int32_t *write_file_descriptors, int32_t write_count,
+            int32_t timeout_milliseconds);
 
 class pt_mutex;
 
@@ -52,54 +52,54 @@ struct networking_resolved_address
     socklen_t           length;
 };
 
-bool networking_dns_resolve(const char *host, const char *service,
-    int family, int socktype, int protocol, int flags,
+ft_bool networking_dns_resolve(const char *host, const char *service,
+    int32_t family, int32_t socktype, int32_t protocol, int32_t flags,
     ft_vector<networking_resolved_address> &out_addresses) noexcept;
 
-bool networking_dns_resolve_first(const char *host, const char *service,
-    int family, int socktype, int protocol, int flags,
+ft_bool networking_dns_resolve_first(const char *host, const char *service,
+    int32_t family, int32_t socktype, int32_t protocol, int32_t flags,
     networking_resolved_address &out_address) noexcept;
 
 void networking_dns_clear_cache(void) noexcept;
 
-void networking_dns_set_error(int resolver_status) noexcept;
+void networking_dns_set_error(int32_t resolver_status) noexcept;
 
 #if NETWORKING_HAS_OPENSSL
-int networking_check_ssl_after_send(SSL *ssl_connection);
+int32_t networking_check_ssl_after_send(SSL *ssl_connection);
 #endif
 
 struct event_loop
 {
-    int *read_file_descriptors;
-    int read_count;
-    int *write_file_descriptors;
-    int write_count;
+    int32_t *read_file_descriptors;
+    int32_t read_count;
+    int32_t *write_file_descriptors;
+    int32_t write_count;
     pt_mutex *mutex;
-    bool thread_safe_enabled;
+    ft_bool thread_safe_enabled;
 };
 
 class udp_socket;
 
 void event_loop_init(event_loop *loop);
 void event_loop_clear(event_loop *loop);
-int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write);
-int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write);
-int event_loop_run(event_loop *loop, int timeout_milliseconds);
-int event_loop_prepare_thread_safety(event_loop *loop);
+int32_t event_loop_add_socket(event_loop *loop, int32_t socket_fd, ft_bool is_write);
+int32_t event_loop_remove_socket(event_loop *loop, int32_t socket_fd, ft_bool is_write);
+int32_t event_loop_run(event_loop *loop, int32_t timeout_milliseconds);
+int32_t event_loop_prepare_thread_safety(event_loop *loop);
 void event_loop_teardown_thread_safety(event_loop *loop);
-int event_loop_lock(event_loop *loop, bool *lock_acquired);
-void event_loop_unlock(event_loop *loop, bool lock_acquired);
+int32_t event_loop_lock(event_loop *loop, ft_bool *lock_acquired);
+void event_loop_unlock(event_loop *loop, ft_bool lock_acquired);
 
-int udp_event_loop_wait_read(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
-int udp_event_loop_wait_write(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
-ssize_t udp_event_loop_receive(event_loop *loop, udp_socket &socket, void *buffer, size_t size,
-                               int flags, struct sockaddr *source_address,
-                               socklen_t *address_length, int timeout_milliseconds);
-ssize_t udp_event_loop_send(event_loop *loop, udp_socket &socket, const void *data, size_t size,
-                            int flags, const struct sockaddr *destination_address,
-                            socklen_t address_length, int timeout_milliseconds);
+int32_t udp_event_loop_wait_read(event_loop *loop, udp_socket &socket, int32_t timeout_milliseconds);
+int32_t udp_event_loop_wait_write(event_loop *loop, udp_socket &socket, int32_t timeout_milliseconds);
+ssize_t udp_event_loop_receive(event_loop *loop, udp_socket &socket, void *buffer, ft_size_t size,
+                               int32_t flags, struct sockaddr *source_address,
+                               socklen_t *address_length, int32_t timeout_milliseconds);
+ssize_t udp_event_loop_send(event_loop *loop, udp_socket &socket, const void *data, ft_size_t size,
+                            int32_t flags, const struct sockaddr *destination_address,
+                            socklen_t address_length, int32_t timeout_milliseconds);
 
-int networking_check_socket_after_send(int socket_fd);
+int32_t networking_check_socket_after_send(int32_t socket_fd);
 
 enum class SocketType
 {
@@ -110,43 +110,44 @@ enum class SocketType
 
 class SocketConfig
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        void abort_lifecycle_error(const char *method_name,
-                    const char *reason) const noexcept;
-        void abort_if_not_initialised(const char *method_name) const noexcept;
 
     public:
         SocketType _type;
         char _ip[46];
         uint16_t _port;
-        int _backlog;
-        int _protocol;
-        int _address_family;
-        bool _reuse_address;
-        bool _non_blocking;
-        int _recv_timeout;
-        int _send_timeout;
+        int32_t _backlog;
+        int32_t _protocol;
+        int32_t _address_family;
+        ft_bool _reuse_address;
+        ft_bool _non_blocking;
+        int32_t _recv_timeout;
+        int32_t _send_timeout;
         char _multicast_group[46];
         char _multicast_interface[46];
 
-        SocketConfig();
-        ~SocketConfig();
+        SocketConfig() noexcept;
+        SocketConfig(const SocketConfig& other) noexcept;
+        SocketConfig(SocketConfig&& other) noexcept;
+        ~SocketConfig() noexcept;
 
-        SocketConfig(const SocketConfig& other) noexcept = delete;
-        SocketConfig(SocketConfig&& other) noexcept = delete;
         SocketConfig& operator=(const SocketConfig& other) noexcept = delete;
         SocketConfig& operator=(SocketConfig&& other) noexcept = delete;
-        int initialize() noexcept;
-        int destroy() noexcept;
+        int32_t move(SocketConfig &other) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const SocketConfig &other) noexcept;
+        int32_t initialize(SocketConfig &&other) noexcept;
+        int32_t destroy() noexcept;
 };
 
-int socket_config_prepare_thread_safety(SocketConfig *config);
+int32_t socket_config_prepare_thread_safety(SocketConfig *config);
 void socket_config_teardown_thread_safety(SocketConfig *config);
-int socket_config_lock(const SocketConfig *config, bool *lock_acquired);
-void socket_config_unlock(const SocketConfig *config, bool lock_acquired);
+int32_t socket_config_lock(const SocketConfig *config, ft_bool *lock_acquired);
+void socket_config_unlock(const SocketConfig *config, ft_bool lock_acquired);
 
 #endif

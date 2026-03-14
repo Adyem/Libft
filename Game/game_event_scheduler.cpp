@@ -3,11 +3,12 @@
 #include "../JSon/json.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include <cstdio>
 #include <new>
 
-thread_local int ft_event_scheduler::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_event_scheduler::_last_error = FT_ERR_SUCCESS;
 static void event_scheduler_profile_reset_struct(t_event_scheduler_profile &profile)
 {
     profile.update_count = 0;
@@ -28,14 +29,14 @@ void ft_event_scheduler::reset_profile_locked() const noexcept
     return ;
 }
 
-void ft_event_scheduler::record_profile_locked(size_t ready_count,
-                size_t rescheduled_count,
-                size_t queue_depth,
-                long long duration_ns) const noexcept
+void ft_event_scheduler::record_profile_locked(ft_size_t ready_count,
+                ft_size_t rescheduled_count,
+                ft_size_t queue_depth,
+                int64_t duration_ns) const noexcept
 {
     this->_profile.update_count += 1;
-    this->_profile.events_processed += static_cast<long long>(ready_count);
-    this->_profile.events_rescheduled += static_cast<long long>(rescheduled_count);
+    this->_profile.events_processed += static_cast<int64_t>(ready_count);
+    this->_profile.events_rescheduled += static_cast<int64_t>(rescheduled_count);
     if (queue_depth > this->_profile.max_queue_depth)
         this->_profile.max_queue_depth = queue_depth;
     if (ready_count > this->_profile.max_ready_batch)
@@ -47,17 +48,17 @@ void ft_event_scheduler::record_profile_locked(size_t ready_count,
 }
 
 void ft_event_scheduler::finalize_update(ft_vector<ft_sharedptr<ft_event> > &events,
-                size_t ready_count,
-                size_t rescheduled_count,
-                size_t queue_depth,
-                bool profiling_active,
-                bool,
+                ft_size_t ready_count,
+                ft_size_t rescheduled_count,
+                ft_size_t queue_depth,
+                ft_bool profiling_active,
+                ft_bool,
                 t_high_resolution_time_point) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -77,7 +78,7 @@ void ft_event_scheduler::finalize_update(ft_vector<ft_sharedptr<ft_event> > &eve
     return ;
 }
 
-bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
+ft_bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
         const ft_sharedptr<ft_event> &right) const noexcept
 {
     const ft_event *left_pointer;
@@ -86,104 +87,196 @@ bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
     left_pointer = left.get();
     right_pointer = right.get();
     if (left_pointer == ft_nullptr)
-        return (false);
+        return (FT_FALSE);
     if (right_pointer == ft_nullptr)
-        return (true);
+        return (FT_TRUE);
     return (left_pointer->get_duration() > right_pointer->get_duration());
 }
 
 ft_event_scheduler::ft_event_scheduler() noexcept
     : _events(), _mutex(ft_nullptr),
-      _profiling_enabled(false), _profile(), _ready_cache(),
-      _initialised_state(ft_event_scheduler::_state_uninitialised)
+      _profiling_enabled(FT_FALSE), _profile(), _ready_cache(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     event_scheduler_profile_reset_struct(this->_profile);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
+ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
+    : _events(), _mutex(ft_nullptr),
+      _profiling_enabled(FT_FALSE), _profile(), _ready_cache(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_event_scheduler::ft_event_scheduler(copy)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    this->_events.clear();
+    this->_ready_cache.clear();
+    this->_profiling_enabled = other._profiling_enabled;
+    this->_profile = other._profile;
+    this->set_error(other.get_error());
+    return ;
+}
+
+ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
+    : _events(), _mutex(ft_nullptr),
+      _profiling_enabled(FT_FALSE), _profile(), _ready_cache(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_event_scheduler::ft_event_scheduler(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
 ft_event_scheduler::~ft_event_scheduler()
 {
-    if (this->_initialised_state == ft_event_scheduler::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-void ft_event_scheduler::set_error(int error) const noexcept
+int32_t ft_event_scheduler::set_error(int32_t error_code) noexcept
 {
-    ft_event_scheduler::_last_error = error;
-    return ;
+    ft_event_scheduler::_last_error = error_code;
+    return (error_code);
 }
 
-void ft_event_scheduler::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
+int32_t ft_event_scheduler::initialize() noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_event_scheduler lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_event_scheduler::abort_if_not_initialised(
-    const char *method_name) const
-{
-    if (this->_initialised_state == ft_event_scheduler::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-int ft_event_scheduler::initialize() noexcept
-{
-    if (this->_initialised_state == ft_event_scheduler::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_event_scheduler::initialize",
-            "called while object is already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_event_scheduler::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     this->_events.clear();
     this->_ready_cache.initialize();
     this->_ready_cache.clear();
-    this->_profiling_enabled = false;
+    this->_profiling_enabled = FT_FALSE;
     event_scheduler_profile_reset_struct(this->_profile);
-    this->_initialised_state = ft_event_scheduler::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_event_scheduler::destroy() noexcept
+int32_t ft_event_scheduler::destroy() noexcept
 {
-    int disable_error;
+    int32_t disable_error;
 
-    if (this->_initialised_state != ft_event_scheduler::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     this->_events.clear();
     this->_ready_cache.clear();
     (void)this->_ready_cache.destroy();
-    this->_profiling_enabled = false;
+    this->_profiling_enabled = FT_FALSE;
     event_scheduler_profile_reset_struct(this->_profile);
     disable_error = this->disable_thread_safety();
-    this->_initialised_state = ft_event_scheduler::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);
 }
 
-int ft_event_scheduler::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_event_scheduler::move(ft_event_scheduler &other) noexcept
 {
-    int lock_error;
+    ft_sharedptr<ft_event> current_event;
+    ft_size_t index;
+    ft_size_t count;
+    int32_t destroy_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::lock_internal");
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_event_scheduler::move", "source object is not initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    destroy_error = this->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(destroy_error);
+        return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    this->_events.clear();
+    while (!other._events.empty())
+    {
+        current_event = other._events.pop();
+        this->_events.push(current_event);
+    }
+    this->_ready_cache.clear();
+    index = 0;
+    count = other._ready_cache.size();
+    while (index < count)
+    {
+        this->_ready_cache.push_back(other._ready_cache[index]);
+        index += 1;
+    }
+    other._ready_cache.clear();
+    this->_profiling_enabled = other._profiling_enabled;
+    this->_profile = other._profile;
+    this->_mutex = other._mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._profiling_enabled = FT_FALSE;
+    event_scheduler_profile_reset_struct(other._profile);
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(other.get_error());
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_event_scheduler::lock_internal(ft_bool *lock_acquired) const noexcept
+{
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::lock_internal");
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -191,37 +284,34 @@ int ft_event_scheduler::lock_internal(bool *lock_acquired) const noexcept
         return (lock_error);
     }
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
 
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-void ft_event_scheduler::unlock_internal(bool lock_acquired) const noexcept
+void ft_event_scheduler::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::unlock_internal");
-    if (lock_acquired == false)
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::unlock_internal");
+    if (lock_acquired == FT_FALSE)
         return ;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void ft_event_scheduler::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::schedule_event");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::schedule_event");
     if (!event)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -234,28 +324,28 @@ void ft_event_scheduler::schedule_event(const ft_sharedptr<ft_event> &event) noe
     return ;
 }
 
-void ft_event_scheduler::cancel_event(int id) noexcept
+void ft_event_scheduler::cancel_event(int32_t id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
-    bool event_found;
+    ft_bool event_found;
 
-    this->abort_if_not_initialised("ft_event_scheduler::cancel_event");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::cancel_event");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return ;
     }
-    event_found = false;
+    event_found = FT_FALSE;
     while (!this->_events.empty())
     {
         current_event = this->_events.pop();
         if (current_event && current_event->get_id() == id)
-            event_found = true;
+            event_found = FT_TRUE;
         else
             temporary_queue.push(current_event);
     }
@@ -269,30 +359,30 @@ void ft_event_scheduler::cancel_event(int id) noexcept
     return ;
 }
 
-void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
+void ft_event_scheduler::reschedule_event(int32_t id, int32_t new_duration) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
-    bool event_found;
+    ft_bool event_found;
 
-    this->abort_if_not_initialised("ft_event_scheduler::reschedule_event");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::reschedule_event");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return ;
     }
-    event_found = false;
+    event_found = FT_FALSE;
     while (!this->_events.empty())
     {
         current_event = this->_events.pop();
         if (current_event && current_event->get_id() == id)
         {
             current_event->set_duration(new_duration);
-            event_found = true;
+            event_found = FT_TRUE;
         }
         temporary_queue.push(current_event);
     }
@@ -307,21 +397,21 @@ void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
 }
 
 void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
-        int ticks, const char *log_file_path,
+        int32_t ticks, const char *log_file_path,
         ft_string *log_buffer) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
 
-    this->abort_if_not_initialised("ft_event_scheduler::update_events");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::update_events");
     if (!world)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -353,13 +443,13 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
     return ;
 }
 
-void ft_event_scheduler::enable_profiling(bool enabled) noexcept
+void ft_event_scheduler::enable_profiling(ft_bool enabled) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::enable_profiling");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::enable_profiling");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -373,17 +463,17 @@ void ft_event_scheduler::enable_profiling(bool enabled) noexcept
     return ;
 }
 
-bool ft_event_scheduler::profiling_enabled() const noexcept
+ft_bool ft_event_scheduler::profiling_enabled() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    bool enabled;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_bool enabled;
 
-    this->abort_if_not_initialised("ft_event_scheduler::profiling_enabled");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::profiling_enabled");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     enabled = this->_profiling_enabled;
     this->unlock_internal(lock_acquired);
     return (enabled);
@@ -391,11 +481,11 @@ bool ft_event_scheduler::profiling_enabled() const noexcept
 
 void ft_event_scheduler::reset_profile() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::reset_profile");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::reset_profile");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -410,11 +500,11 @@ void ft_event_scheduler::reset_profile() noexcept
 
 void ft_event_scheduler::snapshot_profile(t_event_scheduler_profile &out) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::snapshot_profile");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::snapshot_profile");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -425,11 +515,11 @@ void ft_event_scheduler::snapshot_profile(t_event_scheduler_profile &out) const 
 
 void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::dump_events");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::dump_events");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -445,14 +535,14 @@ void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) co
     return ;
 }
 
-size_t ft_event_scheduler::size() const noexcept
+ft_size_t ft_event_scheduler::size() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    size_t queue_size;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t queue_size;
 
-    this->abort_if_not_initialised("ft_event_scheduler::size");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::size");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
@@ -463,11 +553,11 @@ size_t ft_event_scheduler::size() const noexcept
 
 void ft_event_scheduler::clear() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::clear");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::clear");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -481,22 +571,28 @@ void ft_event_scheduler::clear() noexcept
     return ;
 }
 
-int ft_event_scheduler::get_error() const noexcept
+int32_t ft_event_scheduler::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_event_scheduler::get_error");
     return (ft_event_scheduler::_last_error);
 }
 
 const char *ft_event_scheduler::get_error_str() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_event_scheduler::get_error_str");
     return (ft_strerror(ft_event_scheduler::_last_error));
 }
 
-int ft_event_scheduler::enable_thread_safety() noexcept
+int32_t ft_event_scheduler::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_event_scheduler::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -520,11 +616,11 @@ int ft_event_scheduler::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_event_scheduler::disable_thread_safety() noexcept
+int32_t ft_event_scheduler::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
-    if (this->_initialised_state != ft_event_scheduler::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
@@ -541,13 +637,13 @@ int ft_event_scheduler::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_event_scheduler::is_thread_safe() const noexcept
+ft_bool ft_event_scheduler::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialised("ft_event_scheduler::is_thread_safe");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_scheduler::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
-int log_event_to_file(const ft_event &event, const char *file_path) noexcept
+int32_t log_event_to_file(const ft_event &event, const char *file_path) noexcept
 {
     FILE *file;
 
@@ -575,7 +671,7 @@ void log_event_to_buffer(const ft_event &event, ft_string &buffer) noexcept
     return ;
 }
 
-static int add_item_field(json_group *group, const ft_string &key, int value)
+static int32_t add_item_field(json_group *group, const ft_string &key, int32_t value)
 {
     json_item *json_item_ptr;
 
@@ -594,15 +690,15 @@ json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &sc
     json_group *group;
     json_item *count_item;
     ft_vector<ft_sharedptr<ft_event> > events;
-    size_t event_index;
-    size_t event_count;
+    ft_size_t event_index;
+    ft_size_t event_count;
 
     if (!scheduler)
         return (ft_nullptr);
     group = json_create_json_group("world");
     if (!group)
         return (ft_nullptr);
-    count_item = json_create_item("event_count", static_cast<int>(scheduler->size()));
+    count_item = json_create_item("event_count", static_cast<int32_t>(scheduler->size()));
     if (!count_item)
     {
         json_free_groups(group);
@@ -618,7 +714,7 @@ json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &sc
         ft_string key_id;
         ft_string key_duration;
 
-        if (pf_snprintf(event_index_buffer, sizeof(event_index_buffer), "%d", static_cast<int>(event_index)) < 0)
+        if (pf_snprintf(event_index_buffer, sizeof(event_index_buffer), "%d", static_cast<int32_t>(event_index)) < 0)
         {
             json_free_groups(group);
             return (ft_nullptr);
@@ -637,11 +733,11 @@ json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &sc
     return (group);
 }
 
-int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, json_group *group)
+int32_t deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, json_group *group)
 {
     json_item *count_item;
-    int event_count;
-    int event_index;
+    int32_t event_count;
+    int32_t event_index;
 
     if (!scheduler)
         return (FT_ERR_GAME_GENERAL_ERROR);

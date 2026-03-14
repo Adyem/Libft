@@ -6,34 +6,43 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
+#include <cstdint>
 
 class ft_dialogue_line
 {
-    private:
-        int _line_id;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t _line_id;
         ft_string _speaker;
         ft_string _text;
-        ft_vector<int> _next_line_ids;
+        ft_vector<int32_t> _next_line_ids;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local int _last_error;
+        uint8_t _initialised_state;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        void unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_dialogue_line() noexcept;
         virtual ~ft_dialogue_line() noexcept;
-        ft_dialogue_line(const ft_dialogue_line &other) noexcept = delete;
+        ft_dialogue_line(const ft_dialogue_line &other) noexcept;
         ft_dialogue_line &operator=(const ft_dialogue_line &other) noexcept = delete;
-        ft_dialogue_line(ft_dialogue_line &&other) noexcept = delete;
+        ft_dialogue_line(ft_dialogue_line &&other) noexcept;
         ft_dialogue_line &operator=(ft_dialogue_line &&other) noexcept = delete;
 
-        int initialize(int line_id, const ft_string &speaker,
-            const ft_string &text, const ft_vector<int> &next_line_ids) noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(int32_t line_id, const ft_string &speaker,
+            const ft_string &text, const ft_vector<int32_t> &next_line_ids) noexcept;
+        int32_t destroy() noexcept;
+        int32_t move(ft_dialogue_line &other) noexcept;
 
-        int get_line_id() const noexcept;
-        void set_line_id(int line_id) noexcept;
+        int32_t get_line_id() const noexcept;
+        void set_line_id(int32_t line_id) noexcept;
 
         const ft_string &get_speaker() const noexcept;
         void set_speaker(const ft_string &speaker) noexcept;
@@ -41,19 +50,16 @@ class ft_dialogue_line
         const ft_string &get_text() const noexcept;
         void set_text(const ft_string &text) noexcept;
 
-        const ft_vector<int> &get_next_line_ids() const noexcept;
-        ft_vector<int> &get_next_line_ids() noexcept;
-        void set_next_line_ids(const ft_vector<int> &next_line_ids) noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
+        const ft_vector<int32_t> &get_next_line_ids() const noexcept;
+        ft_vector<int32_t> &get_next_line_ids() noexcept;
+        void set_next_line_ids(const ft_vector<int32_t> &next_line_ids) noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 #endif

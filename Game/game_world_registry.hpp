@@ -10,61 +10,57 @@
 
 class ft_world_registry
 {
-    private:
-        ft_map<int, ft_region_definition> _regions;
-        ft_map<int, ft_world_region>      _world_regions;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        ft_map<int32_t, ft_region_definition> _regions;
+        ft_map<int32_t, ft_world_region>      _world_regions;
         pt_recursive_mutex                         *_mutex;
         uint8_t                           _initialised_state;
-        static thread_local int           _last_error;
+        static thread_local int32_t           _last_error;
 
-        void set_error(int error_code) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
 
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_world_registry() noexcept;
         virtual ~ft_world_registry() noexcept;
-        ft_world_registry(const ft_world_registry &other) noexcept = delete;
+        ft_world_registry(const ft_world_registry &other) noexcept;
         ft_world_registry &operator=(const ft_world_registry &other) noexcept = delete;
-        ft_world_registry(ft_world_registry &&other) noexcept = delete;
+        ft_world_registry(ft_world_registry &&other) noexcept;
         ft_world_registry &operator=(ft_world_registry &&other) noexcept = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_world_registry &other) noexcept;
-        int initialize(ft_world_registry &&other) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_world_registry &other) noexcept;
+        int32_t initialize(ft_world_registry &&other) noexcept;
+        int32_t move(ft_world_registry &other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int register_region(const ft_region_definition &region) noexcept;
-        int register_world(const ft_world_region &world_region) noexcept;
+        int32_t register_region(const ft_region_definition &region) noexcept;
+        int32_t register_world(const ft_world_region &world_region) noexcept;
 
-        int fetch_region(int region_id, ft_region_definition &out_region) const noexcept;
-        int fetch_world(int world_id, ft_world_region &out_world) const noexcept;
+        int32_t fetch_region(int32_t region_id, ft_region_definition &out_region) const noexcept;
+        int32_t fetch_world(int32_t world_id, ft_world_region &out_world) const noexcept;
 
-        ft_map<int, ft_region_definition> &get_regions() noexcept;
-        const ft_map<int, ft_region_definition> &get_regions() const noexcept;
-        void set_regions(const ft_map<int, ft_region_definition> &regions) noexcept;
+        ft_map<int32_t, ft_region_definition> &get_regions() noexcept;
+        const ft_map<int32_t, ft_region_definition> &get_regions() const noexcept;
+        void set_regions(const ft_map<int32_t, ft_region_definition> &regions) noexcept;
 
-        ft_map<int, ft_world_region> &get_world_regions() noexcept;
-        const ft_map<int, ft_world_region> &get_world_regions() const noexcept;
-        void set_world_regions(const ft_map<int, ft_world_region> &world_regions) noexcept;
+        ft_map<int32_t, ft_world_region> &get_world_regions() noexcept;
+        const ft_map<int32_t, ft_world_region> &get_world_regions() const noexcept;
+        void set_world_regions(const ft_map<int32_t, ft_world_region> &world_regions) noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

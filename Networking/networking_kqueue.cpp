@@ -6,19 +6,19 @@
 #include <sys/time.h>
 #include <cerrno>
 
-int nw_poll(int *read_file_descriptors, int read_count,
-            int *write_file_descriptors, int write_count,
-            int timeout_milliseconds)
+int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
+            int32_t *write_file_descriptors, int32_t write_count,
+            int32_t timeout_milliseconds)
 {
-    int kqueue_descriptor;
+    int32_t kqueue_descriptor;
     struct kevent change_event;
     struct kevent *event_list;
-    int index;
-    int maximum_events;
-    int ready_descriptors;
-    int ready_index;
-    int descriptor;
-    int search_index;
+    int32_t index;
+    int32_t maximum_events;
+    int32_t ready_descriptors;
+    int32_t ready_index;
+    int32_t descriptor;
+    int32_t search_index;
     timespec timeout;
 
     kqueue_descriptor = kqueue();
@@ -33,7 +33,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         EV_SET(&change_event, read_file_descriptors[index], EVFILT_READ, EV_ADD, 0, 0, NULL);
         if (kevent(kqueue_descriptor, &change_event, 1, NULL, 0, NULL) == -1)
         {
-            int last_error;
+            int32_t last_error;
 
             last_error = errno;
             close(kqueue_descriptor);
@@ -48,7 +48,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         EV_SET(&change_event, write_file_descriptors[index], EVFILT_WRITE, EV_ADD, 0, 0, NULL);
         if (kevent(kqueue_descriptor, &change_event, 1, NULL, 0, NULL) == -1)
         {
-            int last_error;
+            int32_t last_error;
 
             last_error = errno;
             close(kqueue_descriptor);
@@ -76,7 +76,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_descriptors = kevent(kqueue_descriptor, NULL, 0, event_list, maximum_events, &timeout);
     if (ready_descriptors <= 0)
     {
-        int wait_error;
+        int32_t wait_error;
 
         wait_error = errno;
         cma_free(event_list);
@@ -90,7 +90,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_index = 0;
     while (ready_index < ready_descriptors)
     {
-        descriptor = static_cast<int>(event_list[ready_index].ident);
+        descriptor = static_cast<int32_t>(event_list[ready_index].ident);
         search_index = 0;
         while (read_file_descriptors && search_index < read_count)
         {

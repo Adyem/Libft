@@ -2,70 +2,109 @@
 #include "ft_region_definition.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int ft_region_definition::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_region_definition::_last_error = FT_ERR_SUCCESS;
 
 ft_region_definition::ft_region_definition() noexcept
     : _region_id(0), _name(), _description(), _recommended_level(0),
       _mutex(ft_nullptr),
-      _initialised_state(ft_region_definition::_state_uninitialised)
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
+ft_region_definition::ft_region_definition(const ft_region_definition &other) noexcept
+    : _region_id(0), _name(), _description(), _recommended_level(0),
+      _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_region_definition::ft_region_definition(copy)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(initialize_error);
+    }
+    return ;
+}
+
+ft_region_definition::ft_region_definition(ft_region_definition &&other) noexcept
+    : _region_id(0), _name(), _description(), _recommended_level(0),
+      _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_region_definition::ft_region_definition(move)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+    }
+    return ;
+}
+
 ft_region_definition::~ft_region_definition() noexcept
 {
-    if (this->_initialised_state != ft_region_definition::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
     (void)this->destroy();
     return ;
 }
 
-void ft_region_definition::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_region_definition lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_region_definition::set_error(int error_code) const noexcept
+int32_t ft_region_definition::set_error(int32_t error_code) noexcept
 {
     ft_region_definition::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
-void ft_region_definition::abort_if_not_initialised(const char *method_name) const
+int32_t ft_region_definition::initialize() noexcept
 {
-    if (this->_initialised_state == ft_region_definition::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
+    int32_t name_error;
+    int32_t description_error;
 
-int ft_region_definition::initialize() noexcept
-{
-    int name_error;
-    int description_error;
-
-    if (this->_initialised_state == ft_region_definition::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_region_definition::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "ft_region_definition::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     name_error = this->_name.initialize();
     if (name_error != FT_ERR_SUCCESS)
     {
-        this->_initialised_state = ft_region_definition::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(name_error);
         return (name_error);
     }
@@ -73,24 +112,24 @@ int ft_region_definition::initialize() noexcept
     if (description_error != FT_ERR_SUCCESS)
     {
         (void)this->_name.destroy();
-        this->_initialised_state = ft_region_definition::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(description_error);
         return (description_error);
     }
     this->_region_id = 0;
     this->_recommended_level = 0;
-    this->_initialised_state = ft_region_definition::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_region_definition::initialize(const ft_region_definition &other) noexcept
+int32_t ft_region_definition::initialize(const ft_region_definition &other) noexcept
 {
-    int initialize_error;
+    int32_t initialize_error;
 
-    if (other._initialised_state != ft_region_definition::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        other.abort_lifecycle_error("ft_region_definition::initialize(copy)",
+        errno_abort_lifecycle(other._initialised_state, "ft_region_definition::initialize(copy)",
             "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -99,7 +138,7 @@ int ft_region_definition::initialize(const ft_region_definition &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialised_state == ft_region_definition::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -122,17 +161,22 @@ int ft_region_definition::initialize(const ft_region_definition &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_region_definition::initialize(ft_region_definition &&other) noexcept
+int32_t ft_region_definition::initialize(ft_region_definition &&other) noexcept
 {
     return (this->initialize(static_cast<const ft_region_definition &>(other)));
 }
 
-int ft_region_definition::initialize(int region_id, const ft_string &name,
-    const ft_string &description, int recommended_level) noexcept
+int32_t ft_region_definition::move(ft_region_definition &other) noexcept
 {
-    int initialize_error;
+    return (this->initialize(static_cast<ft_region_definition &&>(other)));
+}
 
-    if (this->_initialised_state == ft_region_definition::_state_initialised)
+int32_t ft_region_definition::initialize(int32_t region_id, const ft_string &name,
+    const ft_string &description, int32_t recommended_level) noexcept
+{
+    int32_t initialize_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -155,23 +199,23 @@ int ft_region_definition::initialize(int region_id, const ft_string &name,
     return (FT_ERR_SUCCESS);
 }
 
-int ft_region_definition::destroy() noexcept
+int32_t ft_region_definition::destroy() noexcept
 {
-    int disable_error;
-    int description_error;
-    int name_error;
+    int32_t disable_error;
+    int32_t description_error;
+    int32_t name_error;
 
-    if (this->_initialised_state != ft_region_definition::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     description_error = this->_description.destroy();
     name_error = this->_name.destroy();
     this->_region_id = 0;
     this->_recommended_level = 0;
-    this->_initialised_state = ft_region_definition::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     if (disable_error != FT_ERR_SUCCESS)
     {
         this->set_error(disable_error);
@@ -191,12 +235,12 @@ int ft_region_definition::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_region_definition::enable_thread_safety() noexcept
+int32_t ft_region_definition::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_region_definition::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -220,9 +264,9 @@ int ft_region_definition::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_region_definition::disable_thread_safety() noexcept
+int32_t ft_region_definition::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
     {
@@ -236,17 +280,17 @@ int ft_region_definition::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_region_definition::is_thread_safe() const noexcept
+ft_bool ft_region_definition::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_region_definition::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_region_definition::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -254,147 +298,141 @@ int ft_region_definition::lock_internal(bool *lock_acquired) const noexcept
         return (lock_error);
     }
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_region_definition::unlock_internal(bool lock_acquired) const noexcept
+int32_t ft_region_definition::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    const int unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(unlock_error);
-    return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_region_definition::lock(bool *lock_acquired) const noexcept
+int32_t ft_region_definition::lock(ft_bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_region_definition::lock");
-    const int lock_result = this->lock_internal(lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::lock");
+    const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
 }
 
-void ft_region_definition::unlock(bool lock_acquired) const noexcept
+void ft_region_definition::unlock(ft_bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_region_definition::unlock");
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::unlock");
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return ;
 }
 
-int ft_region_definition::get_region_id() const noexcept
+int32_t ft_region_definition::get_region_id() const noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    this->abort_if_not_initialised("ft_region_definition::get_region_id");
-    const int lock_result = this->lock_internal(&lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::get_region_id");
+    const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return (0);
     this->set_error(FT_ERR_SUCCESS);
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (this->_region_id);
 }
 
-void ft_region_definition::set_region_id(int region_id) noexcept
+void ft_region_definition::set_region_id(int32_t region_id) noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    this->abort_if_not_initialised("ft_region_definition::set_region_id");
-    const int lock_result = this->lock_internal(&lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::set_region_id");
+    const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
     this->_region_id = region_id;
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return ;
 }
 
 const ft_string &ft_region_definition::get_name() const noexcept
 {
-    this->abort_if_not_initialised("ft_region_definition::get_name");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::get_name");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_name);
 }
 
 void ft_region_definition::set_name(const ft_string &name) noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    this->abort_if_not_initialised("ft_region_definition::set_name");
-    const int lock_result = this->lock_internal(&lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::set_name");
+    const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
     this->_name = name;
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return ;
 }
 
 const ft_string &ft_region_definition::get_description() const noexcept
 {
-    this->abort_if_not_initialised("ft_region_definition::get_description");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::get_description");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_description);
 }
 
 void ft_region_definition::set_description(const ft_string &description) noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    this->abort_if_not_initialised("ft_region_definition::set_description");
-    const int lock_result = this->lock_internal(&lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::set_description");
+    const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
     this->_description = description;
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return ;
 }
 
-int ft_region_definition::get_recommended_level() const noexcept
+int32_t ft_region_definition::get_recommended_level() const noexcept
 {
-    this->abort_if_not_initialised("ft_region_definition::get_recommended_level");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::get_recommended_level");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recommended_level);
 }
 
-void ft_region_definition::set_recommended_level(int recommended_level) noexcept
+void ft_region_definition::set_recommended_level(int32_t recommended_level) noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    this->abort_if_not_initialised("ft_region_definition::set_recommended_level");
-    const int lock_result = this->lock_internal(&lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_region_definition::set_recommended_level");
+    const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
     this->_recommended_level = recommended_level;
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return ;
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_region_definition::get_mutex_for_validation() const noexcept
-{
-    this->abort_if_not_initialised("ft_region_definition::get_mutex_for_validation");
-    this->set_error(FT_ERR_SUCCESS);
-    return (this->_mutex);
-}
-#endif
 
-int ft_region_definition::get_error() const noexcept
+int32_t ft_region_definition::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_region_definition::get_error");
     return (ft_region_definition::_last_error);
 }
 
 const char *ft_region_definition::get_error_str() const noexcept
 {
-    return (ft_strerror(this->get_error()));
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_region_definition::get_error_str");
+    return (ft_strerror(ft_region_definition::_last_error));
 }

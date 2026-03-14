@@ -10,13 +10,13 @@
 void ft_file_sink(const char *message, void *user_data)
 {
     s_file_sink *sink;
-    size_t       length;
-    bool         lock_acquired;
+    ft_size_t       length;
+    ft_bool         lock_acquired;
 
     sink = static_cast<s_file_sink *>(user_data);
     if (!sink)
         return ;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (file_sink_lock(sink, &lock_acquired) != 0)
         return ;
     length = ft_strlen(message);
@@ -26,16 +26,16 @@ void ft_file_sink(const char *message, void *user_data)
     return ;
 }
 
-static int log_set_file_report(int return_value)
+static int32_t log_set_file_report(int32_t return_value)
 {
     return (return_value);
 }
 
-int ft_log_set_file(const char *path, size_t max_size)
+int32_t ft_log_set_file(const char *path, ft_size_t max_size)
 {
     s_file_sink *sink;
-    int          file_descriptor;
-    int          prepare_error;
+    int32_t          file_descriptor;
+    int32_t          prepare_status;
 
     if (!path)
         return (log_set_file_report(-1));
@@ -59,8 +59,8 @@ int ft_log_set_file(const char *path, size_t max_size)
         delete sink;
         return (log_set_file_report(-1));
     }
-    prepare_error = file_sink_prepare_thread_safety(sink);
-    if (prepare_error != FT_ERR_SUCCESS)
+    prepare_status = file_sink_prepare_thread_safety(sink);
+    if (prepare_status != FT_ERR_SUCCESS)
     {
         close(file_descriptor);
         delete sink;

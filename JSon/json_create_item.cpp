@@ -20,11 +20,11 @@ json_item* json_create_item(const char *key, const char *value)
     }
     item->key = ft_nullptr;
     item->value = ft_nullptr;
-    item->is_big_number = false;
+    item->is_big_number = FT_FALSE;
     item->big_number = ft_nullptr;
     item->next = ft_nullptr;
     item->_mutex = ft_nullptr;
-    if (json_item_enable_thread_safety(item) != 0)
+    if (json_item_enable_thread_safety(item) != FT_ERR_SUCCESS)
     {
         delete item;
         return (ft_nullptr);
@@ -46,7 +46,7 @@ json_item* json_create_item(const char *key, const char *value)
     return (item);
 }
 
-json_item* json_create_item(const char *key, const bool value)
+json_item* json_create_item(const char *key, const ft_bool value)
 {
     json_item *item = new(std::nothrow) json_item;
     if (!item)
@@ -55,11 +55,11 @@ json_item* json_create_item(const char *key, const bool value)
     }
     item->key = ft_nullptr;
     item->value = ft_nullptr;
-    item->is_big_number = false;
+    item->is_big_number = FT_FALSE;
     item->big_number = ft_nullptr;
     item->next = ft_nullptr;
     item->_mutex = ft_nullptr;
-    if (json_item_enable_thread_safety(item) != 0)
+    if (json_item_enable_thread_safety(item) != FT_ERR_SUCCESS)
     {
         delete item;
         return (ft_nullptr);
@@ -70,7 +70,7 @@ json_item* json_create_item(const char *key, const bool value)
         delete item;
         return (ft_nullptr);
     }
-    if (value == true)
+    if (value == FT_TRUE)
         item->value = adv_strdup("true");
     else
         item->value = adv_strdup("false");
@@ -84,7 +84,7 @@ json_item* json_create_item(const char *key, const bool value)
     return (item);
 }
 
-json_item* json_create_item(const char *key, const int value)
+json_item* json_create_item(const char *key, const int32_t value)
 {
     json_item *item = new(std::nothrow) json_item;
     if (!item)
@@ -93,11 +93,11 @@ json_item* json_create_item(const char *key, const int value)
     }
     item->key = ft_nullptr;
     item->value = ft_nullptr;
-    item->is_big_number = false;
+    item->is_big_number = FT_FALSE;
     item->big_number = ft_nullptr;
     item->next = ft_nullptr;
     item->_mutex = ft_nullptr;
-    if (json_item_enable_thread_safety(item) != 0)
+    if (json_item_enable_thread_safety(item) != FT_ERR_SUCCESS)
     {
         delete item;
         return (ft_nullptr);

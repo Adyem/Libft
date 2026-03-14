@@ -17,7 +17,7 @@ struct rng_beta_context
 
 typedef double (*rng_integrand)(double value, void *context);
 
-static int rng_adjust_segment_total(int segment_total)
+static int32_t rng_adjust_segment_total(int32_t segment_total)
 {
     if ((segment_total & 1) == 1)
         segment_total = segment_total + 1;
@@ -28,10 +28,10 @@ static int rng_adjust_segment_total(int segment_total)
     return (segment_total);
 }
 
-static double rng_simpson_integral(double start, double end, int segment_total, rng_integrand function, void *context)
+static double rng_simpson_integral(double start, double end, int32_t segment_total, rng_integrand function, void *context)
 {
     double step;
-    int index;
+    int32_t index;
     double sum;
 
     if (segment_total <= 0)
@@ -53,7 +53,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
         else
             weight = 4.0;
         value = function(point, context);
-        if (std::isfinite(value) == false)
+        if (std::isfinite(value) == FT_FALSE)
         {
             double adjustment;
             double adjusted_point;
@@ -75,7 +75,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
                     adjusted_point = start;
             }
             value = function(adjusted_point, context);
-            if (std::isfinite(value) == false)
+            if (std::isfinite(value) == FT_FALSE)
                 value = 0.0;
         }
         sum = sum + weight * value;
@@ -131,7 +131,7 @@ double rng_gamma_pdf(double shape, double scale, double value)
     log_component = log_component - shape * std::log(scale);
     log_component = log_component - std::lgamma(shape);
     result = std::exp(log_component);
-    if (std::isfinite(result) == false)
+    if (std::isfinite(result) == FT_FALSE)
     {
         return (0.0);
     }
@@ -142,7 +142,7 @@ double rng_gamma_cdf(double shape, double scale, double value)
 {
     rng_gamma_context context;
     double integral;
-    int segment_total;
+    int32_t segment_total;
     double normalized_value;
     double result;
 
@@ -159,7 +159,7 @@ double rng_gamma_cdf(double shape, double scale, double value)
     normalized_value = value / scale;
     if (normalized_value < 0.0)
         normalized_value = 0.0;
-    segment_total = static_cast<int>(normalized_value * 128.0) + 256;
+    segment_total = static_cast<int32_t>(normalized_value * 128.0) + 256;
     segment_total = rng_adjust_segment_total(segment_total);
     integral = rng_simpson_integral(0.0, value, segment_total, rng_gamma_pdf_integrand, &context);
     result = integral;
@@ -209,7 +209,7 @@ double rng_beta_pdf(double alpha, double beta, double value)
     log_denominator = std::lgamma(alpha) + std::lgamma(beta) - std::lgamma(alpha + beta);
     log_component = (alpha - 1.0) * std::log(value) + (beta - 1.0) * std::log(1.0 - value);
     result = std::exp(log_component - log_denominator);
-    if (std::isfinite(result) == false)
+    if (std::isfinite(result) == FT_FALSE)
     {
         return (0.0);
     }
@@ -220,7 +220,7 @@ double rng_beta_cdf(double alpha, double beta, double value)
 {
     rng_beta_context context;
     double integral;
-    int segment_total;
+    int32_t segment_total;
     double range_end;
     double result;
 
@@ -238,7 +238,7 @@ double rng_beta_cdf(double alpha, double beta, double value)
     }
     context.alpha = alpha;
     context.beta = beta;
-    segment_total = static_cast<int>((alpha + beta) * 64.0) + 256;
+    segment_total = static_cast<int32_t>((alpha + beta) * 64.0) + 256;
     segment_total = rng_adjust_segment_total(segment_total);
     range_end = value;
     integral = rng_simpson_integral(0.0, range_end, segment_total, rng_beta_pdf_integrand, &context);

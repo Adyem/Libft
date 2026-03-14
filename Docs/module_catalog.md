@@ -11646,7 +11646,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_shuffle(RandomIt first, RandomIt last)`
   - `void ft_reverse(BidirectionalIt first, BidirectionalIt last)`
 
-### Template/bitset.hpp
+### CPP_class/bitset.hpp
 
 - Declares:
   - `void set_error(int error) const`
@@ -11697,7 +11697,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `inline void ft_bitset::teardown_thread_safety()`
   - `inline void ft_bitset::reset_storage(size_t size) noexcept`
 
-### Template/cancellation.hpp
+### CPP_class/cancellation.hpp
 
 - Declares:
   - `void set_error(int error_code) const`
@@ -12800,7 +12800,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `#if defined(__cpp_concepts) && __cpp_concepts >= 201907L #include <concepts> #define FT_TEMPLATE_HAS_CONCEPTS 1 #else #define FT_TEMPLATE_HAS_CONCEPTS 0 #endif #if FT_TEMPLATE_HAS_CONCEPTS #include <type_traits> template <typename ConstructibleType, typename... ConstructArgs> concept ft_constructible_from = std::is_constructible_v<ConstructibleType, ConstructArgs...>`
 - Defines: _None_
 
-### Template/thread_pool.hpp
+### CPP_class/thread_pool.hpp
 
 - Declares:
   - `void set_error(int error) const`

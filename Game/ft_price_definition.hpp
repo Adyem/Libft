@@ -8,67 +8,63 @@
 
 class ft_price_definition
 {
-    private:
-        int      _item_id;
-        int      _rarity;
-        int      _base_value;
-        int      _minimum_value;
-        int      _maximum_value;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t      _item_id;
+        int32_t      _rarity;
+        int32_t      _base_value;
+        int32_t      _minimum_value;
+        int32_t      _maximum_value;
         pt_recursive_mutex *_mutex;
         uint8_t  _initialised_state;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
 
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_price_definition() noexcept;
         virtual ~ft_price_definition() noexcept;
-        ft_price_definition(const ft_price_definition &other) noexcept = delete;
+        ft_price_definition(const ft_price_definition &other) noexcept;
         ft_price_definition &operator=(const ft_price_definition &other) noexcept = delete;
-        ft_price_definition(ft_price_definition &&other) noexcept = delete;
+        ft_price_definition(ft_price_definition &&other) noexcept;
         ft_price_definition &operator=(ft_price_definition &&other) noexcept = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_price_definition &other) noexcept;
-        int initialize(ft_price_definition &&other) noexcept;
-        int initialize(int item_id, int rarity, int base_value,
-            int minimum_value, int maximum_value) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_price_definition &other) noexcept;
+        int32_t initialize(ft_price_definition &&other) noexcept;
+        int32_t move(ft_price_definition &other) noexcept;
+        int32_t initialize(int32_t item_id, int32_t rarity, int32_t base_value,
+            int32_t minimum_value, int32_t maximum_value) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int get_item_id() const noexcept;
-        void set_item_id(int item_id) noexcept;
+        int32_t get_item_id() const noexcept;
+        void set_item_id(int32_t item_id) noexcept;
 
-        int get_rarity() const noexcept;
-        void set_rarity(int rarity) noexcept;
+        int32_t get_rarity() const noexcept;
+        void set_rarity(int32_t rarity) noexcept;
 
-        int get_base_value() const noexcept;
-        void set_base_value(int base_value) noexcept;
+        int32_t get_base_value() const noexcept;
+        void set_base_value(int32_t base_value) noexcept;
 
-        int get_minimum_value() const noexcept;
-        void set_minimum_value(int minimum_value) noexcept;
+        int32_t get_minimum_value() const noexcept;
+        void set_minimum_value(int32_t minimum_value) noexcept;
 
-        int get_maximum_value() const noexcept;
-        void set_maximum_value(int maximum_value) noexcept;
+        int32_t get_maximum_value() const noexcept;
+        void set_maximum_value(int32_t maximum_value) noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

@@ -332,7 +332,7 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(ft_task_scheduler *scheduler,
     }
     this->_state = state;
     {
-        int state_error = ft_sharedptr<ft_scheduled_task_state>::get_error();
+        int state_error = this->_state.get_error();
 
         if (state_error != FT_ERR_SUCCESS)
         {
@@ -355,7 +355,7 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(const ft_scheduled_task_handl
     this->_state = other._state;
     this->_scheduler = other._scheduler;
     {
-        int state_error = ft_sharedptr<ft_scheduled_task_state>::get_error();
+        int state_error = this->_state.get_error();
 
         if (state_error != FT_ERR_SUCCESS)
         {
@@ -397,7 +397,7 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
     this->_state = other._state;
     this->_scheduler = other._scheduler;
     {
-        int state_error = ft_sharedptr<ft_scheduled_task_state>::get_error();
+        int state_error = this->_state.get_error();
 
         if (state_error != FT_ERR_SUCCESS)
         {
@@ -681,7 +681,7 @@ int ft_task_scheduler::initialize(size_t thread_count)
     {
         int worker_reserve_error;
 
-        worker_reserve_error = ft_vector<ft_thread>::get_error();
+        worker_reserve_error = this->_workers.get_error();
         if (worker_reserve_error != FT_ERR_SUCCESS)
         {
             this->_running.store(false);
@@ -717,7 +717,7 @@ int ft_task_scheduler::initialize(size_t thread_count)
         {
             int worker_push_error;
 
-            worker_push_error = ft_vector<ft_thread>::get_error();
+            worker_push_error = this->_workers.get_error();
             if (worker_push_error != FT_ERR_SUCCESS)
             {
                 worker_failure = true;
@@ -984,7 +984,7 @@ bool ft_task_scheduler::scheduled_heap_push(scheduled_task &&task)
     size_t size;
 
     this->_scheduled.push_back(ft_move(task));
-    if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+    if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
         return (false);
     size = this->_scheduled.size();
     if (size == 0)
@@ -1002,7 +1002,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
     size_t size;
 
     size = this->_scheduled.size();
-    if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+    if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
         return (false);
     if (size == 0)
         return (false);
@@ -1010,7 +1010,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
     if (size == 1)
     {
         this->_scheduled.pop_back();
-        if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+        if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
             return (false);
         this->_scheduled_size_counter = 0;
         return (true);
@@ -1019,7 +1019,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
 
     last_task = ft_move(this->_scheduled[size - 1]);
     this->_scheduled.pop_back();
-    if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+    if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
         return (false);
     this->_scheduled[0] = ft_move(last_task);
     this->scheduled_heap_sift_down(0);
@@ -1032,7 +1032,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     size_t size;
 
     size = this->_scheduled.size();
-    if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+    if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
         return (false);
     if (size == 0)
         return (false);
@@ -1041,7 +1041,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     if (index == size - 1)
     {
         this->_scheduled.pop_back();
-        if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+        if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
             return (false);
         this->_scheduled_size_counter = static_cast<long long>(this->_scheduled.size());
         return (true);
@@ -1050,7 +1050,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
 
     last_task = ft_move(this->_scheduled[size - 1]);
         this->_scheduled.pop_back();
-        if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+        if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
             return (false);
     this->_scheduled[index] = ft_move(last_task);
     this->scheduled_heap_sift_down(index);
@@ -1083,7 +1083,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     }
     state_copy = state;
     {
-        int state_error = ft_sharedptr<ft_scheduled_task_state>::get_error();
+        int state_error = state_copy.get_error();
 
         if (state_error != FT_ERR_SUCCESS)
         {
@@ -1115,7 +1115,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         size_t size;
 
         size = this->_scheduled.size();
-        if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+        if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
         {
             (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
             this->unlock_internal(scheduler_lock_acquired);
@@ -1179,7 +1179,7 @@ void ft_task_scheduler::timer_loop()
                 return ;
             }
             scheduled_count = this->_scheduled.size();
-            if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+            if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
             {
                 (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 return ;
@@ -1249,7 +1249,7 @@ void ft_task_scheduler::timer_loop()
             bool pop_success;
 
             scheduled_count = this->_scheduled.size();
-            if (ft_vector<scheduled_task>::get_error() != FT_ERR_SUCCESS)
+            if (this->_scheduled.get_error() != FT_ERR_SUCCESS)
             {
                 (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 return ;
@@ -1263,7 +1263,7 @@ void ft_task_scheduler::timer_loop()
             pop_success = this->scheduled_heap_pop(expired_task);
             if (!pop_success)
             {
-                int scheduled_error = ft_vector<scheduled_task>::get_error();
+                int scheduled_error = this->_scheduled.get_error();
                 (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 (void)scheduled_error;
                 return ;
@@ -1324,7 +1324,7 @@ void ft_task_scheduler::timer_loop()
                         expired_task._label = reschedule_label;
                         if (!this->scheduled_heap_push(ft_move(expired_task)))
                         {
-                            (void)ft_vector<scheduled_task>::get_error();
+                            (void)this->_scheduled.get_error();
                         }
                         else
                             this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
@@ -1369,7 +1369,7 @@ void ft_task_scheduler::timer_loop()
                         expired_task._time = updated_time;
                         expired_task._function = ft_move(original_function);
                         if (!this->scheduled_heap_push(ft_move(expired_task)))
-                            (void)ft_vector<scheduled_task>::get_error();
+                            (void)this->_scheduled.get_error();
                     }
                 }
                 continue;
@@ -1435,7 +1435,7 @@ void ft_task_scheduler::timer_loop()
                     expired_task._parent_id = previous_trace_id;
                     expired_task._label = reschedule_label;
                     if (!this->scheduled_heap_push(ft_move(expired_task)))
-                        (void)ft_vector<scheduled_task>::get_error();
+                        (void)this->_scheduled.get_error();
                     else
                         this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
                                 new_trace_id, previous_trace_id, reschedule_label, true);

@@ -2,69 +2,106 @@
 #include "game_world_registry.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int ft_world_registry::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_world_registry::_last_error = FT_ERR_SUCCESS;
 
 ft_world_registry::ft_world_registry() noexcept
     : _regions(), _world_regions(), _mutex(ft_nullptr),
-      _initialised_state(ft_world_registry::_state_uninitialised)
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
+ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept
+    : _regions(), _world_regions(), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_world_registry::ft_world_registry(copy)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(initialize_error);
+    }
+    return ;
+}
+
+ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept
+    : _regions(), _world_regions(), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_world_registry::ft_world_registry(move)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+    }
+    return ;
+}
+
 ft_world_registry::~ft_world_registry() noexcept
 {
-    if (this->_initialised_state != ft_world_registry::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return ;
     (void)this->destroy();
     return ;
 }
 
-void ft_world_registry::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_world_registry lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_world_registry::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == ft_world_registry::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-void ft_world_registry::set_error(int error_code) const noexcept
+int32_t ft_world_registry::set_error(int32_t error_code) noexcept
 {
     ft_world_registry::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
-int ft_world_registry::initialize() noexcept
+int32_t ft_world_registry::initialize() noexcept
 {
-    int regions_error;
-    int worlds_error;
+    int32_t regions_error;
+    int32_t worlds_error;
 
-    if (this->_initialised_state == ft_world_registry::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_world_registry::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "ft_world_registry::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     regions_error = this->_regions.initialize();
     if (regions_error != FT_ERR_SUCCESS)
     {
-        this->_initialised_state = ft_world_registry::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(regions_error);
         return (regions_error);
     }
@@ -72,30 +109,30 @@ int ft_world_registry::initialize() noexcept
     if (worlds_error != FT_ERR_SUCCESS)
     {
         (void)this->_regions.destroy();
-        this->_initialised_state = ft_world_registry::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(worlds_error);
         return (worlds_error);
     }
     this->_regions.clear();
     this->_world_regions.clear();
-    this->_initialised_state = ft_world_registry::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_registry::initialize(const ft_world_registry &other) noexcept
+int32_t ft_world_registry::initialize(const ft_world_registry &other) noexcept
 {
-    int initialize_error;
-    size_t count;
-    size_t index;
-    const Pair<int, ft_region_definition> *region_entry;
-    const Pair<int, ft_region_definition> *region_end;
-    const Pair<int, ft_world_region> *world_entry;
-    const Pair<int, ft_world_region> *world_end;
+    int32_t initialize_error;
+    ft_size_t count;
+    ft_size_t index;
+    const Pair<int32_t, ft_region_definition> *region_entry;
+    const Pair<int32_t, ft_region_definition> *region_end;
+    const Pair<int32_t, ft_world_region> *world_entry;
+    const Pair<int32_t, ft_world_region> *world_end;
 
-    if (other._initialised_state != ft_world_registry::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        other.abort_lifecycle_error("ft_world_registry::initialize(copy)",
+        errno_abort_lifecycle(other._initialised_state, "ft_world_registry::initialize(copy)",
             "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -104,7 +141,7 @@ int ft_world_registry::initialize(const ft_world_registry &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialised_state == ft_world_registry::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -143,36 +180,41 @@ int ft_world_registry::initialize(const ft_world_registry &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_registry::initialize(ft_world_registry &&other) noexcept
+int32_t ft_world_registry::initialize(ft_world_registry &&other) noexcept
 {
     return (this->initialize(static_cast<const ft_world_registry &>(other)));
 }
 
-int ft_world_registry::destroy() noexcept
+int32_t ft_world_registry::move(ft_world_registry &other) noexcept
 {
-    int disable_error;
+    return (this->initialize(static_cast<ft_world_registry &&>(other)));
+}
 
-    if (this->_initialised_state != ft_world_registry::_state_initialised)
+int32_t ft_world_registry::destroy() noexcept
+{
+    int32_t disable_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     this->_regions.clear();
     this->_world_regions.clear();
     (void)this->_regions.destroy();
     (void)this->_world_regions.destroy();
     disable_error = this->disable_thread_safety();
-    this->_initialised_state = ft_world_registry::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);
 }
 
-int ft_world_registry::enable_thread_safety() noexcept
+int32_t ft_world_registry::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_world_registry::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -196,9 +238,9 @@ int ft_world_registry::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_registry::disable_thread_safety() noexcept
+int32_t ft_world_registry::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
     {
@@ -212,17 +254,17 @@ int ft_world_registry::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_world_registry::is_thread_safe() const noexcept
+ft_bool ft_world_registry::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_world_registry::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_world_registry::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -230,130 +272,129 @@ int ft_world_registry::lock_internal(bool *lock_acquired) const noexcept
         return (lock_error);
     }
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_registry::unlock_internal(bool lock_acquired) const noexcept
+int32_t ft_world_registry::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    const int unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(unlock_error);
-    return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_world_registry::lock(bool *lock_acquired) const noexcept
+int32_t ft_world_registry::lock(ft_bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_world_registry::lock");
-    const int lock_result = this->lock_internal(lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::lock");
+    const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
 }
 
-void ft_world_registry::unlock(bool lock_acquired) const noexcept
+void ft_world_registry::unlock(ft_bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_world_registry::unlock");
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::unlock");
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return ;
 }
 
-int ft_world_registry::register_region(const ft_region_definition &region) noexcept
+int32_t ft_world_registry::register_region(const ft_region_definition &region) noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    this->abort_if_not_initialised("ft_world_registry::register_region");
-    const int lock_result = this->lock_internal(&lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::register_region");
+    const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
         this->set_error(lock_result);
         return (FT_ERR_INVALID_STATE);
     }
     this->_regions.insert(region.get_region_id(), region);
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_registry::register_world(const ft_world_region &world_region) noexcept
+int32_t ft_world_registry::register_world(const ft_world_region &world_region) noexcept
 {
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
-    this->abort_if_not_initialised("ft_world_registry::register_world");
-    const int lock_result = this->lock_internal(&lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::register_world");
+    const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
         this->set_error(lock_result);
         return (FT_ERR_INVALID_STATE);
     }
     this->_world_regions.insert(world_region.get_world_id(), world_region);
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_world_registry::fetch_region(int region_id,
+int32_t ft_world_registry::fetch_region(int32_t region_id,
     ft_region_definition &out_region) const noexcept
 {
-    const Pair<int, ft_region_definition> *entry;
+    const Pair<int32_t, ft_region_definition> *entry;
 
-    this->abort_if_not_initialised("ft_world_registry::fetch_region");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::fetch_region");
     entry = this->_regions.find(region_id);
     if (entry == this->_regions.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         return (FT_ERR_NOT_FOUND);
     }
-    const int initialize_error = out_region.initialize(entry->value);
+    const int32_t initialize_error = out_region.initialize(entry->value);
     this->set_error(initialize_error);
     return (initialize_error);
 }
 
-int ft_world_registry::fetch_world(int world_id,
+int32_t ft_world_registry::fetch_world(int32_t world_id,
     ft_world_region &out_world) const noexcept
 {
-    const Pair<int, ft_world_region> *entry;
+    const Pair<int32_t, ft_world_region> *entry;
 
-    this->abort_if_not_initialised("ft_world_registry::fetch_world");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::fetch_world");
     entry = this->_world_regions.find(world_id);
     if (entry == this->_world_regions.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         return (FT_ERR_NOT_FOUND);
     }
-    const int initialize_error = out_world.initialize(entry->value);
+    const int32_t initialize_error = out_world.initialize(entry->value);
     this->set_error(initialize_error);
     return (initialize_error);
 }
 
-ft_map<int, ft_region_definition> &ft_world_registry::get_regions() noexcept
+ft_map<int32_t, ft_region_definition> &ft_world_registry::get_regions() noexcept
 {
-    this->abort_if_not_initialised("ft_world_registry::get_regions");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::get_regions");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_regions);
 }
 
-const ft_map<int, ft_region_definition> &ft_world_registry::get_regions() const noexcept
+const ft_map<int32_t, ft_region_definition> &ft_world_registry::get_regions() const noexcept
 {
-    this->abort_if_not_initialised("ft_world_registry::get_regions const");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::get_regions const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_regions);
 }
 
 void ft_world_registry::set_regions(
-    const ft_map<int, ft_region_definition> &regions) noexcept
+    const ft_map<int32_t, ft_region_definition> &regions) noexcept
 {
-    size_t count;
-    size_t index;
-    const Pair<int, ft_region_definition> *entry;
-    const Pair<int, ft_region_definition> *entry_end;
+    ft_size_t count;
+    ft_size_t index;
+    const Pair<int32_t, ft_region_definition> *entry;
+    const Pair<int32_t, ft_region_definition> *entry_end;
 
-    this->abort_if_not_initialised("ft_world_registry::set_regions");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::set_regions");
     this->_regions.clear();
     count = regions.size();
     entry_end = regions.end();
@@ -369,29 +410,29 @@ void ft_world_registry::set_regions(
     return ;
 }
 
-ft_map<int, ft_world_region> &ft_world_registry::get_world_regions() noexcept
+ft_map<int32_t, ft_world_region> &ft_world_registry::get_world_regions() noexcept
 {
-    this->abort_if_not_initialised("ft_world_registry::get_world_regions");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::get_world_regions");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_regions);
 }
 
-const ft_map<int, ft_world_region> &ft_world_registry::get_world_regions() const noexcept
+const ft_map<int32_t, ft_world_region> &ft_world_registry::get_world_regions() const noexcept
 {
-    this->abort_if_not_initialised("ft_world_registry::get_world_regions const");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::get_world_regions const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_regions);
 }
 
 void ft_world_registry::set_world_regions(
-    const ft_map<int, ft_world_region> &world_regions) noexcept
+    const ft_map<int32_t, ft_world_region> &world_regions) noexcept
 {
-    size_t count;
-    size_t index;
-    const Pair<int, ft_world_region> *entry;
-    const Pair<int, ft_world_region> *entry_end;
+    ft_size_t count;
+    ft_size_t index;
+    const Pair<int32_t, ft_world_region> *entry;
+    const Pair<int32_t, ft_world_region> *entry_end;
 
-    this->abort_if_not_initialised("ft_world_registry::set_world_regions");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_world_registry::set_world_regions");
     this->_world_regions.clear();
     count = world_regions.size();
     entry_end = world_regions.end();
@@ -407,21 +448,19 @@ void ft_world_registry::set_world_regions(
     return ;
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_world_registry::get_mutex_for_validation() const noexcept
-{
-    this->abort_if_not_initialised("ft_world_registry::get_mutex_for_validation");
-    this->set_error(FT_ERR_SUCCESS);
-    return (this->_mutex);
-}
-#endif
 
-int ft_world_registry::get_error() const noexcept
+int32_t ft_world_registry::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_world_registry::get_error");
     return (ft_world_registry::_last_error);
 }
 
 const char *ft_world_registry::get_error_str() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_world_registry::get_error_str");
     return (ft_strerror(ft_world_registry::_last_error));
 }

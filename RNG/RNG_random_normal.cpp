@@ -6,7 +6,7 @@ float ft_random_normal(void)
 {
     float uniform_one;
     float uniform_two;
-    const float pi_value = 3.14159265358979323846f;
+    const float PI_VALUE = 3.14159265358979323846f;
     float radius;
     float angle;
     float result;
@@ -23,7 +23,7 @@ float ft_random_normal(void)
     log_value = math_log(uniform_one);
     sqrt_value = math_sqrt(-2.0 * log_value);
     radius = static_cast<float>(sqrt_value);
-    angle = 2.0f * pi_value * uniform_two;
+    angle = 2.0f * PI_VALUE * uniform_two;
     cosine_value = math_cos(angle);
     result = radius * static_cast<float>(cosine_value);
     return (result);

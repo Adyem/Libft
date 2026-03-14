@@ -4,38 +4,37 @@
 #include "../Errno/errno.hpp"
 #include <cstdint>
 
-int ft_socket_runtime_acquire();
+int32_t ft_socket_runtime_acquire();
 void ft_socket_runtime_release();
 
 class ft_socket_handle
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        int _socket_fd;
-        void abort_lifecycle_error(const char *method_name, const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
+        int32_t _socket_fd;
 
     public:
-        ft_socket_handle();
-        explicit ft_socket_handle(int socket_fd);
-        ~ft_socket_handle();
-
-        ft_socket_handle(const ft_socket_handle &other) = delete;
+        ft_socket_handle() noexcept;
+        ft_socket_handle(const ft_socket_handle &other) noexcept;
+        ft_socket_handle(ft_socket_handle &&other) noexcept;
+        ~ft_socket_handle() noexcept;
         ft_socket_handle &operator=(const ft_socket_handle &other) = delete;
-
-        ft_socket_handle(ft_socket_handle &&other) noexcept = delete;
         ft_socket_handle &operator=(ft_socket_handle &&other) noexcept = delete;
+        int32_t move(ft_socket_handle &other) noexcept;
 
-        int initialize();
-        int destroy();
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_socket_handle &other) noexcept;
+        int32_t initialize(ft_socket_handle &&other) noexcept;
+        int32_t destroy() noexcept;
 
-        bool reset(int socket_fd);
-        bool close();
-        bool is_valid() const;
-        int get() const;
+        ft_bool reset(int32_t socket_fd);
+        ft_bool close();
+        ft_bool is_valid() const;
+        int32_t get() const;
 };
 
 #endif

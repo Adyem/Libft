@@ -2,7 +2,7 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "file_utils.hpp"
 
-static int file_string_error(void) noexcept
+static int32_t file_string_error(void) noexcept
 {
     return (ft_string::get_error());
 }
@@ -37,7 +37,7 @@ ft_string file_path_join(const char *path_left, const char *path_right)
         if (data[result.size() - 1] != path_sep)
             result.append(path_sep);
     }
-    size_t index = 0;
+    ft_size_t index = 0;
     while (right_data[index] == path_sep)
         index++;
     while (right_data[index] != '\0')

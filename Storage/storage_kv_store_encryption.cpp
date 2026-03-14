@@ -2,30 +2,31 @@
 
 #include "../CMA/CMA.hpp"
 #include "../Compression/compression.hpp"
-#include "../Encryption/aes.hpp"
+#include "../Encryption/encryption.hpp"
+#include "../Errno/errno_internal.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
-int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const
+int32_t kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const
 {
-    this->abort_if_not_initialised("kv_store::encrypt_value");
+    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::encrypt_value");
     std::vector<uint8_t> output_buffer;
     const char *plain_c_string;
-    std::size_t plain_size;
+    ft_size_t plain_size;
     uint8_t header_plain[16];
     uint8_t header_cipher[16];
-    std::size_t header_index;
+    ft_size_t header_index;
     uint8_t counter_block[16];
-    std::size_t counter_index;
+    ft_size_t counter_index;
     unsigned char *encoded_buffer;
-    std::size_t encoded_size;
-    std::size_t output_index;
-    std::size_t byte_index;
+    ft_size_t encoded_size;
+    ft_size_t output_index;
+    ft_size_t byte_index;
     uint64_t block_counter;
 
-    if (this->_encryption_enabled == false)
+    if (this->_encryption_enabled == FT_FALSE)
     {
         encoded_string = plain_string;
         return (FT_ERR_SUCCESS);
@@ -93,23 +94,23 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
     return (FT_ERR_SUCCESS);
 }
 
-int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const
+int32_t kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const
 {
-    this->abort_if_not_initialised("kv_store::decrypt_value");
+    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::decrypt_value");
     unsigned char *decoded_buffer;
-    std::size_t decoded_size;
+    ft_size_t decoded_size;
     uint8_t header_plain[16];
     uint8_t expected_header[16];
-    std::size_t header_index;
-    std::size_t payload_size;
+    ft_size_t header_index;
+    ft_size_t payload_size;
     const unsigned char *payload_pointer;
     uint8_t counter_block[16];
-    std::size_t counter_index;
-    std::size_t payload_index;
+    ft_size_t counter_index;
+    ft_size_t payload_index;
     uint64_t block_counter;
-    std::size_t byte_index;
+    ft_size_t byte_index;
 
-    if (this->_encryption_enabled == false)
+    if (this->_encryption_enabled == FT_FALSE)
     {
         plain_string = encoded_string;
         return (FT_ERR_SUCCESS);
@@ -185,9 +186,9 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     return (FT_ERR_SUCCESS);
 }
 
-int kv_store::configure_encryption(const char *encryption_key, bool enable_encryption)
+int32_t kv_store::configure_encryption(const char *encryption_key, ft_bool enable_encryption)
 {
-    this->abort_if_not_initialised("kv_store::configure_encryption");
+    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::configure_encryption");
     if (enable_encryption)
     {
         if (encryption_key == ft_nullptr)
@@ -195,10 +196,10 @@ int kv_store::configure_encryption(const char *encryption_key, bool enable_encry
         this->_encryption_key = encryption_key;
         if (this->_encryption_key.size() != 16)
             return (FT_ERR_INVALID_ARGUMENT);
-        this->_encryption_enabled = true;
+        this->_encryption_enabled = FT_TRUE;
         return (FT_ERR_SUCCESS);
     }
-    this->_encryption_enabled = false;
+    this->_encryption_enabled = FT_FALSE;
     if (encryption_key == ft_nullptr)
         this->_encryption_key.clear();
     else

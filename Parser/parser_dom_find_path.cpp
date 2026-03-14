@@ -1,7 +1,7 @@
 #include "dom.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_dom_node **out_node) noexcept
+int32_t ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_dom_node **out_node) noexcept
 {
 
     if (!root || !out_node)
@@ -12,7 +12,7 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
     raw_path = path.c_str();
     if (!raw_path)
         return (FT_ERR_INVALID_ARGUMENT);
-    size_t path_length;
+    ft_size_t path_length;
 
     path_length = path.size();
     if (path_length == 0)
@@ -21,9 +21,9 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
         return (FT_ERR_SUCCESS);
     }
     const ft_dom_node *current_node;
-    size_t start_index;
-    int status;
-    int error_code;
+    ft_size_t start_index;
+    int32_t status;
+    int32_t error_code;
 
     current_node = root;
     start_index = 0;
@@ -31,8 +31,8 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
     error_code = FT_ERR_SUCCESS;
     while (start_index < path_length && status == 0)
     {
-        size_t end_index;
-        size_t segment_length;
+        ft_size_t end_index;
+        ft_size_t segment_length;
 
         end_index = start_index;
         while (end_index < path_length && raw_path[end_index] != '/')

@@ -19,13 +19,10 @@ SRCS := Encryption_basic_encryption.cpp \
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := basic_encryption.hpp \
-        encryption_aead.hpp \
-        encryption_secure_wipe.hpp \
-        encryption_key_management.hpp \
+HEADERS := encryption.hpp \
+        encryption_internal.hpp \
+        encryption_aead_context.hpp \
         encryption_hardware_acceleration.hpp \
-        encryption_sha3.hpp \
-        encryption_blake2.hpp \
         encryption_hmac_sha256.hpp
 
 ifeq ($(OS),Windows_NT)

@@ -3,10 +3,10 @@
 
 void ft_character::restore_physical_armor() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -21,10 +21,10 @@ void ft_character::restore_physical_armor() noexcept
 
 void ft_character::restore_magic_armor() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -39,10 +39,10 @@ void ft_character::restore_magic_armor() noexcept
 
 void ft_character::restore_armor() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -56,12 +56,12 @@ void ft_character::restore_armor() noexcept
     return ;
 }
 
-void ft_character::take_damage(long long damage, uint8_t type) noexcept
+void ft_character::take_damage(int64_t damage, uint8_t type) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -83,12 +83,12 @@ void ft_character::take_damage(long long damage, uint8_t type) noexcept
     return ;
 }
 
-void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_flat(int64_t damage, uint8_t type) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -101,12 +101,12 @@ void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
     return ;
 }
 
-void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_scaled(int64_t damage, uint8_t type) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -119,12 +119,12 @@ void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
     return ;
 }
 
-void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_buffer(int64_t damage, uint8_t type) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -137,12 +137,12 @@ void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
     return ;
 }
 
-void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_magic_shield(int64_t damage, uint8_t type) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -155,10 +155,10 @@ void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noex
     return ;
 }
 
-void ft_character::take_damage_flat_internal(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_flat_internal(int64_t damage, uint8_t type) noexcept
 {
-    int previous_hit_points;
-    long long damage_applied;
+    int32_t previous_hit_points;
+    int64_t damage_applied;
 
     previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers_internal(damage);
@@ -170,10 +170,10 @@ void ft_character::take_damage_flat_internal(long long damage, uint8_t type) noe
         damage = damage - this->_magic_armor;
     if (damage < 0)
         damage = 0;
-    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    this->_hit_points = this->_hit_points - static_cast<int32_t>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
-    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    damage_applied = static_cast<int64_t>(previous_hit_points - this->_hit_points);
     if (damage_applied < 0)
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
@@ -182,10 +182,10 @@ void ft_character::take_damage_flat_internal(long long damage, uint8_t type) noe
     return ;
 }
 
-void ft_character::take_damage_scaled_internal(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_scaled_internal(int64_t damage, uint8_t type) noexcept
 {
-    int previous_hit_points;
-    long long damage_applied;
+    int32_t previous_hit_points;
+    int64_t damage_applied;
 
     previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers_internal(damage);
@@ -194,19 +194,19 @@ void ft_character::take_damage_scaled_internal(long long damage, uint8_t type) n
     if (type == FT_DAMAGE_PHYSICAL)
     {
         double scaled = static_cast<double>(damage) * this->_physical_damage_multiplier;
-        damage = static_cast<long long>(scaled);
+        damage = static_cast<int64_t>(scaled);
     }
     else if (type == FT_DAMAGE_MAGICAL)
     {
         double scaled = static_cast<double>(damage) * this->_magic_damage_multiplier;
-        damage = static_cast<long long>(scaled);
+        damage = static_cast<int64_t>(scaled);
     }
     if (damage < 0)
         damage = 0;
-    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    this->_hit_points = this->_hit_points - static_cast<int32_t>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
-    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    damage_applied = static_cast<int64_t>(previous_hit_points - this->_hit_points);
     if (damage_applied < 0)
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
@@ -215,10 +215,10 @@ void ft_character::take_damage_scaled_internal(long long damage, uint8_t type) n
     return ;
 }
 
-void ft_character::take_damage_buffer_internal(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_buffer_internal(int64_t damage, uint8_t type) noexcept
 {
-    int previous_hit_points;
-    long long damage_applied;
+    int32_t previous_hit_points;
+    int64_t damage_applied;
 
     previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers_internal(damage);
@@ -230,7 +230,7 @@ void ft_character::take_damage_buffer_internal(long long damage, uint8_t type) n
         {
             if (damage <= this->_current_physical_armor)
             {
-                this->_current_physical_armor = this->_current_physical_armor - static_cast<int>(damage);
+                this->_current_physical_armor = this->_current_physical_armor - static_cast<int32_t>(damage);
                 damage = 0;
             }
             else
@@ -246,7 +246,7 @@ void ft_character::take_damage_buffer_internal(long long damage, uint8_t type) n
         {
             if (damage <= this->_current_magic_armor)
             {
-                this->_current_magic_armor = this->_current_magic_armor - static_cast<int>(damage);
+                this->_current_magic_armor = this->_current_magic_armor - static_cast<int32_t>(damage);
                 damage = 0;
             }
             else
@@ -258,10 +258,10 @@ void ft_character::take_damage_buffer_internal(long long damage, uint8_t type) n
     }
     if (damage < 0)
         damage = 0;
-    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    this->_hit_points = this->_hit_points - static_cast<int32_t>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
-    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    damage_applied = static_cast<int64_t>(previous_hit_points - this->_hit_points);
     if (damage_applied < 0)
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
@@ -270,10 +270,10 @@ void ft_character::take_damage_buffer_internal(long long damage, uint8_t type) n
     return ;
 }
 
-void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_magic_shield_internal(int64_t damage, uint8_t type) noexcept
 {
-    int previous_hit_points;
-    long long damage_applied;
+    int32_t previous_hit_points;
+    int64_t damage_applied;
 
     previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers_internal(damage);
@@ -283,7 +283,7 @@ void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t t
     {
         if (damage <= this->_current_magic_armor)
         {
-            this->_current_magic_armor = this->_current_magic_armor - static_cast<int>(damage);
+            this->_current_magic_armor = this->_current_magic_armor - static_cast<int32_t>(damage);
             damage = 0;
         }
         else
@@ -298,7 +298,7 @@ void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t t
         damage = damage - this->_physical_armor;
 #elif FT_PHYSICAL_DAMAGE_REDUCTION == FT_DAMAGE_RULE_SCALED
         double scaled = static_cast<double>(damage) * this->_physical_damage_multiplier;
-        damage = static_cast<long long>(scaled);
+        damage = static_cast<int64_t>(scaled);
 #endif
     }
     else if (type == FT_DAMAGE_MAGICAL)
@@ -307,15 +307,15 @@ void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t t
         damage = damage - this->_magic_armor;
 #elif FT_MAGIC_DAMAGE_REDUCTION == FT_DAMAGE_RULE_SCALED
         double scaled = static_cast<double>(damage) * this->_magic_damage_multiplier;
-        damage = static_cast<long long>(scaled);
+        damage = static_cast<int64_t>(scaled);
 #endif
     }
     if (damage < 0)
         damage = 0;
-    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    this->_hit_points = this->_hit_points - static_cast<int32_t>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
-    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    damage_applied = static_cast<int64_t>(previous_hit_points - this->_hit_points);
     if (damage_applied < 0)
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
@@ -324,12 +324,12 @@ void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t t
     return ;
 }
 
-void ft_character::move(int dx, int dy, int dz) noexcept
+void ft_character::move(int32_t dx, int32_t dy, int32_t dz) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -344,13 +344,13 @@ void ft_character::move(int dx, int dy, int dz) noexcept
     return ;
 }
 
-long long ft_character::apply_skill_modifiers(long long damage) const noexcept
+int64_t ft_character::apply_skill_modifiers(int64_t damage) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    long long result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int64_t result;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -363,10 +363,10 @@ long long ft_character::apply_skill_modifiers(long long damage) const noexcept
     return (result);
 }
 
-long long ft_character::apply_skill_modifiers_internal(long long damage) const noexcept
+int64_t ft_character::apply_skill_modifiers_internal(int64_t damage) const noexcept
 {
-    const Pair<int, ft_skill> *skill_ptr;
-    const Pair<int, ft_skill> *skill_end;
+    const Pair<int32_t, ft_skill> *skill_ptr;
+    const Pair<int32_t, ft_skill> *skill_end;
 
     skill_end = this->_skills.end();
     skill_ptr = skill_end - this->_skills.size();
@@ -375,10 +375,10 @@ long long ft_character::apply_skill_modifiers_internal(long long damage) const n
         if (skill_ptr->value.get_cooldown() == 0)
         {
             damage += skill_ptr->value.get_modifier1();
-            int percent = skill_ptr->value.get_modifier2();
+            int32_t percent = skill_ptr->value.get_modifier2();
             if (percent != 0)
             {
-                long long delta = damage * percent;
+                int64_t delta = damage * percent;
                 damage += delta / 100;
             }
         }
@@ -389,12 +389,12 @@ long long ft_character::apply_skill_modifiers_internal(long long damage) const n
     return (damage);
 }
 
-void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept
+void ft_character::apply_modifier(const ft_item_modifier &mod, int32_t sign) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -407,11 +407,11 @@ void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcep
     return ;
 }
 
-void ft_character::apply_modifier_internal(const ft_item_modifier &mod, int sign) noexcept
+void ft_character::apply_modifier_internal(const ft_item_modifier &mod, int32_t sign) noexcept
 {
-    int modifier_error;
-    int modifier_identifier;
-    int modifier_value;
+    int32_t modifier_error;
+    int32_t modifier_identifier;
+    int32_t modifier_value;
 
     modifier_error = mod.get_error();
     if (modifier_error != FT_ERR_SUCCESS)
@@ -455,14 +455,14 @@ void ft_character::apply_modifier_internal(const ft_item_modifier &mod, int sign
     return ;
 }
 
-int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexcept
+int32_t ft_character::equip_item(int32_t slot, const ft_sharedptr<ft_item> &item) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     ft_sharedptr<ft_item> current;
-    int equip_error;
+    int32_t equip_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -470,7 +470,7 @@ int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexce
         return (this->get_error());
     }
     current = this->_equipment.get_item(slot);
-    if (this->handle_component_error(this->_equipment.get_error()) == true)
+    if (this->handle_component_error(this->_equipment.get_error()) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return (this->get_error());
@@ -511,13 +511,13 @@ int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexce
     return (FT_ERR_SUCCESS);
 }
 
-void ft_character::unequip_item(int slot) noexcept
+void ft_character::unequip_item(int32_t slot) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     ft_sharedptr<ft_item> item;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -538,7 +538,7 @@ void ft_character::unequip_item(int slot) noexcept
             this->apply_modifier_internal(mod, -1);
     }
     this->_equipment.unequip(slot);
-    if (this->handle_component_error(this->_equipment.get_error()) == true)
+    if (this->handle_component_error(this->_equipment.get_error()) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;

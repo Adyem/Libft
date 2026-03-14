@@ -1,180 +1,249 @@
 #include "time.hpp"
-#include "fps.hpp"
-#include "../Errno/errno.hpp"
+#include "time_fps.hpp"
+
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
+
 #include <chrono>
 #include <new>
-
-void    time_fps::abort_lifecycle_error(const char *method_name,
-    const char *reason) const noexcept
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "time_fps lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
-
-void    time_fps::abort_if_not_initialised(const char *method_name) const noexcept
-{
-    if (this->_initialised_state == time_fps::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-int     time_fps::lock_mutex(void) const noexcept
-{
-    this->abort_if_not_initialised("time_fps::lock_mutex");
-    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
-}
-
-int     time_fps::unlock_mutex(void) const noexcept
-{
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
-}
 
 time_fps::time_fps(void) noexcept
 {
     this->_mutex = ft_nullptr;
-    this->_initialised_state = time_fps::_state_uninitialised;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     this->_frame_duration_ms = 0.0;
-    this->_frames_per_second = 0;
+    this->_frames_per_second = static_cast<int64_t>(0);
     this->_last_frame_time = std::chrono::steady_clock::time_point();
+    return ;
+}
+
+time_fps::time_fps(const time_fps &other) noexcept
+{
+    this->_mutex = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    this->_frame_duration_ms = 0.0;
+    this->_frames_per_second = static_cast<int64_t>(0);
+    this->_last_frame_time = std::chrono::steady_clock::time_point();
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "time_fps::time_fps(copy)", "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+time_fps::time_fps(time_fps &&other) noexcept
+{
+    this->_mutex = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    this->_frame_duration_ms = 0.0;
+    this->_frames_per_second = static_cast<int64_t>(0);
+    this->_last_frame_time = std::chrono::steady_clock::time_point();
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "time_fps::time_fps(move)", "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(static_cast<time_fps &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 time_fps::~time_fps() noexcept
 {
-    if (this->_initialised_state == time_fps::_state_initialised)
-        (void)this->destroy();
+    (void)this->destroy();
+    this->_mutex = ft_nullptr;
+    this->_frame_duration_ms = 0.0;
+    this->_frames_per_second = static_cast<int64_t>(0);
+    this->_last_frame_time = std::chrono::steady_clock::time_point();
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     return ;
 }
 
-int     time_fps::initialize(long frames_per_second) noexcept
+int32_t time_fps::initialize(void) noexcept
 {
-    if (this->_initialised_state == time_fps::_state_initialised)
-    {
-        this->abort_lifecycle_error("time_fps::initialize",
-            "called while object is already initialised");
-        return (FT_ERR_INVALID_STATE);
-    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "time_fps::initialize", "already initialised");
     this->_frame_duration_ms = 0.0;
-    this->_frames_per_second = 0;
+    this->_frames_per_second = static_cast<int64_t>(0);
     this->_last_frame_time = std::chrono::steady_clock::now();
-    if (frames_per_second >= 24)
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t time_fps::initialize(const time_fps &other) noexcept
+{
+    int32_t destroy_error;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "time_fps::initialize(copy)", "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->_frames_per_second = frames_per_second;
-        this->_frame_duration_ms = 1000.0 / static_cast<double>(frames_per_second);
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
     }
-    this->_initialised_state = time_fps::_state_initialised;
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    this->_frame_duration_ms = other._frame_duration_ms;
+    this->_frames_per_second = other._frames_per_second;
+    this->_last_frame_time = other._last_frame_time;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int     time_fps::destroy(void) noexcept
+int32_t time_fps::initialize(time_fps &&other) noexcept
 {
-    int disable_error;
+    int32_t destroy_error;
+    int32_t move_error;
 
-    if (this->_initialised_state != time_fps::_state_initialised)
-        return (FT_ERR_INVALID_STATE);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "time_fps::initialize(move)", "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (move_error);
+}
+
+int32_t time_fps::move(time_fps &other) noexcept
+{
+    int32_t lock_error;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "time_fps::move", "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
+    this->_frame_duration_ms = other._frame_duration_ms;
+    this->_frames_per_second = other._frames_per_second;
+    this->_last_frame_time = other._last_frame_time;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._frame_duration_ms = 0.0;
+    other._frames_per_second = static_cast<int64_t>(0);
+    other._last_frame_time = std::chrono::steady_clock::time_point();
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t time_fps::destroy(void) noexcept
+{
+    int32_t first_error;
+    int32_t disable_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    first_error = FT_ERR_SUCCESS;
     disable_error = this->disable_thread_safety();
-    if (disable_error != FT_ERR_SUCCESS)
-        return (disable_error);
+    if (disable_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = disable_error;
     this->_frame_duration_ms = 0.0;
-    this->_frames_per_second = 0;
+    this->_frames_per_second = static_cast<int64_t>(0);
     this->_last_frame_time = std::chrono::steady_clock::time_point();
-    this->_initialised_state = time_fps::_state_destroyed;
-    return (FT_ERR_SUCCESS);
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (first_error);
 }
 
-long    time_fps::get_frames_per_second(void) noexcept
+int64_t time_fps::get_frames_per_second(void) noexcept
 {
-    long frames_per_second_value;
-    int lock_error;
-    int unlock_error;
+    int64_t frames_per_second_value;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("time_fps::get_frames_per_second");
-    frames_per_second_value = 0;
-    lock_error = this->lock_mutex();
+    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::get_frames_per_second");
+    frames_per_second_value = static_cast<int64_t>(0);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (frames_per_second_value);
-    if (this->_frames_per_second > 0)
+    if (this->_frames_per_second > static_cast<int64_t>(0))
         frames_per_second_value = this->_frames_per_second;
-    unlock_error = this->unlock_mutex();
-    (void)(unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (frames_per_second_value);
 }
 
-int     time_fps::set_frames_per_second(long frames_per_second) noexcept
+int32_t time_fps::set_frames_per_second(int64_t frames_per_second) noexcept
 {
-    int lock_error;
-    int unlock_error;
-    int result;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("time_fps::set_frames_per_second");
-    lock_error = this->lock_mutex();
+    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::set_frames_per_second");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (-1);
-    result = -1;
-    if (frames_per_second < 24)
+        return (FT_ERR_INTERNAL);
+    if (frames_per_second < static_cast<int64_t>(24))
     {
-        this->_frames_per_second = 0;
+        this->_frames_per_second = static_cast<int64_t>(0);
         this->_frame_duration_ms = 0.0;
         this->_last_frame_time = std::chrono::steady_clock::now();
-        result = -1;
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    else
-    {
-        this->_frames_per_second = frames_per_second;
-        this->_frame_duration_ms = 1000.0 / static_cast<double>(frames_per_second);
-        this->_last_frame_time = std::chrono::steady_clock::now();
-        result = 0;
-    }
-    unlock_error = this->unlock_mutex();
-    (void)(unlock_error);
-    return (result);
+    this->_frames_per_second = frames_per_second;
+    this->_frame_duration_ms = 1000.0 / static_cast<double>(frames_per_second);
+    this->_last_frame_time = std::chrono::steady_clock::now();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-void    time_fps::sleep_to_next_frame(void) noexcept
+void time_fps::sleep_to_next_frame(void) noexcept
 {
-    int lock_error;
-    int unlock_error;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("time_fps::sleep_to_next_frame");
-    lock_error = this->lock_mutex();
+    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::sleep_to_next_frame");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (this->_frame_duration_ms > 0.0)
     {
         std::chrono::steady_clock::time_point now;
-        long elapsed;
+        int64_t elapsed;
         double remaining_ms;
 
         now = std::chrono::steady_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - this->_last_frame_time).count();
         remaining_ms = this->_frame_duration_ms - static_cast<double>(elapsed);
         if (remaining_ms > 0.0)
-            time_sleep_ms(static_cast<unsigned int>(remaining_ms));
+            time_sleep_ms(static_cast<uint32_t>(remaining_ms));
         this->_last_frame_time = std::chrono::steady_clock::now();
     }
-    unlock_error = this->unlock_mutex();
-    (void)(unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
-int     time_fps::enable_thread_safety(void) noexcept
+int32_t time_fps::enable_thread_safety(void) noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
+    int32_t mutex_error;
 
-    this->abort_if_not_initialised("time_fps::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -190,30 +259,19 @@ int     time_fps::enable_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int     time_fps::disable_thread_safety(void) noexcept
+int32_t time_fps::disable_thread_safety(void) noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
-    this->abort_if_not_initialised("time_fps::disable_thread_safety");
-    if (this->_mutex != ft_nullptr)
-    {
-        destroy_error = this->_mutex->destroy();
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
-        return (destroy_error);
-    }
-    return (FT_ERR_SUCCESS);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
 }
 
-bool    time_fps::is_thread_safe(void) const noexcept
+ft_bool time_fps::is_thread_safe(void) const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *time_fps::get_mutex_for_validation(void) const noexcept
-{
-    this->abort_if_not_initialised("time_fps::get_mutex_for_validation");
-    return (this->_mutex);
-}
-#endif

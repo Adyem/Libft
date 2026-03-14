@@ -7,7 +7,7 @@ SRCS := html_node.cpp html_writer.cpp html_cleanup.cpp html_search.cpp html_stri
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := parser.hpp document.hpp
+HEADERS := html_parser.hpp html_document.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

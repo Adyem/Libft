@@ -5,35 +5,44 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "basic_encryption.hpp"
+#include "encryption.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
-const char *be_getEncryptionKey(void)
+const char *be_get_encryption_key(void)
 {
-    size_t key_length = 32;
-    char *key = static_cast<char *>(cma_malloc(key_length + 1));
+    ft_size_t key_length;
+    char *key;
+    int32_t secure_error;
+
+    key_length = 32;
+    key = static_cast<char *>(cma_malloc(key_length + 1));
     if (key == ft_nullptr)
         return (ft_nullptr);
-    if (cmp_rng_secure_bytes(reinterpret_cast<unsigned char *>(key), key_length) == 0)
+    if (cmp_rng_secure_bytes(reinterpret_cast<uint8_t *>(key),
+            key_length) == FT_ERR_SUCCESS)
     {
-        size_t index = 0;
+        ft_size_t index;
+
+        index = 0;
         while (index < key_length)
         {
             key[index] = static_cast<char>('A'
-                + (static_cast<unsigned char>(key[index]) % 26));
-            index++;
+                + (static_cast<uint8_t>(key[index]) % 26));
+            ++index;
         }
         key[key_length] = '\0';
         return (key);
     }
-    int secure_error = FT_ERR_INTERNAL;
+    secure_error = FT_ERR_INTERNAL;
     uint32_t seed_value = ft_random_seed(ft_nullptr);
-    size_t index = 0;
+    ft_size_t index;
+
+    index = 0;
     while (index < key_length)
     {
         seed_value = seed_value * 1103515245u + 12345u;
         key[index] = static_cast<char>('A' + (seed_value % 26u));
-        index++;
+        ++index;
     }
     key[key_length] = '\0';
     if (secure_error != FT_ERR_SUCCESS)

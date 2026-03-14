@@ -12,24 +12,26 @@ static ft_string normalize_path(ft_string path)
     return (path);
 }
 
-int file_dir_exists(const char *rel_path)
+int32_t file_dir_exists(const char *rel_path)
 {
     ft_string path;
     int32_t initialization_error;
 
     initialization_error = path.initialize(rel_path);
     if (initialization_error != FT_ERR_SUCCESS)
-        return (-1);
+        return (initialization_error);
     path = normalize_path(path);
-    int error_code;
-    int exists_value;
-    int status;
+    int32_t error_code;
+    int32_t exists_value;
+    int32_t status;
 
     if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (-1);
+        return (ft_string::get_error());
     exists_value = 0;
     status = cmp_directory_exists(path.c_str(), &exists_value, &error_code);
     if (status != FT_ERR_SUCCESS)
-        return (-1);
-    return (exists_value);
+        return (error_code);
+    if (exists_value == FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_FOUND);
+    return (FT_ERR_SUCCESS);
 }

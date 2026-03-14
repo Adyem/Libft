@@ -1,10 +1,12 @@
 #include "udp_socket.hpp"
 #include "networking.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
+#include "../Basic/basic.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <new>
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -18,7 +20,7 @@
 #endif
 
 #ifdef _WIN32
-static int setsockopt_reuse(int file_descriptor, int option_value)
+static int32_t setsockopt_reuse(int32_t file_descriptor, int32_t option_value)
 {
     if (setsockopt(file_descriptor, SOL_SOCKET, SO_REUSEADDR,
             reinterpret_cast<const char *>(&option_value), sizeof(option_value)) == SOCKET_ERROR)
@@ -26,7 +28,7 @@ static int setsockopt_reuse(int file_descriptor, int option_value)
     return (FT_ERR_SUCCESS);
 }
 #else
-static int setsockopt_reuse(int file_descriptor, int option_value)
+static int32_t setsockopt_reuse(int32_t file_descriptor, int32_t option_value)
 {
     if (setsockopt(file_descriptor, SOL_SOCKET, SO_REUSEADDR,
             &option_value, sizeof(option_value)) < 0)
@@ -36,7 +38,7 @@ static int setsockopt_reuse(int file_descriptor, int option_value)
 #endif
 
 #ifdef _WIN32
-static int set_timeout_recv(int file_descriptor, int timeout_milliseconds)
+static int32_t set_timeout_recv(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     if (setsockopt(file_descriptor, SOL_SOCKET, SO_RCVTIMEO,
             reinterpret_cast<const char *>(&timeout_milliseconds), sizeof(timeout_milliseconds)) == SOCKET_ERROR)
@@ -44,7 +46,7 @@ static int set_timeout_recv(int file_descriptor, int timeout_milliseconds)
     return (FT_ERR_SUCCESS);
 }
 #else
-static int set_timeout_recv(int file_descriptor, int timeout_milliseconds)
+static int32_t set_timeout_recv(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     struct timeval timeout_value;
 
@@ -58,7 +60,7 @@ static int set_timeout_recv(int file_descriptor, int timeout_milliseconds)
 #endif
 
 #ifdef _WIN32
-static int set_timeout_send(int file_descriptor, int timeout_milliseconds)
+static int32_t set_timeout_send(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     if (setsockopt(file_descriptor, SOL_SOCKET, SO_SNDTIMEO,
             reinterpret_cast<const char *>(&timeout_milliseconds), sizeof(timeout_milliseconds)) == SOCKET_ERROR)
@@ -66,7 +68,7 @@ static int set_timeout_send(int file_descriptor, int timeout_milliseconds)
     return (FT_ERR_SUCCESS);
 }
 #else
-static int set_timeout_send(int file_descriptor, int timeout_milliseconds)
+static int32_t set_timeout_send(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     struct timeval timeout_value;
 
@@ -79,50 +81,133 @@ static int set_timeout_send(int file_descriptor, int timeout_milliseconds)
 }
 #endif
 
-udp_socket::udp_socket()
-    : _initialised_state(_state_uninitialised), _address(), _socket_fd(-1), _mutex()
+udp_socket::udp_socket() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _address(), _socket_fd(-1), _mutex(ft_nullptr)
 {
     ft_bzero(&this->_address, sizeof(this->_address));
     return ;
 }
 
-udp_socket::~udp_socket()
+udp_socket::udp_socket(const udp_socket &other) noexcept
+    : udp_socket()
 {
-    if (this->_initialised_state == _state_uninitialised)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "udp_socket::udp_socket(copy)", "source is uninitialised");
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+udp_socket::udp_socket(udp_socket &&other) noexcept
+    : udp_socket()
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "udp_socket::udp_socket(move)", "source is uninitialised");
+    if (this->initialize(static_cast<udp_socket &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+udp_socket::~udp_socket() noexcept
+{
+    (void)this->destroy();
+    return ;
+}
+
+int32_t udp_socket::move(udp_socket &other) noexcept
+{
+    return (this->initialize(static_cast<udp_socket &&>(other)));
+}
+
+int32_t udp_socket::enable_thread_safety() noexcept
+{
+    int32_t mutex_error;
+    pt_recursive_mutex *mutex_pointer;
+
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
     {
-        pf_printf_fd(2, "udp_socket lifecycle error: %s\n",
-            "destructor called on uninitialised instance");
-        su_abort();
+        delete mutex_pointer;
+        return (mutex_error);
     }
-    if (this->_initialised_state == _state_initialised)
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t udp_socket::disable_thread_safety() noexcept
+{
+    int32_t destroy_error;
+    pt_recursive_mutex *mutex_pointer;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = this->_mutex;
+    this->_mutex = ft_nullptr;
+    destroy_error = mutex_pointer->destroy();
+    delete mutex_pointer;
+    if (destroy_error != FT_ERR_SUCCESS && destroy_error != FT_ERR_INVALID_STATE)
+        return (destroy_error);
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool udp_socket::is_thread_safe() const noexcept
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+int32_t udp_socket::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state,
+            "udp_socket::initialize", "initialize called on initialised instance");
+    ft_bzero(&this->_address, sizeof(this->_address));
+    this->_socket_fd = -1;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t udp_socket::initialize(const udp_socket &other) noexcept
+{
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "udp_socket::initialize(const udp_socket &)", "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
-        (void)this->close_socket();
-        (void)this->_mutex.destroy();
-        this->_initialised_state = _state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
     }
-    return ;
+    if (this->initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    this->_address = other._address;
+    this->_socket_fd = -1;
+    return (FT_ERR_SUCCESS);
 }
 
-void udp_socket::abort_lifecycle_error(const char *method_name, const char *reason) const
+int32_t udp_socket::initialize(udp_socket &&other) noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "udp_socket lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
+    int32_t initialize_error;
+
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    (void)other.destroy();
+    return (FT_ERR_SUCCESS);
 }
 
-void udp_socket::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == _state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialised");
-    return ;
-}
-
-int udp_socket::create_socket(const SocketConfig &config)
+int32_t udp_socket::create_socket(const SocketConfig &config)
 {
     this->_socket_fd = nw_socket(config._address_family, SOCK_DGRAM, config._protocol);
     if (this->_socket_fd < 0)
@@ -130,16 +215,16 @@ int udp_socket::create_socket(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int udp_socket::set_non_blocking(const SocketConfig &config)
+int32_t udp_socket::set_non_blocking(const SocketConfig &config)
 {
-    if (config._non_blocking == false)
+    if (config._non_blocking == FT_FALSE)
         return (FT_ERR_SUCCESS);
     if (nw_set_nonblocking(this->_socket_fd) != 0)
         return (FT_ERR_CONFIGURATION);
     return (FT_ERR_SUCCESS);
 }
 
-int udp_socket::set_timeouts(const SocketConfig &config)
+int32_t udp_socket::set_timeouts(const SocketConfig &config)
 {
     if (config._recv_timeout > 0)
     {
@@ -154,7 +239,7 @@ int udp_socket::set_timeouts(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int udp_socket::configure_address(const SocketConfig &config)
+int32_t udp_socket::configure_address(const SocketConfig &config)
 {
     struct addrinfo hints;
     struct addrinfo *address_info;
@@ -179,9 +264,9 @@ int udp_socket::configure_address(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int udp_socket::bind_socket(const SocketConfig &config)
+int32_t udp_socket::bind_socket(const SocketConfig &config)
 {
-    int reuse_option;
+    int32_t reuse_option;
 
     reuse_option = 1;
     if (config._type != SocketType::SERVER)
@@ -194,7 +279,7 @@ int udp_socket::bind_socket(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int udp_socket::connect_socket(const SocketConfig &config)
+int32_t udp_socket::connect_socket(const SocketConfig &config)
 {
     if (config._type != SocketType::CLIENT)
         return (FT_ERR_SUCCESS);
@@ -204,26 +289,18 @@ int udp_socket::connect_socket(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int udp_socket::initialize(const SocketConfig &config)
+int32_t udp_socket::initialize(const SocketConfig &config)
 {
-    int lock_error;
-    int step_error;
+    int32_t lock_error;
+    int32_t step_error;
 
-    if (this->_initialised_state == _state_initialised)
-        this->abort_lifecycle_error("udp_socket::initialize",
-            "initialize called on initialised instance");
-    if (this->_initialised_state != _state_initialised)
-    {
-        if (this->_mutex.initialize() != FT_ERR_SUCCESS)
-            return (FT_ERR_INITIALIZATION_FAILED);
-        this->_initialised_state = _state_initialised;
-    }
-    lock_error = this->_mutex.lock();
+    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::initialize(config)");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (this->_socket_fd >= 0)
     {
-        (void)this->_mutex.unlock();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_ALREADY_INITIALISED);
     }
     step_error = this->create_socket(config);
@@ -245,81 +322,103 @@ int udp_socket::initialize(const SocketConfig &config)
             this->_socket_fd = -1;
         }
     }
-    (void)this->_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (step_error);
 }
 
-ssize_t udp_socket::send_to(const void *data, size_t size, int flags,
+int32_t udp_socket::destroy() noexcept
+{
+    int32_t lock_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+    {
+        if (this->_socket_fd >= 0)
+        {
+            (void)nw_close(this->_socket_fd);
+            this->_socket_fd = -1;
+        }
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    }
+    (void)this->disable_thread_safety();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+ssize_t udp_socket::send_to(const void *data, ft_size_t size, int32_t flags,
     const struct sockaddr *destination_address, socklen_t address_length)
 {
-    int lock_error;
+    int32_t lock_error;
     ssize_t send_result;
 
-    this->abort_if_not_initialised("udp_socket::send_to");
-    lock_error = this->_mutex.lock();
+    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::send_to");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (this->_socket_fd < 0)
     {
-        (void)this->_mutex.unlock();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     send_result = nw_sendto(this->_socket_fd, data, size, flags, destination_address, address_length);
-    (void)this->_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (send_result);
 }
 
-ssize_t udp_socket::receive_from(void *buffer, size_t size, int flags,
+ssize_t udp_socket::receive_from(void *buffer, ft_size_t size, int32_t flags,
     struct sockaddr *source_address, socklen_t *address_length)
 {
-    int lock_error;
+    int32_t lock_error;
     ssize_t receive_result;
 
-    this->abort_if_not_initialised("udp_socket::receive_from");
-    lock_error = this->_mutex.lock();
+    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::receive_from");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (this->_socket_fd < 0)
     {
-        (void)this->_mutex.unlock();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     receive_result = nw_recvfrom(this->_socket_fd, buffer, size, flags, source_address, address_length);
-    (void)this->_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (receive_result);
 }
 
-bool udp_socket::close_socket()
+ft_bool udp_socket::close_socket()
 {
-    int lock_error;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("udp_socket::close_socket");
-    lock_error = this->_mutex.lock();
+    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::close_socket");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     if (this->_socket_fd < 0)
     {
-        (void)this->_mutex.unlock();
-        return (true);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_TRUE);
     }
     if (nw_close(this->_socket_fd) != 0)
     {
-        (void)this->_mutex.unlock();
-        return (false);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_FALSE);
     }
     this->_socket_fd = -1;
-    (void)this->_mutex.unlock();
-    return (true);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_TRUE);
 }
 
-int udp_socket::get_fd() const
+int32_t udp_socket::get_fd() const
 {
-    this->abort_if_not_initialised("udp_socket::get_fd");
+    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::get_fd");
     return (this->_socket_fd);
 }
 
 const struct sockaddr_storage &udp_socket::get_address() const
 {
-    this->abort_if_not_initialised("udp_socket::get_address");
+    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::get_address");
     return (this->_address);
 }

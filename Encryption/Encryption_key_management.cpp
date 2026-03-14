@@ -1,11 +1,12 @@
-#include "encryption_key_management.hpp"
+#include "encryption.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../RNG/rng.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
-static int encryption_fill_secure_buffer_internal(unsigned char *buffer, size_t buffer_length)
+static int32_t encryption_fill_secure_buffer_internal(uint8_t *buffer,
+    ft_size_t buffer_length)
 {
     if (buffer == ft_nullptr)
     {
@@ -15,26 +16,22 @@ static int encryption_fill_secure_buffer_internal(unsigned char *buffer, size_t 
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (rng_secure_bytes(buffer, buffer_length) != 0)
+    if (rng_secure_bytes(buffer, buffer_length) != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     return (FT_ERR_SUCCESS);
 }
 
-int encryption_fill_secure_buffer(unsigned char *buffer, size_t buffer_length)
+int32_t encryption_fill_secure_buffer(uint8_t *buffer, ft_size_t buffer_length)
 {
-    int error_code;
-
-    error_code = encryption_fill_secure_buffer_internal(buffer, buffer_length);
-    if (error_code == FT_ERR_SUCCESS)
-        return (0);
-    return (-1);
+    return (encryption_fill_secure_buffer_internal(buffer, buffer_length));
 }
 
-static unsigned char *encryption_allocate_key(size_t key_length, int *error_code)
+static uint8_t *encryption_allocate_key(ft_size_t key_length,
+    int32_t *error_code)
 {
-    unsigned char *key_buffer;
+    uint8_t *key_buffer;
 
-    key_buffer = static_cast<unsigned char *>(cma_malloc(key_length));
+    key_buffer = static_cast<uint8_t *>(cma_malloc(key_length));
     if (key_buffer == ft_nullptr)
     {
         if (error_code)
@@ -46,7 +43,7 @@ static unsigned char *encryption_allocate_key(size_t key_length, int *error_code
     return (key_buffer);
 }
 
-static void encryption_discard_key(unsigned char *key_buffer, size_t key_length)
+static void encryption_discard_key(uint8_t *key_buffer, ft_size_t key_length)
 {
     if (key_buffer == ft_nullptr)
         return ;
@@ -56,10 +53,11 @@ static void encryption_discard_key(unsigned char *key_buffer, size_t key_length)
     return ;
 }
 
-static unsigned char *encryption_generate_symmetric_key_internal(size_t key_length, int *error_code)
+static uint8_t *encryption_generate_symmetric_key_internal(ft_size_t key_length,
+    int32_t *error_code)
 {
-    unsigned char *key_buffer;
-    int allocation_error;
+    uint8_t *key_buffer;
+    int32_t allocation_error;
 
     if (key_length == 0)
     {
@@ -87,18 +85,20 @@ static unsigned char *encryption_generate_symmetric_key_internal(size_t key_leng
     return (key_buffer);
 }
 
-unsigned char *encryption_generate_symmetric_key(size_t key_length)
+uint8_t *encryption_generate_symmetric_key(ft_size_t key_length)
 {
-    unsigned char *key_buffer;
+    uint8_t *key_buffer;
 
     key_buffer = encryption_generate_symmetric_key_internal(key_length, ft_nullptr);
     return (key_buffer);
 }
 
-unsigned char *encryption_generate_initialization_vector(size_t iv_length)
+uint8_t *encryption_generate_initialization_vector(
+    ft_size_t initialization_vector_length)
 {
-    unsigned char *key_buffer;
+    uint8_t *key_buffer;
 
-    key_buffer = encryption_generate_symmetric_key_internal(iv_length, ft_nullptr);
+    key_buffer = encryption_generate_symmetric_key_internal(
+            initialization_vector_length, ft_nullptr);
     return (key_buffer);
 }

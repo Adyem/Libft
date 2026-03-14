@@ -1,6 +1,6 @@
 #include "time.hpp"
 
-long long   time_monotonic(void)
+int64_t   time_monotonic(void)
 {
     t_monotonic_time_point time_point;
 

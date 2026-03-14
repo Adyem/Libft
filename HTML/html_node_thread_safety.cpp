@@ -1,20 +1,20 @@
 #include <new>
 
-#include "parser.hpp"
+#include "html_parser.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 
-int html_node_prepare_thread_safety(html_node *node)
+int32_t html_node_prepare_thread_safety(html_node *node)
 {
     pt_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
     if (!node)
         return (FT_ERR_INVALID_ARGUMENT);
     if (node->thread_safe_enabled && node->mutex)
-        return (0);
+        return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (!mutex_pointer)
         return (FT_ERR_NO_MEMORY);
@@ -25,8 +25,8 @@ int html_node_prepare_thread_safety(html_node *node)
         return (initialize_error);
     }
     node->mutex = mutex_pointer;
-    node->thread_safe_enabled = true;
-    return (0);
+    node->thread_safe_enabled = FT_TRUE;
+    return (FT_ERR_SUCCESS);
 }
 
 void html_node_teardown_thread_safety(html_node *node)
@@ -39,31 +39,31 @@ void html_node_teardown_thread_safety(html_node *node)
         delete node->mutex;
         node->mutex = ft_nullptr;
     }
-    node->thread_safe_enabled = false;
+    node->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-int html_node_lock(const html_node *node, bool *lock_acquired)
+int32_t html_node_lock(const html_node *node, ft_bool *lock_acquired)
 {
     html_node *mutable_node;
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!node)
         return (FT_ERR_INVALID_ARGUMENT);
     mutable_node = const_cast<html_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
-        return (0);
+        return (FT_ERR_SUCCESS);
     lock_error = pt_mutex_lock_if_not_null(mutable_node->mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired)
-        *lock_acquired = true;
-    return (0);
+        *lock_acquired = FT_TRUE;
+    return (FT_ERR_SUCCESS);
 }
 
-void html_node_unlock(const html_node *node, bool lock_acquired)
+void html_node_unlock(const html_node *node, ft_bool lock_acquired)
 {
     html_node *mutable_node;
 
@@ -76,11 +76,11 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
     return ;
 }
 
-bool html_node_is_thread_safe_enabled(const html_node *node)
+ft_bool html_node_is_thread_safe_enabled(const html_node *node)
 {
     if (!node)
-        return (false);
+        return (FT_FALSE);
     if (!node->thread_safe_enabled || !node->mutex)
-        return (false);
-    return (true);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }

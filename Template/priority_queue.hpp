@@ -4,6 +4,7 @@
 #include "constructor.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
@@ -17,388 +18,665 @@ class ft_priority_queue
 {
     private:
         ElementType*                 _data;
-        ft_size_t                       _capacity;
-        ft_size_t                       _size;
+        ft_size_t                    _configured_initial_capacity;
+        ft_size_t                    _capacity;
+        ft_size_t                    _size;
         Compare                      _comp;
         mutable pt_recursive_mutex*  _mutex;
-        static thread_local int32_t  _last_error;
+        uint8_t                      _initialised_state;
+        static thread_local uint32_t _last_error;
 
-        static int32_t set_error(int32_t error_code)
-        {
-            _last_error = error_code;
-            return (error_code);
-        }
-
-        bool ensure_capacity(ft_size_t desired)
-        {
-            ft_size_t new_capacity;
-            ElementType* new_data;
-            ft_size_t element_index;
-
-            if (desired <= this->_capacity)
-            {
-                set_error(FT_ERR_SUCCESS);
-                return (true);
-            }
-            if (this->_capacity == 0)
-                new_capacity = 1;
-            else
-                new_capacity = this->_capacity * 2;
-            while (new_capacity < desired)
-                new_capacity *= 2;
-            new_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * new_capacity));
-            if (new_data == ft_nullptr)
-            {
-                set_error(FT_ERR_PRIORITY_QUEUE_NO_MEMORY);
-                return (false);
-            }
-            element_index = 0;
-            while (element_index < this->_size)
-            {
-                ::construct_at(&new_data[element_index], ft_move(this->_data[element_index]));
-                ::destroy_at(&this->_data[element_index]);
-                element_index += 1;
-            }
-            if (this->_data != ft_nullptr)
-                cma_free(this->_data);
-            this->_data = new_data;
-            this->_capacity = new_capacity;
-            set_error(FT_ERR_SUCCESS);
-            return (true);
-        }
-
-        void heapify_up(ft_size_t index)
-        {
-            ft_size_t parent_index;
-
-            while (index > 0)
-            {
-                parent_index = (index - 1) / 2;
-                if (!this->_comp(this->_data[parent_index], this->_data[index]))
-                    break ;
-                ft_swap(this->_data[parent_index], this->_data[index]);
-                index = parent_index;
-            }
-            return ;
-        }
-
-        void heapify_down(ft_size_t index)
-        {
-            ft_size_t left_child_index;
-            ft_size_t right_child_index;
-            ft_size_t largest_index;
-
-            while (true)
-            {
-                left_child_index = index * 2 + 1;
-                right_child_index = left_child_index + 1;
-                largest_index = index;
-                if (left_child_index < this->_size
-                    && this->_comp(this->_data[largest_index], this->_data[left_child_index]))
-                    largest_index = left_child_index;
-                if (right_child_index < this->_size
-                    && this->_comp(this->_data[largest_index], this->_data[right_child_index]))
-                    largest_index = right_child_index;
-                if (largest_index == index)
-                    break ;
-                ft_swap(this->_data[index], this->_data[largest_index]);
-                index = largest_index;
-            }
-            return ;
-        }
-
-        int32_t lock_internal(ft_bool *lock_acquired) const
-        {
-            if (lock_acquired != ft_nullptr)
-                *lock_acquired = FT_FALSE;
-            if (this->_mutex == ft_nullptr)
-                return (FT_ERR_SUCCESS);
-            if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
-                return (set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
-            if (lock_acquired != ft_nullptr)
-                *lock_acquired = FT_TRUE;
-            return (FT_ERR_SUCCESS);
-        }
-
-        int32_t unlock_internal(ft_bool lock_acquired) const
-        {
-            if (lock_acquired == FT_FALSE || this->_mutex == ft_nullptr)
-                return (FT_ERR_SUCCESS);
-            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            return (FT_ERR_SUCCESS);
-        }
+        static uint32_t set_error(uint32_t error_code);
+        ft_bool ensure_capacity(ft_size_t desired);
+        void heapify_up(ft_size_t index);
+        void heapify_down(ft_size_t index);
+        int32_t lock_internal(ft_bool *lock_acquired) const;
+        int32_t unlock_internal(ft_bool lock_acquired) const;
 
     public:
         ft_priority_queue(ft_size_t initial_capacity = 0,
-                const Compare& comp = Compare())
-            : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _mutex(ft_nullptr)
-        {
-            if (initial_capacity > 0)
-            {
-                this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initial_capacity));
-                if (this->_data == ft_nullptr)
-                {
-                    set_error(FT_ERR_PRIORITY_QUEUE_NO_MEMORY);
-                    return ;
-                }
-                this->_capacity = initial_capacity;
-            }
-            set_error(FT_ERR_SUCCESS);
-            return ;
-        }
-
-        ~ft_priority_queue()
-        {
-            this->clear();
-            if (this->_data != ft_nullptr)
-                cma_free(this->_data);
-            (void)this->disable_thread_safety();
-            return ;
-        }
-
-        ft_priority_queue(const ft_priority_queue&) = delete;
+            const Compare& comp = Compare());
+        ft_priority_queue(const ft_priority_queue<ElementType, Compare> &other);
+        ft_priority_queue(ft_priority_queue<ElementType, Compare> &&other);
+        ~ft_priority_queue();
         ft_priority_queue& operator=(const ft_priority_queue&) = delete;
-        ft_priority_queue(ft_priority_queue&& other) = delete;
         ft_priority_queue& operator=(ft_priority_queue&& other) = delete;
 
-        int32_t enable_thread_safety()
-        {
-            pt_recursive_mutex *new_mutex;
-            int32_t initialize_result;
+        int32_t initialize();
+        int32_t destroy();
+        uint32_t move(ft_priority_queue<ElementType, Compare> &other);
+        int32_t enable_thread_safety();
+        int32_t disable_thread_safety();
+        ft_bool is_thread_safe() const;
+        int32_t lock(ft_bool *lock_acquired) const;
+        void unlock(ft_bool lock_acquired) const;
 
-            if (this->_mutex != ft_nullptr)
-                return (set_error(FT_ERR_SUCCESS));
-            new_mutex = new (std::nothrow) pt_recursive_mutex();
-            if (new_mutex == ft_nullptr)
-                return (set_error(FT_ERR_NO_MEMORY));
-            initialize_result = new_mutex->initialize();
-            if (initialize_result != FT_ERR_SUCCESS)
-            {
-                delete new_mutex;
-                return (set_error(initialize_result));
-            }
-            this->_mutex = new_mutex;
-            return (set_error(FT_ERR_SUCCESS));
-        }
+        void push(const ElementType& value);
+        void push(ElementType&& value);
+        ElementType pop();
 
-        int32_t disable_thread_safety()
-        {
-            pt_recursive_mutex *mutex_pointer;
-            int32_t destroy_result;
+        ElementType& top();
+        const ElementType& top() const;
 
-            mutex_pointer = this->_mutex;
-            if (mutex_pointer == ft_nullptr)
-                return (set_error(FT_ERR_SUCCESS));
-            this->_mutex = ft_nullptr;
-            destroy_result = mutex_pointer->destroy();
-            delete mutex_pointer;
-            if (destroy_result != FT_ERR_SUCCESS)
-                return (set_error(destroy_result));
-            return (set_error(FT_ERR_SUCCESS));
-        }
+        ft_size_t size() const;
+        ft_bool empty() const;
 
-        bool is_thread_safe() const
-        {
-            set_error(FT_ERR_SUCCESS);
-            return (this->_mutex != ft_nullptr);
-        }
+        void clear();
 
-        int32_t lock(ft_bool *lock_acquired) const
-        {
-            return (set_error(this->lock_internal(lock_acquired)));
-        }
-
-        void unlock(ft_bool lock_acquired) const
-        {
-            (void)this->unlock_internal(lock_acquired);
-            return ;
-        }
-
-        void push(const ElementType& value)
-        {
-            ft_bool lock_acquired;
-            int32_t lock_error;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return ;
-            if (!this->ensure_capacity(this->_size + 1))
-            {
-                (void)this->unlock_internal(lock_acquired);
-                return ;
-            }
-            ::construct_at(&this->_data[this->_size], value);
-            this->heapify_up(this->_size);
-            this->_size += 1;
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return ;
-        }
-
-        void push(ElementType&& value)
-        {
-            ft_bool lock_acquired;
-            int32_t lock_error;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return ;
-            if (!this->ensure_capacity(this->_size + 1))
-            {
-                (void)this->unlock_internal(lock_acquired);
-                return ;
-            }
-            ::construct_at(&this->_data[this->_size], ft_move(value));
-            this->heapify_up(this->_size);
-            this->_size += 1;
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return ;
-        }
-
-        ElementType pop()
-        {
-            ft_bool lock_acquired;
-            int32_t lock_error;
-            ElementType value;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return (ElementType());
-            if (this->_size == 0)
-            {
-                set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
-                (void)this->unlock_internal(lock_acquired);
-                return (ElementType());
-            }
-            value = ft_move(this->_data[0]);
-            ::destroy_at(&this->_data[0]);
-            this->_size -= 1;
-            if (this->_size > 0)
-            {
-                ::construct_at(&this->_data[0], ft_move(this->_data[this->_size]));
-                ::destroy_at(&this->_data[this->_size]);
-                this->heapify_down(0);
-            }
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return (value);
-        }
-
-        ElementType& top()
-        {
-            static ElementType error_element = ElementType();
-            ft_bool lock_acquired;
-            int32_t lock_error;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return (error_element);
-            if (this->_size == 0)
-            {
-                set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
-                (void)this->unlock_internal(lock_acquired);
-                return (error_element);
-            }
-            ElementType *value = &this->_data[0];
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return (*value);
-        }
-
-        const ElementType& top() const
-        {
-            static ElementType error_element = ElementType();
-            ft_bool lock_acquired;
-            int32_t lock_error;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return (error_element);
-            if (this->_size == 0)
-            {
-                set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
-                (void)this->unlock_internal(lock_acquired);
-                return (error_element);
-            }
-            const ElementType *value = &this->_data[0];
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return (*value);
-        }
-
-        ft_size_t size() const
-        {
-            ft_size_t current_size;
-            ft_bool lock_acquired;
-            int32_t lock_error;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return (0);
-            current_size = this->_size;
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return (current_size);
-        }
-
-        bool empty() const
-        {
-            bool result;
-            ft_bool lock_acquired;
-            int32_t lock_error;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return (true);
-            result = (this->_size == 0);
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return (result);
-        }
-
-        void clear()
-        {
-            ft_size_t element_index;
-            ft_bool lock_acquired;
-            int32_t lock_error;
-
-            lock_acquired = FT_FALSE;
-            lock_error = this->lock_internal(&lock_acquired);
-            if (lock_error != FT_ERR_SUCCESS)
-                return ;
-            element_index = 0;
-            while (element_index < this->_size)
-            {
-                ::destroy_at(&this->_data[element_index]);
-                element_index += 1;
-            }
-            this->_size = 0;
-            set_error(FT_ERR_SUCCESS);
-            (void)this->unlock_internal(lock_acquired);
-            return ;
-        }
-
-        static int32_t get_error() noexcept
-        {
-            return (_last_error);
-        }
-
-        static const char *get_error_str() noexcept
-        {
-            return (ft_strerror(_last_error));
-        }
-
+        uint32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 template <typename ElementType, typename Compare>
-thread_local int32_t ft_priority_queue<ElementType, Compare>::_last_error = FT_ERR_SUCCESS;
+thread_local uint32_t ft_priority_queue<ElementType, Compare>::_last_error = FT_ERR_SUCCESS;
+
+template <typename ElementType, typename Compare>
+uint32_t ft_priority_queue<ElementType, Compare>::set_error(uint32_t error_code)
+{
+    _last_error = error_code;
+    return (error_code);
+}
+
+template <typename ElementType, typename Compare>
+ft_bool ft_priority_queue<ElementType, Compare>::ensure_capacity(ft_size_t desired)
+{
+    ft_size_t new_capacity;
+    ElementType* new_data;
+    ft_size_t element_index;
+
+    if (desired <= this->_capacity)
+    {
+        set_error(FT_ERR_SUCCESS);
+        return (FT_TRUE);
+    }
+    if (this->_capacity == 0)
+        new_capacity = 1;
+    else
+        new_capacity = this->_capacity * 2;
+    while (new_capacity < desired)
+        new_capacity *= 2;
+    new_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * new_capacity));
+    if (new_data == ft_nullptr)
+    {
+        set_error(FT_ERR_PRIORITY_QUEUE_NO_MEMORY);
+        return (FT_FALSE);
+    }
+    element_index = 0;
+    while (element_index < this->_size)
+    {
+        ::construct_at(&new_data[element_index], ft_move(this->_data[element_index]));
+        ::destroy_at(&this->_data[element_index]);
+        element_index += 1;
+    }
+    if (this->_data != ft_nullptr)
+        cma_free(this->_data);
+    this->_data = new_data;
+    this->_capacity = new_capacity;
+    set_error(FT_ERR_SUCCESS);
+    return (FT_TRUE);
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::heapify_up(ft_size_t index)
+{
+    ft_size_t parent_index;
+
+    while (index > 0)
+    {
+        parent_index = (index - 1) / 2;
+        if (!this->_comp(this->_data[parent_index], this->_data[index]))
+            break ;
+        ft_swap(this->_data[parent_index], this->_data[index]);
+        index = parent_index;
+    }
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::heapify_down(ft_size_t index)
+{
+    ft_size_t left_child_index;
+    ft_size_t right_child_index;
+    ft_size_t largest_index;
+
+    while (FT_TRUE)
+    {
+        left_child_index = index * 2 + 1;
+        right_child_index = left_child_index + 1;
+        largest_index = index;
+        if (left_child_index < this->_size
+            && this->_comp(this->_data[largest_index], this->_data[left_child_index]))
+            largest_index = left_child_index;
+        if (right_child_index < this->_size
+            && this->_comp(this->_data[largest_index], this->_data[right_child_index]))
+            largest_index = right_child_index;
+        if (largest_index == index)
+            break ;
+        ft_swap(this->_data[index], this->_data[largest_index]);
+        index = largest_index;
+    }
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+int32_t ft_priority_queue<ElementType, Compare>::lock_internal(ft_bool *lock_acquired) const
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = FT_FALSE;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
+        return (set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = FT_TRUE;
+    return (FT_ERR_SUCCESS);
+}
+
+template <typename ElementType, typename Compare>
+int32_t ft_priority_queue<ElementType, Compare>::unlock_internal(ft_bool lock_acquired) const
+{
+    if (lock_acquired == FT_FALSE || this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
+}
+
+template <typename ElementType, typename Compare>
+ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_size_t initial_capacity,
+    const Compare& comp)
+    : _data(ft_nullptr), _configured_initial_capacity(initial_capacity),
+      _capacity(0), _size(0), _comp(comp), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+ft_priority_queue<ElementType, Compare>::ft_priority_queue(
+    const ft_priority_queue<ElementType, Compare> &other)
+    : _data(ft_nullptr), _configured_initial_capacity(other._configured_initial_capacity),
+      _capacity(0), _size(0), _comp(other._comp), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    ft_size_t element_index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_priority_queue::ft_priority_queue(copy)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize() != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    lock_acquired = FT_FALSE;
+    lock_error = other.lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    element_index = 0;
+    while (element_index < other._size)
+    {
+        this->push(other._data[element_index]);
+        if (this->get_error() != FT_ERR_SUCCESS)
+        {
+            (void)other.unlock_internal(lock_acquired);
+            (void)this->destroy();
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return ;
+        }
+        element_index += 1;
+    }
+    (void)other.unlock_internal(lock_acquired);
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+ft_priority_queue<ElementType, Compare>::ft_priority_queue(
+    ft_priority_queue<ElementType, Compare> &&other)
+    : _data(ft_nullptr), _configured_initial_capacity(other._configured_initial_capacity),
+      _capacity(0), _size(0), _comp(other._comp), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_priority_queue::ft_priority_queue(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->move(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+ft_priority_queue<ElementType, Compare>::~ft_priority_queue()
+{
+    uint32_t previous_error;
+
+    previous_error = ft_priority_queue<ElementType, Compare>::_last_error;
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (this->_mutex != ft_nullptr)
+        (void)this->disable_thread_safety();
+    (void)set_error(previous_error);
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+int32_t ft_priority_queue<ElementType, Compare>::initialize()
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state,
+            "ft_priority_queue::initialize",
+            "called while object is already initialised");
+        return (set_error(FT_ERR_INVALID_STATE));
+    }
+    this->_data = ft_nullptr;
+    this->_capacity = 0;
+    this->_size = 0;
+    this->_mutex = ft_nullptr;
+    if (this->_configured_initial_capacity > 0)
+    {
+        this->_data = static_cast<ElementType *>(cma_malloc(sizeof(ElementType)
+                    * this->_configured_initial_capacity));
+        if (this->_data == ft_nullptr)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (set_error(FT_ERR_PRIORITY_QUEUE_NO_MEMORY));
+        }
+        this->_capacity = this->_configured_initial_capacity;
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ElementType, typename Compare>
+int32_t ft_priority_queue<ElementType, Compare>::destroy()
+{
+    int32_t first_error;
+    int32_t disable_result;
+    ft_size_t element_index;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (set_error(FT_ERR_SUCCESS));
+    first_error = FT_ERR_SUCCESS;
+    disable_result = this->disable_thread_safety();
+    if (disable_result != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = disable_result;
+    element_index = 0;
+    while (element_index < this->_size)
+    {
+        ::destroy_at(&this->_data[element_index]);
+        element_index += 1;
+    }
+    if (this->_data != ft_nullptr)
+    {
+        cma_free(this->_data);
+        this->_data = ft_nullptr;
+    }
+    this->_capacity = 0;
+    this->_size = 0;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (set_error(first_error));
+}
+
+template <typename ElementType, typename Compare>
+uint32_t ft_priority_queue<ElementType, Compare>::move(
+    ft_priority_queue<ElementType, Compare> &other)
+{
+    int32_t destroy_result;
+
+    if (this == &other)
+        return (set_error(FT_ERR_SUCCESS));
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_priority_queue::move",
+            "source object is uninitialised");
+        return (set_error(FT_ERR_INVALID_STATE));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (set_error(destroy_result));
+    }
+    this->_configured_initial_capacity = other._configured_initial_capacity;
+    this->_comp = other._comp;
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_data = ft_nullptr;
+        this->_capacity = 0;
+        this->_size = 0;
+        this->_mutex = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(FT_ERR_SUCCESS));
+    }
+    this->_data = other._data;
+    this->_capacity = other._capacity;
+    this->_size = other._size;
+    this->_mutex = other._mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._data = ft_nullptr;
+    other._capacity = 0;
+    other._size = 0;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ElementType, typename Compare>
+int32_t ft_priority_queue<ElementType, Compare>::enable_thread_safety()
+{
+    pt_recursive_mutex *new_mutex;
+    int32_t initialize_result;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (set_error(FT_ERR_SUCCESS));
+    new_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (new_mutex == ft_nullptr)
+        return (set_error(FT_ERR_NO_MEMORY));
+    initialize_result = new_mutex->initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        return (set_error(initialize_result));
+    }
+    this->_mutex = new_mutex;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ElementType, typename Compare>
+int32_t ft_priority_queue<ElementType, Compare>::disable_thread_safety()
+{
+    pt_recursive_mutex *mutex_pointer;
+    int32_t destroy_result;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED
+        && this->_initialised_state != FT_CLASS_STATE_DESTROYED)
+        return (set_error(FT_ERR_INVALID_STATE));
+    mutex_pointer = this->_mutex;
+    if (mutex_pointer == ft_nullptr)
+        return (set_error(FT_ERR_SUCCESS));
+    this->_mutex = ft_nullptr;
+    destroy_result = mutex_pointer->destroy();
+    delete mutex_pointer;
+    if (destroy_result != FT_ERR_SUCCESS)
+        return (set_error(destroy_result));
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ElementType, typename Compare>
+ft_bool ft_priority_queue<ElementType, Compare>::is_thread_safe() const
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::is_thread_safe");
+    set_error(FT_ERR_SUCCESS);
+    return (this->_mutex != ft_nullptr);
+}
+
+template <typename ElementType, typename Compare>
+int32_t ft_priority_queue<ElementType, Compare>::lock(ft_bool *lock_acquired) const
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::lock");
+    return (set_error(this->lock_internal(lock_acquired)));
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::unlock(ft_bool lock_acquired) const
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::unlock");
+    (void)this->unlock_internal(lock_acquired);
+    set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
+{
+    ft_bool lock_acquired;
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::push");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        set_error(lock_error);
+        return ;
+    }
+    if (!this->ensure_capacity(this->_size + 1))
+    {
+        set_error(FT_ERR_NO_MEMORY);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
+    ::construct_at(&this->_data[this->_size], value);
+    this->heapify_up(this->_size);
+    this->_size += 1;
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
+{
+    ft_bool lock_acquired;
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::push(move)");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        set_error(lock_error);
+        return ;
+    }
+    if (!this->ensure_capacity(this->_size + 1))
+    {
+        set_error(FT_ERR_NO_MEMORY);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
+    ::construct_at(&this->_data[this->_size], ft_move(value));
+    this->heapify_up(this->_size);
+    this->_size += 1;
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+ElementType ft_priority_queue<ElementType, Compare>::pop()
+{
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ElementType value;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::pop");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (ElementType());
+    if (this->_size == 0)
+    {
+        set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
+        (void)this->unlock_internal(lock_acquired);
+        return (ElementType());
+    }
+    value = ft_move(this->_data[0]);
+    ::destroy_at(&this->_data[0]);
+    this->_size -= 1;
+    if (this->_size > 0)
+    {
+        ::construct_at(&this->_data[0], ft_move(this->_data[this->_size]));
+        ::destroy_at(&this->_data[this->_size]);
+        this->heapify_down(0);
+    }
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return (value);
+}
+
+template <typename ElementType, typename Compare>
+ElementType& ft_priority_queue<ElementType, Compare>::top()
+{
+    static ElementType error_element = ElementType();
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ElementType *value;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::top");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (error_element);
+    if (this->_size == 0)
+    {
+        set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
+        (void)this->unlock_internal(lock_acquired);
+        return (error_element);
+    }
+    value = &this->_data[0];
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return (*value);
+}
+
+template <typename ElementType, typename Compare>
+const ElementType& ft_priority_queue<ElementType, Compare>::top() const
+{
+    static ElementType error_element = ElementType();
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    const ElementType *value;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::top const");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (error_element);
+    if (this->_size == 0)
+    {
+        set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
+        (void)this->unlock_internal(lock_acquired);
+        return (error_element);
+    }
+    value = &this->_data[0];
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return (*value);
+}
+
+template <typename ElementType, typename Compare>
+ft_size_t ft_priority_queue<ElementType, Compare>::size() const
+{
+    ft_size_t current_size;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::size");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (0);
+    current_size = this->_size;
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return (current_size);
+}
+
+template <typename ElementType, typename Compare>
+ft_bool ft_priority_queue<ElementType, Compare>::empty() const
+{
+    ft_bool result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::empty");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (FT_TRUE);
+    result = (this->_size == 0);
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return (result);
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::clear()
+{
+    ft_size_t element_index;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::clear");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return ;
+    element_index = 0;
+    while (element_index < this->_size)
+    {
+        ::destroy_at(&this->_data[element_index]);
+        element_index += 1;
+    }
+    this->_size = 0;
+    set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+uint32_t ft_priority_queue<ElementType, Compare>::get_error() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::get_error");
+    return (_last_error);
+}
+
+template <typename ElementType, typename Compare>
+const char *ft_priority_queue<ElementType, Compare>::get_error_str() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_priority_queue::get_error_str");
+    return (ft_strerror(_last_error));
+}
 
 #endif

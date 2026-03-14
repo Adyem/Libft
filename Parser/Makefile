@@ -3,11 +3,11 @@ TARGET := parser.a
 DEBUG_TARGET := parser_debug.a
 
 SRCS :=         parser_document_backend.cpp \
-                Parser_dom_node.cpp \
-                Parser_dom_document.cpp \
-                Parser_dom_validation_report.cpp \
-                Parser_dom_schema.cpp \
-                Parser_dom_find_path.cpp
+                parser_dom_node.cpp \
+                parser_dom_document.cpp \
+                parser_dom_validation_report.cpp \
+                parser_dom_schema.cpp \
+                parser_dom_find_path.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

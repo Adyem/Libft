@@ -6,13 +6,13 @@
 struct ft_event_scheduler_telemetry_state
 {
     const char *scheduler_name;
-    long long last_update_count;
-    long long last_events_processed;
-    long long last_events_rescheduled;
-    long long last_total_processing_ns;
-    size_t last_max_queue_depth;
-    size_t last_max_ready_batch;
-    long long last_last_update_ns;
+    int64_t last_update_count;
+    int64_t last_events_processed;
+    int64_t last_events_rescheduled;
+    int64_t last_total_processing_ns;
+    ft_size_t last_max_queue_depth;
+    ft_size_t last_max_ready_batch;
+    int64_t last_last_update_ns;
 };
 
 void game_event_scheduler_telemetry_state_initialize(ft_event_scheduler_telemetry_state &state, const char *scheduler_name) noexcept;

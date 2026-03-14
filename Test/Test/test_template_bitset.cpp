@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Template/bitset.hpp"
+#include "../../CPP_class/bitset.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #ifndef LIBFT_TEST_BUILD

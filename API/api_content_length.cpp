@@ -1,25 +1,25 @@
 #include "api_internal.hpp"
 #include "../Errno/errno.hpp"
 
-bool api_append_content_length_header(ft_string &request, size_t content_length)
+ft_bool api_append_content_length_header(ft_string &request, ft_size_t content_length)
 {
     char content_length_buffer[32];
     char reversed_buffer[32];
-    size_t reversed_length;
-    size_t index;
-    int request_error;
+    ft_size_t reversed_length;
+    ft_size_t index;
+    int32_t request_error;
 
     if (!request.is_initialised())
     {
         if (request.initialize() != FT_ERR_SUCCESS)
-            return (false);
+            return (FT_FALSE);
     }
 
     reversed_length = 0;
     do
     {
         if (reversed_length >= sizeof(reversed_buffer) - 1)
-            return (false);
+            return (FT_FALSE);
         reversed_buffer[reversed_length] = static_cast<char>('0' + (content_length % 10));
         content_length /= 10;
         reversed_length++;
@@ -28,7 +28,7 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     index = 0;
     while (index < reversed_length)
     {
-        size_t reversed_index;
+        ft_size_t reversed_index;
 
         reversed_index = reversed_length - index - 1;
         content_length_buffer[index] = reversed_buffer[reversed_index];
@@ -39,13 +39,13 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     request_error = ft_string::get_error();
     if (request_error != FT_ERR_SUCCESS)
     {
-        return (false);
+        return (FT_FALSE);
     }
     request += content_length_buffer;
     request_error = ft_string::get_error();
     if (request_error != FT_ERR_SUCCESS)
     {
-        return (false);
+        return (FT_FALSE);
     }
-    return (true);
+    return (FT_TRUE);
 }

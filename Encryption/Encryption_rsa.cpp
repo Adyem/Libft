@@ -1,9 +1,8 @@
-#include <stdint.h>
 #include "../Errno/errno.hpp"
 #include "../RNG/rng.hpp"
-#include "rsa.hpp"
+#include "encryption.hpp"
 
-static bool g_force_mod_inverse_failure = false;
+static ft_bool g_force_mod_inverse_failure = FT_FALSE;
 
 static uint64_t rsa_gcd(uint64_t first_value, uint64_t second_value)
 {
@@ -16,47 +15,51 @@ static uint64_t rsa_gcd(uint64_t first_value, uint64_t second_value)
     return (first_value);
 }
 
-static uint64_t rsa_mod_inverse(uint64_t value, uint64_t modulus)
+static int32_t rsa_mod_inverse(uint64_t value, uint64_t modulus,
+    uint64_t *inverse_value)
 {
-    int64_t t_value = 0;
-    int64_t new_t_value = 1;
-    int64_t r_value = static_cast<int64_t>(modulus);
-    int64_t new_r_value = static_cast<int64_t>(value);
-    while (new_r_value != 0)
+    int64_t coefficient_value = 0;
+    int64_t next_coefficient_value = 1;
+    int64_t remainder_value = static_cast<int64_t>(modulus);
+    int64_t next_remainder_value = static_cast<int64_t>(value);
+    while (next_remainder_value != 0)
     {
-        int64_t quotient_value = r_value / new_r_value;
-        int64_t temp_t_value = t_value - quotient_value * new_t_value;
-        t_value = new_t_value;
-        new_t_value = temp_t_value;
-        int64_t temp_r_value = r_value - quotient_value * new_r_value;
-        r_value = new_r_value;
-        new_r_value = temp_r_value;
+        int64_t quotient_value = remainder_value / next_remainder_value;
+        int64_t temporary_coefficient_value = coefficient_value
+            - quotient_value * next_coefficient_value;
+        coefficient_value = next_coefficient_value;
+        next_coefficient_value = temporary_coefficient_value;
+        int64_t temporary_remainder_value = remainder_value
+            - quotient_value * next_remainder_value;
+        remainder_value = next_remainder_value;
+        next_remainder_value = temporary_remainder_value;
     }
-    if (r_value > 1)
-        return (0);
-    if (t_value < 0)
-        t_value += modulus;
-    return (static_cast<uint64_t>(t_value));
+    if (remainder_value > 1)
+        return (FT_ERR_INVALID_STATE);
+    if (coefficient_value < 0)
+        coefficient_value += modulus;
+    *inverse_value = static_cast<uint64_t>(coefficient_value);
+    return (FT_ERR_SUCCESS);
 }
 
-static bool rsa_is_prime(uint64_t value)
+static ft_bool rsa_is_prime(uint64_t value)
 {
     if (value < 2)
-        return (false);
+        return (FT_FALSE);
     uint64_t divisor_value = 2;
     while (divisor_value * divisor_value <= value)
     {
         if (value % divisor_value == 0)
-            return (false);
+            return (FT_FALSE);
         divisor_value = divisor_value + 1;
     }
-    return (true);
+    return (FT_TRUE);
 }
 
 static uint64_t rsa_generate_prime(uint64_t limit)
 {
     uint64_t prime_candidate = 0;
-    while (prime_candidate < 2 || rsa_is_prime(prime_candidate) == false)
+    while (prime_candidate < 2 || rsa_is_prime(prime_candidate) == FT_FALSE)
     {
         prime_candidate = static_cast<uint64_t>(ft_random_int()) % limit;
         if ((prime_candidate & 1) == 0)
@@ -79,11 +82,12 @@ static uint64_t rsa_mod_pow(uint64_t base_value, uint64_t exponent_value, uint64
     return (result_value);
 }
 
-int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t *modulus, int bit_size)
+int32_t rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key,
+    uint64_t *modulus, int32_t bit_size)
 {
     if (!public_key || !private_key || !modulus)
-        return (1);
-    uint64_t limit_value = 1ULL << (bit_size / 2);
+        return (FT_ERR_INVALID_ARGUMENT);
+    uint64_t limit_value = static_cast<uint64_t>(1) << (bit_size / 2);
     uint64_t prime_one = rsa_generate_prime(limit_value);
     uint64_t prime_two = rsa_generate_prime(limit_value);
     while (prime_two == prime_one)
@@ -97,21 +101,26 @@ int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t 
         while (rsa_gcd(public_exponent, phi_value) != 1)
             public_exponent = public_exponent + 2;
     }
-    uint64_t private_exponent;
-    if (g_force_mod_inverse_failure == true)
-        private_exponent = 0;
+    uint64_t private_exponent = 0;
+    int32_t inverse_result;
+    if (g_force_mod_inverse_failure == FT_TRUE)
+        inverse_result = FT_ERR_INVALID_STATE;
     else
-        private_exponent = rsa_mod_inverse(public_exponent, phi_value);
-    if (private_exponent == 0)
-        return (1);
+        inverse_result = rsa_mod_inverse(public_exponent, phi_value,
+            &private_exponent);
+    if (inverse_result != FT_ERR_SUCCESS)
+        return (inverse_result);
     *public_key = public_exponent;
     *private_key = private_exponent;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-void rsa_set_force_mod_inverse_failure(bool enable)
+void rsa_set_force_mod_inverse_failure(ft_bool enable)
 {
-    g_force_mod_inverse_failure = enable;
+    if (enable != FT_FALSE)
+        g_force_mod_inverse_failure = FT_TRUE;
+    else
+        g_force_mod_inverse_failure = FT_FALSE;
     return ;
 }
 

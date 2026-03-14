@@ -10,54 +10,50 @@
 
 class ft_behavior_table
 {
-    private:
-        ft_map<int, ft_behavior_profile> _profiles;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        ft_map<int32_t, ft_behavior_profile> _profiles;
         pt_recursive_mutex                        *_mutex;
         uint8_t                          _initialised_state;
-        static thread_local int           _last_error;
+        static thread_local int32_t           _last_error;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
 
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
-        void set_error(int error_code) const noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         ft_behavior_table() noexcept;
         ~ft_behavior_table() noexcept;
-        ft_behavior_table(const ft_behavior_table &other) noexcept = delete;
+        ft_behavior_table(const ft_behavior_table &other) noexcept;
         ft_behavior_table &operator=(const ft_behavior_table &other) noexcept = delete;
-        ft_behavior_table(ft_behavior_table &&other) noexcept = delete;
+        ft_behavior_table(ft_behavior_table &&other) noexcept;
         ft_behavior_table &operator=(ft_behavior_table &&other) noexcept = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_behavior_table &other) noexcept;
-        int initialize(ft_behavior_table &&other) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_behavior_table &other) noexcept;
+        int32_t initialize(ft_behavior_table &&other) noexcept;
+        int32_t move(ft_behavior_table &other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        ft_map<int, ft_behavior_profile> &get_profiles() noexcept;
-        const ft_map<int, ft_behavior_profile> &get_profiles() const noexcept;
-        void set_profiles(const ft_map<int, ft_behavior_profile> &profiles) noexcept;
+        ft_map<int32_t, ft_behavior_profile> &get_profiles() noexcept;
+        const ft_map<int32_t, ft_behavior_profile> &get_profiles() const noexcept;
+        void set_profiles(const ft_map<int32_t, ft_behavior_profile> &profiles) noexcept;
 
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
-        int register_profile(const ft_behavior_profile &profile) noexcept;
-        int fetch_profile(int profile_id, ft_behavior_profile &profile) const noexcept;
+        int32_t register_profile(const ft_behavior_profile &profile) noexcept;
+        int32_t fetch_profile(int32_t profile_id, ft_behavior_profile &profile) const noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 #endif

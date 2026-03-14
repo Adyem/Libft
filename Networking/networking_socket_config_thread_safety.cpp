@@ -1,7 +1,7 @@
 #include "networking.hpp"
 #include "../Errno/errno.hpp"
 
-int socket_config_prepare_thread_safety(SocketConfig *config)
+int32_t socket_config_prepare_thread_safety(SocketConfig *config)
 {
     if (config == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -15,22 +15,22 @@ void socket_config_teardown_thread_safety(SocketConfig *config)
     return ;
 }
 
-int socket_config_lock(const SocketConfig *config, bool *lock_acquired)
+int32_t socket_config_lock(const SocketConfig *config, ft_bool *lock_acquired)
 {
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (config == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-void socket_config_unlock(const SocketConfig *config, bool lock_acquired)
+void socket_config_unlock(const SocketConfig *config, ft_bool lock_acquired)
 {
     if (config == ft_nullptr)
         return ;
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return ;
     return ;
 }

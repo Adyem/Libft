@@ -1,20 +1,60 @@
 #include "api.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../Template/move.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include <new>
 
 api_streaming_handler::api_streaming_handler() noexcept
-    : _initialised_state(api_streaming_handler::_state_uninitialised),
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
       _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
       _user_data(ft_nullptr), _mutex(ft_nullptr)
 {
     return ;
 }
 
+api_streaming_handler::api_streaming_handler(
+    const api_streaming_handler &other) noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
+      _user_data(ft_nullptr), _mutex(ft_nullptr)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "api_streaming_handler::api_streaming_handler(copy)",
+            "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+api_streaming_handler::api_streaming_handler(
+    api_streaming_handler &&other) noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
+      _user_data(ft_nullptr), _mutex(ft_nullptr)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "api_streaming_handler::api_streaming_handler(move)",
+            "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
 api_streaming_handler::~api_streaming_handler()
 {
-    if (this->_initialised_state == api_streaming_handler::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
@@ -22,29 +62,20 @@ api_streaming_handler::~api_streaming_handler()
 void api_streaming_handler::abort_lifecycle_error(const char *method_name,
     const char *reason) const noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "api_streaming_handler lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
+    errno_abort_lifecycle(this->_initialised_state, method_name, reason);
     return ;
 }
 
 void api_streaming_handler::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialised_state == api_streaming_handler::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
+    errno_abort_if_uninitialised(this->_initialised_state, method_name);
     return ;
 }
 
-int api_streaming_handler::enable_thread_safety() noexcept
+int32_t api_streaming_handler::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *new_mutex;
-    int initialize_result;
+    int32_t initialize_result;
 
     this->abort_if_not_initialised("api_streaming_handler::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
@@ -62,10 +93,10 @@ int api_streaming_handler::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int api_streaming_handler::disable_thread_safety() noexcept
+int32_t api_streaming_handler::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int destroy_result;
+    int32_t destroy_result;
 
     this->abort_if_not_initialised("api_streaming_handler::disable_thread_safety");
     mutex_pointer = this->_mutex;
@@ -79,33 +110,98 @@ int api_streaming_handler::disable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-bool api_streaming_handler::is_thread_safe() const noexcept
+ft_bool api_streaming_handler::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int api_streaming_handler::initialize() noexcept
+int32_t api_streaming_handler::initialize() noexcept
 {
-    if (this->_initialised_state == api_streaming_handler::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         this->abort_lifecycle_error("api_streaming_handler::initialize",
             "initialize called on initialised instance");
     this->_headers_callback = ft_nullptr;
     this->_body_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
-    this->_initialised_state = api_streaming_handler::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int api_streaming_handler::destroy() noexcept
+int32_t api_streaming_handler::initialize(
+    const api_streaming_handler &other) noexcept
 {
-    if (this->_initialised_state != api_streaming_handler::_state_initialised)
-        return (FT_ERR_INVALID_STATE);
+    int32_t destroy_result;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->abort_lifecycle_error("api_streaming_handler::initialize(copy)",
+            "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (destroy_result);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    this->_headers_callback = other._headers_callback;
+    this->_body_callback = other._body_callback;
+    this->_user_data = other._user_data;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t api_streaming_handler::initialize(
+    api_streaming_handler &&other) noexcept
+{
+    int32_t destroy_result;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->abort_lifecycle_error("api_streaming_handler::initialize(move)",
+            "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (destroy_result);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    this->_headers_callback = other._headers_callback;
+    this->_body_callback = other._body_callback;
+    this->_user_data = other._user_data;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._headers_callback = ft_nullptr;
+    other._body_callback = ft_nullptr;
+    other._user_data = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t api_streaming_handler::destroy() noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    (void)this->disable_thread_safety();
     this->_headers_callback = ft_nullptr;
     this->_body_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
-    (void)this->disable_thread_safety();
-    this->_initialised_state = api_streaming_handler::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
+}
+
+uint32_t api_streaming_handler::move(api_streaming_handler &other) noexcept
+{
+    return (static_cast<uint32_t>(this->initialize(ft_move(other))));
 }
 
 void api_streaming_handler::reset() noexcept
@@ -148,7 +244,7 @@ void api_streaming_handler::set_user_data(void *user_data) noexcept
     return ;
 }
 
-bool api_streaming_handler::invoke_headers_callback(int status_code,
+ft_bool api_streaming_handler::invoke_headers_callback(int32_t status_code,
     const char *headers) const noexcept
 {
     api_stream_headers_callback callback;
@@ -157,34 +253,34 @@ bool api_streaming_handler::invoke_headers_callback(int status_code,
     callback = ft_nullptr;
     user_data = ft_nullptr;
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     callback = this->_headers_callback;
     user_data = this->_user_data;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (callback == ft_nullptr)
-        return (true);
+        return (FT_TRUE);
     callback(status_code, headers, user_data);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool api_streaming_handler::invoke_body_callback(const char *chunk_data,
-    size_t chunk_size, bool is_final_chunk, bool &should_continue) const noexcept
+ft_bool api_streaming_handler::invoke_body_callback(const char *chunk_data,
+    ft_size_t chunk_size, ft_bool is_final_chunk, ft_bool &should_continue) const noexcept
 {
     api_stream_body_callback callback;
     void *user_data;
 
     callback = ft_nullptr;
     user_data = ft_nullptr;
-    should_continue = true;
+    should_continue = FT_TRUE;
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_FALSE);
     callback = this->_body_callback;
     user_data = this->_user_data;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (callback == ft_nullptr)
-        return (true);
+        return (FT_TRUE);
     should_continue = callback(chunk_data, chunk_size, is_final_chunk, user_data);
-    return (true);
+    return (FT_TRUE);
 }
 
 #ifdef LIBFT_TEST_BUILD

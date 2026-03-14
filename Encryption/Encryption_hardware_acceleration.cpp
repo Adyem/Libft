@@ -1,4 +1,4 @@
-#include "encryption_hardware_acceleration.hpp"
+#include "encryption.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
@@ -7,7 +7,8 @@
 static std::atomic<t_encryption_aes_block_function> g_aes_encrypt_hook;
 static std::atomic<t_encryption_aes_block_function> g_aes_decrypt_hook;
 
-int encryption_register_hardware_hooks(const s_encryption_hardware_hooks &hooks)
+int32_t encryption_register_hardware_hooks(
+    const s_encryption_hardware_hooks &hooks)
 {
     g_aes_encrypt_hook.store(hooks.aes_encrypt, std::memory_order_release);
     g_aes_decrypt_hook.store(hooks.aes_decrypt, std::memory_order_release);
@@ -28,24 +29,26 @@ void encryption_get_hardware_hooks(s_encryption_hardware_hooks &out_hooks)
     return ;
 }
 
-bool encryption_try_hardware_aes_encrypt(uint8_t *block, const uint8_t *key)
+ft_bool encryption_try_hardware_aes_encrypt(uint8_t *block,
+    const uint8_t *key)
 {
     t_encryption_aes_block_function hook;
 
     hook = g_aes_encrypt_hook.load(std::memory_order_acquire);
     if (hook == ft_nullptr)
-        return (false);
+        return (FT_FALSE);
     hook(block, key);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool encryption_try_hardware_aes_decrypt(uint8_t *block, const uint8_t *key)
+ft_bool encryption_try_hardware_aes_decrypt(uint8_t *block,
+    const uint8_t *key)
 {
     t_encryption_aes_block_function hook;
 
     hook = g_aes_decrypt_hook.load(std::memory_order_acquire);
     if (hook == ft_nullptr)
-        return (false);
+        return (FT_FALSE);
     hook(block, key);
-    return (true);
+    return (FT_TRUE);
 }

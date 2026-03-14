@@ -2,29 +2,30 @@
 #include "game_behavior_action.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int ft_behavior_action::_last_error = FT_ERR_SUCCESS;
-int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_behavior_action &second,
-        bool *first_locked,
-        bool *second_locked)
+thread_local int32_t ft_behavior_action::_last_error = FT_ERR_SUCCESS;
+int32_t ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_behavior_action &second,
+        ft_bool *first_locked,
+        ft_bool *second_locked)
 {
     const ft_behavior_action *ordered_first;
     const ft_behavior_action *ordered_second;
-    int lock_error;
-    bool swapped;
+    int32_t lock_error;
+    ft_bool swapped;
 
     if (first_locked != ft_nullptr)
-        *first_locked = false;
+        *first_locked = FT_FALSE;
     if (second_locked != ft_nullptr)
-        *second_locked = false;
+        *second_locked = FT_FALSE;
     if (&first == &second)
     {
         return (first.lock_internal(first_locked));
     }
     ordered_first = &first;
     ordered_second = &second;
-    swapped = false;
+    swapped = FT_FALSE;
     if (ordered_first > ordered_second)
     {
         const ft_behavior_action *temporary;
@@ -32,15 +33,15 @@ int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_beha
         temporary = ordered_first;
         ordered_first = ordered_second;
         ordered_second = temporary;
-        swapped = true;
+        swapped = FT_TRUE;
     }
-    while (true)
+    while (FT_TRUE)
     {
-        bool lower_locked;
-        bool upper_locked;
+        ft_bool lower_locked;
+        ft_bool upper_locked;
 
-        lower_locked = false;
-        upper_locked = false;
+        lower_locked = FT_FALSE;
+        upper_locked = FT_FALSE;
         lock_error = ordered_first->lock_internal(&lower_locked);
         if (lock_error != FT_ERR_SUCCESS)
             return (lock_error);
@@ -74,70 +75,130 @@ int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_beha
 }
 
 ft_behavior_action::ft_behavior_action() noexcept
-    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _mutex(ft_nullptr)
+    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     return ;
 }
 
-int ft_behavior_action::initialize() noexcept
+ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
+    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_behavior_action::ft_behavior_action(copy)",
+            "source object is not initialised");
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
+    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_behavior_action::ft_behavior_action(move)",
+            "source object is not initialised");
+    }
+    if (this->initialize(static_cast<ft_behavior_action &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+int32_t ft_behavior_action::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state,
+            "ft_behavior_action::initialize",
+            "called while object is already initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
     this->_action_id = 0;
     this->_weight = 0.0;
     this->_cooldown_seconds = 0.0;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_behavior_action::initialize(int action_id, double weight,
+int32_t ft_behavior_action::initialize(int32_t action_id, double weight,
     double cooldown_seconds) noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state,
+            "ft_behavior_action::initialize",
+            "called while object is already initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
     this->_action_id = action_id;
     this->_weight = weight;
     this->_cooldown_seconds = cooldown_seconds;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 ft_behavior_action::~ft_behavior_action() noexcept
 {
-    (void)this->disable_thread_safety();
+    (void)this->destroy();
     return ;
 }
 
-int ft_behavior_action::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_behavior_action::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-void ft_behavior_action::unlock_internal(bool lock_acquired) const noexcept
+void ft_behavior_action::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return ;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        const_cast<ft_behavior_action *>(this)->set_error(unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
-int ft_behavior_action::initialize(const ft_behavior_action &other) noexcept
+int32_t ft_behavior_action::initialize(const ft_behavior_action &other) noexcept
 {
-    bool other_locked;
-    int lock_error;
+    ft_bool other_locked;
+    int32_t lock_error;
 
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    other_locked = false;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_behavior_action::initialize(copy)",
+            "source object is not initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    other_locked = FT_FALSE;
     lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -147,19 +208,34 @@ int ft_behavior_action::initialize(const ft_behavior_action &other) noexcept
     this->_action_id = other._action_id;
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other.unlock_internal(other_locked);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_behavior_action::initialize(ft_behavior_action &&other) noexcept
+int32_t ft_behavior_action::initialize(ft_behavior_action &&other) noexcept
 {
-    bool other_locked;
-    int lock_error;
+    ft_bool other_locked;
+    int32_t lock_error;
 
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    other_locked = false;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_behavior_action::initialize(move)",
+            "source object is not initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    other_locked = FT_FALSE;
     lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -169,19 +245,51 @@ int ft_behavior_action::initialize(ft_behavior_action &&other) noexcept
     this->_action_id = other._action_id;
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._action_id = 0;
     other._weight = 0.0;
     other._cooldown_seconds = 0.0;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     other.set_error(FT_ERR_SUCCESS);
     other.unlock_internal(other_locked);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_behavior_action::enable_thread_safety() noexcept
+int32_t ft_behavior_action::move(ft_behavior_action &other) noexcept
+{
+    int32_t destroy_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    return (this->initialize(static_cast<ft_behavior_action &&>(other)));
+}
+
+int32_t ft_behavior_action::destroy() noexcept
+{
+    int32_t disable_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    disable_error = this->disable_thread_safety();
+    this->_action_id = 0;
+    this->_weight = 0.0;
+    this->_cooldown_seconds = 0.0;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(disable_error);
+    return (disable_error);
+}
+
+int32_t ft_behavior_action::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -198,9 +306,9 @@ int ft_behavior_action::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_behavior_action::disable_thread_safety() noexcept
+int32_t ft_behavior_action::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -210,18 +318,18 @@ int ft_behavior_action::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_behavior_action::is_thread_safe() const noexcept
+ft_bool ft_behavior_action::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_behavior_action::get_action_id() const noexcept
+int32_t ft_behavior_action::get_action_id() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int action_id;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t action_id;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -234,12 +342,12 @@ int ft_behavior_action::get_action_id() const noexcept
     return (action_id);
 }
 
-void ft_behavior_action::set_action_id(int action_id) noexcept
+void ft_behavior_action::set_action_id(int32_t action_id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -254,11 +362,11 @@ void ft_behavior_action::set_action_id(int action_id) noexcept
 
 double ft_behavior_action::get_weight() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     double weight;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -273,10 +381,10 @@ double ft_behavior_action::get_weight() const noexcept
 
 void ft_behavior_action::set_weight(double weight) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -291,11 +399,11 @@ void ft_behavior_action::set_weight(double weight) noexcept
 
 double ft_behavior_action::get_cooldown_seconds() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     double cooldown_seconds;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -310,10 +418,10 @@ double ft_behavior_action::get_cooldown_seconds() const noexcept
 
 void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -326,21 +434,24 @@ void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
     return ;
 }
 
-int ft_behavior_action::get_error() const noexcept
+int32_t ft_behavior_action::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_behavior_action::get_error");
     return (ft_behavior_action::_last_error);
 }
 
 const char *ft_behavior_action::get_error_str() const noexcept
 {
-    int error_code;
-
-    error_code = this->get_error();
-    return (ft_strerror(error_code));
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_behavior_action::get_error_str");
+    return (ft_strerror(ft_behavior_action::_last_error));
 }
 
-void ft_behavior_action::set_error(int error_code) const noexcept
+int32_t ft_behavior_action::set_error(int32_t error_code) noexcept
 {
     ft_behavior_action::_last_error = error_code;
-    return ;
+    return (error_code);
 }

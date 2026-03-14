@@ -3,7 +3,7 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "file_utils.hpp"
 
-static int file_string_error(void) noexcept
+static int32_t file_string_error(void) noexcept
 {
     return (ft_string::get_error());
 }
@@ -30,7 +30,7 @@ ft_string file_path_normalize(const char *path)
         return (empty_result);
     if (file_string_error() != FT_ERR_SUCCESS)
         return (result);
-    size_t index = 0;
+    ft_size_t index = 0;
     char path_sep = cmp_path_separator();
     while (data[index] != '\0')
     {

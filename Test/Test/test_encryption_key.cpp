@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Encryption/basic_encryption.hpp"
+#include "../../Encryption/encryption.hpp"
 #include "../../CMA/CMA.hpp"
 #include <cstring>
 
@@ -8,10 +8,10 @@
 
 int test_encryption_key_random(void)
 {
-    const char *first_key = be_getEncryptionKey();
+    const char *first_key = be_get_encryption_key();
     if (!first_key)
         return (0);
-    const char *second_key = be_getEncryptionKey();
+    const char *second_key = be_get_encryption_key();
     if (!second_key)
     {
         cma_free(const_cast<char *>(first_key));
@@ -24,4 +24,3 @@ int test_encryption_key_random(void)
     cma_free(const_cast<char *>(second_key));
     return (result);
 }
-

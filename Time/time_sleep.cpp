@@ -2,21 +2,20 @@
 #include "../PThread/pthread.hpp"
 #include <climits>
 
-void    time_sleep(unsigned int seconds)
+void    time_sleep(uint32_t seconds)
 {
-    unsigned long long total_milliseconds;
-    unsigned int chunk_milliseconds;
+    uint64_t total_milliseconds;
+    uint32_t chunk_milliseconds;
 
-    total_milliseconds = static_cast<unsigned long long>(seconds) * 1000ULL;
+    total_milliseconds = static_cast<uint64_t>(seconds) * 1000ULL;
     while (total_milliseconds != 0)
     {
-        if (total_milliseconds > static_cast<unsigned long long>(UINT_MAX))
+        if (total_milliseconds > static_cast<uint64_t>(UINT_MAX))
             chunk_milliseconds = UINT_MAX;
         else
-            chunk_milliseconds = static_cast<unsigned int>(total_milliseconds);
+            chunk_milliseconds = static_cast<uint32_t>(total_milliseconds);
         pt_thread_sleep(chunk_milliseconds);
         total_milliseconds -= chunk_milliseconds;
     }
     return ;
 }
-

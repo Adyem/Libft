@@ -4,12 +4,10 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compression/compression.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Encryption/basic_encryption.hpp"
-#include "../Encryption/encryption_sha1.hpp"
+#include "../Encryption/encryption.hpp"
 #include "../Basic/basic.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
@@ -23,9 +21,9 @@ static char websocket_ascii_lower(char character)
     return (character);
 }
 
-static int websocket_case_insensitive_compare(const char *left, const char *right, std::size_t length)
+static int32_t websocket_case_insensitive_compare(const char *left, const char *right, ft_size_t length)
 {
-    std::size_t index_value;
+    ft_size_t index_value;
 
     index_value = 0;
     while (index_value < length)
@@ -36,20 +34,20 @@ static int websocket_case_insensitive_compare(const char *left, const char *righ
         left_value = static_cast<unsigned char>(websocket_ascii_lower(left[index_value]));
         right_value = static_cast<unsigned char>(websocket_ascii_lower(right[index_value]));
         if (left_value != right_value)
-            return (static_cast<int>(left_value) - static_cast<int>(right_value));
+            return (static_cast<int32_t>(left_value) - static_cast<int32_t>(right_value));
         index_value++;
     }
     return (FT_ERR_SUCCESS);
 }
 
 static const char *websocket_find_header_value(const ft_string &request,
-    const char *header_name, std::size_t &value_length)
+    const char *header_name, ft_size_t &value_length)
 {
     const char  *cursor;
     const char  *line_end;
-    std::size_t header_length;
-    std::size_t line_length;
-    std::size_t offset;
+    ft_size_t header_length;
+    ft_size_t line_length;
+    ft_size_t offset;
 
     cursor = request.c_str();
     header_length = ft_strlen(header_name);
@@ -57,7 +55,7 @@ static const char *websocket_find_header_value(const ft_string &request,
     {
         line_end = ft_strstr(cursor, "\r\n");
         if (line_end != ft_nullptr)
-            line_length = static_cast<std::size_t>(line_end - cursor);
+            line_length = static_cast<ft_size_t>(line_end - cursor);
         else
             line_length = ft_strlen(cursor);
         if (line_length >= header_length)
@@ -79,22 +77,22 @@ static const char *websocket_find_header_value(const ft_string &request,
     return (ft_nullptr);
 }
 
-static bool websocket_header_contains_token(const ft_string &request,
+static ft_bool websocket_header_contains_token(const ft_string &request,
     const char *header_name, const char *token)
 {
-    std::size_t value_length;
+    ft_size_t value_length;
     const char  *value_start;
-    std::size_t token_length;
-    std::size_t index_value;
+    ft_size_t token_length;
+    ft_size_t index_value;
 
     value_start = websocket_find_header_value(request, header_name, value_length);
     if (value_start == ft_nullptr || value_length == 0)
-        return (false);
+        return (FT_FALSE);
     token_length = ft_strlen(token);
     if (token_length == 0)
-        return (false);
+        return (FT_FALSE);
     if (token_length > value_length)
-        return (false);
+        return (FT_FALSE);
     index_value = 0;
     while (index_value + token_length <= value_length)
     {
@@ -124,17 +122,17 @@ static bool websocket_header_contains_token(const ft_string &request,
                     continue ;
                 }
             }
-            return (true);
+            return (FT_TRUE);
         }
         index_value++;
     }
-    return (false);
+    return (FT_FALSE);
 }
 
-static int websocket_append_bytes(ft_vector<unsigned char> &buffer,
-    const unsigned char *data, std::size_t length)
+static int32_t websocket_append_bytes(ft_vector<unsigned char> &buffer,
+    const unsigned char *data, ft_size_t length)
 {
-    std::size_t index_value;
+    ft_size_t index_value;
 
     if (data == ft_nullptr && length != 0)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -147,15 +145,15 @@ static int websocket_append_bytes(ft_vector<unsigned char> &buffer,
     return (FT_ERR_SUCCESS);
 }
 
-static int websocket_permessage_deflate_inflate(const unsigned char *payload,
-    std::size_t payload_length, ft_string &message)
+static int32_t websocket_permessage_deflate_inflate(const unsigned char *payload,
+    ft_size_t payload_length, ft_string &message)
 {
     unsigned char tail_bytes[4];
     ft_vector<unsigned char> input_buffer;
     ft_vector<unsigned char> output_buffer;
-    int append_error;
+    int32_t append_error;
     z_stream stream;
-    int zlib_result;
+    int32_t zlib_result;
 
     if (payload == ft_nullptr && payload_length != 0)
     {
@@ -180,10 +178,10 @@ static int websocket_permessage_deflate_inflate(const unsigned char *payload,
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    while (true)
+    while (FT_TRUE)
     {
         unsigned char output_chunk[512];
-        std::size_t produced_bytes;
+        ft_size_t produced_bytes;
 
         stream.next_out = output_chunk;
         stream.avail_out = sizeof(output_chunk);
@@ -214,13 +212,13 @@ static int websocket_permessage_deflate_inflate(const unsigned char *payload,
     return (FT_ERR_SUCCESS);
 }
 
-static int websocket_permessage_deflate_deflate(const ft_string &message,
+static int32_t websocket_permessage_deflate_deflate(const ft_string &message,
     ft_vector<unsigned char> &compressed)
 {
     z_stream stream;
-    int zlib_result;
+    int32_t zlib_result;
     ft_vector<unsigned char> output_buffer;
-    int append_error;
+    int32_t append_error;
 
     ft_memset(&stream, 0, sizeof(stream));
     stream.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(message.c_str()));
@@ -230,10 +228,10 @@ static int websocket_permessage_deflate_deflate(const ft_string &message,
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    while (true)
+    while (FT_TRUE)
     {
         unsigned char output_chunk[512];
-        std::size_t produced_bytes;
+        ft_size_t produced_bytes;
 
         stream.next_out = output_chunk;
         stream.avail_out = sizeof(output_chunk);
@@ -263,7 +261,7 @@ static int websocket_permessage_deflate_deflate(const ft_string &message,
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    std::size_t trim_index;
+    ft_size_t trim_index;
 
     trim_index = 0;
     while (trim_index < 4)
@@ -285,7 +283,7 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
 {
     unsigned char digest[20];
     unsigned char *encoded;
-    std::size_t encoded_size;
+    ft_size_t encoded_size;
     ft_string magic;
 
     magic = key;
@@ -295,7 +293,7 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     encoded = ft_base64_encode(digest, 20, &encoded_size);
     if (encoded)
     {
-        std::size_t index_value = 0;
+        ft_size_t index_value = 0;
         while (index_value < encoded_size)
         {
             accept.append(reinterpret_cast<char *>(encoded)[index_value]);
@@ -306,68 +304,99 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     return ;
 }
 
-ft_websocket_server::ft_websocket_server()
-    : _initialised_state(_state_uninitialised), _server_socket(ft_nullptr), _mutex(ft_nullptr)
+ft_websocket_server::ft_websocket_server() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _server_socket(ft_nullptr), _mutex(ft_nullptr)
 {
     return ;
 }
 
-ft_websocket_server::~ft_websocket_server()
+ft_websocket_server::ft_websocket_server(const ft_websocket_server &other) noexcept
+    : ft_websocket_server()
 {
-    if (this->_initialised_state == _state_initialised)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_websocket_server::ft_websocket_server(copy)",
+            "source is uninitialised");
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_websocket_server::ft_websocket_server(ft_websocket_server &&other) noexcept
+    : ft_websocket_server()
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_websocket_server::ft_websocket_server(move)",
+            "source is uninitialised");
+    if (this->initialize(static_cast<ft_websocket_server &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_websocket_server::~ft_websocket_server() noexcept
+{
+    (void)this->destroy();
+    return ;
+}
+
+int32_t ft_websocket_server::move(ft_websocket_server &other) noexcept
+{
+    return (this->initialize(static_cast<ft_websocket_server &&>(other)));
+}
+
+int32_t ft_websocket_server::initialize(const ft_websocket_server &other) noexcept
+{
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_websocket_server::initialize(const ft_websocket_server &)",
+            "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
-    return ;
-}
-
-void ft_websocket_server::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_websocket_server lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_websocket_server::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == _state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialised");
-    return ;
-}
-
-int ft_websocket_server::initialize()
-{
-    pt_recursive_mutex *mutex_pointer;
-
-    if (this->_initialised_state == _state_initialised)
-        this->abort_lifecycle_error("ft_websocket_server::initialize",
-            "initialize called on initialised instance");
-    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-    if (mutex_pointer == ft_nullptr)
-        return (FT_ERR_INVALID_OPERATION);
-    if (mutex_pointer->initialize() != FT_ERR_SUCCESS)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
-        delete mutex_pointer;
-        return (FT_ERR_INVALID_OPERATION);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
     }
-    this->_mutex = mutex_pointer;
-    this->_server_socket = ft_nullptr;
-    this->_connection_states.clear();
-    this->_initialised_state = _state_initialised;
+    return (this->initialize());
+}
+
+int32_t ft_websocket_server::initialize(ft_websocket_server &&other) noexcept
+{
+    int32_t initialize_error;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    (void)other.destroy();
     return (FT_ERR_SUCCESS);
 }
 
-int ft_websocket_server::destroy()
+int32_t ft_websocket_server::initialize() noexcept
 {
-    if (this->_initialised_state != _state_initialised)
-        return (FT_ERR_INVALID_STATE);
-    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
-        return (FT_ERR_INVALID_OPERATION);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        errno_abort_lifecycle(this->_initialised_state, "ft_websocket_server::initialize", "initialize called on initialised instance");
+    this->_mutex = ft_nullptr;
+    this->_server_socket = ft_nullptr;
+    this->_connection_states.clear();
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_websocket_server::destroy() noexcept
+{
+    int32_t disable_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     if (this->_server_socket)
     {
         this->_server_socket->close_socket();
@@ -375,19 +404,51 @@ int ft_websocket_server::destroy()
         this->_server_socket = ft_nullptr;
     }
     this->_connection_states.clear();
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (this->_mutex != ft_nullptr)
-    {
-        (void)this->_mutex->destroy();
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
-    }
-    this->_initialised_state = _state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 
-void ft_websocket_server::store_connection_state_locked(int client_fd,
-    bool permessage_deflate_enabled)
+int32_t ft_websocket_server::enable_thread_safety() noexcept
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    this->_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    if (this->_mutex->initialize() != FT_ERR_SUCCESS)
+    {
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_websocket_server::disable_thread_safety() noexcept
+{
+    int32_t destroy_error;
+    pt_recursive_mutex *mutex_pointer;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = this->_mutex;
+    this->_mutex = ft_nullptr;
+    destroy_error = mutex_pointer->destroy();
+    delete mutex_pointer;
+    if (destroy_error != FT_ERR_SUCCESS && destroy_error != FT_ERR_INVALID_STATE)
+        return (destroy_error);
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool ft_websocket_server::is_thread_safe() const noexcept
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+void ft_websocket_server::store_connection_state_locked(int32_t client_fd,
+    ft_bool permessage_deflate_enabled)
 {
     s_connection_state state;
 
@@ -396,29 +457,29 @@ void ft_websocket_server::store_connection_state_locked(int client_fd,
     return ;
 }
 
-void ft_websocket_server::remove_connection_state_locked(int client_fd)
+void ft_websocket_server::remove_connection_state_locked(int32_t client_fd)
 {
     this->_connection_states.remove(client_fd);
     return ;
 }
 
-bool ft_websocket_server::connection_supports_permessage_deflate_locked(int client_fd) const
+ft_bool ft_websocket_server::connection_supports_permessage_deflate_locked(int32_t client_fd) const
 {
-    const Pair<int, s_connection_state> *entry_pointer;
+    const Pair<int32_t, s_connection_state> *entry_pointer;
 
     entry_pointer = this->_connection_states.find(client_fd);
     if (entry_pointer == this->_connection_states.end())
-        return (false);
+        return (FT_FALSE);
     return (entry_pointer->value._permessage_deflate_enabled);
 }
 
-int ft_websocket_server::start(const char *ip, uint16_t port, int address_family, bool non_blocking)
+int32_t ft_websocket_server::start(const char *ip_address, uint16_t port, int32_t address_family, ft_bool non_blocking)
 {
     SocketConfig configuration;
-    int lock_error;
-    int initialize_error;
+    int32_t lock_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_websocket_server::start");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::start");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -429,7 +490,7 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
         return (FT_ERR_INVALID_OPERATION);
     }
     configuration._type = SocketType::SERVER;
-    std::strncpy(configuration._ip, ip, sizeof(configuration._ip) - 1);
+    ft_strncpy(configuration._ip, ip_address, sizeof(configuration._ip) - 1);
     configuration._ip[sizeof(configuration._ip) - 1] = '\0';
     configuration._port = port;
     configuration._address_family = address_family;
@@ -460,9 +521,9 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
     return (FT_ERR_SUCCESS);
 }
 
-int ft_websocket_server::perform_handshake_locked(int client_fd)
+int32_t ft_websocket_server::perform_handshake_locked(int32_t client_fd)
 {
-    static const std::size_t MAX_HANDSHAKE_SIZE = 8192;
+    static const ft_size_t MAX_HANDSHAKE_SIZE = 8192;
     char buffer[1024];
     ssize_t bytes_received;
     ft_string request;
@@ -471,12 +532,12 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
     ft_string key;
     ft_string accept;
     ft_string response;
-    std::size_t request_size;
-    bool permessage_deflate_enabled;
+    ft_size_t request_size;
+    ft_bool permessage_deflate_enabled;
 
     this->remove_connection_state_locked(client_fd);
     request.clear();
-    while (true)
+    while (FT_TRUE)
     {
         if (request.size() >= MAX_HANDSHAKE_SIZE)
         {
@@ -489,7 +550,7 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
             return (FT_ERR_INVALID_OPERATION);
         buffer[bytes_received] = '\0';
         request_size = request.size();
-        if (request_size + static_cast<std::size_t>(bytes_received) > MAX_HANDSHAKE_SIZE)
+        if (request_size + static_cast<ft_size_t>(bytes_received) > MAX_HANDSHAKE_SIZE)
         {
             return (FT_ERR_INVALID_OPERATION);
         }
@@ -505,7 +566,7 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
     key.clear();
     if (line_end)
     {
-        std::size_t index_value;
+        ft_size_t index_value;
 
         index_value = 0;
         while (key_line + index_value < line_end)
@@ -516,7 +577,7 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
     }
     else
     {
-        std::size_t index_value;
+        ft_size_t index_value;
 
         index_value = 0;
         while (key_line[index_value] != '\0')
@@ -535,7 +596,7 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
     response.append("Sec-WebSocket-Accept: ");
     response.append(accept);
     response.append("\r\n");
-    if (permessage_deflate_enabled != false)
+    if (permessage_deflate_enabled != FT_FALSE)
     {
         response.append("Sec-WebSocket-Extensions: permessage-deflate; server_no_context_takeover; client_no_context_takeover\r\n");
     }
@@ -549,10 +610,10 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_websocket_server::send_pong_locked(int client_fd, const unsigned char *payload, std::size_t length)
+int32_t ft_websocket_server::send_pong_locked(int32_t client_fd, const unsigned char *payload, ft_size_t length)
 {
     ft_string frame;
-    std::size_t index_value;
+    ft_size_t index_value;
 
     frame.append(static_cast<char>(0x8A));
     if (length <= 125)
@@ -584,25 +645,25 @@ int ft_websocket_server::send_pong_locked(int client_fd, const unsigned char *pa
     return (FT_ERR_SUCCESS);
 }
 
-int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
+int32_t ft_websocket_server::receive_frame_locked(int32_t client_fd, ft_string &message)
 {
     unsigned char header[2];
     unsigned char mask_key[4];
-    std::size_t payload_length;
+    ft_size_t payload_length;
     ssize_t bytes_received;
     unsigned char *payload;
-    std::size_t index_value;
+    ft_size_t index_value;
     unsigned char opcode;
     unsigned char rsv_bits;
-    bool permessage_deflate_enabled;
-    bool is_final;
-    bool masked;
-    bool is_control_frame;
-    int inflate_error;
+    ft_bool permessage_deflate_enabled;
+    ft_bool is_final;
+    ft_bool masked;
+    ft_bool is_control_frame;
+    int32_t inflate_error;
 
     message.clear();
     permessage_deflate_enabled = this->connection_supports_permessage_deflate_locked(client_fd);
-    while (true)
+    while (FT_TRUE)
     {
         bytes_received = nw_recv(client_fd, header, 2, 0);
         if (bytes_received <= 0)
@@ -614,9 +675,9 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
         rsv_bits = header[0] & 0x70;
         is_final = ((header[0] & 0x80) != 0);
         masked = ((header[1] & 0x80) != 0);
-        payload_length = static_cast<std::size_t>(header[1] & 0x7F);
+        payload_length = static_cast<ft_size_t>(header[1] & 0x7F);
         is_control_frame = ((opcode & 0x08) != 0);
-        if (is_final == false)
+        if (is_final == FT_FALSE)
         {
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
@@ -626,12 +687,12 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
         }
-        if ((rsv_bits & 0x40) != 0 && permessage_deflate_enabled == false)
+        if ((rsv_bits & 0x40) != 0 && permessage_deflate_enabled == FT_FALSE)
         {
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
         }
-        if (is_control_frame != false && rsv_bits != 0)
+        if (is_control_frame != FT_FALSE && rsv_bits != 0)
         {
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
@@ -646,12 +707,12 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
                 this->remove_connection_state_locked(client_fd);
                 return (FT_ERR_INVALID_OPERATION);
             }
-            payload_length = static_cast<std::size_t>((extended[0] << 8) | extended[1]);
+            payload_length = static_cast<ft_size_t>((extended[0] << 8) | extended[1]);
         }
         else if (payload_length == 127)
         {
             unsigned char extended[8];
-            std::size_t shift_index;
+            ft_size_t shift_index;
 
             bytes_received = nw_recv(client_fd, extended, 8, 0);
             if (bytes_received <= 0)
@@ -667,7 +728,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
                 shift_index++;
             }
         }
-        if (is_control_frame != false && payload_length > 125)
+        if (is_control_frame != FT_FALSE && payload_length > 125)
         {
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
@@ -677,7 +738,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
         }
-        if (masked == false)
+        if (masked == FT_FALSE)
         {
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
@@ -708,7 +769,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
                 this->remove_connection_state_locked(client_fd);
                 return (FT_ERR_INVALID_OPERATION);
             }
-            index_value += static_cast<std::size_t>(bytes_received);
+            index_value += static_cast<ft_size_t>(bytes_received);
         }
         index_value = 0;
         while (index_value < payload_length)
@@ -775,14 +836,14 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
     }
 }
 
-int ft_websocket_server::run_once(int &client_fd, ft_string &message)
+int32_t ft_websocket_server::run_once(int32_t &client_fd, ft_string &message)
 {
     struct sockaddr_storage client_address;
     socklen_t address_length;
-    int result;
-    int lock_error;
+    int32_t result;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_websocket_server::run_once");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::run_once");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -815,17 +876,17 @@ int ft_websocket_server::run_once(int &client_fd, ft_string &message)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_websocket_server::send_text(int client_fd, const ft_string &message)
+int32_t ft_websocket_server::send_text(int32_t client_fd, const ft_string &message)
 {
     ft_string frame;
-    std::size_t length;
-    std::size_t index_value;
-    bool permessage_deflate_enabled;
+    ft_size_t length;
+    ft_size_t index_value;
+    ft_bool permessage_deflate_enabled;
     ft_vector<unsigned char> compressed_payload;
-    int lock_error;
-    int deflate_error;
+    int32_t lock_error;
+    int32_t deflate_error;
 
-    this->abort_if_not_initialised("ft_websocket_server::send_text");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::send_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -835,7 +896,7 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
         return (FT_ERR_INVALID_OPERATION);
     }
     permessage_deflate_enabled = this->connection_supports_permessage_deflate_locked(client_fd);
-    if (permessage_deflate_enabled != false)
+    if (permessage_deflate_enabled != FT_FALSE)
     {
         deflate_error = websocket_permessage_deflate_deflate(message, compressed_payload);
         if (deflate_error != FT_ERR_SUCCESS)
@@ -872,7 +933,7 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
         }
     }
     index_value = 0;
-    if (permessage_deflate_enabled != false)
+    if (permessage_deflate_enabled != FT_FALSE)
     {
         while (index_value < length)
         {
@@ -897,14 +958,14 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_websocket_server::get_port(unsigned short &port_value) const
+int32_t ft_websocket_server::get_port(uint16_t &port_value) const
 {
     struct sockaddr_storage local_address;
     socklen_t address_length;
-    int server_fd;
-    int lock_error;
+    int32_t server_fd;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_websocket_server::get_port");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::get_port");
     port_value = 0;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)

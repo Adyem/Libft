@@ -24,7 +24,7 @@
 struct networking_dns_cache_entry
 {
     ft_vector<networking_resolved_address> addresses;
-    long                                   expiration_ms;
+    int64_t                                   expiration_ms;
 
     networking_dns_cache_entry() noexcept
         : addresses(), expiration_ms(0)
@@ -40,8 +40,8 @@ struct networking_dns_cache_entry
     networking_dns_cache_entry(const networking_dns_cache_entry &other) noexcept
         : addresses(), expiration_ms(other.expiration_ms)
     {
-        size_t index;
-        size_t count;
+        ft_size_t index;
+        ft_size_t count;
 
         index = 0;
         count = other.addresses.size();
@@ -57,8 +57,8 @@ struct networking_dns_cache_entry
     {
         if (this != &other)
         {
-            size_t index;
-            size_t count;
+            ft_size_t index;
+            ft_size_t count;
 
             this->addresses.clear();
             index = 0;
@@ -76,34 +76,34 @@ struct networking_dns_cache_entry
 
 static ft_map<ft_string, networking_dns_cache_entry>   g_networking_dns_cache;
 static pt_mutex                                        g_networking_dns_cache_mutex;
-static const long                                      g_networking_dns_cache_ttl_ms = 60000;
+static const int64_t                                      g_networking_dns_cache_ttl_ms = 60000;
 
-static void networking_push_failure(int error_code) noexcept
+static void networking_push_failure(int32_t error_code) noexcept
 {
     (void)(error_code);
 }
 
-static int networking_dns_cache_lock(bool *lock_acquired) noexcept
+static int32_t networking_dns_cache_lock(ft_bool *lock_acquired) noexcept
 {
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (g_networking_dns_cache_mutex.lock() != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-static int networking_dns_cache_unlock(bool lock_acquired) noexcept
+static int32_t networking_dns_cache_unlock(ft_bool lock_acquired) noexcept
 {
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
     if (g_networking_dns_cache_mutex.unlock() != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     return (FT_ERR_SUCCESS);
 }
 
-static bool networking_dns_append_literal(ft_string &target, const char *literal) noexcept
+static ft_bool networking_dns_append_literal(ft_string &target, const char *literal) noexcept
 {
     const char  *value;
 
@@ -111,20 +111,20 @@ static bool networking_dns_append_literal(ft_string &target, const char *literal
     if (value == ft_nullptr)
         value = "";
     target.append(value);
-    return (true);
+    return (FT_TRUE);
 }
 
-static bool networking_dns_append_separator(ft_string &target) noexcept
+static ft_bool networking_dns_append_separator(ft_string &target) noexcept
 {
     target.append('|');
-    return (true);
+    return (FT_TRUE);
 }
 
-static bool networking_dns_copy_addresses(const ft_vector<networking_resolved_address> &source,
+static ft_bool networking_dns_copy_addresses(const ft_vector<networking_resolved_address> &source,
     ft_vector<networking_resolved_address> &destination) noexcept
 {
-    size_t  index;
-    size_t  count;
+    ft_size_t  index;
+    ft_size_t  count;
 
     destination.clear();
     count = source.size();
@@ -134,19 +134,19 @@ static bool networking_dns_copy_addresses(const ft_vector<networking_resolved_ad
         destination.push_back(source[index]);
         index++;
     }
-    return (true);
+    return (FT_TRUE);
 }
 
-static bool networking_dns_append_number(ft_string &target, int value) noexcept
+static ft_bool networking_dns_append_number(ft_string &target, int32_t value) noexcept
 {
     char number_buffer[32];
 
     snprintf(number_buffer, sizeof(number_buffer), "%d", value);
     target.append(number_buffer);
-    return (true);
+    return (FT_TRUE);
 }
 
-void networking_dns_set_error(int resolver_status) noexcept
+void networking_dns_set_error(int32_t resolver_status) noexcept
 {
 #ifdef EAI_BADFLAGS
     if (resolver_status == EAI_BADFLAGS)
@@ -240,101 +240,101 @@ void networking_dns_set_error(int resolver_status) noexcept
     return ;
 }
 
-bool networking_dns_resolve(const char *host, const char *service,
-    int family, int socktype, int protocol, int flags,
+ft_bool networking_dns_resolve(const char *host, const char *service,
+    int32_t family, int32_t socktype, int32_t protocol, int32_t flags,
     ft_vector<networking_resolved_address> &out_addresses) noexcept
 {
     ft_string   cache_key;
     const char  *service_string;
     const char  *service_parameter;
-    long        lookup_start_ms;
-    bool        lookup_start_valid;
-    bool        cache_lock_acquired;
+    int64_t        lookup_start_ms;
+    ft_bool        lookup_start_valid;
+    ft_bool        cache_lock_acquired;
     Pair<ft_string, networking_dns_cache_entry> *cache_entry;
-    bool        entry_valid;
-    int         cache_lock_error;
+    ft_bool        entry_valid;
+    int32_t         cache_lock_error;
 
     out_addresses.clear();
     if (host == ft_nullptr || host[0] == '\0')
     {
         networking_push_failure(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     cache_key = host;
     if (!networking_dns_append_separator(cache_key))
-        return (false);
+        return (FT_FALSE);
     service_string = service;
     if (service_string == ft_nullptr)
         service_string = "";
     if (!networking_dns_append_literal(cache_key, service_string))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_separator(cache_key))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_number(cache_key, family))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_separator(cache_key))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_number(cache_key, socktype))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_separator(cache_key))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_number(cache_key, protocol))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_separator(cache_key))
-        return (false);
+        return (FT_FALSE);
     if (!networking_dns_append_number(cache_key, flags))
-        return (false);
+        return (FT_FALSE);
     lookup_start_ms = time_now_ms();
-    lookup_start_valid = true;
-    cache_lock_acquired = false;
+    lookup_start_valid = FT_TRUE;
+    cache_lock_acquired = FT_FALSE;
     cache_lock_error = networking_dns_cache_lock(&cache_lock_acquired);
     if (cache_lock_error != FT_ERR_SUCCESS)
     {
         networking_push_failure(cache_lock_error);
-        return (false);
+        return (FT_FALSE);
     }
     cache_entry = g_networking_dns_cache.find(cache_key);
     if (cache_entry != g_networking_dns_cache.end())
     {
-        entry_valid = true;
+        entry_valid = FT_TRUE;
         if (lookup_start_valid)
         {
             if (cache_entry->value.expiration_ms < lookup_start_ms)
-                entry_valid = false;
+                entry_valid = FT_FALSE;
         }
         if (entry_valid)
         {
             if (!networking_dns_copy_addresses(cache_entry->value.addresses, out_addresses))
             {
-                int cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
+                int32_t cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
 
                 if (cache_unlock_error != FT_ERR_SUCCESS)
                 {
                     networking_push_failure(cache_unlock_error);
                 }
-                return (false);
+                return (FT_FALSE);
             }
             {
-                int cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
+                int32_t cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
 
                 if (cache_unlock_error != FT_ERR_SUCCESS)
                 {
                     networking_push_failure(cache_unlock_error);
-                    return (false);
+                    return (FT_FALSE);
                 }
             }
             (void)(FT_ERR_SUCCESS);
-            return (true);
+            return (FT_TRUE);
         }
         g_networking_dns_cache.remove(cache_key);
     }
         {
-            int cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
+            int32_t cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
 
         if (cache_unlock_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(cache_unlock_error);
-            return (false);
+            return (FT_FALSE);
         }
     }
     service_parameter = ft_nullptr;
@@ -343,7 +343,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     struct addrinfo hints;
     struct addrinfo *results;
     struct addrinfo *current;
-    int resolver_status;
+    int32_t resolver_status;
 
     ft_memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;
@@ -357,7 +357,7 @@ bool networking_dns_resolve(const char *host, const char *service,
         networking_dns_set_error(resolver_status);
         if (results != ft_nullptr)
             freeaddrinfo(results);
-        return (false);
+        return (FT_FALSE);
     }
     current = results;
     while (current != ft_nullptr)
@@ -374,23 +374,23 @@ bool networking_dns_resolve(const char *host, const char *service,
         current = current->ai_next;
     }
     freeaddrinfo(results);
-    size_t result_count;
+    ft_size_t result_count;
 
     result_count = out_addresses.size();
     if (result_count == 0)
     {
         networking_push_failure(FT_ERR_SOCKET_RESOLVE_FAILED);
-        return (false);
+        return (FT_FALSE);
     }
-    long cache_record_ms;
-    bool cache_record_valid;
+    int64_t cache_record_ms;
+    ft_bool cache_record_valid;
 
     cache_record_ms = time_now_ms();
-    cache_record_valid = true;
+    cache_record_valid = FT_TRUE;
     if (cache_record_valid)
     {
         networking_dns_cache_entry cache_value;
-        long expiration_ms;
+        int64_t expiration_ms;
 
         if (cache_record_ms > LONG_MAX - g_networking_dns_cache_ttl_ms)
             expiration_ms = LONG_MAX;
@@ -399,56 +399,56 @@ bool networking_dns_resolve(const char *host, const char *service,
         cache_value.expiration_ms = expiration_ms;
         if (networking_dns_copy_addresses(out_addresses, cache_value.addresses))
         {
-            bool update_lock_acquired;
-            int update_lock_error;
+            ft_bool update_lock_acquired;
+            int32_t update_lock_error;
 
-            update_lock_acquired = false;
+            update_lock_acquired = FT_FALSE;
             update_lock_error = networking_dns_cache_lock(&update_lock_acquired);
 
             if (update_lock_error == FT_ERR_SUCCESS)
             {
                 g_networking_dns_cache.remove(cache_key);
                 g_networking_dns_cache.insert(cache_key, cache_value);
-                int update_unlock_error = networking_dns_cache_unlock(update_lock_acquired);
+                int32_t update_unlock_error = networking_dns_cache_unlock(update_lock_acquired);
 
                 if (update_unlock_error != FT_ERR_SUCCESS)
                 {
                     networking_push_failure(update_unlock_error);
-                    return (false);
+                    return (FT_FALSE);
                 }
             }
         }
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool networking_dns_resolve_first(const char *host, const char *service,
-    int family, int socktype, int protocol, int flags,
+ft_bool networking_dns_resolve_first(const char *host, const char *service,
+    int32_t family, int32_t socktype, int32_t protocol, int32_t flags,
     networking_resolved_address &out_address) noexcept
 {
     ft_vector<networking_resolved_address> results;
-    size_t count;
+    ft_size_t count;
 
     if (!networking_dns_resolve(host, service, family, socktype, protocol, flags, results))
-        return (false);
+        return (FT_FALSE);
     count = results.size();
     if (count == 0)
     {
         networking_push_failure(FT_ERR_SOCKET_RESOLVE_FAILED);
-        return (false);
+        return (FT_FALSE);
     }
     out_address = results[0];
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
 void networking_dns_clear_cache(void) noexcept
 {
-    bool cache_lock_acquired;
-    int cache_lock_error;
+    ft_bool cache_lock_acquired;
+    int32_t cache_lock_error;
 
-    cache_lock_acquired = false;
+    cache_lock_acquired = FT_FALSE;
     cache_lock_error = networking_dns_cache_lock(&cache_lock_acquired);
 
     if (cache_lock_error != FT_ERR_SUCCESS)
@@ -458,7 +458,7 @@ void networking_dns_clear_cache(void) noexcept
     }
     g_networking_dns_cache.clear();
     {
-        int cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
+        int32_t cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
 
         if (cache_unlock_error != FT_ERR_SUCCESS)
         {

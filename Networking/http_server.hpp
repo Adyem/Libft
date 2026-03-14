@@ -8,31 +8,36 @@
 
 class ft_http_server
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        void abort_lifecycle_error(const char *method_name, const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
         ft_socket _server_socket;
-        bool _non_blocking;
+        ft_bool _non_blocking;
         mutable pt_recursive_mutex *_mutex;
 
-        int run_once_locked();
+        int32_t run_once_locked();
 
     public:
-        ft_http_server();
-        ~ft_http_server();
-        ft_http_server(const ft_http_server &other) = delete;
+        ft_http_server() noexcept;
+        ft_http_server(const ft_http_server &other) noexcept;
+        ft_http_server(ft_http_server &&other) noexcept;
+        ~ft_http_server() noexcept;
         ft_http_server &operator=(const ft_http_server &other) = delete;
-        ft_http_server(ft_http_server &&other) noexcept = delete;
         ft_http_server &operator=(ft_http_server &&other) noexcept = delete;
+        int32_t move(ft_http_server &other) noexcept;
 
-        int initialize();
-        int destroy();
-        int start(const char *ip, uint16_t port, int address_family = AF_INET, bool non_blocking = false);
-        int run_once();
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_http_server &other) noexcept;
+        int32_t initialize(ft_http_server &&other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t start(const char *ip_address, uint16_t port, int32_t address_family = AF_INET, ft_bool non_blocking = FT_FALSE);
+        int32_t run_once() noexcept;
 };
 
 #endif

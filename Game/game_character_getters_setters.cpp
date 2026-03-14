@@ -2,14 +2,15 @@
 #include "game_character.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 
-int ft_character::get_hit_points() const noexcept
+int32_t ft_character::get_hit_points() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int hit_points;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t hit_points;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -22,12 +23,12 @@ int ft_character::get_hit_points() const noexcept
     return (hit_points);
 }
 
-void ft_character::set_hit_points(int hp) noexcept
+void ft_character::set_hit_points(int32_t hp) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -40,18 +41,18 @@ void ft_character::set_hit_points(int hp) noexcept
     return ;
 }
 
-bool ft_character::is_alive() const noexcept
+ft_bool ft_character::is_alive() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    bool alive;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_bool alive;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_character *>(this)->set_error(lock_error);
-        return (false);
+        return (FT_FALSE);
     }
     alive = this->_hit_points > 0;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESS);
@@ -59,13 +60,13 @@ bool ft_character::is_alive() const noexcept
     return (alive);
 }
 
-int ft_character::get_physical_armor() const noexcept
+int32_t ft_character::get_physical_armor() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int armor_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t armor_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -78,12 +79,12 @@ int ft_character::get_physical_armor() const noexcept
     return (armor_value);
 }
 
-void ft_character::set_physical_armor(int armor) noexcept
+void ft_character::set_physical_armor(int32_t armor) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -96,13 +97,13 @@ void ft_character::set_physical_armor(int armor) noexcept
     return ;
 }
 
-int ft_character::get_magic_armor() const noexcept
+int32_t ft_character::get_magic_armor() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int armor_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t armor_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -115,12 +116,12 @@ int ft_character::get_magic_armor() const noexcept
     return (armor_value);
 }
 
-void ft_character::set_magic_armor(int armor) noexcept
+void ft_character::set_magic_armor(int32_t armor) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -133,13 +134,13 @@ void ft_character::set_magic_armor(int armor) noexcept
     return ;
 }
 
-int ft_character::get_current_physical_armor() const noexcept
+int32_t ft_character::get_current_physical_armor() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int armor_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t armor_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -152,12 +153,12 @@ int ft_character::get_current_physical_armor() const noexcept
     return (armor_value);
 }
 
-void ft_character::set_current_physical_armor(int armor) noexcept
+void ft_character::set_current_physical_armor(int32_t armor) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -170,13 +171,13 @@ void ft_character::set_current_physical_armor(int armor) noexcept
     return ;
 }
 
-int ft_character::get_current_magic_armor() const noexcept
+int32_t ft_character::get_current_magic_armor() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int armor_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t armor_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -189,12 +190,12 @@ int ft_character::get_current_magic_armor() const noexcept
     return (armor_value);
 }
 
-void ft_character::set_current_magic_armor(int armor) noexcept
+void ft_character::set_current_magic_armor(int32_t armor) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -209,10 +210,10 @@ void ft_character::set_current_magic_armor(int armor) noexcept
 
 void ft_character::set_damage_rule(uint8_t rule) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -227,11 +228,11 @@ void ft_character::set_damage_rule(uint8_t rule) noexcept
 
 uint8_t ft_character::get_damage_rule() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     uint8_t rule_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -244,13 +245,13 @@ uint8_t ft_character::get_damage_rule() const noexcept
     return (rule_value);
 }
 
-int ft_character::get_might() const noexcept
+int32_t ft_character::get_might() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int attribute;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t attribute;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -263,12 +264,12 @@ int ft_character::get_might() const noexcept
     return (attribute);
 }
 
-void ft_character::set_might(int might) noexcept
+void ft_character::set_might(int32_t might) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -281,13 +282,13 @@ void ft_character::set_might(int might) noexcept
     return ;
 }
 
-int ft_character::get_agility() const noexcept
+int32_t ft_character::get_agility() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int attribute;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t attribute;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -300,12 +301,12 @@ int ft_character::get_agility() const noexcept
     return (attribute);
 }
 
-void ft_character::set_agility(int agility) noexcept
+void ft_character::set_agility(int32_t agility) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -318,13 +319,13 @@ void ft_character::set_agility(int agility) noexcept
     return ;
 }
 
-int ft_character::get_endurance() const noexcept
+int32_t ft_character::get_endurance() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int attribute;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t attribute;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -337,12 +338,12 @@ int ft_character::get_endurance() const noexcept
     return (attribute);
 }
 
-void ft_character::set_endurance(int endurance) noexcept
+void ft_character::set_endurance(int32_t endurance) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -355,13 +356,13 @@ void ft_character::set_endurance(int endurance) noexcept
     return ;
 }
 
-int ft_character::get_reason() const noexcept
+int32_t ft_character::get_reason() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int attribute;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t attribute;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -374,12 +375,12 @@ int ft_character::get_reason() const noexcept
     return (attribute);
 }
 
-void ft_character::set_reason(int reason) noexcept
+void ft_character::set_reason(int32_t reason) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -392,13 +393,13 @@ void ft_character::set_reason(int reason) noexcept
     return ;
 }
 
-int ft_character::get_insigh() const noexcept
+int32_t ft_character::get_insigh() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int attribute;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t attribute;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -411,12 +412,12 @@ int ft_character::get_insigh() const noexcept
     return (attribute);
 }
 
-void ft_character::set_insigh(int insigh) noexcept
+void ft_character::set_insigh(int32_t insigh) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -429,13 +430,13 @@ void ft_character::set_insigh(int insigh) noexcept
     return ;
 }
 
-int ft_character::get_presence() const noexcept
+int32_t ft_character::get_presence() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int attribute;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t attribute;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -448,12 +449,12 @@ int ft_character::get_presence() const noexcept
     return (attribute);
 }
 
-void ft_character::set_presence(int presence) noexcept
+void ft_character::set_presence(int32_t presence) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -466,13 +467,13 @@ void ft_character::set_presence(int presence) noexcept
     return ;
 }
 
-int ft_character::get_coins() const noexcept
+int32_t ft_character::get_coins() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int coins_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t coins_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -485,12 +486,12 @@ int ft_character::get_coins() const noexcept
     return (coins_value);
 }
 
-void ft_character::set_coins(int coins) noexcept
+void ft_character::set_coins(int32_t coins) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -503,13 +504,13 @@ void ft_character::set_coins(int coins) noexcept
     return ;
 }
 
-int ft_character::get_valor() const noexcept
+int32_t ft_character::get_valor() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int valor_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t valor_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -522,12 +523,12 @@ int ft_character::get_valor() const noexcept
     return (valor_value);
 }
 
-void ft_character::set_valor(int valor) noexcept
+void ft_character::set_valor(int32_t valor) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -540,13 +541,13 @@ void ft_character::set_valor(int valor) noexcept
     return ;
 }
 
-int ft_character::get_experience() const noexcept
+int32_t ft_character::get_experience() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int experience_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t experience_value;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -559,12 +560,12 @@ int ft_character::get_experience() const noexcept
     return (experience_value);
 }
 
-void ft_character::set_experience(int experience) noexcept
+void ft_character::set_experience(int32_t experience) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -577,13 +578,13 @@ void ft_character::set_experience(int experience) noexcept
     return ;
 }
 
-int ft_character::get_x() const noexcept
+int32_t ft_character::get_x() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int coordinate;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t coordinate;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -596,12 +597,12 @@ int ft_character::get_x() const noexcept
     return (coordinate);
 }
 
-void ft_character::set_x(int x) noexcept
+void ft_character::set_x(int32_t x) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -614,13 +615,13 @@ void ft_character::set_x(int x) noexcept
     return ;
 }
 
-int ft_character::get_y() const noexcept
+int32_t ft_character::get_y() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int coordinate;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t coordinate;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -633,12 +634,12 @@ int ft_character::get_y() const noexcept
     return (coordinate);
 }
 
-void ft_character::set_y(int y) noexcept
+void ft_character::set_y(int32_t y) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -651,13 +652,13 @@ void ft_character::set_y(int y) noexcept
     return ;
 }
 
-int ft_character::get_z() const noexcept
+int32_t ft_character::get_z() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int coordinate;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t coordinate;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -670,12 +671,12 @@ int ft_character::get_z() const noexcept
     return (coordinate);
 }
 
-void ft_character::set_z(int z) noexcept
+void ft_character::set_z(int32_t z) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -690,10 +691,10 @@ void ft_character::set_z(int z) noexcept
 
 const ft_resistance &ft_character::get_fire_res() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -711,13 +712,13 @@ const ft_resistance &ft_character::get_fire_res() const noexcept
     return (this->_fire_res);
 }
 
-void ft_character::set_fire_res(int percent, int flat) noexcept
+void ft_character::set_fire_res(int32_t percent, int32_t flat) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t error_code;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -725,7 +726,7 @@ void ft_character::set_fire_res(int percent, int flat) noexcept
         return ;
     }
     error_code = this->_fire_res.set_values(percent, flat);
-    if (this->handle_component_error(error_code) == true)
+    if (this->handle_component_error(error_code) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;
@@ -737,10 +738,10 @@ void ft_character::set_fire_res(int percent, int flat) noexcept
 
 const ft_resistance &ft_character::get_frost_res() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -758,12 +759,12 @@ const ft_resistance &ft_character::get_frost_res() const noexcept
     return (this->_frost_res);
 }
 
-void ft_character::set_frost_res(int percent, int flat) noexcept
+void ft_character::set_frost_res(int32_t percent, int32_t flat) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t error_code;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -771,7 +772,7 @@ void ft_character::set_frost_res(int percent, int flat) noexcept
         return ;
     }
     error_code = this->_frost_res.set_values(percent, flat);
-    if (this->handle_component_error(error_code) == true)
+    if (this->handle_component_error(error_code) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;
@@ -783,10 +784,10 @@ void ft_character::set_frost_res(int percent, int flat) noexcept
 
 const ft_resistance &ft_character::get_lightning_res() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -804,12 +805,12 @@ const ft_resistance &ft_character::get_lightning_res() const noexcept
     return (this->_lightning_res);
 }
 
-void ft_character::set_lightning_res(int percent, int flat) noexcept
+void ft_character::set_lightning_res(int32_t percent, int32_t flat) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t error_code;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -817,7 +818,7 @@ void ft_character::set_lightning_res(int percent, int flat) noexcept
         return ;
     }
     error_code = this->_lightning_res.set_values(percent, flat);
-    if (this->handle_component_error(error_code) == true)
+    if (this->handle_component_error(error_code) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;
@@ -829,10 +830,10 @@ void ft_character::set_lightning_res(int percent, int flat) noexcept
 
 const ft_resistance &ft_character::get_air_res() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -850,12 +851,12 @@ const ft_resistance &ft_character::get_air_res() const noexcept
     return (this->_air_res);
 }
 
-void ft_character::set_air_res(int percent, int flat) noexcept
+void ft_character::set_air_res(int32_t percent, int32_t flat) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t error_code;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -863,7 +864,7 @@ void ft_character::set_air_res(int percent, int flat) noexcept
         return ;
     }
     error_code = this->_air_res.set_values(percent, flat);
-    if (this->handle_component_error(error_code) == true)
+    if (this->handle_component_error(error_code) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;
@@ -875,10 +876,10 @@ void ft_character::set_air_res(int percent, int flat) noexcept
 
 const ft_resistance &ft_character::get_earth_res() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -896,12 +897,12 @@ const ft_resistance &ft_character::get_earth_res() const noexcept
     return (this->_earth_res);
 }
 
-void ft_character::set_earth_res(int percent, int flat) noexcept
+void ft_character::set_earth_res(int32_t percent, int32_t flat) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t error_code;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -909,7 +910,7 @@ void ft_character::set_earth_res(int percent, int flat) noexcept
         return ;
     }
     error_code = this->_earth_res.set_values(percent, flat);
-    if (this->handle_component_error(error_code) == true)
+    if (this->handle_component_error(error_code) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;
@@ -921,10 +922,10 @@ void ft_character::set_earth_res(int percent, int flat) noexcept
 
 const ft_resistance &ft_character::get_chaos_res() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -942,12 +943,12 @@ const ft_resistance &ft_character::get_chaos_res() const noexcept
     return (this->_chaos_res);
 }
 
-void ft_character::set_chaos_res(int percent, int flat) noexcept
+void ft_character::set_chaos_res(int32_t percent, int32_t flat) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t error_code;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -955,7 +956,7 @@ void ft_character::set_chaos_res(int percent, int flat) noexcept
         return ;
     }
     error_code = this->_chaos_res.set_values(percent, flat);
-    if (this->handle_component_error(error_code) == true)
+    if (this->handle_component_error(error_code) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;
@@ -967,10 +968,10 @@ void ft_character::set_chaos_res(int percent, int flat) noexcept
 
 const ft_resistance &ft_character::get_physical_res() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -988,12 +989,12 @@ const ft_resistance &ft_character::get_physical_res() const noexcept
     return (this->_physical_res);
 }
 
-void ft_character::set_physical_res(int percent, int flat) noexcept
+void ft_character::set_physical_res(int32_t percent, int32_t flat) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t error_code;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1001,7 +1002,7 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
         return ;
     }
     error_code = this->_physical_res.set_values(percent, flat);
-    if (this->handle_component_error(error_code) == true)
+    if (this->handle_component_error(error_code) == FT_TRUE)
     {
         this->unlock_internal(lock_acquired);
         return ;
@@ -1011,12 +1012,12 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
     return ;
 }
 
-ft_map<int, ft_skill> &ft_character::get_skills() noexcept
+ft_map<int32_t, ft_skill> &ft_character::get_skills() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1028,12 +1029,12 @@ ft_map<int, ft_skill> &ft_character::get_skills() noexcept
     return (this->_skills);
 }
 
-const ft_map<int, ft_skill> &ft_character::get_skills() const noexcept
+const ft_map<int32_t, ft_skill> &ft_character::get_skills() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1045,12 +1046,12 @@ const ft_map<int, ft_skill> &ft_character::get_skills() const noexcept
     return (this->_skills);
 }
 
-ft_skill *ft_character::get_skill(int id) noexcept
+ft_skill *ft_character::get_skill(int32_t id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    Pair<int, ft_skill> *found;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    Pair<int32_t, ft_skill> *found;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1069,12 +1070,12 @@ ft_skill *ft_character::get_skill(int id) noexcept
     return (&found->value);
 }
 
-const ft_skill *ft_character::get_skill(int id) const noexcept
+const ft_skill *ft_character::get_skill(int32_t id) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    const Pair<int, ft_skill> *found;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    const Pair<int32_t, ft_skill> *found;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1093,11 +1094,11 @@ const ft_skill *ft_character::get_skill(int id) const noexcept
     return (&found->value);
 }
 
-ft_map<int, ft_buff> &ft_character::get_buffs() noexcept
+ft_map<int32_t, ft_buff> &ft_character::get_buffs() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1109,11 +1110,11 @@ ft_map<int, ft_buff> &ft_character::get_buffs() noexcept
     return (this->_buffs);
 }
 
-const ft_map<int, ft_buff> &ft_character::get_buffs() const noexcept
+const ft_map<int32_t, ft_buff> &ft_character::get_buffs() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1125,12 +1126,12 @@ const ft_map<int, ft_buff> &ft_character::get_buffs() const noexcept
     return (this->_buffs);
 }
 
-ft_map<int, ft_debuff> &ft_character::get_debuffs() noexcept
+ft_map<int32_t, ft_debuff> &ft_character::get_debuffs() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1142,12 +1143,12 @@ ft_map<int, ft_debuff> &ft_character::get_debuffs() noexcept
     return (this->_debuffs);
 }
 
-const ft_map<int, ft_debuff> &ft_character::get_debuffs() const noexcept
+const ft_map<int32_t, ft_debuff> &ft_character::get_debuffs() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1159,12 +1160,12 @@ const ft_map<int, ft_debuff> &ft_character::get_debuffs() const noexcept
     return (this->_debuffs);
 }
 
-ft_map<int, ft_upgrade> &ft_character::get_upgrades() noexcept
+ft_map<int32_t, ft_upgrade> &ft_character::get_upgrades() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1176,12 +1177,12 @@ ft_map<int, ft_upgrade> &ft_character::get_upgrades() noexcept
     return (this->_upgrades);
 }
 
-const ft_map<int, ft_upgrade> &ft_character::get_upgrades() const noexcept
+const ft_map<int32_t, ft_upgrade> &ft_character::get_upgrades() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1193,12 +1194,12 @@ const ft_map<int, ft_upgrade> &ft_character::get_upgrades() const noexcept
     return (this->_upgrades);
 }
 
-ft_map<int, ft_quest> &ft_character::get_quests() noexcept
+ft_map<int32_t, ft_quest> &ft_character::get_quests() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1210,12 +1211,12 @@ ft_map<int, ft_quest> &ft_character::get_quests() noexcept
     return (this->_quests);
 }
 
-const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
+const ft_map<int32_t, ft_quest> &ft_character::get_quests() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1227,12 +1228,12 @@ const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
     return (this->_quests);
 }
 
-ft_map<int, ft_achievement> &ft_character::get_achievements() noexcept
+ft_map<int32_t, ft_achievement> &ft_character::get_achievements() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1244,12 +1245,12 @@ ft_map<int, ft_achievement> &ft_character::get_achievements() noexcept
     return (this->_achievements);
 }
 
-const ft_map<int, ft_achievement> &ft_character::get_achievements() const noexcept
+const ft_map<int32_t, ft_achievement> &ft_character::get_achievements() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1263,10 +1264,10 @@ const ft_map<int, ft_achievement> &ft_character::get_achievements() const noexce
 
 ft_reputation &ft_character::get_reputation() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1280,10 +1281,10 @@ ft_reputation &ft_character::get_reputation() noexcept
 
 const ft_reputation &ft_character::get_reputation() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1297,10 +1298,10 @@ const ft_reputation &ft_character::get_reputation() const noexcept
 
 ft_experience_table &ft_character::get_experience_table() noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1314,10 +1315,10 @@ ft_experience_table &ft_character::get_experience_table() noexcept
 
 const ft_experience_table &ft_character::get_experience_table() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1329,13 +1330,13 @@ const ft_experience_table &ft_character::get_experience_table() const noexcept
     return (this->_experience_table);
 }
 
-int ft_character::get_level() const noexcept
+int32_t ft_character::get_level() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int level_value;
-    int experience_error;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t level_value;
+    int32_t experience_error;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1355,12 +1356,12 @@ int ft_character::get_level() const noexcept
     return (level_value);
 }
 
-ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) noexcept
+ft_sharedptr<ft_item> ft_character::get_equipped_item(int32_t slot) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int equipment_error;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t equipment_error;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1380,12 +1381,12 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) noexcept
     return (this->_equipment.get_item(slot));
 }
 
-ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
+ft_sharedptr<ft_item> ft_character::get_equipped_item(int32_t slot) const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int equipment_error;
-    lock_acquired = false;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t equipment_error;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1405,19 +1406,25 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
     return (this->_equipment.get_item(slot));
 }
 
-int ft_character::get_error() const noexcept
+int32_t ft_character::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_character::get_error");
     return (ft_character::_last_error);
 }
 
 const char *ft_character::get_error_str() const noexcept
 {
-    return (ft_strerror(this->get_error()));
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_character::get_error_str");
+    return (ft_strerror(ft_character::_last_error));
 }
 
-void ft_character::set_physical_armor_internal(int armor) noexcept
+void ft_character::set_physical_armor_internal(int32_t armor) noexcept
 {
-    int index;
+    int32_t index;
 
     this->_physical_armor = armor;
     this->_current_physical_armor = armor;
@@ -1431,9 +1438,9 @@ void ft_character::set_physical_armor_internal(int armor) noexcept
     return ;
 }
 
-void ft_character::set_magic_armor_internal(int armor) noexcept
+void ft_character::set_magic_armor_internal(int32_t armor) noexcept
 {
-    int index;
+    int32_t index;
 
     this->_magic_armor = armor;
     this->_current_magic_armor = armor;
@@ -1459,34 +1466,31 @@ void ft_character::restore_magic_armor_internal() noexcept
     return ;
 }
 
-void ft_character::set_error(int err) const noexcept
+int32_t ft_character::set_error(int32_t error_code) noexcept
 {
-    ft_character::_last_error = err;
-    return ;
+    ft_character::_last_error = error_code;
+    return (error_code);
 }
 
-int ft_character::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_character::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-void ft_character::unlock_internal(bool lock_acquired) const noexcept
+void ft_character::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return ;
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-        const_cast<ft_character *>(this)->set_error(unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }

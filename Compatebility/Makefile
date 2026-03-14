@@ -2,7 +2,7 @@ include ../compiler_flags.mk
 TARGET := Compatebility.a
 DEBUG_TARGET := Compatebility_debug.a
 
-SRCS := Compatebility_file_io.cpp Compatebility_file_ops.cpp Compatebility_file_watch.cpp Compatebility_file_dir.cpp Compatebility_file_path.cpp Compatebility_rng.cpp Compatebility_readline.cpp Compatebility_pthread.cpp Compatebility_system.cpp Compatebility_write.cpp Compatebility_syslog.cpp Compatebility_networking.cpp Compatebility_time.cpp Compatebility_cross_process_posix.cpp Compatebility_cross_process_windows.cpp Compatebility_cma_platform.cpp Compatebility_service.cpp
+SRCS := Compatebility_file_io.cpp Compatebility_file_ops.cpp Compatebility_file_watch.cpp Compatebility_file_dir.cpp Compatebility_file_path.cpp Compatebility_rng.cpp Compatebility_readline.cpp Compatebility_pthread.cpp Compatebility_system.cpp Compatebility_write.cpp Compatebility_syslog.cpp Compatebility_networking.cpp Compatebility_time.cpp Compatebility_cross_process_posix.cpp Compatebility_cross_process_windows.cpp Compatebility_cma_platform.cpp Compatebility_service.cpp Compatebility_storage_memory_mapped.cpp
 MM_SRCS :=
 HEADERS := compatebility_internal.hpp \
         compatebility_cma_platform.hpp \

@@ -10,14 +10,14 @@
 # include <sys/socket.h>
 #endif
 
-int ft_socket::setup_client(const SocketConfig &config)
+int32_t ft_socket::setup_client(const SocketConfig &config)
 {
-    bool non_blocking;
-    bool has_timeout;
-    bool has_multicast;
-    int address_family;
+    ft_bool non_blocking;
+    ft_bool has_timeout;
+    ft_bool has_multicast;
+    int32_t address_family;
     socklen_t address_length;
-    int setup_error;
+    int32_t setup_error;
 
     non_blocking = config._non_blocking;
     has_timeout = (config._recv_timeout > 0 || config._send_timeout > 0);
@@ -26,13 +26,13 @@ int ft_socket::setup_client(const SocketConfig &config)
     setup_error = this->create_socket(config);
     if (setup_error != FT_ERR_SUCCESS)
         return (setup_error);
-    if (non_blocking != false)
+    if (non_blocking != FT_FALSE)
     {
         setup_error = this->set_non_blocking(config);
         if (setup_error != FT_ERR_SUCCESS)
             return (setup_error);
     }
-    if (has_timeout != false)
+    if (has_timeout != FT_FALSE)
     {
         setup_error = this->set_timeouts(config);
         if (setup_error != FT_ERR_SUCCESS)
@@ -54,16 +54,16 @@ int ft_socket::setup_client(const SocketConfig &config)
             reinterpret_cast<const struct sockaddr *>(&this->_address), address_length) < 0)
     {
 #ifdef _WIN32
-        if (!(non_blocking != false && WSAGetLastError() == WSAEWOULDBLOCK))
+        if (!(non_blocking != FT_FALSE && WSAGetLastError() == WSAEWOULDBLOCK))
 #else
-        if (!(non_blocking != false && (errno == EINPROGRESS || errno == EWOULDBLOCK)))
+        if (!(non_blocking != FT_FALSE && (errno == EINPROGRESS || errno == EWOULDBLOCK)))
 #endif
         {
             (void)this->close_socket();
             return (FT_ERR_SOCKET_CONNECT_FAILED);
         }
     }
-    if (has_multicast != false)
+    if (has_multicast != FT_FALSE)
     {
         setup_error = this->join_multicast_group(config);
         if (setup_error != FT_ERR_SUCCESS)

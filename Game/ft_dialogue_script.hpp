@@ -12,52 +12,51 @@
 
 class ft_dialogue_script
 {
-    private:
-        int _script_id;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t _script_id;
         ft_string _title;
         ft_string _summary;
-        int _start_line_id;
+        int32_t _start_line_id;
         ft_vector<ft_sharedptr<ft_dialogue_line> > _lines;
         pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
 
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_dialogue_script() noexcept;
         virtual ~ft_dialogue_script() noexcept;
-        ft_dialogue_script(const ft_dialogue_script &other) noexcept = delete;
+        ft_dialogue_script(const ft_dialogue_script &other) noexcept;
         ft_dialogue_script &operator=(const ft_dialogue_script &other) noexcept = delete;
-        ft_dialogue_script(ft_dialogue_script &&other) noexcept = delete;
+        ft_dialogue_script(ft_dialogue_script &&other) noexcept;
         ft_dialogue_script &operator=(ft_dialogue_script &&other) noexcept = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_dialogue_script &other) noexcept;
-        int initialize(ft_dialogue_script &&other) noexcept;
-        int initialize(int script_id, const ft_string &title,
-            const ft_string &summary, int start_line_id,
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_dialogue_script &other) noexcept;
+        int32_t initialize(ft_dialogue_script &&other) noexcept;
+        int32_t move(ft_dialogue_script &other) noexcept;
+        int32_t initialize(int32_t script_id, const ft_string &title,
+            const ft_string &summary, int32_t start_line_id,
             const ft_vector<ft_dialogue_line> &lines) noexcept;
-        int destroy() noexcept;
+        int32_t destroy() noexcept;
 
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int get_script_id() const noexcept;
-        void set_script_id(int script_id) noexcept;
+        int32_t get_script_id() const noexcept;
+        void set_script_id(int32_t script_id) noexcept;
 
         const ft_string &get_title() const noexcept;
         void set_title(const ft_string &title) noexcept;
@@ -65,17 +64,14 @@ class ft_dialogue_script
         const ft_string &get_summary() const noexcept;
         void set_summary(const ft_string &summary) noexcept;
 
-        int get_start_line_id() const noexcept;
-        void set_start_line_id(int start_line_id) noexcept;
+        int32_t get_start_line_id() const noexcept;
+        void set_start_line_id(int32_t start_line_id) noexcept;
 
         const ft_vector<ft_sharedptr<ft_dialogue_line> > &get_lines() const noexcept;
         ft_vector<ft_sharedptr<ft_dialogue_line> > &get_lines() noexcept;
         void set_lines(const ft_vector<ft_sharedptr<ft_dialogue_line> > &lines) noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

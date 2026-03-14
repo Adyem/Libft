@@ -1,6 +1,6 @@
 #include "logger_internal.hpp"
 
-void ft_log_set_color(bool enable)
+void ft_log_set_color(ft_bool enable)
 {
     g_use_color = enable;
     return ;

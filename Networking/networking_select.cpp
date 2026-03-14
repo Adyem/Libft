@@ -9,17 +9,17 @@
 # include <cerrno>
 #endif
 
-int nw_poll(int *read_file_descriptors, int read_count,
-            int *write_file_descriptors, int write_count,
-            int timeout_milliseconds)
+int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
+            int32_t *write_file_descriptors, int32_t write_count,
+            int32_t timeout_milliseconds)
 {
 #ifdef _WIN32
     fd_set read_set;
     fd_set write_set;
-    int index;
-    int max_descriptor;
-    int ready_descriptors;
-    int total_ready;
+    int32_t index;
+    int32_t max_descriptor;
+    int32_t ready_descriptors;
+    int32_t total_ready;
     timeval timeout;
     timeval *timeout_pointer;
 
@@ -58,7 +58,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_descriptors = select(max_descriptor + 1, &read_set, &write_set, NULL, timeout_pointer);
     if (ready_descriptors <= 0)
     {
-        int select_error;
+        int32_t select_error;
 
         select_error = WSAGetLastError();
         if (ready_descriptors == 0)
@@ -93,10 +93,10 @@ int nw_poll(int *read_file_descriptors, int read_count,
 #else
     fd_set read_set;
     fd_set write_set;
-    int index;
-    int max_descriptor;
-    int ready_descriptors;
-    int total_ready;
+    int32_t index;
+    int32_t max_descriptor;
+    int32_t ready_descriptors;
+    int32_t total_ready;
     timeval timeout;
     timeval *timeout_pointer;
 
@@ -135,7 +135,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_descriptors = select(max_descriptor + 1, &read_set, &write_set, NULL, timeout_pointer);
     if (ready_descriptors <= 0)
     {
-        int select_error;
+        int32_t select_error;
 
         select_error = errno;
         if (ready_descriptors == 0)

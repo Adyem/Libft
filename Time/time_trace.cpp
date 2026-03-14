@@ -17,47 +17,47 @@ typedef struct s_time_trace_frame
 }   t_time_trace_frame;
 
 static std::FILE                                *g_trace_file = ft_nullptr;
-static bool                                     g_trace_session_active = false;
-static bool                                     g_trace_first_event = true;
+static ft_bool                                     g_trace_session_active = FT_FALSE;
+static ft_bool                                     g_trace_first_event = FT_TRUE;
 static std::chrono::steady_clock::time_point    g_trace_session_start;
 static std::vector<t_time_trace_frame>          g_trace_stack;
 
-static bool time_trace_write_raw(const char *buffer, size_t length, bool flush)
+static ft_bool time_trace_write_raw(const char *buffer, ft_size_t length, ft_bool flush)
 {
-    size_t  written;
+    ft_size_t  written;
 
     if (buffer == ft_nullptr && length != 0)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     if (g_trace_file == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     written = std::fwrite(buffer, 1, length, g_trace_file);
     if (written != length)
     {
         (void)(FT_ERR_IO);
-        return (false);
+        return (FT_FALSE);
     }
     if (flush)
     {
         if (std::fflush(g_trace_file) != 0)
         {
             (void)(FT_ERR_IO);
-            return (false);
+            return (FT_FALSE);
         }
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
 static std::string  time_trace_escape_json(const char *input)
 {
     std::string escaped;
-    size_t      index;
+    ft_size_t      index;
 
     if (input == ft_nullptr)
         return (std::string());
@@ -94,43 +94,43 @@ static std::string  time_trace_escape_json(const char *input)
     return (escaped);
 }
 
-static long long    time_trace_elapsed_microseconds(std::chrono::steady_clock::time_point moment)
+static int64_t    time_trace_elapsed_microseconds(std::chrono::steady_clock::time_point moment)
 {
     std::chrono::steady_clock::duration         duration_since_start;
-    long long                                   microseconds;
+    int64_t                                   microseconds;
 
     duration_since_start = moment - g_trace_session_start;
     microseconds = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_start).count();
     return (microseconds);
 }
 
-static std::string  time_trace_long_long_to_string(long long value)
+static std::string  time_trace_long_long_to_string(int64_t value)
 {
     return (std::to_string(value));
 }
 
-static bool time_trace_write_event_line(const std::string &line)
+static ft_bool time_trace_write_event_line(const std::string &line)
 {
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     if (!g_trace_first_event)
     {
-        if (!time_trace_write_raw(",\n", 2, false))
-            return (false);
+        if (!time_trace_write_raw(",\n", 2, FT_FALSE))
+            return (FT_FALSE);
     }
-    if (!time_trace_write_raw(line.c_str(), line.size(), true))
-        return (false);
+    if (!time_trace_write_raw(line.c_str(), line.size(), FT_TRUE))
+        return (FT_FALSE);
     if (g_trace_first_event)
-        g_trace_first_event = false;
+        g_trace_first_event = FT_FALSE;
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-static bool time_trace_write_duration_event(const std::string &name,
-    const std::string &category, long long start_us, long long duration_us)
+static ft_bool time_trace_write_duration_event(const std::string &name,
+    const std::string &category, int64_t start_us, int64_t duration_us)
 {
     std::string line;
     std::string escaped_name;
@@ -151,8 +151,8 @@ static bool time_trace_write_duration_event(const std::string &name,
     return (time_trace_write_event_line(line));
 }
 
-static bool time_trace_write_instant_event(const std::string &name,
-    const std::string &category, long long timestamp_us)
+static ft_bool time_trace_write_instant_event(const std::string &name,
+    const std::string &category, int64_t timestamp_us)
 {
     std::string line;
     std::string escaped_name;
@@ -171,26 +171,26 @@ static bool time_trace_write_instant_event(const std::string &name,
     return (time_trace_write_event_line(line));
 }
 
-bool    time_trace_begin_session(const char *file_path)
+ft_bool    time_trace_begin_session(const char *file_path)
 {
     const char  *header;
-    size_t      header_length;
+    ft_size_t      header_length;
 
     if (g_trace_session_active)
     {
         (void)(FT_ERR_ALREADY_INITIALISED);
-        return (false);
+        return (FT_FALSE);
     }
     if (file_path == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     g_trace_file = std::fopen(file_path, "w");
     if (g_trace_file == ft_nullptr)
     {
         (void)(FT_ERR_IO);
-        return (false);
+        return (FT_FALSE);
     }
     header = "{\"traceEvents\":[\n";
     header_length = std::strlen(header);
@@ -199,37 +199,37 @@ bool    time_trace_begin_session(const char *file_path)
         std::fclose(g_trace_file);
         g_trace_file = ft_nullptr;
         (void)(FT_ERR_IO);
-        return (false);
+        return (FT_FALSE);
     }
     if (std::fflush(g_trace_file) != 0)
     {
         std::fclose(g_trace_file);
         g_trace_file = ft_nullptr;
         (void)(FT_ERR_IO);
-        return (false);
+        return (FT_FALSE);
     }
     g_trace_session_start = std::chrono::steady_clock::now();
-    g_trace_session_active = true;
-    g_trace_first_event = true;
+    g_trace_session_active = FT_TRUE;
+    g_trace_first_event = FT_TRUE;
     g_trace_stack.clear();
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    time_trace_end_session(void)
+ft_bool    time_trace_end_session(void)
 {
     const char  *footer;
-    size_t      footer_length;
+    ft_size_t      footer_length;
 
     if (!g_trace_session_active)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     if (!g_trace_stack.empty())
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     footer = "\n]}\n";
     footer_length = std::strlen(footer);
@@ -237,33 +237,33 @@ bool    time_trace_end_session(void)
     {
         std::fclose(g_trace_file);
         g_trace_file = ft_nullptr;
-        g_trace_session_active = false;
+        g_trace_session_active = FT_FALSE;
         (void)(FT_ERR_IO);
-        return (false);
+        return (FT_FALSE);
     }
     if (std::fclose(g_trace_file) != 0)
     {
         g_trace_file = ft_nullptr;
-        g_trace_session_active = false;
+        g_trace_session_active = FT_FALSE;
         (void)(FT_ERR_IO);
-        return (false);
+        return (FT_FALSE);
     }
     g_trace_file = ft_nullptr;
-    g_trace_session_active = false;
-    g_trace_first_event = true;
+    g_trace_session_active = FT_FALSE;
+    g_trace_first_event = FT_TRUE;
     g_trace_stack.clear();
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    time_trace_begin_event(const char *name, const char *category)
+ft_bool    time_trace_begin_event(const char *name, const char *category)
 {
     t_time_trace_frame frame;
 
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     if (name == ft_nullptr)
         frame.name = "";
@@ -281,28 +281,28 @@ bool    time_trace_begin_event(const char *name, const char *category)
     catch (const std::bad_alloc &)
     {
         (void)(FT_ERR_NO_MEMORY);
-        return (false);
+        return (FT_FALSE);
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    time_trace_end_event(void)
+ft_bool    time_trace_end_event(void)
 {
     std::chrono::steady_clock::time_point    end_time;
     t_time_trace_frame                        frame;
-    long long                                start_us;
-    long long                                duration_us;
+    int64_t                                start_us;
+    int64_t                                duration_us;
 
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     if (g_trace_stack.empty())
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     frame = g_trace_stack.back();
     g_trace_stack.pop_back();
@@ -313,22 +313,22 @@ bool    time_trace_end_event(void)
         duration_us = 0;
     if (!time_trace_write_duration_event(frame.name, frame.category,
             start_us, duration_us))
-        return (false);
+        return (FT_FALSE);
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    time_trace_instant_event(const char *name, const char *category)
+ft_bool    time_trace_instant_event(const char *name, const char *category)
 {
     std::chrono::steady_clock::time_point    now;
     std::string                              event_name;
     std::string                              event_category;
-    long long                                timestamp_us;
+    int64_t                                timestamp_us;
 
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_FALSE);
     }
     if (name == ft_nullptr)
         event_name = "";
@@ -342,7 +342,7 @@ bool    time_trace_instant_event(const char *name, const char *category)
     timestamp_us = time_trace_elapsed_microseconds(now);
     if (!time_trace_write_instant_event(event_name, event_category,
             timestamp_us))
-        return (false);
+        return (FT_FALSE);
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }

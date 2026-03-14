@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-static void time_benchmark_set_error(t_time_benchmark *benchmark, int error_code)
+static void time_benchmark_set_error(t_time_benchmark *benchmark, int32_t error_code)
 {
     if (benchmark != ft_nullptr)
         benchmark->error_code = error_code;
@@ -34,32 +34,32 @@ void    time_benchmark_reset(t_time_benchmark *benchmark)
     return ;
 }
 
-int time_benchmark_add_sample(t_time_benchmark *benchmark, double duration_ms)
+int32_t time_benchmark_add_sample(t_time_benchmark *benchmark, double duration_ms)
 {
     double  delta;
     double  delta_after_update;
-    size_t  new_count;
+    ft_size_t  new_count;
     double  count_double;
 
     if (benchmark == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (!(duration_ms >= 0.0))
     {
         time_benchmark_set_error(benchmark, FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (!std::isfinite(duration_ms))
     {
         time_benchmark_set_error(benchmark, FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (benchmark->sample_count >= std::numeric_limits<size_t>::max())
+    if (benchmark->sample_count >= std::numeric_limits<ft_size_t>::max())
     {
         time_benchmark_set_error(benchmark, FT_ERR_OUT_OF_RANGE);
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     new_count = benchmark->sample_count + 1;
     count_double = static_cast<double>(new_count);
@@ -81,10 +81,10 @@ int time_benchmark_add_sample(t_time_benchmark *benchmark, double duration_ms)
     }
     benchmark->sample_count = new_count;
     time_benchmark_set_error(benchmark, FT_ERR_SUCCESS);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-int time_benchmark_add_duration(t_time_benchmark *benchmark,
+int32_t time_benchmark_add_duration(t_time_benchmark *benchmark,
     t_duration_milliseconds duration)
 {
     return (time_benchmark_add_sample(benchmark,
@@ -106,7 +106,7 @@ static double  time_benchmark_calculate_jitter(const t_time_benchmark *benchmark
     return (std::sqrt(variance));
 }
 
-bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
+ft_bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
     t_time_benchmark_snapshot *out_snapshot)
 {
     double jitter_ms;
@@ -114,7 +114,7 @@ bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
     if (benchmark == ft_nullptr || out_snapshot == ft_nullptr)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     out_snapshot->sample_count = benchmark->sample_count;
     out_snapshot->average_ms = benchmark->rolling_mean_ms;
@@ -125,13 +125,13 @@ bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
     if (benchmark->error_code != FT_ERR_SUCCESS)
     {
         (void)(benchmark->error_code);
-        return (false);
+        return (FT_FALSE);
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-size_t  time_benchmark_get_sample_count(const t_time_benchmark *benchmark)
+ft_size_t  time_benchmark_get_sample_count(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
@@ -191,7 +191,7 @@ double  time_benchmark_get_maximum_ms(const t_time_benchmark *benchmark)
     return (benchmark->maximum_ms);
 }
 
-int time_benchmark_get_error(const t_time_benchmark *benchmark)
+int32_t time_benchmark_get_error(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {

@@ -2,6 +2,7 @@
 #define NETWORKING_SSL_WRAPPER_HPP
 
 #include "openssl_support.hpp"
+#include "../Basic/basic.hpp"
 
 #if NETWORKING_HAS_OPENSSL
 #include <cstddef>
@@ -18,8 +19,8 @@ extern "C"
 {
 #endif
 
-ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len);
-ssize_t nw_ssl_read(SSL *ssl, void *buf, size_t len);
+ssize_t nw_ssl_write(SSL *ssl, const void *buf, ft_size_t len);
+ssize_t nw_ssl_read(SSL *ssl, void *buf, ft_size_t len);
 
 #ifdef __cplusplus
 }

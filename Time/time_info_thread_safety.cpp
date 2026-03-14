@@ -18,15 +18,15 @@ static void time_info_disable_thread_safety(t_time_info *time_info)
         std::free(time_info->mutex);
         time_info->mutex = ft_nullptr;
     }
-    time_info->thread_safe_enabled = false;
+    time_info->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-int time_info_prepare_thread_safety(t_time_info *time_info)
+int32_t time_info_prepare_thread_safety(t_time_info *time_info)
 {
     pt_mutex    *mutex_pointer;
     void        *memory;
-    int         error_code;
+    int32_t         error_code;
 
     if (!time_info)
     {
@@ -46,7 +46,7 @@ int time_info_prepare_thread_safety(t_time_info *time_info)
     }
     mutex_pointer = new(memory) pt_mutex();
     {
-        int mutex_error;
+        int32_t mutex_error;
 
         if (mutex_pointer == ft_nullptr)
             mutex_error = FT_ERR_SUCCESS;
@@ -62,7 +62,7 @@ int time_info_prepare_thread_safety(t_time_info *time_info)
         }
     }
     time_info->mutex = mutex_pointer;
-    time_info->thread_safe_enabled = true;
+    time_info->thread_safe_enabled = FT_TRUE;
     error_code = FT_ERR_SUCCESS;
     (void)(error_code);
     return (FT_ERR_SUCCESS);
@@ -76,12 +76,12 @@ void    time_info_teardown_thread_safety(t_time_info *time_info)
     return ;
 }
 
-int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
+int32_t time_info_lock(const t_time_info *time_info, ft_bool *lock_acquired)
 {
     t_time_info *mutable_info;
 
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!time_info)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
@@ -94,7 +94,7 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
         return (FT_ERR_SUCCESS);
     }
     {
-        int lock_error;
+        int32_t lock_error;
 
         lock_error = pt_mutex_lock_if_not_null(mutable_info->mutex);
         if (lock_error != FT_ERR_SUCCESS)
@@ -104,12 +104,12 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
         }
     }
     if (lock_acquired)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     (void)(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
+void    time_info_unlock(const t_time_info *time_info, ft_bool lock_acquired)
 {
     t_time_info *mutable_info;
 
@@ -130,7 +130,7 @@ void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
         return ;
     }
     {
-        int unlock_error;
+        int32_t unlock_error;
 
         unlock_error = pt_mutex_unlock_if_not_null(mutable_info->mutex);
         if (unlock_error != FT_ERR_SUCCESS)
@@ -143,11 +143,11 @@ void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
     return ;
 }
 
-bool    time_info_is_thread_safe(const t_time_info *time_info)
+ft_bool    time_info_is_thread_safe(const t_time_info *time_info)
 {
     if (!time_info)
-        return (false);
+        return (FT_FALSE);
     if (!time_info->thread_safe_enabled || !time_info->mutex)
-        return (false);
-    return (true);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }

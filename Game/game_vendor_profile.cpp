@@ -2,61 +2,100 @@
 #include "ft_vendor_profile.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int ft_vendor_profile::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_vendor_profile::_last_error = FT_ERR_SUCCESS;
 
 ft_vendor_profile::ft_vendor_profile() noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
       _mutex(ft_nullptr),
-      _initialised_state(ft_vendor_profile::_state_uninitialised)
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
+ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
+    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
+      _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_vendor_profile::ft_vendor_profile(copy)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(initialize_error);
+    }
+    return ;
+}
+
+ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
+    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
+      _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_vendor_profile::ft_vendor_profile(move)",
+            "source object is not initialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+    }
+    return ;
+}
+
 ft_vendor_profile::~ft_vendor_profile() noexcept
 {
-    if (this->_initialised_state == ft_vendor_profile::_state_uninitialised)
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         return ;
-    if (this->_initialised_state == ft_vendor_profile::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-void ft_vendor_profile::abort_lifecycle_error(const char *method_name,
-    const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_vendor_profile lifecycle error: %s: %s\n", method_name,
-        reason);
-    su_abort();
-    return ;
-}
-
-void ft_vendor_profile::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == ft_vendor_profile::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-void ft_vendor_profile::set_error(int error_code) const noexcept
+int32_t ft_vendor_profile::set_error(int32_t error_code) noexcept
 {
     ft_vendor_profile::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
-int ft_vendor_profile::initialize() noexcept
+int32_t ft_vendor_profile::initialize() noexcept
 {
-    if (this->_initialised_state == ft_vendor_profile::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_vendor_profile::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "ft_vendor_profile::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -64,18 +103,18 @@ int ft_vendor_profile::initialize() noexcept
     this->_buy_markup = 1.0;
     this->_sell_multiplier = 1.0;
     this->_tax_rate = 0.0;
-    this->_initialised_state = ft_vendor_profile::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_vendor_profile::initialize(const ft_vendor_profile &other) noexcept
+int32_t ft_vendor_profile::initialize(const ft_vendor_profile &other) noexcept
 {
-    int initialize_error;
+    int32_t initialize_error;
 
-    if (other._initialised_state != ft_vendor_profile::_state_initialised)
+    if (other._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        other.abort_lifecycle_error("ft_vendor_profile::initialize(copy)",
+        errno_abort_lifecycle(other._initialised_state, "ft_vendor_profile::initialize(copy)",
             "source object is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -84,7 +123,7 @@ int ft_vendor_profile::initialize(const ft_vendor_profile &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (this->_initialised_state == ft_vendor_profile::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -107,17 +146,22 @@ int ft_vendor_profile::initialize(const ft_vendor_profile &other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_vendor_profile::initialize(ft_vendor_profile &&other) noexcept
+int32_t ft_vendor_profile::initialize(ft_vendor_profile &&other) noexcept
 {
     return (this->initialize(static_cast<const ft_vendor_profile &>(other)));
 }
 
-int ft_vendor_profile::initialize(int vendor_id, double buy_markup,
+int32_t ft_vendor_profile::move(ft_vendor_profile &other) noexcept
+{
+    return (this->initialize(static_cast<ft_vendor_profile &&>(other)));
+}
+
+int32_t ft_vendor_profile::initialize(int32_t vendor_id, double buy_markup,
     double sell_multiplier, double tax_rate) noexcept
 {
-    int initialize_error;
+    int32_t initialize_error;
 
-    if (this->_initialised_state == ft_vendor_profile::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -140,31 +184,31 @@ int ft_vendor_profile::initialize(int vendor_id, double buy_markup,
     return (FT_ERR_SUCCESS);
 }
 
-int ft_vendor_profile::destroy() noexcept
+int32_t ft_vendor_profile::destroy() noexcept
 {
-    int disable_error;
+    int32_t disable_error;
 
-    if (this->_initialised_state != ft_vendor_profile::_state_initialised)
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_vendor_id = 0;
     this->_buy_markup = 1.0;
     this->_sell_multiplier = 1.0;
     this->_tax_rate = 0.0;
-    this->_initialised_state = ft_vendor_profile::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);
 }
 
-int ft_vendor_profile::enable_thread_safety() noexcept
+int32_t ft_vendor_profile::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("ft_vendor_profile::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -188,10 +232,10 @@ int ft_vendor_profile::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_vendor_profile::disable_thread_safety() noexcept
+int32_t ft_vendor_profile::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *old_mutex;
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
     {
@@ -206,18 +250,18 @@ int ft_vendor_profile::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_vendor_profile::is_thread_safe() const noexcept
+ft_bool ft_vendor_profile::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_vendor_profile::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_vendor_profile::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    int lock_error;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_vendor_profile::lock_internal");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::lock_internal");
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -225,48 +269,47 @@ int ft_vendor_profile::lock_internal(bool *lock_acquired) const noexcept
         return (lock_error);
     }
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_vendor_profile::unlock_internal(bool lock_acquired) const noexcept
+int32_t ft_vendor_profile::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_vendor_profile::unlock_internal");
-    if (lock_acquired == false)
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::unlock_internal");
+    if (lock_acquired == FT_FALSE)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    const int unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(unlock_error);
-    return (unlock_error);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_vendor_profile::lock(bool *lock_acquired) const noexcept
+int32_t ft_vendor_profile::lock(ft_bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_vendor_profile::lock");
-    const int lock_result = this->lock_internal(lock_acquired);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::lock");
+    const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
 }
 
-void ft_vendor_profile::unlock(bool lock_acquired) const noexcept
+void ft_vendor_profile::unlock(ft_bool lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_vendor_profile::unlock");
-    const int unlock_result = this->unlock_internal(lock_acquired);
-    this->set_error(unlock_result);
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::unlock");
+    const int32_t unlock_result = this->unlock_internal(lock_acquired);
+    (void)unlock_result;
     return ;
 }
 
-int ft_vendor_profile::get_vendor_id() const noexcept
+int32_t ft_vendor_profile::get_vendor_id() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t value;
 
-    this->abort_if_not_initialised("ft_vendor_profile::get_vendor_id");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_vendor_id");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -274,27 +317,23 @@ int ft_vendor_profile::get_vendor_id() const noexcept
         return (0);
     }
     value = this->_vendor_id;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
-void ft_vendor_profile::set_vendor_id(int vendor_id) noexcept
+void ft_vendor_profile::set_vendor_id(int32_t vendor_id) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_vendor_profile::set_vendor_id");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_vendor_id");
     if (vendor_id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -302,23 +341,19 @@ void ft_vendor_profile::set_vendor_id(int vendor_id) noexcept
         return ;
     }
     this->_vendor_id = vendor_id;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 double ft_vendor_profile::get_buy_markup() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     double value;
 
-    this->abort_if_not_initialised("ft_vendor_profile::get_buy_markup");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_buy_markup");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -326,22 +361,18 @@ double ft_vendor_profile::get_buy_markup() const noexcept
         return (0.0);
     }
     value = this->_buy_markup;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
 void ft_vendor_profile::set_buy_markup(double buy_markup) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_vendor_profile::set_buy_markup");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_buy_markup");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -349,23 +380,19 @@ void ft_vendor_profile::set_buy_markup(double buy_markup) noexcept
         return ;
     }
     this->_buy_markup = buy_markup;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 double ft_vendor_profile::get_sell_multiplier() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     double value;
 
-    this->abort_if_not_initialised("ft_vendor_profile::get_sell_multiplier");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_sell_multiplier");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -373,22 +400,18 @@ double ft_vendor_profile::get_sell_multiplier() const noexcept
         return (0.0);
     }
     value = this->_sell_multiplier;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
 void ft_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_vendor_profile::set_sell_multiplier");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_sell_multiplier");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -396,23 +419,19 @@ void ft_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
         return ;
     }
     this->_sell_multiplier = sell_multiplier;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 double ft_vendor_profile::get_tax_rate() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
     double value;
 
-    this->abort_if_not_initialised("ft_vendor_profile::get_tax_rate");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::get_tax_rate");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -420,22 +439,18 @@ double ft_vendor_profile::get_tax_rate() const noexcept
         return (0.0);
     }
     value = this->_tax_rate;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
 void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_vendor_profile::set_tax_rate");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vendor_profile::set_tax_rate");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -443,30 +458,24 @@ void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
         return ;
     }
     this->_tax_rate = tax_rate;
-    int unlock_error;
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        this->set_error(unlock_error);
-    else
+    (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex *ft_vendor_profile::get_mutex_for_validation() const noexcept
-{
-    this->abort_if_not_initialised("ft_vendor_profile::get_mutex_for_validation");
-    this->set_error(FT_ERR_SUCCESS);
-    return (this->_mutex);
-}
-#endif
 
-int ft_vendor_profile::get_error() const noexcept
+int32_t ft_vendor_profile::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_vendor_profile::get_error");
     return (ft_vendor_profile::_last_error);
 }
 
 const char *ft_vendor_profile::get_error_str() const noexcept
 {
-    return (ft_strerror(this->get_error()));
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_vendor_profile::get_error_str");
+    return (ft_strerror(ft_vendor_profile::_last_error));
 }

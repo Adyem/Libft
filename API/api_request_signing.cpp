@@ -1,6 +1,6 @@
 #include "api_request_signing.hpp"
 #include "../Compression/compression.hpp"
-#include "../Encryption/encryption_hmac_sha256.hpp"
+#include "../Encryption/encryption.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
@@ -11,38 +11,38 @@
 #if NETWORKING_HAS_OPENSSL
 namespace
 {
-    static thread_local int g_api_request_signing_error = FT_ERR_SUCCESS;
+    static thread_local int32_t g_api_request_signing_error = FT_ERR_SUCCESS;
 
-    void api_request_signing_set_error(int error_code) noexcept
+    void api_request_signing_set_error(int32_t error_code) noexcept
     {
         g_api_request_signing_error = error_code;
         return ;
     }
 
-    int api_request_signing_get_error() noexcept
+    int32_t api_request_signing_get_error() noexcept
     {
         return (g_api_request_signing_error);
     }
 
-    int api_request_signing_finish(int result) noexcept
+    int32_t api_request_signing_finish(int32_t result) noexcept
     {
         return (result);
     }
 
-    int api_request_signing_ensure_string(ft_string &target) noexcept
+    int32_t api_request_signing_ensure_string(ft_string &target) noexcept
     {
         if (target.is_initialised())
             return (FT_ERR_SUCCESS);
-        int initialization_error = target.initialize();
+        int32_t initialization_error = target.initialize();
         if (initialization_error != FT_ERR_SUCCESS)
             api_request_signing_set_error(initialization_error);
         return (initialization_error);
     }
 
-    int api_request_signing_append(ft_string &target,
+    int32_t api_request_signing_append(ft_string &target,
         const char *value) noexcept
     {
-        int string_error;
+        int32_t string_error;
 
         if (api_request_signing_ensure_string(target) != FT_ERR_SUCCESS)
             return (-1);
@@ -59,10 +59,10 @@ namespace
         return (0);
     }
 
-    int api_request_signing_append_character(ft_string &target,
+    int32_t api_request_signing_append_character(ft_string &target,
         char value) noexcept
     {
-        int string_error;
+        int32_t string_error;
 
         if (api_request_signing_ensure_string(target) != FT_ERR_SUCCESS)
             return (-1);
@@ -77,12 +77,12 @@ namespace
         return (0);
     }
 
-    int api_request_signing_percent_encode(const char *input,
+    int32_t api_request_signing_percent_encode(const char *input,
         ft_string &output) noexcept
     {
         static const char hex_table[] = "0123456789ABCDEF";
-        size_t index;
-        int string_error;
+        ft_size_t index;
+        int32_t string_error;
 
         if (api_request_signing_ensure_string(output) != FT_ERR_SUCCESS)
             return (-1);
@@ -93,24 +93,24 @@ namespace
         while (input[index] != '\0')
         {
             unsigned char character;
-            bool unreserved;
+            ft_bool unreserved;
 
             character = static_cast<unsigned char>(input[index]);
-            unreserved = false;
+            unreserved = FT_FALSE;
             if (character >= 'A' && character <= 'Z')
-                unreserved = true;
+                unreserved = FT_TRUE;
             else if (character >= 'a' && character <= 'z')
-                unreserved = true;
+                unreserved = FT_TRUE;
             else if (character >= '0' && character <= '9')
-                unreserved = true;
+                unreserved = FT_TRUE;
             else if (character == '-')
-                unreserved = true;
+                unreserved = FT_TRUE;
             else if (character == '.')
-                unreserved = true;
+                unreserved = FT_TRUE;
             else if (character == '_')
-                unreserved = true;
+                unreserved = FT_TRUE;
             else if (character == '~')
-                unreserved = true;
+                unreserved = FT_TRUE;
             if (unreserved)
             {
                 output.append(static_cast<char>(character));
@@ -142,11 +142,11 @@ namespace
         return (0);
     }
 
-    int api_request_signing_uppercase(const char *input,
+    int32_t api_request_signing_uppercase(const char *input,
         ft_string &output) noexcept
     {
-        size_t index;
-        int string_error;
+        ft_size_t index;
+        int32_t string_error;
 
         if (!input)
         {
@@ -175,7 +175,7 @@ namespace
         return (0);
     }
 
-    int api_request_signing_build_canonical(
+    int32_t api_request_signing_build_canonical(
         const api_hmac_signature_input &input, ft_string &canonical) noexcept
     {
         if (!input.method || !input.path)
@@ -224,7 +224,7 @@ namespace
         ft_string value;
     };
 
-    int api_request_signing_add_parameter(
+    int32_t api_request_signing_add_parameter(
         std::vector<api_oauth_parameter_entry> &entries,
         const char *key, const char *value) noexcept
     {
@@ -253,11 +253,11 @@ namespace
         return (0);
     }
 
-    int api_request_signing_append_normalized(
+    int32_t api_request_signing_append_normalized(
         ft_string &target,
         const std::vector<api_oauth_parameter_entry> &entries) noexcept
     {
-        size_t index;
+        ft_size_t index;
 
         index = 0;
         while (index < entries.size())
@@ -280,8 +280,8 @@ namespace
         return (0);
     }
 
-    int api_request_signing_append_header_parameter(ft_string &target,
-        const char *key, const char *value, int &is_first) noexcept
+    int32_t api_request_signing_append_header_parameter(ft_string &target,
+        const char *key, const char *value, int32_t &is_first) noexcept
     {
         ft_string encoded_value;
         const char *local_value;
@@ -325,15 +325,15 @@ namespace
 }
 
 #if NETWORKING_HAS_OPENSSL
-int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
-    const unsigned char *key, std::size_t key_length,
+int32_t api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
+    const unsigned char *key, ft_size_t key_length,
     ft_string &signature_output) noexcept
 {
     unsigned char digest[32];
     ft_string canonical;
-    std::size_t encoded_size;
+    ft_size_t encoded_size;
     unsigned char *encoded_buffer;
-    int error_code;
+    int32_t error_code;
 
     if (!key || key_length == 0)
     {
@@ -379,13 +379,13 @@ int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
     return (api_request_signing_finish(0));
 }
 
-int api_apply_hmac_signature_header(const api_hmac_signature_input &input,
-    const unsigned char *key, std::size_t key_length,
+int32_t api_apply_hmac_signature_header(const api_hmac_signature_input &input,
+    const unsigned char *key, ft_size_t key_length,
     const char *header_name, ft_string &header_output) noexcept
 {
     ft_string signature;
-    int sign_result;
-    int sign_error;
+    int32_t sign_result;
+    int32_t sign_error;
 
     if (!header_name)
     {
@@ -414,7 +414,7 @@ int api_apply_hmac_signature_header(const api_hmac_signature_input &input,
     return (api_request_signing_finish(0));
 }
 
-int api_build_oauth1_authorization_header(
+int32_t api_build_oauth1_authorization_header(
     const api_oauth1_parameters &parameters, ft_string &header_output) noexcept
 {
     std::vector<api_oauth_parameter_entry> entries;
@@ -427,13 +427,13 @@ int api_build_oauth1_authorization_header(
     ft_string encoded_consumer_secret;
     ft_string encoded_token_secret;
     unsigned char digest[32];
-    std::size_t encoded_size;
+    ft_size_t encoded_size;
     unsigned char *encoded_buffer;
     ft_string signature_string;
     ft_string encoded_signature;
-    int header_first;
-    size_t parameter_index;
-    int error_code;
+    int32_t header_first;
+    ft_size_t parameter_index;
+    int32_t error_code;
 
     if (!parameters.method || !parameters.url
         || !parameters.consumer_key || !parameters.consumer_secret
@@ -486,14 +486,17 @@ int api_build_oauth1_authorization_header(
         [](const api_oauth_parameter_entry &lhs,
             const api_oauth_parameter_entry &rhs)
         {
-            int comparison;
+            int32_t comparison;
 
             comparison = std::strcmp(lhs.key.c_str(), rhs.key.c_str());
             if (comparison < 0)
-                return (true);
+                return (FT_TRUE);
             if (comparison > 0)
-                return (false);
-            return (std::strcmp(lhs.value.c_str(), rhs.value.c_str()) < 0);
+                return (FT_FALSE);
+            comparison = std::strcmp(lhs.value.c_str(), rhs.value.c_str());
+            if (comparison < 0)
+                return (FT_TRUE);
+            return (FT_FALSE);
         });
     if (api_request_signing_ensure_string(normalized_parameters) != FT_ERR_SUCCESS)
         return (api_request_signing_finish(-1));

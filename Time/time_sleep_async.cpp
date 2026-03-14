@@ -2,12 +2,12 @@
 #include "../Errno/errno.hpp"
 #include <climits>
 
-int event_loop_run(event_loop *loop, int timeout_milliseconds);
+int32_t event_loop_run(event_loop *loop, int32_t timeout_milliseconds);
 
-void    time_async_sleep_init(t_time_async_sleep *sleep_state, long long delay_milliseconds)
+void    time_async_sleep_init(t_time_async_sleep *sleep_state, int64_t delay_milliseconds)
 {
     t_monotonic_time_point    now_point;
-    long long                 normalized_delay;
+    int64_t                 normalized_delay;
 
     if (!sleep_state)
     {
@@ -20,28 +20,28 @@ void    time_async_sleep_init(t_time_async_sleep *sleep_state, long long delay_m
         normalized_delay = 0;
     sleep_state->deadline = time_monotonic_point_add_ms(now_point, normalized_delay);
     if (normalized_delay == 0)
-        sleep_state->completed = true;
+        sleep_state->completed = FT_TRUE;
     else
-        sleep_state->completed = false;
+        sleep_state->completed = FT_FALSE;
     (void)(FT_ERR_SUCCESS);
     return ;
 }
 
-bool    time_async_sleep_is_complete(const t_time_async_sleep *sleep_state)
+ft_bool    time_async_sleep_is_complete(const t_time_async_sleep *sleep_state)
 {
     if (!sleep_state)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (true);
+        return (FT_TRUE);
     }
     (void)(FT_ERR_SUCCESS);
     return (sleep_state->completed);
 }
 
-long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
+int64_t   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
 {
     t_monotonic_time_point    now_point;
-    long long                 remaining;
+    int64_t                 remaining;
 
     if (!sleep_state)
     {
@@ -57,7 +57,7 @@ long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
     remaining = time_monotonic_point_diff_ms(now_point, sleep_state->deadline);
     if (remaining <= 0)
     {
-        sleep_state->completed = true;
+        sleep_state->completed = FT_TRUE;
         (void)(FT_ERR_SUCCESS);
         return (0);
     }
@@ -65,39 +65,39 @@ long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
     return (remaining);
 }
 
-int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
+int32_t time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
 {
-    long long   remaining;
-    int         timeout;
-    int         poll_result;
-    int         error_code;
+    int64_t   remaining;
+    int32_t         timeout;
+    int32_t         poll_result;
+    int32_t         error_code;
 
     if (!loop || !sleep_state)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     remaining = time_async_sleep_remaining_ms(sleep_state);
     error_code = FT_ERR_SUCCESS;
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)(error_code);
-        return (-1);
+        return (error_code);
     }
     if (sleep_state->completed)
     {
         (void)(FT_ERR_SUCCESS);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
-    if (remaining > static_cast<long long>(INT_MAX))
+    if (remaining > static_cast<int64_t>(INT_MAX))
         timeout = INT_MAX;
     else
-        timeout = static_cast<int>(remaining);
+        timeout = static_cast<int32_t>(remaining);
     poll_result = event_loop_run(loop, timeout);
     if (poll_result < 0)
     {
         (void)(FT_ERR_IO);
-        return (-1);
+        return (FT_ERR_IO);
     }
     if (poll_result == 0)
     {
@@ -106,14 +106,14 @@ int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
         if (error_code != FT_ERR_SUCCESS)
         {
             (void)(error_code);
-            return (-1);
+            return (error_code);
         }
         if (sleep_state->completed)
         {
             (void)(FT_ERR_SUCCESS);
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
     }
-    (void)(FT_ERR_SUCCESS);
-    return (1);
+    (void)(FT_ERR_TIMEOUT);
+    return (FT_ERR_TIMEOUT);
 }

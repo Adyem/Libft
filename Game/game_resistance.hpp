@@ -6,44 +6,45 @@
 
 class ft_resistance
 {
-    private:
-        int              _percent_value;
-        int              _flat_value;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t              _percent_value;
+        int32_t              _flat_value;
         mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error) const noexcept;
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const noexcept;
-        void abort_if_not_initialised(const char *method_name) const noexcept;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_resistance() noexcept;
+        ft_resistance(const ft_resistance &other) noexcept;
+        ft_resistance(ft_resistance &&other) noexcept;
         ~ft_resistance() noexcept;
-        int initialize() noexcept;
-        int destroy() noexcept;
-        ft_resistance(const ft_resistance &other) noexcept = delete;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_resistance &other) noexcept;
+        int32_t initialize(ft_resistance &&other) noexcept;
+        int32_t move(ft_resistance &other) noexcept;
+        int32_t destroy() noexcept;
         ft_resistance &operator=(const ft_resistance &other) noexcept = delete;
-        ft_resistance(ft_resistance &&other) noexcept = delete;
         ft_resistance &operator=(ft_resistance &&other) noexcept = delete;
 
-        int set_values(int percent_value, int flat_value) noexcept;
-        int set_percent(int percent_value) noexcept;
-        int set_flat(int flat_value) noexcept;
-        int get_percent() const noexcept;
-        int get_flat() const noexcept;
-        int reset() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
+        int32_t set_values(int32_t percent_value, int32_t flat_value) noexcept;
+        int32_t set_percent(int32_t percent_value) noexcept;
+        int32_t set_flat(int32_t flat_value) noexcept;
+        int32_t get_percent() const noexcept;
+        int32_t get_flat() const noexcept;
+        int32_t reset() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 
-        int         get_error() const noexcept;
+        int32_t         get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

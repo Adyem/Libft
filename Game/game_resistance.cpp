@@ -3,119 +3,217 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local int ft_resistance::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_resistance::_last_error = FT_ERR_SUCCESS;
 
 ft_resistance::ft_resistance() noexcept
     : _percent_value(0), _flat_value(0), _mutex(ft_nullptr),
-      _initialised_state(ft_resistance::_state_uninitialised)
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+ft_resistance::ft_resistance(const ft_resistance &other) noexcept
+    : _percent_value(0), _flat_value(0), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t initialize_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_resistance::ft_resistance(copy)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    initialize_error = this->initialize(other);
+    if (initialize_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+ft_resistance::ft_resistance(ft_resistance &&other) noexcept
+    : _percent_value(0), _flat_value(0), _mutex(ft_nullptr),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    int32_t move_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_resistance::ft_resistance(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return ;
+    }
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 ft_resistance::~ft_resistance() noexcept
 {
-    if (this->_initialised_state == ft_resistance::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
-    else
-        this->_initialised_state = ft_resistance::_state_destroyed;
     return ;
 }
 
-void ft_resistance::abort_lifecycle_error(const char *method_name,
-        const char *reason) const noexcept
+int32_t ft_resistance::initialize() noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "ft_resistance lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
-    return ;
-}
-
-void ft_resistance::abort_if_not_initialised(const char *method_name) const noexcept
-{
-    if (this->_initialised_state == ft_resistance::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
-    return ;
-}
-
-int ft_resistance::initialize() noexcept
-{
-    if (this->_initialised_state == ft_resistance::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("ft_resistance::initialize",
-            "already initialised");
+        errno_abort_lifecycle(this->_initialised_state, "ft_resistance::initialize", "already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     this->_percent_value = 0;
     this->_flat_value = 0;
-    this->_initialised_state = ft_resistance::_state_initialised;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::destroy() noexcept
+int32_t ft_resistance::initialize(const ft_resistance &other) noexcept
 {
-    if (this->_initialised_state != ft_resistance::_state_initialised)
+    int32_t destroy_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        this->_initialised_state = ft_resistance::_state_destroyed;
+        errno_abort_lifecycle(other._initialised_state, "ft_resistance::initialize(copy)",
+            "source object is uninitialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    this->_percent_value = other._percent_value;
+    this->_flat_value = other._flat_value;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    this->set_error(other.get_error());
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_resistance::initialize(ft_resistance &&other) noexcept
+{
+    return (this->move(other));
+}
+
+int32_t ft_resistance::move(ft_resistance &other) noexcept
+{
+    int32_t destroy_error;
+
+    if (&other == this)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_resistance::move", "source object is not initialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    this->_percent_value = other._percent_value;
+    this->_flat_value = other._flat_value;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    this->set_error(other.get_error());
+    other._percent_value = 0;
+    other._flat_value = 0;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    other.set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_resistance::destroy() noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     this->_percent_value = 0;
     this->_flat_value = 0;
     if (this->_mutex != ft_nullptr)
         (void)this->disable_thread_safety();
-    this->_initialised_state = ft_resistance::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::lock_internal(bool *lock_acquired) const noexcept
+int32_t ft_resistance::lock_internal(ft_bool *lock_acquired) const noexcept
 {
-    this->abort_if_not_initialised("ft_resistance::lock_internal");
-    int lock_error;
+    int32_t lock_error;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::unlock_internal(bool lock_acquired) const noexcept
+int32_t ft_resistance::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    int unlock_error;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_resistance *>(this)->set_error(unlock_error);
-        return (unlock_error);
-    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::set_percent(int percent_value) noexcept
+int32_t ft_resistance::set_percent(int32_t percent_value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_resistance::set_percent");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_resistance::set_percent");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -124,19 +222,17 @@ int ft_resistance::set_percent(int percent_value) noexcept
     }
     this->_percent_value = percent_value;
     this->set_error(FT_ERR_SUCCESS);
-    lock_error = this->unlock_internal(lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (lock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::set_flat(int flat_value) noexcept
+int32_t ft_resistance::set_flat(int32_t flat_value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_resistance::set_flat");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_resistance::set_flat");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -145,19 +241,17 @@ int ft_resistance::set_flat(int flat_value) noexcept
     }
     this->_flat_value = flat_value;
     this->set_error(FT_ERR_SUCCESS);
-    lock_error = this->unlock_internal(lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (lock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::set_values(int percent_value, int flat_value) noexcept
+int32_t ft_resistance::set_values(int32_t percent_value, int32_t flat_value) noexcept
 {
-    bool lock_acquired;
-    int lock_error;
+    ft_bool lock_acquired;
+    int32_t lock_error;
 
-    this->abort_if_not_initialised("ft_resistance::set_values");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_resistance::set_values");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -167,25 +261,23 @@ int ft_resistance::set_values(int percent_value, int flat_value) noexcept
     this->_percent_value = percent_value;
     this->_flat_value = flat_value;
     this->set_error(FT_ERR_SUCCESS);
-    lock_error = this->unlock_internal(lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (lock_error);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::reset() noexcept
+int32_t ft_resistance::reset() noexcept
 {
     return (this->set_values(0, 0));
 }
 
-int ft_resistance::get_percent() const noexcept
+int32_t ft_resistance::get_percent() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int percent_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t percent_value;
 
-    this->abort_if_not_initialised("ft_resistance::get_percent");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_resistance::get_percent");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -194,20 +286,18 @@ int ft_resistance::get_percent() const noexcept
     }
     percent_value = this->_percent_value;
     const_cast<ft_resistance *>(this)->set_error(FT_ERR_SUCCESS);
-    lock_error = this->unlock_internal(lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (0);
+    (void)this->unlock_internal(lock_acquired);
     return (percent_value);
 }
 
-int ft_resistance::get_flat() const noexcept
+int32_t ft_resistance::get_flat() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int flat_value;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t flat_value;
 
-    this->abort_if_not_initialised("ft_resistance::get_flat");
-    lock_acquired = false;
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_resistance::get_flat");
+    lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -216,17 +306,16 @@ int ft_resistance::get_flat() const noexcept
     }
     flat_value = this->_flat_value;
     const_cast<ft_resistance *>(this)->set_error(FT_ERR_SUCCESS);
-    lock_error = this->unlock_internal(lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (0);
+    (void)this->unlock_internal(lock_acquired);
     return (flat_value);
 }
 
-int ft_resistance::enable_thread_safety() noexcept
+int32_t ft_resistance::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_resistance::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -250,9 +339,9 @@ int ft_resistance::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int ft_resistance::disable_thread_safety() noexcept
+int32_t ft_resistance::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
     if (this->_mutex == ft_nullptr)
     {
@@ -266,23 +355,29 @@ int ft_resistance::disable_thread_safety() noexcept
     return (destroy_error);
 }
 
-bool ft_resistance::is_thread_safe() const noexcept
+ft_bool ft_resistance::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int ft_resistance::get_error() const noexcept
+int32_t ft_resistance::get_error() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_resistance::get_error");
     return (ft_resistance::_last_error);
 }
 
 const char *ft_resistance::get_error_str() const noexcept
 {
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
+            "ft_resistance::get_error_str");
     return (ft_strerror(ft_resistance::_last_error));
 }
 
-void ft_resistance::set_error(int error) const noexcept
+int32_t ft_resistance::set_error(int32_t error_code) noexcept
 {
-    ft_resistance::_last_error = error;
-    return ;
+    ft_resistance::_last_error = error_code;
+    return (error_code);
 }

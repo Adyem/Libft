@@ -1,11 +1,13 @@
 #ifndef CONSTRUCTOR_HPP
 #define CONSTRUCTOR_HPP
 
+#include "../Basic/basic.hpp"
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 #include <new>
 
-constexpr auto* placement_new_ref = static_cast<void* (*)(std::size_t, void*)>(&::operator new);
+constexpr auto* placement_new_ref = static_cast<void* (*)(ft_size_t, void*)>(&::operator new);
 
 template <typename T, typename... Args>
 constexpr T* construct_at(T* destination, Args&&... args)

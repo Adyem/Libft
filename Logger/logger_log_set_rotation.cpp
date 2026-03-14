@@ -1,33 +1,33 @@
 #include "logger_internal.hpp"
 
-static int log_rotation_report(int return_value)
+static int32_t log_rotation_report(int32_t return_value)
 {
     return (return_value);
 }
 
-int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int max_age_seconds)
+int32_t ft_log_set_rotation(ft_size_t max_size, ft_size_t retention_count, uint32_t max_age_seconds)
 {
-    size_t sink_count;
-    size_t index;
-    bool   updated;
-    int    lock_error;
+    ft_size_t sink_count;
+    ft_size_t entry_index;
+    ft_bool   updated;
+    int32_t    lock_error;
 
     lock_error = logger_lock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
         return (log_rotation_report(-1));
     sink_count = g_sinks.size();
-    index = 0;
-    updated = false;
-    while (index < sink_count)
+    entry_index = 0;
+    updated = FT_FALSE;
+    while (entry_index < sink_count)
     {
         s_log_sink entry;
 
-        entry = g_sinks[index];
-        s_log_sink &stored_entry = g_sinks[index];
-        bool        sink_lock_acquired;
-        int         sink_lock_error;
+        entry = g_sinks[entry_index];
+        s_log_sink &stored_entry = g_sinks[entry_index];
+        ft_bool        sink_lock_acquired;
+        int32_t         sink_lock_error;
 
-        sink_lock_acquired = false;
+        sink_lock_acquired = FT_FALSE;
         sink_lock_error = log_sink_lock(&stored_entry, &sink_lock_acquired);
         if (sink_lock_error != FT_ERR_SUCCESS)
         {
@@ -44,10 +44,10 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
             file_sink = static_cast<s_file_sink *>(entry.user_data);
             if (file_sink)
             {
-                bool file_sink_lock_acquired;
-                int  file_lock_error;
+                ft_bool file_sink_lock_acquired;
+                int32_t  file_lock_error;
 
-                file_sink_lock_acquired = false;
+                file_sink_lock_acquired = FT_FALSE;
                 file_lock_error = file_sink_lock(file_sink, &file_sink_lock_acquired);
                 if (file_lock_error != FT_ERR_SUCCESS)
                 {
@@ -63,12 +63,12 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
                 file_sink->max_age_seconds = max_age_seconds;
                 if (file_sink_lock_acquired)
                     file_sink_unlock(file_sink, file_sink_lock_acquired);
-                updated = true;
+                updated = FT_TRUE;
             }
         }
         if (sink_lock_acquired)
             log_sink_unlock(&stored_entry, sink_lock_acquired);
-        index += 1;
+        entry_index += 1;
     }
     lock_error = logger_unlock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
@@ -78,11 +78,11 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
     return (log_rotation_report(0));
 }
 
-int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int *max_age_seconds)
+int32_t ft_log_get_rotation(ft_size_t *max_size, ft_size_t *retention_count, uint32_t *max_age_seconds)
 {
-    size_t sink_count;
-    size_t index;
-    int    lock_error;
+    ft_size_t sink_count;
+    ft_size_t entry_index;
+    int32_t    lock_error;
 
     if (!max_size || !retention_count || !max_age_seconds)
         return (log_rotation_report(-1));
@@ -90,17 +90,17 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
     if (lock_error != FT_ERR_SUCCESS)
         return (log_rotation_report(-1));
     sink_count = g_sinks.size();
-    index = 0;
-    while (index < sink_count)
+    entry_index = 0;
+    while (entry_index < sink_count)
     {
         s_log_sink entry;
 
-        entry = g_sinks[index];
-        s_log_sink &stored_entry = g_sinks[index];
-        bool        sink_lock_acquired;
-        int         sink_lock_error;
+        entry = g_sinks[entry_index];
+        s_log_sink &stored_entry = g_sinks[entry_index];
+        ft_bool        sink_lock_acquired;
+        int32_t         sink_lock_error;
 
-        sink_lock_acquired = false;
+        sink_lock_acquired = FT_FALSE;
         sink_lock_error = log_sink_lock(&stored_entry, &sink_lock_acquired);
         if (sink_lock_error != FT_ERR_SUCCESS)
         {
@@ -117,10 +117,10 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
             file_sink = static_cast<s_file_sink *>(entry.user_data);
             if (file_sink)
             {
-                bool file_sink_lock_acquired;
-                int  file_lock_error;
+                ft_bool file_sink_lock_acquired;
+                int32_t  file_lock_error;
 
-                file_sink_lock_acquired = false;
+                file_sink_lock_acquired = FT_FALSE;
                 file_lock_error = file_sink_lock(file_sink, &file_sink_lock_acquired);
                 if (file_lock_error != FT_ERR_SUCCESS)
                 {
@@ -146,7 +146,7 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
         }
         if (sink_lock_acquired)
             log_sink_unlock(&stored_entry, sink_lock_acquired);
-        index += 1;
+        entry_index += 1;
     }
     lock_error = logger_unlock_sinks();
     if (lock_error != FT_ERR_SUCCESS)

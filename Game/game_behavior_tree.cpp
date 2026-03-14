@@ -2,11 +2,26 @@
 #include "../Template/move.hpp"
 #include "../Basic/basic.hpp"
 
-thread_local int ft_behavior_node::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_behavior_node::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_behavior_tree::_last_error = FT_ERR_SUCCESS;
 
 ft_behavior_context::ft_behavior_context() noexcept
     : _character(ft_nullptr), _user_data(ft_nullptr)
 {
+    return ;
+}
+
+ft_behavior_context::ft_behavior_context(const ft_behavior_context &other) noexcept
+    : _character(other._character), _user_data(other._user_data)
+{
+    return ;
+}
+
+ft_behavior_context::ft_behavior_context(ft_behavior_context &&other) noexcept
+    : _character(other._character), _user_data(other._user_data)
+{
+    other._character = ft_nullptr;
+    other._user_data = ft_nullptr;
     return ;
 }
 
@@ -43,18 +58,30 @@ ft_behavior_node::ft_behavior_node() noexcept
     return ;
 }
 
+ft_behavior_node::ft_behavior_node(const ft_behavior_node &other) noexcept
+{
+    this->set_error(other.get_error());
+    return ;
+}
+
+ft_behavior_node::ft_behavior_node(ft_behavior_node &&other) noexcept
+{
+    this->set_error(other.get_error());
+    return ;
+}
+
 ft_behavior_node::~ft_behavior_node() noexcept
 {
     return ;
 }
 
-void ft_behavior_node::set_error(int error_code) const noexcept
+int32_t ft_behavior_node::set_error(int32_t error_code) noexcept
 {
     ft_behavior_node::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
-int ft_behavior_node::get_error() const noexcept
+int32_t ft_behavior_node::get_error() const noexcept
 {
     return (ft_behavior_node::_last_error);
 }
@@ -70,8 +97,15 @@ ft_behavior_action::ft_behavior_action() noexcept
     return ;
 }
 
-ft_behavior_action::ft_behavior_action(const ft_function<int(ft_behavior_context &)> &callback) noexcept
-    : ft_behavior_node(), _callback(callback)
+ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
+    : ft_behavior_node(other), _callback(other._callback)
+{
+    return ;
+}
+
+ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
+    : ft_behavior_node(static_cast<ft_behavior_node &&>(other)),
+      _callback(ft_move(other._callback))
 {
     return ;
 }
@@ -81,26 +115,26 @@ ft_behavior_action::~ft_behavior_action() noexcept
     return ;
 }
 
-void ft_behavior_action::set_callback(const ft_function<int(ft_behavior_context &)> &callback) noexcept
+void ft_behavior_action::set_callback(const ft_function<int32_t(ft_behavior_context &)> &callback) noexcept
 {
     this->_callback = callback;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-const ft_function<int(ft_behavior_context &)> &ft_behavior_action::get_callback() const noexcept
+const ft_function<int32_t(ft_behavior_context &)> &ft_behavior_action::get_callback() const noexcept
 {
     return (this->_callback);
 }
 
-int ft_behavior_action::tick(ft_behavior_context &context) noexcept
+int32_t ft_behavior_action::tick(ft_behavior_context &context) noexcept
 {
     if (!this->_callback)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_BEHAVIOR_STATUS_FAILURE);
     }
-    int status;
+    int32_t status;
 
     status = this->_callback(context);
     if (status != FT_BEHAVIOR_STATUS_RUNNING
@@ -120,24 +154,37 @@ ft_behavior_composite::ft_behavior_composite() noexcept
     return ;
 }
 
+ft_behavior_composite::ft_behavior_composite(const ft_behavior_composite &other) noexcept
+    : ft_behavior_node(other), _children(other._children)
+{
+    return ;
+}
+
+ft_behavior_composite::ft_behavior_composite(ft_behavior_composite &&other) noexcept
+    : ft_behavior_node(static_cast<ft_behavior_node &&>(other)),
+      _children(ft_move(other._children))
+{
+    return ;
+}
+
 ft_behavior_composite::~ft_behavior_composite() noexcept
 {
     return ;
 }
 
-bool ft_behavior_composite::validate_child(const ft_sharedptr<ft_behavior_node> &child) const noexcept
+ft_bool ft_behavior_composite::validate_child(const ft_sharedptr<ft_behavior_node> &child) const noexcept
 {
     if (!child)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     if (child->get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(child->get_error());
-        return (false);
+        return (FT_FALSE);
     }
-    return (true);
+    return (FT_TRUE);
 }
 
 void ft_behavior_composite::add_child(const ft_sharedptr<ft_behavior_node> &child) noexcept
@@ -148,11 +195,6 @@ void ft_behavior_composite::add_child(const ft_sharedptr<ft_behavior_node> &chil
         return ;
     }
     this->_children.push_back(child);
-    if (false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return ;
-    }
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -182,24 +224,36 @@ ft_behavior_selector::ft_behavior_selector() noexcept
     return ;
 }
 
+ft_behavior_selector::ft_behavior_selector(const ft_behavior_selector &other) noexcept
+    : ft_behavior_composite(other)
+{
+    return ;
+}
+
+ft_behavior_selector::ft_behavior_selector(ft_behavior_selector &&other) noexcept
+    : ft_behavior_composite(static_cast<ft_behavior_composite &&>(other))
+{
+    return ;
+}
+
 ft_behavior_selector::~ft_behavior_selector() noexcept
 {
     return ;
 }
 
-int ft_behavior_selector::tick(ft_behavior_context &context) noexcept
+int32_t ft_behavior_selector::tick(ft_behavior_context &context) noexcept
 {
-    size_t index;
-    size_t child_count;
+    ft_size_t index;
+    ft_size_t child_count;
 
     index = 0;
     child_count = this->_children.size();
     while (index < child_count)
     {
         ft_sharedptr<ft_behavior_node> child = this->_children[index];
-        if (this->validate_child(child) == false)
+        if (this->validate_child(child) == FT_FALSE)
             return (FT_BEHAVIOR_STATUS_FAILURE);
-        int status = child->tick(context);
+        int32_t status = child->tick(context);
         if (child->get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(child->get_error());
@@ -227,15 +281,27 @@ ft_behavior_sequence::ft_behavior_sequence() noexcept
     return ;
 }
 
+ft_behavior_sequence::ft_behavior_sequence(const ft_behavior_sequence &other) noexcept
+    : ft_behavior_composite(other)
+{
+    return ;
+}
+
+ft_behavior_sequence::ft_behavior_sequence(ft_behavior_sequence &&other) noexcept
+    : ft_behavior_composite(static_cast<ft_behavior_composite &&>(other))
+{
+    return ;
+}
+
 ft_behavior_sequence::~ft_behavior_sequence() noexcept
 {
     return ;
 }
 
-int ft_behavior_sequence::tick(ft_behavior_context &context) noexcept
+int32_t ft_behavior_sequence::tick(ft_behavior_context &context) noexcept
 {
-    size_t index;
-    size_t child_count;
+    ft_size_t index;
+    ft_size_t child_count;
 
     index = 0;
     child_count = this->_children.size();
@@ -247,9 +313,9 @@ int ft_behavior_sequence::tick(ft_behavior_context &context) noexcept
     while (index < child_count)
     {
         ft_sharedptr<ft_behavior_node> child = this->_children[index];
-        if (this->validate_child(child) == false)
+        if (this->validate_child(child) == FT_FALSE)
             return (FT_BEHAVIOR_STATUS_FAILURE);
-        int status = child->tick(context);
+        int32_t status = child->tick(context);
         if (child->get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(child->get_error());
@@ -278,15 +344,29 @@ ft_behavior_tree::ft_behavior_tree() noexcept
     return ;
 }
 
+ft_behavior_tree::ft_behavior_tree(const ft_behavior_tree &other) noexcept
+    : _root(other._root)
+{
+    this->set_error(other.get_error());
+    return ;
+}
+
+ft_behavior_tree::ft_behavior_tree(ft_behavior_tree &&other) noexcept
+    : _root(ft_move(other._root))
+{
+    this->set_error(other.get_error());
+    return ;
+}
+
 ft_behavior_tree::~ft_behavior_tree() noexcept
 {
     return ;
 }
 
-void ft_behavior_tree::set_error(int error_code) const noexcept
+int32_t ft_behavior_tree::set_error(int32_t error_code) noexcept
 {
     ft_behavior_tree::_last_error = error_code;
-    return ;
+    return (error_code);
 }
 
 void ft_behavior_tree::set_root(const ft_sharedptr<ft_behavior_node> &root) noexcept
@@ -308,20 +388,20 @@ const ft_sharedptr<ft_behavior_node> &ft_behavior_tree::get_root() const noexcep
     return (this->_root);
 }
 
-int ft_behavior_tree::tick(ft_behavior_context &context) noexcept
+int32_t ft_behavior_tree::tick(ft_behavior_context &context) noexcept
 {
     if (!this->_root)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_BEHAVIOR_STATUS_FAILURE);
     }
-    int status = this->_root->tick(context);
+    int32_t status = this->_root->tick(context);
 
     this->set_error(this->_root->get_error());
     return (status);
 }
 
-int ft_behavior_tree::get_error() const noexcept
+int32_t ft_behavior_tree::get_error() const noexcept
 {
     return (ft_behavior_tree::_last_error);
 }

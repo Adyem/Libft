@@ -9,7 +9,7 @@ SRCS := xml_document.cpp \
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := xml.hpp xml_dom_bridge.hpp
+HEADERS := xml.hpp xml_document.hpp xml_dom_bridge.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

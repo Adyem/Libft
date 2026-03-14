@@ -4,9 +4,9 @@
 
 #if NETWORKING_HAS_OPENSSL
 
-static ssize_t ssl_translate_result(SSL *ssl, int result, int *error_code)
+static ssize_t ssl_translate_result(SSL *ssl, int32_t result, int32_t *error_code)
 {
-    int ssl_error;
+    int32_t ssl_error;
 
     if (result > 0)
     {
@@ -44,30 +44,30 @@ static ssize_t ssl_translate_result(SSL *ssl, int result, int *error_code)
     return (-1);
 }
 
-static ssize_t ssl_report(int error_code, ssize_t result)
+static ssize_t ssl_report(int32_t error_code, ssize_t result)
 {
     (void)(error_code);
     return (result);
 }
 
-static ssize_t ssl_write_platform(SSL *ssl, const void *buf, size_t len)
+static ssize_t ssl_write_platform(SSL *ssl, const void *buf, ft_size_t len)
 {
-    int write_length;
-    int ret;
-    int error_code;
+    int32_t write_length;
+    int32_t ret;
+    int32_t error_code;
 
-    if (len > static_cast<size_t>(INT_MAX))
+    if (len > static_cast<ft_size_t>(INT_MAX))
     {
         return (ssl_report(FT_ERR_INVALID_ARGUMENT, -1));
     }
-    write_length = static_cast<int>(len);
+    write_length = static_cast<int32_t>(len);
     ret = SSL_write(ssl, buf, write_length);
     return (ssl_report(error_code, ssl_translate_result(ssl, ret, &error_code)));
 }
 
 extern "C"
 {
-    ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len)
+    ssize_t nw_ssl_write(SSL *ssl, const void *buf, ft_size_t len)
     {
         ssize_t result;
 
@@ -75,17 +75,17 @@ extern "C"
         return (result);
     }
 
-    ssize_t nw_ssl_read(SSL *ssl, void *buf, size_t len)
+    ssize_t nw_ssl_read(SSL *ssl, void *buf, ft_size_t len)
     {
-        int read_length;
-        int ret;
-        int error_code;
+        int32_t read_length;
+        int32_t ret;
+        int32_t error_code;
 
-        if (len > static_cast<size_t>(INT_MAX))
+        if (len > static_cast<ft_size_t>(INT_MAX))
         {
             return (ssl_report(FT_ERR_INVALID_ARGUMENT, -1));
         }
-        read_length = static_cast<int>(len);
+        read_length = static_cast<int32_t>(len);
         ret = SSL_read(ssl, buf, read_length);
         return (ssl_report(error_code, ssl_translate_result(ssl, ret, &error_code)));
     }

@@ -6,11 +6,11 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
-int log_sink_prepare_thread_safety(s_log_sink *sink)
+int32_t log_sink_prepare_thread_safety(s_log_sink *sink)
 {
     pt_mutex *mutex_pointer;
-    int      error_code;
-    int      initialize_result;
+    int32_t      error_code_value;
+    int32_t      initialize_result;
 
     if (!sink)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -26,9 +26,9 @@ int log_sink_prepare_thread_safety(s_log_sink *sink)
         return (initialize_result);
     }
     sink->mutex = mutex_pointer;
-    sink->thread_safe_enabled = true;
-    error_code = FT_ERR_SUCCESS;
-    return (error_code);
+    sink->thread_safe_enabled = FT_TRUE;
+    error_code_value = FT_ERR_SUCCESS;
+    return (error_code_value);
 }
 
 void log_sink_teardown_thread_safety(s_log_sink *sink)
@@ -41,32 +41,32 @@ void log_sink_teardown_thread_safety(s_log_sink *sink)
         delete sink->mutex;
         sink->mutex = ft_nullptr;
     }
-    sink->thread_safe_enabled = false;
+    sink->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-int log_sink_lock(const s_log_sink *sink, bool *lock_acquired)
+int32_t log_sink_lock(const s_log_sink *sink, ft_bool *lock_acquired)
 {
     s_log_sink *mutable_sink;
-    int error_code;
+    int32_t error_code_value;
 
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!sink)
         return (FT_ERR_INVALID_ARGUMENT);
     mutable_sink = const_cast<s_log_sink *>(sink);
     if (!mutable_sink->thread_safe_enabled || !mutable_sink->mutex)
         return (FT_ERR_SUCCESS);
-    error_code = pt_mutex_lock_if_not_null(mutable_sink->mutex);
-    if (error_code != FT_ERR_SUCCESS)
-        return (error_code);
+    error_code_value = pt_mutex_lock_if_not_null(mutable_sink->mutex);
+    if (error_code_value != FT_ERR_SUCCESS)
+        return (error_code_value);
     if (lock_acquired)
-        *lock_acquired = true;
-    error_code = FT_ERR_SUCCESS;
-    return (error_code);
+        *lock_acquired = FT_TRUE;
+    error_code_value = FT_ERR_SUCCESS;
+    return (error_code_value);
 }
 
-void log_sink_unlock(const s_log_sink *sink, bool lock_acquired)
+void log_sink_unlock(const s_log_sink *sink, ft_bool lock_acquired)
 {
     s_log_sink *mutable_sink;
 

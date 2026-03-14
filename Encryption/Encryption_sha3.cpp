@@ -3,32 +3,33 @@
 #if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
 #include "../Errno/errno.hpp"
-#include "encryption_sha3.hpp"
+#include "../CPP_class/class_nullptr.hpp"
+#include "encryption.hpp"
 
-static int sha3_hash_internal(const EVP_MD *algorithm, const void *data,
-    size_t length, unsigned char *digest, size_t expected_length)
+static int32_t sha3_hash_internal(const EVP_MD *algorithm, const void *data,
+    ft_size_t length, uint8_t *digest, ft_size_t expected_length)
 {
     EVP_MD_CTX  *context;
-    unsigned int output_length;
+    uint32_t output_length;
 
-    if (digest == NULL)
+    if (digest == ft_nullptr)
     {
         return (FT_ERR_INVALID_POINTER);
     }
-    if (length > 0 && data == NULL)
+    if (length > 0 && data == ft_nullptr)
     {
         return (FT_ERR_INVALID_POINTER);
     }
-    if (algorithm == NULL)
+    if (algorithm == ft_nullptr)
     {
         return (FT_ERR_INVALID_OPERATION);
     }
     context = EVP_MD_CTX_new();
-    if (context == NULL)
+    if (context == ft_nullptr)
     {
         return (FT_ERR_NO_MEMORY);
     }
-    if (EVP_DigestInit_ex(context, algorithm, NULL) != 1)
+    if (EVP_DigestInit_ex(context, algorithm, ft_nullptr) != 1)
     {
         EVP_MD_CTX_free(context);
         return (FT_ERR_INITIALIZATION_FAILED);
@@ -48,19 +49,19 @@ static int sha3_hash_internal(const EVP_MD *algorithm, const void *data,
         return (FT_ERR_INTERNAL);
     }
     EVP_MD_CTX_free(context);
-    if (static_cast<size_t>(output_length) != expected_length)
+    if (static_cast<ft_size_t>(output_length) != expected_length)
     {
         return (FT_ERR_INTERNAL);
     }
     return (FT_ERR_SUCCESS);
 }
 
-int sha3_256_hash(const void *data, size_t length, unsigned char *digest)
+int32_t sha3_256_hash(const void *data, ft_size_t length, uint8_t *digest)
 {
     return (sha3_hash_internal(EVP_sha3_256(), data, length, digest, 32));
 }
 
-int sha3_512_hash(const void *data, size_t length, unsigned char *digest)
+int32_t sha3_512_hash(const void *data, ft_size_t length, uint8_t *digest)
 {
     return (sha3_hash_internal(EVP_sha3_512(), data, length, digest, 64));
 }

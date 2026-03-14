@@ -7,7 +7,7 @@
 # include <unistd.h>
 #endif
 
-int nw_set_nonblocking(int socket_fd)
+int32_t nw_set_nonblocking(int32_t socket_fd)
 {
 #ifdef _WIN32
     u_long mode;
@@ -17,7 +17,7 @@ int nw_set_nonblocking(int socket_fd)
         return (-1);
     return (0);
 #else
-    int flags;
+    int32_t flags;
 
     flags = fcntl(socket_fd, F_GETFL, 0);
     if (flags == -1)

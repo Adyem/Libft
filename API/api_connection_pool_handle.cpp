@@ -1,16 +1,16 @@
 #include "api_internal.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../Template/move.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include <new>
 
 api_connection_pool_handle::api_connection_pool_handle()
-    : _initialised_state(api_connection_pool_handle::_state_uninitialised),
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
       _mutex(ft_nullptr), key(), socket(),
       security_mode(api_connection_security_mode::PLAIN),
-      has_socket(false), from_pool(false), should_store(false),
-      negotiated_http2(false), plain_socket_timed_out(false),
-      plain_socket_validated(false)
+      has_socket(FT_FALSE), from_pool(FT_FALSE), should_store(FT_FALSE),
+      negotiated_http2(FT_FALSE), plain_socket_timed_out(FT_FALSE),
+      plain_socket_validated(FT_FALSE)
 {
 #if NETWORKING_HAS_OPENSSL
     this->tls_session = ft_nullptr;
@@ -19,9 +19,63 @@ api_connection_pool_handle::api_connection_pool_handle()
     return ;
 }
 
+api_connection_pool_handle::api_connection_pool_handle(
+    const api_connection_pool_handle &other) noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _mutex(ft_nullptr), key(), socket(),
+      security_mode(api_connection_security_mode::PLAIN),
+      has_socket(FT_FALSE), from_pool(FT_FALSE), should_store(FT_FALSE),
+      negotiated_http2(FT_FALSE), plain_socket_timed_out(FT_FALSE),
+      plain_socket_validated(FT_FALSE)
+{
+#if NETWORKING_HAS_OPENSSL
+    this->tls_session = ft_nullptr;
+    this->tls_context = ft_nullptr;
+#endif
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "api_connection_pool_handle::api_connection_pool_handle(copy)",
+            "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
+api_connection_pool_handle::api_connection_pool_handle(
+    api_connection_pool_handle &&other) noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _mutex(ft_nullptr), key(), socket(),
+      security_mode(api_connection_security_mode::PLAIN),
+      has_socket(FT_FALSE), from_pool(FT_FALSE), should_store(FT_FALSE),
+      negotiated_http2(FT_FALSE), plain_socket_timed_out(FT_FALSE),
+      plain_socket_validated(FT_FALSE)
+{
+#if NETWORKING_HAS_OPENSSL
+    this->tls_session = ft_nullptr;
+    this->tls_context = ft_nullptr;
+#endif
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "api_connection_pool_handle::api_connection_pool_handle(move)",
+            "source is uninitialised");
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return ;
+    }
+    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
 api_connection_pool_handle::~api_connection_pool_handle()
 {
-    if (this->_initialised_state == api_connection_pool_handle::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
@@ -29,29 +83,20 @@ api_connection_pool_handle::~api_connection_pool_handle()
 void api_connection_pool_handle::abort_lifecycle_error(const char *method_name,
     const char *reason) const noexcept
 {
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "api_connection_pool_handle lifecycle error: %s: %s\n",
-        method_name, reason);
-    su_abort();
+    errno_abort_lifecycle(this->_initialised_state, method_name, reason);
     return ;
 }
 
 void api_connection_pool_handle::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    if (this->_initialised_state == api_connection_pool_handle::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name,
-        "called while object is not initialised");
+    errno_abort_if_uninitialised(this->_initialised_state, method_name);
     return ;
 }
 
-int api_connection_pool_handle::enable_thread_safety() noexcept
+int32_t api_connection_pool_handle::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *new_mutex;
-    int initialize_result;
+    int32_t initialize_result;
 
     this->abort_if_not_initialised("api_connection_pool_handle::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
@@ -69,10 +114,10 @@ int api_connection_pool_handle::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int api_connection_pool_handle::disable_thread_safety() noexcept
+int32_t api_connection_pool_handle::disable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int destroy_result;
+    int32_t destroy_result;
 
     this->abort_if_not_initialised("api_connection_pool_handle::disable_thread_safety");
     mutex_pointer = this->_mutex;
@@ -86,20 +131,20 @@ int api_connection_pool_handle::disable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-bool api_connection_pool_handle::is_thread_safe() const noexcept
+ft_bool api_connection_pool_handle::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int api_connection_pool_handle::initialize() noexcept
+int32_t api_connection_pool_handle::initialize() noexcept
 {
-    if (this->_initialised_state == api_connection_pool_handle::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         this->abort_lifecycle_error("api_connection_pool_handle::initialize",
             "initialize called on initialised instance");
-    int key_init_result = this->key.initialize();
+    int32_t key_init_result = this->key.initialize();
     if (key_init_result != FT_ERR_SUCCESS)
     {
-        this->_initialised_state = api_connection_pool_handle::_state_destroyed;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (key_init_result);
     }
     this->key.clear();
@@ -108,59 +153,142 @@ int api_connection_pool_handle::initialize() noexcept
     this->tls_context = ft_nullptr;
 #endif
     this->security_mode = api_connection_security_mode::PLAIN;
-    this->has_socket = false;
-    this->from_pool = false;
-    this->should_store = false;
-    this->negotiated_http2 = false;
-    this->plain_socket_timed_out = false;
-    this->plain_socket_validated = false;
-    this->_initialised_state = api_connection_pool_handle::_state_initialised;
+    this->has_socket = FT_FALSE;
+    this->from_pool = FT_FALSE;
+    this->should_store = FT_FALSE;
+    this->negotiated_http2 = FT_FALSE;
+    this->plain_socket_timed_out = FT_FALSE;
+    this->plain_socket_validated = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int api_connection_pool_handle::destroy() noexcept
+int32_t api_connection_pool_handle::initialize(
+    const api_connection_pool_handle &other) noexcept
 {
-    if (this->_initialised_state != api_connection_pool_handle::_state_initialised)
+    int32_t destroy_result;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->abort_lifecycle_error("api_connection_pool_handle::initialize(copy)",
+            "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (destroy_result);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
+    this->key = other.key;
+#if NETWORKING_HAS_OPENSSL
+    this->tls_session = other.tls_session;
+    this->tls_context = other.tls_context;
+#endif
+    this->security_mode = other.security_mode;
+    this->has_socket = other.has_socket;
+    this->from_pool = other.from_pool;
+    this->should_store = other.should_store;
+    this->negotiated_http2 = other.negotiated_http2;
+    this->plain_socket_timed_out = other.plain_socket_timed_out;
+    this->plain_socket_validated = other.plain_socket_validated;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t api_connection_pool_handle::initialize(
+    api_connection_pool_handle &&other) noexcept
+{
+    int32_t destroy_result;
+
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        this->abort_lifecycle_error("api_connection_pool_handle::initialize(move)",
+            "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (destroy_result);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
+    other.key.clear();
+#if NETWORKING_HAS_OPENSSL
+    other.tls_session = ft_nullptr;
+    other.tls_context = ft_nullptr;
+#endif
+    other.security_mode = api_connection_security_mode::PLAIN;
+    other.has_socket = FT_FALSE;
+    other.from_pool = FT_FALSE;
+    other.should_store = FT_FALSE;
+    other.negotiated_http2 = FT_FALSE;
+    other.plain_socket_timed_out = FT_FALSE;
+    other.plain_socket_validated = FT_FALSE;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t api_connection_pool_handle::destroy() noexcept
+{
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    (void)this->disable_thread_safety();
     this->key.clear();
 #if NETWORKING_HAS_OPENSSL
     this->tls_session = ft_nullptr;
     this->tls_context = ft_nullptr;
 #endif
     this->security_mode = api_connection_security_mode::PLAIN;
-    this->has_socket = false;
-    this->from_pool = false;
-    this->should_store = false;
-    this->negotiated_http2 = false;
-    this->plain_socket_timed_out = false;
-    this->plain_socket_validated = false;
-    (void)this->disable_thread_safety();
-    this->_initialised_state = api_connection_pool_handle::_state_destroyed;
+    this->has_socket = FT_FALSE;
+    this->from_pool = FT_FALSE;
+    this->should_store = FT_FALSE;
+    this->negotiated_http2 = FT_FALSE;
+    this->plain_socket_timed_out = FT_FALSE;
+    this->plain_socket_validated = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 
-int api_connection_pool_handle::lock(bool *lock_acquired) const
+uint32_t api_connection_pool_handle::move(
+    api_connection_pool_handle &other) noexcept
+{
+    return (static_cast<uint32_t>(this->initialize(ft_move(other))));
+}
+
+int32_t api_connection_pool_handle::lock(ft_bool *lock_acquired) const
 {
     api_connection_pool_handle *mutable_handle;
-    int lock_result;
+    int32_t lock_result;
 
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     mutable_handle = const_cast<api_connection_pool_handle *>(this);
     mutable_handle->abort_if_not_initialised("api_connection_pool_handle::lock");
     lock_result = pt_recursive_mutex_lock_if_not_null(mutable_handle->_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
     if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
 
-void api_connection_pool_handle::unlock(bool lock_acquired) const
+void api_connection_pool_handle::unlock(ft_bool lock_acquired) const
 {
     api_connection_pool_handle *mutable_handle;
 
-    if (lock_acquired == false)
+    if (lock_acquired == FT_FALSE)
         return ;
     mutable_handle = const_cast<api_connection_pool_handle *>(this);
     (void)pt_recursive_mutex_unlock_if_not_null(mutable_handle->_mutex);

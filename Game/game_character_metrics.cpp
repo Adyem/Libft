@@ -4,7 +4,7 @@
 #include "../Errno/errno.hpp"
 
 void ft_character::emit_game_metric(const char *event_name, const char *attribute,
-    long long delta_value, long long total_value, const char *unit) const noexcept
+    int64_t delta_value, int64_t total_value, const char *unit) const noexcept
 {
     ft_game_observability_sample sample;
 
@@ -20,7 +20,7 @@ void ft_character::emit_game_metric(const char *event_name, const char *attribut
     sample.unit = unit;
     sample.error_code = FT_ERR_SUCCESS;
     sample.error_tag = ft_nullptr;
-    sample.success = true;
+    sample.success = FT_TRUE;
     observability_game_metrics_record(sample);
     return ;
 }

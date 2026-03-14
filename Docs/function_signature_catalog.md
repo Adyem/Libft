@@ -7703,7 +7703,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename RandomIt> void ft_shuffle(RandomIt first, RandomIt last)`
 - `template <typename RandomIt> void ft_sort(RandomIt first, RandomIt last)`
 
-### Template/bitset.hpp
+### CPP_class/bitset.hpp
 
 - `bool is_thread_safe_enabled() const;`
 - `bool test(size_t pos) const;`
@@ -7749,7 +7749,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void unlock(bool lock_acquired) const;`
 - `void unlock_internal(bool lock_acquired) const;`
 
-### Template/cancellation.hpp
+### CPP_class/cancellation.hpp
 
 - `inline bool ft_cancellation_source::is_cancellation_requested() const noexcept`
 - `inline bool ft_cancellation_token::is_cancellation_requested() const noexcept`
@@ -8722,7 +8722,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename CharType> void ft_string_view<CharType>::sleep_backoff() noexcept`
 - `void set_error(int error) const;`
 
-### Template/thread_pool.hpp
+### CPP_class/thread_pool.hpp
 
 - `bool is_thread_safe() const;`
 - `const char* get_error_str() const;`
@@ -11719,7 +11719,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 - `kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 
-### Template/bitset.hpp
+### CPP_class/bitset.hpp
 
 - `ft_bitset() {`
 - `ft_bitset();`
@@ -11731,7 +11731,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `inline ft_bitset::ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
-### Template/cancellation.hpp
+### CPP_class/cancellation.hpp
 
 - `ft_cancellation_state() noexcept;`
 - `ft_cancellation_state(const ft_cancellation_state&) = delete;`
@@ -11977,7 +11977,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_string_view(const ft_string_view& other);`
 
-### Template/thread_pool.hpp
+### CPP_class/thread_pool.hpp
 
 - `ft_thread_pool() {`
 - `ft_thread_pool();`
@@ -12538,11 +12538,11 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `kv_store_entry::~kv_store_entry() noexcept`
 
-### Template/bitset.hpp
+### CPP_class/bitset.hpp
 
 - `inline ft_bitset::~ft_bitset()`
 
-### Template/cancellation.hpp
+### CPP_class/cancellation.hpp
 
 - `inline ft_cancellation_source::~ft_cancellation_source() noexcept`
 - `inline ft_cancellation_token::~ft_cancellation_token() noexcept`
@@ -12551,7 +12551,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `template<typename T> Pool<T>::Object::~Object() noexcept`
 
-### Template/thread_pool.hpp
+### CPP_class/thread_pool.hpp
 
 - `inline ft_thread_pool::~ft_thread_pool()`
 
@@ -13139,11 +13139,11 @@ The catalog lists the function declarations and definitions that appear in the C
 - `kv_store_entry &kv_store_entry::operator=(const kv_store_entry &other) noexcept`
 - `kv_store_entry &kv_store_entry::operator=(kv_store_entry &&other) noexcept`
 
-### Template/bitset.hpp
+### CPP_class/bitset.hpp
 
 - `inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept`
 
-### Template/cancellation.hpp
+### CPP_class/cancellation.hpp
 
 - `inline ft_cancellation_source &ft_cancellation_source::operator=(const ft_cancellation_source &other) noexcept`
 - `inline ft_cancellation_source &ft_cancellation_source::operator=(ft_cancellation_source &&other) noexcept`

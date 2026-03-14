@@ -1,12 +1,12 @@
 #include "logger_internal.hpp"
 
-void ft_log_warn(const char *fmt, ...)
+void ft_log_warn(const char *format_string, ...)
 {
-    va_list args;
-    va_start(args, fmt);
+    va_list argument_list;
+    va_start(argument_list, format_string);
     if (g_async_running)
-        ft_log_enqueue(LOG_LEVEL_WARN, fmt, args);
+        ft_log_enqueue(LOG_LEVEL_WARN, format_string, argument_list);
     else
-        ft_log_vwrite(LOG_LEVEL_WARN, fmt, args);
-    va_end(args);
+        ft_log_vwrite(LOG_LEVEL_WARN, format_string, argument_list);
+    va_end(argument_list);
 }

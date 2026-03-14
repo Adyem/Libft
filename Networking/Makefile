@@ -11,17 +11,17 @@ SRCS := networking_socket_class.cpp \
         networking_setup_udp.cpp \
         networking_udp_event_loop.cpp \
         networking_socket_wrapper_functions.cpp \
-        socket_handle.cpp \
+        networking_socket_handle.cpp \
         networking_ssl_wrapper.cpp \
         networking_tls_aead.cpp \
         networking_quic_experimental.cpp \
         networking_nonblocking.cpp \
         networking_event_loop.cpp \
-        http_client.cpp \
-        http2_client.cpp \
-        http_server.cpp \
-        websocket_client.cpp \
-        websocket_server.cpp \
+        networking_http_client.cpp \
+        networking_http2_client.cpp \
+        networking_http_server.cpp \
+        networking_websocket_client.cpp \
+        networking_websocket_server.cpp \
         networking_socket_config_thread_safety.cpp
 
 ifeq ($(OS),Windows_NT)
@@ -158,4 +158,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

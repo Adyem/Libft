@@ -19,7 +19,7 @@ void event_loop_init(event_loop *loop)
     loop->write_file_descriptors = ft_nullptr;
     loop->write_count = 0;
     loop->mutex = ft_nullptr;
-    loop->thread_safe_enabled = false;
+    loop->thread_safe_enabled = FT_FALSE;
     if (event_loop_prepare_thread_safety(loop) != 0)
         return ;
     return ;
@@ -27,12 +27,12 @@ void event_loop_init(event_loop *loop)
 
 void event_loop_clear(event_loop *loop)
 {
-    bool lock_acquired;
-    int  lock_result;
+    ft_bool lock_acquired;
+    int32_t  lock_result;
 
     if (!loop)
         return ;
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     lock_result = event_loop_lock(loop, &lock_acquired);
     if (loop->read_file_descriptors)
     {
@@ -52,14 +52,14 @@ void event_loop_clear(event_loop *loop)
     return ;
 }
 
-int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
+int32_t event_loop_add_socket(event_loop *loop, int32_t socket_fd, ft_bool is_write)
 {
-    int  *new_array;
-    int **descriptor_array;
-    int  *descriptor_count;
-    int   current_count;
-    bool  lock_acquired;
-    int   result;
+    int32_t  *new_array;
+    int32_t **descriptor_array;
+    int32_t  *descriptor_count;
+    int32_t   current_count;
+    ft_bool  lock_acquired;
+    int32_t   result;
 
     if (!loop)
     {
@@ -68,7 +68,7 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
     }
     if (event_loop_prepare_thread_safety(loop) != 0)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (event_loop_lock(loop, &lock_acquired) != 0)
         return (-1);
     if (is_write)
@@ -81,8 +81,8 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
         descriptor_array = &loop->read_file_descriptors;
         descriptor_count = &loop->read_count;
     }
-    new_array = static_cast<int *>(cma_realloc(*descriptor_array,
-                                               sizeof(int) * (*descriptor_count + 1)));
+    new_array = static_cast<int32_t *>(cma_realloc(*descriptor_array,
+                                               sizeof(int32_t) * (*descriptor_count + 1)));
     if (!new_array)
     {
         (void)(FT_ERR_NO_MEMORY);
@@ -101,13 +101,13 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
     return (result);
 }
 
-int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
+int32_t event_loop_remove_socket(event_loop *loop, int32_t socket_fd, ft_bool is_write)
 {
-    int  *descriptor_count;
-    int  *descriptors;
-    int   index;
-    bool  lock_acquired;
-    int   result;
+    int32_t  *descriptor_count;
+    int32_t  *descriptors;
+    int32_t   index;
+    ft_bool  lock_acquired;
+    int32_t   result;
 
     if (!loop)
     {
@@ -116,7 +116,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
     }
     if (event_loop_prepare_thread_safety(loop) != 0)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (event_loop_lock(loop, &lock_acquired) != 0)
         return (-1);
     if (is_write)
@@ -156,10 +156,10 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
     return (result);
 }
 
-int event_loop_run(event_loop *loop, int timeout_milliseconds)
+int32_t event_loop_run(event_loop *loop, int32_t timeout_milliseconds)
 {
-    int  poll_result;
-    bool lock_acquired;
+    int32_t  poll_result;
+    ft_bool lock_acquired;
 
     if (!loop)
     {
@@ -168,7 +168,7 @@ int event_loop_run(event_loop *loop, int timeout_milliseconds)
     }
     if (event_loop_prepare_thread_safety(loop) != 0)
         return (-1);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     if (event_loop_lock(loop, &lock_acquired) != 0)
         return (-1);
     poll_result = nw_poll(loop->read_file_descriptors, loop->read_count,
@@ -178,7 +178,7 @@ int event_loop_run(event_loop *loop, int timeout_milliseconds)
     return (poll_result);
 }
 
-int event_loop_prepare_thread_safety(event_loop *loop)
+int32_t event_loop_prepare_thread_safety(event_loop *loop)
 {
     pt_mutex *mutex_pointer;
     void     *memory;
@@ -208,7 +208,7 @@ int event_loop_prepare_thread_safety(event_loop *loop)
         return (-1);
     }
     loop->mutex = mutex_pointer;
-    loop->thread_safe_enabled = true;
+    loop->thread_safe_enabled = FT_TRUE;
     (void)(FT_ERR_SUCCESS);
     return (0);
 }
@@ -223,14 +223,14 @@ void event_loop_teardown_thread_safety(event_loop *loop)
         std::free(loop->mutex);
         loop->mutex = ft_nullptr;
     }
-    loop->thread_safe_enabled = false;
+    loop->thread_safe_enabled = FT_FALSE;
     return ;
 }
 
-int event_loop_lock(event_loop *loop, bool *lock_acquired)
+int32_t event_loop_lock(event_loop *loop, ft_bool *lock_acquired)
 {
     if (lock_acquired)
-        *lock_acquired = false;
+        *lock_acquired = FT_FALSE;
     if (!loop)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
@@ -244,12 +244,12 @@ int event_loop_lock(event_loop *loop, bool *lock_acquired)
     if (pt_mutex_lock_if_not_null(loop->mutex) != FT_ERR_SUCCESS)
         return (-1);
     if (lock_acquired)
-        *lock_acquired = true;
+        *lock_acquired = FT_TRUE;
     (void)(FT_ERR_SUCCESS);
     return (0);
 }
 
-void event_loop_unlock(event_loop *loop, bool lock_acquired)
+void event_loop_unlock(event_loop *loop, ft_bool lock_acquired)
 {
     if (!loop)
     {

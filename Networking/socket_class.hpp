@@ -16,66 +16,67 @@
 
 class ft_socket
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         uint8_t _initialised_state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-        void abort_lifecycle_error(const char *method_name, const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int     setup_server(const SocketConfig &config);
-        int     setup_client(const SocketConfig &config);
-        int     create_socket(const SocketConfig &config);
-        int     set_reuse_address(const SocketConfig &config);
-        int     set_non_blocking(const SocketConfig &config);
-        int     set_timeouts(const SocketConfig &config);
-        int     configure_address(const SocketConfig &config);
-        int     bind_socket(const SocketConfig &config);
-        int     listen_socket(const SocketConfig &config);
-        int        accept_connection();
+        int32_t setup_server(const SocketConfig &config);
+        int32_t setup_client(const SocketConfig &config);
+        int32_t create_socket(const SocketConfig &config);
+        int32_t set_reuse_address(const SocketConfig &config);
+        int32_t set_non_blocking(const SocketConfig &config);
+        int32_t set_timeouts(const SocketConfig &config);
+        int32_t configure_address(const SocketConfig &config);
+        int32_t bind_socket(const SocketConfig &config);
+        int32_t listen_socket(const SocketConfig &config);
+        int32_t accept_connection();
         void     reset_to_empty_state();
         void     reset_to_empty_state_locked();
         static void sleep_backoff();
-        ssize_t send_data_locked(const void *data, size_t size, int flags);
-        ssize_t send_all_locked(const void *data, size_t size, int flags);
-        ssize_t receive_data_locked(void *buffer, size_t size, int flags);
-        bool close_socket_locked();
+        ssize_t send_data_locked(const void *data, ft_size_t size, int32_t flags);
+        ssize_t send_all_locked(const void *data, ft_size_t size, int32_t flags);
+        ssize_t receive_data_locked(void *buffer, ft_size_t size, int32_t flags);
+        ft_bool close_socket_locked();
 
         struct sockaddr_storage _address;
-        ft_vector<int>           _connected;
-        int                         _socket_file_descriptor;
+        ft_vector<int32_t> _connected;
+        int32_t _socket_file_descriptor;
         mutable pt_recursive_mutex *_mutex;
 
-        ft_socket(int file_descriptor, const sockaddr_storage &addr);
-        ft_socket(const ft_socket &other) = delete;
         ft_socket &operator=(const ft_socket &other) = delete;
 
     public:
-        ft_socket();
-        ~ft_socket();
-
-        ft_socket(ft_socket &&other) noexcept = delete;
+        ft_socket() noexcept;
+        ft_socket(const ft_socket &other) noexcept;
+        ft_socket(ft_socket &&other) noexcept;
+        ~ft_socket() noexcept;
         ft_socket &operator=(ft_socket &&other) noexcept = delete;
+        int32_t move(ft_socket &other) noexcept;
 
-        int            initialize(const SocketConfig &config);
-        int            destroy();
-        ssize_t     send_data(const void *data, size_t size, int flags = 0);
-        ssize_t         send_all(const void *data, size_t size, int flags = 0);
-        ssize_t        receive_data(void *buffer, size_t size, int flags = 0);
-        bool        close_socket();
-        ssize_t     broadcast_data(const void *data, size_t size, int flags);
-        ssize_t     broadcast_data(const void *data, size_t size, int flags, int exception);
-        ssize_t     send_data(const void *data, size_t size, int flags, int file_descriptor);
-        bool        disconnect_client(int file_descriptor);
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_socket &other) noexcept;
+        int32_t initialize(ft_socket &&other) noexcept;
+        int32_t initialize(const SocketConfig &config);
+        int32_t destroy() noexcept;
+        ssize_t send_data(const void *data, ft_size_t size, int32_t flags = 0);
+        ssize_t send_all(const void *data, ft_size_t size, int32_t flags = 0);
+        ssize_t receive_data(void *buffer, ft_size_t size, int32_t flags = 0);
+        ft_bool close_socket();
+        ssize_t broadcast_data(const void *data, ft_size_t size, int32_t flags);
+        ssize_t broadcast_data(const void *data, ft_size_t size, int32_t flags, int32_t exception);
+        ssize_t send_data(const void *data, ft_size_t size, int32_t flags, int32_t file_descriptor);
+        ft_bool disconnect_client(int32_t file_descriptor);
         void        disconnect_all_clients();
-        size_t      get_client_count() const;
-        bool        is_client_connected(int file_descriptor) const;
-        int            get_file_descriptor() const;
+        ft_size_t get_client_count() const;
+        ft_bool is_client_connected(int32_t file_descriptor) const;
+        int32_t get_file_descriptor() const;
         const struct sockaddr_storage &get_address() const;
-        int            join_multicast_group(const SocketConfig &config);
-        int            enable_thread_safety() noexcept;
-        int            disable_thread_safety() noexcept;
-        bool        is_thread_safe() const noexcept;
+        int32_t join_multicast_group(const SocketConfig &config);
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif

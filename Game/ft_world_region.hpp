@@ -9,55 +9,51 @@
 
 class ft_world_region
 {
-    private:
-        int             _world_id;
-        ft_vector<int>  _region_ids;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t             _world_id;
+        ft_vector<int32_t>  _region_ids;
         pt_recursive_mutex       *_mutex;
         uint8_t         _initialised_state;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
 
-        void abort_lifecycle_error(const char *method_name,
-                const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_world_region() noexcept;
         virtual ~ft_world_region() noexcept;
-        ft_world_region(const ft_world_region &other) = delete;
+        ft_world_region(const ft_world_region &other) noexcept;
         ft_world_region &operator=(const ft_world_region &other) = delete;
-        ft_world_region(ft_world_region &&other) = delete;
+        ft_world_region(ft_world_region &&other) noexcept;
         ft_world_region &operator=(ft_world_region &&other) = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_world_region &other) noexcept;
-        int initialize(ft_world_region &&other) noexcept;
-        int initialize(int world_id, const ft_vector<int> &region_ids) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_world_region &other) noexcept;
+        int32_t initialize(ft_world_region &&other) noexcept;
+        int32_t move(ft_world_region &other) noexcept;
+        int32_t initialize(int32_t world_id, const ft_vector<int32_t> &region_ids) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int get_world_id() const noexcept;
-        void set_world_id(int world_id) noexcept;
+        int32_t get_world_id() const noexcept;
+        void set_world_id(int32_t world_id) noexcept;
 
-        const ft_vector<int> &get_region_ids() const noexcept;
-        ft_vector<int> &get_region_ids() noexcept;
-        void set_region_ids(const ft_vector<int> &region_ids) noexcept;
+        const ft_vector<int32_t> &get_region_ids() const noexcept;
+        ft_vector<int32_t> &get_region_ids() noexcept;
+        void set_region_ids(const ft_vector<int32_t> &region_ids) noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

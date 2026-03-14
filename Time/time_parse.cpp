@@ -7,18 +7,18 @@
 #include <sstream>
 #include <iomanip>
 
-static bool is_leap_year(int year)
+static ft_bool is_leap_year(int32_t year)
 {
     if (year % 4 != 0)
-        return (false);
+        return (FT_FALSE);
     if (year % 100 != 0)
-        return (true);
+        return (FT_TRUE);
     if (year % 400 != 0)
-        return (false);
-    return (true);
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
-static int get_days_in_month(int year, int month)
+static int32_t get_days_in_month(int32_t year, int32_t month)
 {
     if (month == 1)
         return (31);
@@ -51,29 +51,29 @@ static int get_days_in_month(int year, int month)
     return (0);
 }
 
-static bool parse_timezone_offset(const char *timezone_buffer, int *offset_seconds)
+static ft_bool parse_timezone_offset(const char *timezone_buffer, int32_t *offset_seconds)
 {
     const char  *offset_part;
-    size_t      offset_length;
-    int         offset_hours;
-    int         offset_minutes;
-    int         sign_multiplier;
+    ft_size_t      offset_length;
+    int32_t         offset_hours;
+    int32_t         offset_minutes;
+    int32_t         sign_multiplier;
 
     if (!timezone_buffer || !offset_seconds)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     if ((timezone_buffer[0] == 'Z' || timezone_buffer[0] == 'z')
         && timezone_buffer[1] == '\0')
     {
         *offset_seconds = 0;
-        return (true);
+        return (FT_TRUE);
     }
     if (timezone_buffer[0] != '+' && timezone_buffer[0] != '-')
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     sign_multiplier = 1;
     if (timezone_buffer[0] == '-')
@@ -83,7 +83,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     if (offset_length == 0)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     offset_hours = 0;
     offset_minutes = 0;
@@ -92,7 +92,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
         if (std::sscanf(offset_part, "%d:%d", &offset_hours, &offset_minutes) != 2)
         {
             (void)(FT_ERR_INVALID_ARGUMENT);
-            return (false);
+            return (FT_FALSE);
         }
     }
     else if (offset_length == 2)
@@ -100,7 +100,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
         if (std::sscanf(offset_part, "%d", &offset_hours) != 1)
         {
             (void)(FT_ERR_INVALID_ARGUMENT);
-            return (false);
+            return (FT_FALSE);
         }
         offset_minutes = 0;
     }
@@ -109,81 +109,81 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
         if (std::sscanf(offset_part, "%2d%2d", &offset_hours, &offset_minutes) != 2)
         {
             (void)(FT_ERR_INVALID_ARGUMENT);
-            return (false);
+            return (FT_FALSE);
         }
     }
     else
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     if (offset_hours < 0 || offset_hours > 23)
     {
         (void)(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        return (FT_FALSE);
     }
     if (offset_minutes < 0 || offset_minutes > 59)
     {
         (void)(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        return (FT_FALSE);
     }
     *offset_seconds = sign_multiplier * ((offset_hours * 60) + offset_minutes) * 60;
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_time *timestamp_output)
+ft_bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_time *timestamp_output)
 {
     std::tm parsed_time;
-    int year;
-    int month;
-    int day;
-    int hours;
-    int minutes;
-    int seconds;
+    int32_t year;
+    int32_t month;
+    int32_t day;
+    int32_t hours;
+    int32_t minutes;
+    int32_t seconds;
     char timezone_buffer[7];
     std::time_t epoch_time;
-    int offset_seconds;
+    int32_t offset_seconds;
     std::time_t adjusted_epoch;
     std::tm *utc_time;
-    int error_code;
+    int32_t error_code;
 
     if (!string_input)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     ft_memset(&parsed_time, 0, sizeof(parsed_time));
     ft_memset(timezone_buffer, 0, sizeof(timezone_buffer));
     if (std::sscanf(string_input, "%d-%d-%dT%d:%d:%d%6s", &year, &month, &day, &hours, &minutes, &seconds, timezone_buffer) != 7)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     if (month < 1 || month > 12)
     {
         (void)(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        return (FT_FALSE);
     }
     if (day < 1 || day > get_days_in_month(year, month))
     {
         (void)(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        return (FT_FALSE);
     }
     if (hours < 0 || hours > 23)
     {
         (void)(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        return (FT_FALSE);
     }
     if (minutes < 0 || minutes > 59)
     {
         (void)(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        return (FT_FALSE);
     }
     if (seconds < 0 || seconds > 60)
     {
         (void)(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        return (FT_FALSE);
     }
     if (!parse_timezone_offset(timezone_buffer, &offset_seconds))
     {
@@ -191,7 +191,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
         (void)(error_code);
-        return (false);
+        return (FT_FALSE);
     }
     parsed_time.tm_year = year - 1900;
     parsed_time.tm_mon = month - 1;
@@ -206,7 +206,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         if (epoch_time == static_cast<std::time_t>(-1))
         {
             (void)(FT_ERR_OUT_OF_RANGE);
-            return (false);
+            return (FT_FALSE);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
         *timestamp_output = adjusted_epoch;
@@ -217,7 +217,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         if (epoch_time == static_cast<std::time_t>(-1))
         {
             (void)(FT_ERR_OUT_OF_RANGE);
-            return (false);
+            return (FT_FALSE);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
     }
@@ -230,15 +230,15 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         if (!utc_time)
         {
             (void)(FT_ERR_OUT_OF_RANGE);
-            return (false);
+            return (FT_FALSE);
         }
         *time_output = *utc_time;
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output, bool interpret_as_utc)
+ft_bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output, ft_bool interpret_as_utc)
 {
     std::tm parsed_time;
     std::istringstream input_stream;
@@ -247,7 +247,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
     if (!string_input || !format)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     ft_memset(&parsed_time, 0, sizeof(parsed_time));
     input_stream.str(string_input);
@@ -255,7 +255,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
     if (input_stream.fail())
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        return (FT_FALSE);
     }
     parsed_time.tm_isdst = 0;
     if (interpret_as_utc)
@@ -264,7 +264,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         if (epoch_time == static_cast<std::time_t>(-1))
         {
             (void)(FT_ERR_OUT_OF_RANGE);
-            return (false);
+            return (FT_FALSE);
         }
     }
     else
@@ -273,7 +273,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         if (epoch_time == static_cast<std::time_t>(-1))
         {
             (void)(FT_ERR_OUT_OF_RANGE);
-            return (false);
+            return (FT_FALSE);
         }
     }
     if (timestamp_output)
@@ -290,7 +290,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
             if (!utc_time)
             {
                 (void)(FT_ERR_OUT_OF_RANGE);
-                return (false);
+                return (FT_FALSE);
             }
             *time_output = *utc_time;
         }
@@ -298,10 +298,10 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
             *time_output = parsed_time;
     }
     (void)(FT_ERR_SUCCESS);
-    return (true);
+    return (FT_TRUE);
 }
 
-bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output)
+ft_bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output)
 {
-    return (time_parse_custom(string_input, format, time_output, timestamp_output, false));
+    return (time_parse_custom(string_input, format, time_output, timestamp_output, FT_FALSE));
 }

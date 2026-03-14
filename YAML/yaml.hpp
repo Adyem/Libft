@@ -17,11 +17,12 @@ enum yaml_type
 
 class yaml_value
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
-        uint8_t _state;
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
+#endif
+        uint8_t _initialised_state;
         yaml_type _type;
         ft_string _scalar;
         ft_vector<yaml_value*> _list;
@@ -30,26 +31,26 @@ class yaml_value
 
         mutable pt_recursive_mutex *_mutex;
 
-        int lock(bool *lock_acquired) const noexcept;
-        int unlock(bool lock_acquired) const noexcept;
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const noexcept;
-        void abort_if_not_initialised(const char *method_name) const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
     public:
         yaml_value() noexcept;
+        yaml_value(const yaml_value &other) noexcept;
+        yaml_value(yaml_value &&other) noexcept;
         ~yaml_value() noexcept;
 
-        yaml_value(const yaml_value &) = delete;
         yaml_value &operator=(const yaml_value &) = delete;
-        yaml_value(yaml_value &&) = delete;
         yaml_value &operator=(yaml_value &&) = delete;
 
-        int initialize() noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const yaml_value &other) noexcept;
+        int32_t initialize(yaml_value &&other) noexcept;
+        int32_t destroy() noexcept;
+        uint32_t move(yaml_value &other) noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
 
         void set_type(yaml_type type) noexcept;
         yaml_type get_type() const noexcept;
@@ -63,25 +64,21 @@ class yaml_value
         void add_map_item(const ft_string &key, yaml_value *value) noexcept;
         const ft_map<ft_string, yaml_value*> &get_map() const noexcept;
         const ft_vector<ft_string> &get_map_keys() const noexcept;
-
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
-size_t      yaml_find_char(const ft_string &string, char character) noexcept;
-ft_string   yaml_substr(const ft_string &string, size_t start, size_t length) noexcept;
-ft_string   yaml_substr_from(const ft_string &string, size_t start) noexcept;
-size_t      yaml_count_indent(const ft_string &line) noexcept;
+ft_size_t      yaml_find_char(const ft_string &string, char character) noexcept;
+ft_string   yaml_substr(const ft_string &string, ft_size_t start, ft_size_t length) noexcept;
+ft_string   yaml_substr_from(const ft_string &string, ft_size_t start) noexcept;
+ft_size_t      yaml_count_indent(const ft_string &line) noexcept;
 void        yaml_trim(ft_string &string) noexcept;
-int         yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noexcept;
+int32_t         yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noexcept;
 
 yaml_value    *yaml_read_from_string(const ft_string &content) noexcept;
 yaml_value    *yaml_read_from_file(const char *file_path) noexcept;
 yaml_value    *yaml_read_from_backend(ft_document_source &source) noexcept;
 ft_string      yaml_write_to_string(const yaml_value *value) noexcept;
-int           yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept;
-int           yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexcept;
+int32_t           yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept;
+int32_t           yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexcept;
 void          yaml_free(yaml_value *value) noexcept;
 
 #endif

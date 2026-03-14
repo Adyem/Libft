@@ -9,115 +9,103 @@
 
 class ft_goal
 {
-    private:
-        int              _target;
-        int              _progress;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t              _target;
+        int32_t              _progress;
         mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialised_state;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
-
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-
-        void abort_lifecycle_error(const char *method_name,
-                const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_goal() noexcept;
+        ft_goal(const ft_goal &other) noexcept;
+        ft_goal(ft_goal &&other) noexcept;
         ~ft_goal() noexcept;
-        ft_goal(const ft_goal &other) = delete;
         ft_goal &operator=(const ft_goal &other) = delete;
-        ft_goal(ft_goal &&other) = delete;
         ft_goal &operator=(ft_goal &&other) = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_goal &other) noexcept;
-        int initialize(ft_goal &&other) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_goal &other) noexcept;
+        int32_t initialize(ft_goal &&other) noexcept;
+        int32_t move(ft_goal &other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int get_target() const noexcept;
-        void set_target(int target) noexcept;
-        int get_progress() const noexcept;
-        void set_progress(int value) noexcept;
-        void add_progress(int delta) noexcept;
+        int32_t get_target() const noexcept;
+        void set_target(int32_t target) noexcept;
+        int32_t get_progress() const noexcept;
+        void set_progress(int32_t value) noexcept;
+        void add_progress(int32_t delta) noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 class ft_achievement
 {
-    private:
-        int              _id;
-        ft_map<int, ft_goal> _goals;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        int32_t              _id;
+        ft_map<int32_t, ft_goal> _goals;
         mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialised_state;
-        static thread_local int _last_error;
+        static thread_local int32_t _last_error;
 
-        void set_error(int error_code) const noexcept;
-
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
-
-        void abort_lifecycle_error(const char *method_name,
-                const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_achievement() noexcept;
+        ft_achievement(const ft_achievement &other) noexcept;
+        ft_achievement(ft_achievement &&other) noexcept;
         virtual ~ft_achievement() noexcept;
-        ft_achievement(const ft_achievement &other) = delete;
         ft_achievement &operator=(const ft_achievement &other) = delete;
-        ft_achievement(ft_achievement &&other) = delete;
         ft_achievement &operator=(ft_achievement &&other) = delete;
 
-        int initialize() noexcept;
-        int initialize(const ft_achievement &other) noexcept;
-        int initialize(ft_achievement &&other) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(const ft_achievement &other) noexcept;
+        int32_t initialize(ft_achievement &&other) noexcept;
+        int32_t move(ft_achievement &other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        int get_id() const noexcept;
-        void set_id(int id) noexcept;
+        int32_t get_id() const noexcept;
+        void set_id(int32_t id) noexcept;
 
-        ft_map<int, ft_goal>       &get_goals() noexcept;
-        const ft_map<int, ft_goal> &get_goals() const noexcept;
-        void set_goals(const ft_map<int, ft_goal> &goals) noexcept;
-        int get_goal(int id) const noexcept;
-        void set_goal(int id, int goal) noexcept;
+        ft_map<int32_t, ft_goal>       &get_goals() noexcept;
+        const ft_map<int32_t, ft_goal> &get_goals() const noexcept;
+        void set_goals(const ft_map<int32_t, ft_goal> &goals) noexcept;
+        int32_t get_goal(int32_t id) const noexcept;
+        void set_goal(int32_t id, int32_t goal) noexcept;
 
-        int get_progress(int id) const noexcept;
-        void set_progress(int id, int progress) noexcept;
-        void add_progress(int id, int value) noexcept;
+        int32_t get_progress(int32_t id) const noexcept;
+        void set_progress(int32_t id, int32_t progress) noexcept;
+        void add_progress(int32_t id, int32_t value) noexcept;
 
-        bool is_goal_complete(int id) const noexcept;
-        bool is_complete() const noexcept;
+        ft_bool is_goal_complete(int32_t id) const noexcept;
+        ft_bool is_complete() const noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

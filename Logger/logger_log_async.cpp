@@ -7,15 +7,15 @@
 #include <unistd.h>
 #include <cerrno>
 
-bool g_async_running = false;
-static size_t g_async_queue_limit = 1024;
-static size_t g_async_pending_messages = 0;
-static size_t g_async_peak_pending = 0;
-static size_t g_async_dropped_messages = 0;
+ft_bool g_async_running = FT_FALSE;
+static ft_size_t g_async_queue_limit = 1024;
+static ft_size_t g_async_pending_messages = 0;
+static ft_size_t g_async_peak_pending = 0;
+static ft_size_t g_async_dropped_messages = 0;
 static ft_queue<ft_string> g_log_queue;
-static int log_queue_initialize(void);
-static int g_log_queue_initializer_result = log_queue_initialize();
-static int log_queue_initialize(void)
+static int32_t log_queue_initialize(void);
+static int32_t g_log_queue_initializer_result = log_queue_initialize();
+static int32_t log_queue_initialize(void)
 {
     return (g_log_queue.initialize());
 }
@@ -28,9 +28,9 @@ static pthread_t g_log_thread;
 
 static void ft_log_process_message(const ft_string &message)
 {
-    size_t sink_count;
+    ft_size_t sink_count;
     ft_vector<s_log_sink> sinks_snapshot;
-    int    lock_error;
+    int32_t    lock_error;
 
     lock_error = logger_lock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
@@ -49,12 +49,12 @@ static void ft_log_process_message(const ft_string &message)
         (void)write_result;
         return ;
     }
-    size_t index;
-    index = 0;
-    while (index < sink_count)
+    ft_size_t entry_index;
+    entry_index = 0;
+    while (entry_index < sink_count)
     {
         s_log_sink entry;
-        entry = g_sinks[index];
+        entry = g_sinks[entry_index];
         if (g_sinks.get_error() != FT_ERR_SUCCESS)
         {
             logger_unlock_sinks();
@@ -66,32 +66,32 @@ static void ft_log_process_message(const ft_string &message)
             logger_unlock_sinks();
             return ;
         }
-        index++;
+        entry_index++;
     }
     logger_unlock_sinks();
-    index = 0;
-    while (index < sink_count)
+    entry_index = 0;
+    while (entry_index < sink_count)
     {
         s_log_sink entry;
 
-        entry = sinks_snapshot[index];
+        entry = sinks_snapshot[entry_index];
         if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
             return ;
-        bool sink_lock_acquired;
-        int  sink_error;
-        int  sink_lock_error;
+        ft_bool sink_lock_acquired;
+        int32_t  sink_error;
+        int32_t  sink_lock_error;
 
-        sink_lock_acquired = false;
+        sink_lock_acquired = FT_FALSE;
         sink_lock_error = log_sink_lock(&entry, &sink_lock_acquired);
         sink_error = sink_lock_error;
         if (sink_error == FT_ERR_SUCCESS)
         {
-            bool        rotate_for_size_pre;
-            bool        rotate_for_age_pre;
+            ft_bool        rotate_for_size_pre;
+            ft_bool        rotate_for_age_pre;
             s_file_sink *file_sink;
 
-            rotate_for_size_pre = false;
-            rotate_for_age_pre = false;
+            rotate_for_size_pre = FT_FALSE;
+            rotate_for_age_pre = FT_FALSE;
             file_sink = ft_nullptr;
             if (entry.function == ft_file_sink)
             {
@@ -103,11 +103,11 @@ static void ft_log_process_message(const ft_string &message)
                 entry.function(message.c_str(), entry.user_data);
             if (sink_error == FT_ERR_SUCCESS && entry.function == ft_file_sink)
             {
-                bool rotate_for_size_post;
-                bool rotate_for_age_post;
+                ft_bool rotate_for_size_post;
+                ft_bool rotate_for_age_post;
 
-                rotate_for_size_post = false;
-                rotate_for_age_post = false;
+                rotate_for_size_post = FT_FALSE;
+                rotate_for_age_post = FT_FALSE;
                 if (logger_prepare_rotation(file_sink, &rotate_for_size_post, &rotate_for_age_post) != 0)
                     sink_error = FT_ERR_INVALID_OPERATION;
                 else if (rotate_for_size_pre || rotate_for_age_pre || rotate_for_size_post || rotate_for_age_post)
@@ -120,16 +120,16 @@ static void ft_log_process_message(const ft_string &message)
             log_sink_unlock(&entry, sink_lock_acquired);
         if (sink_error != FT_ERR_SUCCESS)
             return ;
-        index++;
+        entry_index++;
     }
     return ;
 }
 
 static void *ft_log_worker(void *argument)
 {
-    bool queue_is_empty;
+    ft_bool queue_is_empty;
     ft_string message;
-    int queue_error;
+    int32_t queue_error;
 
     (void)argument;
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
@@ -166,7 +166,7 @@ static void *ft_log_worker(void *argument)
     return (ft_nullptr);
 }
 
-void ft_log_enable_async(bool enable)
+void ft_log_enable_async(ft_bool enable)
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
@@ -179,7 +179,7 @@ void ft_log_enable_async(bool enable)
             pthread_mutex_unlock(&g_condition_mutex);
             return ;
         }
-        g_async_running = true;
+        g_async_running = FT_TRUE;
         g_async_pending_messages = 0;
         g_async_peak_pending = 0;
         g_async_dropped_messages = 0;
@@ -190,7 +190,7 @@ void ft_log_enable_async(bool enable)
             {
                 return ;
             }
-            g_async_running = false;
+            g_async_running = FT_FALSE;
             pthread_mutex_unlock(&g_condition_mutex);
         }
     }
@@ -201,7 +201,7 @@ void ft_log_enable_async(bool enable)
             pthread_mutex_unlock(&g_condition_mutex);
             return ;
         }
-        g_async_running = false;
+        g_async_running = FT_FALSE;
         pthread_mutex_unlock(&g_condition_mutex);
         if (pt_cond_broadcast(&g_queue_condition) != 0)
             return ;
@@ -216,22 +216,22 @@ void ft_log_enable_async(bool enable)
     return ;
 }
 
-void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
+void ft_log_enqueue(t_log_level level, const char *format_string, va_list argument_list)
 {
     ft_vector<s_redaction_rule> redaction_snapshot;
     ft_string message_text;
     ft_string context_fragment;
     ft_string final_message;
-    int queue_error;
-    int signal_result;
-    int unlock_result;
-    int format_error;
+    int32_t queue_error;
+    int32_t signal_result;
+    int32_t unlock_status;
+    int32_t format_error;
     char message_buffer[1024];
     va_list args_copy;
-    int lock_error;
-    int redaction_error;
+    int32_t lock_error;
+    int32_t redaction_error;
 
-    if (!fmt)
+    if (!format_string)
     {
         return ;
     }
@@ -239,8 +239,8 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     {
         return ;
     }
-    va_copy(args_copy, args);
-    int formatted_length = pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args_copy);
+    va_copy(args_copy, argument_list);
+    int32_t formatted_length = pf_vsnprintf(message_buffer, sizeof(message_buffer), format_string, args_copy);
     va_end(args_copy);
     format_error = FT_ERR_SUCCESS;
     if (formatted_length < 0)
@@ -318,8 +318,8 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     signal_result = 0;
     if (queue_error == FT_ERR_SUCCESS)
         signal_result = pt_cond_signal(&g_queue_condition);
-    unlock_result = pthread_mutex_unlock(&g_condition_mutex);
-    if (unlock_result != 0)
+    unlock_status = pthread_mutex_unlock(&g_condition_mutex);
+    if (unlock_status != 0)
     {
         return ;
     }
@@ -332,7 +332,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     return ;
 }
 
-void ft_log_set_async_queue_limit(size_t limit)
+void ft_log_set_async_queue_limit(ft_size_t limit)
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
@@ -341,13 +341,13 @@ void ft_log_set_async_queue_limit(size_t limit)
     g_async_queue_limit = limit;
     if (g_async_queue_limit > 0)
     {
-        bool needs_trim;
+        ft_bool needs_trim;
 
         needs_trim = g_async_pending_messages > g_async_queue_limit;
         while (needs_trim)
         {
             ft_string dropped_message;
-            int drop_error;
+            int32_t drop_error;
 
             dropped_message = g_log_queue.dequeue();
             drop_error = g_log_queue.get_error();
@@ -372,39 +372,39 @@ void ft_log_set_async_queue_limit(size_t limit)
     return ;
 }
 
-size_t ft_log_get_async_queue_limit()
+ft_size_t ft_log_get_async_queue_limit()
 {
-    size_t limit;
+    ft_size_t limit;
 
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     limit = g_async_queue_limit;
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     return (limit);
 }
 
-int ft_log_get_async_metrics(s_log_async_metrics *metrics)
+int32_t ft_log_get_async_metrics(s_log_async_metrics *metrics)
 {
-    bool metrics_lock_acquired;
+    ft_bool metrics_lock_acquired;
 
     if (!metrics)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    metrics_lock_acquired = false;
+    metrics_lock_acquired = FT_FALSE;
     if (log_async_metrics_lock(metrics, &metrics_lock_acquired) != 0)
     {
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
         log_async_metrics_unlock(metrics, metrics_lock_acquired);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     metrics->pending_messages = g_async_pending_messages;
     metrics->peak_pending_messages = g_async_peak_pending;
@@ -412,10 +412,10 @@ int ft_log_get_async_metrics(s_log_async_metrics *metrics)
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
         log_async_metrics_unlock(metrics, metrics_lock_acquired);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
     log_async_metrics_unlock(metrics, metrics_lock_acquired);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_log_reset_async_metrics()

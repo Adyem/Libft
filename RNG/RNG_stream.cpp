@@ -1,75 +1,62 @@
 #include "rng_stream.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "rng.hpp"
+#include "rng_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Math/math.hpp"
 #include "../PThread/pthread.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include <climits>
 #include <limits>
 #include <new>
 
-static int rng_stream_capture_math_error(ft_size_t previous_depth)
+static int32_t rng_stream_capture_math_error(ft_size_t previous_depth)
 {
     (void)previous_depth;
     return (FT_ERR_SUCCESS);
 }
 
-void rng_stream::abort_lifecycle_error(const char *method_name, const char *reason) const
-{
-    if (method_name == ft_nullptr)
-        method_name = "unknown";
-    if (reason == ft_nullptr)
-        reason = "unknown";
-    pf_printf_fd(2, "rng_stream lifecycle error: %s: %s\n", method_name, reason);
-    su_abort();
-    return ;
-}
-
-void rng_stream::abort_if_not_initialised(const char *method_name) const
-{
-    if (this->_initialised_state == rng_stream::_state_initialised)
-        return ;
-    this->abort_lifecycle_error(method_name, "called while object is not initialised");
-    return ;
-}
-
-rng_stream::rng_stream()
+rng_stream::rng_stream() noexcept
     : _engine()
     , _mutex(ft_nullptr)
-    , _initialised_state(rng_stream::_state_uninitialised)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    std::random_device random_device;
-
-    this->_engine.seed(random_device());
     return ;
 }
 
-rng_stream::rng_stream(uint32_t seed_value)
+rng_stream::rng_stream(const rng_stream &other) noexcept
     : _engine()
     , _mutex(ft_nullptr)
-    , _initialised_state(rng_stream::_state_uninitialised)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
+    (void)this->initialize(other);
+    return ;
+}
+
+rng_stream::rng_stream(rng_stream &&other) noexcept
+    : _engine()
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    (void)this->initialize(static_cast<rng_stream &&>(other));
     return ;
 }
 
 
-rng_stream::~rng_stream()
+rng_stream::~rng_stream() noexcept
 {
-    if (this->_initialised_state == rng_stream::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     return ;
 }
 
-int rng_stream::enable_thread_safety()
+int32_t rng_stream::enable_thread_safety() noexcept
 {
     pt_recursive_mutex *mutex_pointer;
-    int initialize_error;
+    int32_t initialize_error;
 
-    this->abort_if_not_initialised("rng_stream::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -85,11 +72,11 @@ int rng_stream::enable_thread_safety()
     return (FT_ERR_SUCCESS);
 }
 
-int rng_stream::disable_thread_safety()
+int32_t rng_stream::disable_thread_safety() noexcept
 {
-    int destroy_error;
+    int32_t destroy_error;
 
-    this->abort_if_not_initialised("rng_stream::disable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -98,41 +85,56 @@ int rng_stream::disable_thread_safety()
     return (destroy_error);
 }
 
-bool rng_stream::is_thread_safe() const
+ft_bool rng_stream::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
 
-int rng_stream::initialize()
+int32_t rng_stream::initialize() noexcept
 {
-    if (this->_initialised_state == rng_stream::_state_initialised)
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        this->abort_lifecycle_error("rng_stream::initialize",
+        errno_abort_lifecycle(this->_initialised_state, "rng_stream::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_initialised_state = rng_stream::_state_initialised;
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        ft_seed_random_engine_with_entropy();
+    this->_engine = g_random_engine;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
 
-int rng_stream::initialize(const rng_stream &other)
+int32_t rng_stream::initialize(const rng_stream &other) noexcept
 {
-    int initialize_error;
-    int this_lock_error;
-    int other_lock_error;
-    int this_unlock_error;
-    int other_unlock_error;
-    int final_error;
+    int32_t initialize_error;
+    int32_t this_lock_error;
+    int32_t other_lock_error;
+    ft_bool lock_this_first;
+    ft_bool this_locked;
+    ft_bool other_locked;
 
-    if (other._initialised_state != rng_stream::_state_initialised)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error("rng_stream::initialize(const rng_stream &) source",
+        errno_abort_lifecycle(other._initialised_state,
+            "rng_stream::initialize(const rng_stream &) source",
             "source is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialised_state == rng_stream::_state_initialised)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            initialize_error = this->destroy();
+            if (initialize_error != FT_ERR_SUCCESS)
+                return (initialize_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -143,68 +145,97 @@ int rng_stream::initialize(const rng_stream &other)
         return (initialize_error);
     this_lock_error = FT_ERR_SUCCESS;
     other_lock_error = FT_ERR_SUCCESS;
+    lock_this_first = FT_FALSE;
     if (this < &other)
+        lock_this_first = FT_TRUE;
+    this_locked = FT_FALSE;
+    other_locked = FT_FALSE;
+    if (lock_this_first == FT_TRUE)
     {
         if (this->_mutex != ft_nullptr)
+        {
             this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+            if (this_lock_error == FT_ERR_SUCCESS)
+                this_locked = FT_TRUE;
+        }
         if (this_lock_error == FT_ERR_SUCCESS && other._mutex != ft_nullptr)
+        {
             other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+            if (other_lock_error == FT_ERR_SUCCESS)
+                other_locked = FT_TRUE;
+        }
     }
     else
     {
         if (other._mutex != ft_nullptr)
+        {
             other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+            if (other_lock_error == FT_ERR_SUCCESS)
+                other_locked = FT_TRUE;
+        }
         if (other_lock_error == FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
+        {
             this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+            if (this_lock_error == FT_ERR_SUCCESS)
+                this_locked = FT_TRUE;
+        }
     }
     if (this_lock_error != FT_ERR_SUCCESS || other_lock_error != FT_ERR_SUCCESS)
     {
-        if (other._mutex != ft_nullptr && other_lock_error == FT_ERR_SUCCESS)
-            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
-        if (this->_mutex != ft_nullptr && this_lock_error == FT_ERR_SUCCESS)
+        if (this_locked == FT_TRUE)
             (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        if (other_locked == FT_TRUE)
+            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
         (void)this->destroy();
         if (this_lock_error != FT_ERR_SUCCESS)
             return (this_lock_error);
         return (other_lock_error);
     }
     this->_engine = other._engine;
-    this_unlock_error = FT_ERR_SUCCESS;
-    other_unlock_error = FT_ERR_SUCCESS;
-    if (this->_mutex != ft_nullptr)
-        this_unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (other._mutex != ft_nullptr)
-        other_unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    final_error = this_unlock_error;
-    if (final_error == FT_ERR_SUCCESS)
-        final_error = other_unlock_error;
-    if (final_error != FT_ERR_SUCCESS)
+    if (lock_this_first == FT_TRUE)
     {
-        (void)this->destroy();
-        return (final_error);
+        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    }
+    else
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
     }
     return (FT_ERR_SUCCESS);
 }
 
-int rng_stream::initialize(rng_stream &&other)
+int32_t rng_stream::initialize(rng_stream &&other) noexcept
 {
-    int initialize_error;
-    int this_lock_error;
-    int other_lock_error;
-    int this_unlock_error;
-    int other_unlock_error;
-    int final_error;
+    int32_t initialize_error;
+    int32_t this_lock_error;
+    int32_t other_lock_error;
+    ft_bool lock_this_first;
+    ft_bool this_locked;
+    ft_bool other_locked;
     std::mt19937 default_engine;
 
-    if (other._initialised_state != rng_stream::_state_initialised)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        other.abort_lifecycle_error("rng_stream::initialize(rng_stream &&) source",
+        errno_abort_lifecycle(other._initialised_state,
+            "rng_stream::initialize(rng_stream &&) source",
             "source is not initialised");
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialised_state == rng_stream::_state_initialised)
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        {
+            initialize_error = this->destroy();
+            if (initialize_error != FT_ERR_SUCCESS)
+                return (initialize_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         initialize_error = this->destroy();
         if (initialize_error != FT_ERR_SUCCESS)
@@ -215,26 +246,47 @@ int rng_stream::initialize(rng_stream &&other)
         return (initialize_error);
     this_lock_error = FT_ERR_SUCCESS;
     other_lock_error = FT_ERR_SUCCESS;
+    lock_this_first = FT_FALSE;
     if (this < &other)
+        lock_this_first = FT_TRUE;
+    this_locked = FT_FALSE;
+    other_locked = FT_FALSE;
+    if (lock_this_first == FT_TRUE)
     {
         if (this->_mutex != ft_nullptr)
+        {
             this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+            if (this_lock_error == FT_ERR_SUCCESS)
+                this_locked = FT_TRUE;
+        }
         if (this_lock_error == FT_ERR_SUCCESS && other._mutex != ft_nullptr)
+        {
             other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+            if (other_lock_error == FT_ERR_SUCCESS)
+                other_locked = FT_TRUE;
+        }
     }
     else
     {
         if (other._mutex != ft_nullptr)
+        {
             other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+            if (other_lock_error == FT_ERR_SUCCESS)
+                other_locked = FT_TRUE;
+        }
         if (other_lock_error == FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
+        {
             this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+            if (this_lock_error == FT_ERR_SUCCESS)
+                this_locked = FT_TRUE;
+        }
     }
     if (this_lock_error != FT_ERR_SUCCESS || other_lock_error != FT_ERR_SUCCESS)
     {
-        if (other._mutex != ft_nullptr && other_lock_error == FT_ERR_SUCCESS)
-            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
-        if (this->_mutex != ft_nullptr && this_lock_error == FT_ERR_SUCCESS)
+        if (this_locked == FT_TRUE)
             (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        if (other_locked == FT_TRUE)
+            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
         (void)this->destroy();
         if (this_lock_error != FT_ERR_SUCCESS)
             return (this_lock_error);
@@ -242,64 +294,63 @@ int rng_stream::initialize(rng_stream &&other)
     }
     this->_engine = other._engine;
     other._engine = default_engine;
-    this_unlock_error = FT_ERR_SUCCESS;
-    other_unlock_error = FT_ERR_SUCCESS;
-    if (this->_mutex != ft_nullptr)
-        this_unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (other._mutex != ft_nullptr)
-        other_unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    final_error = this_unlock_error;
-    if (final_error == FT_ERR_SUCCESS)
-        final_error = other_unlock_error;
-    if (final_error != FT_ERR_SUCCESS)
+    if (lock_this_first == FT_TRUE)
     {
-        (void)this->destroy();
-        return (final_error);
+        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    }
+    else
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
     }
     return (FT_ERR_SUCCESS);
 }
 
-int rng_stream::destroy()
+uint32_t rng_stream::move(rng_stream &other) noexcept
 {
-    int disable_error;
+    return (static_cast<uint32_t>(this->initialize(
+            static_cast<rng_stream &&>(other))));
+}
 
-    if (this->_initialised_state != rng_stream::_state_initialised)
-        return (FT_ERR_INVALID_STATE);
+int32_t rng_stream::destroy() noexcept
+{
+    int32_t disable_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
     disable_error = this->disable_thread_safety();
-    this->_initialised_state = rng_stream::_state_destroyed;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (disable_error);
 }
 
-int rng_stream::reseed(uint32_t seed_value)
+int32_t rng_stream::reseed(uint32_t seed_value) noexcept
 {
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::reseed");
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::reseed");
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (operation_error);
 }
 
-int rng_stream::reseed_from_string(const char *seed_string)
+int32_t rng_stream::reseed_from_string(const char *seed_string) noexcept
 {
     uint32_t derived_seed;
 
-    this->abort_if_not_initialised("rng_stream::reseed_from_string");
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::reseed_from_string");
     if (seed_string == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     derived_seed = ft_random_seed(seed_string);
     return (this->reseed(derived_seed));
 }
 
-int rng_stream::random_int_unlocked()
+int32_t rng_stream::random_int_unlocked()
 {
-    std::uniform_int_distribution<int> distribution(0, std::numeric_limits<int>::max());
-    int random_value;
+    std::uniform_int_distribution<int32_t> distribution(0, std::numeric_limits<int32_t>::max());
+    int32_t random_value;
 
     random_value = distribution(this->_engine);
     return (random_value);
@@ -314,96 +365,82 @@ float rng_stream::random_float_unlocked()
     return (random_value);
 }
 
-Pair<int, int> rng_stream::random_int()
+Pair<int32_t,  int32_t> rng_stream::random_int()
 {
-    int value;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_int");
+    int32_t value;
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_int");
     value = 0;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         value = this->random_int_unlocked();
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
-    return (Pair<int, int>(operation_error, value));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (Pair<int32_t,  int32_t>(operation_error, value));
 }
 
-Pair<int, int> rng_stream::dice_roll(int number, int faces)
+Pair<int32_t,  int32_t> rng_stream::dice_roll(int32_t number, int32_t faces)
 {
-    int result;
-    int index;
-    bool overflowed;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::dice_roll");
+    int32_t result;
+    int32_t index;
+    ft_bool overflowed;
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::dice_roll");
     if (faces == 0 && number == 0)
-        return (Pair<int, int>(FT_ERR_SUCCESS, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, 0));
     if (faces < 1 || number < 1)
-        return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     if (faces == 1)
-        return (Pair<int, int>(FT_ERR_SUCCESS, number));
+        return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, number));
     result = 0;
     index = 0;
-    overflowed = false;
+    overflowed = FT_FALSE;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
     {
         while (index < number)
         {
-            int roll;
+            int32_t roll_value;
 
-            roll = this->random_int_unlocked();
-            if (result > INT_MAX - ((roll % faces) + 1))
+            roll_value = this->random_int_unlocked();
+            if (result > INT_MAX - ((roll_value % faces) + 1))
             {
-                overflowed = true;
+                overflowed = FT_TRUE;
                 operation_error = FT_ERR_OUT_OF_RANGE;
                 break ;
             }
-            result = result + ((roll % faces) + 1);
+            result = result + ((roll_value % faces) + 1);
             index = index + 1;
         }
     }
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (overflowed)
-        return (Pair<int, int>(operation_error, 0));
-    return (Pair<int, int>(operation_error, result));
+        return (Pair<int32_t,  int32_t>(operation_error, 0));
+    return (Pair<int32_t,  int32_t>(operation_error, result));
 }
 
-Pair<int, float> rng_stream::random_float()
+Pair<int32_t,  float> rng_stream::random_float()
 {
     float value;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_float");
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_float");
     value = 0.0f;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         value = this->random_float_unlocked();
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
-    return (Pair<int, float>(operation_error, value));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (Pair<int32_t,  float>(operation_error, value));
 }
 
-Pair<int, float> rng_stream::random_normal()
+Pair<int32_t,  float> rng_stream::random_normal()
 {
     float uniform_one;
     float uniform_two;
     float radius;
     float angle;
     float result;
-    const float pi_value = 3.14159265358979323846f;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_normal");
+    const float PI_VALUE = 3.14159265358979323846f;
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_normal");
     uniform_one = 0.0f;
     uniform_two = 0.0f;
     radius = 0.0f;
@@ -425,27 +462,23 @@ Pair<int, float> rng_stream::random_normal()
     }
     if (operation_error == FT_ERR_SUCCESS)
     {
-        angle = 2.0f * pi_value * uniform_two;
+        angle = 2.0f * PI_VALUE * uniform_two;
         result = radius * static_cast<float>(math_cos(angle));
         if (rng_stream_capture_math_error(0) != FT_ERR_SUCCESS)
             operation_error = FT_ERR_INTERNAL;
     }
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
-    return (Pair<int, float>(operation_error, result));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (Pair<int32_t,  float>(operation_error, result));
 }
 
-Pair<int, float> rng_stream::random_exponential(float lambda_value)
+Pair<int32_t,  float> rng_stream::random_exponential(float lambda_value)
 {
     float uniform_value;
     float result;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_exponential");
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_exponential");
     if (lambda_value <= 0.0f)
-        return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
+        return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     uniform_value = 0.0f;
     result = 0.0f;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -459,26 +492,22 @@ Pair<int, float> rng_stream::random_exponential(float lambda_value)
         if (rng_stream_capture_math_error(0) != FT_ERR_SUCCESS)
             operation_error = FT_ERR_INTERNAL;
     }
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
-    return (Pair<int, float>(operation_error, result));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (Pair<int32_t,  float>(operation_error, result));
 }
 
-Pair<int, int> rng_stream::random_poisson(double lambda_value)
+Pair<int32_t,  int32_t> rng_stream::random_poisson(double lambda_value)
 {
     double limit_value;
     double product_value;
-    int count_value;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_poisson");
+    int32_t count_value;
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_poisson");
     if (lambda_value <= 0.0)
-        return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     limit_value = math_exp(-lambda_value);
     if (rng_stream_capture_math_error(0) != FT_ERR_SUCCESS)
-        return (Pair<int, int>(FT_ERR_INTERNAL, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INTERNAL, 0));
     product_value = 1.0;
     count_value = 0;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -493,33 +522,29 @@ Pair<int, int> rng_stream::random_poisson(double lambda_value)
             count_value = count_value + 1;
         }
     }
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
-    return (Pair<int, int>(operation_error, count_value - 1));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (Pair<int32_t,  int32_t>(operation_error, count_value - 1));
 }
 
-Pair<int, int> rng_stream::random_binomial(int trial_count, double success_probability)
+Pair<int32_t,  int32_t> rng_stream::random_binomial(int32_t trial_count, double success_probability)
 {
-    const double probability_epsilon = std::numeric_limits<double>::epsilon();
-    int trial_index;
-    int success_count;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_binomial");
+    const double PROBABILITY_EPSILON = std::numeric_limits<double>::epsilon();
+    int32_t trial_index;
+    int32_t success_count;
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_binomial");
     if (trial_count < 0)
-        return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     if (success_probability < 0.0)
-        return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     if (trial_count == 0)
-        return (Pair<int, int>(FT_ERR_SUCCESS, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, 0));
     if (success_probability > 1.0)
-        return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
-    if (success_probability <= probability_epsilon)
-        return (Pair<int, int>(FT_ERR_SUCCESS, 0));
-    if ((1.0 - success_probability) <= probability_epsilon)
-        return (Pair<int, int>(FT_ERR_SUCCESS, trial_count));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
+    if (success_probability <= PROBABILITY_EPSILON)
+        return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, 0));
+    if ((1.0 - success_probability) <= PROBABILITY_EPSILON)
+        return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, trial_count));
     trial_index = 0;
     success_count = 0;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -535,28 +560,24 @@ Pair<int, int> rng_stream::random_binomial(int trial_count, double success_proba
             trial_index = trial_index + 1;
         }
     }
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
-    return (Pair<int, int>(operation_error, success_count));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (Pair<int32_t,  int32_t>(operation_error, success_count));
 }
 
-Pair<int, int> rng_stream::random_geometric(double success_probability)
+Pair<int32_t,  int32_t> rng_stream::random_geometric(double success_probability)
 {
-    const double probability_epsilon = std::numeric_limits<double>::epsilon();
-    int trial_count;
-    int result;
-    int found_success;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_geometric");
+    const double PROBABILITY_EPSILON = std::numeric_limits<double>::epsilon();
+    int32_t trial_count;
+    int32_t result;
+    int32_t found_success;
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_geometric");
     if (success_probability <= 0.0)
-        return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     if (success_probability > 1.0)
-        return (Pair<int, int>(FT_ERR_INVALID_ARGUMENT, 0));
-    if ((1.0 - success_probability) <= probability_epsilon)
-        return (Pair<int, int>(FT_ERR_SUCCESS, 1));
+        return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
+    if ((1.0 - success_probability) <= PROBABILITY_EPSILON)
+        return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, 1));
     trial_count = 1;
     found_success = 0;
     result = 0;
@@ -577,35 +598,29 @@ Pair<int, int> rng_stream::random_geometric(double success_probability)
             trial_count = trial_count + 1;
         }
     }
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (found_success == 0 && operation_error == FT_ERR_SUCCESS)
         operation_error = FT_ERR_INVALID_STATE;
-    return (Pair<int, int>(operation_error, result));
+    return (Pair<int32_t,  int32_t>(operation_error, result));
 }
 
-Pair<int, float> rng_stream::random_gamma(float shape, float scale)
+Pair<int32_t,  float> rng_stream::random_gamma(float shape, float scale)
 {
     std::gamma_distribution<float> distribution(shape, scale);
     float sample_value;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_gamma");
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_gamma");
     if (shape <= 0.0f || scale <= 0.0f)
-        return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
+        return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         sample_value = distribution(this->_engine);
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
-    return (Pair<int, float>(operation_error, sample_value));
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (Pair<int32_t,  float>(operation_error, sample_value));
 }
 
-Pair<int, float> rng_stream::random_beta(float alpha, float beta)
+Pair<int32_t,  float> rng_stream::random_beta(float alpha, float beta)
 {
     std::gamma_distribution<float> alpha_distribution(alpha, 1.0f);
     std::gamma_distribution<float> beta_distribution(beta, 1.0f);
@@ -613,12 +628,10 @@ Pair<int, float> rng_stream::random_beta(float alpha, float beta)
     float beta_sample;
     float sum;
     float result;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_beta");
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_beta");
     if (alpha <= 0.0f || beta <= 0.0f)
-        return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
+        return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     alpha_sample = 0.0f;
     beta_sample = 0.0f;
     result = 0.0f;
@@ -628,9 +641,7 @@ Pair<int, float> rng_stream::random_beta(float alpha, float beta)
         alpha_sample = alpha_distribution(this->_engine);
         beta_sample = beta_distribution(this->_engine);
     }
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     sum = alpha_sample + beta_sample;
     if (operation_error == FT_ERR_SUCCESS && sum <= 0.0f)
         operation_error = FT_ERR_INVALID_STATE;
@@ -642,29 +653,25 @@ Pair<int, float> rng_stream::random_beta(float alpha, float beta)
         if (result > 1.0f)
             result = 1.0f;
     }
-    return (Pair<int, float>(operation_error, result));
+    return (Pair<int32_t,  float>(operation_error, result));
 }
 
-Pair<int, float> rng_stream::random_chi_squared(float degrees_of_freedom)
+Pair<int32_t,  float> rng_stream::random_chi_squared(float degrees_of_freedom)
 {
     std::gamma_distribution<float> distribution(degrees_of_freedom * 0.5f, 2.0f);
     float sample_value;
-    int operation_error;
-    int unlock_error;
-
-    this->abort_if_not_initialised("rng_stream::random_chi_squared");
+    int32_t operation_error;
+    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_chi_squared");
     if (degrees_of_freedom <= 0.0f)
-        return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
+        return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         sample_value = distribution(this->_engine);
-    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    if (operation_error == FT_ERR_SUCCESS)
-        operation_error = unlock_error;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS && sample_value < 0.0f)
         sample_value = 0.0f;
-    return (Pair<int, float>(operation_error, sample_value));
+    return (Pair<int32_t,  float>(operation_error, sample_value));
 }
 
 #ifdef LIBFT_TEST_BUILD

@@ -3,26 +3,26 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-int file_move(const char *source_path, const char *destination_path)
+int32_t file_move(const char *source_path, const char *destination_path)
 {
-    int move_result;
-    int delete_error;
-    int cleanup_error;
-    int error_code;
+    int32_t move_result;
+    int32_t delete_error;
+    int32_t cleanup_error;
+    int32_t error_code;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     move_result = cmp_file_move(source_path, destination_path, &error_code);
-    if (move_result == 0)
-        return (0);
+    if (move_result == FT_ERR_SUCCESS)
+        return (FT_ERR_SUCCESS);
     if (error_code != FT_ERR_INVALID_OPERATION)
-        return (-1);
-    if (file_copy(source_path, destination_path) != 0)
-        return (-1);
-    if (cmp_file_delete(source_path, &delete_error) != 0)
+        return (error_code);
+    if (file_copy(source_path, destination_path) != FT_ERR_SUCCESS)
+        return (FT_ERR_IO);
+    if (cmp_file_delete(source_path, &delete_error) != FT_ERR_SUCCESS)
     {
         cmp_file_delete(destination_path, &cleanup_error);
-        return (-1);
+        return (FT_ERR_IO);
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }

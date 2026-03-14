@@ -14,7 +14,10 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_istringstream.cpp \
          cpp_class_ofstream.cpp \
          cpp_class_big_number.cpp \
-         cpp_class_big_number_serialization.cpp
+         cpp_class_big_number_serialization.cpp \
+         cpp_class_bitset.cpp \
+         cpp_class_cancellation.cpp \
+         cpp_class_thread_pool.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -29,7 +32,10 @@ HEADERS := class_string.hpp \
           class_fd_istream.hpp \
           class_istringstream.hpp \
           class_ofstream.hpp \
-          class_big_number.hpp
+          class_big_number.hpp \
+          bitset.hpp \
+          cancellation.hpp \
+          thread_pool.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -130,4 +136,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

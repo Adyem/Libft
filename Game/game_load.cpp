@@ -9,12 +9,12 @@
 #include "../Template/shared_ptr.hpp"
 #include <cstdio>
 
-int deserialize_character(ft_character &character, json_group *group);
-int deserialize_inventory(ft_inventory &inventory, json_group *group);
-int deserialize_equipment(ft_character &character, json_group *group);
-int deserialize_quest(ft_quest &quest, json_group *group);
+int32_t deserialize_character(ft_character &character, json_group *group);
+int32_t deserialize_inventory(ft_inventory &inventory, json_group *group);
+int32_t deserialize_equipment(ft_character &character, json_group *group);
+int32_t deserialize_quest(ft_quest &quest, json_group *group);
 
-static int parse_item_field(json_group *group, const ft_string &key, int &out_value)
+static int32_t parse_item_field(json_group *group, const ft_string &key, int32_t &out_value)
 {
     json_item *json_item_ptr = json_find_item(group, key.c_str());
     if (!json_item_ptr)
@@ -25,9 +25,9 @@ static int parse_item_field(json_group *group, const ft_string &key, int &out_va
     return (FT_ERR_SUCCESS);
 }
 
-static int build_item_from_group(ft_item &item, json_group *group, const ft_string &item_prefix)
+static int32_t build_item_from_group(ft_item &item, json_group *group, const ft_string &item_prefix)
 {
-    int value;
+    int32_t value;
     ft_string key_max = item_prefix;
     key_max += "_max_stack";
     if (parse_item_field(group, key_max, value) != FT_ERR_SUCCESS)
@@ -96,7 +96,7 @@ static int build_item_from_group(ft_item &item, json_group *group, const ft_stri
     return (FT_ERR_SUCCESS);
 }
 
-int deserialize_inventory(ft_inventory &inventory, json_group *group)
+int32_t deserialize_inventory(ft_inventory &inventory, json_group *group)
 {
     json_item *capacity_item = json_find_item(group, "capacity");
     if (!capacity_item)
@@ -115,13 +115,13 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
     {
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    int serialized_weight = ft_atoi(cur_weight_item->value);
+    int32_t serialized_weight = ft_atoi(cur_weight_item->value);
     json_item *used_slots_item = json_find_item(group, "used_slots");
     if (!used_slots_item)
     {
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    int serialized_slots = ft_atoi(used_slots_item->value);
+    int32_t serialized_slots = ft_atoi(used_slots_item->value);
     inventory.set_current_weight(0);
     inventory.set_used_slots(0);
     inventory.get_items().clear();
@@ -130,9 +130,9 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
     {
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    int item_count = ft_atoi(count_item->value);
-    int item_index = 0;
-    int loop_error = FT_ERR_SUCCESS;
+    int32_t item_count = ft_atoi(count_item->value);
+    int32_t item_index = 0;
+    int32_t loop_error = FT_ERR_SUCCESS;
     while (item_index < item_count)
     {
         char item_index_string[32];
@@ -171,7 +171,7 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
     return (FT_ERR_SUCCESS);
 }
 
-int deserialize_equipment(ft_character &character, json_group *group)
+int32_t deserialize_equipment(ft_character &character, json_group *group)
 {
     json_item *present = json_find_item(group, "head_present");
     if (present && ft_atoi(present->value) == 1)
@@ -227,7 +227,7 @@ int deserialize_equipment(ft_character &character, json_group *group)
     return (FT_ERR_SUCCESS);
 }
 
-int deserialize_quest(ft_quest &quest, json_group *group)
+int32_t deserialize_quest(ft_quest &quest, json_group *group)
 {
     json_item *item = json_find_item(group, "id");
     if (item)
@@ -260,8 +260,8 @@ int deserialize_quest(ft_quest &quest, json_group *group)
     json_item *count_item = json_find_item(group, "reward_item_count");
     if (count_item)
     {
-        int reward_count = ft_atoi(count_item->value);
-        int reward_index = 0;
+        int32_t reward_count = ft_atoi(count_item->value);
+        int32_t reward_index = 0;
         quest.get_reward_items().clear();
         while (reward_index < reward_count)
         {

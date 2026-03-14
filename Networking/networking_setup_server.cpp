@@ -1,6 +1,7 @@
 #include "networking.hpp"
 #include "socket_class.hpp"
 #include "../Basic/basic.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <fcntl.h>
@@ -18,13 +19,13 @@
 #endif
 
 #ifdef _WIN32
-static inline int setsockopt_reuse(int file_descriptor, int option_value)
+static inline int32_t setsockopt_reuse(int32_t file_descriptor, int32_t option_value)
 {
     return (setsockopt(file_descriptor, SOL_SOCKET, SO_REUSEADDR,
             reinterpret_cast<const char *>(&option_value), sizeof(option_value)));
 }
 
-static inline int set_nonblocking_platform(int file_descriptor)
+static inline int32_t set_nonblocking_platform(int32_t file_descriptor)
 {
     u_long mode;
 
@@ -32,27 +33,27 @@ static inline int set_nonblocking_platform(int file_descriptor)
     return (ioctlsocket(static_cast<SOCKET>(file_descriptor), FIONBIO, &mode));
 }
 
-static inline int set_timeout_recv(int file_descriptor, int timeout_milliseconds)
+static inline int32_t set_timeout_recv(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     return (setsockopt(file_descriptor, SOL_SOCKET, SO_RCVTIMEO,
             reinterpret_cast<const char *>(&timeout_milliseconds), sizeof(timeout_milliseconds)));
 }
 
-static inline int set_timeout_send(int file_descriptor, int timeout_milliseconds)
+static inline int32_t set_timeout_send(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     return (setsockopt(file_descriptor, SOL_SOCKET, SO_SNDTIMEO,
             reinterpret_cast<const char *>(&timeout_milliseconds), sizeof(timeout_milliseconds)));
 }
 #else
-static inline int setsockopt_reuse(int file_descriptor, int option_value)
+static inline int32_t setsockopt_reuse(int32_t file_descriptor, int32_t option_value)
 {
     return (setsockopt(file_descriptor, SOL_SOCKET, SO_REUSEADDR,
             &option_value, sizeof(option_value)));
 }
 
-static inline int set_nonblocking_platform(int file_descriptor)
+static inline int32_t set_nonblocking_platform(int32_t file_descriptor)
 {
-    int flags;
+    int32_t flags;
 
     flags = fcntl(file_descriptor, F_GETFL, 0);
     if (flags == -1)
@@ -60,7 +61,7 @@ static inline int set_nonblocking_platform(int file_descriptor)
     return (fcntl(file_descriptor, F_SETFL, flags | O_NONBLOCK));
 }
 
-static inline int set_timeout_recv(int file_descriptor, int timeout_milliseconds)
+static inline int32_t set_timeout_recv(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     struct timeval timeout_value;
 
@@ -70,7 +71,7 @@ static inline int set_timeout_recv(int file_descriptor, int timeout_milliseconds
             &timeout_value, sizeof(timeout_value)));
 }
 
-static inline int set_timeout_send(int file_descriptor, int timeout_milliseconds)
+static inline int32_t set_timeout_send(int32_t file_descriptor, int32_t timeout_milliseconds)
 {
     struct timeval timeout_value;
 
@@ -81,7 +82,7 @@ static inline int set_timeout_send(int file_descriptor, int timeout_milliseconds
 }
 #endif
 
-int ft_socket::create_socket(const SocketConfig &config)
+int32_t ft_socket::create_socket(const SocketConfig &config)
 {
     this->_socket_file_descriptor = nw_socket(config._address_family, SOCK_STREAM, config._protocol);
     if (this->_socket_file_descriptor < 0)
@@ -89,11 +90,11 @@ int ft_socket::create_socket(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_socket::set_reuse_address(const SocketConfig &config)
+int32_t ft_socket::set_reuse_address(const SocketConfig &config)
 {
-    int option_value;
+    int32_t option_value;
 
-    if (config._reuse_address == false)
+    if (config._reuse_address == FT_FALSE)
         return (FT_ERR_SUCCESS);
     option_value = 1;
     if (setsockopt_reuse(this->_socket_file_descriptor, option_value) < 0)
@@ -105,7 +106,7 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_socket::set_timeouts(const SocketConfig &config)
+int32_t ft_socket::set_timeouts(const SocketConfig &config)
 {
     if (config._recv_timeout > 0)
     {
@@ -128,9 +129,9 @@ int ft_socket::set_timeouts(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_socket::set_non_blocking(const SocketConfig &config)
+int32_t ft_socket::set_non_blocking(const SocketConfig &config)
 {
-    if (config._non_blocking == false)
+    if (config._non_blocking == FT_FALSE)
         return (FT_ERR_SUCCESS);
     if (set_nonblocking_platform(this->_socket_file_descriptor) < 0)
     {
@@ -141,14 +142,14 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_socket::configure_address(const SocketConfig &config)
+int32_t ft_socket::configure_address(const SocketConfig &config)
 {
     ft_string host_copy;
     char port_string[16];
     struct addrinfo hints;
     struct addrinfo *results;
     struct addrinfo *current;
-    int resolver_status;
+    int32_t resolver_status;
 
     ft_memset(&this->_address, 0, sizeof(this->_address));
     host_copy = config._ip;
@@ -165,7 +166,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         address_ipv4 = reinterpret_cast<struct sockaddr_in *>(&this->_address);
         address_ipv4->sin_family = AF_INET;
         address_ipv4->sin_port = htons(config._port);
-        if (host_copy.empty() != false)
+        if (host_copy.empty() != FT_FALSE)
         {
             address_ipv4->sin_addr.s_addr = htonl(INADDR_ANY);
             return (FT_ERR_SUCCESS);
@@ -180,7 +181,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         address_ipv6 = reinterpret_cast<struct sockaddr_in6 *>(&this->_address);
         address_ipv6->sin6_family = AF_INET6;
         address_ipv6->sin6_port = htons(config._port);
-        if (host_copy.empty() != false)
+        if (host_copy.empty() != FT_FALSE)
         {
             address_ipv6->sin6_addr = in6addr_any;
             return (FT_ERR_SUCCESS);
@@ -225,7 +226,7 @@ int ft_socket::configure_address(const SocketConfig &config)
     return (FT_ERR_SOCKET_RESOLVE_FAILED);
 }
 
-int ft_socket::bind_socket(const SocketConfig &config)
+int32_t ft_socket::bind_socket(const SocketConfig &config)
 {
     socklen_t address_length;
 
@@ -249,7 +250,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_socket::listen_socket(const SocketConfig &config)
+int32_t ft_socket::listen_socket(const SocketConfig &config)
 {
     if (nw_listen(this->_socket_file_descriptor, config._backlog) < 0)
     {
@@ -260,9 +261,9 @@ int ft_socket::listen_socket(const SocketConfig &config)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_socket::join_multicast_group(const SocketConfig &config)
+int32_t ft_socket::join_multicast_group(const SocketConfig &config)
 {
-    this->abort_if_not_initialised("ft_socket::join_multicast_group");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::join_multicast_group");
     if (config._multicast_group[0] == '\0')
         return (FT_ERR_SUCCESS);
     if (config._address_family == AF_INET)
@@ -319,9 +320,9 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     return (FT_ERR_CONFIGURATION);
 }
 
-int ft_socket::setup_server(const SocketConfig &config)
+int32_t ft_socket::setup_server(const SocketConfig &config)
 {
-    int setup_error;
+    int32_t setup_error;
 
     setup_error = this->create_socket(config);
     if (setup_error != FT_ERR_SUCCESS)

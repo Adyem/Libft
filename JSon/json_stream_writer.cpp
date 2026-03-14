@@ -6,31 +6,31 @@
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static thread_local int g_json_stream_writer_last_error = FT_ERR_SUCCESS;
+static thread_local int32_t g_json_stream_writer_last_error = FT_ERR_SUCCESS;
 
-static void json_stream_writer_push_error(int error_code)
+static void json_stream_writer_set_error(int32_t error_code)
 {
     g_json_stream_writer_last_error = error_code;
     return ;
 }
 
 #define JSON_STREAM_WRITER_ERROR_RETURN(code, value) \
-    do { json_stream_writer_push_error(code); return (value); } while (0)
+    do { json_stream_writer_set_error(code); return (value); } while (0)
 
 #define JSON_STREAM_WRITER_SUCCESS_RETURN(value) \
-    do { json_stream_writer_push_error(FT_ERR_SUCCESS); return (value); } while (0)
+    do { json_stream_writer_set_error(FT_ERR_SUCCESS); return (value); } while (0)
 
-static int json_stream_writer_last_error(void)
+static int32_t json_stream_writer_last_error(void)
 {
     return (g_json_stream_writer_last_error);
 }
 
-static int json_stream_writer_write_chunk(json_stream_writer *writer,
+static int32_t json_stream_writer_write_chunk(json_stream_writer *writer,
     const char *buffer,
-    size_t size)
+    ft_size_t size)
 {
-    size_t offset;
-    size_t written;
+    ft_size_t offset;
+    ft_size_t written;
 
     if (!writer || !buffer)
     {
@@ -40,7 +40,7 @@ static int json_stream_writer_write_chunk(json_stream_writer *writer,
     while (offset < size)
     {
         written = writer->write_callback(writer->user_data, buffer + offset, size - offset);
-        if (written == 0)
+        if (written == FT_ERR_SUCCESS)
         {
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_IO, -1);
         }
@@ -49,10 +49,10 @@ static int json_stream_writer_write_chunk(json_stream_writer *writer,
     JSON_STREAM_WRITER_SUCCESS_RETURN(0);
 }
 
-static int json_stream_writer_write_literal(json_stream_writer *writer,
+static int32_t json_stream_writer_write_literal(json_stream_writer *writer,
     const char *literal)
 {
-    size_t length;
+    ft_size_t length;
 
     if (!literal)
     {
@@ -62,17 +62,17 @@ static int json_stream_writer_write_literal(json_stream_writer *writer,
     return (json_stream_writer_write_chunk(writer, literal, length));
 }
 
-static int json_stream_writer_write_escaped_string(json_stream_writer *writer,
+static int32_t json_stream_writer_write_escaped_string(json_stream_writer *writer,
     const char *value,
-    size_t length)
+    ft_size_t length)
 {
-    size_t index;
+    ft_size_t index;
     unsigned char character;
     char buffer[6];
     const char *hex_digits;
 
-    if (json_stream_writer_write_chunk(writer, "\"", 1) != 0)
-        return (-1);
+    if (json_stream_writer_write_chunk(writer, "\"", 1) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
     index = 0;
     hex_digits = "0123456789ABCDEF";
     while (index < length)
@@ -82,43 +82,43 @@ static int json_stream_writer_write_escaped_string(json_stream_writer *writer,
         {
             buffer[0] = '\\';
             buffer[1] = static_cast<char>(character);
-            if (json_stream_writer_write_chunk(writer, buffer, 2) != 0)
-                return (-1);
+            if (json_stream_writer_write_chunk(writer, buffer, 2) != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
             index += 1;
             continue ;
         }
         if (character == '\b')
         {
-            if (json_stream_writer_write_literal(writer, "\\b") != 0)
-                return (-1);
+            if (json_stream_writer_write_literal(writer, "\\b") != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
             index += 1;
             continue ;
         }
         if (character == '\f')
         {
-            if (json_stream_writer_write_literal(writer, "\\f") != 0)
-                return (-1);
+            if (json_stream_writer_write_literal(writer, "\\f") != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
             index += 1;
             continue ;
         }
         if (character == '\n')
         {
-            if (json_stream_writer_write_literal(writer, "\\n") != 0)
-                return (-1);
+            if (json_stream_writer_write_literal(writer, "\\n") != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
             index += 1;
             continue ;
         }
         if (character == '\r')
         {
-            if (json_stream_writer_write_literal(writer, "\\r") != 0)
-                return (-1);
+            if (json_stream_writer_write_literal(writer, "\\r") != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
             index += 1;
             continue ;
         }
         if (character == '\t')
         {
-            if (json_stream_writer_write_literal(writer, "\\t") != 0)
-                return (-1);
+            if (json_stream_writer_write_literal(writer, "\\t") != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
             index += 1;
             continue ;
         }
@@ -130,29 +130,29 @@ static int json_stream_writer_write_escaped_string(json_stream_writer *writer,
             buffer[3] = '0';
             buffer[4] = hex_digits[(character >> 4) & 0x0F];
             buffer[5] = hex_digits[character & 0x0F];
-            if (json_stream_writer_write_chunk(writer, buffer, 6) != 0)
-                return (-1);
+            if (json_stream_writer_write_chunk(writer, buffer, 6) != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
             index += 1;
             continue ;
         }
         buffer[0] = static_cast<char>(character);
-        if (json_stream_writer_write_chunk(writer, buffer, 1) != 0)
-            return (-1);
+        if (json_stream_writer_write_chunk(writer, buffer, 1) != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_STATE);
         index += 1;
     }
-    if (json_stream_writer_write_chunk(writer, "\"", 1) != 0)
-        return (-1);
+    if (json_stream_writer_write_chunk(writer, "\"", 1) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
     JSON_STREAM_WRITER_SUCCESS_RETURN(0);
 }
 
-static int json_stream_writer_write_string(json_stream_writer *writer,
+static int32_t json_stream_writer_write_string(json_stream_writer *writer,
     const json_stream_scalar *scalar)
 {
     if (!scalar)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
-    if (scalar->data == ft_nullptr && scalar->length != 0)
+    if (scalar->data == ft_nullptr && scalar->length != FT_ERR_SUCCESS)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
@@ -161,10 +161,10 @@ static int json_stream_writer_write_string(json_stream_writer *writer,
     return (json_stream_writer_write_escaped_string(writer, scalar->data, scalar->length));
 }
 
-static int json_stream_writer_write_number(json_stream_writer *writer,
+static int32_t json_stream_writer_write_number(json_stream_writer *writer,
     const json_stream_scalar *scalar)
 {
-    if (!scalar || scalar->data == ft_nullptr || scalar->length == 0)
+    if (!scalar || scalar->data == ft_nullptr || scalar->length == FT_ERR_SUCCESS)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
@@ -175,16 +175,16 @@ static json_stream_writer_context *json_stream_writer_current_context(json_strea
 {
     if (!writer)
         return (ft_nullptr);
-    if (writer->context_size == 0)
+    if (writer->context_size == FT_ERR_SUCCESS)
         return (ft_nullptr);
     return (&writer->context_stack[writer->context_size - 1]);
 }
 
-static int json_stream_writer_ensure_capacity(json_stream_writer *writer,
-    size_t required)
+static int32_t json_stream_writer_ensure_capacity(json_stream_writer *writer,
+    ft_size_t required)
 {
-    size_t capacity;
-    size_t new_capacity;
+    ft_size_t capacity;
+    ft_size_t new_capacity;
     json_stream_writer_context *resized;
 
     if (!writer)
@@ -192,14 +192,14 @@ static int json_stream_writer_ensure_capacity(json_stream_writer *writer,
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
     if (writer->context_capacity >= required)
-        return (0);
+        return (FT_ERR_SUCCESS);
     capacity = writer->context_capacity;
-    if (capacity == 0)
+    if (capacity == FT_ERR_SUCCESS)
         capacity = 4;
     new_capacity = capacity;
         while (new_capacity < required)
         {
-            size_t next_capacity;
+            ft_size_t next_capacity;
 
             next_capacity = new_capacity * 2;
             if (next_capacity <= new_capacity)
@@ -218,10 +218,10 @@ static int json_stream_writer_ensure_capacity(json_stream_writer *writer,
     }
     writer->context_stack = resized;
     writer->context_capacity = new_capacity;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-static int json_stream_writer_push_context(json_stream_writer *writer,
+static int32_t json_stream_writer_push_context(json_stream_writer *writer,
     char type)
 {
     json_stream_writer_context *context;
@@ -230,25 +230,25 @@ static int json_stream_writer_push_context(json_stream_writer *writer,
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
-    if (json_stream_writer_ensure_capacity(writer, writer->context_size + 1) != 0)
-        return (-1);
+    if (json_stream_writer_ensure_capacity(writer, writer->context_size + 1) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
     context = &writer->context_stack[writer->context_size];
     context->type = type;
-    context->need_comma = false;
+    context->need_comma = FT_FALSE;
     if (type == 'o')
-        context->expecting_key = true;
+        context->expecting_key = FT_TRUE;
     else
-        context->expecting_key = false;
+        context->expecting_key = FT_FALSE;
     writer->context_size += 1;
     JSON_STREAM_WRITER_SUCCESS_RETURN(0);
 }
 
-static int json_stream_writer_pop_context(json_stream_writer *writer,
+static int32_t json_stream_writer_pop_context(json_stream_writer *writer,
     char expected_type)
 {
     json_stream_writer_context *context;
 
-    if (!writer || writer->context_size == 0)
+    if (!writer || writer->context_size == FT_ERR_SUCCESS)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
     }
@@ -257,7 +257,7 @@ static int json_stream_writer_pop_context(json_stream_writer *writer,
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
     }
-    if (expected_type == 'o' && context->expecting_key == false)
+    if (expected_type == 'o' && context->expecting_key == FT_FALSE)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
     }
@@ -265,32 +265,32 @@ static int json_stream_writer_pop_context(json_stream_writer *writer,
     JSON_STREAM_WRITER_SUCCESS_RETURN(0);
 }
 
-static int json_stream_writer_prepare_value(json_stream_writer *writer)
+static int32_t json_stream_writer_prepare_value(json_stream_writer *writer)
 {
     json_stream_writer_context *current;
 
     current = json_stream_writer_current_context(writer);
     if (current == ft_nullptr)
     {
-        if (writer->root_value_emitted != false)
+        if (writer->root_value_emitted != FT_FALSE)
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
-        writer->root_value_emitted = true;
-        return (0);
+        writer->root_value_emitted = FT_TRUE;
+        return (FT_ERR_SUCCESS);
     }
     if (current->type == 'o')
     {
-        if (current->expecting_key != false)
+        if (current->expecting_key != FT_FALSE)
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     if (current->type == 'a')
     {
-        if (current->need_comma != false)
+        if (current->need_comma != FT_FALSE)
         {
-            if (json_stream_writer_write_literal(writer, ",") != 0)
-                return (-1);
+            if (json_stream_writer_write_literal(writer, ",") != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_STATE);
         }
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
 }
@@ -304,19 +304,19 @@ static void json_stream_writer_mark_parent_consumed(json_stream_writer *writer)
         return ;
     if (current->type == 'o')
     {
-        current->expecting_key = true;
-        current->need_comma = true;
+        current->expecting_key = FT_TRUE;
+        current->need_comma = FT_TRUE;
         return ;
     }
     if (current->type == 'a')
     {
-        current->need_comma = true;
+        current->need_comma = FT_TRUE;
         return ;
     }
     return ;
 }
 
-int json_stream_writer_init(json_stream_writer *writer,
+int32_t json_stream_writer_init(json_stream_writer *writer,
     json_stream_write_callback callback,
     void *user_data)
 {
@@ -330,9 +330,9 @@ int json_stream_writer_init(json_stream_writer *writer,
     writer->context_stack = ft_nullptr;
     writer->context_size = 0;
     writer->context_capacity = 0;
-    writer->began_document = false;
-    writer->finished_document = false;
-    writer->root_value_emitted = false;
+    writer->began_document = FT_FALSE;
+    writer->finished_document = FT_FALSE;
+    writer->root_value_emitted = FT_FALSE;
     writer->error_code = FT_ERR_SUCCESS;
     JSON_STREAM_WRITER_SUCCESS_RETURN(0);
 }
@@ -348,22 +348,22 @@ void json_stream_writer_destroy(json_stream_writer *writer)
     writer->context_capacity = 0;
     writer->write_callback = ft_nullptr;
     writer->user_data = ft_nullptr;
-    writer->began_document = false;
-    writer->finished_document = false;
-    writer->root_value_emitted = false;
+    writer->began_document = FT_FALSE;
+    writer->finished_document = FT_FALSE;
+    writer->root_value_emitted = FT_FALSE;
     writer->error_code = FT_ERR_SUCCESS;
     return ;
 }
 
-static int json_stream_writer_write_boolean(json_stream_writer *writer,
-    bool value)
+static int32_t json_stream_writer_write_boolean(json_stream_writer *writer,
+    ft_bool value)
 {
-    if (value != false)
+    if (value != FT_FALSE)
         return (json_stream_writer_write_literal(writer, "true"));
     return (json_stream_writer_write_literal(writer, "false"));
 }
 
-int json_stream_writer_process(json_stream_writer *writer,
+int32_t json_stream_writer_process(json_stream_writer *writer,
     const json_stream_event *event)
 {
     json_stream_writer_context *current;
@@ -379,209 +379,209 @@ int json_stream_writer_process(json_stream_writer *writer,
     }
     if (writer->error_code != FT_ERR_SUCCESS)
     {
-        json_stream_writer_push_error(writer->error_code);
-        return (-1);
+        json_stream_writer_set_error(writer->error_code);
+        return (FT_ERR_INVALID_STATE);
     }
     if (event->type == JSON_STREAM_EVENT_BEGIN_DOCUMENT)
     {
-        if (writer->began_document != false)
+        if (writer->began_document != FT_FALSE)
         {
             writer->error_code = FT_ERR_INVALID_STATE;
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
         }
-        writer->began_document = true;
-        writer->finished_document = false;
-        writer->root_value_emitted = false;
+        writer->began_document = FT_TRUE;
+        writer->finished_document = FT_FALSE;
+        writer->root_value_emitted = FT_FALSE;
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_END_DOCUMENT)
     {
-        if (writer->began_document == false || writer->finished_document != false)
+        if (writer->began_document == FT_FALSE || writer->finished_document != FT_FALSE)
         {
             writer->error_code = FT_ERR_INVALID_STATE;
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
         }
-        if (writer->context_size != 0 || writer->root_value_emitted == false)
+        if (writer->context_size != FT_ERR_SUCCESS || writer->root_value_emitted == FT_FALSE)
         {
             writer->error_code = FT_ERR_INVALID_STATE;
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
         }
-        writer->finished_document = true;
+        writer->finished_document = FT_TRUE;
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
-    if (writer->began_document == false || writer->finished_document != false)
+    if (writer->began_document == FT_FALSE || writer->finished_document != FT_FALSE)
     {
         writer->error_code = FT_ERR_INVALID_STATE;
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
     }
     if (event->type == JSON_STREAM_EVENT_KEY)
     {
-        if (!event->value.data && event->value.length != 0)
+        if (!event->value.data && event->value.length != FT_ERR_SUCCESS)
         {
             writer->error_code = FT_ERR_INVALID_ARGUMENT;
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         }
         current = json_stream_writer_current_context(writer);
-        if (current == ft_nullptr || current->type != 'o' || current->expecting_key == false)
+        if (current == ft_nullptr || current->type != 'o' || current->expecting_key == FT_FALSE)
         {
             writer->error_code = FT_ERR_INVALID_STATE;
             JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
         }
-        if (current->need_comma != false)
+        if (current->need_comma != FT_FALSE)
         {
-            if (json_stream_writer_write_literal(writer, ",") != 0)
+            if (json_stream_writer_write_literal(writer, ",") != FT_ERR_SUCCESS)
             {
                 writer->error_code = json_stream_writer_last_error();
-                return (-1);
+                return (FT_ERR_INVALID_STATE);
             }
         }
         if (event->value.data == ft_nullptr)
         {
-            if (json_stream_writer_write_chunk(writer, "\"\"", 2) != 0)
+            if (json_stream_writer_write_chunk(writer, "\"\"", 2) != FT_ERR_SUCCESS)
             {
                 writer->error_code = json_stream_writer_last_error();
-                return (-1);
+                return (FT_ERR_INVALID_STATE);
             }
         }
         else if (json_stream_writer_write_escaped_string(writer,
                  event->value.data,
-                 event->value.length) != 0)
+                 event->value.length) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_literal(writer, ":") != 0)
+        if (json_stream_writer_write_literal(writer, ":") != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        current->expecting_key = false;
+        current->expecting_key = FT_FALSE;
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_BEGIN_OBJECT)
     {
-        if (json_stream_writer_prepare_value(writer) != 0)
+        if (json_stream_writer_prepare_value(writer) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_literal(writer, "{") != 0)
+        if (json_stream_writer_write_literal(writer, "{") != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         json_stream_writer_mark_parent_consumed(writer);
-        if (json_stream_writer_push_context(writer, 'o') != 0)
+        if (json_stream_writer_push_context(writer, 'o') != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_END_OBJECT)
     {
-        if (json_stream_writer_pop_context(writer, 'o') != 0)
+        if (json_stream_writer_pop_context(writer, 'o') != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_literal(writer, "}") != 0)
+        if (json_stream_writer_write_literal(writer, "}") != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_BEGIN_ARRAY)
     {
-        if (json_stream_writer_prepare_value(writer) != 0)
+        if (json_stream_writer_prepare_value(writer) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_literal(writer, "[") != 0)
+        if (json_stream_writer_write_literal(writer, "[") != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         json_stream_writer_mark_parent_consumed(writer);
-        if (json_stream_writer_push_context(writer, 'a') != 0)
+        if (json_stream_writer_push_context(writer, 'a') != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_END_ARRAY)
     {
-        if (json_stream_writer_pop_context(writer, 'a') != 0)
+        if (json_stream_writer_pop_context(writer, 'a') != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_literal(writer, "]") != 0)
+        if (json_stream_writer_write_literal(writer, "]") != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_STRING)
     {
-        if (json_stream_writer_prepare_value(writer) != 0)
+        if (json_stream_writer_prepare_value(writer) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_string(writer, &event->value) != 0)
+        if (json_stream_writer_write_string(writer, &event->value) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         json_stream_writer_mark_parent_consumed(writer);
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_NUMBER)
     {
-        if (json_stream_writer_prepare_value(writer) != 0)
+        if (json_stream_writer_prepare_value(writer) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_number(writer, &event->value) != 0)
+        if (json_stream_writer_write_number(writer, &event->value) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         json_stream_writer_mark_parent_consumed(writer);
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_BOOLEAN)
     {
-        if (json_stream_writer_prepare_value(writer) != 0)
+        if (json_stream_writer_prepare_value(writer) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_boolean(writer, event->bool_value) != 0)
+        if (json_stream_writer_write_boolean(writer, event->bool_value) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         json_stream_writer_mark_parent_consumed(writer);
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
     }
     if (event->type == JSON_STREAM_EVENT_NULL)
     {
-        if (json_stream_writer_prepare_value(writer) != 0)
+        if (json_stream_writer_prepare_value(writer) != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
-        if (json_stream_writer_write_literal(writer, "null") != 0)
+        if (json_stream_writer_write_literal(writer, "null") != FT_ERR_SUCCESS)
         {
             writer->error_code = json_stream_writer_last_error();
-            return (-1);
+            return (FT_ERR_INVALID_STATE);
         }
         json_stream_writer_mark_parent_consumed(writer);
         JSON_STREAM_WRITER_SUCCESS_RETURN(0);
@@ -590,7 +590,7 @@ int json_stream_writer_process(json_stream_writer *writer,
     JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
 }
 
-int json_stream_writer_finish(json_stream_writer *writer)
+int32_t json_stream_writer_finish(json_stream_writer *writer)
 {
     if (!writer)
     {
@@ -598,14 +598,14 @@ int json_stream_writer_finish(json_stream_writer *writer)
     }
     if (writer->error_code != FT_ERR_SUCCESS)
     {
-        json_stream_writer_push_error(writer->error_code);
-        return (-1);
+        json_stream_writer_set_error(writer->error_code);
+        return (FT_ERR_INVALID_STATE);
     }
-    if (writer->began_document == false || writer->finished_document == false)
+    if (writer->began_document == FT_FALSE || writer->finished_document == FT_FALSE)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
     }
-    if (writer->context_size != 0)
+    if (writer->context_size != FT_ERR_SUCCESS)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
     }

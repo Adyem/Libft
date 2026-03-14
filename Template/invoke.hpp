@@ -8,7 +8,8 @@
 template <typename InstanceType>
 struct ft_invoke_detail_is_pointer
 {
-    static const bool value = std::is_pointer<typename std::decay<InstanceType>::type>::value;
+    static const ft_bool value =
+        static_cast<ft_bool>(std::is_pointer<typename std::decay<InstanceType>::type>::value);
 };
 
 #if FT_TEMPLATE_HAS_CONCEPTS

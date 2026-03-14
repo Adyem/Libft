@@ -18,77 +18,73 @@
 
 class ft_inventory
 {
-    private:
-        ft_map<int, ft_sharedptr<ft_item> > _items;
-        size_t                              _capacity;
-        size_t                              _used_slots;
-        int                                 _weight_limit;
-        int                                 _current_weight;
-        int                                 _next_slot;
+    #ifdef LIBFT_TEST_BUILD
+        public:
+    #else
+        private:
+    #endif
+        ft_map<int32_t, ft_sharedptr<ft_item> > _items;
+        ft_size_t                              _capacity;
+        ft_size_t                              _used_slots;
+        int32_t                                 _weight_limit;
+        int32_t                                 _current_weight;
+        int32_t                                 _next_slot;
         pt_recursive_mutex                           *_mutex;
         uint8_t                             _initialised_state;
-        static thread_local int             _last_error;
+        static thread_local int32_t             _last_error;
 
-        void set_error(int error_code) const noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
-        static const uint8_t _state_uninitialised = 0;
-        static const uint8_t _state_destroyed = 1;
-        static const uint8_t _state_initialised = 2;
 
-        bool check_item_valid(const ft_sharedptr<ft_item> &item) const noexcept;
-        void abort_lifecycle_error(const char *method_name,
-            const char *reason) const;
-        void abort_if_not_initialised(const char *method_name) const;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        int unlock_internal(bool lock_acquired) const noexcept;
+        ft_bool check_item_valid(const ft_sharedptr<ft_item> &item) const noexcept;
+        int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
+        int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
     public:
         ft_inventory() noexcept;
+        ft_inventory(const ft_inventory &other) noexcept;
+        ft_inventory(ft_inventory &&other) noexcept;
         virtual ~ft_inventory() noexcept;
-        ft_inventory(const ft_inventory &other) noexcept = delete;
         ft_inventory &operator=(const ft_inventory &other) noexcept = delete;
-        ft_inventory(ft_inventory &&other) noexcept = delete;
         ft_inventory &operator=(ft_inventory &&other) noexcept = delete;
 
-        int initialize() noexcept;
-        int initialize(size_t capacity, int weight_limit) noexcept;
-        int initialize(const ft_inventory &other) noexcept;
-        int initialize(ft_inventory &&other) noexcept;
-        int destroy() noexcept;
-        int enable_thread_safety() noexcept;
-        int disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int32_t initialize() noexcept;
+        int32_t initialize(ft_size_t capacity, int32_t weight_limit) noexcept;
+        int32_t initialize(const ft_inventory &other) noexcept;
+        int32_t initialize(ft_inventory &&other) noexcept;
+        int32_t move(ft_inventory &other) noexcept;
+        int32_t destroy() noexcept;
+        int32_t enable_thread_safety() noexcept;
+        int32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+        int32_t lock(ft_bool *lock_acquired) const noexcept;
+        void unlock(ft_bool lock_acquired) const noexcept;
 
-        ft_map<int, ft_sharedptr<ft_item> >       &get_items() noexcept;
-        const ft_map<int, ft_sharedptr<ft_item> > &get_items() const noexcept;
+        ft_map<int32_t, ft_sharedptr<ft_item> >       &get_items() noexcept;
+        const ft_map<int32_t, ft_sharedptr<ft_item> > &get_items() const noexcept;
 
-        size_t get_capacity() const noexcept;
-        void   resize(size_t capacity) noexcept;
-        size_t get_used() const noexcept;
-        void   set_used_slots(size_t used) noexcept;
-        bool   is_full() const noexcept;
-        int    get_weight_limit() const noexcept;
-        void   set_weight_limit(int limit) noexcept;
-        int    get_current_weight() const noexcept;
-        void   set_current_weight(int weight) noexcept;
+        ft_size_t get_capacity() const noexcept;
+        void   resize(ft_size_t capacity) noexcept;
+        ft_size_t get_used() const noexcept;
+        void   set_used_slots(ft_size_t used) noexcept;
+        ft_bool   is_full() const noexcept;
+        int32_t    get_weight_limit() const noexcept;
+        void   set_weight_limit(int32_t limit) noexcept;
+        int32_t    get_current_weight() const noexcept;
+        void   set_current_weight(int32_t weight) noexcept;
 
-        int  add_item(const ft_sharedptr<ft_item> &item) noexcept;
-        void remove_item(int slot) noexcept;
+        int32_t  add_item(const ft_sharedptr<ft_item> &item) noexcept;
+        void remove_item(int32_t slot) noexcept;
 
-        int  count_item(int item_id) const noexcept;
-        bool has_item(int item_id) const noexcept;
+        int32_t  count_item(int32_t item_id) const noexcept;
+        ft_bool has_item(int32_t item_id) const noexcept;
 
-        int  count_rarity(int rarity) const noexcept;
-        bool has_rarity(int rarity) const noexcept;
+        int32_t  count_rarity(int32_t rarity) const noexcept;
+        ft_bool has_rarity(int32_t rarity) const noexcept;
 
-        int get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
-#ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-#endif
 };
 
 #endif

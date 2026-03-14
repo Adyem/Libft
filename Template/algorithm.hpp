@@ -26,31 +26,37 @@ void ft_sort(RandomIt first, RandomIt last, Compare comp)
 template <typename RandomIt>
 void ft_sort(RandomIt first, RandomIt last)
 {
-    ft_sort(first, last, [](const auto& a, const auto& b){ return (a < b); });
+    ft_sort(first, last, [](const auto& a, const auto& b)
+    {
+        return (a < b);
+    });
     return ;
 }
 
 template <typename RandomIt, typename T, typename Compare>
-bool ft_binary_search(RandomIt first, RandomIt last, const T& value, Compare comp)
+ft_bool ft_binary_search(RandomIt first, RandomIt last, const T& value, Compare comp)
 {
     while (first < last)
     {
         RandomIt mid = first + (last - first) / 2;
-          if (!comp(*mid, value) && !comp(value, *mid))
-              return (true);
+        if (!comp(*mid, value) && !comp(value, *mid))
+            return (FT_TRUE);
         if (comp(*mid, value))
             first = mid + 1;
         else
             last = mid;
     }
-      return (false);
+    return (FT_FALSE);
 }
 
 template <typename RandomIt, typename T>
-bool ft_binary_search(RandomIt first, RandomIt last, const T& value)
+ft_bool ft_binary_search(RandomIt first, RandomIt last, const T& value)
 {
-      return (ft_binary_search(first, last, value,
-          [](const auto& a, const auto& b){ return (a < b); }));
+    return (ft_binary_search(first, last, value,
+        [](const auto& a, const auto& b)
+        {
+            return (a < b);
+        }));
 }
 
 template <typename RandomIt>
