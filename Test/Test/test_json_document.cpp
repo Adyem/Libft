@@ -10,7 +10,7 @@
 
 #include <string>
 
-FT_TEST(test_json_document_find_item_by_pointer_success, "json document resolves pointers to items")
+FT_TEST(test_json_document_find_item_by_pointer_success)
 {
     json_document document;
     if (document.initialize() != FT_ERR_SUCCESS)
@@ -31,7 +31,7 @@ FT_TEST(test_json_document_find_item_by_pointer_success, "json document resolves
     return (1);
 }
 
-FT_TEST(test_json_document_find_item_by_pointer_missing_path_sets_error, "json document reports missing pointer paths")
+FT_TEST(test_json_document_find_item_by_pointer_missing_path_sets_error)
 {
     json_document document;
     if (document.initialize() != FT_ERR_SUCCESS)
@@ -45,7 +45,7 @@ FT_TEST(test_json_document_find_item_by_pointer_missing_path_sets_error, "json d
     return (1);
 }
 
-FT_TEST(test_json_document_pointer_unescapes_tokens, "json document pointer decoding supports escaped segments")
+FT_TEST(test_json_document_pointer_unescapes_tokens)
 {
     json_document document;
     if (document.initialize() != FT_ERR_SUCCESS)
@@ -66,7 +66,7 @@ FT_TEST(test_json_document_pointer_unescapes_tokens, "json document pointer deco
     return (1);
 }
 
-FT_TEST(test_json_document_pointer_requires_leading_slash, "json document pointer requires a leading slash")
+FT_TEST(test_json_document_pointer_requires_leading_slash)
 {
     json_document document;
     if (document.initialize() != FT_ERR_SUCCESS)
@@ -83,7 +83,7 @@ FT_TEST(test_json_document_pointer_requires_leading_slash, "json document pointe
     return (1);
 }
 
-FT_TEST(test_json_document_pointer_rejects_empty_segment, "json document pointer rejects empty path segments")
+FT_TEST(test_json_document_pointer_rejects_empty_segment)
 {
     json_document document;
     if (document.initialize() != FT_ERR_SUCCESS)
@@ -100,7 +100,7 @@ FT_TEST(test_json_document_pointer_rejects_empty_segment, "json document pointer
     return (1);
 }
 
-FT_TEST(test_json_document_pointer_invalid_escape_sets_error, "json document pointer invalid escapes set errors")
+FT_TEST(test_json_document_pointer_invalid_escape_sets_error)
 {
     json_document document;
     if (document.initialize() != FT_ERR_SUCCESS)

@@ -7,7 +7,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_json_validate_schema_success, "json schema validation success")
+FT_TEST(test_json_validate_schema_success)
 {
     json_document document;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, json_group_list_enable_thread_safety());
@@ -44,7 +44,7 @@ FT_TEST(test_json_validate_schema_success, "json schema validation success")
     return (1);
 }
 
-FT_TEST(test_json_validate_schema_missing_field, "json schema validation missing field")
+FT_TEST(test_json_validate_schema_missing_field)
 {
     json_document document;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, json_group_list_enable_thread_safety());

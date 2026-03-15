@@ -56,6 +56,8 @@ static int capture_event(void *user_data, const json_stream_event *event)
     if (!user_data || !event)
         return (-1);
     events = static_cast<ft_vector<captured_event> *>(user_data);
+    if (record.value.initialize() != FT_ERR_SUCCESS)
+        return (-1);
     record.type = event->type;
     record.bool_value = event->bool_value;
     if (event->value.data != ft_nullptr && event->value.length > 0)
@@ -63,6 +65,7 @@ static int capture_event(void *user_data, const json_stream_event *event)
     else
         record.value.clear();
     events->push_back(record);
+    (void)record.value.destroy();
     return (0);
 }
 
@@ -96,7 +99,7 @@ static size_t string_sink_write(void *user_data, const char *buffer, size_t size
     return (size);
 }
 
-FT_TEST(test_json_stream_reader_emits_events, "json_stream_reader_traverse produces callback sequence")
+FT_TEST(test_json_stream_reader_emits_events)
 {
     const char *json_text;
     ft_vector<captured_event> events;
@@ -124,6 +127,7 @@ FT_TEST(test_json_stream_reader_emits_events, "json_stream_reader_traverse produ
     };
 
     json_text = "{\n  \"numbers\": [1, 2, 3],\n  \"nested\": {\n    \"flag\": true,\n    \"text\": \"hello\"\n  }\n}\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
     status = gather_events(json_text, events);
     FT_ASSERT_EQ(0, status);
     expected_count = sizeof(expected_types) / sizeof(expected_types[0]);
@@ -146,7 +150,7 @@ FT_TEST(test_json_stream_reader_emits_events, "json_stream_reader_traverse produ
     return (1);
 }
 
-FT_TEST(test_json_stream_writer_round_trip, "json_stream_writer_process reproduces input structure")
+FT_TEST(test_json_stream_writer_round_trip)
 {
     const char *json_text;
     ft_vector<captured_event> events;
@@ -156,6 +160,8 @@ FT_TEST(test_json_stream_writer_round_trip, "json_stream_writer_process reproduc
     size_t count;
 
     json_text = "{\n  \"numbers\": [1, 2, 3],\n  \"nested\": {\n    \"flag\": true,\n    \"text\": \"hello\"\n  }\n}\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encoded.initialize());
     FT_ASSERT_EQ(0, gather_events(json_text, events));
     FT_ASSERT_EQ(0, json_stream_writer_init(&writer, string_sink_write, &encoded));
     index = 0;

@@ -21,9 +21,7 @@ TOTAL_SRCS := $(words $(SRCS))
 
 HEADERS := encryption.hpp \
         encryption_internal.hpp \
-        encryption_aead_context.hpp \
-        encryption_hardware_acceleration.hpp \
-        encryption_hmac_sha256.hpp
+        encryption_aead_context.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -62,7 +60,7 @@ $(TARGET): $(OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-$(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
+$(OBJS): $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
@@ -74,7 +72,7 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-$(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
+$(DEBUG_OBJS): $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
@@ -82,7 +80,15 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(OBJDIR)/*.d) $(wildcard $(DEBUG_OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.d)
+CLEAN_OBJS := $(wildcard objs/*.o) \
+	$(wildcard objs/*.d) \
+	$(wildcard objs_test/*.o) \
+	$(wildcard objs_test/*.d) \
+	$(wildcard objs_debug/*.o) \
+	$(wildcard objs_debug/*.d) \
+	$(wildcard objs_debug_test/*.o) \
+	$(wildcard objs_debug_test/*.d)
+TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
 
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
@@ -104,6 +110,9 @@ fclean:
 		status=1; \
 	fi; \
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+		status=1; \
+	fi; \
+	if ! 1000 4 24 27 30 46 122 135 136 138 1000RM) 1000 4 24 27 30 46 122 135 136 138 1000TEST_ARCHIVES); then \
 		status=1; \
 	fi; \
 	if [ $$status -eq 0 ]; then \

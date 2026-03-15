@@ -2457,12 +2457,23 @@ int32_t kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entrie
 
 int32_t kv_store::export_snapshot_to_file(const char *file_path) const
 {
-    ft_file_document_sink file_sink(file_path);
+    ft_file_document_sink file_sink;
+    int32_t initialize_error;
+    int32_t write_error;
+    int32_t destroy_error;
 
     errno_abort_if_uninitialised(this->_initialised_state, "kv_store::export_snapshot_to_file");
     if (file_path == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
-    return (this->write_snapshot(file_sink));
+    initialize_error = file_sink.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    file_sink.set_path(file_path);
+    write_error = this->write_snapshot(file_sink);
+    destroy_error = file_sink.destroy();
+    if (write_error != FT_ERR_SUCCESS)
+        return (write_error);
+    return (destroy_error);
 }
 
 int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)

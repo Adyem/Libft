@@ -1,0 +1,85 @@
+#include "../test_internal.hpp"
+#include "../../Basic/basic.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_basic_toupper_basic)
+{
+    char string[4];
+
+    string[0] = 'a';
+    string[1] = 'b';
+    string[2] = 'c';
+    string[3] = '\0';
+    ft_to_upper(string);
+    FT_ASSERT_EQ(0, ft_strcmp(string, "ABC"));
+    return (1);
+}
+
+FT_TEST(test_basic_toupper_mixed)
+{
+    char string[7];
+
+    string[0] = 'a';
+    string[1] = '1';
+    string[2] = 'b';
+    string[3] = '!';
+    string[4] = 'c';
+    string[5] = '?';
+    string[6] = '\0';
+    ft_to_upper(string);
+    FT_ASSERT_EQ(0, ft_strcmp(string, "A1B!C?"));
+    return (1);
+}
+
+FT_TEST(test_basic_toupper_empty)
+{
+    char string[1];
+
+    string[0] = '\0';
+    ft_to_upper(string);
+    FT_ASSERT_EQ(0, ft_strcmp(string, ""));
+    return (1);
+}
+
+FT_TEST(test_basic_toupper_nullptr)
+{
+    ft_to_upper(ft_nullptr);
+    return (1);
+}
+
+FT_TEST(test_basic_toupper_stops_at_terminator)
+{
+    char string[6];
+
+    string[0] = 'a';
+    string[1] = static_cast<char>(0xE1);
+    string[2] = '\0';
+    string[3] = 'x';
+    string[4] = 'y';
+    string[5] = '\0';
+    ft_to_upper(string);
+    FT_ASSERT_EQ('A', string[0]);
+    FT_ASSERT_EQ(static_cast<char>(0xE1), string[1]);
+    FT_ASSERT_EQ('\0', string[2]);
+    FT_ASSERT_EQ('x', string[3]);
+    FT_ASSERT_EQ('y', string[4]);
+    return (1);
+}
+
+FT_TEST(test_basic_toupper_recovers_after_nullptr)
+{
+    char string[4];
+
+    string[0] = 'l';
+    string[1] = 'o';
+    string[2] = 'w';
+    string[3] = '\0';
+    ft_to_upper(ft_nullptr);
+    ft_to_upper(string);
+    FT_ASSERT_EQ(0, ft_strcmp(string, "LOW"));
+    return (1);
+}

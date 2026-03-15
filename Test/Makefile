@@ -14,42 +14,44 @@ SRCS := $(filter-out Test/test_template.cpp,$(SRCS))
 endif
 
 BASIC_TEST_FILES := \
-	Test/test_atoi.cpp \
-	Test/test_atol.cpp \
+	Test/test_basic_atoi.cpp \
+	Test/test_basic_atol.cpp \
 	Test/test_basic_additional_coverage.cpp \
-	Test/test_bzero.cpp \
-	Test/test_isalnum.cpp \
-	Test/test_isalpha.cpp \
-	Test/test_isdigit.cpp \
-	Test/test_islower.cpp \
-	Test/test_isprint.cpp \
-	Test/test_isspace.cpp \
-	Test/test_isupper.cpp \
-	Test/test_libft_utf8.cpp \
-	Test/test_memchr.cpp \
-	Test/test_memcmp.cpp \
-	Test/test_memcpy.cpp \
-	Test/test_memmove.cpp \
-	Test/test_memset.cpp \
-	Test/test_strchr.cpp \
-	Test/test_strcmp.cpp \
-	Test/test_striteri.cpp \
-	Test/test_strlcat.cpp \
-	Test/test_strlcpy.cpp \
-	Test/test_strlen.cpp \
-	Test/test_strmapi.cpp \
-	Test/test_strncmp.cpp \
-	Test/test_strncpy.cpp \
-	Test/test_strnstr.cpp \
-	Test/test_strrchr.cpp \
-	Test/test_strstr.cpp \
-	Test/test_strtok.cpp \
-	Test/test_strtol.cpp \
-	Test/test_strtoul.cpp \
-	Test/test_tolower.cpp \
-	Test/test_toupper.cpp \
-	Test/test_validate_int.cpp \
-	Test/test_wide_char.cpp
+	Test/test_basic_bzero.cpp \
+	Test/test_basic_isalnum.cpp \
+	Test/test_basic_isalpha.cpp \
+	Test/test_basic_isdigit.cpp \
+	Test/test_basic_islower.cpp \
+	Test/test_basic_isprint.cpp \
+	Test/test_basic_isspace.cpp \
+	Test/test_basic_isupper.cpp \
+	Test/test_basic_memchr.cpp \
+	Test/test_basic_memcmp.cpp \
+	Test/test_basic_memcpy.cpp \
+	Test/test_basic_memcpy_s.cpp \
+	Test/test_basic_memmove.cpp \
+	Test/test_basic_memset.cpp \
+	Test/test_basic_strchr.cpp \
+	Test/test_basic_strcmp.cpp \
+	Test/test_basic_strcpy_s.cpp \
+	Test/test_basic_striteri.cpp \
+	Test/test_basic_strlcat.cpp \
+	Test/test_basic_strlcpy.cpp \
+	Test/test_basic_strlen.cpp \
+	Test/test_basic_strmapi.cpp \
+	Test/test_basic_strncmp.cpp \
+	Test/test_basic_strncpy.cpp \
+	Test/test_basic_strnstr.cpp \
+	Test/test_basic_strrchr.cpp \
+	Test/test_basic_strstr.cpp \
+	Test/test_basic_strtok.cpp \
+	Test/test_basic_strtol.cpp \
+	Test/test_basic_strtoul.cpp \
+	Test/test_basic_tolower.cpp \
+	Test/test_basic_toupper.cpp \
+	Test/test_basic_utf8.cpp \
+	Test/test_basic_validate_int.cpp \
+	Test/test_basic_wstrlen.cpp
 
 CMA_TEST_FILES := \
 	Test/test_cma.cpp \
@@ -236,8 +238,10 @@ $(OBJDIR)/Test/test_template_iterator_copy_move.o: CFLAGS := $(COMPILE_FLAGS) -D
 $(OBJDIR)/Test/test_template_unordered_map_allocation_failure_paths.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_template_trie_copy_move_deleted.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_advanced_memory.o $(OBJDIR)/Test/test_advanced_numeric.o $(OBJDIR)/Test/test_advanced_strings.o \
-$(OBJDIR)/Test/test_atoi.o $(OBJDIR)/Test/test_strjoin_multiple.o $(OBJDIR)/Test/test_to_string.o \
-$(OBJDIR)/Test/test_wide_char.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Advanced\"
+$(OBJDIR)/Test/test_strjoin_multiple.o $(OBJDIR)/Test/test_to_string.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Advanced\"
+$(OBJDIR)/Test/test_basic_atoi.o $(OBJDIR)/Test/test_basic_wstrlen.o \
+$(OBJDIR)/Test/test_basic_utf8.o $(OBJDIR)/Test/test_basic_validate_int.o \
+$(OBJDIR)/Test/test_basic_additional_coverage.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Basic\"
 $(OBJDIR)/Test/test_networking.o $(OBJDIR)/Test/test_http_server.o $(OBJDIR)/Test/test_websocket.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_networking_quic.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async.o $(OBJDIR)/Test/test_logger_network.o \

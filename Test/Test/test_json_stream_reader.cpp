@@ -56,7 +56,7 @@ static size_t test_chunk_callback(void *user_data, char *buffer, size_t max_size
     return (written);
 }
 
-FT_TEST(test_json_stream_reader_file_small_buffer, "json stream reader handles file input with tight buffers")
+FT_TEST(test_json_stream_reader_file_small_buffer)
 {
     std::string content = "{";
     int index = 0;
@@ -110,7 +110,7 @@ FT_TEST(test_json_stream_reader_file_small_buffer, "json stream reader handles f
     return (1);
 }
 
-FT_TEST(test_json_stream_reader_callback_error_propagation, "json stream reader propagates parsing errors from chunk callbacks")
+FT_TEST(test_json_stream_reader_callback_error_propagation)
 {
     const char *chunks[2];
     size_t sizes[2];
@@ -124,7 +124,7 @@ FT_TEST(test_json_stream_reader_callback_error_propagation, "json stream reader 
     return (1);
 }
 
-FT_TEST(test_json_stream_reader_respects_allocator_limits, "json stream reader stays within allocator limits")
+FT_TEST(test_json_stream_reader_respects_allocator_limits)
 {
     std::string content = "{";
     int index = 0;
@@ -161,7 +161,7 @@ FT_TEST(test_json_stream_reader_respects_allocator_limits, "json stream reader s
     return (1);
 }
 
-FT_TEST(test_json_stream_reader_decodes_escaped_strings, "json stream reader decodes escaped and unicode sequences")
+FT_TEST(test_json_stream_reader_decodes_escaped_strings)
 {
     std::string json_text = "{ \"config\": { \"value\": \"";
     json_text.append("Line\\nBreak \\\"Quote\\\" Backslash\\\\ Unicode ");
@@ -191,7 +191,7 @@ FT_TEST(test_json_stream_reader_decodes_escaped_strings, "json stream reader dec
     return (1);
 }
 
-FT_TEST(test_json_document_streaming_loads_file, "json document supports streaming loads from files")
+FT_TEST(test_json_document_streaming_loads_file)
 {
     const char *file_path = "Test/tmp_json_stream_reader.json";
     std::string content = "{ \"config\": { \"value\": \"42\" } }";

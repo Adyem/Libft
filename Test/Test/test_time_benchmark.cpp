@@ -7,8 +7,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_time_benchmark_computes_average_and_jitter,
-    "time_benchmark tracks rolling averages and jitter")
+FT_TEST(test_time_benchmark_computes_average_and_jitter)
 {
     t_time_benchmark            benchmark;
     t_time_benchmark_snapshot   snapshot;
@@ -17,11 +16,11 @@ FT_TEST(test_time_benchmark_computes_average_and_jitter,
 
     time_benchmark_init(&benchmark);
     add_result = time_benchmark_add_sample(&benchmark, 10.0);
-    FT_ASSERT_EQ(0, add_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, add_result);
     add_result = time_benchmark_add_sample(&benchmark, 12.0);
-    FT_ASSERT_EQ(0, add_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, add_result);
     add_result = time_benchmark_add_sample(&benchmark, 14.0);
-    FT_ASSERT_EQ(0, add_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, add_result);
 
     snapshot_result = time_benchmark_snapshot(&benchmark, &snapshot);
     FT_ASSERT_EQ(true, snapshot_result);
@@ -34,8 +33,7 @@ FT_TEST(test_time_benchmark_computes_average_and_jitter,
     return (1);
 }
 
-FT_TEST(test_time_benchmark_rejects_negative_samples,
-    "time_benchmark rejects invalid durations and preserves previous samples")
+FT_TEST(test_time_benchmark_rejects_negative_samples)
 {
     t_time_benchmark            benchmark;
     t_time_benchmark_snapshot   snapshot;
@@ -44,10 +42,10 @@ FT_TEST(test_time_benchmark_rejects_negative_samples,
 
     time_benchmark_init(&benchmark);
     add_result = time_benchmark_add_sample(&benchmark, 5.0);
-    FT_ASSERT_EQ(0, add_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, add_result);
 
     add_result = time_benchmark_add_sample(&benchmark, -1.0);
-    FT_ASSERT_EQ(-1, add_result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, add_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, time_benchmark_get_error(&benchmark));
 
     snapshot_result = time_benchmark_snapshot(&benchmark, &snapshot);
@@ -61,8 +59,7 @@ FT_TEST(test_time_benchmark_rejects_negative_samples,
     return (1);
 }
 
-FT_TEST(test_time_benchmark_accepts_duration_wrappers,
-    "time_benchmark accumulates structured duration samples")
+FT_TEST(test_time_benchmark_accepts_duration_wrappers)
 {
     t_time_benchmark            benchmark;
     t_time_benchmark_snapshot   snapshot;
@@ -75,9 +72,9 @@ FT_TEST(test_time_benchmark_accepts_duration_wrappers,
     first_duration = time_duration_ms_create(5);
     second_duration = time_duration_ms_create(15);
     add_result = time_benchmark_add_duration(&benchmark, first_duration);
-    FT_ASSERT_EQ(0, add_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, add_result);
     add_result = time_benchmark_add_duration(&benchmark, second_duration);
-    FT_ASSERT_EQ(0, add_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, add_result);
 
     snapshot_result = time_benchmark_snapshot(&benchmark, &snapshot);
     FT_ASSERT_EQ(true, snapshot_result);

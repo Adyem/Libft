@@ -401,7 +401,7 @@ int32_t encryption_aead_context::configure_cipher(const uint8_t *key_buffer,
     if (EVP_CipherInit_ex(this->_context, cipher, ft_nullptr, ft_nullptr,
             ft_nullptr, encrypt_flag) != 1)
         return (this->finalize_operation(FT_ERR_INTERNAL));
-    initialization_vector_length_value = EVP_CIPHER_initialization_vector_length(cipher);
+    initialization_vector_length_value = EVP_CIPHER_iv_length(cipher);
     if (initialization_vector_length_value < 0)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     this->_initialization_vector_length = static_cast<ft_size_t>(initialization_vector_length_value);

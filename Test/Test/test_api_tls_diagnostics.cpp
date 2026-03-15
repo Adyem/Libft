@@ -392,8 +392,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
     return (true);
 }
 
-FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
-    "api_tls_client captures TLS handshake certificate metadata")
+FT_TEST(test_api_tls_client_populates_handshake_diagnostics)
 {
     ft_string ca_path;
     ft_string cert_path;

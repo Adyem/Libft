@@ -8,14 +8,14 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_json_read_from_string_null_input_sets_errno, "json reader rejects null input")
+FT_TEST(test_json_read_from_string_null_input_sets_errno)
 {
     json_group *groups = json_read_from_string(ft_nullptr);
     FT_ASSERT(groups == ft_nullptr);
     return (1);
 }
 
-FT_TEST(test_json_read_from_string_missing_quote_sets_errno, "json reader detects unterminated strings")
+FT_TEST(test_json_read_from_string_missing_quote_sets_errno)
 {
     const char *content = "{ \"config\": { \"name\": \"value } }";
     json_group *groups = json_read_from_string(content);
@@ -23,7 +23,7 @@ FT_TEST(test_json_read_from_string_missing_quote_sets_errno, "json reader detect
     return (1);
 }
 
-FT_TEST(test_json_read_from_string_missing_colon_sets_errno, "json reader detects missing delimiters")
+FT_TEST(test_json_read_from_string_missing_colon_sets_errno)
 {
     const char *content = "{ \"config\" { \"name\": \"value\" } }";
     json_group *groups = json_read_from_string(content);
@@ -31,7 +31,7 @@ FT_TEST(test_json_read_from_string_missing_colon_sets_errno, "json reader detect
     return (1);
 }
 
-FT_TEST(test_json_read_from_string_missing_closing_sets_errno, "json reader requires closing braces")
+FT_TEST(test_json_read_from_string_missing_closing_sets_errno)
 {
     const char *content = "{ \"config\": { \"name\": \"value\" }";
     json_group *groups = json_read_from_string(content);
@@ -39,7 +39,7 @@ FT_TEST(test_json_read_from_string_missing_closing_sets_errno, "json reader requ
     return (1);
 }
 
-FT_TEST(test_json_read_from_string_missing_fraction_digits_sets_errno, "json reader rejects missing fraction digits")
+FT_TEST(test_json_read_from_string_missing_fraction_digits_sets_errno)
 {
     const char *content = "{ \"config\": { \"value\": 1. } }";
     json_group *groups = json_read_from_string(content);
@@ -47,7 +47,7 @@ FT_TEST(test_json_read_from_string_missing_fraction_digits_sets_errno, "json rea
     return (1);
 }
 
-FT_TEST(test_json_read_from_string_missing_exponent_digits_sets_errno, "json reader rejects missing exponent digits")
+FT_TEST(test_json_read_from_string_missing_exponent_digits_sets_errno)
 {
     const char *content = "{ \"config\": { \"value\": 1e } }";
     json_group *groups = json_read_from_string(content);
@@ -55,7 +55,7 @@ FT_TEST(test_json_read_from_string_missing_exponent_digits_sets_errno, "json rea
     return (1);
 }
 
-FT_TEST(test_json_read_from_string_success_resets_errno, "json reader clears errno on success")
+FT_TEST(test_json_read_from_string_success_resets_errno)
 {
     const char *content = "{ \"config\": { \"name\": \"value\" } }";
     json_group *groups = json_read_from_string(content);
@@ -64,7 +64,7 @@ FT_TEST(test_json_read_from_string_success_resets_errno, "json reader clears err
     return (1);
 }
 
-FT_TEST(test_json_read_from_string_decodes_escaped_strings, "json reader decodes escaped and unicode sequences")
+FT_TEST(test_json_read_from_string_decodes_escaped_strings)
 {
     std::string content_string = "{ \"config\": { \"value\": \"";
     content_string.append("Line\\nBreak \\\"Quote\\\" Backslash\\\\ Unicode ");
@@ -89,7 +89,7 @@ FT_TEST(test_json_read_from_string_decodes_escaped_strings, "json reader decodes
     return (1);
 }
 
-FT_TEST(test_json_read_from_file_missing_file_sets_errno, "json reader reports io errors")
+FT_TEST(test_json_read_from_file_missing_file_sets_errno)
 {
     json_group *groups = json_read_from_file("Test/nonexistent_json_reader.json");
     FT_ASSERT(groups == ft_nullptr);

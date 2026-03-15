@@ -262,11 +262,24 @@ int32_t ft_socket::move(ft_socket &other) noexcept
 
 int32_t ft_socket::initialize() noexcept
 {
+    int32_t connected_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "ft_socket::initialize()",
             "initialize called on initialised instance");
     ft_bzero(&this->_address, sizeof(this->_address));
-    this->_connected.clear();
+    connected_error = this->_connected.destroy();
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
+    connected_error = this->_connected.initialize();
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
     this->_socket_file_descriptor = -1;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -274,6 +287,8 @@ int32_t ft_socket::initialize() noexcept
 
 int32_t ft_socket::initialize(const ft_socket &other) noexcept
 {
+    int32_t connected_error;
+
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
@@ -288,7 +303,18 @@ int32_t ft_socket::initialize(const ft_socket &other) noexcept
     }
     this->_address = other._address;
     this->_socket_file_descriptor = -1;
-    this->_connected.clear();
+    connected_error = this->_connected.destroy();
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
+    connected_error = this->_connected.initialize();
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -667,6 +693,7 @@ int32_t ft_socket::initialize(const SocketConfig &config)
 {
     int32_t lock_error;
     int32_t initialize_result;
+    int32_t connected_error;
 
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -674,6 +701,20 @@ int32_t ft_socket::initialize(const SocketConfig &config)
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "ft_socket::initialize",
             "initialize called on initialised instance");
+    connected_error = this->_connected.destroy();
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
+    connected_error = this->_connected.initialize();
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     initialize_result = FT_ERR_UNSUPPORTED_TYPE;
@@ -689,6 +730,7 @@ int32_t ft_socket::initialize(const SocketConfig &config)
 int32_t ft_socket::destroy() noexcept
 {
     int32_t disable_error;
+    int32_t connected_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
@@ -697,6 +739,9 @@ int32_t ft_socket::destroy() noexcept
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
     this->disconnect_all_clients();
+    connected_error = this->_connected.destroy();
+    if (connected_error != FT_ERR_SUCCESS)
+        return (connected_error);
     (void)this->close_socket();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);

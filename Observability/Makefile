@@ -70,7 +70,15 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(OBJDIR)/*.d) $(wildcard $(DEBUG_OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.d)
+CLEAN_OBJS := $(wildcard objs/*.o) \
+	$(wildcard objs/*.d) \
+	$(wildcard objs_test/*.o) \
+	$(wildcard objs_test/*.d) \
+	$(wildcard objs_debug/*.o) \
+	$(wildcard objs_debug/*.d) \
+	$(wildcard objs_debug_test/*.o) \
+	$(wildcard objs_debug_test/*.d)
+TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
 
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
@@ -92,6 +100,9 @@ fclean:
 		status=1; \
 	fi; \
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+		status=1; \
+	fi; \
+	if ! 1000 4 24 27 30 46 122 135 136 138 1000RM) 1000 4 24 27 30 46 122 135 136 138 1000TEST_ARCHIVES); then \
 		status=1; \
 	fi; \
 	if [ $$status -eq 0 ]; then \

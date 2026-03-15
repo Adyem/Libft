@@ -15,7 +15,8 @@
 #include "../Errno/errno.hpp"
 #include "../Time/time.hpp"
 #include "../Observability/observability_networking_metrics.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/unique_lock.hpp"
 
 #ifdef _WIN32
@@ -70,7 +71,7 @@ struct http_client_active_connection
     ft_bool                            store_allowed;
 };
 
-static pt_mutex g_http_client_pool_mutex;
+static pt_recursive_mutex *g_http_client_pool_mutex = ft_nullptr;
 static std::vector<http_client_connection_entry> g_http_client_pool_entries;
 static ft_size_t g_http_client_pool_max_idle = 8;
 static int64_t g_http_client_pool_idle_timeout_ms = 30000;
@@ -78,13 +79,70 @@ static ft_size_t g_http_client_pool_acquire_calls = 0;
 static ft_size_t g_http_client_pool_reuse_hits = 0;
 static ft_size_t g_http_client_pool_acquire_misses = 0;
 
+static int32_t http_client_reinitialize_string(ft_string &value)
+{
+    int32_t destroy_error;
+    int32_t initialize_error;
+
+    destroy_error = value.destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    initialize_error = value.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t http_client_pool_enable_thread_safety(void)
+{
+    pt_recursive_mutex *mutex_pointer;
+    int32_t initialize_error;
+
+    if (g_http_client_pool_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    g_http_client_pool_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t http_client_pool_disable_thread_safety(void)
+{
+    int32_t destroy_error;
+    pt_recursive_mutex *mutex_pointer;
+
+    mutex_pointer = g_http_client_pool_mutex;
+    g_http_client_pool_mutex = ft_nullptr;
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = mutex_pointer->destroy();
+    delete mutex_pointer;
+    return (destroy_error);
+}
+
+ft_bool http_client_pool_is_thread_safe(void)
+{
+    if (g_http_client_pool_mutex != ft_nullptr)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
 static void http_client_pool_reset_active(http_client_active_connection &connection)
 {
+    if (http_client_reinitialize_string(connection.entry.host) != FT_ERR_SUCCESS)
+        return ;
+    if (http_client_reinitialize_string(connection.entry.port) != FT_ERR_SUCCESS)
+        return ;
     connection.entry.socket_fd = -1;
     connection.entry.ssl_context = NULL;
     connection.entry.ssl_connection = NULL;
-    connection.entry.host.clear();
-    connection.entry.port.clear();
     connection.entry.use_ssl = FT_FALSE;
     connection.from_pool = FT_FALSE;
     connection.store_allowed = FT_TRUE;
@@ -109,8 +167,10 @@ static void http_client_pool_dispose_entry(http_client_connection_entry &entry)
         nw_close(entry.socket_fd);
         entry.socket_fd = -1;
     }
-    entry.host.clear();
-    entry.port.clear();
+    if (http_client_reinitialize_string(entry.host) != FT_ERR_SUCCESS)
+        return ;
+    if (http_client_reinitialize_string(entry.port) != FT_ERR_SUCCESS)
+        return ;
     entry.use_ssl = FT_FALSE;
     entry.last_used = time_monotonic_point_now();
     return ;
@@ -156,7 +216,7 @@ static void http_client_pool_release_connection(http_client_active_connection &c
     int32_t lock_error;
     t_monotonic_time_point now;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         http_client_pool_dispose_entry(connection.entry);
@@ -167,14 +227,14 @@ static void http_client_pool_release_connection(http_client_active_connection &c
     http_client_pool_prune_locked(now);
     if (g_http_client_pool_entries.size() >= g_http_client_pool_max_idle)
     {
-        (void)g_http_client_pool_mutex.unlock();
+        (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
         http_client_pool_dispose_entry(connection.entry);
         http_client_pool_reset_active(connection);
         return ;
     }
     connection.entry.last_used = now;
     g_http_client_pool_entries.push_back(connection.entry);
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     http_client_pool_reset_active(connection);
     return ;
 }
@@ -192,7 +252,7 @@ static int32_t http_client_pool_acquire_connection(const char *host, const char 
     t_monotonic_time_point now;
     ft_size_t index;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
     now = time_monotonic_point_now();
@@ -211,13 +271,17 @@ static int32_t http_client_pool_acquire_connection(const char *host, const char 
             g_http_client_pool_entries.erase(g_http_client_pool_entries.begin() + index);
             g_http_client_pool_reuse_hits++;
             reused = FT_TRUE;
-            (void)g_http_client_pool_mutex.unlock();
+            (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
             return (FT_ERR_SUCCESS);
         }
         index++;
     }
     g_http_client_pool_acquire_misses++;
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
+    if (http_client_reinitialize_string(connection.entry.host) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
+    if (http_client_reinitialize_string(connection.entry.port) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     connection.entry.host = host;
     connection.entry.port = port;
     connection.entry.use_ssl = use_ssl;
@@ -278,6 +342,18 @@ static void http_client_parse_header_metadata(http_stream_state &state)
     ft_size_t      header_limit;
     ft_size_t      offset;
     ft_string   status_prefix;
+    ft_string   header_name;
+    ft_string   header_value;
+    ft_string   lowered_value;
+
+    if (status_prefix.initialize() != FT_ERR_SUCCESS)
+        return ;
+    if (header_name.initialize() != FT_ERR_SUCCESS)
+        return ;
+    if (header_value.initialize() != FT_ERR_SUCCESS)
+        return ;
+    if (lowered_value.initialize() != FT_ERR_SUCCESS)
+        return ;
 
     state.keep_alive_allowed = FT_FALSE;
     state.has_content_length = FT_FALSE;
@@ -302,9 +378,6 @@ static void http_client_parse_header_metadata(http_stream_state &state)
         ft_size_t line_length;
         const char *line_start;
         ft_size_t colon_index;
-        ft_string header_name;
-        ft_string header_value;
-        ft_string lowered_value;
 
         line_start = header_data + offset;
         line_length = 0;
@@ -325,6 +398,9 @@ static void http_client_parse_header_metadata(http_stream_state &state)
             colon_index++;
         if (colon_index >= line_length)
             continue ;
+        header_name.clear();
+        header_value.clear();
+        lowered_value.clear();
         header_name.assign(line_start, colon_index);
         header_value.assign(line_start + colon_index + 1, line_length - colon_index - 1);
         http_client_trim_string(header_name);
@@ -381,7 +457,7 @@ void http_client_pool_flush(void)
     int32_t lock_error;
     ft_size_t index;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     index = 0;
@@ -391,7 +467,7 @@ void http_client_pool_flush(void)
         index++;
     }
     g_http_client_pool_entries.clear();
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return ;
 }
 
@@ -399,7 +475,7 @@ void http_client_pool_set_max_idle(ft_size_t max_idle)
 {
     int32_t lock_error;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     g_http_client_pool_max_idle = max_idle;
@@ -415,7 +491,7 @@ void http_client_pool_set_max_idle(ft_size_t max_idle)
         }
         g_http_client_pool_entries.resize(g_http_client_pool_max_idle);
     }
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return ;
 }
 
@@ -424,11 +500,11 @@ ft_size_t http_client_pool_get_idle_count(void)
     int32_t lock_error;
     ft_size_t idle_count;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     idle_count = g_http_client_pool_entries.size();
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return (idle_count);
 }
 
@@ -436,13 +512,13 @@ void http_client_pool_debug_reset_counters(void)
 {
     int32_t lock_error;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     g_http_client_pool_acquire_calls = 0;
     g_http_client_pool_reuse_hits = 0;
     g_http_client_pool_acquire_misses = 0;
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return ;
 }
 
@@ -451,11 +527,11 @@ ft_size_t http_client_pool_debug_get_reuse_count(void)
     int32_t lock_error;
     ft_size_t reuse_count;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     reuse_count = g_http_client_pool_reuse_hits;
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return (reuse_count);
 }
 
@@ -464,11 +540,11 @@ ft_size_t http_client_pool_debug_get_miss_count(void)
     int32_t lock_error;
     ft_size_t miss_count;
 
-    lock_error = g_http_client_pool_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     miss_count = g_http_client_pool_acquire_misses;
-    (void)g_http_client_pool_mutex.unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return (miss_count);
 }
 
@@ -787,10 +863,15 @@ int32_t http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, ft
     return (FT_ERR_SUCCESS);
 }
 
-static void http_client_stream_state_init(http_stream_state &state, http_response_handler handler)
+static int32_t http_client_stream_state_init(http_stream_state &state, http_response_handler handler)
 {
-    state.header_buffer.clear();
-    state.headers.clear();
+    if (state.header_buffer.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
+    if (state.headers.initialize() != FT_ERR_SUCCESS)
+    {
+        (void)state.header_buffer.destroy();
+        return (FT_ERR_NO_MEMORY);
+    }
     state.status_code = 0;
     state.headers_ready = FT_FALSE;
     state.keep_alive_allowed = FT_FALSE;
@@ -800,7 +881,7 @@ static void http_client_stream_state_init(http_stream_state &state, http_respons
     state.saw_chunked_encoding = FT_FALSE;
     state.http_1_1 = FT_FALSE;
     state.handler = handler;
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 static int32_t http_client_parse_status(const ft_string &headers)
@@ -882,7 +963,8 @@ static int32_t http_client_receive_stream(http_client_active_connection &connect
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    http_client_stream_state_init(state, handler);
+    if (http_client_stream_state_init(state, handler) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     socket_fd = connection.entry.socket_fd;
     ssl_connection = connection.entry.ssl_connection;
     use_ssl = connection.entry.use_ssl;
@@ -1147,6 +1229,8 @@ int32_t http_get_stream(const char *host, const char *path, http_response_handle
         port_string = "443";
     else
         port_string = "80";
+    if (request.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     http_client_pool_reset_active(connection);
     attempt = 0;
     while (attempt < 2)
@@ -1247,6 +1331,9 @@ int32_t http_post(const char *host, const char *path, const ft_string &body, ft_
         port_string = "443";
     else
         port_string = "80";
+    if (request.initialize() != FT_ERR_SUCCESS)
+        return (http_client_finish_with_metrics("POST", host, path, body.size(),
+            FT_ERR_NO_MEMORY, start_time));
     http_client_pool_reset_active(connection);
     body_length = body.size();
     std::snprintf(length_string, sizeof(length_string), "%zu", body_length);

@@ -15,6 +15,9 @@ int32_t http_get(const char *host, const char *path, ft_string &response, ft_boo
 int32_t http_post(const char *host, const char *path, const ft_string &body, ft_string &response, ft_bool use_ssl = FT_FALSE, const char *custom_port = NULL);
 int32_t http_client_send_plain_request(int32_t socket_fd, const char *buffer, ft_size_t length);
 int32_t http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, ft_size_t length);
+int32_t http_client_pool_enable_thread_safety(void);
+int32_t http_client_pool_disable_thread_safety(void);
+ft_bool http_client_pool_is_thread_safe(void);
 void http_client_pool_flush(void);
 void http_client_pool_set_max_idle(ft_size_t max_idle);
 ft_size_t http_client_pool_get_idle_count(void);

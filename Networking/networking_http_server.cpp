@@ -396,12 +396,18 @@ int32_t ft_http_server::run_once_locked()
     processed_requests = 0;
     last_error_code = FT_ERR_SUCCESS;
     ft_string pending_data;
+    if (pending_data.initialize() != FT_ERR_SUCCESS)
+    {
+        nw_close(client_socket);
+        return (FT_ERR_NO_MEMORY);
+    }
     while (connection_active != FT_FALSE)
     {
         t_monotonic_time_point request_start_time;
         ft_string request;
         ft_string body;
         ft_string response;
+        ft_string current_request;
         ft_bool header_complete;
         ft_bool request_complete;
         ft_bool has_content_length;
@@ -420,6 +426,14 @@ int32_t ft_http_server::run_once_locked()
         ft_bool should_keep_alive;
         char buffer[1024];
         ssize_t bytes_received;
+        if (request.initialize() != FT_ERR_SUCCESS
+            || body.initialize() != FT_ERR_SUCCESS
+            || response.initialize() != FT_ERR_SUCCESS
+            || current_request.initialize() != FT_ERR_SUCCESS)
+        {
+            nw_close(client_socket);
+            return (FT_ERR_NO_MEMORY);
+        }
 
         request_start_time = time_monotonic_point_now();
         header_complete = FT_FALSE;
@@ -585,7 +599,6 @@ int32_t ft_http_server::run_once_locked()
             break ;
         }
         ft_size_t consumed_length;
-        ft_string current_request;
 
         consumed_length = header_length;
         if (has_content_length != FT_FALSE)

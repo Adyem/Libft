@@ -24,7 +24,7 @@ static json_group *create_sample_group(void)
     return (group);
 }
 
-FT_TEST(test_json_write_to_string_initial_alloc_failure_sets_errno, "json_write_to_string reports errno when the initial buffer allocation fails")
+FT_TEST(test_json_write_to_string_initial_alloc_failure_sets_errno)
 {
     cma_set_alloc_limit(1);
     char *result = json_write_to_string(ft_nullptr);
@@ -33,7 +33,7 @@ FT_TEST(test_json_write_to_string_initial_alloc_failure_sets_errno, "json_write_
     return (1);
 }
 
-FT_TEST(test_json_write_to_string_midway_failure_sets_errno, "json_write_to_string sets allocator errno on intermediate failures")
+FT_TEST(test_json_write_to_string_midway_failure_sets_errno)
 {
     json_group *group = create_sample_group();
     FT_ASSERT(group != ft_nullptr);
@@ -45,7 +45,7 @@ FT_TEST(test_json_write_to_string_midway_failure_sets_errno, "json_write_to_stri
     return (1);
 }
 
-FT_TEST(test_json_write_to_string_success_resets_errno, "json_write_to_string clears errno after a successful serialization")
+FT_TEST(test_json_write_to_string_success_resets_errno)
 {
     json_group *group = create_sample_group();
     FT_ASSERT(group != ft_nullptr);

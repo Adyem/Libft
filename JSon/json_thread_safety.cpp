@@ -59,11 +59,6 @@ int32_t json_group_list_lock()
 {
     int32_t lock_error;
 
-    if (g_json_group_list_mutex == ft_nullptr)
-    {
-        json_thread_set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(g_json_group_list_mutex);
     json_thread_set_error(lock_error);
     return (lock_error);
@@ -73,11 +68,6 @@ int32_t json_group_list_lock_manual()
 {
     int32_t lock_error;
 
-    if (g_json_group_list_mutex == ft_nullptr)
-    {
-        json_thread_set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(g_json_group_list_mutex);
     json_thread_set_error(lock_error);
     return (lock_error);
@@ -85,11 +75,6 @@ int32_t json_group_list_lock_manual()
 
 int32_t json_group_list_unlock_manual()
 {
-    if (g_json_group_list_mutex == ft_nullptr)
-    {
-        json_thread_set_error(FT_ERR_INVALID_STATE);
-        return (FT_ERR_INVALID_STATE);
-    }
     (void)pt_recursive_mutex_unlock_if_not_null(g_json_group_list_mutex);
     json_thread_set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -97,8 +82,6 @@ int32_t json_group_list_unlock_manual()
 
 void json_group_list_finalize_lock()
 {
-    if (g_json_group_list_mutex == ft_nullptr)
-        return ;
     (void)pt_recursive_mutex_unlock_if_not_null(g_json_group_list_mutex);
     json_thread_set_error(FT_ERR_SUCCESS);
     return ;
