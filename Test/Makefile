@@ -164,7 +164,11 @@ DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
+.PHONY: FORCE
+FORCE:
+	@true
+
+$(TARGET): FORCE $(OBJS) ../$(LIBFT_ARCHIVE)
 	@echo "Linking final executable ($(TARGET))"
 	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../$(LIBFT_ARCHIVE) $(LDFLAGS)
 

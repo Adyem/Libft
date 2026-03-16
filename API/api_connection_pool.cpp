@@ -4,6 +4,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
 #include "../Networking/networking.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <cstddef>
 #include <set>
 #include <new>
@@ -88,9 +89,20 @@ static std::set<SSL*> &api_connection_pool_get_tls_registry(void)
 
 static pt_mutex &api_connection_pool_get_tls_mutex(void)
 {
-    static pt_mutex tls_mutex;
+    static pt_mutex *tls_mutex = ft_nullptr;
+    int32_t initialize_error;
 
-    return (tls_mutex);
+    if (tls_mutex == ft_nullptr)
+    {
+        tls_mutex = new (std::nothrow) pt_mutex();
+        if (tls_mutex == ft_nullptr)
+            su_abort();
+        initialize_error = tls_mutex->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            su_abort();
+    }
+
+    return (*tls_mutex);
 }
 
 static ft_bool api_connection_pool_tls_register(SSL *tls_session)
@@ -217,9 +229,20 @@ static void api_connection_pool_clear_storage(api_connection_pool_storage &stora
 
 static pt_mutex &api_connection_pool_get_mutex(void)
 {
-    static pt_mutex connection_pool_mutex;
+    static pt_mutex *connection_pool_mutex = ft_nullptr;
+    int32_t initialize_error;
 
-    return (connection_pool_mutex);
+    if (connection_pool_mutex == ft_nullptr)
+    {
+        connection_pool_mutex = new (std::nothrow) pt_mutex();
+        if (connection_pool_mutex == ft_nullptr)
+            su_abort();
+        initialize_error = connection_pool_mutex->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            su_abort();
+    }
+
+    return (*connection_pool_mutex);
 }
 static ft_size_t g_api_connection_max_idle = 8;
 static int64_t g_api_connection_idle_timeout_ms = 60000;
@@ -278,6 +301,11 @@ static ft_string api_connection_pool_build_key(const char *host, uint16_t port,
 {
     ft_string key;
     char port_buffer[16];
+    int32_t key_initialization_error;
+
+    key_initialization_error = key.initialize();
+    if (key_initialization_error != FT_ERR_SUCCESS)
+        return (ft_string::from_error(key_initialization_error));
 
     if (host)
         key = host;
@@ -347,7 +375,6 @@ ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         api_connection_security_mode security_mode,
         const char *security_identity)
 {
-    ft_string key;
     ft_bool handle_lock_acquired;
 
     handle_lock_acquired = FT_FALSE;
@@ -357,8 +384,8 @@ ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         return (FT_FALSE);
     }
 
-    key = api_connection_pool_build_key(host, port, security_mode, security_identity);
-    handle.key = key;
+    handle.key = api_connection_pool_build_key(host, port, security_mode,
+            security_identity);
     handle.security_mode = security_mode;
 #if NETWORKING_HAS_OPENSSL
     handle.tls_session = ft_nullptr;

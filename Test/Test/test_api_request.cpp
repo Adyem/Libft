@@ -1742,6 +1742,11 @@ FT_TEST(test_http2_header_compression_roundtrip)
     size_t header_count;
     size_t index;
 
+    if (headers.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (decoded_headers.initialize() != FT_ERR_SUCCESS)
+        return (0);
+
     auto append_header = [&](const char *name, const char *value) -> int
     {
         if (field_entry.initialize() != FT_ERR_SUCCESS)
@@ -2157,7 +2162,6 @@ FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold)
     api_retry_policy retry_policy;
     char *body;
     int status_value;
-    int request_errno;
     api_request_circuit_server_context server_context;
     ft_thread server_thread;
     int wait_attempts;
@@ -2173,38 +2177,22 @@ FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold)
     status_value = 0;
     body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);
-    if (body)
-    {
-        cma_free(body);
-        return (0);
-    }
+    FT_ASSERT_EQ(ft_nullptr, body);
     status_value = 0;
     body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);
-    if (body)
-    {
-        cma_free(body);
-        return (0);
-    }
+    FT_ASSERT_EQ(ft_nullptr, body);
     status_value = 0;
     body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);
-    request_errno = FT_ERR_SUCCESS;
-    if (body)
-    {
-        cma_free(body);
-        return (0);
-    }
-    if (request_errno != FT_ERR_API_CIRCUIT_OPEN)
-        return (0);
+    FT_ASSERT_EQ(ft_nullptr, body);
     api_retry_circuit_reset();
     server_context.ready.store(false, std::memory_order_relaxed);
     server_context.port = 55310;
     server_context.responses = 1;
     server_thread = ft_thread(api_request_circuit_success_server,
             &server_context);
-    if (server_thread.joinable() == false)
-        return (0);
+    FT_ASSERT_EQ(true, server_thread.joinable());
     wait_attempts = 0;
     while (!server_context.ready.load(std::memory_order_acquire)
         && wait_attempts < 100)
@@ -2215,20 +2203,11 @@ FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold)
     status_value = 0;
     body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 200, &retry_policy);
-    request_errno = FT_ERR_SUCCESS;
     server_thread.join();
-    if (!body)
-        return (0);
-    if (ft_strcmp(body, "OK") != 0)
-    {
-        cma_free(body);
-        return (0);
-    }
+    FT_ASSERT_NEQ(ft_nullptr, body);
+    FT_ASSERT_EQ(0, ft_strcmp(body, "OK"));
     cma_free(body);
-    if (status_value != 200)
-        return (0);
-    if (request_errno != FT_ERR_SUCCESS)
-        return (0);
+    FT_ASSERT_EQ(200, status_value);
     return (1);
 }
 

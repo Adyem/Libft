@@ -46,20 +46,32 @@ static void api_pool_test_server(api_pool_test_server_context *context)
     socklen_t address_length;
     int client_fd;
     int response_count;
+    int32_t configuration_error;
 
     if (!context)
         return ;
     context->result.store(0);
     context->accept_count.store(0);
     context->handled_requests.store(0);
+    configuration_error = server_configuration.initialize();
+    if (configuration_error != FT_ERR_SUCCESS)
+    {
+        context->result.store(configuration_error);
+        context->ready.store(true);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
+    server_configuration._reuse_address = FT_TRUE;
     ft_strlcpy(server_configuration._ip, "127.0.0.1",
             sizeof(server_configuration._ip));
     server_configuration._port = g_api_pool_test_port;
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int32_t server_socket_error;
+
+    server_socket_error = server_socket.initialize(server_configuration);
+    if (server_socket_error != FT_ERR_SUCCESS)
     {
-        context->result.store(FT_ERR_INVALID_OPERATION);
+        context->result.store(server_socket_error);
         context->ready.store(true);
         return ;
     }
@@ -89,7 +101,14 @@ static void api_pool_test_server(api_pool_test_server_context *context)
         ft_string request_storage;
         bool header_complete;
         size_t terminator_match;
+        int32_t request_storage_initialization_error;
 
+        request_storage_initialization_error = request_storage.initialize();
+        if (request_storage_initialization_error != FT_ERR_SUCCESS)
+        {
+            context->result.store(request_storage_initialization_error);
+            break;
+        }
         connection_active = true;
         header_complete = false;
         terminator_match = 0;
@@ -110,9 +129,9 @@ static void api_pool_test_server(api_pool_test_server_context *context)
 
                 current_char = buffer[buffer_index];
                 request_storage.append(current_char);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                if (request_storage.get_error() != FT_ERR_SUCCESS)
                 {
-                    context->result.store(ft_string::get_error());
+                    context->result.store(request_storage.get_error());
                     connection_active = false;
                     break;
                 }
@@ -182,8 +201,7 @@ FT_TEST(test_api_connection_pool_reuses_connections)
     context.result.store(0);
     ft_thread server_thread(api_pool_test_server, &context);
 
-    if (!server_thread.joinable())
-        return (0);
+    FT_ASSERT(server_thread.joinable());
     int wait_attempts;
 
     wait_attempts = 0;
@@ -192,11 +210,12 @@ FT_TEST(test_api_connection_pool_reuses_connections)
         if (wait_attempts > 100)
         {
             server_thread.join();
-            return (0);
+            FT_ASSERT_EQ(true, false);
         }
         api_pool_test_sleep_small();
         wait_attempts++;
     }
+    FT_ASSERT_EQ(0, context.result.load());
     api_debug_reset_connection_pool_counters();
     api_connection_pool_flush();
     int first_status;
@@ -206,10 +225,8 @@ FT_TEST(test_api_connection_pool_reuses_connections)
     first_body = api_request_string("127.0.0.1", g_api_pool_test_port,
             "GET", "/pool", ft_nullptr, ft_nullptr, &first_status, 2000);
     if (!first_body)
-    {
         server_thread.join();
-        return (0);
-    }
+    FT_ASSERT_NEQ(ft_nullptr, first_body);
     FT_ASSERT_EQ(200, first_status);
     FT_ASSERT(ft_strncmp(first_body, "Hello", 5) == 0);
     cma_free(first_body);
@@ -220,17 +237,14 @@ FT_TEST(test_api_connection_pool_reuses_connections)
     second_body = api_request_string("127.0.0.1", g_api_pool_test_port,
             "GET", "/pool", ft_nullptr, ft_nullptr, &second_status, 2000);
     if (!second_body)
-    {
         server_thread.join();
-        return (0);
-    }
+    FT_ASSERT_NEQ(ft_nullptr, second_body);
     FT_ASSERT_EQ(200, second_status);
     FT_ASSERT(ft_strncmp(second_body, "Hello", 5) == 0);
     cma_free(second_body);
     api_connection_pool_flush();
     server_thread.join();
-    if (context.result.load() != 0)
-        return (0);
+    FT_ASSERT_EQ(0, context.result.load());
     FT_ASSERT_EQ(static_cast<size_t>(2),
             api_debug_get_connection_pool_acquires());
     FT_ASSERT_EQ(static_cast<size_t>(1),
@@ -245,9 +259,11 @@ FT_TEST(test_api_connection_pool_reuses_connections)
 FT_TEST(test_api_connection_pool_disable_store_resets_http2_flag)
 {
     api_connection_pool_handle handle;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handle.initialize());
 
     handle.negotiated_http2 = true;
     api_connection_pool_disable_store(handle);
     FT_ASSERT_EQ(false, handle.negotiated_http2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handle.destroy());
     return (1);
 }

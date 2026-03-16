@@ -11,8 +11,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_cmp_dir_read_mutex_lock_failure,
-    "cmp_dir_read reports failure when the directory mutex lock fails")
+FT_TEST(test_cmp_dir_read_mutex_lock_failure)
 {
     int32_t error_code = FT_ERR_SUCCESS;
     file_dir *directory_stream = cmp_dir_open(".", &error_code);
@@ -31,8 +30,7 @@ FT_TEST(test_cmp_dir_read_mutex_lock_failure,
     return (1);
 }
 
-FT_TEST(test_cmp_dir_close_mutex_lock_failure,
-    "cmp_dir_close reports failure when the directory mutex lock fails")
+FT_TEST(test_cmp_dir_close_mutex_lock_failure)
 {
     int32_t error_code = FT_ERR_SUCCESS;
     file_dir *directory_stream = cmp_dir_open(".", &error_code);
@@ -51,8 +49,7 @@ FT_TEST(test_cmp_dir_close_mutex_lock_failure,
 }
 
 #if defined(_WIN32) || defined(_WIN64)
-FT_TEST(test_cmp_file_read_mutex_lock_failure,
-    "cmp_read reports failure when the module-wide file mutex lock fails")
+FT_TEST(test_cmp_file_read_mutex_lock_failure)
 {
     const char *file_path = "test_cmp_file_mutex_failure.bin";
     std::FILE *file_handle = std::fopen(file_path, "w+b");
@@ -84,8 +81,7 @@ FT_TEST(test_cmp_file_read_mutex_lock_failure,
 #endif
 
 #if !defined(_WIN32) && !defined(_WIN64) && !defined(_POSIX_VERSION)
-FT_TEST(test_cmp_localtime_mutex_lock_failure,
-    "cmp_localtime reports failure when the localtime mutex lock fails")
+FT_TEST(test_cmp_localtime_mutex_lock_failure)
 {
     std::time_t current_time = 0;
     std::tm output;
@@ -100,8 +96,7 @@ FT_TEST(test_cmp_localtime_mutex_lock_failure,
 }
 #endif
 #if defined(_WIN32) || defined(_WIN64)
-FT_TEST(test_cmp_open_mutex_lock_failure,
-    "cmp_open returns -1 when the module file mutex lock fails")
+FT_TEST(test_cmp_open_mutex_lock_failure)
 {
     pt_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
@@ -112,8 +107,7 @@ FT_TEST(test_cmp_open_mutex_lock_failure,
     return (1);
 }
 
-FT_TEST(test_cmp_write_mutex_lock_failure,
-    "cmp_write reports failure when the module-wide file mutex lock fails")
+FT_TEST(test_cmp_write_mutex_lock_failure)
 {
     const char *file_path = "test_cmp_write_mutex_failure.bin";
     std::FILE *file_handle = std::fopen(file_path, "w+b");
@@ -140,8 +134,7 @@ FT_TEST(test_cmp_write_mutex_lock_failure,
     return (1);
 }
 
-FT_TEST(test_cmp_close_mutex_lock_failure,
-    "cmp_close reports failure when the module-wide file mutex lock fails")
+FT_TEST(test_cmp_close_mutex_lock_failure)
 {
     const char *file_path = "test_cmp_close_mutex_failure.bin";
     std::FILE *file_handle = std::fopen(file_path, "w+b");

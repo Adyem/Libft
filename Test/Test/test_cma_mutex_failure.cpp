@@ -9,10 +9,11 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_cma_lock_allocator_mutex_lock_failure,
-    "cma_lock_allocator reports invalid state when the recursive mutex lock fails")
+FT_TEST(test_cma_lock_allocator_mutex_lock_failure)
 {
-    bool lock_acquired = false;
+    ft_bool lock_acquired;
+
+    lock_acquired = FT_FALSE;
 
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
@@ -20,12 +21,11 @@ FT_TEST(test_cma_lock_allocator_mutex_lock_failure,
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SUCCESS,
         std::memory_order_release);
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, lock_result);
-    FT_ASSERT_EQ(false, lock_acquired);
+    FT_ASSERT_EQ(FT_FALSE, lock_acquired);
     return (1);
 }
 
-FT_TEST(test_cma_malloc_mutex_lock_failure,
-    "cma_malloc returns null when the allocator mutex lock fails")
+FT_TEST(test_cma_malloc_mutex_lock_failure)
 {
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
@@ -36,8 +36,7 @@ FT_TEST(test_cma_malloc_mutex_lock_failure,
     return (1);
 }
 
-FT_TEST(test_cma_realloc_mutex_lock_failure,
-    "cma_realloc returns null when allocator mutex lock fails")
+FT_TEST(test_cma_realloc_mutex_lock_failure)
 {
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
@@ -48,8 +47,7 @@ FT_TEST(test_cma_realloc_mutex_lock_failure,
     return (1);
 }
 
-FT_TEST(test_cma_alloc_size_mutex_lock_failure,
-    "cma_alloc_size reports zero when allocator mutex lock fails")
+FT_TEST(test_cma_alloc_size_mutex_lock_failure)
 {
     void *allocation = cma_malloc(16);
     if (allocation == ft_nullptr)

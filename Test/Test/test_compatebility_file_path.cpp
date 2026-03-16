@@ -6,7 +6,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_cmp_path_separator_matches_platform, "cmp_path_separator returns platform separator")
+FT_TEST(test_cmp_path_separator_matches_platform)
 {
 #if defined(_WIN32) || defined(_WIN64)
     const char expected_separator = '\\';
@@ -17,7 +17,7 @@ FT_TEST(test_cmp_path_separator_matches_platform, "cmp_path_separator returns pl
     return (1);
 }
 
-FT_TEST(test_cmp_normalize_slashes_translates_alternate_separator, "cmp_normalize_slashes converts alternate separator characters")
+FT_TEST(test_cmp_normalize_slashes_translates_alternate_separator)
 {
 #if defined(_WIN32) || defined(_WIN64)
     char path[] = "folder/subdir/file.txt";
@@ -31,7 +31,7 @@ FT_TEST(test_cmp_normalize_slashes_translates_alternate_separator, "cmp_normaliz
     return (1);
 }
 
-FT_TEST(test_cmp_normalize_slashes_preserves_native_separator, "cmp_normalize_slashes leaves native separator untouched")
+FT_TEST(test_cmp_normalize_slashes_preserves_native_separator)
 {
 #if defined(_WIN32) || defined(_WIN64)
     char path[] = "folder\\native\\path";
@@ -45,7 +45,7 @@ FT_TEST(test_cmp_normalize_slashes_preserves_native_separator, "cmp_normalize_sl
     return (1);
 }
 
-FT_TEST(test_cmp_normalize_slashes_handles_empty_string, "cmp_normalize_slashes handles empty strings without modification")
+FT_TEST(test_cmp_normalize_slashes_handles_empty_string)
 {
     char path[] = "";
 

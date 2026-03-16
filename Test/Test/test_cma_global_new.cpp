@@ -23,8 +23,7 @@ struct alignas(128) aligned_large_type
     int value;
 };
 
-FT_TEST(test_cma_global_new_preserves_alignment,
-    "global operator new respects over-aligned requirements")
+FT_TEST(test_cma_global_new_preserves_alignment)
 {
     aligned_trivial_type *instance;
     std::uintptr_t instance_address;
@@ -41,8 +40,7 @@ FT_TEST(test_cma_global_new_preserves_alignment,
     return (1);
 }
 
-FT_TEST(test_cma_global_new_alignment_failure_sets_errno,
-    "global operator new propagates allocator failures for over-aligned types")
+FT_TEST(test_cma_global_new_alignment_failure_sets_errno)
 {
     void *instance;
 

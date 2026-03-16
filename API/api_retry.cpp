@@ -25,6 +25,14 @@ static ft_vector<api_circuit_state> &api_retry_circuit_get_states(void)
     return (states);
 }
 
+static int32_t api_retry_circuit_ensure_states_initialised(
+    ft_vector<api_circuit_state> &states)
+{
+    if (states.is_initialised() == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    return (states.initialize());
+}
+
 static pt_mutex *api_retry_circuit_get_mutex(void)
 {
     static pt_mutex *circuit_mutex = ft_nullptr;
@@ -100,12 +108,16 @@ static api_circuit_state *api_retry_circuit_get_state(
     ft_vector<api_circuit_state> &states, const ft_string &key)
 {
     api_circuit_state *state;
+    int32_t key_initialization_error;
 
     state = api_retry_circuit_find_state(states, key);
     if (state)
         return (state);
     api_circuit_state new_state;
 
+    key_initialization_error = new_state.key.initialize();
+    if (key_initialization_error != FT_ERR_SUCCESS)
+        return (ft_nullptr);
     new_state.key = key;
     new_state.failure_count = 0;
     new_state.open_until_ms = 0;
@@ -137,8 +149,15 @@ ft_bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return (FT_TRUE);
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
+    int32_t states_initialization_error;
     api_circuit_state *state;
 
+    states_initialization_error = api_retry_circuit_ensure_states_initialised(states);
+    if (states_initialization_error != FT_ERR_SUCCESS)
+    {
+        (void)circuit_mutex->unlock();
+        return (FT_TRUE);
+    }
     state = api_retry_circuit_get_state(states, handle.key);
     if (!state)
     {
@@ -182,8 +201,15 @@ void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
     if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
+    int32_t states_initialization_error;
     api_circuit_state *state;
 
+    states_initialization_error = api_retry_circuit_ensure_states_initialised(states);
+    if (states_initialization_error != FT_ERR_SUCCESS)
+    {
+        (void)circuit_mutex->unlock();
+        return ;
+    }
     state = api_retry_circuit_get_state(states, handle.key);
     if (!state)
     {
@@ -229,8 +255,15 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
     if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
+    int32_t states_initialization_error;
     api_circuit_state *state;
 
+    states_initialization_error = api_retry_circuit_ensure_states_initialised(states);
+    if (states_initialization_error != FT_ERR_SUCCESS)
+    {
+        (void)circuit_mutex->unlock();
+        return ;
+    }
     state = api_retry_circuit_get_state(states, handle.key);
     if (!state)
     {
@@ -274,7 +307,14 @@ void api_retry_circuit_reset(void)
     if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
+    int32_t states_initialization_error;
 
+    states_initialization_error = api_retry_circuit_ensure_states_initialised(states);
+    if (states_initialization_error != FT_ERR_SUCCESS)
+    {
+        (void)circuit_mutex->unlock();
+        return ;
+    }
     states.clear();
     (void)circuit_mutex->unlock();
     return ;

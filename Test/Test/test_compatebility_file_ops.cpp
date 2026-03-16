@@ -66,7 +66,7 @@ static void cleanup_compatebility_file_artifacts(void)
     return ;
 }
 
-FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports FT_ERR_INVALID_ARGUMENT for null path")
+FT_TEST(test_cmp_file_exists_null_pointer_sets_errno)
 {
     int error_code = FT_ERR_SUCCESS;
     int exists_value = 1;
@@ -78,7 +78,7 @@ FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports F
     return (1);
 }
 
-FT_TEST(test_cmp_file_exists_missing_path_sets_errno, "cmp_file_exists reports FT_ERR_IO for missing file")
+FT_TEST(test_cmp_file_exists_missing_path_sets_errno)
 {
     const char *missing_path = "cmp_file_exists_missing_path.txt";
     int error_code = FT_ERR_SUCCESS;
@@ -92,7 +92,7 @@ FT_TEST(test_cmp_file_exists_missing_path_sets_errno, "cmp_file_exists reports F
     return (1);
 }
 
-FT_TEST(test_cmp_file_exists_success_clears_errno, "cmp_file_exists clears errno on success")
+FT_TEST(test_cmp_file_exists_success_clears_errno)
 {
     const char *path = "cmp_file_exists_success.txt";
     int error_code = FT_ERR_INVALID_ARGUMENT;
@@ -108,7 +108,7 @@ FT_TEST(test_cmp_file_exists_success_clears_errno, "cmp_file_exists clears errno
     return (1);
 }
 
-FT_TEST(test_cmp_file_delete_null_pointer_sets_errno, "cmp_file_delete reports FT_ERR_INVALID_ARGUMENT for null path")
+FT_TEST(test_cmp_file_delete_null_pointer_sets_errno)
 {
     int error_code = FT_ERR_SUCCESS;
 
@@ -117,7 +117,7 @@ FT_TEST(test_cmp_file_delete_null_pointer_sets_errno, "cmp_file_delete reports F
     return (1);
 }
 
-FT_TEST(test_cmp_file_delete_permission_error_sets_errno, "cmp_file_delete reports EACCES for protected directory")
+FT_TEST(test_cmp_file_delete_permission_error_sets_errno)
 {
     const char *directory_path = "cmp_file_delete_permission_dir";
     const char *file_path = "cmp_file_delete_permission_dir/file.txt";
@@ -140,7 +140,7 @@ FT_TEST(test_cmp_file_delete_permission_error_sets_errno, "cmp_file_delete repor
     return (1);
 }
 
-FT_TEST(test_cmp_file_delete_success_clears_errno, "cmp_file_delete clears errno on success")
+FT_TEST(test_cmp_file_delete_success_clears_errno)
 {
     const char *path = "cmp_file_delete_success.txt";
     int error_code = FT_ERR_INVALID_ARGUMENT;
@@ -152,7 +152,7 @@ FT_TEST(test_cmp_file_delete_success_clears_errno, "cmp_file_delete clears errno
     return (1);
 }
 
-FT_TEST(test_cmp_file_move_null_pointer_sets_errno, "cmp_file_move reports FT_ERR_INVALID_ARGUMENT for null source")
+FT_TEST(test_cmp_file_move_null_pointer_sets_errno)
 {
     int error_code = FT_ERR_SUCCESS;
 
@@ -162,7 +162,7 @@ FT_TEST(test_cmp_file_move_null_pointer_sets_errno, "cmp_file_move reports FT_ER
     return (1);
 }
 
-FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports FT_ERR_IO for missing source")
+FT_TEST(test_cmp_file_move_missing_source_sets_errno)
 {
     const char *source_path = "cmp_file_move_missing_source.txt";
     const char *destination_path = "cmp_file_move_missing_destination.txt";
@@ -175,7 +175,7 @@ FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports FT_
     return (1);
 }
 
-FT_TEST(test_cmp_file_move_success_clears_errno, "cmp_file_move moves files and clears errno on success")
+FT_TEST(test_cmp_file_move_success_clears_errno)
 {
     const char *source_path = "cmp_file_move_success_source.txt";
     const char *destination_path = "cmp_file_move_success_destination.txt";
@@ -203,7 +203,7 @@ FT_TEST(test_cmp_file_move_success_clears_errno, "cmp_file_move moves files and 
     return (1);
 }
 
-FT_TEST(test_cmp_file_copy_null_pointer_sets_errno, "cmp_file_copy reports FT_ERR_INVALID_ARGUMENT for null source")
+FT_TEST(test_cmp_file_copy_null_pointer_sets_errno)
 {
     int error_code = FT_ERR_SUCCESS;
 
@@ -213,7 +213,7 @@ FT_TEST(test_cmp_file_copy_null_pointer_sets_errno, "cmp_file_copy reports FT_ER
     return (1);
 }
 
-FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports permission errors")
+FT_TEST(test_cmp_file_copy_permission_error_sets_errno)
 {
     const char *source_path = "cmp_file_copy_permission_source.txt";
     const char *destination_directory = "cmp_file_copy_permission_dir";
@@ -238,7 +238,7 @@ FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports p
     return (1);
 }
 
-FT_TEST(test_cmp_file_copy_missing_source_sets_errno, "cmp_file_copy reports FT_ERR_IO for missing source")
+FT_TEST(test_cmp_file_copy_missing_source_sets_errno)
 {
     const char *source_path = "cmp_file_copy_missing_source.txt";
     const char *destination_path = "cmp_file_copy_missing_destination.txt";
@@ -252,7 +252,7 @@ FT_TEST(test_cmp_file_copy_missing_source_sets_errno, "cmp_file_copy reports FT_
     return (1);
 }
 
-FT_TEST(test_cmp_file_copy_success_clears_errno, "cmp_file_copy clears errno on success")
+FT_TEST(test_cmp_file_copy_success_clears_errno)
 {
     const char *source_path = "cmp_file_copy_success_source.txt";
     const char *destination_path = "cmp_file_copy_success_destination.txt";
@@ -269,7 +269,7 @@ FT_TEST(test_cmp_file_copy_success_clears_errno, "cmp_file_copy clears errno on 
     return (1);
 }
 
-FT_TEST(test_cmp_file_create_directory_null_pointer_sets_errno, "cmp_file_create_directory reports FT_ERR_INVALID_ARGUMENT for null path")
+FT_TEST(test_cmp_file_create_directory_null_pointer_sets_errno)
 {
     int error_code = FT_ERR_SUCCESS;
 
@@ -279,7 +279,7 @@ FT_TEST(test_cmp_file_create_directory_null_pointer_sets_errno, "cmp_file_create
     return (1);
 }
 
-FT_TEST(test_cmp_file_create_directory_permission_error_sets_errno, "cmp_file_create_directory reports permission errors")
+FT_TEST(test_cmp_file_create_directory_permission_error_sets_errno)
 {
     const char *parent_file = "cmp_file_create_directory_permission_parent_file.txt";
     const char *child_directory = "cmp_file_create_directory_permission_parent_file.txt/child";
@@ -296,7 +296,7 @@ FT_TEST(test_cmp_file_create_directory_permission_error_sets_errno, "cmp_file_cr
     return (1);
 }
 
-FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno, "cmp_file_create_directory reports EEXIST")
+FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno)
 {
     const char *directory_path = "cmp_file_create_directory_existing";
     int error_code = FT_ERR_SUCCESS;
@@ -314,7 +314,7 @@ FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno, "cmp_file_creat
     return (1);
 }
 
-FT_TEST(test_cmp_file_create_directory_success_clears_errno, "cmp_file_create_directory clears errno on success")
+FT_TEST(test_cmp_file_create_directory_success_clears_errno)
 {
     const char *directory_path = "cmp_file_create_directory_success";
     int error_code = FT_ERR_INVALID_ARGUMENT;
@@ -326,7 +326,7 @@ FT_TEST(test_cmp_file_create_directory_success_clears_errno, "cmp_file_create_di
     return (1);
 }
 
-FT_TEST(test_cmp_file_get_permissions_invalid_argument_sets_errno, "cmp_file_get_permissions validates null pointers")
+FT_TEST(test_cmp_file_get_permissions_invalid_argument_sets_errno)
 {
     mode_t mode_value = 0;
     int error_code = FT_ERR_SUCCESS;
@@ -340,7 +340,7 @@ FT_TEST(test_cmp_file_get_permissions_invalid_argument_sets_errno, "cmp_file_get
     return (1);
 }
 
-FT_TEST(test_cmp_file_get_permissions_missing_path_sets_errno, "cmp_file_get_permissions reports missing files")
+FT_TEST(test_cmp_file_get_permissions_missing_path_sets_errno)
 {
     const char *missing_path = "cmp_file_get_permissions_missing.txt";
     mode_t mode_value = 0;
@@ -353,7 +353,7 @@ FT_TEST(test_cmp_file_get_permissions_missing_path_sets_errno, "cmp_file_get_per
     return (1);
 }
 
-FT_TEST(test_cmp_file_get_permissions_success_clears_errno, "cmp_file_get_permissions returns mode on success")
+FT_TEST(test_cmp_file_get_permissions_success_clears_errno)
 {
     const char *path = "cmp_file_get_permissions_success.txt";
     mode_t mode_value = 0;

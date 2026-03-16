@@ -2332,7 +2332,7 @@ ft_big_number_proxy::ft_big_number_proxy(int32_t error_code) noexcept
 }
 
 ft_big_number_proxy::ft_big_number_proxy(const ft_big_number &value) noexcept
-    : _value(), _last_error(ft_big_number::get_error())
+    : _value(), _last_error(FT_ERR_SUCCESS)
 {
     int32_t initialization_error = this->_value.initialize(value);
     if (initialization_error != FT_ERR_SUCCESS)
@@ -2352,18 +2352,28 @@ ft_big_number_proxy::ft_big_number_proxy(const ft_big_number &value, int32_t err
 ft_big_number_proxy::ft_big_number_proxy(const ft_big_number_proxy &other) noexcept
     : _value(), _last_error(other._last_error)
 {
-    int32_t initialization_error = this->_value.initialize(other._value);
-    if (initialization_error != FT_ERR_SUCCESS)
-        this->_last_error = initialization_error;
+    int32_t initialization_error;
+
+    if (other._value._initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        initialization_error = this->_value.initialize(other._value);
+        if (initialization_error != FT_ERR_SUCCESS)
+            this->_last_error = initialization_error;
+    }
     return ;
 }
 
 ft_big_number_proxy::ft_big_number_proxy(ft_big_number_proxy &&other) noexcept
     : _value(), _last_error(other._last_error)
 {
-    int32_t initialization_error = this->_value.initialize(ft_move(other._value));
-    if (initialization_error != FT_ERR_SUCCESS)
-        this->_last_error = initialization_error;
+    int32_t initialization_error;
+
+    if (other._value._initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        initialization_error = this->_value.initialize(ft_move(other._value));
+        if (initialization_error != FT_ERR_SUCCESS)
+            this->_last_error = initialization_error;
+    }
     other._last_error = FT_ERR_SUCCESS;
     return ;
 }

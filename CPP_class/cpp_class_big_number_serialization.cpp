@@ -15,6 +15,11 @@ ft_string big_number_to_hex_string(const ft_big_number& number) noexcept
 ft_big_number big_number_from_hex_string(const char* hex_digits) noexcept
 {
     ft_big_number result;
+    int32_t result_initialization_error;
+
+    result_initialization_error = result.initialize();
+    if (result_initialization_error != FT_ERR_SUCCESS)
+        return (result);
 
     if (!hex_digits)
     {
@@ -42,6 +47,11 @@ ft_big_number big_number_from_hex_string(const char* hex_digits) noexcept
     if (!has_negative_sign)
         return (result);
     ft_big_number zero_reference;
+    int32_t zero_reference_initialization_error;
+
+    zero_reference_initialization_error = zero_reference.initialize();
+    if (zero_reference_initialization_error != FT_ERR_SUCCESS)
+        return (result);
 
     zero_reference.assign("0");
     ft_big_number signed_result = zero_reference - result;

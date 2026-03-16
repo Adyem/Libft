@@ -40,21 +40,21 @@ static config_data *create_test_config(size_t entry_count)
     return (config);
 }
 
-FT_TEST(test_config_parse_null_filename_sets_errno, "config_parse rejects null filename")
+FT_TEST(test_config_parse_null_filename_sets_errno)
 {
     config_data *config = config_parse(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
     return (1);
 }
 
-FT_TEST(test_config_load_file_null_filename_sets_errno, "config_load_file rejects null filename")
+FT_TEST(test_config_load_file_null_filename_sets_errno)
 {
     config_data *config = config_load_file(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
     return (1);
 }
 
-FT_TEST(test_config_parse_success_sets_errno_success, "config_parse loads ini files and clears errno")
+FT_TEST(test_config_parse_success_sets_errno_success)
 {
     const char *filename = "test_config.ini";
     config_data *source = create_test_config(1);
@@ -100,7 +100,7 @@ FT_TEST(test_config_parse_success_sets_errno_success, "config_parse loads ini fi
     return (1);
 }
 
-FT_TEST(test_config_parse_missing_value_handles_entries, "config_parse accepts missing keys and values")
+FT_TEST(test_config_parse_missing_value_handles_entries)
 {
     const char *filename = "test_config_missing.ini";
     config_data *source = create_test_config(2);
@@ -140,7 +140,7 @@ FT_TEST(test_config_parse_missing_value_handles_entries, "config_parse accepts m
     return (1);
 }
 
-FT_TEST(test_config_write_ini_round_trip, "config_write_file supports ini round trips")
+FT_TEST(test_config_write_ini_round_trip)
 {
     const char *filename = "config_round_trip.ini";
     config_data *source = create_test_config(3);
@@ -214,7 +214,7 @@ FT_TEST(test_config_write_ini_round_trip, "config_write_file supports ini round 
     return (1);
 }
 
-FT_TEST(test_config_data_create_initializes_thread_safety, "config_data_create prepares mutex protection")
+FT_TEST(test_config_data_create_initializes_thread_safety)
 {
     config_data *config;
 
@@ -226,7 +226,7 @@ FT_TEST(test_config_data_create_initializes_thread_safety, "config_data_create p
     return (1);
 }
 
-FT_TEST(test_config_data_prepare_thread_safety_reinitializes_mutex, "config_data_prepare_thread_safety recreates mutex after teardown")
+FT_TEST(test_config_data_prepare_thread_safety_reinitializes_mutex)
 {
     config_data *config;
 
@@ -241,10 +241,10 @@ FT_TEST(test_config_data_prepare_thread_safety_reinitializes_mutex, "config_data
     return (1);
 }
 
-FT_TEST(test_config_entry_prepare_thread_safety_initializes_mutex, "config_entry_prepare_thread_safety allocates mutex protection")
+FT_TEST(test_config_entry_prepare_thread_safety_initializes_mutex)
 {
     config_entry entry;
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
     entry.mutex = ft_nullptr;
     entry.section = ft_nullptr;
@@ -252,32 +252,32 @@ FT_TEST(test_config_entry_prepare_thread_safety_initializes_mutex, "config_entry
     entry.value = ft_nullptr;
     FT_ASSERT_EQ(0, config_entry_prepare_thread_safety(&entry));
     FT_ASSERT(entry.mutex != ft_nullptr);
-    lock_acquired = false;
+    lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(0, config_entry_lock(&entry, &lock_acquired));
-    FT_ASSERT(lock_acquired == true);
+    FT_ASSERT(lock_acquired == FT_TRUE);
     config_entry_unlock(&entry, lock_acquired);
     config_entry_teardown_thread_safety(&entry);
     FT_ASSERT(entry.mutex == ft_nullptr);
     return (1);
 }
 
-FT_TEST(test_config_entry_lock_handles_disabled_thread_safety, "config_entry_lock succeeds when mutex setup is skipped")
+FT_TEST(test_config_entry_lock_handles_disabled_thread_safety)
 {
     config_entry entry;
-    bool lock_acquired;
+    ft_bool lock_acquired;
 
     entry.mutex = ft_nullptr;
     entry.section = ft_nullptr;
     entry.key = ft_nullptr;
     entry.value = ft_nullptr;
-    lock_acquired = true;
+    lock_acquired = FT_TRUE;
     FT_ASSERT_EQ(0, config_entry_lock(&entry, &lock_acquired));
-    FT_ASSERT(lock_acquired == false);
+    FT_ASSERT(lock_acquired == FT_FALSE);
     config_entry_unlock(&entry, lock_acquired);
     return (1);
 }
 
-FT_TEST(test_config_write_json_round_trip, "config_write_file supports json round trips")
+FT_TEST(test_config_write_json_round_trip)
 {
     const char *filename = "config_round_trip.json";
     config_data *source = create_test_config(2);
@@ -342,7 +342,7 @@ FT_TEST(test_config_write_json_round_trip, "config_write_file supports json roun
     return (1);
 }
 
-FT_TEST(test_config_merge_prefers_override_entries, "config_merge replaces duplicate keys with override values")
+FT_TEST(test_config_merge_prefers_override_entries)
 {
     config_data *base = create_test_config(2);
     if (!base)

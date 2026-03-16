@@ -8,8 +8,7 @@
 
 #define INIT_BIG_NUMBER(number) FT_ASSERT_EQ(FT_ERR_SUCCESS, number.initialize())
 
-FT_TEST(test_ft_big_number_assign_base_invalid_input_keeps_value,
-    "ft_big_number assign_base invalid input keeps previous value")
+FT_TEST(test_ft_big_number_assign_base_invalid_input_keeps_value)
 {
     ft_big_number number_value;
     INIT_BIG_NUMBER(number_value);
@@ -20,8 +19,7 @@ FT_TEST(test_ft_big_number_assign_base_invalid_input_keeps_value,
     return (1);
 }
 
-FT_TEST(test_ft_big_number_divide_by_zero_returns_zero_result,
-    "ft_big_number divide by zero returns default result value")
+FT_TEST(test_ft_big_number_divide_by_zero_returns_zero_result)
 {
     ft_big_number numerator;
     ft_big_number denominator;
