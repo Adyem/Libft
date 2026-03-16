@@ -293,7 +293,6 @@ fclean:
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET); then \
 		status=1; \
 	fi; \
-	printf "DEBUG STATUS=%%d\n" $$status; \
 	if [ $$status -eq 0 ]; then \
 		printf '\033[1;35m[LIBFT FCLEAN] Success\033[0m\n'; \
 	else \

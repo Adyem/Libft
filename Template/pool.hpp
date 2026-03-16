@@ -407,13 +407,27 @@ Pool<T>::~Pool()
 template<typename T>
 int32_t Pool<T>::initialize()
 {
+    int32_t slots_initialize_error;
+    int32_t free_indices_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "Pool::initialize", "called while object is already initialised");
         return (set_error(FT_ERR_INVALID_STATE));
     }
-    this->_slots.clear();
-    this->_free_indices.clear();
+    slots_initialize_error = this->_slots.initialize();
+    if (slots_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(static_cast<uint32_t>(slots_initialize_error)));
+    }
+    free_indices_initialize_error = this->_free_indices.initialize();
+    if (free_indices_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_slots.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(static_cast<uint32_t>(free_indices_initialize_error)));
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (set_error(FT_ERR_SUCCESS));
 }

@@ -342,7 +342,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	        $(MAKE) -C .. $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
 	fi
 
-CLEAN_OBJS := $(shell find $(OBJDIR) $(DEBUG_OBJDIR) \( -name '*.o' -o -name '*.d' \) -type f 2>/dev/null)
+CLEAN_OBJS := $(shell find . -type f \( -name '*.o' -o -name '*.d' \) 2>/dev/null)
 
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))

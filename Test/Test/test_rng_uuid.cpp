@@ -1,0 +1,42 @@
+#include "../test_internal.hpp"
+#include "../../RNG/rng.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+static int is_lower_hexadecimal_character(char value)
+{
+    if (value >= '0' && value <= '9')
+        return (1);
+    if (value >= 'a' && value <= 'f')
+        return (1);
+    return (0);
+}
+
+FT_TEST(test_ft_generate_uuid_null_out_sets_errno)
+{
+    ft_generate_uuid(ft_nullptr);
+    return (1);
+}
+
+FT_TEST(test_ft_generate_uuid_success_sets_errno_success)
+{
+    char output[37];
+    size_t index;
+
+    ft_generate_uuid(output);
+    index = 0;
+    while (index < 36)
+    {
+        if (index == 8 || index == 13 || index == 18 || index == 23)
+            FT_ASSERT_EQ('-', output[index]);
+        else
+            FT_ASSERT(is_lower_hexadecimal_character(output[index]) != 0);
+        index++;
+    }
+    FT_ASSERT_EQ('\0', output[36]);
+    return (1);
+}

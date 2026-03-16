@@ -209,18 +209,18 @@ int32_t ft_run_registered_tests(void)
             continue ;
         }
         selected_tests++;
-        printf("Running test %d \"%s\"\n", selected_tests,
+        printf("Running test %d \"%s\"", selected_tests,
             tests[index].description);
         fflush(stdout);
         if (execute_test_function(&tests[index]))
         {
-            printf("OK %d %s\n", selected_tests, tests[index].description);
+            printf("\r\033[2KOK %d %s\n", selected_tests, tests[index].description);
             fflush(stdout);
             passed++;
         }
         else
         {
-            printf("KO %d %s\n", selected_tests, tests[index].description);
+            printf("\r\033[2KKO %d %s\n", selected_tests, tests[index].description);
             fflush(stdout);
         }
         index++;

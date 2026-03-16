@@ -12,9 +12,11 @@ static bool compression_vector_operation_failed(const ft_vector<unsigned char> &
     return (vector.get_error() != FT_ERR_SUCCESS);
 }
 
-static int compression_string_pop_error(const ft_string &)
+static int compression_string_pop_error(const ft_string &string)
 {
-    return (ft_string::get_error());
+    if (string.is_initialised() != FT_TRUE)
+        return (1);
+    return (0);
 }
 
 static int  compression_store_in_vector(ft_vector<unsigned char> &destination, const unsigned char *buffer, std::size_t size)
@@ -44,33 +46,24 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
 
 static int  compression_assign_string(ft_string &destination, const unsigned char *buffer, std::size_t size)
 {
-    int string_error;
+    int32_t assign_error;
 
-    string_error = ft_string::get_error();
-    if (string_error != FT_ERR_SUCCESS)
-    {
+    if (destination.is_initialised() != FT_TRUE)
         return (1);
-    }
     if (size == 0)
     {
-        destination.clear();
-        string_error = ft_string::get_error();
-        if (string_error != FT_ERR_SUCCESS)
-        {
+        assign_error = destination.clear();
+        if (assign_error != FT_ERR_SUCCESS)
             return (1);
-        }
         return (0);
     }
     if (buffer == ft_nullptr)
     {
         return (1);
     }
-    destination.assign(reinterpret_cast<const char *>(buffer), size);
-        string_error = ft_string::get_error();
-        if (string_error != FT_ERR_SUCCESS)
-        {
-            return (1);
-        }
+    assign_error = destination.assign(reinterpret_cast<const char *>(buffer), size);
+    if (assign_error != FT_ERR_SUCCESS)
+        return (1);
     return (0);
 }
 

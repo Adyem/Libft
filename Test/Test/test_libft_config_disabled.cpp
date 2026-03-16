@@ -1,0 +1,46 @@
+#include "../test_internal.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+#define LIBFT_ENABLE_FILE_IO_HELPERS 0
+#define LIBFT_ENABLE_TIME_HELPERS 0
+#define LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS 0
+#define LIBFT_ENABLE_LOCALE_HELPERS 0
+#include "../../Basic/config.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+
+static_assert(LIBFT_HAS_ENVIRONMENT_HELPERS == 1, "environment helpers are always enabled");
+static_assert(LIBFT_HAS_FILE_IO_HELPERS == 0, "file helpers should be disabled");
+static_assert(LIBFT_HAS_TIME_HELPERS == 0, "time helpers should be disabled");
+static_assert(LIBFT_HAS_BOUNDS_CHECKED_HELPERS == 0, "bounds helpers should be disabled");
+static_assert(LIBFT_HAS_LOCALE_HELPERS == 0, "locale helpers should be disabled");
+
+FT_TEST(test_libft_config_disables_environment_helpers)
+{
+    FT_ASSERT_EQ(1, LIBFT_HAS_ENVIRONMENT_HELPERS);
+    return (1);
+}
+
+FT_TEST(test_libft_config_disables_file_helpers)
+{
+    FT_ASSERT_EQ(0, LIBFT_HAS_FILE_IO_HELPERS);
+    return (1);
+}
+
+FT_TEST(test_libft_config_disables_time_helpers)
+{
+    FT_ASSERT_EQ(0, LIBFT_HAS_TIME_HELPERS);
+    return (1);
+}
+
+FT_TEST(test_libft_config_disables_bounds_helpers)
+{
+    FT_ASSERT_EQ(0, LIBFT_HAS_BOUNDS_CHECKED_HELPERS);
+    return (1);
+}
+
+FT_TEST(test_libft_config_disables_locale_helpers)
+{
+    FT_ASSERT_EQ(0, LIBFT_HAS_LOCALE_HELPERS);
+    return (1);
+}

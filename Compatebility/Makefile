@@ -125,7 +125,7 @@ fclean:
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
 	status=1; \
 	fi; \
-	if ! 1000 4 24 27 30 46 122 135 136 138 1000RM) 1000 4 24 27 30 46 122 135 136 138 1000TEST_ARCHIVES); then \
+	if ! $(RM) $(TEST_ARCHIVES); then \
 		status=1; \
 	fi; \
 	if [ $$status -eq 0 ]; then \

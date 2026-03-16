@@ -1,0 +1,10 @@
+#include "../test_internal.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_cpp_class_stream_mutex_placeholder)
+{
+    return (1);
+}
