@@ -180,7 +180,7 @@ uint32_t ft_logger::move(ft_logger &other) noexcept
 void ft_logger::set_global() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "ft_logger::set_global");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_logger::set_global");
     if (this->_initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->set_error(FT_ERR_NOT_INITIALISED);
@@ -719,14 +719,14 @@ ft_log_context_guard ft_logger::make_context_guard(const s_log_field *fields,
 int32_t ft_logger::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "ft_logger::get_error");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_logger::get_error");
     return (this->_error_code);
 }
 
 const char *ft_logger::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "ft_logger::get_error_str");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_logger::get_error_str");
     return (ft_strerror(this->_error_code));
 }
 

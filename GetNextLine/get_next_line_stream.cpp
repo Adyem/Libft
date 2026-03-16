@@ -274,7 +274,7 @@ int32_t gnl_stream::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "gnl_stream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -295,7 +295,7 @@ int32_t gnl_stream::disable_thread_safety(void) noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "gnl_stream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
     {
@@ -309,7 +309,7 @@ int32_t gnl_stream::disable_thread_safety(void) noexcept
 
 ft_bool gnl_stream::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "gnl_stream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
@@ -333,7 +333,7 @@ int32_t gnl_stream::init_from_fd(int32_t file_descriptor) noexcept
     int32_t operation_error;
 
     operation_error = FT_ERR_SUCCESS;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "gnl_stream::init_from_fd");
     lock_error = FT_ERR_SUCCESS;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -360,7 +360,7 @@ int32_t gnl_stream::init_from_file(FILE *file_handle, ft_bool close_on_reset) no
     int32_t operation_error;
 
     operation_error = FT_ERR_SUCCESS;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "gnl_stream::init_from_file");
     lock_error = FT_ERR_SUCCESS;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -388,7 +388,7 @@ int32_t gnl_stream::init_from_callback(int64_t (*callback)(void *user_data, char
     int32_t operation_error;
 
     operation_error = FT_ERR_SUCCESS;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "gnl_stream::init_from_callback");
     lock_error = FT_ERR_SUCCESS;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -413,7 +413,7 @@ void gnl_stream::reset() noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "gnl_stream::reset");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "gnl_stream::reset");
     lock_error = FT_ERR_SUCCESS;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -436,7 +436,7 @@ int64_t gnl_stream::read(char *buffer, ft_size_t max_size) noexcept
     int64_t read_result;
 
     operation_error = FT_ERR_SUCCESS;
-    errno_abort_if_uninitialised(this->_initialised_state, "gnl_stream::read");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "gnl_stream::read");
     lock_error = FT_ERR_SUCCESS;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)

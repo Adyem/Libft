@@ -242,7 +242,7 @@ int32_t ft_unique_lock<MutexType>::last_operation_error() const noexcept
 template <typename MutexType>
 int32_t ft_unique_lock<MutexType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_unique_lock::get_error");
     return (static_cast<int32_t>(_last_error));
 }
@@ -250,7 +250,7 @@ int32_t ft_unique_lock<MutexType>::get_error() const noexcept
 template <typename MutexType>
 const char *ft_unique_lock<MutexType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_unique_lock::get_error_str");
     return (ft_strerror(static_cast<int32_t>(_last_error)));
 }

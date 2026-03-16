@@ -16,7 +16,7 @@ uint32_t game_progress_tracker::set_error(uint32_t error_code) noexcept
 int32_t game_progress_tracker::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_progress_tracker::get_error");
     return (static_cast<int32_t>(game_progress_tracker::_last_error));
 }
@@ -24,7 +24,7 @@ int32_t game_progress_tracker::get_error() const noexcept
 const char *game_progress_tracker::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_progress_tracker::get_error_str");
     return (ft_strerror(game_progress_tracker::_last_error));
 }
@@ -242,7 +242,7 @@ int32_t game_progress_tracker::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -322,38 +322,38 @@ int32_t game_progress_tracker::unlock_internal(ft_bool lock_acquired) const noex
 
 int32_t game_progress_tracker::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void game_progress_tracker::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 ft_map<int32_t, game_achievement> &game_progress_tracker::get_achievements() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::get_achievements");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::get_achievements");
     return (this->_achievements);
 }
 
 const ft_map<int32_t, game_achievement> &game_progress_tracker::get_achievements() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::get_achievements const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::get_achievements const");
     return (this->_achievements);
 }
 
 ft_map<int32_t, game_quest> &game_progress_tracker::get_quests() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::get_quests");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::get_quests");
     return (this->_quests);
 }
 
 const ft_map<int32_t, game_quest> &game_progress_tracker::get_quests() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::get_quests const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::get_quests const");
     return (this->_quests);
 }
 
@@ -366,7 +366,7 @@ void game_progress_tracker::set_achievements(
     const Pair<int32_t, game_achievement> *entry;
     const Pair<int32_t, game_achievement> *entry_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::set_achievements");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::set_achievements");
     int32_t lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -399,7 +399,7 @@ void game_progress_tracker::set_quests(const ft_map<int32_t, game_quest> &quests
     const Pair<int32_t, game_quest> *entry;
     const Pair<int32_t, game_quest> *entry_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::set_quests");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::set_quests");
     int32_t lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -429,7 +429,7 @@ int32_t game_progress_tracker::register_achievement(
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::register_achievement");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::register_achievement");
     int32_t lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -448,7 +448,7 @@ int32_t game_progress_tracker::register_quest(const game_quest &quest) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::register_quest");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::register_quest");
     int32_t lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -468,7 +468,7 @@ int32_t game_progress_tracker::update_goal_target(int32_t achievement_id, int32_
 {
     Pair<int32_t, game_achievement> *achievement_entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::update_goal_target");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::update_goal_target");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
     {
@@ -485,7 +485,7 @@ int32_t game_progress_tracker::update_goal_progress(int32_t achievement_id, int3
 {
     Pair<int32_t, game_achievement> *achievement_entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::update_goal_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::update_goal_progress");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
     {
@@ -502,7 +502,7 @@ int32_t game_progress_tracker::add_goal_progress(int32_t achievement_id, int32_t
 {
     Pair<int32_t, game_achievement> *achievement_entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::add_goal_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::add_goal_progress");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
     {
@@ -518,7 +518,7 @@ ft_bool game_progress_tracker::is_achievement_complete(int32_t achievement_id) c
 {
     const Pair<int32_t, game_achievement> *achievement_entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::is_achievement_complete");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::is_achievement_complete");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
         return (FT_FALSE);
@@ -529,7 +529,7 @@ int32_t game_progress_tracker::set_quest_phase(int32_t quest_id, int32_t phase) 
 {
     Pair<int32_t, game_quest> *quest_entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::set_quest_phase");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::set_quest_phase");
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
         return (FT_ERR_NOT_FOUND);
@@ -541,7 +541,7 @@ int32_t game_progress_tracker::advance_quest_phase(int32_t quest_id) noexcept
 {
     Pair<int32_t, game_quest> *quest_entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::advance_quest_phase");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::advance_quest_phase");
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
     {
@@ -562,7 +562,7 @@ ft_bool game_progress_tracker::is_quest_complete(int32_t quest_id) const noexcep
 {
     const Pair<int32_t, game_quest> *quest_entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_progress_tracker::is_quest_complete");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_progress_tracker::is_quest_complete");
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
         return (FT_FALSE);

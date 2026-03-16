@@ -40,7 +40,7 @@ void quaternion::abort_lifecycle_error(const char *method_name,
 
 void quaternion::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 static void quaternion_sleep_backoff()
@@ -646,7 +646,7 @@ uint32_t quaternion::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "quaternion::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (quaternion::set_error(FT_ERR_SUCCESS));
@@ -667,7 +667,7 @@ uint32_t quaternion::disable_thread_safety() noexcept
 {
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "quaternion::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -682,7 +682,7 @@ uint32_t quaternion::disable_thread_safety() noexcept
 
 ft_bool quaternion::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "quaternion::is_thread_safe");
     quaternion::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);

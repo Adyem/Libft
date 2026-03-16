@@ -186,7 +186,7 @@ int32_t game_experience_table::lock_internal(ft_bool *lock_acquired) const noexc
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -288,7 +288,7 @@ int32_t game_experience_table::get_count() const noexcept
     int32_t lock_error;
     int32_t count_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_count");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::get_count");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -308,7 +308,7 @@ int32_t game_experience_table::resize(int32_t new_count) noexcept
     int32_t lock_error;
     int32_t result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::resize");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::resize");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -327,7 +327,7 @@ int32_t game_experience_table::get_level(int32_t experience) const noexcept
     int32_t lock_error;
     int32_t level;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::get_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -355,7 +355,7 @@ int32_t game_experience_table::get_value(int32_t index) const noexcept
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::get_value");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -380,7 +380,7 @@ void game_experience_table::set_value(int32_t index, int32_t value) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::set_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::set_value");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -413,7 +413,7 @@ int32_t game_experience_table::set_levels(const int32_t *levels, int32_t count) 
     int32_t resize_result;
     int32_t level_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::set_levels");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::set_levels");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -460,7 +460,7 @@ int32_t game_experience_table::generate_levels_total(int32_t count, int32_t base
     double value;
     int32_t level_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::generate_levels_total");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::generate_levels_total");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -512,7 +512,7 @@ int32_t game_experience_table::generate_levels_scaled(int32_t count, int32_t bas
     double total;
     int32_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::generate_levels_scaled");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::generate_levels_scaled");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -561,7 +561,7 @@ int32_t game_experience_table::check_for_error() const noexcept
     int32_t lock_error;
     int32_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::check_for_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::check_for_error");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -594,14 +594,14 @@ int32_t game_experience_table::check_for_error() const noexcept
 int32_t game_experience_table::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_error");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::get_error");
     return (static_cast<int32_t>(game_experience_table::_last_error));
 }
 
 const char *game_experience_table::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::get_error_str");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
@@ -610,7 +610,7 @@ int32_t game_experience_table::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_experience_table::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();

@@ -393,7 +393,7 @@ int32_t ft_render_window::initialize(const ft_render_window_desc &desc)
     int32_t                   lock_status;
     ft_render_platform_result platform_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::initialize(desc)");
     lock_status = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_status != FT_ERR_SUCCESS)
@@ -429,7 +429,7 @@ int32_t ft_render_window::initialize(const ft_render_window_desc &desc)
 void ft_render_window::shutdown(void)
 {
     int32_t                    lock_error;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::shutdown");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -457,7 +457,7 @@ int32_t ft_render_window::poll_events(void)
 {
     ft_render_platform_result  platform_result;
     int32_t                    lock_error;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::poll_events");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -484,7 +484,7 @@ int32_t ft_render_window::present(void)
 {
     ft_render_platform_result  platform_result;
     int32_t                    lock_error;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::present");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -509,7 +509,7 @@ int32_t ft_render_window::present(void)
 
 ft_render_framebuffer &ft_render_window::framebuffer(void)
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::framebuffer");
     return (this->_framebuffer);
 }
@@ -523,7 +523,7 @@ int32_t ft_render_window::clear(uint32_t color)
     uint32_t                     *pixels;
     int32_t                      index;
     int32_t                      lock_error;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::clear");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -563,7 +563,7 @@ int32_t ft_render_window::put_pixel(int32_t coordinate_x, int32_t coordinate_y,
     int32_t height;
     int32_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::put_pixel");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -591,7 +591,7 @@ int32_t ft_render_window::set_fullscreen(ft_bool enabled)
 {
     ft_render_platform_result  platform_result;
     int32_t                    lock_error;
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::set_fullscreen");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -616,14 +616,14 @@ int32_t ft_render_window::set_fullscreen(ft_bool enabled)
 
 ft_bool ft_render_window::should_close(void) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::should_close");
     return (this->_should_close);
 }
 
 int32_t ft_render_window::prepare_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::prepare_thread_safety");
     if (this->_mutex)
         return (FT_ERR_SUCCESS);
@@ -639,28 +639,28 @@ int32_t ft_render_window::prepare_thread_safety(void) noexcept
 
 uint32_t ft_render_window::teardown_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::teardown_thread_safety");
     return (destroy_recursive_mutex(&this->_mutex));
 }
 
 uint32_t ft_render_window::enable_thread_safety() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::enable_thread_safety");
     return (this->prepare_thread_safety());
 }
 
 uint32_t ft_render_window::disable_thread_safety() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::disable_thread_safety");
     return (this->teardown_thread_safety());
 }
 
 ft_bool ft_render_window::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }

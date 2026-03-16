@@ -1409,7 +1409,7 @@ ft_sharedptr<game_item> game_character::get_equipped_item(int32_t slot) const no
 int32_t game_character::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_character::get_error");
     return (static_cast<int32_t>(game_character::_last_error));
 }
@@ -1417,7 +1417,7 @@ int32_t game_character::get_error() const noexcept
 const char *game_character::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_character::get_error_str");
     return (ft_strerror(game_character::_last_error));
 }

@@ -9,7 +9,7 @@ int32_t ft_fd_istream::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_fd_istream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -28,7 +28,7 @@ int32_t ft_fd_istream::enable_thread_safety(void) noexcept
 
 int32_t ft_fd_istream::disable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_fd_istream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -40,7 +40,7 @@ int32_t ft_fd_istream::disable_thread_safety(void) noexcept
 
 ft_bool ft_fd_istream::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_fd_istream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
@@ -158,7 +158,7 @@ int32_t ft_fd_istream::move(ft_fd_istream &other) noexcept
 
 void ft_fd_istream::set_file_descriptor(int32_t file_descriptor) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_fd_istream::set_file_descriptor");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return ;
@@ -171,7 +171,7 @@ int32_t ft_fd_istream::get_file_descriptor() const noexcept
 {
     int32_t file_descriptor;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_fd_istream::get_file_descriptor");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (-1);
@@ -185,7 +185,7 @@ ssize_t ft_fd_istream::do_read(char *buffer, ft_size_t count)
     int32_t file_descriptor;
     ssize_t result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_fd_istream::do_read");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_fd_istream::do_read");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (-1);
     file_descriptor = this->_file_descriptor;

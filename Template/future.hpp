@@ -95,7 +95,7 @@ class ft_future<void>
 template <typename ValueType>
 int32_t ft_future<ValueType>::enable_thread_safety()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer;
@@ -136,21 +136,21 @@ int32_t ft_future<ValueType>::disable_thread_safety()
 template <typename ValueType>
 ft_bool ft_future<ValueType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 template <typename ValueType>
 uint32_t ft_future<ValueType>::get_error() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::get_error");
     return (FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
 const char *ft_future<ValueType>::get_error_str() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::get_error_str");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
@@ -450,7 +450,7 @@ ValueType ft_future<ValueType>::get() const
     ft_promise<ValueType> *promise_pointer;
     ValueType value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::get");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::get");
     lock_acquired = FT_FALSE;
     promise_pointer = ft_nullptr;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
@@ -475,7 +475,7 @@ void ft_future<ValueType>::wait() const
     ft_bool lock_acquired;
     ft_promise<ValueType> *promise_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::wait");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::wait");
     lock_acquired = FT_FALSE;
     promise_pointer = ft_nullptr;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
@@ -496,7 +496,7 @@ ft_bool ft_future<ValueType>::valid() const
     ft_bool is_valid;
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::valid");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::valid");
     lock_acquired = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -507,7 +507,7 @@ ft_bool ft_future<ValueType>::valid() const
 
 inline int32_t ft_future<void>::enable_thread_safety()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer;
@@ -546,19 +546,19 @@ inline int32_t ft_future<void>::disable_thread_safety()
 
 inline ft_bool ft_future<void>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 inline uint32_t ft_future<void>::get_error() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::get_error");
     return (FT_ERR_SUCCESS);
 }
 
 inline const char *ft_future<void>::get_error_str() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::get_error_str");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
@@ -845,7 +845,7 @@ inline void ft_future<void>::get() const
     ft_bool lock_acquired;
     ft_promise<void> *promise_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::get");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::get");
     lock_acquired = FT_FALSE;
     promise_pointer = ft_nullptr;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
@@ -868,7 +868,7 @@ inline void ft_future<void>::wait() const
     ft_bool lock_acquired;
     ft_promise<void> *promise_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::wait");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::wait");
     lock_acquired = FT_FALSE;
     promise_pointer = ft_nullptr;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
@@ -888,7 +888,7 @@ inline ft_bool ft_future<void>::valid() const
     ft_bool is_valid;
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::valid");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::valid");
     lock_acquired = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -900,14 +900,14 @@ inline ft_bool ft_future<void>::valid() const
 template <typename ValueType>
 int32_t ft_future<ValueType>::lock(ft_bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 template <typename ValueType>
 void ft_future<ValueType>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -938,13 +938,13 @@ int32_t ft_future<ValueType>::unlock_internal(ft_bool lock_acquired) const
 
 inline int32_t ft_future<void>::lock(ft_bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 inline void ft_future<void>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_future<void>::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }

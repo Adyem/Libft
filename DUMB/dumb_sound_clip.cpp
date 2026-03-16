@@ -377,7 +377,7 @@ int32_t ft_sound_clip::move(ft_sound_clip &other)
 
 int32_t ft_sound_clip::prepare_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_clip::prepare_thread_safety");
     if (this->_mutex)
         return (FT_ERR_SUCCESS);
@@ -393,7 +393,7 @@ int32_t ft_sound_clip::prepare_thread_safety(void) noexcept
 
 uint32_t ft_sound_clip::teardown_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_clip::teardown_thread_safety");
     return (destroy_recursive_mutex(&this->_mutex));
 }
@@ -410,7 +410,7 @@ int32_t ft_sound_clip::load_wav(const char *file_path)
 
     buffer = ft_nullptr;
     size = 0;
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_sound_clip::load_wav");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_sound_clip::load_wav");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -472,39 +472,39 @@ int32_t ft_sound_clip::load_wav(const char *file_path)
 
 uint32_t ft_sound_clip::enable_thread_safety() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_clip::enable_thread_safety");
     return (this->prepare_thread_safety());
 }
 
 uint32_t ft_sound_clip::disable_thread_safety() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_clip::disable_thread_safety");
     return (this->teardown_thread_safety());
 }
 
 ft_bool ft_sound_clip::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_clip::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 const uint8_t *ft_sound_clip::get_data(void) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_sound_clip::get_data");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_sound_clip::get_data");
     return (this->_data.data());
 }
 
 ft_size_t ft_sound_clip::get_size(void) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_sound_clip::get_size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_sound_clip::get_size");
     return (this->_data.size());
 }
 
 const ft_sound_spec *ft_sound_clip::get_spec(void) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_sound_clip::get_spec");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_sound_clip::get_spec");
     return (this->_spec);
 }

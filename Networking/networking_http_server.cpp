@@ -157,7 +157,7 @@ int32_t ft_http_server::start(const char *ip_address, uint16_t port, int32_t add
     SocketConfig configuration;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_http_server::start");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_http_server::start");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -344,7 +344,7 @@ int32_t ft_http_server::run_once() noexcept
     int32_t result;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_http_server::run_once");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_http_server::run_once");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);

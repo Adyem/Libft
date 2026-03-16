@@ -67,7 +67,7 @@ int32_t ft_dom_document::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -124,13 +124,13 @@ int32_t ft_dom_document::unlock_internal(ft_bool lock_acquired) const noexcept
 
 int32_t ft_dom_document::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_document::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_dom_document::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_document::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -140,7 +140,7 @@ void ft_dom_document::set_root(ft_dom_node *root) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::set_root");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_document::set_root");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -158,7 +158,7 @@ ft_dom_node *ft_dom_document::get_root() const noexcept
     int32_t lock_error;
     ft_dom_node *root_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::get_root");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_document::get_root");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -173,7 +173,7 @@ void ft_dom_document::clear() noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_document::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_document::clear");
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

@@ -344,7 +344,7 @@ int32_t html_document::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -383,7 +383,7 @@ html_node *html_document::create_node(const char *tag_name,
     int32_t lock_error;
     html_node *node;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::create_node");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::create_node");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -402,7 +402,7 @@ html_attr *html_document::create_attr(const char *key, const char *value) noexce
     int32_t lock_error;
     html_attr *attribute;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::create_attr");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::create_attr");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -420,7 +420,7 @@ void html_document::add_attr(html_node *target_node, html_attr *new_attribute) n
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::add_attr");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::add_attr");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -438,7 +438,7 @@ void html_document::remove_attr(html_node *target_node, const char *key) noexcep
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::remove_attr");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::remove_attr");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -456,7 +456,7 @@ void html_document::add_child(html_node *parent_node, html_node *child_node) noe
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::add_child");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::add_child");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -474,7 +474,7 @@ void html_document::append_node(html_node *new_node) noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::append_node");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::append_node");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -493,7 +493,7 @@ int32_t html_document::write_to_file(const char *file_path) const noexcept
     int32_t lock_error;
     int32_t write_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::write_to_file");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::write_to_file");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -512,7 +512,7 @@ char *html_document::write_to_string() const noexcept
     int32_t lock_error;
     char *result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::write_to_string");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::write_to_string");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -525,7 +525,7 @@ void html_document::remove_nodes_by_tag(const char *tag_name) noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::remove_nodes_by_tag");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::remove_nodes_by_tag");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -543,7 +543,7 @@ void html_document::remove_nodes_by_attr(const char *key, const char *value) noe
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::remove_nodes_by_attr");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::remove_nodes_by_attr");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -561,7 +561,7 @@ void html_document::remove_nodes_by_text(const char *text_content) noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::remove_nodes_by_text");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::remove_nodes_by_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -580,7 +580,7 @@ html_node *html_document::find_by_tag(const char *tag_name) const noexcept
     int32_t lock_error;
     html_node *node;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::find_by_tag");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::find_by_tag");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -599,7 +599,7 @@ html_node *html_document::find_by_attr(const char *key, const char *value) const
     int32_t lock_error;
     html_node *node;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::find_by_attr");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::find_by_attr");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -618,7 +618,7 @@ html_node *html_document::find_by_text(const char *text_content) const noexcept
     int32_t lock_error;
     html_node *node;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::find_by_text");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::find_by_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -637,7 +637,7 @@ html_node *html_document::find_by_selector(const char *selector) const noexcept
     int32_t lock_error;
     html_node *node;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::find_by_selector");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::find_by_selector");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -656,7 +656,7 @@ ft_size_t html_document::count_nodes_by_tag(const char *tag_name) const noexcept
     int32_t lock_error;
     ft_size_t node_count;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::count_nodes_by_tag");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::count_nodes_by_tag");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (static_cast<ft_size_t>(0U));
@@ -675,7 +675,7 @@ html_node *html_document::get_root() const noexcept
     int32_t lock_error;
     html_node *root_node;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::get_root");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_root");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -687,7 +687,7 @@ html_node *html_document::get_root() const noexcept
 int32_t html_document::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "html_document::get_error");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_error");
     return (static_cast<int32_t>(html_document::_last_error));
 }
 
@@ -696,7 +696,7 @@ const char *html_document::get_error_str() const noexcept
     const char *message;
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "html_document::get_error_str");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_error_str");
     message = ft_strerror(static_cast<int32_t>(html_document::_last_error));
     if (message == ft_nullptr)
         message = "unknown error";
@@ -707,7 +707,7 @@ void html_document::clear() noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "html_document::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::clear");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;

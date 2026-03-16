@@ -292,7 +292,7 @@ void ft_thread_pool::wait()
     int32_t work_lock_error;
     ft_bool done;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_thread_pool::wait");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_thread_pool::wait");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -326,7 +326,7 @@ int32_t ft_thread_pool::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_thread_pool::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_thread_pool::enable_thread_safety");
     if (this->_thread_safe_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -363,7 +363,7 @@ int32_t ft_thread_pool::disable_thread_safety()
 
 ft_bool ft_thread_pool::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_thread_pool::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_thread_pool::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_thread_safe_mutex != ft_nullptr);
 }
@@ -372,7 +372,7 @@ int32_t ft_thread_pool::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_thread_pool::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_thread_pool::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -386,14 +386,14 @@ void ft_thread_pool::unlock(ft_bool lock_acquired) const
 
 uint32_t ft_thread_pool::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_thread_pool::get_error");
     return (_last_error);
 }
 
 const char *ft_thread_pool::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_thread_pool::get_error_str");
     return (ft_strerror(_last_error));
 }

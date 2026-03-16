@@ -232,7 +232,7 @@ int32_t game_price_definition::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -308,7 +308,7 @@ int32_t game_price_definition::unlock_internal(ft_bool lock_acquired) const noex
 
 int32_t game_price_definition::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -316,21 +316,21 @@ int32_t game_price_definition::lock(ft_bool *lock_acquired) const noexcept
 
 void game_price_definition::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int32_t game_price_definition::get_item_id() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::get_item_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::get_item_id");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_item_id);
 }
 
 void game_price_definition::set_item_id(int32_t item_id) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::set_item_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::set_item_id");
     this->_item_id = item_id;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -338,14 +338,14 @@ void game_price_definition::set_item_id(int32_t item_id) noexcept
 
 int32_t game_price_definition::get_rarity() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::get_rarity");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::get_rarity");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_rarity);
 }
 
 void game_price_definition::set_rarity(int32_t rarity) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::set_rarity");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::set_rarity");
     this->_rarity = rarity;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -353,14 +353,14 @@ void game_price_definition::set_rarity(int32_t rarity) noexcept
 
 int32_t game_price_definition::get_base_value() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::get_base_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::get_base_value");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_base_value);
 }
 
 void game_price_definition::set_base_value(int32_t base_value) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::set_base_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::set_base_value");
     this->_base_value = base_value;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -368,14 +368,14 @@ void game_price_definition::set_base_value(int32_t base_value) noexcept
 
 int32_t game_price_definition::get_minimum_value() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::get_minimum_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::get_minimum_value");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_minimum_value);
 }
 
 void game_price_definition::set_minimum_value(int32_t minimum_value) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::set_minimum_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::set_minimum_value");
     this->_minimum_value = minimum_value;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -383,14 +383,14 @@ void game_price_definition::set_minimum_value(int32_t minimum_value) noexcept
 
 int32_t game_price_definition::get_maximum_value() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::get_maximum_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::get_maximum_value");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_maximum_value);
 }
 
 void game_price_definition::set_maximum_value(int32_t maximum_value) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_price_definition::set_maximum_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_price_definition::set_maximum_value");
     this->_maximum_value = maximum_value;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -400,7 +400,7 @@ void game_price_definition::set_maximum_value(int32_t maximum_value) noexcept
 int32_t game_price_definition::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_price_definition::get_error");
     return (static_cast<int32_t>(game_price_definition::_last_error));
 }
@@ -408,7 +408,7 @@ int32_t game_price_definition::get_error() const noexcept
 const char *game_price_definition::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_price_definition::get_error_str");
     return (ft_strerror(game_price_definition::_last_error));
 }

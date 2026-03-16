@@ -364,7 +364,7 @@ const CharType* ft_string_view<CharType>::data() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::data");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::data");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -385,7 +385,7 @@ ft_size_t ft_string_view<CharType>::size() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -406,7 +406,7 @@ ft_bool ft_string_view<CharType>::empty() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -428,7 +428,7 @@ typename ft_string_view<CharType>::char_proxy ft_string_view<CharType>::operator
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::operator[]");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::operator[]");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -456,8 +456,8 @@ int32_t ft_string_view<CharType>::compare(const ft_string_view& other) const
     ft_bool second_lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::compare");
-    errno_abort_if_uninitialised(other._initialised_state, "ft_string_view::compare other");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::compare");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state, "ft_string_view::compare other");
     first_lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&first_lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -509,8 +509,8 @@ int32_t ft_string_view<CharType>::substr(ft_size_t position, ft_size_t count,
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::substr");
-    errno_abort_if_uninitialised(out_view._initialised_state, "ft_string_view::substr out_view");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::substr");
+    errno_abort_if_uninitialised_or_destroyed(out_view._initialised_state, "ft_string_view::substr out_view");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -543,7 +543,7 @@ int32_t ft_string_view<CharType>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -582,7 +582,7 @@ int32_t ft_string_view<CharType>::disable_thread_safety()
 template <typename CharType>
 ft_bool ft_string_view<CharType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -592,7 +592,7 @@ int32_t ft_string_view<CharType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_string_view::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string_view::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -608,7 +608,7 @@ void ft_string_view<CharType>::unlock(ft_bool lock_acquired) const
 template <typename CharType>
 uint32_t ft_string_view<CharType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_string_view::get_error");
     return (_last_error);
 }
@@ -616,7 +616,7 @@ uint32_t ft_string_view<CharType>::get_error() const noexcept
 template <typename CharType>
 const char *ft_string_view<CharType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_string_view::get_error_str");
     return (ft_strerror(_last_error));
 }

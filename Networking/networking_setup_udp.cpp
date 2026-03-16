@@ -294,7 +294,7 @@ int32_t udp_socket::initialize(const SocketConfig &config)
     int32_t lock_error;
     int32_t step_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::initialize(config)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "udp_socket::initialize(config)");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -354,7 +354,7 @@ ssize_t udp_socket::send_to(const void *data, ft_size_t size, int32_t flags,
     int32_t lock_error;
     ssize_t send_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::send_to");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "udp_socket::send_to");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -374,7 +374,7 @@ ssize_t udp_socket::receive_from(void *buffer, ft_size_t size, int32_t flags,
     int32_t lock_error;
     ssize_t receive_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::receive_from");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "udp_socket::receive_from");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -392,7 +392,7 @@ ft_bool udp_socket::close_socket()
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::close_socket");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "udp_socket::close_socket");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -413,12 +413,12 @@ ft_bool udp_socket::close_socket()
 
 int32_t udp_socket::get_fd() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::get_fd");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "udp_socket::get_fd");
     return (this->_socket_fd);
 }
 
 const struct sockaddr_storage &udp_socket::get_address() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "udp_socket::get_address");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "udp_socket::get_address");
     return (this->_address);
 }

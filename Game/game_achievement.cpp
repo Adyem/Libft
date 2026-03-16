@@ -16,7 +16,7 @@ uint32_t game_goal::set_error(uint32_t error_code) noexcept
 int32_t game_goal::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_goal::get_error");
     return (static_cast<int32_t>(game_goal::_last_error));
 }
@@ -24,7 +24,7 @@ int32_t game_goal::get_error() const noexcept
 const char *game_goal::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_goal::get_error_str");
     return (ft_strerror(this->get_error()));
 }
@@ -38,7 +38,7 @@ uint32_t game_achievement::set_error(uint32_t error_code) noexcept
 int32_t game_achievement::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_achievement::get_error");
     return (static_cast<int32_t>(game_achievement::_last_error));
 }
@@ -46,7 +46,7 @@ int32_t game_achievement::get_error() const noexcept
 const char *game_achievement::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_achievement::get_error_str");
     return (ft_strerror(this->get_error()));
 }
@@ -251,7 +251,7 @@ int32_t game_goal::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -300,7 +300,7 @@ int32_t game_goal::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -328,7 +328,7 @@ int32_t game_goal::unlock_internal(ft_bool lock_acquired) const noexcept
 
 int32_t game_goal::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -336,7 +336,7 @@ int32_t game_goal::lock(ft_bool *lock_acquired) const noexcept
 
 void game_goal::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -347,7 +347,7 @@ int32_t game_goal::get_target() const noexcept
     int32_t lock_error;
     int32_t target_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::get_target");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::get_target");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -366,7 +366,7 @@ void game_goal::set_target(int32_t target) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::set_target");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::set_target");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -386,7 +386,7 @@ int32_t game_goal::get_progress() const noexcept
     int32_t lock_error;
     int32_t progress_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::get_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::get_progress");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -405,7 +405,7 @@ void game_goal::set_progress(int32_t value) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::set_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::set_progress");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -424,7 +424,7 @@ void game_goal::add_progress(int32_t delta) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_goal::add_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_goal::add_progress");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -675,7 +675,7 @@ int32_t game_achievement::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -724,7 +724,7 @@ int32_t game_achievement::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -752,7 +752,7 @@ int32_t game_achievement::unlock_internal(ft_bool lock_acquired) const noexcept
 
 int32_t game_achievement::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -760,7 +760,7 @@ int32_t game_achievement::lock(ft_bool *lock_acquired) const noexcept
 
 void game_achievement::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -771,7 +771,7 @@ int32_t game_achievement::get_id() const noexcept
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::get_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::get_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -790,7 +790,7 @@ void game_achievement::set_id(int32_t id) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::set_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::set_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -809,7 +809,7 @@ ft_map<int32_t, game_goal> &game_achievement::get_goals() noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::get_goals");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::get_goals");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -827,7 +827,7 @@ const ft_map<int32_t, game_goal> &game_achievement::get_goals() const noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::get_goals const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::get_goals const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -850,7 +850,7 @@ void game_achievement::set_goals(const ft_map<int32_t, game_goal> &goals) noexce
     ft_size_t                    index;
     int32_t                       lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::set_goals");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::set_goals");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -891,7 +891,7 @@ int32_t game_achievement::get_goal(int32_t id) const noexcept
     int32_t lock_error;
     int32_t target_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::get_goal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::get_goal");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -924,7 +924,7 @@ void game_achievement::set_goal(int32_t id, int32_t goal) noexcept
     ft_bool                lock_acquired;
     int32_t                 lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::set_goal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::set_goal");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -967,7 +967,7 @@ int32_t game_achievement::get_progress(int32_t id) const noexcept
     int32_t                        lock_error;
     int32_t                        progress_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::get_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::get_progress");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1000,7 +1000,7 @@ void game_achievement::set_progress(int32_t id, int32_t progress) noexcept
     ft_bool                lock_acquired;
     int32_t                 lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::set_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::set_progress");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1043,7 +1043,7 @@ void game_achievement::add_progress(int32_t id, int32_t value) noexcept
     ft_bool                lock_acquired;
     int32_t                 lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::add_progress");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::add_progress");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1087,7 +1087,7 @@ ft_bool game_achievement::is_goal_complete(int32_t id) const noexcept
     int32_t lock_error;
     ft_bool is_complete_flag;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::is_goal_complete");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::is_goal_complete");
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -1122,7 +1122,7 @@ ft_bool game_achievement::is_complete() const noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_achievement::is_complete");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_achievement::is_complete");
     goals_count = this->_goals.size();
     goals_end = this->_goals.end();
     if (goals_count == 0)

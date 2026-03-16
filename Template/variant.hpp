@@ -482,7 +482,7 @@ void ft_variant<Types...>::emplace(TypeToStore&& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::emplace");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::emplace");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -517,7 +517,7 @@ ft_bool ft_variant<Types...>::holds_alternative() const
     int32_t lock_error;
     ft_bool has_type;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::holds_alternative");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::holds_alternative");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -574,7 +574,7 @@ ft_variant<Types...>::get()
     int32_t lock_error;
     TypeToGet *value_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::get");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::get");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -601,7 +601,7 @@ ft_variant<Types...>::get() const
     int32_t lock_error;
     const TypeToGet *value_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::get const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::get const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -626,7 +626,7 @@ void ft_variant<Types...>::visit(VisitorType&& visitor)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::visit");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::visit");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -653,7 +653,7 @@ void ft_variant<Types...>::reset()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::reset");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::reset");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -673,7 +673,7 @@ int32_t ft_variant<Types...>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -695,7 +695,7 @@ int32_t ft_variant<Types...>::disable_thread_safety()
     pt_recursive_mutex *mutex_pointer;
     int32_t destroy_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::disable_thread_safety");
     mutex_pointer = this->_mutex;
     if (mutex_pointer == ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
@@ -710,7 +710,7 @@ int32_t ft_variant<Types...>::disable_thread_safety()
 template <typename... Types>
 ft_bool ft_variant<Types...>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -720,7 +720,7 @@ int32_t ft_variant<Types...>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -736,14 +736,14 @@ void ft_variant<Types...>::unlock(ft_bool lock_acquired) const
 template <typename... Types>
 uint32_t ft_variant<Types...>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::get_error");
     return (_last_error);
 }
 
 template <typename... Types>
 const char *ft_variant<Types...>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_variant::get_error_str");
     return (ft_strerror(_last_error));
 }

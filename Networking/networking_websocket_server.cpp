@@ -152,6 +152,7 @@ static int32_t websocket_permessage_deflate_inflate(const unsigned char *payload
     ft_vector<unsigned char> input_buffer;
     ft_vector<unsigned char> output_buffer;
     int32_t append_error;
+    int32_t initialise_error;
     z_stream stream;
     int32_t zlib_result;
 
@@ -159,6 +160,12 @@ static int32_t websocket_permessage_deflate_inflate(const unsigned char *payload
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
+    initialise_error = input_buffer.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+        return (initialise_error);
+    initialise_error = output_buffer.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+        return (initialise_error);
     tail_bytes[0] = 0x00;
     tail_bytes[1] = 0x00;
     tail_bytes[2] = 0xFF;
@@ -219,7 +226,11 @@ static int32_t websocket_permessage_deflate_deflate(const ft_string &message,
     int32_t zlib_result;
     ft_vector<unsigned char> output_buffer;
     int32_t append_error;
+    int32_t initialise_error;
 
+    initialise_error = output_buffer.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+        return (initialise_error);
     ft_memset(&stream, 0, sizeof(stream));
     stream.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(message.c_str()));
     stream.avail_in = static_cast<uInt>(message.size());
@@ -285,7 +296,13 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     unsigned char *encoded;
     ft_size_t encoded_size;
     ft_string magic;
+    int32_t initialize_error;
 
+    initialize_error = magic.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        return ;
+    }
     magic = key;
     magic.append("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
     sha1_hash(magic.c_str(), magic.size(), digest);
@@ -378,11 +395,18 @@ int32_t ft_websocket_server::initialize(ft_websocket_server &&other) noexcept
 
 int32_t ft_websocket_server::initialize() noexcept
 {
+    int32_t connection_states_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "ft_websocket_server::initialize", "initialize called on initialised instance");
     this->_mutex = ft_nullptr;
     this->_server_socket = ft_nullptr;
-    this->_connection_states.clear();
+    connection_states_error = this->_connection_states.initialize();
+    if (connection_states_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connection_states_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -390,6 +414,7 @@ int32_t ft_websocket_server::initialize() noexcept
 int32_t ft_websocket_server::destroy() noexcept
 {
     int32_t disable_error;
+    int32_t states_destroy_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
@@ -403,7 +428,9 @@ int32_t ft_websocket_server::destroy() noexcept
         delete this->_server_socket;
         this->_server_socket = ft_nullptr;
     }
-    this->_connection_states.clear();
+    states_destroy_error = this->_connection_states.destroy();
+    if (states_destroy_error != FT_ERR_SUCCESS)
+        return (states_destroy_error);
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
@@ -479,7 +506,7 @@ int32_t ft_websocket_server::start(const char *ip_address, uint16_t port, int32_
     int32_t lock_error;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::start");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_server::start");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -534,7 +561,20 @@ int32_t ft_websocket_server::perform_handshake_locked(int32_t client_fd)
     ft_string response;
     ft_size_t request_size;
     ft_bool permessage_deflate_enabled;
+    int32_t string_init_error;
 
+    string_init_error = request.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
+    string_init_error = key.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
+    string_init_error = accept.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
+    string_init_error = response.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
     this->remove_connection_state_locked(client_fd);
     request.clear();
     while (FT_TRUE)
@@ -614,7 +654,11 @@ int32_t ft_websocket_server::send_pong_locked(int32_t client_fd, const unsigned 
 {
     ft_string frame;
     ft_size_t index_value;
+    int32_t initialize_error;
 
+    initialize_error = frame.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     frame.append(static_cast<char>(0x8A));
     if (length <= 125)
         frame.append(static_cast<char>(static_cast<unsigned char>(length)));
@@ -843,7 +887,7 @@ int32_t ft_websocket_server::run_once(int32_t &client_fd, ft_string &message)
     int32_t result;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::run_once");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_server::run_once");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -885,8 +929,15 @@ int32_t ft_websocket_server::send_text(int32_t client_fd, const ft_string &messa
     ft_vector<unsigned char> compressed_payload;
     int32_t lock_error;
     int32_t deflate_error;
+    int32_t initialise_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::send_text");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_server::send_text");
+    initialise_error = frame.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+        return (initialise_error);
+    initialise_error = compressed_payload.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+        return (initialise_error);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -965,7 +1016,7 @@ int32_t ft_websocket_server::get_port(uint16_t &port_value) const
     int32_t server_fd;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_server::get_port");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_server::get_port");
     port_value = 0;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)

@@ -320,7 +320,7 @@ int32_t json_document::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "json_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -341,7 +341,7 @@ int32_t json_document::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "json_document::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -1303,7 +1303,7 @@ json_group *json_document::get_groups() const noexcept
 
 void json_document::set_manual_error(int32_t error_code) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "json_document::set_manual_error");
     this->set_error(error_code);
     return ;
@@ -1314,7 +1314,7 @@ int32_t json_document::get_error() const noexcept
     int32_t lock_error;
     int32_t error_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "json_document::get_error");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
@@ -1335,7 +1335,7 @@ const char *json_document::get_error_str() const noexcept
     int32_t lock_error;
     const char *error_string;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "json_document::get_error_str");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)

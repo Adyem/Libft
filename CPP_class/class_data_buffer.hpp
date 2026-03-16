@@ -175,7 +175,7 @@ int32_t DataBuffer::read_value(ValueType &value) noexcept
 template <typename ValueType>
 data_buffer_proxy DataBuffer::operator<<(const ValueType &value) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::operator<<");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::operator<<");
     int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -192,7 +192,7 @@ data_buffer_proxy DataBuffer::operator<<(const ValueType &value) noexcept
 template <typename ValueType>
 data_buffer_proxy DataBuffer::operator>>(ValueType &value) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::operator>>");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::operator>>");
     int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {

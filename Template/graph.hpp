@@ -502,7 +502,7 @@ ft_size_t ft_graph<VertexType>::add_vertex(const VertexType& value)
     VertexType *new_value;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::add_vertex(copy)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::add_vertex(copy)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -543,7 +543,7 @@ ft_size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
     VertexType *new_value;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::add_vertex(move)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::add_vertex(move)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -583,7 +583,7 @@ void ft_graph<VertexType>::add_edge(ft_size_t from, ft_size_t to)
     int32_t lock_error;
     graph_node *node;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::add_edge");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::add_edge");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -624,7 +624,7 @@ void ft_graph<VertexType>::bfs(ft_size_t start, Func visit)
     ft_size_t edge_index;
     ft_size_t adjacent;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::bfs");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::bfs");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -699,7 +699,7 @@ void ft_graph<VertexType>::dfs(ft_size_t start, Func visit)
     ft_size_t edge_index;
     ft_size_t adjacent;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::dfs");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::dfs");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -769,7 +769,7 @@ void ft_graph<VertexType>::neighbors(ft_size_t index,
     int32_t lock_error;
     ft_size_t edge_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::neighbors");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::neighbors");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -801,7 +801,7 @@ ft_size_t ft_graph<VertexType>::size() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -819,7 +819,7 @@ ft_bool ft_graph<VertexType>::empty() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -836,7 +836,7 @@ void ft_graph<VertexType>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -856,7 +856,7 @@ int32_t ft_graph<VertexType>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -895,7 +895,7 @@ int32_t ft_graph<VertexType>::disable_thread_safety()
 template <typename VertexType>
 ft_bool ft_graph<VertexType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -905,7 +905,7 @@ int32_t ft_graph<VertexType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -921,14 +921,14 @@ void ft_graph<VertexType>::unlock(ft_bool lock_acquired) const
 template <typename VertexType>
 uint32_t ft_graph<VertexType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::get_error");
     return (_last_error);
 }
 
 template <typename VertexType>
 const char *ft_graph<VertexType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_graph::get_error_str");
     return (ft_strerror(_last_error));
 }

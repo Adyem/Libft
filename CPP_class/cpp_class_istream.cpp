@@ -192,7 +192,7 @@ int32_t ft_istream::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_istream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -211,7 +211,7 @@ int32_t ft_istream::enable_thread_safety(void) noexcept
 
 int32_t ft_istream::disable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_istream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -223,7 +223,7 @@ int32_t ft_istream::disable_thread_safety(void) noexcept
 
 ft_bool ft_istream::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_istream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
@@ -232,7 +232,7 @@ ssize_t ft_istream::read(char *buffer, ft_size_t count) noexcept
 {
     ssize_t bytes_read;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_istream::read");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_istream::read");
     if (buffer == ft_nullptr && count > 0)
     {
         this->_is_valid = FT_FALSE;
@@ -264,7 +264,7 @@ ft_size_t ft_istream::gcount() const noexcept
 {
     ft_size_t count_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_istream::gcount");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_istream::gcount");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (0);
     count_value = this->_gcount;
@@ -276,7 +276,7 @@ ft_bool ft_istream::is_valid() const noexcept
 {
     ft_bool result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_istream::is_valid");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_istream::is_valid");
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (FT_FALSE);
     result = this->_is_valid;

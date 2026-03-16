@@ -191,7 +191,7 @@ ssize_t ft_stringbuf::read(char *buffer, ft_size_t count) noexcept
 {
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stringbuf::read");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stringbuf::read");
     if (buffer == ft_nullptr)
         return (-1);
     if (count == 0)
@@ -214,7 +214,7 @@ ssize_t ft_stringbuf::read(char *buffer, ft_size_t count) noexcept
 
 ft_bool ft_stringbuf::is_valid() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stringbuf::is_valid");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stringbuf::is_valid");
     return (FT_TRUE);
 }
 
@@ -223,7 +223,7 @@ int32_t ft_stringbuf::get_string(ft_string &value) const noexcept
     int32_t lock_error;
     int32_t assign_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stringbuf::get_string");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stringbuf::get_string");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -240,7 +240,7 @@ int32_t ft_stringbuf::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_stringbuf::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -259,7 +259,7 @@ int32_t ft_stringbuf::enable_thread_safety(void) noexcept
 
 int32_t ft_stringbuf::disable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_stringbuf::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -271,7 +271,7 @@ int32_t ft_stringbuf::disable_thread_safety(void) noexcept
 
 ft_bool ft_stringbuf::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_stringbuf::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }

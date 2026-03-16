@@ -110,7 +110,7 @@ double vector3::get_x() const
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::get_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::get_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -128,7 +128,7 @@ double vector3::get_y() const
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::get_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::get_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -146,7 +146,7 @@ double vector3::get_z() const
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::get_z");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::get_z");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -168,8 +168,8 @@ vector3 vector3::add(const vector3 &other) const
     double result_y;
     double result_z;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::add");
-    errno_abort_if_uninitialised(other._initialised_state, "vector3::add source");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::add");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state, "vector3::add source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -193,8 +193,8 @@ vector3 vector3::subtract(const vector3 &other) const
     double result_y;
     double result_z;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::subtract");
-    errno_abort_if_uninitialised(other._initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::subtract");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state,
         "vector3::subtract source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
@@ -217,8 +217,8 @@ double vector3::dot(const vector3 &other) const
     int32_t lock_error;
     double result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::dot");
-    errno_abort_if_uninitialised(other._initialised_state, "vector3::dot source");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::dot");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state, "vector3::dot source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -241,8 +241,8 @@ vector3 vector3::cross(const vector3 &other) const
     double result_y;
     double result_z;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::cross");
-    errno_abort_if_uninitialised(other._initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::cross");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state,
         "vector3::cross source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
@@ -264,7 +264,7 @@ double vector3::length() const
     double squared;
     double result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::length");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::length");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -289,7 +289,7 @@ vector3 vector3::normalize() const
     double normalized_y;
     double normalized_z;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector3::normalize");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector3::normalize");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -318,7 +318,7 @@ uint32_t vector3::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "vector3::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (vector3::set_error(FT_ERR_SUCCESS));
@@ -339,7 +339,7 @@ uint32_t vector3::disable_thread_safety() noexcept
 {
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "vector3::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -354,7 +354,7 @@ uint32_t vector3::disable_thread_safety() noexcept
 
 ft_bool vector3::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "vector3::is_thread_safe");
     vector3::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);

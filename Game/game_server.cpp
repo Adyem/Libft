@@ -17,7 +17,7 @@ uint32_t game_server::set_error(uint32_t error_code) noexcept
 int32_t game_server::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_server::get_error");
     return (static_cast<int32_t>(game_server::_last_error));
 }
@@ -25,7 +25,7 @@ int32_t game_server::get_error() const noexcept
 const char *game_server::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_server::get_error_str");
     return (ft_strerror(game_server::_last_error));
 }
@@ -232,7 +232,7 @@ int32_t game_server::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -263,7 +263,7 @@ int32_t game_server::start(const char *ip, uint16_t port) noexcept
     int32_t lock_error;
     int32_t start_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::start");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::start");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -293,7 +293,7 @@ void game_server::set_join_callback(void (*callback)(int32_t)) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::set_join_callback");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::set_join_callback");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -312,7 +312,7 @@ void game_server::set_leave_callback(void (*callback)(int32_t)) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::set_leave_callback");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::set_leave_callback");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -340,7 +340,7 @@ int32_t game_server::handle_message_locked(int32_t client_handle,
     ft_sharedptr<game_event> event;
     ft_sharedptr<game_event_scheduler> scheduler;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::handle_message_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::handle_message_locked");
     groups = json_read_from_string(message.c_str());
     if (groups == ft_nullptr)
     {
@@ -440,7 +440,7 @@ int32_t game_server::serialize_world_locked(ft_string &out) const noexcept
     json_group *group;
     char *content;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::serialize_world_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::serialize_world_locked");
     if (!this->_world)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
@@ -481,7 +481,7 @@ void game_server::run_once() noexcept
     Pair<int32_t, int32_t> *client_ptr;
     Pair<int32_t, int32_t> *client_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::run_once");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::run_once");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -530,7 +530,7 @@ int32_t game_server::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -559,7 +559,7 @@ int32_t game_server::disable_thread_safety() noexcept
     pt_recursive_mutex *old_mutex;
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -580,7 +580,7 @@ ft_bool game_server::is_thread_safe() const noexcept
 
 void game_server::join_client_locked(int32_t client_id, int32_t client_handle) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::join_client_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::join_client_locked");
     this->_clients.insert(client_id, client_handle);
     if (this->_on_join != ft_nullptr)
         this->_on_join(client_id);
@@ -590,7 +590,7 @@ void game_server::join_client_locked(int32_t client_id, int32_t client_handle) n
 
 void game_server::leave_client_locked(int32_t client_id) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_server::leave_client_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_server::leave_client_locked");
     this->_clients.remove(client_id);
     if (this->_on_leave != ft_nullptr)
         this->_on_leave(client_id);

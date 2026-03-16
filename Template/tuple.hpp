@@ -307,7 +307,7 @@ ft_tuple<Types...>::get()
     int32_t lock_result;
     elem_t *reference;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::get");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::get");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -334,7 +334,7 @@ ft_tuple<Types...>::get() const
     int32_t lock_result;
     const elem_t *reference;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::get const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::get const");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -358,7 +358,7 @@ T& ft_tuple<Types...>::get()
     int32_t lock_result;
     T *reference;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::get type");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::get type");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -383,7 +383,7 @@ const T& ft_tuple<Types...>::get() const
     int32_t lock_result;
     const T *reference;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_tuple::get type const");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
@@ -407,7 +407,7 @@ void ft_tuple<Types...>::reset()
     ft_bool lock_acquired;
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::reset");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::reset");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -424,7 +424,7 @@ int32_t ft_tuple<Types...>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_tuple::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
@@ -464,7 +464,7 @@ int32_t ft_tuple<Types...>::disable_thread_safety()
 template <typename... Types>
 ft_bool ft_tuple<Types...>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_tuple::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
@@ -473,14 +473,14 @@ ft_bool ft_tuple<Types...>::is_thread_safe() const
 template <typename... Types>
 int32_t ft_tuple<Types...>::lock(ft_bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::lock");
     return (set_error(this->lock_internal(lock_acquired)));
 }
 
 template <typename... Types>
 void ft_tuple<Types...>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
     return ;
@@ -489,14 +489,14 @@ void ft_tuple<Types...>::unlock(ft_bool lock_acquired) const
 template <typename... Types>
 uint32_t ft_tuple<Types...>::get_error() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::get_error");
     return (_last_error);
 }
 
 template <typename... Types>
 const char *ft_tuple<Types...>::get_error_str() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_tuple::get_error_str");
     return (ft_strerror(_last_error));
 }

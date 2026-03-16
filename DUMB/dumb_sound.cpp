@@ -298,7 +298,7 @@ int32_t ft_sound_device::move(ft_sound_device &other)
 
 int32_t ft_sound_device::prepare_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_device::prepare_thread_safety");
     if (this->_mutex)
         return (FT_ERR_SUCCESS);
@@ -314,28 +314,28 @@ int32_t ft_sound_device::prepare_thread_safety(void) noexcept
 
 uint32_t ft_sound_device::teardown_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_device::teardown_thread_safety");
     return (destroy_recursive_mutex(&this->_mutex));
 }
 
 uint32_t ft_sound_device::enable_thread_safety() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_device::enable_thread_safety");
     return (this->prepare_thread_safety());
 }
 
 uint32_t ft_sound_device::disable_thread_safety() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_device::disable_thread_safety");
     return (this->teardown_thread_safety());
 }
 
 ft_bool ft_sound_device::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sound_device::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }

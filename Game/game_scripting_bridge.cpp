@@ -246,7 +246,7 @@ const ft_sharedptr<game_world> &game_script_context::get_world() const noexcept
 
 void game_script_context::set_state(game_state *state) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::set_state");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_script_context::set_state");
     this->_state = state;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -254,7 +254,7 @@ void game_script_context::set_state(game_state *state) noexcept
 
 void game_script_context::set_world(const ft_sharedptr<game_world> &world) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::set_world");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_script_context::set_world");
     this->_world = world;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -262,7 +262,7 @@ void game_script_context::set_world(const ft_sharedptr<game_world> &world) noexc
 
 void game_script_context::set_variable(const ft_string &key, const ft_string &value) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::set_variable");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_script_context::set_variable");
     if (this->_state)
     {
         this->_state->set_variable(key, value);
@@ -285,7 +285,7 @@ void game_script_context::set_variable(const ft_string &key, const ft_string &va
 
 const ft_string *game_script_context::get_variable(const ft_string &key) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::get_variable");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_script_context::get_variable");
     if (this->_state)
     {
         const ft_string *value;
@@ -308,7 +308,7 @@ const ft_string *game_script_context::get_variable(const ft_string &key) const n
 
 void game_script_context::remove_variable(const ft_string &key) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::remove_variable");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_script_context::remove_variable");
     if (this->_state)
     {
         this->_state->remove_variable(key);
@@ -322,7 +322,7 @@ void game_script_context::remove_variable(const ft_string &key) noexcept
 
 void game_script_context::clear_variables() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_script_context::clear_variables");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_script_context::clear_variables");
     if (this->_state)
     {
         this->_state->clear_variables();
@@ -337,7 +337,7 @@ void game_script_context::clear_variables() noexcept
 int32_t game_script_context::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_script_context::get_error");
     return (static_cast<int32_t>(game_script_context::_last_error));
 }
@@ -345,7 +345,7 @@ int32_t game_script_context::get_error() const noexcept
 const char *game_script_context::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_script_context::get_error_str");
     return (ft_strerror(game_script_context::_last_error));
 }
@@ -1354,7 +1354,7 @@ ft_bool game_script_bridge::is_thread_safe() const noexcept
 int32_t game_script_bridge::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_script_bridge::get_error");
     return (static_cast<int32_t>(game_script_bridge::_last_error));
 }
@@ -1362,7 +1362,7 @@ int32_t game_script_bridge::get_error() const noexcept
 const char *game_script_bridge::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_script_bridge::get_error_str");
     return (ft_strerror(game_script_bridge::_last_error));
 }

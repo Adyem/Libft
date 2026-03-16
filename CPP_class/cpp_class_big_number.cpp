@@ -115,7 +115,7 @@ int32_t ft_big_number::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "enable thread safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "enable thread safety");
     if (this->_mutex != ft_nullptr)
     {
         ft_big_number::set_error(FT_ERR_SUCCESS);
@@ -138,7 +138,7 @@ int32_t ft_big_number::disable_thread_safety(void) noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "disable thread safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "disable thread safety");
     if (this->_mutex == ft_nullptr)
         return (ft_big_number::set_error(FT_ERR_SUCCESS));
     destroy_error = this->_mutex->destroy();
@@ -149,7 +149,7 @@ int32_t ft_big_number::disable_thread_safety(void) noexcept
 
 ft_bool ft_big_number::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "is thread safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "is thread safe");
     ft_big_number::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -168,14 +168,14 @@ uint32_t ft_big_number::set_error(uint32_t error_code) noexcept
 
 uint32_t ft_big_number::get_error() noexcept
 {
-    errno_abort_if_uninitialised(ft_big_number::_last_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(ft_big_number::_last_initialised_state,
         "ft_big_number::get_error");
     return (ft_big_number::_last_error);
 }
 
 const char *ft_big_number::get_error_str() noexcept
 {
-    errno_abort_if_uninitialised(ft_big_number::_last_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(ft_big_number::_last_initialised_state,
         "ft_big_number::get_error_str");
     const char* error_string = ft_strerror(ft_big_number::_last_error);
 

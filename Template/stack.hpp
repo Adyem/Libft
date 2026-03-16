@@ -315,7 +315,7 @@ int32_t ft_stack<ElementType>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_stack::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
@@ -355,7 +355,7 @@ int32_t ft_stack<ElementType>::disable_thread_safety()
 template <typename ElementType>
 ft_bool ft_stack<ElementType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_stack::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
@@ -366,7 +366,7 @@ int32_t ft_stack<ElementType>::lock(ft_bool *lock_acquired) const
 {
     int32_t result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::lock");
     result = this->lock_internal(lock_acquired);
     return (set_error(result));
 }
@@ -374,7 +374,7 @@ int32_t ft_stack<ElementType>::lock(ft_bool *lock_acquired) const
 template <typename ElementType>
 void ft_stack<ElementType>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
     return ;
@@ -387,7 +387,7 @@ void ft_stack<ElementType>::push(const ElementType& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::push");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::push");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -415,7 +415,7 @@ void ft_stack<ElementType>::push(ElementType&& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::push(move)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::push(move)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -444,7 +444,7 @@ ElementType ft_stack<ElementType>::pop()
     ElementType value;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::pop");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::pop");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -474,7 +474,7 @@ ElementType& ft_stack<ElementType>::top()
     int32_t lock_error;
     ElementType *value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::top");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::top");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -499,7 +499,7 @@ const ElementType& ft_stack<ElementType>::top() const
     int32_t lock_error;
     const ElementType *value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::top const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::top const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -523,7 +523,7 @@ ft_size_t ft_stack<ElementType>::size() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -541,7 +541,7 @@ ft_bool ft_stack<ElementType>::empty() const
     int32_t lock_error;
     ft_bool is_empty;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -558,7 +558,7 @@ void ft_stack<ElementType>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -572,14 +572,14 @@ void ft_stack<ElementType>::clear()
 template <typename ElementType>
 uint32_t ft_stack<ElementType>::get_error() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::get_error");
     return (_last_error);
 }
 
 template <typename ElementType>
 const char *ft_stack<ElementType>::get_error_str() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_stack::get_error_str");
     return (ft_strerror(_last_error));
 }

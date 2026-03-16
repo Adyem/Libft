@@ -393,7 +393,7 @@ int32_t ft_priority_queue<ElementType, Compare>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
@@ -433,7 +433,7 @@ int32_t ft_priority_queue<ElementType, Compare>::disable_thread_safety()
 template <typename ElementType, typename Compare>
 ft_bool ft_priority_queue<ElementType, Compare>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
@@ -442,7 +442,7 @@ ft_bool ft_priority_queue<ElementType, Compare>::is_thread_safe() const
 template <typename ElementType, typename Compare>
 int32_t ft_priority_queue<ElementType, Compare>::lock(ft_bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::lock");
     return (set_error(this->lock_internal(lock_acquired)));
 }
@@ -450,7 +450,7 @@ int32_t ft_priority_queue<ElementType, Compare>::lock(ft_bool *lock_acquired) co
 template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
@@ -463,7 +463,7 @@ void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::push");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -492,7 +492,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::push(move)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -522,7 +522,7 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
     int32_t lock_error;
     ElementType value;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::pop");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -556,7 +556,7 @@ ElementType& ft_priority_queue<ElementType, Compare>::top()
     int32_t lock_error;
     ElementType *value;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::top");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -582,7 +582,7 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
     int32_t lock_error;
     const ElementType *value;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::top const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -607,7 +607,7 @@ ft_size_t ft_priority_queue<ElementType, Compare>::size() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -626,7 +626,7 @@ ft_bool ft_priority_queue<ElementType, Compare>::empty() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -645,7 +645,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -666,7 +666,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
 template <typename ElementType, typename Compare>
 uint32_t ft_priority_queue<ElementType, Compare>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::get_error");
     return (_last_error);
 }
@@ -674,7 +674,7 @@ uint32_t ft_priority_queue<ElementType, Compare>::get_error() const noexcept
 template <typename ElementType, typename Compare>
 const char *ft_priority_queue<ElementType, Compare>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::get_error_str");
     return (ft_strerror(_last_error));
 }

@@ -127,7 +127,7 @@ int32_t ft_socket_handle::destroy() noexcept
 
 ft_bool ft_socket_handle::reset(int32_t socket_fd)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket_handle::reset");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket_handle::reset");
     if (socket_fd < 0)
     {
         if (!this->close())
@@ -147,7 +147,7 @@ ft_bool ft_socket_handle::reset(int32_t socket_fd)
 
 ft_bool ft_socket_handle::close()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket_handle::close");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket_handle::close");
     if (this->_socket_fd < 0)
         return (FT_TRUE);
     if (nw_close(this->_socket_fd) != 0)
@@ -158,7 +158,7 @@ ft_bool ft_socket_handle::close()
 
 ft_bool ft_socket_handle::is_valid() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket_handle::is_valid");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket_handle::is_valid");
     if (this->_socket_fd >= 0)
         return (FT_TRUE);
     return (FT_FALSE);
@@ -166,7 +166,7 @@ ft_bool ft_socket_handle::is_valid() const
 
 int32_t ft_socket_handle::get() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket_handle::get");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket_handle::get");
     return (this->_socket_fd);
 }
 

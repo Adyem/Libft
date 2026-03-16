@@ -15,7 +15,7 @@
 
 int32_t ft_file::enable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_file::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_file::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer;
@@ -35,7 +35,7 @@ int32_t ft_file::enable_thread_safety(void) noexcept
 
 int32_t ft_file::disable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_file::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_file::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     int32_t destroy_error = this->_mutex->destroy();
@@ -47,7 +47,7 @@ int32_t ft_file::disable_thread_safety(void) noexcept
 
 ft_bool ft_file::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_file::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_file::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 

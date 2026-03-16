@@ -160,7 +160,7 @@ int32_t ft_ofstream::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_ofstream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -179,7 +179,7 @@ int32_t ft_ofstream::enable_thread_safety(void) noexcept
 
 int32_t ft_ofstream::disable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_ofstream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -191,7 +191,7 @@ int32_t ft_ofstream::disable_thread_safety(void) noexcept
 
 ft_bool ft_ofstream::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_ofstream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
@@ -200,7 +200,7 @@ int32_t ft_ofstream::open(const char *filename) noexcept
 {
     int32_t open_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_ofstream::open");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_ofstream::open");
     if (filename == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     open_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -217,7 +217,7 @@ ssize_t ft_ofstream::write(const char *string) noexcept
 {
     ssize_t bytes_written;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_ofstream::write");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_ofstream::write");
     if (string == ft_nullptr)
         return (-1);
     if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
@@ -231,7 +231,7 @@ int32_t ft_ofstream::close() noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_ofstream::close");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_ofstream::close");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);

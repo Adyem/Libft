@@ -5,13 +5,13 @@
 static int32_t write_indent(ft_string &output, int32_t indent) noexcept
 {
     int32_t indent_index = 0;
+    int32_t append_error;
+
     while (indent_index < indent)
     {
-        output.append(' ');
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
-        {
-            return (ft_string::get_error());
-        }
+        append_error = output.append(' ');
+        if (append_error != FT_ERR_SUCCESS)
+            return (append_error);
         indent_index++;
     }
     return (FT_ERR_SUCCESS);
@@ -29,21 +29,18 @@ static int32_t write_node(const yaml_value *value, ft_string &output, int32_t in
     if (value_type == YAML_SCALAR)
     {
         int32_t indent_error;
+        int32_t append_error;
 
         indent_error = write_indent(output, indent);
         if (indent_error != FT_ERR_SUCCESS)
             return (indent_error);
         const ft_string &scalar = value->get_scalar();
-        output.append(scalar);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
-        {
-            return (ft_string::get_error());
-        }
-        output.append('\n');
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
-        {
-            return (ft_string::get_error());
-        }
+        append_error = output.append(scalar);
+        if (append_error != FT_ERR_SUCCESS)
+            return (append_error);
+        append_error = output.append('\n');
+        if (append_error != FT_ERR_SUCCESS)
+            return (append_error);
         return (FT_ERR_SUCCESS);
     }
     if (value_type == YAML_LIST)
@@ -64,39 +61,33 @@ static int32_t write_node(const yaml_value *value, ft_string &output, int32_t in
             if (item_is_scalar)
             {
                 int32_t indent_error;
+                int32_t append_error;
 
                 indent_error = write_indent(output, indent);
                 if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
-                output.append("- ");
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
+                append_error = output.append("- ");
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
                 const ft_string &scalar = item->get_scalar();
-                output.append(scalar);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
-                output.append('\n');
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
+                append_error = output.append(scalar);
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
+                append_error = output.append('\n');
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
             }
             else
             {
                 int32_t indent_error;
+                int32_t append_error;
 
                 indent_error = write_indent(output, indent);
                 if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
-                output.append("-\n");
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
+                append_error = output.append("-\n");
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
                 int32_t node_error;
 
                 node_error = write_node(item, output, indent + 2);
@@ -127,49 +118,39 @@ static int32_t write_node(const yaml_value *value, ft_string &output, int32_t in
             if (child_is_scalar)
             {
                 int32_t indent_error;
+                int32_t append_error;
 
                 indent_error = write_indent(output, indent);
                 if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
-                output.append(key);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
-                output.append(": ");
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
+                append_error = output.append(key);
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
+                append_error = output.append(": ");
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
                 const ft_string &scalar = child->get_scalar();
-                output.append(scalar);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
-                output.append('\n');
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
+                append_error = output.append(scalar);
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
+                append_error = output.append('\n');
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
             }
             else
             {
                 int32_t indent_error;
+                int32_t append_error;
 
                 indent_error = write_indent(output, indent);
                 if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
-                output.append(key);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
-                output.append(":\n");
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                {
-                    return (ft_string::get_error());
-                }
+                append_error = output.append(key);
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
+                append_error = output.append(":\n");
+                if (append_error != FT_ERR_SUCCESS)
+                    return (append_error);
                 int32_t node_error;
 
                 node_error = write_node(child, output, indent + 2);
@@ -186,8 +167,12 @@ static int32_t write_node(const yaml_value *value, ft_string &output, int32_t in
 ft_string yaml_write_to_string(const yaml_value *value) noexcept
 {
     ft_string output;
+    int32_t initialize_error;
     int32_t write_error;
 
+    initialize_error = output.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (ft_string());
     write_error = write_node(value, output, 0);
     if (write_error != FT_ERR_SUCCESS)
         return (ft_string());
@@ -202,7 +187,7 @@ int32_t yaml_write_to_file(const char *file_path, const yaml_value *value) noexc
     ft_size_t expected_size;
     ft_size_t written;
 
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (output.is_initialised() == FT_FALSE)
         return (FT_ERR_INVALID_STATE);
     file = su_fopen(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file == ft_nullptr)
@@ -224,12 +209,10 @@ int32_t yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) n
 {
     ft_string serialized;
     int32_t write_result;
-    int32_t serialize_error;
 
     serialized = yaml_write_to_string(value);
-    serialize_error = ft_string::get_error();
-    if (serialize_error != FT_ERR_SUCCESS)
-        return (serialize_error);
+    if (serialized.is_initialised() == FT_FALSE)
+        return (FT_ERR_INVALID_STATE);
     write_result = sink.write_all(serialized.c_str(), serialized.size());
     if (write_result != FT_ERR_SUCCESS)
         return (write_result);

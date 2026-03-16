@@ -299,7 +299,7 @@ void game_item_modifier::set_value(int32_t value) noexcept
 int32_t game_item_modifier::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_item_modifier::get_error");
     return (static_cast<int32_t>(game_item_modifier::_last_error));
 }
@@ -307,7 +307,7 @@ int32_t game_item_modifier::get_error() const noexcept
 const char *game_item_modifier::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_item_modifier::get_error_str");
     return (ft_strerror(this->get_error()));
 }
@@ -1641,7 +1641,7 @@ uint32_t game_item::set_error(uint32_t error_code) noexcept
 int32_t game_item::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_item::get_error");
     return (static_cast<int32_t>(game_item::_last_error));
 }
@@ -1649,7 +1649,7 @@ int32_t game_item::get_error() const noexcept
 const char *game_item::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_item::get_error_str");
     return (ft_strerror(this->get_error()));
 }

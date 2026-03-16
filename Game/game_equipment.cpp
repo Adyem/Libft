@@ -186,7 +186,7 @@ int32_t game_equipment::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -216,7 +216,7 @@ int32_t game_equipment::equip(int32_t slot, const ft_sharedptr<game_item> &item)
     int32_t lock_error;
     int32_t result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::equip");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::equip");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -258,7 +258,7 @@ void game_equipment::unequip(int32_t slot) noexcept
     int32_t lock_error;
     int32_t result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::unequip");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::unequip");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -293,7 +293,7 @@ ft_sharedptr<game_item> game_equipment::get_item(int32_t slot) noexcept
     int32_t lock_error;
     ft_sharedptr<game_item> result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::get_item");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::get_item");
     result = ft_sharedptr<game_item>();
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -333,7 +333,7 @@ ft_sharedptr<game_item> game_equipment::get_item(int32_t slot) const noexcept
     int32_t lock_error;
     ft_sharedptr<game_item> result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::get_item const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::get_item const");
     result = ft_sharedptr<game_item>();
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -364,7 +364,7 @@ int32_t game_equipment::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -414,13 +414,13 @@ ft_bool game_equipment::is_thread_safe() const noexcept
 int32_t game_equipment::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::get_error");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::get_error");
     return (static_cast<int32_t>(game_equipment::_last_error));
 }
 
 const char *game_equipment::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "game_equipment::get_error_str");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_equipment::get_error_str");
     return (ft_strerror(this->get_error()));
 }

@@ -94,7 +94,7 @@ uint32_t game_map3d::set_error(uint32_t error_code) noexcept
 int32_t game_map3d::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_map3d::get_error");
     return (static_cast<int32_t>(game_map3d::_last_error));
 }
@@ -102,7 +102,7 @@ int32_t game_map3d::get_error() const noexcept
 const char *game_map3d::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_map3d::get_error_str");
     return (ft_strerror(game_map3d::_last_error));
 }
@@ -217,7 +217,7 @@ int32_t game_map3d::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -297,7 +297,7 @@ int32_t game_map3d::unlock_internal(ft_bool lock_acquired) const noexcept
 
 int32_t game_map3d::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -305,7 +305,7 @@ int32_t game_map3d::lock(ft_bool *lock_acquired) const noexcept
 
 void game_map3d::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -315,7 +315,7 @@ void game_map3d::resize(ft_size_t width, ft_size_t height, ft_size_t depth, int3
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::resize");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::resize");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -338,7 +338,7 @@ int32_t game_map3d::get(ft_size_t x, ft_size_t y, ft_size_t z) const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::get");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::get");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -367,7 +367,7 @@ void game_map3d::set(ft_size_t x, ft_size_t y, ft_size_t z, int32_t value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::set");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::set");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -407,7 +407,7 @@ void game_map3d::toggle_obstacle(ft_size_t x, ft_size_t y, ft_size_t z,
     int32_t lock_error;
     int32_t new_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::toggle_obstacle");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::toggle_obstacle");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -441,7 +441,7 @@ ft_size_t game_map3d::get_width() const
     int32_t lock_error;
     ft_size_t width_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::get_width");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::get_width");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -461,7 +461,7 @@ ft_size_t game_map3d::get_height() const
     int32_t lock_error;
     ft_size_t height_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::get_height");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::get_height");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -481,7 +481,7 @@ ft_size_t game_map3d::get_depth() const
     int32_t lock_error;
     ft_size_t depth_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_map3d::get_depth");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_map3d::get_depth");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

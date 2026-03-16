@@ -194,7 +194,7 @@ int32_t ft_cancellation_state::register_callback(
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_cancellation_state::register_callback");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_state::register_callback");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -215,7 +215,7 @@ int32_t ft_cancellation_state::request_cancel() noexcept
     int32_t lock_error;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_cancellation_state::request_cancel");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_state::request_cancel");
     if (this->_cancelled.exchange(FT_TRUE, std::memory_order_acq_rel))
         return (set_error(FT_ERR_SUCCESS));
     lock_acquired = FT_FALSE;
@@ -258,7 +258,7 @@ int32_t ft_cancellation_state::enable_thread_safety() noexcept
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_cancellation_state::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_state::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -295,14 +295,14 @@ int32_t ft_cancellation_state::disable_thread_safety() noexcept
 
 uint32_t ft_cancellation_state::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_cancellation_state::get_error");
     return (_last_error);
 }
 
 const char *ft_cancellation_state::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_cancellation_state::get_error_str");
     return (ft_strerror(_last_error));
 }
@@ -488,13 +488,13 @@ uint32_t ft_cancellation_source::move(ft_cancellation_source &other) noexcept
 
 ft_cancellation_token ft_cancellation_source::get_token() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_cancellation_source::get_token");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_source::get_token");
     return (ft_cancellation_token(this->_state));
 }
 
 int32_t ft_cancellation_source::request_cancel() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_cancellation_source::request_cancel");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_source::request_cancel");
     if (this->_state == ft_nullptr)
         return (FT_ERR_INVALID_STATE);
     return (this->_state->request_cancel());
@@ -502,7 +502,7 @@ int32_t ft_cancellation_source::request_cancel() noexcept
 
 ft_bool ft_cancellation_source::is_cancellation_requested() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_cancellation_source::is_cancellation_requested");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_source::is_cancellation_requested");
     if (this->_state == ft_nullptr)
         return (FT_TRUE);
     return (this->_state->is_cancelled());

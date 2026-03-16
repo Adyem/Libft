@@ -243,7 +243,7 @@ int32_t game_world_registry::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -319,7 +319,7 @@ int32_t game_world_registry::unlock_internal(ft_bool lock_acquired) const noexce
 
 int32_t game_world_registry::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -327,7 +327,7 @@ int32_t game_world_registry::lock(ft_bool *lock_acquired) const noexcept
 
 void game_world_registry::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -336,7 +336,7 @@ int32_t game_world_registry::register_region(const game_region_definition &regio
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::register_region");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::register_region");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -352,7 +352,7 @@ int32_t game_world_registry::register_world(const game_world_region &world_regio
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::register_world");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::register_world");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
     {
@@ -369,7 +369,7 @@ int32_t game_world_registry::fetch_region(int32_t region_id,
 {
     const Pair<int32_t, game_region_definition> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::fetch_region");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::fetch_region");
     entry = this->_regions.find(region_id);
     if (entry == this->_regions.end())
     {
@@ -386,7 +386,7 @@ int32_t game_world_registry::fetch_world(int32_t world_id,
 {
     const Pair<int32_t, game_world_region> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::fetch_world");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::fetch_world");
     entry = this->_world_regions.find(world_id);
     if (entry == this->_world_regions.end())
     {
@@ -400,14 +400,14 @@ int32_t game_world_registry::fetch_world(int32_t world_id,
 
 ft_map<int32_t, game_region_definition> &game_world_registry::get_regions() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::get_regions");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::get_regions");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_regions);
 }
 
 const ft_map<int32_t, game_region_definition> &game_world_registry::get_regions() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::get_regions const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::get_regions const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_regions);
 }
@@ -420,7 +420,7 @@ void game_world_registry::set_regions(
     const Pair<int32_t, game_region_definition> *entry;
     const Pair<int32_t, game_region_definition> *entry_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::set_regions");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::set_regions");
     this->_regions.clear();
     count = regions.size();
     entry_end = regions.end();
@@ -438,14 +438,14 @@ void game_world_registry::set_regions(
 
 ft_map<int32_t, game_world_region> &game_world_registry::get_world_regions() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::get_world_regions");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::get_world_regions");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_regions);
 }
 
 const ft_map<int32_t, game_world_region> &game_world_registry::get_world_regions() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::get_world_regions const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::get_world_regions const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_world_regions);
 }
@@ -458,7 +458,7 @@ void game_world_registry::set_world_regions(
     const Pair<int32_t, game_world_region> *entry;
     const Pair<int32_t, game_world_region> *entry_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_world_registry::set_world_regions");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_registry::set_world_regions");
     this->_world_regions.clear();
     count = world_regions.size();
     entry_end = world_regions.end();
@@ -478,7 +478,7 @@ void game_world_registry::set_world_regions(
 int32_t game_world_registry::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_world_registry::get_error");
     return (static_cast<int32_t>(game_world_registry::_last_error));
 }
@@ -486,7 +486,7 @@ int32_t game_world_registry::get_error() const noexcept
 const char *game_world_registry::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_world_registry::get_error_str");
     return (ft_strerror(game_world_registry::_last_error));
 }

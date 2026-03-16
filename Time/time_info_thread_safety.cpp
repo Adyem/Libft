@@ -8,7 +8,7 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
-static void time_info_disable_thread_safety(t_time_info *time_info)
+static void time_info_disable_thread_safety_internal(t_time_info *time_info)
 {
     if (!time_info)
         return ;
@@ -22,7 +22,7 @@ static void time_info_disable_thread_safety(t_time_info *time_info)
     return ;
 }
 
-int32_t time_info_prepare_thread_safety(t_time_info *time_info)
+int32_t time_info_enable_thread_safety(t_time_info *time_info)
 {
     pt_mutex    *mutex_pointer;
     void        *memory;
@@ -49,9 +49,9 @@ int32_t time_info_prepare_thread_safety(t_time_info *time_info)
         int32_t mutex_error;
 
         if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESS;
+            mutex_error = FT_ERR_NO_MEMORY;
         else
-            mutex_error = FT_ERR_SUCCESS;
+            mutex_error = mutex_pointer->initialize();
 
         if (mutex_error != FT_ERR_SUCCESS)
         {
@@ -68,11 +68,11 @@ int32_t time_info_prepare_thread_safety(t_time_info *time_info)
     return (FT_ERR_SUCCESS);
 }
 
-void    time_info_teardown_thread_safety(t_time_info *time_info)
+void    time_info_disable_thread_safety(t_time_info *time_info)
 {
     if (!time_info)
         return ;
-    time_info_disable_thread_safety(time_info);
+    time_info_disable_thread_safety_internal(time_info);
     return ;
 }
 

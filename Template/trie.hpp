@@ -381,7 +381,7 @@ int32_t ft_trie<ValueType>::insert(const char *key, ValueType *value_pointer,
     int32_t lock_error;
     int32_t insert_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_trie::insert");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::insert");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -400,7 +400,7 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_trie::search");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::search");
     if (key == ft_nullptr)
     {
         set_error(FT_ERR_INVALID_ARGUMENT);
@@ -441,7 +441,7 @@ int32_t ft_trie<ValueType>::enable_thread_safety()
     int32_t initialize_result;
     typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator(this->_children.begin());
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_trie::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -497,7 +497,7 @@ int32_t ft_trie<ValueType>::disable_thread_safety()
 template <typename ValueType>
 ft_bool ft_trie<ValueType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_trie::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -507,7 +507,7 @@ int32_t ft_trie<ValueType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_trie::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -523,14 +523,14 @@ void ft_trie<ValueType>::unlock(ft_bool lock_acquired) const
 template <typename ValueType>
 uint32_t ft_trie<ValueType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_trie::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::get_error");
     return (_last_error);
 }
 
 template <typename ValueType>
 const char *ft_trie<ValueType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_trie::get_error_str");
     return (ft_strerror(_last_error));
 }

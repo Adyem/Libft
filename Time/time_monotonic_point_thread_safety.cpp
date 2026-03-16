@@ -8,7 +8,7 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
-static void time_monotonic_point_disable_thread_safety(t_monotonic_time_point *time_point)
+static void time_monotonic_point_disable_thread_safety_internal(t_monotonic_time_point *time_point)
 {
     if (!time_point)
         return ;
@@ -27,7 +27,7 @@ static int32_t  time_monotonic_point_report_result(int32_t error_code)
     return (error_code);
 }
 
-int32_t time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_point)
+int32_t time_monotonic_point_enable_thread_safety(t_monotonic_time_point *time_point)
 {
     pt_mutex    *mutex_pointer;
     void        *memory;
@@ -44,9 +44,9 @@ int32_t time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_
         int32_t mutex_error;
 
         if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESS;
+            mutex_error = FT_ERR_NO_MEMORY;
         else
-            mutex_error = FT_ERR_SUCCESS;
+            mutex_error = mutex_pointer->initialize();
 
         if (mutex_error != FT_ERR_SUCCESS)
         {
@@ -60,11 +60,11 @@ int32_t time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_
     return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
 }
 
-void    time_monotonic_point_teardown_thread_safety(t_monotonic_time_point *time_point)
+void    time_monotonic_point_disable_thread_safety(t_monotonic_time_point *time_point)
 {
     if (!time_point)
         return ;
-    time_monotonic_point_disable_thread_safety(time_point);
+    time_monotonic_point_disable_thread_safety_internal(time_point);
     return ;
 }
 

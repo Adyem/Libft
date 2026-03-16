@@ -179,7 +179,7 @@ int64_t time_fps::get_frames_per_second(void) noexcept
     int64_t frames_per_second_value;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::get_frames_per_second");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_fps::get_frames_per_second");
     frames_per_second_value = static_cast<int64_t>(0);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -194,7 +194,7 @@ int32_t time_fps::set_frames_per_second(int64_t frames_per_second) noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::set_frames_per_second");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_fps::set_frames_per_second");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
@@ -217,7 +217,7 @@ void time_fps::sleep_to_next_frame(void) noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::sleep_to_next_frame");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_fps::sleep_to_next_frame");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -243,7 +243,7 @@ int32_t time_fps::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "time_fps::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_fps::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();

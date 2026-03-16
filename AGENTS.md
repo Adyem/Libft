@@ -137,6 +137,7 @@ Lifecycle state:
 - Default constructors may only perform non-fallible setup that leaves the object in an uninitialised-ready state (`state = 0`).
 - Constructors may zero/reset fields into a safe known uninitialised-ready state (`state = 0`), but must not perform fallible setup.
 - Member-class objects must not be lifecycle-initialised in the constructor; they remain uninitialised until the owning class `initialize(...)` runs and initializes them explicitly.
+- Assignment operators and value setters (for example `operator=`, `set_*`) must not implicitly initialize an uninitialised lifecycle object; callers must call `initialize(...)` first, and assignment/value operations may assume the object is already initialised.
 - All fallible setup belongs in `initialize(...)`.
 - Lifecycle class instances may be created on stack or heap; in both cases, callers are responsible for calling `initialize(...)` before first use.
 
@@ -149,15 +150,16 @@ Lifecycle error signaling:
 - `get_error()` and `get_error_str()` must abort via `su_abort();` when `_initialised_state == FT_CLASS_STATE_UNINITIALISED`.
 - Calling `get_error()` and `get_error_str()` in destroyed state (`_initialised_state == FT_CLASS_STATE_DESTROYED`) is valid and must report based on `_last_error`.
 - Use a separate lifecycle-state helper (for example `is_initialised()`) when callers need to validate whether an object is initialised.
+- `get_error()` and `get_error_str()` must be instance methods (non-static). Static class-scope error queries (for example `ft_string::get_error()`) are forbidden; callers must query a concrete object instance (for example `value.get_error()`).
 
 Shared lifecycle abort helper:
 - Lifecycle abort formatting/behavior must be centralized in shared Errno internal helpers instead of per-class duplicated implementations.
 - These helpers are for internal use only and must be declared in `Errno/errno_internal.hpp`.
 - Required internal helper prototypes:
-  - `void errno_abort_if_uninitialised(uint8_t initialised_state, const char *method_name);`
+  - `void errno_abort_if_uninitialised_or_destroyed(uint8_t initialised_state, const char *method_name);`
   - `void errno_abort_lifecycle(uint8_t initialised_state, const char *method_name, const char *reason);`
 - Usage rules:
-  - `errno_abort_if_uninitialised(...)` is used for the common guard path where a method requires `state == 2` and no custom reason text is needed.
+  - `errno_abort_if_uninitialised_or_destroyed(...)` is used for the common guard path where a method requires `state == 2` and no custom reason text is needed.
   - `errno_abort_lifecycle(...)` is used when a specific reason must be attached (for example invalid source state in copy/move flows).
   - Classes must pass lifecycle state and method context into these helpers; classes must not format lifecycle abort messages locally.
 - The helper prints a clear message to `stderr` and calls `su_abort();`.

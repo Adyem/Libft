@@ -249,7 +249,7 @@ int32_t game_behavior_profile::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -315,7 +315,7 @@ int32_t game_behavior_profile::unlock_internal(ft_bool lock_acquired) const noex
 
 int32_t game_behavior_profile::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::lock");
     int32_t lock_error = this->lock_internal(lock_acquired);
     this->set_error(lock_error);
     return (lock_error);
@@ -323,7 +323,7 @@ int32_t game_behavior_profile::lock(ft_bool *lock_acquired) const noexcept
 
 void game_behavior_profile::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::unlock");
 
     (void)this->unlock_internal(lock_acquired);
     return ;
@@ -331,7 +331,7 @@ void game_behavior_profile::unlock(ft_bool lock_acquired) const noexcept
 
 int32_t game_behavior_profile::get_profile_id() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::get_profile_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::get_profile_id");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_profile_id);
 }
@@ -340,7 +340,7 @@ void game_behavior_profile::set_profile_id(int32_t profile_id) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::set_profile_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::set_profile_id");
     int32_t lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -355,7 +355,7 @@ void game_behavior_profile::set_profile_id(int32_t profile_id) noexcept
 
 double game_behavior_profile::get_aggression_weight() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::get_aggression_weight");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::get_aggression_weight");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_aggression_weight);
 }
@@ -364,7 +364,7 @@ void game_behavior_profile::set_aggression_weight(double aggression_weight) noex
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::set_aggression_weight");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::set_aggression_weight");
     int32_t lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -379,7 +379,7 @@ void game_behavior_profile::set_aggression_weight(double aggression_weight) noex
 
 double game_behavior_profile::get_caution_weight() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::get_caution_weight");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::get_caution_weight");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_caution_weight);
 }
@@ -388,7 +388,7 @@ void game_behavior_profile::set_caution_weight(double caution_weight) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::set_caution_weight");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::set_caution_weight");
     int32_t lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -403,14 +403,14 @@ void game_behavior_profile::set_caution_weight(double caution_weight) noexcept
 
 ft_vector<game_behavior_action> &game_behavior_profile::get_actions() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::get_actions");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::get_actions");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_actions);
 }
 
 const ft_vector<game_behavior_action> &game_behavior_profile::get_actions() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::get_actions const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::get_actions const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_actions);
 }
@@ -420,7 +420,7 @@ void game_behavior_profile::set_actions(
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_profile::set_actions");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_profile::set_actions");
     int32_t lock_error;
 
     lock_error = this->lock_internal(&lock_acquired);
@@ -439,7 +439,7 @@ void game_behavior_profile::set_actions(
 int32_t game_behavior_profile::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_behavior_profile::get_error");
     return (static_cast<int32_t>(game_behavior_profile::_last_error));
 }
@@ -447,7 +447,7 @@ int32_t game_behavior_profile::get_error() const noexcept
 const char *game_behavior_profile::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_behavior_profile::get_error_str");
     return (ft_strerror(this->get_error()));
 }

@@ -4,6 +4,7 @@
 #include "../Template/map.hpp"
 #include "../Template/vector.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../Basic/basic.hpp"
 #include "../Time/time.hpp"
@@ -24,25 +25,38 @@
 struct networking_dns_cache_entry
 {
     ft_vector<networking_resolved_address> addresses;
+    ft_bool                                   addresses_initialised;
     int64_t                                   expiration_ms;
 
     networking_dns_cache_entry() noexcept
-        : addresses(), expiration_ms(0)
+        : addresses(), addresses_initialised(FT_FALSE), expiration_ms(0)
     {
+        if (this->addresses.initialize() == FT_ERR_SUCCESS)
+            this->addresses_initialised = FT_TRUE;
         return ;
     }
 
     ~networking_dns_cache_entry() noexcept
     {
+        if (this->addresses_initialised == FT_TRUE)
+        {
+            (void)this->addresses.destroy();
+            this->addresses_initialised = FT_FALSE;
+        }
         return ;
     }
 
     networking_dns_cache_entry(const networking_dns_cache_entry &other) noexcept
-        : addresses(), expiration_ms(other.expiration_ms)
+        : addresses(), addresses_initialised(FT_FALSE), expiration_ms(other.expiration_ms)
     {
         ft_size_t index;
         ft_size_t count;
 
+        if (this->addresses.initialize() != FT_ERR_SUCCESS)
+            return ;
+        this->addresses_initialised = FT_TRUE;
+        if (other.addresses_initialised == FT_FALSE)
+            return ;
         index = 0;
         count = other.addresses.size();
         while (index < count)
@@ -60,7 +74,18 @@ struct networking_dns_cache_entry
             ft_size_t index;
             ft_size_t count;
 
+            if (this->addresses_initialised == FT_FALSE)
+            {
+                if (this->addresses.initialize() != FT_ERR_SUCCESS)
+                    return (*this);
+                this->addresses_initialised = FT_TRUE;
+            }
             this->addresses.clear();
+            if (other.addresses_initialised == FT_FALSE)
+            {
+                this->expiration_ms = other.expiration_ms;
+                return (*this);
+            }
             index = 0;
             count = other.addresses.size();
             while (index < count)
@@ -75,7 +100,7 @@ struct networking_dns_cache_entry
 };
 
 static ft_map<ft_string, networking_dns_cache_entry>   g_networking_dns_cache;
-static pt_mutex                                        g_networking_dns_cache_mutex;
+static pt_mutex                                        *g_networking_dns_cache_mutex = ft_nullptr;
 static const int64_t                                      g_networking_dns_cache_ttl_ms = 60000;
 
 static void networking_push_failure(int32_t error_code) noexcept
@@ -85,9 +110,12 @@ static void networking_push_failure(int32_t error_code) noexcept
 
 static int32_t networking_dns_cache_lock(ft_bool *lock_acquired) noexcept
 {
+    uint32_t    lock_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
-    if (g_networking_dns_cache_mutex.lock() != FT_ERR_SUCCESS)
+    lock_error = pt_mutex_lock_if_not_null(g_networking_dns_cache_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_TRUE;
@@ -98,9 +126,65 @@ static int32_t networking_dns_cache_unlock(ft_bool lock_acquired) noexcept
 {
     if (lock_acquired == FT_FALSE)
         return (FT_ERR_SUCCESS);
-    if (g_networking_dns_cache_mutex.unlock() != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+    (void)pt_mutex_unlock_if_not_null(g_networking_dns_cache_mutex);
     return (FT_ERR_SUCCESS);
+}
+
+static int32_t networking_dns_cache_ensure_initialised(void) noexcept
+{
+    int32_t initialise_error;
+
+    if (g_networking_dns_cache.is_initialised() == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    initialise_error = g_networking_dns_cache.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+        return (initialise_error);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t networking_dns_enable_thread_safety(void) noexcept
+{
+    pt_mutex    *new_mutex;
+    int32_t     initialise_error;
+
+    if (g_networking_dns_cache_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    new_mutex = new (std::nothrow) pt_mutex();
+    if (new_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialise_error = new_mutex->initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        return (initialise_error);
+    }
+    g_networking_dns_cache_mutex = new_mutex;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t networking_dns_disable_thread_safety(void) noexcept
+{
+    pt_mutex    *mutex_pointer;
+    int32_t     first_error;
+    int32_t     destroy_error;
+
+    mutex_pointer = g_networking_dns_cache_mutex;
+    g_networking_dns_cache_mutex = ft_nullptr;
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    first_error = FT_ERR_SUCCESS;
+    destroy_error = mutex_pointer->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        first_error = destroy_error;
+    delete mutex_pointer;
+    return (first_error);
+}
+
+ft_bool networking_dns_is_thread_safe(void) noexcept
+{
+    if (g_networking_dns_cache_mutex != ft_nullptr)
+        return (FT_TRUE);
+    return (FT_FALSE);
 }
 
 static ft_bool networking_dns_append_literal(ft_string &target, const char *literal) noexcept
@@ -286,6 +370,12 @@ ft_bool networking_dns_resolve(const char *host, const char *service,
         return (FT_FALSE);
     lookup_start_ms = time_now_ms();
     lookup_start_valid = FT_TRUE;
+    cache_lock_error = networking_dns_cache_ensure_initialised();
+    if (cache_lock_error != FT_ERR_SUCCESS)
+    {
+        networking_push_failure(cache_lock_error);
+        return (FT_FALSE);
+    }
     cache_lock_acquired = FT_FALSE;
     cache_lock_error = networking_dns_cache_lock(&cache_lock_acquired);
     if (cache_lock_error != FT_ERR_SUCCESS)
@@ -397,6 +487,8 @@ ft_bool networking_dns_resolve(const char *host, const char *service,
         else
             expiration_ms = cache_record_ms + g_networking_dns_cache_ttl_ms;
         cache_value.expiration_ms = expiration_ms;
+        if (cache_value.addresses_initialised == FT_FALSE)
+            return (FT_TRUE);
         if (networking_dns_copy_addresses(out_addresses, cache_value.addresses))
         {
             ft_bool update_lock_acquired;
@@ -428,17 +520,29 @@ ft_bool networking_dns_resolve_first(const char *host, const char *service,
     networking_resolved_address &out_address) noexcept
 {
     ft_vector<networking_resolved_address> results;
+    int32_t     initialise_error;
     ft_size_t count;
 
-    if (!networking_dns_resolve(host, service, family, socktype, protocol, flags, results))
+    initialise_error = results.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+    {
+        networking_push_failure(initialise_error);
         return (FT_FALSE);
+    }
+    if (!networking_dns_resolve(host, service, family, socktype, protocol, flags, results))
+    {
+        (void)results.destroy();
+        return (FT_FALSE);
+    }
     count = results.size();
     if (count == 0)
     {
         networking_push_failure(FT_ERR_SOCKET_RESOLVE_FAILED);
+        (void)results.destroy();
         return (FT_FALSE);
     }
     out_address = results[0];
+    (void)results.destroy();
     (void)(FT_ERR_SUCCESS);
     return (FT_TRUE);
 }
@@ -447,7 +551,14 @@ void networking_dns_clear_cache(void) noexcept
 {
     ft_bool cache_lock_acquired;
     int32_t cache_lock_error;
+    int32_t cache_init_error;
 
+    cache_init_error = networking_dns_cache_ensure_initialised();
+    if (cache_init_error != FT_ERR_SUCCESS)
+    {
+        networking_push_failure(cache_init_error);
+        return ;
+    }
     cache_lock_acquired = FT_FALSE;
     cache_lock_error = networking_dns_cache_lock(&cache_lock_acquired);
 

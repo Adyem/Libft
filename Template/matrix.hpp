@@ -360,7 +360,7 @@ int32_t ft_matrix<ElementType>::enable_thread_safety()
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -382,7 +382,7 @@ int32_t ft_matrix<ElementType>::disable_thread_safety()
     int32_t destroy_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::disable_thread_safety");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     destroy_error = this->_mutex->destroy();
@@ -394,7 +394,7 @@ int32_t ft_matrix<ElementType>::disable_thread_safety()
 template <typename ElementType>
 ft_bool ft_matrix<ElementType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -404,7 +404,7 @@ int32_t ft_matrix<ElementType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::lock");
     lock_error = this->lock_internal(lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (set_error(lock_error));
@@ -414,7 +414,7 @@ int32_t ft_matrix<ElementType>::lock(ft_bool *lock_acquired) const
 template <typename ElementType>
 void ft_matrix<ElementType>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
     return ;
@@ -427,7 +427,7 @@ ft_bool ft_matrix<ElementType>::init(ft_size_t rows, ft_size_t cols)
     int32_t lock_error;
     ft_bool init_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::init");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::init");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -451,7 +451,7 @@ ElementType& ft_matrix<ElementType>::at(ft_size_t row_index, ft_size_t column_in
     int32_t lock_error;
     ElementType *element_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::at");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::at");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -481,7 +481,7 @@ const ElementType& ft_matrix<ElementType>::at(ft_size_t row_index,
     int32_t lock_error;
     const ElementType *element_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::at const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::at const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -509,7 +509,7 @@ ft_size_t ft_matrix<ElementType>::rows() const
     int32_t lock_error;
     ft_size_t current_rows;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::rows");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::rows");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -530,7 +530,7 @@ ft_size_t ft_matrix<ElementType>::cols() const
     int32_t lock_error;
     ft_size_t current_cols;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::cols");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::cols");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -555,8 +555,8 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
     ft_size_t total;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::add");
-    errno_abort_if_uninitialised(other._initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::add");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state,
         "ft_matrix::add(other)");
     if (result.initialize() != FT_ERR_SUCCESS)
     {
@@ -617,8 +617,8 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
     ft_size_t column_index;
     ft_size_t inner_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::multiply");
-    errno_abort_if_uninitialised(other._initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::multiply");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state,
         "ft_matrix::multiply(other)");
     if (result.initialize() != FT_ERR_SUCCESS)
     {
@@ -690,7 +690,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
     ft_size_t row_index;
     ft_size_t column_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::transpose");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::transpose");
     if (result.initialize() != FT_ERR_SUCCESS)
         return (result);
     lock_acquired = FT_FALSE;
@@ -731,7 +731,7 @@ ElementType ft_matrix<ElementType>::determinant() const
     ft_size_t index;
     ft_size_t pivot_row;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::determinant");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::determinant");
     determinant_value = ElementType();
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -832,7 +832,7 @@ void ft_matrix<ElementType>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_matrix::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -849,7 +849,7 @@ void ft_matrix<ElementType>::clear()
 template <typename ElementType>
 uint32_t ft_matrix<ElementType>::get_error() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_matrix::get_error");
     return (ft_matrix<ElementType>::_last_error);
 }
@@ -857,7 +857,7 @@ uint32_t ft_matrix<ElementType>::get_error() const
 template <typename ElementType>
 const char *ft_matrix<ElementType>::get_error_str() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_matrix::get_error_str");
     return (ft_strerror(this->get_error()));
 }

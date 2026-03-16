@@ -443,7 +443,7 @@ ft_bool ft_optional<ElementType>::has_value() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_optional::has_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_optional::has_value");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -465,7 +465,7 @@ ElementType& ft_optional<ElementType>::value()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_optional::value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_optional::value");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -493,7 +493,7 @@ const ElementType& ft_optional<ElementType>::value() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_optional::value const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_optional::value const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -586,7 +586,7 @@ void ft_optional<ElementType>::reset()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_optional::reset");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_optional::reset");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -646,7 +646,7 @@ int32_t ft_optional<ElementType>::disable_thread_safety() noexcept
 template <typename ElementType>
 uint32_t ft_optional<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_optional::get_error");
     return (_last_error);
 }
@@ -654,7 +654,7 @@ uint32_t ft_optional<ElementType>::get_error() const noexcept
 template <typename ElementType>
 const char *ft_optional<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_optional::get_error_str");
     return (ft_strerror(_last_error));
 }

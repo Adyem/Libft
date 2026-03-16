@@ -398,7 +398,7 @@ int32_t ft_queue<ElementType>::enable_thread_safety()
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (ft_queue<ElementType>::set_error(FT_ERR_SUCCESS));
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -419,7 +419,7 @@ int32_t ft_queue<ElementType>::disable_thread_safety()
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (ft_queue<ElementType>::set_error(FT_ERR_SUCCESS));
     destroy_error = this->_mutex->destroy();
@@ -431,7 +431,7 @@ int32_t ft_queue<ElementType>::disable_thread_safety()
 template <typename ElementType>
 ft_bool ft_queue<ElementType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::is_thread_safe");
     ft_queue<ElementType>::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -441,7 +441,7 @@ int32_t ft_queue<ElementType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::lock");
     lock_error = this->lock_internal(lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_queue<ElementType>::set_error(lock_error));
@@ -451,7 +451,7 @@ int32_t ft_queue<ElementType>::lock(ft_bool *lock_acquired) const
 template <typename ElementType>
 void ft_queue<ElementType>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::unlock");
     (void)this->unlock_internal(lock_acquired);
     ft_queue<ElementType>::set_error(FT_ERR_SUCCESS);
     return ;
@@ -490,7 +490,7 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::enqueue(const ElementType&)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::enqueue(const ElementType&)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -530,7 +530,7 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::enqueue(ElementType&&)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::enqueue(ElementType&&)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -571,7 +571,7 @@ ElementType ft_queue<ElementType>::dequeue()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::dequeue");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::dequeue");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -606,7 +606,7 @@ ElementType& ft_queue<ElementType>::front()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::front");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::front");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -634,7 +634,7 @@ const ElementType& ft_queue<ElementType>::front() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::front const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::front const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -661,7 +661,7 @@ typename ft_queue<ElementType>::value_proxy ft_queue<ElementType>::front_proxy()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::front_proxy");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::front_proxy");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -691,7 +691,7 @@ ft_size_t ft_queue<ElementType>::size() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -712,7 +712,7 @@ ft_bool ft_queue<ElementType>::empty() const
     ft_bool is_empty;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -732,7 +732,7 @@ void ft_queue<ElementType>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -749,14 +749,14 @@ void ft_queue<ElementType>::clear()
 template <typename ElementType>
 uint32_t ft_queue<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::get_error");
     return (ft_queue<ElementType>::_last_error);
 }
 
 template <typename ElementType>
 const char *ft_queue<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_queue::get_error_str");
     return (ft_strerror(this->get_error()));
 }

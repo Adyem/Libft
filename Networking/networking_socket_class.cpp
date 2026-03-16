@@ -335,7 +335,7 @@ ssize_t ft_socket::send_data(const void *data, ft_size_t size, int32_t flags)
     ssize_t bytes_sent;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::send_data");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::send_data");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -349,7 +349,7 @@ ssize_t ft_socket::send_all(const void *data, ft_size_t size, int32_t flags)
     ssize_t result;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::send_all");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::send_all");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -364,7 +364,7 @@ ssize_t ft_socket::receive_data(void *buffer, ft_size_t size, int32_t flags)
     ssize_t result;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::receive_data");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::receive_data");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -390,7 +390,7 @@ ft_bool ft_socket::close_socket()
     ft_bool shutdown_success;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::close_socket");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::close_socket");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -442,7 +442,7 @@ ssize_t ft_socket::send_data(const void *data, ft_size_t size, int32_t flags, in
     ssize_t result;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::send_data(file_descriptor)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::send_data(file_descriptor)");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -475,7 +475,7 @@ ssize_t ft_socket::broadcast_data(const void *data, ft_size_t size, int32_t flag
     ft_size_t index;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::broadcast_data");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::broadcast_data");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -517,7 +517,7 @@ int32_t ft_socket::accept_connection()
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::accept_connection");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::accept_connection");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -557,7 +557,7 @@ ft_bool ft_socket::disconnect_client(int32_t file_descriptor)
     ft_size_t index;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::disconnect_client");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::disconnect_client");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -590,7 +590,7 @@ void ft_socket::disconnect_all_clients()
     ft_size_t index;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::disconnect_all_clients");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::disconnect_all_clients");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -612,7 +612,7 @@ ft_size_t ft_socket::get_client_count() const
     ft_size_t count;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::get_client_count");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::get_client_count");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
@@ -628,7 +628,7 @@ ft_bool ft_socket::is_client_connected(int32_t file_descriptor) const
     ft_bool connected;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::is_client_connected");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::is_client_connected");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -653,7 +653,7 @@ int32_t ft_socket::get_file_descriptor() const
     int32_t descriptor;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::get_fd");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::get_fd");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -667,7 +667,7 @@ const struct sockaddr_storage &ft_socket::get_address() const
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::get_address");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::get_address");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_address);
@@ -680,7 +680,7 @@ void ft_socket::reset_to_empty_state()
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_socket::reset_to_empty_state");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_socket::reset_to_empty_state");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;

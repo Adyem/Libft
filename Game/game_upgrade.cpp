@@ -15,7 +15,7 @@ uint32_t game_upgrade::set_error(uint32_t error_code) noexcept
 int32_t game_upgrade::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_upgrade::get_error");
     return (static_cast<int32_t>(game_upgrade::_last_error));
 }
@@ -23,7 +23,7 @@ int32_t game_upgrade::get_error() const noexcept
 const char *game_upgrade::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_upgrade::get_error_str");
     return (ft_strerror(this->get_error()));
 }
@@ -244,7 +244,7 @@ int32_t game_upgrade::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -295,7 +295,7 @@ int32_t game_upgrade::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -312,7 +312,7 @@ int32_t game_upgrade::lock_internal(ft_bool *lock_acquired) const noexcept
 
 int32_t game_upgrade::unlock_internal(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::unlock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::unlock_internal");
     if (lock_acquired == FT_FALSE)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -325,13 +325,13 @@ int32_t game_upgrade::unlock_internal(ft_bool lock_acquired) const noexcept
 
 int32_t game_upgrade::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void game_upgrade::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -342,7 +342,7 @@ int32_t game_upgrade::get_id() const noexcept
     int32_t lock_error;
     int32_t identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::get_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::get_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -361,7 +361,7 @@ void game_upgrade::set_id(int32_t id) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::set_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::set_id");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -381,7 +381,7 @@ uint16_t game_upgrade::get_current_level() const noexcept
     int32_t lock_error;
     uint16_t level_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::get_current_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::get_current_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -400,7 +400,7 @@ void game_upgrade::set_current_level(uint16_t level) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::set_current_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::set_current_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -419,7 +419,7 @@ void game_upgrade::add_level(uint16_t level) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::add_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::add_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -438,7 +438,7 @@ void game_upgrade::sub_level(uint16_t level) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::sub_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::sub_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -458,7 +458,7 @@ uint16_t game_upgrade::get_max_level() const noexcept
     int32_t lock_error;
     uint16_t max_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::get_max_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::get_max_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -477,7 +477,7 @@ void game_upgrade::set_max_level(uint16_t level) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::set_max_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::set_max_level");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -497,7 +497,7 @@ int32_t game_upgrade::get_modifier1() const noexcept
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::get_modifier1");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::get_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -516,7 +516,7 @@ void game_upgrade::set_modifier1(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::set_modifier1");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::set_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -535,7 +535,7 @@ void game_upgrade::add_modifier1(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::add_modifier1");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::add_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -554,7 +554,7 @@ void game_upgrade::sub_modifier1(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::sub_modifier1");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::sub_modifier1");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -574,7 +574,7 @@ int32_t game_upgrade::get_modifier2() const noexcept
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::get_modifier2");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::get_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -593,7 +593,7 @@ void game_upgrade::set_modifier2(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::set_modifier2");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::set_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -612,7 +612,7 @@ void game_upgrade::add_modifier2(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::add_modifier2");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::add_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -631,7 +631,7 @@ void game_upgrade::sub_modifier2(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::sub_modifier2");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::sub_modifier2");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -651,7 +651,7 @@ int32_t game_upgrade::get_modifier3() const noexcept
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::get_modifier3");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::get_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -670,7 +670,7 @@ void game_upgrade::set_modifier3(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::set_modifier3");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::set_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -689,7 +689,7 @@ void game_upgrade::add_modifier3(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::add_modifier3");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::add_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -708,7 +708,7 @@ void game_upgrade::sub_modifier3(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::sub_modifier3");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::sub_modifier3");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -728,7 +728,7 @@ int32_t game_upgrade::get_modifier4() const noexcept
     int32_t lock_error;
     int32_t value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::get_modifier4");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::get_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -747,7 +747,7 @@ void game_upgrade::set_modifier4(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::set_modifier4");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::set_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -766,7 +766,7 @@ void game_upgrade::add_modifier4(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::add_modifier4");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::add_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -785,7 +785,7 @@ void game_upgrade::sub_modifier4(int32_t mod) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_upgrade::sub_modifier4");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_upgrade::sub_modifier4");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

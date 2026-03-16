@@ -261,7 +261,7 @@ Iterator<ValueType>& Iterator<ValueType>::operator++() noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Iterator::operator++");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::operator++");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -289,8 +289,8 @@ ft_bool Iterator<ValueType>::operator!=(const Iterator& other) const noexcept
     int32_t lock_error;
     ft_bool is_different;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Iterator::operator!=");
-    errno_abort_if_uninitialised(other._initialised_state, "Iterator::operator!= other");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::operator!=");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state, "Iterator::operator!= other");
     this_lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&this_lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -320,7 +320,7 @@ typename Iterator<ValueType>::reference_proxy Iterator<ValueType>::operator*() c
     int32_t lock_error;
     ValueType *pointer_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Iterator::operator*");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::operator*");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -339,7 +339,7 @@ ValueType *Iterator<ValueType>::operator->() const noexcept
     int32_t lock_error;
     ValueType *pointer_value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Iterator::operator->");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::operator->");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -364,7 +364,7 @@ int32_t Iterator<ValueType>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Iterator::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -417,7 +417,7 @@ int32_t Iterator<ValueType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Iterator::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -433,14 +433,14 @@ void Iterator<ValueType>::unlock(ft_bool lock_acquired) const
 template <typename ValueType>
 uint32_t Iterator<ValueType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "Iterator::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::get_error");
     return (_last_error);
 }
 
 template <typename ValueType>
 const char *Iterator<ValueType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "Iterator::get_error_str");
     return (ft_strerror(_last_error));
 }

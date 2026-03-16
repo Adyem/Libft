@@ -305,7 +305,7 @@ inline int32_t    scma_handle_accessor<TValue>::enable_thread_safety(void)
 {
     int32_t operation_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "scma_handle_accessor::enable_thread_safety");
     operation_error = scma_enable_thread_safety();
     this->set_error(static_cast<uint32_t>(operation_error));
@@ -317,7 +317,7 @@ inline int32_t    scma_handle_accessor<TValue>::disable_thread_safety(void)
 {
     int32_t operation_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "scma_handle_accessor::disable_thread_safety");
     operation_error = scma_disable_thread_safety();
     this->set_error(static_cast<uint32_t>(operation_error));
@@ -329,7 +329,7 @@ inline ft_bool    scma_handle_accessor<TValue>::is_thread_safe(void) const
 {
     ft_bool is_enabled;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "scma_handle_accessor::is_thread_safe");
     is_enabled = scma_is_thread_safe_enabled();
     this->set_error(FT_ERR_SUCCESS);
@@ -339,7 +339,7 @@ inline ft_bool    scma_handle_accessor<TValue>::is_thread_safe(void) const
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::is_initialised(void) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "scma_handle_accessor::is_initialised");
     this->set_error(FT_ERR_SUCCESS);
     return (1);
@@ -348,7 +348,7 @@ inline int32_t    scma_handle_accessor<TValue>::is_initialised(void) const
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::bind(scma_handle handle)
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "scma_handle_accessor::bind");
     if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
@@ -372,7 +372,7 @@ inline int32_t    scma_handle_accessor<TValue>::is_bound(void) const
 {
     int32_t is_bound_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "scma_handle_accessor::is_bound");
     is_bound_result = 0;
     if (scma_mutex_lock() != FT_ERR_SUCCESS)
@@ -396,7 +396,7 @@ inline scma_handle    scma_handle_accessor<TValue>::get_handle(void) const
 {
     scma_handle handle;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "scma_handle_accessor::get_handle");
     handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);

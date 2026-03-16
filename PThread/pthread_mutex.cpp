@@ -29,7 +29,7 @@ pt_mutex::~pt_mutex()
 
 int pt_mutex::ensure_native_mutex() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::ensure_native_mutex");
     if (this->_native_mutex == ft_nullptr)
     {
@@ -93,14 +93,14 @@ int pt_mutex::destroy()
 
 bool pt_mutex::lockState() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::lockState");
     return (this->_lock.load(std::memory_order_acquire));
 }
 
 int pt_mutex::lock_internal(bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
@@ -118,7 +118,7 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
 
 int pt_mutex::unlock_internal(bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::unlock_internal");
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -138,7 +138,7 @@ void pt_mutex::teardown_thread_safety()
 
 int pt_mutex::lock_state(bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::lock_state");
     int lock_error = this->lock_internal(lock_acquired);
 
@@ -149,7 +149,7 @@ int pt_mutex::lock_state(bool *lock_acquired) const
 
 void pt_mutex::unlock_state(bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::unlock_state");
     (void)this->unlock_internal(lock_acquired);
     return ;
@@ -157,7 +157,7 @@ void pt_mutex::unlock_state(bool lock_acquired) const
 
 bool pt_mutex::is_owned_by_thread(pt_thread_id_type thread_id) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::is_owned_by_thread");
     pthread_t owner_thread;
     pt_mutex_vector owned_mutexes;

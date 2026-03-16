@@ -239,7 +239,7 @@ void ft_bitset::set(ft_size_t position)
     ft_bool lock_acquired;
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::set");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::set");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -261,7 +261,7 @@ void ft_bitset::reset(ft_size_t position)
     ft_bool lock_acquired;
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::reset");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::reset");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -283,7 +283,7 @@ void ft_bitset::flip(ft_size_t position)
     ft_bool lock_acquired;
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::flip");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::flip");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -306,7 +306,7 @@ ft_bool ft_bitset::test(ft_size_t position) const
     int32_t lock_result;
     ft_bool result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::test");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::test");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -329,7 +329,7 @@ ft_size_t ft_bitset::size() const
     ft_bool lock_acquired;
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::size");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -346,7 +346,7 @@ void ft_bitset::clear()
     int32_t lock_result;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::clear");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -367,7 +367,7 @@ int32_t ft_bitset::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_bitset::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
@@ -405,20 +405,20 @@ int32_t ft_bitset::disable_thread_safety()
 
 ft_bool ft_bitset::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
 
 int32_t ft_bitset::lock(ft_bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::lock");
     return (set_error(this->lock_internal(lock_acquired)));
 }
 
 void ft_bitset::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
     return ;
@@ -426,13 +426,13 @@ void ft_bitset::unlock(ft_bool lock_acquired) const
 
 uint32_t ft_bitset::get_error() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::get_error");
     return (_last_error);
 }
 
 const char *ft_bitset::get_error_str() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::get_error_str");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::get_error_str");
     return (ft_strerror(_last_error));
 }
 

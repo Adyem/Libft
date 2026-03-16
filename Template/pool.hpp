@@ -370,14 +370,14 @@ void Pool<T>::Object::unlock(ft_bool lock_acquired) const
 template<typename T>
 uint32_t Pool<T>::Object::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::Object::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::Object::get_error");
     return (_last_error);
 }
 
 template<typename T>
 const char *Pool<T>::Object::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "Pool::Object::get_error_str");
     return (ft_strerror(_last_error));
 }
@@ -487,7 +487,7 @@ void Pool<T>::resize(ft_size_t new_size)
     int32_t lock_error;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::resize");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::resize");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -521,7 +521,7 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     T *constructed_pointer;
     Object result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::acquire");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::acquire");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -563,7 +563,7 @@ int32_t Pool<T>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -602,7 +602,7 @@ int32_t Pool<T>::disable_thread_safety()
 template<typename T>
 ft_bool Pool<T>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -612,7 +612,7 @@ int32_t Pool<T>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -628,14 +628,14 @@ void Pool<T>::unlock(ft_bool lock_acquired) const
 template<typename T>
 uint32_t Pool<T>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::get_error");
     return (_last_error);
 }
 
 template<typename T>
 const char *Pool<T>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "Pool::get_error_str");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::get_error_str");
     return (ft_strerror(_last_error));
 }
 

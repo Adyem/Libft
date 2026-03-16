@@ -437,7 +437,7 @@ void game_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcep
 int32_t game_behavior_action::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_behavior_action::get_error");
     return (static_cast<int32_t>(game_behavior_action::_last_error));
 }
@@ -445,7 +445,7 @@ int32_t game_behavior_action::get_error() const noexcept
 const char *game_behavior_action::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_behavior_action::get_error_str");
     return (ft_strerror(game_behavior_action::_last_error));
 }

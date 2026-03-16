@@ -325,7 +325,7 @@ int32_t game_dialogue_script::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -382,20 +382,20 @@ int32_t game_dialogue_script::unlock_internal(ft_bool lock_acquired) const noexc
 
 int32_t game_dialogue_script::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void game_dialogue_script::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int32_t game_dialogue_script::get_script_id() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::get_script_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::get_script_id");
     return (this->_script_id);
 }
 
@@ -403,7 +403,7 @@ void game_dialogue_script::set_script_id(int32_t script_id) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::set_script_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::set_script_id");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_script_id = script_id;
@@ -413,7 +413,7 @@ void game_dialogue_script::set_script_id(int32_t script_id) noexcept
 
 const ft_string &game_dialogue_script::get_title() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::get_title");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::get_title");
     return (this->_title);
 }
 
@@ -421,7 +421,7 @@ void game_dialogue_script::set_title(const ft_string &title) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::set_title");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::set_title");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_title = title;
@@ -431,7 +431,7 @@ void game_dialogue_script::set_title(const ft_string &title) noexcept
 
 const ft_string &game_dialogue_script::get_summary() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::get_summary");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::get_summary");
     return (this->_summary);
 }
 
@@ -439,7 +439,7 @@ void game_dialogue_script::set_summary(const ft_string &summary) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::set_summary");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::set_summary");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_summary = summary;
@@ -449,7 +449,7 @@ void game_dialogue_script::set_summary(const ft_string &summary) noexcept
 
 int32_t game_dialogue_script::get_start_line_id() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::get_start_line_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::get_start_line_id");
     return (this->_start_line_id);
 }
 
@@ -457,7 +457,7 @@ void game_dialogue_script::set_start_line_id(int32_t start_line_id) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::set_start_line_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::set_start_line_id");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_start_line_id = start_line_id;
@@ -467,13 +467,13 @@ void game_dialogue_script::set_start_line_id(int32_t start_line_id) noexcept
 
 const ft_vector<ft_sharedptr<game_dialogue_line> > &game_dialogue_script::get_lines() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::get_lines const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::get_lines const");
     return (this->_lines);
 }
 
 ft_vector<ft_sharedptr<game_dialogue_line> > &game_dialogue_script::get_lines() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::get_lines");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::get_lines");
     return (this->_lines);
 }
 
@@ -482,7 +482,7 @@ void game_dialogue_script::set_lines(
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_dialogue_script::set_lines");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_script::set_lines");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     game_dialogue_copy_line_vector(lines, this->_lines);
@@ -494,7 +494,7 @@ void game_dialogue_script::set_lines(
 int32_t game_dialogue_script::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_dialogue_script::get_error");
     return (static_cast<int32_t>(game_dialogue_script::_last_error));
 }
@@ -502,7 +502,7 @@ int32_t game_dialogue_script::get_error() const noexcept
 const char *game_dialogue_script::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_dialogue_script::get_error_str");
     return (ft_strerror(this->get_error()));
 }

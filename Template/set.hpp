@@ -393,7 +393,7 @@ int32_t ft_set<ElementType>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_set::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
@@ -433,7 +433,7 @@ int32_t ft_set<ElementType>::disable_thread_safety()
 template <typename ElementType>
 ft_bool ft_set<ElementType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_set::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
@@ -442,14 +442,14 @@ ft_bool ft_set<ElementType>::is_thread_safe() const
 template <typename ElementType>
 int32_t ft_set<ElementType>::lock(ft_bool *lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::lock");
     return (set_error(this->lock_internal(lock_acquired)));
 }
 
 template <typename ElementType>
 void ft_set<ElementType>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
     return ;
@@ -463,7 +463,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
     ft_size_t position;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::insert");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::insert");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -503,7 +503,7 @@ void ft_set<ElementType>::insert(ElementType&& value)
     ft_size_t position;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::insert(move)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::insert(move)");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -543,7 +543,7 @@ ElementType* ft_set<ElementType>::find(const ElementType& value)
     ft_size_t index;
     ElementType *result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::find");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::find");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -569,7 +569,7 @@ const ElementType* ft_set<ElementType>::find(const ElementType& value) const
     ft_size_t index;
     const ElementType *result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::find const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::find const");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -595,7 +595,7 @@ void ft_set<ElementType>::remove(const ElementType& value)
     ft_size_t index;
     ft_size_t current_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::remove");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::remove");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -628,7 +628,7 @@ ft_size_t ft_set<ElementType>::size() const
     int32_t lock_result;
     ft_size_t current_size;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::size");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -646,7 +646,7 @@ ft_bool ft_set<ElementType>::empty() const
     int32_t lock_result;
     ft_bool result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::empty");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -664,7 +664,7 @@ void ft_set<ElementType>::clear()
     int32_t lock_result;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::clear");
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
@@ -684,14 +684,14 @@ void ft_set<ElementType>::clear()
 template <typename ElementType>
 uint32_t ft_set<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::get_error");
     return (_last_error);
 }
 
 template <typename ElementType>
 const char *ft_set<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::get_error_str");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::get_error_str");
     return (ft_strerror(_last_error));
 }
 

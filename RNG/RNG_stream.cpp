@@ -56,7 +56,7 @@ int32_t rng_stream::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -76,7 +76,7 @@ int32_t rng_stream::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -328,7 +328,7 @@ int32_t rng_stream::destroy() noexcept
 int32_t rng_stream::reseed(uint32_t seed_value) noexcept
 {
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::reseed");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::reseed");
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
@@ -340,7 +340,7 @@ int32_t rng_stream::reseed_from_string(const char *seed_string) noexcept
 {
     uint32_t derived_seed;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::reseed_from_string");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::reseed_from_string");
     if (seed_string == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     derived_seed = ft_random_seed(seed_string);
@@ -369,7 +369,7 @@ Pair<int32_t,  int32_t> rng_stream::random_int()
 {
     int32_t value;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_int");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_int");
     value = 0;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
@@ -384,7 +384,7 @@ Pair<int32_t,  int32_t> rng_stream::dice_roll(int32_t number, int32_t faces)
     int32_t index;
     ft_bool overflowed;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::dice_roll");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::dice_roll");
     if (faces == 0 && number == 0)
         return (Pair<int32_t,  int32_t>(FT_ERR_SUCCESS, 0));
     if (faces < 1 || number < 1)
@@ -422,7 +422,7 @@ Pair<int32_t,  float> rng_stream::random_float()
 {
     float value;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_float");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_float");
     value = 0.0f;
     operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
@@ -440,7 +440,7 @@ Pair<int32_t,  float> rng_stream::random_normal()
     float result;
     const float PI_VALUE = 3.14159265358979323846f;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_normal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_normal");
     uniform_one = 0.0f;
     uniform_two = 0.0f;
     radius = 0.0f;
@@ -476,7 +476,7 @@ Pair<int32_t,  float> rng_stream::random_exponential(float lambda_value)
     float uniform_value;
     float result;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_exponential");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_exponential");
     if (lambda_value <= 0.0f)
         return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     uniform_value = 0.0f;
@@ -502,7 +502,7 @@ Pair<int32_t,  int32_t> rng_stream::random_poisson(double lambda_value)
     double product_value;
     int32_t count_value;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_poisson");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_poisson");
     if (lambda_value <= 0.0)
         return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     limit_value = math_exp(-lambda_value);
@@ -532,7 +532,7 @@ Pair<int32_t,  int32_t> rng_stream::random_binomial(int32_t trial_count, double 
     int32_t trial_index;
     int32_t success_count;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_binomial");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_binomial");
     if (trial_count < 0)
         return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     if (success_probability < 0.0)
@@ -571,7 +571,7 @@ Pair<int32_t,  int32_t> rng_stream::random_geometric(double success_probability)
     int32_t result;
     int32_t found_success;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_geometric");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_geometric");
     if (success_probability <= 0.0)
         return (Pair<int32_t,  int32_t>(FT_ERR_INVALID_ARGUMENT, 0));
     if (success_probability > 1.0)
@@ -609,7 +609,7 @@ Pair<int32_t,  float> rng_stream::random_gamma(float shape, float scale)
     std::gamma_distribution<float> distribution(shape, scale);
     float sample_value;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_gamma");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_gamma");
     if (shape <= 0.0f || scale <= 0.0f)
         return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;
@@ -629,7 +629,7 @@ Pair<int32_t,  float> rng_stream::random_beta(float alpha, float beta)
     float sum;
     float result;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_beta");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_beta");
     if (alpha <= 0.0f || beta <= 0.0f)
         return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     alpha_sample = 0.0f;
@@ -661,7 +661,7 @@ Pair<int32_t,  float> rng_stream::random_chi_squared(float degrees_of_freedom)
     std::gamma_distribution<float> distribution(degrees_of_freedom * 0.5f, 2.0f);
     float sample_value;
     int32_t operation_error;
-    errno_abort_if_uninitialised(this->_initialised_state, "rng_stream::random_chi_squared");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "rng_stream::random_chi_squared");
     if (degrees_of_freedom <= 0.0f)
         return (Pair<int32_t,  float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;

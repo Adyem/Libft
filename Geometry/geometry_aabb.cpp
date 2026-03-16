@@ -285,7 +285,7 @@ uint32_t aabb::set_bounds(double minimum_x, double minimum_y,
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::set_bounds");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::set_bounds");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -306,7 +306,7 @@ uint32_t aabb::set_minimum(double minimum_x, double minimum_y)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::set_minimum");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::set_minimum");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -325,7 +325,7 @@ uint32_t aabb::set_minimum_x(double minimum_x)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::set_minimum_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::set_minimum_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -343,7 +343,7 @@ uint32_t aabb::set_minimum_y(double minimum_y)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::set_minimum_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::set_minimum_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -361,7 +361,7 @@ uint32_t aabb::set_maximum(double maximum_x, double maximum_y)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::set_maximum");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::set_maximum");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -380,7 +380,7 @@ uint32_t aabb::set_maximum_x(double maximum_x)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::set_maximum_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::set_maximum_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -398,7 +398,7 @@ uint32_t aabb::set_maximum_y(double maximum_y)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::set_maximum_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::set_maximum_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -417,7 +417,7 @@ double aabb::get_minimum_x() const
     uint32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::get_minimum_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::get_minimum_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
@@ -431,7 +431,7 @@ double aabb::get_minimum_y() const
     uint32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::get_minimum_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::get_minimum_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
@@ -445,7 +445,7 @@ double aabb::get_maximum_x() const
     uint32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::get_maximum_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::get_maximum_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
@@ -459,7 +459,7 @@ double aabb::get_maximum_y() const
     uint32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::get_maximum_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::get_maximum_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
@@ -473,7 +473,7 @@ uint32_t aabb::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     uint32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -494,7 +494,7 @@ uint32_t aabb::disable_thread_safety() noexcept
     uint32_t mutex_error;
     pt_recursive_mutex *mutex_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "aabb::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "aabb::disable_thread_safety");
     mutex_pointer = this->_mutex;
     this->_mutex = ft_nullptr;
     if (mutex_pointer == ft_nullptr)

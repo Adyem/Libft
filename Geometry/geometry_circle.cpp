@@ -266,7 +266,7 @@ uint32_t circle::set_center(double center_x, double center_y)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::set_center");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::set_center");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -280,7 +280,7 @@ uint32_t circle::set_center_x(double center_x)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::set_center_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::set_center_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -293,7 +293,7 @@ uint32_t circle::set_center_y(double center_y)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::set_center_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::set_center_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -306,7 +306,7 @@ uint32_t circle::set_radius(double radius)
 {
     uint32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::set_radius");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::set_radius");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -320,7 +320,7 @@ double circle::get_center_x() const
     uint32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::get_center_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::get_center_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
@@ -334,7 +334,7 @@ double circle::get_center_y() const
     uint32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::get_center_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::get_center_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
@@ -348,7 +348,7 @@ double circle::get_radius() const
     uint32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::get_radius");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::get_radius");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
@@ -362,7 +362,7 @@ uint32_t circle::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     uint32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -383,7 +383,7 @@ uint32_t circle::disable_thread_safety() noexcept
     uint32_t mutex_error;
     pt_recursive_mutex *mutex_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "circle::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "circle::disable_thread_safety");
     mutex_pointer = this->_mutex;
     this->_mutex = ft_nullptr;
     if (mutex_pointer == ft_nullptr)

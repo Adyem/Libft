@@ -11,7 +11,7 @@
 
 int32_t kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::encrypt_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::encrypt_value");
     std::vector<uint8_t> output_buffer;
     const char *plain_c_string;
     ft_size_t plain_size;
@@ -96,7 +96,7 @@ int32_t kv_store::encrypt_value(const ft_string &plain_string, ft_string &encode
 
 int32_t kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::decrypt_value");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::decrypt_value");
     unsigned char *decoded_buffer;
     ft_size_t decoded_size;
     uint8_t header_plain[16];
@@ -188,7 +188,7 @@ int32_t kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plai
 
 int32_t kv_store::configure_encryption(const char *encryption_key, ft_bool enable_encryption)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::configure_encryption");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::configure_encryption");
     if (enable_encryption)
     {
         if (encryption_key == ft_nullptr)

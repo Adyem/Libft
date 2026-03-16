@@ -274,7 +274,7 @@ int32_t game_event_scheduler::lock_internal(ft_bool *lock_acquired) const noexce
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -293,7 +293,7 @@ int32_t game_event_scheduler::lock_internal(ft_bool *lock_acquired) const noexce
 void game_event_scheduler::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::unlock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::unlock_internal");
     if (lock_acquired == FT_FALSE)
         return ;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
@@ -305,7 +305,7 @@ void game_event_scheduler::schedule_event(const ft_sharedptr<game_event> &event)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::schedule_event");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::schedule_event");
     if (!event)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
@@ -332,7 +332,7 @@ void game_event_scheduler::cancel_event(int32_t id) noexcept
     ft_sharedptr<game_event> current_event;
     ft_bool event_found;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::cancel_event");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::cancel_event");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -367,7 +367,7 @@ void game_event_scheduler::reschedule_event(int32_t id, int32_t new_duration) no
     ft_sharedptr<game_event> current_event;
     ft_bool event_found;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::reschedule_event");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::reschedule_event");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -405,7 +405,7 @@ void game_event_scheduler::update_events(ft_sharedptr<game_world> &world,
     ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> temporary_queue;
     ft_sharedptr<game_event> current_event;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::update_events");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::update_events");
     if (!world)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
@@ -448,7 +448,7 @@ void game_event_scheduler::enable_profiling(ft_bool enabled) noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::enable_profiling");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::enable_profiling");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -469,7 +469,7 @@ ft_bool game_event_scheduler::profiling_enabled() const noexcept
     int32_t lock_error;
     ft_bool enabled;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::profiling_enabled");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::profiling_enabled");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -484,7 +484,7 @@ void game_event_scheduler::reset_profile() noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::reset_profile");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::reset_profile");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -503,7 +503,7 @@ void game_event_scheduler::snapshot_profile(t_event_scheduler_profile &out) cons
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::snapshot_profile");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::snapshot_profile");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -518,7 +518,7 @@ void game_event_scheduler::dump_events(ft_vector<ft_sharedptr<game_event> > &out
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::dump_events");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::dump_events");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -541,7 +541,7 @@ ft_size_t game_event_scheduler::size() const noexcept
     int32_t lock_error;
     ft_size_t queue_size;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -556,7 +556,7 @@ void game_event_scheduler::clear() noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -574,7 +574,7 @@ void game_event_scheduler::clear() noexcept
 int32_t game_event_scheduler::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_event_scheduler::get_error");
     return (static_cast<int32_t>(game_event_scheduler::_last_error));
 }
@@ -582,7 +582,7 @@ int32_t game_event_scheduler::get_error() const noexcept
 const char *game_event_scheduler::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_event_scheduler::get_error_str");
     return (ft_strerror(game_event_scheduler::_last_error));
 }
@@ -592,7 +592,7 @@ int32_t game_event_scheduler::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -639,7 +639,7 @@ int32_t game_event_scheduler::disable_thread_safety() noexcept
 
 ft_bool game_event_scheduler::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event_scheduler::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 

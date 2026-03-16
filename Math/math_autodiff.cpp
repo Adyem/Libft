@@ -25,7 +25,7 @@ void ft_dual_number::abort_lifecycle_error(const char *method_name,
 
 void ft_dual_number::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 

@@ -347,7 +347,7 @@ void ft_circular_buffer<ElementType>::push(const ElementType& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::push(copy)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::push(copy)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -376,7 +376,7 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::push(move)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::push(move)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -406,7 +406,7 @@ ElementType ft_circular_buffer<ElementType>::pop()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::pop");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::pop");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -437,7 +437,7 @@ ft_bool ft_circular_buffer<ElementType>::is_full() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::is_full");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::is_full");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -458,7 +458,7 @@ ft_bool ft_circular_buffer<ElementType>::is_empty() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::is_empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::is_empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -479,7 +479,7 @@ ft_size_t ft_circular_buffer<ElementType>::size() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -500,7 +500,7 @@ ft_size_t ft_circular_buffer<ElementType>::capacity() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::capacity");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::capacity");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -520,7 +520,7 @@ int32_t ft_circular_buffer<ElementType>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -559,7 +559,7 @@ int32_t ft_circular_buffer<ElementType>::disable_thread_safety()
 template <typename ElementType>
 ft_bool ft_circular_buffer<ElementType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -569,7 +569,7 @@ int32_t ft_circular_buffer<ElementType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -588,7 +588,7 @@ void ft_circular_buffer<ElementType>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_circular_buffer::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_circular_buffer::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -608,7 +608,7 @@ void ft_circular_buffer<ElementType>::clear()
 template <typename ElementType>
 uint32_t ft_circular_buffer<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_circular_buffer::get_error");
     return (_last_error);
 }
@@ -616,7 +616,7 @@ uint32_t ft_circular_buffer<ElementType>::get_error() const noexcept
 template <typename ElementType>
 const char *ft_circular_buffer<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_circular_buffer::get_error_str");
     return (ft_strerror(_last_error));
 }

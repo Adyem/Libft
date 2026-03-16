@@ -192,7 +192,7 @@ int32_t game_event::lock_internal(ft_bool *lock_acquired) const noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event::lock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -210,7 +210,7 @@ int32_t game_event::lock_internal(ft_bool *lock_acquired) const noexcept
 void game_event::unlock_internal(ft_bool lock_acquired) const noexcept
 {
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event::unlock_internal");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event::unlock_internal");
     if (lock_acquired == FT_FALSE)
         return ;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
@@ -474,7 +474,7 @@ int32_t game_event::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -499,7 +499,7 @@ int32_t game_event::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -514,14 +514,14 @@ int32_t game_event::disable_thread_safety() noexcept
 
 ft_bool game_event::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_event::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 int32_t game_event::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_event::get_error");
     return (static_cast<int32_t>(game_event::_last_error));
 }
@@ -529,7 +529,7 @@ int32_t game_event::get_error() const noexcept
 const char *game_event::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_event::get_error_str");
     return (ft_strerror(game_event::_last_error));
 }

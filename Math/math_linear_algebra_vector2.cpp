@@ -97,7 +97,7 @@ double vector2::get_x() const
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::get_x");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector2::get_x");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -115,7 +115,7 @@ double vector2::get_y() const
     int32_t lock_error;
     double value;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::get_y");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector2::get_y");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -136,8 +136,8 @@ vector2 vector2::add(const vector2 &other) const
     double result_x;
     double result_y;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::add");
-    errno_abort_if_uninitialised(other._initialised_state, "vector2::add source");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector2::add");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state, "vector2::add source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -159,8 +159,8 @@ vector2 vector2::subtract(const vector2 &other) const
     double result_x;
     double result_y;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::subtract");
-    errno_abort_if_uninitialised(other._initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector2::subtract");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state,
         "vector2::subtract source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
@@ -182,8 +182,8 @@ double vector2::dot(const vector2 &other) const
     int32_t lock_error;
     double result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::dot");
-    errno_abort_if_uninitialised(other._initialised_state, "vector2::dot source");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector2::dot");
+    errno_abort_if_uninitialised_or_destroyed(other._initialised_state, "vector2::dot source");
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -201,7 +201,7 @@ double vector2::length() const
     int32_t lock_error;
     double squared;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::length");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector2::length");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -223,7 +223,7 @@ vector2 vector2::normalize() const
     double normalized_x;
     double normalized_y;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "vector2::normalize");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "vector2::normalize");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -251,7 +251,7 @@ uint32_t vector2::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "vector2::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (vector2::set_error(FT_ERR_SUCCESS));
@@ -272,7 +272,7 @@ uint32_t vector2::disable_thread_safety() noexcept
 {
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "vector2::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -287,7 +287,7 @@ uint32_t vector2::disable_thread_safety() noexcept
 
 ft_bool vector2::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "vector2::is_thread_safe");
     vector2::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);

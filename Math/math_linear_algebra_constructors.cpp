@@ -217,7 +217,7 @@ void vector2::abort_lifecycle_error(const char *method_name,
 
 void vector2::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 
@@ -517,7 +517,7 @@ void vector3::abort_lifecycle_error(const char *method_name,
 
 void vector3::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 
@@ -831,7 +831,7 @@ void vector4::abort_lifecycle_error(const char *method_name,
 
 void vector4::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 
@@ -1159,7 +1159,7 @@ void matrix2::abort_lifecycle_error(const char *method_name,
 
 void matrix2::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 
@@ -1475,7 +1475,7 @@ void matrix3::abort_lifecycle_error(const char *method_name,
 
 void matrix3::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 
@@ -1800,7 +1800,7 @@ void matrix4::abort_lifecycle_error(const char *method_name,
 
 void matrix4::abort_if_not_initialised(const char *method_name) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 

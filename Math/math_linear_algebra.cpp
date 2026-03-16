@@ -163,7 +163,7 @@ uint32_t matrix2::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix2::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (matrix2::set_error(FT_ERR_SUCCESS));
@@ -184,7 +184,7 @@ uint32_t matrix2::disable_thread_safety() noexcept
 {
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix2::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -199,7 +199,7 @@ uint32_t matrix2::disable_thread_safety() noexcept
 
 ft_bool matrix2::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix2::is_thread_safe");
     matrix2::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
@@ -380,7 +380,7 @@ uint32_t matrix3::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix3::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (matrix3::set_error(FT_ERR_SUCCESS));
@@ -401,7 +401,7 @@ uint32_t matrix3::disable_thread_safety() noexcept
 {
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix3::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -416,7 +416,7 @@ uint32_t matrix3::disable_thread_safety() noexcept
 
 ft_bool matrix3::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix3::is_thread_safe");
     matrix3::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
@@ -753,7 +753,7 @@ uint32_t matrix4::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix4::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (matrix4::set_error(FT_ERR_SUCCESS));
@@ -774,7 +774,7 @@ uint32_t matrix4::disable_thread_safety() noexcept
 {
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix4::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -789,7 +789,7 @@ uint32_t matrix4::disable_thread_safety() noexcept
 
 ft_bool matrix4::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "matrix4::is_thread_safe");
     matrix4::set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);

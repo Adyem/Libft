@@ -269,7 +269,7 @@ int32_t game_region_definition::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -345,7 +345,7 @@ int32_t game_region_definition::unlock_internal(ft_bool lock_acquired) const noe
 
 int32_t game_region_definition::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::lock");
     const int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -353,7 +353,7 @@ int32_t game_region_definition::lock(ft_bool *lock_acquired) const noexcept
 
 void game_region_definition::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -362,7 +362,7 @@ int32_t game_region_definition::get_region_id() const noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::get_region_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::get_region_id");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return (0);
@@ -375,7 +375,7 @@ void game_region_definition::set_region_id(int32_t region_id) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::set_region_id");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::set_region_id");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
@@ -386,7 +386,7 @@ void game_region_definition::set_region_id(int32_t region_id) noexcept
 
 const ft_string &game_region_definition::get_name() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::get_name");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::get_name");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_name);
 }
@@ -395,7 +395,7 @@ void game_region_definition::set_name(const ft_string &name) noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::set_name");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::set_name");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
@@ -406,7 +406,7 @@ void game_region_definition::set_name(const ft_string &name) noexcept
 
 const ft_string &game_region_definition::get_description() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::get_description");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::get_description");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_description);
 }
@@ -415,7 +415,7 @@ void game_region_definition::set_description(const ft_string &description) noexc
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::set_description");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::set_description");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
@@ -426,7 +426,7 @@ void game_region_definition::set_description(const ft_string &description) noexc
 
 int32_t game_region_definition::get_recommended_level() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::get_recommended_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::get_recommended_level");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recommended_level);
 }
@@ -435,7 +435,7 @@ void game_region_definition::set_recommended_level(int32_t recommended_level) no
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_region_definition::set_recommended_level");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_region_definition::set_recommended_level");
     const int32_t lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
@@ -448,7 +448,7 @@ void game_region_definition::set_recommended_level(int32_t recommended_level) no
 int32_t game_region_definition::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_region_definition::get_error");
     return (static_cast<int32_t>(game_region_definition::_last_error));
 }
@@ -456,7 +456,7 @@ int32_t game_region_definition::get_error() const noexcept
 const char *game_region_definition::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_region_definition::get_error_str");
     return (ft_strerror(game_region_definition::_last_error));
 }

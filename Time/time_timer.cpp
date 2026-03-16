@@ -179,7 +179,7 @@ void time_timer::start(int64_t duration_ms) noexcept
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "time_timer::start");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_timer::start");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -200,7 +200,7 @@ int64_t time_timer::update(void) noexcept
     int64_t remaining;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "time_timer::update");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_timer::update");
     remaining = static_cast<int64_t>(-1);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -230,7 +230,7 @@ int64_t time_timer::add_time(int64_t amount_ms) noexcept
     int32_t lock_error;
 
     result = static_cast<int64_t>(-1);
-    errno_abort_if_uninitialised(this->_initialised_state, "time_timer::add_time");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_timer::add_time");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (result);
@@ -261,7 +261,7 @@ int64_t time_timer::remove_time(int64_t amount_ms) noexcept
     int32_t lock_error;
 
     result = static_cast<int64_t>(-1);
-    errno_abort_if_uninitialised(this->_initialised_state, "time_timer::remove_time");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_timer::remove_time");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (result);
@@ -294,7 +294,7 @@ void time_timer::sleep_remaining(void) noexcept
     int32_t lock_error;
 
     remaining = static_cast<int64_t>(-1);
-    errno_abort_if_uninitialised(this->_initialised_state, "time_timer::sleep_remaining");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_timer::sleep_remaining");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -324,7 +324,7 @@ int32_t time_timer::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "time_timer::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "time_timer::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();

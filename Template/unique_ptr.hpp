@@ -757,7 +757,7 @@ void ft_uniqueptr<ManagedType>::unlock(ft_bool lock_acquired) const noexcept
 template <typename ManagedType>
 uint32_t ft_uniqueptr<ManagedType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_uniqueptr::get_error");
     return (_last_error);
 }
@@ -765,7 +765,7 @@ uint32_t ft_uniqueptr<ManagedType>::get_error() const noexcept
 template <typename ManagedType>
 const char *ft_uniqueptr<ManagedType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_uniqueptr::get_error_str");
     return (ft_strerror(_last_error));
 }

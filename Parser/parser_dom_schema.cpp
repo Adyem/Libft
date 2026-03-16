@@ -67,7 +67,7 @@ int32_t ft_dom_schema::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -124,13 +124,13 @@ int32_t ft_dom_schema::unlock_internal(ft_bool lock_acquired) const noexcept
 
 int32_t ft_dom_schema::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::lock");
     return (this->lock_internal(lock_acquired));
 }
 
 void ft_dom_schema::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -141,7 +141,7 @@ int32_t ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, ft
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::add_rule");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::add_rule");
     rule.path = path;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
@@ -182,7 +182,7 @@ int32_t ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_do
     const ft_dom_node *target_node;
     int32_t find_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::validate_rule");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::validate_rule");
     full_path = ft_dom_build_path(base_path, rule.path);
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (ft_string::get_error());
@@ -244,7 +244,7 @@ int32_t ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validati
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::validate");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::validate");
     report.mark_valid();
     root = document.get_root();
     if (!root)

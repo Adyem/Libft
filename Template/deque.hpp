@@ -319,7 +319,7 @@ int32_t ft_deque<ElementType>::enable_thread_safety()
     pt_recursive_mutex *new_mutex;
     int32_t initialize_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     new_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -341,7 +341,7 @@ int32_t ft_deque<ElementType>::disable_thread_safety()
     pt_recursive_mutex *mutex_pointer;
     int32_t destroy_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::disable_thread_safety");
     mutex_pointer = this->_mutex;
     if (mutex_pointer == ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
@@ -356,7 +356,7 @@ int32_t ft_deque<ElementType>::disable_thread_safety()
 template <typename ElementType>
 ft_bool ft_deque<ElementType>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -366,7 +366,7 @@ int32_t ft_deque<ElementType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::lock");
     lock_result = this->lock_internal(lock_acquired);
     return (set_error(lock_result));
 }
@@ -386,7 +386,7 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::push_front");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::push_front");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -422,7 +422,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::push_front(move)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::push_front(move)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -458,7 +458,7 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::push_back");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::push_back");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -494,7 +494,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::push_back(move)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::push_back(move)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -531,7 +531,7 @@ ElementType ft_deque<ElementType>::pop_front()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::pop_front");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::pop_front");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -568,7 +568,7 @@ ElementType ft_deque<ElementType>::pop_back()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::pop_back");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::pop_back");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -605,7 +605,7 @@ ElementType& ft_deque<ElementType>::front()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::front");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::front");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -633,7 +633,7 @@ const ElementType& ft_deque<ElementType>::front() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::front const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::front const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -661,7 +661,7 @@ ElementType& ft_deque<ElementType>::back()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::back");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::back");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -689,7 +689,7 @@ const ElementType& ft_deque<ElementType>::back() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::back const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::back const");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -716,7 +716,7 @@ ft_size_t ft_deque<ElementType>::size() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -737,7 +737,7 @@ ft_bool ft_deque<ElementType>::empty() const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -757,7 +757,7 @@ void ft_deque<ElementType>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -774,14 +774,14 @@ void ft_deque<ElementType>::clear()
 template <typename ElementType>
 uint32_t ft_deque<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_deque::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_deque::get_error");
     return (_last_error);
 }
 
 template <typename ElementType>
 const char *ft_deque<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_deque::get_error_str");
     return (ft_strerror(_last_error));
 }

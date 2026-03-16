@@ -27,7 +27,11 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     unsigned char *encoded;
     ft_size_t encoded_size;
     ft_string magic;
+    int32_t initialize_error;
 
+    initialize_error = magic.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return ;
     magic = key;
     magic.append("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
     sha1_hash(magic.c_str(), magic.size(), digest);
@@ -197,7 +201,7 @@ void ft_websocket_client::close()
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_client::close");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_client::close");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -226,7 +230,23 @@ int32_t ft_websocket_client::perform_handshake_locked(const char *host, const ch
     const char *request_data;
     ft_size_t total_sent;
     ssize_t send_result;
+    int32_t string_init_error;
 
+    string_init_error = key_string.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
+    string_init_error = request.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
+    string_init_error = response.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
+    string_init_error = accept_key.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
+    string_init_error = expected.initialize();
+    if (string_init_error != FT_ERR_SUCCESS)
+        return (string_init_error);
     socket_fd = this->_socket.get();
     if (socket_fd < 0)
         return (FT_ERR_INVALID_OPERATION);
@@ -318,7 +338,7 @@ int32_t ft_websocket_client::connect(const char *host, uint16_t port, const char
 
     if (host == ft_nullptr || path == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_client::connect");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_client::connect");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -370,7 +390,11 @@ int32_t ft_websocket_client::send_pong_locked(const unsigned char *payload, ft_s
     unsigned char mask_key[4];
     ft_size_t index_value;
     int32_t socket_fd;
+    int32_t initialize_error;
 
+    initialize_error = frame.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     socket_fd = this->_socket.get();
     if (socket_fd < 0)
         return (FT_ERR_INVALID_OPERATION);
@@ -418,7 +442,11 @@ int32_t ft_websocket_client::send_text_locked(const ft_string &message)
     ft_size_t length;
     int32_t socket_fd;
     const char *message_data;
+    int32_t initialize_error;
 
+    initialize_error = frame.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     socket_fd = this->_socket.get();
     if (socket_fd < 0)
         return (FT_ERR_INVALID_OPERATION);
@@ -464,7 +492,7 @@ int32_t ft_websocket_client::send_text(const ft_string &message)
     int32_t lock_error;
     int32_t send_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_client::send_text");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_client::send_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -573,7 +601,7 @@ int32_t ft_websocket_client::receive_text(ft_string &message)
     int32_t lock_error;
     int32_t receive_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_websocket_client::receive_text");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_websocket_client::receive_text");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);

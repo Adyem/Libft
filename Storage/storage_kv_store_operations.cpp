@@ -58,7 +58,7 @@ int32_t kv_store::lock_replication(ft_bool *lock_acquired) const noexcept
 {
     ft_bool has_mutex;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::lock_replication");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::lock_replication");
     if (lock_acquired == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *lock_acquired = FT_FALSE;
@@ -72,7 +72,7 @@ int32_t kv_store::lock_replication(ft_bool *lock_acquired) const noexcept
 
 int32_t kv_store::dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::dispatch_snapshot_to_sink");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::dispatch_snapshot_to_sink");
     ft_vector<kv_store_snapshot_entry> snapshot_entries;
     kv_store *mutable_this;
     int32_t callback_error;
@@ -101,7 +101,7 @@ int32_t kv_store::dispatch_snapshot_to_sink(kv_store_replication_snapshot_callba
 
 int32_t kv_store::notify_replication_listeners(const ft_vector<kv_store_operation> &operations) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::notify_replication_listeners");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::notify_replication_listeners");
     kv_store *mutable_this;
     ft_bool lock_acquired = FT_FALSE;
     ft_vector<kv_store_replication_sink> listeners_copy;
@@ -193,7 +193,7 @@ int32_t kv_store::register_replication_sink(kv_store_replication_operations_call
         kv_store_replication_snapshot_callback snapshot_callback, void *user_data,
         ft_bool ship_initial_snapshot)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::register_replication_sink");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::register_replication_sink");
     ft_bool lock_acquired = FT_FALSE;
     kv_store_replication_sink sink_entry;
     ft_size_t listener_count;
@@ -253,7 +253,7 @@ int32_t kv_store::register_replication_sink(kv_store_replication_operations_call
 int32_t kv_store::unregister_replication_sink(kv_store_replication_operations_callback operations_callback,
         kv_store_replication_snapshot_callback snapshot_callback, void *user_data)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::unregister_replication_sink");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::unregister_replication_sink");
     ft_bool lock_acquired = FT_FALSE;
     ft_size_t listener_count;
     ft_size_t listener_index;
@@ -306,13 +306,13 @@ int32_t kv_store::unregister_replication_sink(kv_store_replication_operations_ca
 
 int32_t kv_store::ship_replication_snapshot(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::ship_replication_snapshot");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::ship_replication_snapshot");
     return (this->dispatch_snapshot_to_sink(snapshot_callback, user_data));
 }
 
 int32_t kv_store::assign_backend_location(const char *location)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::assign_backend_location");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::assign_backend_location");
     if (location == ft_nullptr)
     {
         this->_file_path.clear();
@@ -324,7 +324,7 @@ int32_t kv_store::assign_backend_location(const char *location)
 
 int32_t kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::parse_json_groups");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::parse_json_groups");
     json_group *store_group;
     json_item *item_pointer;
     ft_map<ft_string, int64_t> ttl_metadata;
@@ -489,7 +489,7 @@ int32_t kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_s
 
 int32_t kv_store::load_json_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::load_json_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::load_json_entries");
     json_group *group_head;
 
     if (location == ft_nullptr)
@@ -518,7 +518,7 @@ int32_t kv_store::load_json_entries(const char *location, ft_vector<kv_store_sna
 
 int32_t kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::flush_json_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::flush_json_entries");
     json_group *store_group;
     json_group *head_group;
     kv_store *mutable_this;
@@ -646,7 +646,7 @@ int32_t kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &e
 
 int32_t kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::flush_json_lines_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::flush_json_lines_entries");
     su_file *file_handle;
     kv_store *mutable_this;
     const kv_store_snapshot_entry *entry_begin;
@@ -857,7 +857,7 @@ int32_t kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_ent
 
 int32_t kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::load_json_lines_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::load_json_lines_entries");
     ft_vector<ft_string> lines;
     ft_size_t line_count;
     ft_size_t line_index;
@@ -1030,7 +1030,7 @@ int32_t kv_store::load_json_lines_entries(const char *location, ft_vector<kv_sto
 #if SQLITE3_AVAILABLE
 int32_t kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::flush_sqlite_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::flush_sqlite_entries");
     sqlite3 *database_handle;
     kv_store *mutable_this;
     char *error_message;
@@ -1236,7 +1236,7 @@ int32_t kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> 
 #if SQLITE3_AVAILABLE
 int32_t kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::load_sqlite_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::load_sqlite_entries");
     sqlite3 *database_handle;
     sqlite3_stmt *metadata_statement;
     sqlite3_stmt *select_statement;
@@ -1385,7 +1385,7 @@ int32_t kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_s
 
 int32_t kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::flush_memory_mapped_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::flush_memory_mapped_entries");
     kv_store *mutable_this;
     json_group *store_group;
     json_group *head_group;
@@ -1520,7 +1520,7 @@ int32_t kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_
 
 int32_t kv_store::load_memory_mapped_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::load_memory_mapped_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::load_memory_mapped_entries");
     ft_size_t buffer_length;
     char *buffer_pointer;
     json_group *group_head;
@@ -1548,7 +1548,7 @@ int32_t kv_store::load_memory_mapped_entries(const char *location, ft_vector<kv_
 
 int32_t kv_store::flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::flush_backend_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::flush_backend_entries");
     if (this->_backend_type == KV_STORE_BACKEND_JSON)
         return (this->flush_json_entries(entries));
     if (this->_backend_type == KV_STORE_BACKEND_JSON_LINES)
@@ -1564,7 +1564,7 @@ int32_t kv_store::flush_backend_entries(const ft_vector<kv_store_snapshot_entry>
 
 int32_t kv_store::load_backend_entries(kv_store_backend_type backend_type, const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::load_backend_entries");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::load_backend_entries");
     if (backend_type == KV_STORE_BACKEND_JSON)
         return (this->load_json_entries(location, out_entries));
     if (backend_type == KV_STORE_BACKEND_JSON_LINES)
@@ -1580,7 +1580,7 @@ int32_t kv_store::load_backend_entries(kv_store_backend_type backend_type, const
 
 int32_t kv_store::set_backend(kv_store_backend_type backend_type, const char *location)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::set_backend");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::set_backend");
     ft_vector<kv_store_snapshot_entry> loaded_entries;
     ft_string location_copy;
     int32_t load_result;
@@ -1650,13 +1650,13 @@ int32_t kv_store::set_backend(kv_store_backend_type backend_type, const char *lo
 
 kv_store_backend_type kv_store::get_backend() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::get_backend");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::get_backend");
     return (this->_backend_type);
 }
 
 int32_t kv_store::write_snapshot(ft_document_sink &sink) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::write_snapshot");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::write_snapshot");
     kv_store *mutable_this;
     ft_vector<kv_store_snapshot_entry> entries;
     json_group *store_group;
@@ -1804,7 +1804,7 @@ int32_t kv_store::write_snapshot(ft_document_sink &sink) const
 
 int32_t kv_store::read_snapshot(ft_document_source &source)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::read_snapshot");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::read_snapshot");
     ft_string content;
     int32_t read_result;
     json_group *group_head;
@@ -1906,7 +1906,7 @@ int32_t kv_store::lock_store(ft_bool *lock_acquired) const noexcept
 {
     ft_bool has_mutex;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::lock_store");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::lock_store");
     if (lock_acquired == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *lock_acquired = FT_FALSE;
@@ -1920,7 +1920,7 @@ int32_t kv_store::lock_store(ft_bool *lock_acquired) const noexcept
 
 void kv_store::unlock_store_guard(ft_bool lock_acquired, int32_t) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::unlock_store_guard");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::unlock_store_guard");
     if (lock_acquired)
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
@@ -1928,7 +1928,7 @@ void kv_store::unlock_store_guard(ft_bool lock_acquired, int32_t) const noexcept
 
 int64_t kv_store::current_time_seconds() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::current_time_seconds");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::current_time_seconds");
     t_time current_time;
 
     current_time = time_now();
@@ -1937,7 +1937,7 @@ int64_t kv_store::current_time_seconds() const
 
 int32_t kv_store::compute_expiration(int64_t ttl_seconds, ft_bool &has_expiration, int64_t &expiration_timestamp) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::compute_expiration");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::compute_expiration");
     int64_t current_time;
 
     has_expiration = FT_FALSE;
@@ -1959,7 +1959,7 @@ int32_t kv_store::compute_expiration(int64_t ttl_seconds, ft_bool &has_expiratio
 
 int32_t kv_store::parse_expiration_timestamp(const char *value_string, int64_t &expiration_timestamp) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::parse_expiration_timestamp");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::parse_expiration_timestamp");
     char *end_pointer;
     int64_t parsed_value;
 
@@ -1979,35 +1979,35 @@ int32_t kv_store::parse_expiration_timestamp(const char *value_string, int64_t &
 
 void kv_store::record_set_operation() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::record_set_operation");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::record_set_operation");
     this->_metrics_set_operations = this->_metrics_set_operations + 1;
     return ;
 }
 
 void kv_store::record_delete_operation() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::record_delete_operation");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::record_delete_operation");
     this->_metrics_delete_operations = this->_metrics_delete_operations + 1;
     return ;
 }
 
 void kv_store::record_get_hit() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::record_get_hit");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::record_get_hit");
     this->_metrics_get_hits = this->_metrics_get_hits + 1;
     return ;
 }
 
 void kv_store::record_get_miss() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::record_get_miss");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::record_get_miss");
     this->_metrics_get_misses = this->_metrics_get_misses + 1;
     return ;
 }
 
 void kv_store::record_prune_metrics(int64_t removed_entries, int64_t duration_ms) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::record_prune_metrics");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::record_prune_metrics");
     int64_t normalized_duration;
 
     normalized_duration = duration_ms;
@@ -2024,7 +2024,7 @@ int32_t kv_store::lock_background(ft_bool *lock_acquired) const noexcept
 {
     ft_bool has_mutex;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::lock_background");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::lock_background");
     if (lock_acquired == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *lock_acquired = FT_FALSE;
@@ -2038,7 +2038,7 @@ int32_t kv_store::lock_background(ft_bool *lock_acquired) const noexcept
 
 int32_t kv_store::start_background_thread_locked(int64_t interval_seconds) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::start_background_thread_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::start_background_thread_locked");
     ft_thread background_instance;
 
     if (interval_seconds <= 0)
@@ -2064,7 +2064,7 @@ int32_t kv_store::start_background_thread_locked(int64_t interval_seconds) noexc
 
 void kv_store::stop_background_thread_locked(ft_thread &thread_holder) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::stop_background_thread_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::stop_background_thread_locked");
     if (this->_background_thread_active == FT_FALSE)
     {
         return ;
@@ -2112,7 +2112,7 @@ void kv_store::background_compaction_worker(kv_store *store) noexcept
 
 int32_t kv_store::prune_expired()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::prune_expired");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::prune_expired");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error;
     int32_t prune_result;
@@ -2132,7 +2132,7 @@ int32_t kv_store::prune_expired()
 
 int32_t kv_store::prune_expired_locked()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::prune_expired_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::prune_expired_locked");
     ft_size_t map_size;
     int64_t current_time;
     ft_size_t map_index;
@@ -2221,7 +2221,7 @@ int32_t kv_store::prune_expired_locked()
 
 int32_t kv_store::kv_set(const char *key_string, const char *value_string, int64_t ttl_seconds)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::kv_set");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::kv_set");
     ft_vector<kv_store_operation> operations;
     kv_store_operation operation;
 
@@ -2248,7 +2248,7 @@ int32_t kv_store::kv_set(const char *key_string, const char *value_string, int64
 
 const char *kv_store::kv_get(const char *key_string) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::kv_get");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::kv_get");
     ft_string key_storage;
     const Pair<ft_string, kv_store_entry> *map_pair;
     const Pair<ft_string, kv_store_entry> *map_end;
@@ -2306,7 +2306,7 @@ const char *kv_store::kv_get(const char *key_string) const
 
 int32_t kv_store::kv_delete(const char *key_string)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::kv_delete");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::kv_delete");
     ft_vector<kv_store_operation> operations;
     kv_store_operation operation;
 
@@ -2333,7 +2333,7 @@ int32_t kv_store::kv_delete(const char *key_string)
 
 int32_t kv_store::kv_flush() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::kv_flush");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::kv_flush");
     kv_store *mutable_this;
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error;
@@ -2373,7 +2373,7 @@ int32_t kv_store::get_metrics(kv_store_metrics &out_metrics) const
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::get_metrics");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::get_metrics");
     mutable_this = const_cast<kv_store *>(this);
     lock_acquired = FT_FALSE;
     lock_error = mutable_this->lock_store(&lock_acquired);
@@ -2399,7 +2399,7 @@ int32_t kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entrie
     ft_size_t entry_count;
     ft_size_t entry_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::export_snapshot");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::export_snapshot");
     mutable_this = const_cast<kv_store *>(this);
     lock_acquired = FT_FALSE;
     lock_error = mutable_this->lock_store(&lock_acquired);
@@ -2462,7 +2462,7 @@ int32_t kv_store::export_snapshot_to_file(const char *file_path) const
     int32_t write_error;
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::export_snapshot_to_file");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::export_snapshot_to_file");
     if (file_path == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
     initialize_error = file_sink.initialize();
@@ -2478,7 +2478,7 @@ int32_t kv_store::export_snapshot_to_file(const char *file_path) const
 
 int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::kv_apply");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::kv_apply");
     ft_bool lock_acquired = FT_FALSE;
     ft_size_t operation_count;
     ft_size_t operation_index;
@@ -2595,7 +2595,7 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 
 int32_t kv_store::kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, int64_t ttl_seconds)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::kv_compare_and_swap");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::kv_compare_and_swap");
     ft_string key_storage;
     Pair<ft_string, kv_store_entry> *existing_pair;
     Pair<ft_string, kv_store_entry> *map_end;
@@ -2672,7 +2672,7 @@ int32_t kv_store::kv_compare_and_swap(const char *key_string, const char *expect
 
 int32_t kv_store::apply_snapshot_locked(const ft_vector<kv_store_snapshot_entry> &entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::apply_snapshot_locked");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::apply_snapshot_locked");
     const kv_store_snapshot_entry *entry_begin;
     const kv_store_snapshot_entry *entry_end;
     const kv_store_snapshot_entry *entry_cursor;
@@ -2709,7 +2709,7 @@ int32_t kv_store::apply_snapshot_locked(const ft_vector<kv_store_snapshot_entry>
 
 int32_t kv_store::import_snapshot(const ft_vector<kv_store_snapshot_entry> &entries)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::import_snapshot");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::import_snapshot");
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error;
     int32_t operation_error;
@@ -2736,7 +2736,7 @@ int32_t kv_store::import_snapshot(const ft_vector<kv_store_snapshot_entry> &entr
 
 int32_t kv_store::start_background_compaction(int64_t interval_seconds)
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::start_background_compaction");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::start_background_compaction");
     ft_bool lock_acquired = FT_FALSE;
     kv_store *mutable_this;
     int32_t lock_error;
@@ -2760,7 +2760,7 @@ int32_t kv_store::start_background_compaction(int64_t interval_seconds)
 
 int32_t kv_store::stop_background_compaction()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::stop_background_compaction");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::stop_background_compaction");
     ft_bool lock_acquired = FT_FALSE;
     kv_store *mutable_this;
     ft_thread thread_holder;

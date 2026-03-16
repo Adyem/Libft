@@ -102,6 +102,7 @@ class ft_vector
         int32_t     disable_thread_safety();
         int32_t     copy_from(const ft_vector<ElementType> &other);
         ft_bool is_thread_safe() const;
+        uint8_t is_initialised() const noexcept;
         int32_t     lock(ft_bool *lock_acquired) const;
         void    unlock(ft_bool lock_acquired) const;
         uint32_t get_error() const noexcept;
@@ -143,14 +144,14 @@ uint32_t ft_vector<ElementType>::set_error(uint32_t error_code) noexcept
 template <typename ElementType>
 uint32_t ft_vector<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::get_error");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::get_error");
     return (ft_vector<ElementType>::_last_error);
 }
 
 template <typename ElementType>
 const char *ft_vector<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::get_error_str");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 
@@ -438,7 +439,7 @@ int32_t ft_vector<ElementType>::copy_from(const ft_vector<ElementType> &other)
 template <typename ElementType>
 int32_t ft_vector<ElementType>::enable_thread_safety()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         return (ft_vector<ElementType>::set_error(FT_ERR_SUCCESS));
@@ -479,10 +480,16 @@ ft_bool ft_vector<ElementType>::is_thread_safe() const
 {
     ft_bool enabled;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::is_thread_safe");
     enabled = (this->_mutex != ft_nullptr);
     ft_vector<ElementType>::set_error(FT_ERR_SUCCESS);
     return (enabled);
+}
+
+template <typename ElementType>
+uint8_t ft_vector<ElementType>::is_initialised() const noexcept
+{
+    return (this->_initialised_state);
 }
 
 template <typename ElementType>
@@ -490,7 +497,7 @@ int32_t ft_vector<ElementType>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::lock");
     lock_error = this->lock_internal(lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -504,7 +511,7 @@ int32_t ft_vector<ElementType>::lock(ft_bool *lock_acquired) const
 template <typename ElementType>
 void ft_vector<ElementType>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::unlock");
     (void)this->unlock_internal(lock_acquired);
     ft_vector<ElementType>::set_error(FT_ERR_SUCCESS);
     return ;
@@ -517,7 +524,7 @@ ft_size_t ft_vector<ElementType>::size() const
     ft_size_t current_size;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -538,7 +545,7 @@ ft_size_t ft_vector<ElementType>::capacity() const
     ft_size_t current_capacity;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::capacity");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::capacity");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -559,7 +566,7 @@ ft_bool ft_vector<ElementType>::empty() const
     ft_bool is_empty;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -581,7 +588,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
     int32_t lock_error;
     int32_t reserve_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::push_back(copy)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::push_back(copy)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -624,7 +631,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
     int32_t lock_error;
     int32_t reserve_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::push_back(move)");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::push_back(move)");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -665,7 +672,7 @@ void ft_vector<ElementType>::pop_back()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::pop_back");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::pop_back");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

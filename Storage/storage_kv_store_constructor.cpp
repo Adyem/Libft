@@ -146,7 +146,7 @@ int32_t kv_store::enable_thread_safety() noexcept
     pt_recursive_mutex *replication_mutex;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::enable_thread_safety");
     if (this->_mutex != ft_nullptr && this->_background_mutex != ft_nullptr
         && this->_replication_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -204,7 +204,7 @@ int32_t kv_store::disable_thread_safety() noexcept
     int32_t error_code;
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "kv_store::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::disable_thread_safety");
     error_code = FT_ERR_SUCCESS;
     if (this->_replication_mutex != ft_nullptr)
     {

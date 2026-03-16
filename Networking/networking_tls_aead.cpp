@@ -26,6 +26,14 @@ static const EVP_CIPHER *networking_tls_resolve_cipher(const SSL_CIPHER *cipher)
 static ft_bool networking_tls_prepare_buffer(ft_vector<unsigned char> &buffer,
         ft_size_t length)
 {
+    int32_t initialize_error;
+
+    if (buffer.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        initialize_error = buffer.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (FT_FALSE);
+    }
     buffer.resize(length, 0);
     if (buffer.get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);

@@ -1,0 +1,42 @@
+#include "../test_internal.hpp"
+#include "../../Time/time.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../Basic/basic.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_time_parse_iso8601_pre_epoch)
+{
+    std::tm parsed_time;
+    t_time parsed_timestamp;
+    ft_bool parse_result;
+
+    ft_memset(&parsed_time, 0, sizeof(parsed_time));
+    parsed_timestamp = 0;
+    parse_result = time_parse_iso8601("1969-12-31T23:59:59Z", &parsed_time, &parsed_timestamp);
+    FT_ASSERT_EQ(FT_FALSE, parse_result);
+    return (1);
+}
+
+FT_TEST(test_time_parse_iso8601_accepts_lowercase_z)
+{
+    std::tm parsed_time;
+    t_time parsed_timestamp;
+    ft_bool parse_result;
+
+    ft_memset(&parsed_time, 0, sizeof(parsed_time));
+    parsed_timestamp = 0;
+    parse_result = time_parse_iso8601("2024-03-01T12:34:56z", &parsed_time, &parsed_timestamp);
+    FT_ASSERT_EQ(FT_TRUE, parse_result);
+    FT_ASSERT_EQ(2024 - 1900, parsed_time.tm_year);
+    FT_ASSERT_EQ(2, parsed_time.tm_mon);
+    FT_ASSERT_EQ(1, parsed_time.tm_mday);
+    FT_ASSERT_EQ(12, parsed_time.tm_hour);
+    FT_ASSERT_EQ(34, parsed_time.tm_min);
+    FT_ASSERT_EQ(56, parsed_time.tm_sec);
+    FT_ASSERT_EQ(static_cast<t_time>(1709296496), parsed_timestamp);
+    return (1);
+}

@@ -221,7 +221,7 @@ int32_t encryption_aead_context::enable_thread_safety() noexcept
     pt_recursive_mutex *new_mutex;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -242,7 +242,7 @@ int32_t encryption_aead_context::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -254,7 +254,7 @@ int32_t encryption_aead_context::disable_thread_safety() noexcept
 
 ft_bool encryption_aead_context::is_thread_safe() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::is_thread_safe");
     if (this->_mutex != ft_nullptr)
         return (FT_TRUE);
@@ -367,7 +367,7 @@ int32_t encryption_aead_context::destroy() noexcept
 int32_t encryption_aead_context::finalize_operation(
     int32_t result_value) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::finalize_operation");
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (result_value);
@@ -383,7 +383,7 @@ int32_t encryption_aead_context::configure_cipher(const uint8_t *key_buffer,
     int32_t encrypt_flag;
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::configure_cipher");
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_result != FT_ERR_SUCCESS)
@@ -427,7 +427,7 @@ int32_t encryption_aead_context::configure_cipher(const uint8_t *key_buffer,
 int32_t encryption_aead_context::initialize_encrypt(const uint8_t *key_buffer,
     ft_size_t key_length, const uint8_t *initialization_vector, ft_size_t initialization_vector_length)
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::initialize_encrypt");
     return (this->configure_cipher(key_buffer, key_length, initialization_vector, initialization_vector_length, FT_TRUE));
 }
@@ -435,7 +435,7 @@ int32_t encryption_aead_context::initialize_encrypt(const uint8_t *key_buffer,
 int32_t encryption_aead_context::initialize_decrypt(const uint8_t *key_buffer,
     ft_size_t key_length, const uint8_t *initialization_vector, ft_size_t initialization_vector_length)
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::initialize_decrypt");
     return (this->configure_cipher(key_buffer, key_length, initialization_vector, initialization_vector_length, FT_FALSE));
 }
@@ -447,7 +447,7 @@ int32_t encryption_aead_context::update_aad(const uint8_t *additional_authentica
     int32_t update_result;
     int32_t out_length;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::update_aad");
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_result != FT_ERR_SUCCESS)
@@ -471,7 +471,7 @@ int32_t encryption_aead_context::update(const uint8_t *input_buffer,
     int32_t local_length;
     int32_t update_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::update");
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     output_length = 0;
@@ -499,7 +499,7 @@ int32_t encryption_aead_context::finalize(uint8_t *authentication_tag_buffer, ft
     uint8_t final_block[EVP_MAX_BLOCK_LENGTH];
     int32_t final_length;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::finalize");
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_result != FT_ERR_SUCCESS)
@@ -542,7 +542,7 @@ int32_t encryption_aead_context::set_tag(const uint8_t *authentication_tag_buffe
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::set_tag");
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_result != FT_ERR_SUCCESS)
@@ -565,7 +565,7 @@ void encryption_aead_context::reset() noexcept
 {
     int32_t lock_result;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "encryption_aead_context::reset");
     lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_result != FT_ERR_SUCCESS)

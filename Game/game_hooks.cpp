@@ -17,7 +17,7 @@ uint32_t game_hooks::set_error(uint32_t error_code) noexcept
 int32_t game_hooks::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_hooks::get_error");
     return (static_cast<int32_t>(game_hooks::_last_error));
 }
@@ -25,7 +25,7 @@ int32_t game_hooks::get_error() const noexcept
 const char *game_hooks::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_hooks::get_error_str");
     return (ft_strerror(game_hooks::_last_error));
 }
@@ -306,7 +306,7 @@ int32_t game_hooks::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -377,7 +377,7 @@ int32_t game_hooks::unlock_internal(ft_bool lock_acquired) const noexcept
 
 int32_t game_hooks::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::lock");
     int32_t lock_result = this->lock_internal(lock_acquired);
     this->set_error(lock_result);
     return (lock_result);
@@ -385,7 +385,7 @@ int32_t game_hooks::lock(ft_bool *lock_acquired) const noexcept
 
 void game_hooks::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -462,7 +462,7 @@ void game_hooks::set_on_item_crafted(
     ft_game_hook_listener_entry entry;
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::set_on_item_crafted");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_item_crafted");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_item_crafted = ft_move(callback);
@@ -487,7 +487,7 @@ void game_hooks::set_on_character_damaged(
     ft_game_hook_listener_entry entry;
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::set_on_character_damaged");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_character_damaged");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_character_damaged = ft_move(callback);
@@ -512,7 +512,7 @@ void game_hooks::set_on_event_triggered(
     ft_game_hook_listener_entry entry;
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::set_on_event_triggered");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_event_triggered");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_event_triggered = ft_move(callback);
@@ -533,19 +533,19 @@ void game_hooks::set_on_event_triggered(
 
 ft_function<void(game_character&, game_item&)> game_hooks::get_on_item_crafted() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::get_on_item_crafted");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_on_item_crafted");
     return (this->_legacy_item_crafted);
 }
 
 ft_function<void(game_character&, int32_t, uint8_t)> game_hooks::get_on_character_damaged() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::get_on_character_damaged");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_on_character_damaged");
     return (this->_legacy_character_damaged);
 }
 
 ft_function<void(game_world&, game_event&)> game_hooks::get_on_event_triggered() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::get_on_event_triggered");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_on_event_triggered");
     return (this->_legacy_event_triggered);
 }
 
@@ -555,7 +555,7 @@ void game_hooks::invoke_hook(const ft_string &hook_identifier,
     const Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_size_t index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::invoke_hook");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::invoke_hook");
     listeners_pair = this->_listener_catalog.find(hook_identifier);
     if (listeners_pair == this->_listener_catalog.end())
         return ;
@@ -629,7 +629,7 @@ void game_hooks::register_listener(const ft_game_hook_metadata &metadata,
     ft_game_hook_listener_entry entry;
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::register_listener");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::register_listener");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     entry.metadata = metadata;
@@ -648,7 +648,7 @@ void game_hooks::unregister_listener(const ft_string &hook_identifier,
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::unregister_listener");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::unregister_listener");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->remove_listener_unlocked(hook_identifier, listener_name);
@@ -658,14 +658,14 @@ void game_hooks::unregister_listener(const ft_string &hook_identifier,
 
 ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::get_catalog_metadata");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata");
     return (ft_vector<ft_game_hook_metadata>());
 }
 
 ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata_for(
     const ft_string &) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::get_catalog_metadata_for");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata_for");
     return (ft_vector<ft_game_hook_metadata>());
 }
 
@@ -673,7 +673,7 @@ void game_hooks::reset() noexcept
 {
     ft_bool lock_acquired;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_hooks::reset");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::reset");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_item_crafted = ft_function<void(game_character&, game_item&)>();

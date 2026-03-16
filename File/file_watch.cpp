@@ -137,7 +137,7 @@ int32_t ft_file_watch::enable_thread_safety()
     void *memory_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_file_watch::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -160,7 +160,7 @@ int32_t ft_file_watch::disable_thread_safety()
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_file_watch::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -233,7 +233,7 @@ void ft_file_watch::stop()
     ft_thread thread_to_join;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_file_watch::stop");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_file_watch::stop");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -267,7 +267,7 @@ ft_bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int32_t
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_file_watch::snapshot_callback");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -291,7 +291,7 @@ ft_bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int32_t
 
 void ft_file_watch::event_loop()
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_file_watch::event_loop");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_file_watch::event_loop");
     while (FT_TRUE)
     {
         cmp_file_watch_event event;

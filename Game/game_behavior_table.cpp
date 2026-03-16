@@ -191,7 +191,7 @@ int32_t game_behavior_table::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -257,7 +257,7 @@ int32_t game_behavior_table::unlock_internal(ft_bool lock_acquired) const noexce
 
 int32_t game_behavior_table::lock(ft_bool *lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::lock");
     int32_t lock_error = this->lock_internal(lock_acquired);
     this->set_error(lock_error);
     return (lock_error);
@@ -265,21 +265,21 @@ int32_t game_behavior_table::lock(ft_bool *lock_acquired) const noexcept
 
 void game_behavior_table::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 ft_map<int32_t, game_behavior_profile> &game_behavior_table::get_profiles() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::get_profiles");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::get_profiles");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_profiles);
 }
 
 const ft_map<int32_t, game_behavior_profile> &game_behavior_table::get_profiles() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::get_profiles const");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::get_profiles const");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_profiles);
 }
@@ -293,7 +293,7 @@ void game_behavior_table::set_profiles(
     const Pair<int32_t, game_behavior_profile> *entry;
     const Pair<int32_t, game_behavior_profile> *entry_end;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::set_profiles");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::set_profiles");
     int32_t lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -321,7 +321,7 @@ int32_t game_behavior_table::register_profile(const game_behavior_profile &profi
     ft_bool lock_acquired;
     int32_t profile_identifier;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::register_profile");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::register_profile");
     int32_t lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -340,7 +340,7 @@ int32_t game_behavior_table::fetch_profile(int32_t profile_id,
 {
     const Pair<int32_t, game_behavior_profile> *entry;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_behavior_table::fetch_profile");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_behavior_table::fetch_profile");
     entry = this->_profiles.find(profile_id);
     if (entry == this->_profiles.end())
     {
@@ -356,7 +356,7 @@ int32_t game_behavior_table::fetch_profile(int32_t profile_id,
 int32_t game_behavior_table::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_behavior_table::get_error");
     return (static_cast<int32_t>(game_behavior_table::_last_error));
 }
@@ -364,7 +364,7 @@ int32_t game_behavior_table::get_error() const noexcept
 const char *game_behavior_table::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_behavior_table::get_error_str");
     return (ft_strerror(this->get_error()));
 }

@@ -81,7 +81,7 @@ void ft_thread_pool::submit(Function &&function)
     int32_t work_lock_error;
     ft_size_t task_count;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_thread_pool::submit");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_thread_pool::submit");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

@@ -154,7 +154,7 @@ int32_t http2_header_field::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_header_field::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_header_field::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
@@ -176,7 +176,7 @@ int32_t http2_header_field::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_header_field::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_header_field::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         destroy_error = this->_mutex->destroy();
@@ -201,7 +201,7 @@ int32_t http2_header_field::lock(ft_bool *lock_acquired) const noexcept
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     mutable_field = const_cast<http2_header_field *>(this);
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_header_field::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_header_field::lock");
     has_mutex = (mutable_field->_mutex != ft_nullptr);
     if (pt_recursive_mutex_lock_if_not_null(mutable_field->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -546,7 +546,7 @@ int32_t http2_frame::enable_thread_safety() noexcept
     void *memory_pointer;
     pt_recursive_mutex *mutex_pointer;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_frame::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_frame::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
@@ -568,7 +568,7 @@ int32_t http2_frame::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_frame::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_frame::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -591,7 +591,7 @@ int32_t http2_frame::lock(ft_bool *lock_acquired) const noexcept
     if (lock_acquired != ft_nullptr)
         *lock_acquired = FT_FALSE;
     mutable_frame = const_cast<http2_frame *>(this);
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_frame::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_frame::lock");
     has_mutex = (mutable_frame->_mutex != ft_nullptr);
     if (pt_recursive_mutex_lock_if_not_null(mutable_frame->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);
@@ -730,14 +730,14 @@ uint32_t http2_frame::set_error(uint32_t error_code) const noexcept
 int32_t http2_frame::get_error(void) const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "http2_frame::get_error");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_frame::get_error");
     return (http2_frame::_last_error);
 }
 
 const char *http2_frame::get_error_str(void) const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "http2_frame::get_error_str");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_frame::get_error_str");
     return (ft_strerror(http2_frame::_last_error));
 }
 
@@ -905,7 +905,7 @@ int32_t http2_stream_manager::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_stream_manager::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         return (FT_ERR_SUCCESS);
@@ -936,7 +936,7 @@ int32_t http2_stream_manager::lock(ft_bool *lock_acquired) const noexcept
     if (lock_acquired)
         *lock_acquired = FT_FALSE;
     mutable_manager = const_cast<http2_stream_manager *>(this);
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_stream_manager::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::lock");
     has_mutex = (this->_mutex != ft_nullptr);
     lock_error = pt_recursive_mutex_lock_if_not_null(mutable_manager->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -961,7 +961,7 @@ int32_t http2_stream_manager::disable_thread_safety() noexcept
 {
     int32_t destroy_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_stream_manager::disable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -1865,7 +1865,7 @@ ft_bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
     uint8_t frame_flags;
     ft_string payload_copy;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::apply_remote_settings");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::apply_remote_settings");
     if (!frame.get_type(frame_type))
     {
         return (FT_FALSE);
@@ -1926,7 +1926,7 @@ ft_bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
 ft_bool http2_settings_state::update_local_initial_window(uint32_t new_window,
     http2_stream_manager &streams) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::update_local_initial_window");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::update_local_initial_window");
     if (new_window > 0x7FFFFFFFu)
     {
         return (FT_FALSE);
@@ -1942,7 +1942,7 @@ ft_bool http2_settings_state::update_local_initial_window(uint32_t new_window,
 ft_bool http2_settings_state::update_remote_initial_window(uint32_t new_window,
     http2_stream_manager &streams) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::update_remote_initial_window");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::update_remote_initial_window");
     if (new_window > 0x7FFFFFFFu)
     {
         return (FT_FALSE);
@@ -1957,43 +1957,43 @@ ft_bool http2_settings_state::update_remote_initial_window(uint32_t new_window,
 
 uint32_t http2_settings_state::get_header_table_size() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::get_header_table_size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::get_header_table_size");
     return (this->_header_table_size);
 }
 
 ft_bool http2_settings_state::get_enable_push() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::get_enable_push");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::get_enable_push");
     return (this->_enable_push);
 }
 
 uint32_t http2_settings_state::get_max_concurrent_streams() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::get_max_concurrent_streams");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::get_max_concurrent_streams");
     return (this->_max_concurrent_streams);
 }
 
 uint32_t http2_settings_state::get_initial_local_window() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::get_initial_local_window");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::get_initial_local_window");
     return (this->_initial_local_window);
 }
 
 uint32_t http2_settings_state::get_initial_remote_window() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::get_initial_remote_window");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::get_initial_remote_window");
     return (this->_initial_remote_window);
 }
 
 uint32_t http2_settings_state::get_max_frame_size() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::get_max_frame_size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::get_max_frame_size");
     return (this->_max_frame_size);
 }
 
 uint32_t http2_settings_state::get_max_header_list_size() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "http2_settings_state::get_max_header_list_size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_settings_state::get_max_header_list_size");
     return (this->_max_header_list_size);
 }
 

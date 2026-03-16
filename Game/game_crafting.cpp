@@ -17,7 +17,7 @@ uint32_t game_crafting_ingredient::set_error(uint32_t error_code) noexcept
 int32_t game_crafting_ingredient::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_crafting_ingredient::get_error");
     return (static_cast<int32_t>(game_crafting_ingredient::_last_error));
 }
@@ -25,7 +25,7 @@ int32_t game_crafting_ingredient::get_error() const noexcept
 const char *game_crafting_ingredient::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_crafting_ingredient::get_error_str");
     return (ft_strerror(this->get_error()));
 }
@@ -39,7 +39,7 @@ uint32_t game_crafting::set_error(uint32_t error_code) noexcept
 int32_t game_crafting::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_crafting::get_error");
     return (static_cast<int32_t>(game_crafting::_last_error));
 }
@@ -47,7 +47,7 @@ int32_t game_crafting::get_error() const noexcept
 const char *game_crafting::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state,
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_crafting::get_error_str");
     return (ft_strerror(game_crafting::_last_error));
 }
@@ -557,7 +557,7 @@ int32_t game_crafting::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_crafting::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -611,14 +611,14 @@ ft_bool game_crafting::is_thread_safe() const noexcept
 
 ft_map<int32_t, ft_vector<game_crafting_ingredient>> &game_crafting::get_recipes() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::get_recipes");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_crafting::get_recipes");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
 
 const ft_map<int32_t, ft_vector<game_crafting_ingredient>> &game_crafting::get_recipes() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::get_recipes");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_crafting::get_recipes");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
@@ -633,7 +633,7 @@ int32_t game_crafting::register_recipe(int32_t recipe_id,
     int32_t lock_error;
 
     lock_acquired = FT_FALSE;
-    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::register_recipe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_crafting::register_recipe");
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -674,7 +674,7 @@ int32_t game_crafting::craft_item(game_inventory &inventory, int32_t recipe_id,
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    errno_abort_if_uninitialised(this->_initialised_state, "game_crafting::craft_item");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_crafting::craft_item");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

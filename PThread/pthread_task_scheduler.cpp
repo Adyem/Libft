@@ -603,7 +603,7 @@ void ft_scheduled_task_handle::teardown_thread_safety()
 
 void ft_task_scheduler::abort_if_not_initialised(const char *method_name) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, method_name);
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, method_name);
     return ;
 }
 

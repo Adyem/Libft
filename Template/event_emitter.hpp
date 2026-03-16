@@ -165,7 +165,7 @@ ft_bool ft_event_emitter<EventType, Args...>::ensure_capacity(ft_size_t desired)
     int32_t lock_error;
     ft_bool ensured;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::ensure_capacity");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::ensure_capacity");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -420,7 +420,7 @@ int32_t ft_event_emitter<EventType, Args...>::enable_thread_safety()
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::enable_thread_safety");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -442,7 +442,7 @@ int32_t ft_event_emitter<EventType, Args...>::disable_thread_safety()
     int32_t destroy_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-        errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::disable_thread_safety");
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     destroy_error = this->_mutex->destroy();
@@ -454,7 +454,7 @@ int32_t ft_event_emitter<EventType, Args...>::disable_thread_safety()
 template <typename EventType, typename... Args>
 ft_bool ft_event_emitter<EventType, Args...>::is_thread_safe() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::is_thread_safe");
     set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
@@ -464,7 +464,7 @@ int32_t ft_event_emitter<EventType, Args...>::lock(ft_bool *lock_acquired) const
 {
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::lock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::lock");
     lock_error = this->lock_internal(lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (set_error(lock_error));
@@ -474,7 +474,7 @@ int32_t ft_event_emitter<EventType, Args...>::lock(ft_bool *lock_acquired) const
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::unlock(ft_bool lock_acquired) const
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::unlock");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
     return ;
@@ -487,7 +487,7 @@ void ft_event_emitter<EventType, Args...>::on(const EventType& event,
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::on");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::on");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -515,7 +515,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
     ft_bool found;
     ft_size_t listener_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::emit");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::emit");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -553,7 +553,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
     ft_size_t listener_index;
     ft_size_t shift_index;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::remove_listener");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::remove_listener");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -595,7 +595,7 @@ ft_size_t ft_event_emitter<EventType, Args...>::size() const
     int32_t lock_error;
     ft_size_t current_size;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::size");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -616,7 +616,7 @@ ft_bool ft_event_emitter<EventType, Args...>::empty() const
     int32_t lock_error;
     ft_bool is_empty;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::empty");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::empty");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -636,7 +636,7 @@ void ft_event_emitter<EventType, Args...>::clear()
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised(this->_initialised_state, "ft_event_emitter::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_event_emitter::clear");
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -653,7 +653,7 @@ void ft_event_emitter<EventType, Args...>::clear()
 template <typename EventType, typename... Args>
 uint32_t ft_event_emitter<EventType, Args...>::get_error() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_event_emitter::get_error");
     return (ft_event_emitter<EventType, Args...>::_last_error);
 }
@@ -661,7 +661,7 @@ uint32_t ft_event_emitter<EventType, Args...>::get_error() const
 template <typename EventType, typename... Args>
 const char *ft_event_emitter<EventType, Args...>::get_error_str() const
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_event_emitter::get_error_str");
     return (ft_strerror(this->get_error()));
 }

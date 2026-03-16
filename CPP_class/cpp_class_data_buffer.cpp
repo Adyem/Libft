@@ -330,7 +330,7 @@ int32_t DataBuffer::destroy() noexcept
 
 void DataBuffer::clear() noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::clear");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::clear");
     int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -346,7 +346,7 @@ void DataBuffer::clear() noexcept
 
 ft_size_t DataBuffer::size() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::size");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::size");
     int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -361,14 +361,14 @@ ft_size_t DataBuffer::size() const noexcept
 
 const ft_vector<uint8_t>& DataBuffer::data() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::data");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::data");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_buffer);
 }
 
 ft_size_t DataBuffer::tell() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::tell");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::tell");
     int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -383,7 +383,7 @@ ft_size_t DataBuffer::tell() const noexcept
 
 ft_bool DataBuffer::seek(ft_size_t position) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::seek");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::seek");
     int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -402,28 +402,28 @@ ft_bool DataBuffer::seek(ft_size_t position) noexcept
 
 DataBuffer::operator ft_bool() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::operator ft_bool");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::operator ft_bool");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_ok);
 }
 
 ft_bool DataBuffer::good() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::good");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::good");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_ok);
 }
 
 ft_bool DataBuffer::bad() const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::bad");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::bad");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (!this->_ok);
 }
 
 int32_t DataBuffer::enable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "DataBuffer::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -450,7 +450,7 @@ int32_t DataBuffer::enable_thread_safety(void) noexcept
 
 int32_t DataBuffer::disable_thread_safety(void) noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state,
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "DataBuffer::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
@@ -466,7 +466,7 @@ int32_t DataBuffer::disable_thread_safety(void) noexcept
 
 ft_bool DataBuffer::is_thread_safe(void) const noexcept
 {
-    errno_abort_if_uninitialised(this->_initialised_state, "DataBuffer::is_thread_safe");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "DataBuffer::is_thread_safe");
     const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
