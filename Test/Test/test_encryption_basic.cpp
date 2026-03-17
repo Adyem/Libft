@@ -1,0 +1,81 @@
+#include "../test_internal.hpp"
+#include "../../Encryption/encryption.hpp"
+#include "../../CMA/CMA.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+#include <cstdio>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+static int mock_open_failure(const char *path_name, int flags, mode_t mode)
+{
+    (void)path_name;
+    (void)flags;
+    (void)mode;
+    return (-1);
+}
+
+static ssize_t mock_write_failure(int file_descriptor, const void *buffer, size_t count)
+{
+    (void)file_descriptor;
+    (void)buffer;
+    (void)count;
+    return (-1);
+}
+
+FT_TEST(test_be_get_encryption_key_allocation_failure_sets_errno)
+{
+    const char *key;
+
+    cma_set_alloc_limit(1);
+    key = be_get_encryption_key();
+    FT_ASSERT_EQ(ft_nullptr, key);
+    cma_set_alloc_limit(0);
+    return (1);
+}
+
+FT_TEST(test_be_save_game_allocation_failure_sets_errno)
+{
+    int save_result;
+
+    cma_set_alloc_limit(1);
+    save_result = be_save_game("be_save_game_alloc.txt", "data", "key");
+    FT_ASSERT_EQ(1, save_result);
+    cma_set_alloc_limit(0);
+    return (1);
+}
+
+FT_TEST(test_be_save_game_open_failure_sets_errno)
+{
+    int save_result;
+
+    be_set_save_game_hooks(mock_open_failure, ft_nullptr);
+    save_result = be_save_game("be_save_game_open.txt", "data", "key");
+    be_set_save_game_hooks(ft_nullptr, ft_nullptr);
+    FT_ASSERT_EQ(1, save_result);
+    return (1);
+}
+
+FT_TEST(test_be_save_game_write_failure_sets_errno)
+{
+    int save_result;
+
+    be_set_save_game_hooks(ft_nullptr, mock_write_failure);
+    save_result = be_save_game("be_save_game_write.txt", "data", "key");
+    be_set_save_game_hooks(ft_nullptr, ft_nullptr);
+    std::remove("be_save_game_write.txt");
+    FT_ASSERT_EQ(1, save_result);
+    return (1);
+}
+
+FT_TEST(test_be_decrypt_data_null_input_sets_errno)
+{
+    char *missing_buffer = ft_nullptr;
+    char **wrapper = &missing_buffer;
+
+    FT_ASSERT_EQ(ft_nullptr, be_decrypt_data(ft_nullptr, "key"));
+    FT_ASSERT_EQ(ft_nullptr, be_decrypt_data(wrapper, "key"));
+    return (1);
+}
