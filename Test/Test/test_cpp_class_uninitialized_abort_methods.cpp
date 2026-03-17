@@ -130,7 +130,7 @@ static void data_buffer_bad_uninitialised_aborts(void)
 static void data_buffer_bool_uninitialised_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialised_data_buffer();
-    (void)static_cast<bool>(*buffer_pointer);
+    (void)static_cast<ft_bool>(*buffer_pointer);
     return ;
 }
 
@@ -313,218 +313,187 @@ static void fd_istream_is_thread_safe_uninitialised_aborts(void)
     return ;
 }
 
-FT_TEST(test_data_buffer_clear_uninitialised_aborts,
-    "DataBuffer clear aborts when object is uninitialised")
+FT_TEST(test_data_buffer_clear_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_clear_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_size_uninitialised_aborts,
-    "DataBuffer size aborts when object is uninitialised")
+FT_TEST(test_data_buffer_size_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_size_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_seek_uninitialised_aborts,
-    "DataBuffer seek aborts when object is uninitialised")
+FT_TEST(test_data_buffer_seek_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_seek_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_good_uninitialised_aborts,
-    "DataBuffer good aborts when object is uninitialised")
+FT_TEST(test_data_buffer_good_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_good_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_data_uninitialised_aborts,
-    "DataBuffer data aborts when object is uninitialised")
+FT_TEST(test_data_buffer_data_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_data_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_tell_uninitialised_aborts,
-    "DataBuffer tell aborts when object is uninitialised")
+FT_TEST(test_data_buffer_tell_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_tell_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_bad_uninitialised_aborts,
-    "DataBuffer bad aborts when object is uninitialised")
+FT_TEST(test_data_buffer_bad_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_bad_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_bool_uninitialised_aborts,
-    "DataBuffer bool conversion aborts when object is uninitialised")
+FT_TEST(test_data_buffer_bool_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_bool_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_disable_thread_safety_uninitialised_aborts,
-    "DataBuffer disable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_data_buffer_disable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_disable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_enable_thread_safety_uninitialised_aborts,
-    "DataBuffer enable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_data_buffer_enable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_enable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_is_thread_safe_uninitialised_aborts,
-    "DataBuffer is_thread_safe aborts when object is uninitialised")
+FT_TEST(test_data_buffer_is_thread_safe_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(data_buffer_is_thread_safe_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_read_uninitialised_aborts,
-    "ft_stringbuf read aborts when object is uninitialised")
+FT_TEST(test_ft_stringbuf_read_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(stringbuf_read_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_is_valid_uninitialised_aborts,
-    "ft_stringbuf is_valid aborts when object is uninitialised")
+FT_TEST(test_ft_stringbuf_is_valid_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(stringbuf_is_valid_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_str_uninitialised_aborts,
-    "ft_stringbuf str aborts when object is uninitialised")
+FT_TEST(test_ft_stringbuf_str_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(stringbuf_str_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_enable_thread_safety_uninitialised_aborts,
-    "ft_stringbuf enable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_ft_stringbuf_enable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(stringbuf_enable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_disable_thread_safety_uninitialised_aborts,
-    "ft_stringbuf disable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_ft_stringbuf_disable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(stringbuf_disable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_is_thread_safe_uninitialised_aborts,
-    "ft_stringbuf is_thread_safe aborts when object is uninitialised")
+FT_TEST(test_ft_stringbuf_is_thread_safe_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(stringbuf_is_thread_safe_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_open_uninitialised_aborts,
-    "ft_ofstream open aborts when object is uninitialised")
+FT_TEST(test_ft_ofstream_open_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(ofstream_open_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_write_uninitialised_aborts,
-    "ft_ofstream write aborts when object is uninitialised")
+FT_TEST(test_ft_ofstream_write_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(ofstream_write_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_close_uninitialised_aborts,
-    "ft_ofstream close aborts when object is uninitialised")
+FT_TEST(test_ft_ofstream_close_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(ofstream_close_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_is_thread_safe_uninitialised_aborts,
-    "ft_ofstream is_thread_safe aborts when object is uninitialised")
+FT_TEST(test_ft_ofstream_is_thread_safe_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(ofstream_is_thread_safe_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_enable_thread_safety_uninitialised_aborts,
-    "ft_ofstream enable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_ft_ofstream_enable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(ofstream_enable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_disable_thread_safety_uninitialised_aborts,
-    "ft_ofstream disable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_ft_ofstream_disable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(ofstream_disable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_set_fd_uninitialised_aborts,
-    "ft_fd_istream set_file_descriptor aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_set_fd_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_set_fd_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_get_fd_uninitialised_aborts,
-    "ft_fd_istream get_file_descriptor aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_get_fd_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_get_fd_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_read_uninitialised_aborts,
-    "ft_fd_istream read aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_read_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_read_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_gcount_uninitialised_aborts,
-    "ft_fd_istream gcount aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_gcount_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_gcount_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_is_valid_uninitialised_aborts,
-    "ft_fd_istream is_valid aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_is_valid_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_is_valid_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_enable_thread_safety_uninitialised_aborts,
-    "ft_fd_istream enable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_enable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_enable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_disable_thread_safety_uninitialised_aborts,
-    "ft_fd_istream disable_thread_safety aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_disable_thread_safety_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_disable_thread_safety_uninitialised_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_is_thread_safe_uninitialised_aborts,
-    "ft_fd_istream is_thread_safe aborts when object is uninitialised")
+FT_TEST(test_ft_fd_istream_is_thread_safe_uninitialised_aborts)
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_is_thread_safe_uninitialised_aborts));
     return (1);

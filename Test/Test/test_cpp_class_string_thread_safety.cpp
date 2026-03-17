@@ -10,8 +10,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_ft_string_append_resets_errno,
-        "ft_string append sets error state to success after completing")
+FT_TEST(test_ft_string_append_resets_errno)
 {
     ft_string string_value;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.initialize());
@@ -21,8 +20,7 @@ FT_TEST(test_ft_string_append_resets_errno,
     return (1);
 }
 
-FT_TEST(test_ft_string_concurrent_appends_are_serialized,
-        "ft_string serializes concurrent append operations")
+FT_TEST(test_ft_string_concurrent_appends_are_serialized)
 {
     ft_string            shared_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_string.initialize());
@@ -87,8 +85,7 @@ FT_TEST(test_ft_string_concurrent_appends_are_serialized,
     return (1);
 }
 
-FT_TEST(test_ft_string_append_of_error_string_propagates_code,
-        "ft_string append propagates source error state")
+FT_TEST(test_ft_string_append_of_error_string_propagates_code)
 {
     ft_string healthy_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, healthy_string.initialize("ok"));
@@ -97,7 +94,7 @@ FT_TEST(test_ft_string_append_of_error_string_propagates_code,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, failing_string.initialize("hello world"));
     cma_set_alloc_limit(1);
     healthy_string.append(failing_string);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
+    FT_ASSERT_EQ(static_cast<uint32_t>(FT_ERR_NO_MEMORY), ft_string::get_error());
     cma_set_alloc_limit(0);
     return (1);
 }

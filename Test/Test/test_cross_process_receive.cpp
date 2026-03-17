@@ -81,7 +81,7 @@ namespace
     }
 }
 
-FT_TEST(test_cross_process_receive_memory_basic, "cross process receive memory basic")
+FT_TEST(test_cross_process_receive_memory_basic)
 {
     cross_process_message message;
     cross_process_read_result result;
@@ -136,7 +136,7 @@ FT_TEST(test_cross_process_receive_memory_basic, "cross process receive memory b
     return (1);
 }
 
-FT_TEST(test_cross_process_receive_memory_mutex_timeout, "cross process receive memory mutex timeout")
+FT_TEST(test_cross_process_receive_memory_mutex_timeout)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -176,7 +176,7 @@ FT_TEST(test_cross_process_receive_memory_mutex_timeout, "cross process receive 
     return (1);
 }
 
-FT_TEST(test_cross_process_receive_memory_invalid_payload_offset, "cross process receive memory invalid payload offset")
+FT_TEST(test_cross_process_receive_memory_invalid_payload_offset)
 {
     cross_process_message message;
     cross_process_read_result result;
@@ -228,7 +228,7 @@ FT_TEST(test_cross_process_receive_memory_invalid_payload_offset, "cross process
     return (1);
 }
 
-FT_TEST(test_cross_process_receive_memory_invalid_error_offset, "cross process receive memory invalid error offset")
+FT_TEST(test_cross_process_receive_memory_invalid_error_offset)
 {
     cross_process_message message;
     cross_process_read_result result;
@@ -280,7 +280,7 @@ FT_TEST(test_cross_process_receive_memory_invalid_error_offset, "cross process r
     return (1);
 }
 
-FT_TEST(test_cross_process_receive_memory_descriptor_disconnect, "cross process receive memory descriptor disconnect")
+FT_TEST(test_cross_process_receive_memory_descriptor_disconnect)
 {
     cross_process_read_result result;
     int sockets[2];
@@ -298,7 +298,7 @@ FT_TEST(test_cross_process_receive_memory_descriptor_disconnect, "cross process 
     return (1);
 }
 
-FT_TEST(test_cross_process_receive_memory_missing_mapping, "cross process receive memory missing mapping")
+FT_TEST(test_cross_process_receive_memory_missing_mapping)
 {
     cross_process_message message;
     cross_process_read_result result;
@@ -330,7 +330,7 @@ FT_TEST(test_cross_process_receive_memory_missing_mapping, "cross process receiv
     return (1);
 }
 
-FT_TEST(test_cross_process_receive_memory_invalid_mutex_offset, "cross process receive memory invalid mutex offset")
+FT_TEST(test_cross_process_receive_memory_invalid_mutex_offset)
 {
     cross_process_message message;
     cross_process_read_result result;

@@ -16,8 +16,7 @@ static void cleanup_file(const char *path)
     return ;
 }
 
-FT_TEST(test_ft_file_default_constructor_starts_closed,
-    "ft_file default constructor starts with invalid descriptor")
+FT_TEST(test_ft_file_default_constructor_starts_closed)
 {
     ft_file file;
 
@@ -25,8 +24,7 @@ FT_TEST(test_ft_file_default_constructor_starts_closed,
     return (1);
 }
 
-FT_TEST(test_ft_file_open_close_lifecycle_cycle,
-    "ft_file open and close leave the object reusable")
+FT_TEST(test_ft_file_open_close_lifecycle_cycle)
 {
     const char *path;
     ft_file file;
@@ -42,8 +40,7 @@ FT_TEST(test_ft_file_open_close_lifecycle_cycle,
     return (1);
 }
 
-FT_TEST(test_ft_file_reopen_after_close_reads_previous_data,
-    "ft_file can reopen after close and read persisted bytes")
+FT_TEST(test_ft_file_reopen_after_close_reads_previous_data)
 {
     const char *path;
     ft_file file;
@@ -63,8 +60,7 @@ FT_TEST(test_ft_file_reopen_after_close_reads_previous_data,
     return (1);
 }
 
-FT_TEST(test_ft_file_close_when_already_closed_keeps_invalid_fd,
-    "ft_file close on unopened object keeps descriptor invalid")
+FT_TEST(test_ft_file_close_when_already_closed_keeps_invalid_fd)
 {
     ft_file file;
 
@@ -73,8 +69,7 @@ FT_TEST(test_ft_file_close_when_already_closed_keeps_invalid_fd,
     return (1);
 }
 
-FT_TEST(test_ft_file_copy_to_with_buffer_requires_open_source,
-    "ft_file copy_to_with_buffer fails when source descriptor is invalid")
+FT_TEST(test_ft_file_copy_to_with_buffer_requires_open_source)
 {
     const char *destination_path;
     ft_file file;

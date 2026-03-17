@@ -184,69 +184,60 @@ static void string_call_move_assign_from_uninitialised(void)
     return ;
 }
 
-FT_TEST(test_ft_string_uninitialised_destructor_noop,
-    "ft_string destructor tolerates uninitialised instance")
+FT_TEST(test_ft_string_uninitialised_destructor_noop)
 {
     FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialised(string_call_destructor_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_uninitialised_destroy_noop,
-    "ft_string destroy tolerates uninitialised instance")
+FT_TEST(test_ft_string_uninitialised_destroy_noop)
 {
     FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialised(string_call_destroy_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_uninitialised_append_aborts,
-    "ft_string append aborts on uninitialised instance")
+FT_TEST(test_ft_string_uninitialised_append_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialised(string_call_append_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_initialize_twice_aborts,
-    "ft_string initialize aborts when called while initialised")
+FT_TEST(test_ft_string_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
         string_call_initialize_twice));
     return (1);
 }
 
-FT_TEST(test_ft_string_destroy_twice_noops,
-    "ft_string destroy twice becomes a no-op")
+FT_TEST(test_ft_string_destroy_twice_noops)
 {
     FT_ASSERT_EQ(0, string_expect_sigabrt_signal_handler(
         string_call_destroy_twice));
     return (1);
 }
 
-FT_TEST(test_ft_string_copy_ctor_from_uninitialised_source_aborts,
-    "ft_string copy constructor aborts with uninitialised source")
+FT_TEST(test_ft_string_copy_ctor_from_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
         string_call_copy_ctor_from_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_move_ctor_from_uninitialised_source_aborts,
-    "ft_string move constructor aborts with uninitialised source")
+FT_TEST(test_ft_string_move_ctor_from_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
         string_call_move_ctor_from_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_copy_assign_from_uninitialised_source_aborts,
-    "ft_string copy assignment aborts with uninitialised source")
+FT_TEST(test_ft_string_copy_assign_from_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
         string_call_copy_assign_from_uninitialised));
     return (1);
 }
 
-FT_TEST(test_ft_string_move_assign_from_uninitialised_source_aborts,
-    "ft_string move assignment aborts with uninitialised source")
+FT_TEST(test_ft_string_move_assign_from_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
         string_call_move_assign_from_uninitialised));

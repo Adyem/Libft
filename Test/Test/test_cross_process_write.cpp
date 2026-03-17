@@ -94,7 +94,7 @@ namespace
     }
 }
 
-FT_TEST(test_cross_process_write_memory_basic, "cross process write memory basic")
+FT_TEST(test_cross_process_write_memory_basic)
 {
     cross_process_message message;
     cross_process_message received_message;
@@ -173,7 +173,7 @@ FT_TEST(test_cross_process_write_memory_basic, "cross process write memory basic
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_length_error, "cross process write memory length error")
+FT_TEST(test_cross_process_write_memory_length_error)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -213,7 +213,7 @@ FT_TEST(test_cross_process_write_memory_length_error, "cross process write memor
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_null_payload, "cross process write memory null payload")
+FT_TEST(test_cross_process_write_memory_null_payload)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -237,7 +237,7 @@ FT_TEST(test_cross_process_write_memory_null_payload, "cross process write memor
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_invalid_payload_offset, "cross process write memory invalid payload offset")
+FT_TEST(test_cross_process_write_memory_invalid_payload_offset)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -275,7 +275,7 @@ FT_TEST(test_cross_process_write_memory_invalid_payload_offset, "cross process w
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_invalid_error_offset, "cross process write memory invalid error offset")
+FT_TEST(test_cross_process_write_memory_invalid_error_offset)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -309,7 +309,7 @@ FT_TEST(test_cross_process_write_memory_invalid_error_offset, "cross process wri
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_zero_length_payload, "cross process write memory zero length payload")
+FT_TEST(test_cross_process_write_memory_zero_length_payload)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -342,7 +342,7 @@ FT_TEST(test_cross_process_write_memory_zero_length_payload, "cross process writ
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_mutex_timeout, "cross process write memory mutex timeout")
+FT_TEST(test_cross_process_write_memory_mutex_timeout)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -379,7 +379,7 @@ FT_TEST(test_cross_process_write_memory_mutex_timeout, "cross process write memo
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_open_failure, "cross process write memory open failure")
+FT_TEST(test_cross_process_write_memory_open_failure)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -410,7 +410,7 @@ FT_TEST(test_cross_process_write_memory_open_failure, "cross process write memor
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_invalid_mutex_offset, "cross process write memory invalid mutex offset")
+FT_TEST(test_cross_process_write_memory_invalid_mutex_offset)
 {
     cross_process_message message;
     void *mapping_ptr;
@@ -447,7 +447,7 @@ FT_TEST(test_cross_process_write_memory_invalid_mutex_offset, "cross process wri
     return (1);
 }
 
-FT_TEST(test_cross_process_write_memory_without_error_slot, "cross process write memory without error slot")
+FT_TEST(test_cross_process_write_memory_without_error_slot)
 {
     cross_process_message message;
     void *mapping_ptr;

@@ -64,8 +64,7 @@ static int32_t dumb_expect_load_wav_allocation_failure_child(void)
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_load_wav_reports_failure_when_allocation_is_constrained,
-    "dumb sound clip load_wav reports platform failure when file read allocation fails")
+FT_TEST(test_dumb_sound_clip_load_wav_reports_failure_when_allocation_is_constrained)
 {
     pid_t child_process_id;
     int32_t child_status;

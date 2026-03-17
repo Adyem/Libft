@@ -58,7 +58,7 @@ static void data_buffer_initialize_move_uninitialised_source_aborts(void)
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
 
-    (void)destination_buffer.initialize_move(source_buffer);
+    (void)destination_buffer.initialize(ft_move(source_buffer));
     return ;
 }
 
@@ -85,8 +85,7 @@ static void ofstream_initialize_twice_aborts(void)
     return ;
 }
 
-FT_TEST(test_data_buffer_initialize_copy_into_uninitialised_destination,
-    "DataBuffer initialize(copy) succeeds with uninitialised destination")
+FT_TEST(test_data_buffer_initialize_copy_into_uninitialised_destination)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -99,8 +98,7 @@ FT_TEST(test_data_buffer_initialize_copy_into_uninitialised_destination,
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_copy_into_destroyed_destination,
-    "DataBuffer initialize(copy) succeeds with destroyed destination")
+FT_TEST(test_data_buffer_initialize_copy_into_destroyed_destination)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -115,22 +113,20 @@ FT_TEST(test_data_buffer_initialize_copy_into_destroyed_destination,
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_into_uninitialised_destination,
-    "DataBuffer initialize_move succeeds with uninitialised destination")
+FT_TEST(test_data_buffer_initialize_move_into_uninitialised_destination)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, (source_buffer << 99).get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize_move(source_buffer));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize(ft_move(source_buffer)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.destroy());
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_into_destroyed_destination,
-    "DataBuffer initialize_move succeeds with destroyed destination")
+FT_TEST(test_data_buffer_initialize_move_into_destroyed_destination)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -139,41 +135,37 @@ FT_TEST(test_data_buffer_initialize_move_into_destroyed_destination,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, (source_buffer << 123).get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.destroy());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize_move(source_buffer));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize(ft_move(source_buffer)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.destroy());
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_self_is_noop_success,
-    "DataBuffer initialize_move self returns success")
+FT_TEST(test_data_buffer_initialize_move_self_is_noop_success)
 {
     DataBuffer buffer_value;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize_move(buffer_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize(ft_move(buffer_value)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_copy_uninitialised_source_aborts,
-    "DataBuffer initialize(copy) aborts for uninitialised source")
+FT_TEST(test_data_buffer_initialize_copy_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         data_buffer_initialize_copy_uninitialised_source_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_uninitialised_source_aborts,
-    "DataBuffer initialize_move aborts for uninitialised source")
+FT_TEST(test_data_buffer_initialize_move_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         data_buffer_initialize_move_uninitialised_source_aborts));
     return (1);
 }
 
-FT_TEST(test_data_buffer_destroy_tolerates_destroyed_instance,
-    "DataBuffer destroy tolerates destroyed instance")
+FT_TEST(test_data_buffer_destroy_tolerates_destroyed_instance)
 {
     DataBuffer buffer_value;
 
@@ -184,8 +176,7 @@ FT_TEST(test_data_buffer_destroy_tolerates_destroyed_instance,
 }
 
 
-FT_TEST(test_ft_stringbuf_initialize_destroy_cycle,
-    "ft_stringbuf supports initialize and destroy lifecycle")
+FT_TEST(test_ft_stringbuf_initialize_destroy_cycle)
 {
     ft_string source_value;
     ft_stringbuf buffer_value;
@@ -197,16 +188,14 @@ FT_TEST(test_ft_stringbuf_initialize_destroy_cycle,
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_initialize_twice_aborts,
-    "ft_stringbuf initialize aborts while already initialised")
+FT_TEST(test_ft_stringbuf_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         stringbuf_initialize_twice_aborts));
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_initialize_destroy_cycle,
-    "ft_ofstream supports initialize and destroy lifecycle")
+FT_TEST(test_ft_ofstream_initialize_destroy_cycle)
 {
     ft_ofstream stream_value;
 
@@ -215,8 +204,7 @@ FT_TEST(test_ft_ofstream_initialize_destroy_cycle,
     return (1);
 }
 
-FT_TEST(test_ft_ofstream_initialize_twice_aborts,
-    "ft_ofstream initialize aborts while already initialised")
+FT_TEST(test_ft_ofstream_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         ofstream_initialize_twice_aborts));

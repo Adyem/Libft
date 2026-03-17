@@ -2009,10 +2009,9 @@ ft_bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
     uint8_t frame_flags;
     uint32_t frame_stream_identifier;
 
-    out_buffer.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (out_buffer.clear() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = FT_ERR_NO_MEMORY;
         return (FT_FALSE);
     }
     if (!frame.copy_payload(payload_copy))
@@ -2021,11 +2020,6 @@ ft_bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
         return (FT_FALSE);
     }
     payload_length = payload_copy.size();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-    {
-        error_code = ft_string::get_error();
-        return (FT_FALSE);
-    }
     if (payload_length > 0xFFFFFF)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
@@ -2058,28 +2052,20 @@ ft_bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
     index = 0;
     while (index < sizeof(header))
     {
-        http2_append_raw_byte(out_buffer, header[index]);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (out_buffer.append(static_cast<char>(header[index])) != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = FT_ERR_NO_MEMORY;
             return (FT_FALSE);
         }
         index++;
     }
     payload_data = payload_copy.c_str();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-    {
-        error_code = ft_string::get_error();
-        return (FT_FALSE);
-    }
     index = 0;
     while (index < payload_length)
     {
-        http2_append_raw_byte(out_buffer,
-            static_cast<unsigned char>(payload_data[index]));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (out_buffer.append(static_cast<char>(payload_data[index])) != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = FT_ERR_NO_MEMORY;
             return (FT_FALSE);
         }
         index++;
@@ -2142,12 +2128,12 @@ ft_bool http2_decode_frame(const unsigned char *buffer, ft_size_t buffer_size,
     }
     if (payload_copy.initialize() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = payload_copy.get_error();
         return (FT_FALSE);
     }
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (payload_copy.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = payload_copy.get_error();
         return (FT_FALSE);
     }
     index = 0;
@@ -2155,9 +2141,9 @@ ft_bool http2_decode_frame(const unsigned char *buffer, ft_size_t buffer_size,
     {
         http2_append_raw_byte(payload_copy,
             static_cast<unsigned char>(buffer[offset + 9 + index]));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (payload_copy.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = payload_copy.get_error();
             return (FT_FALSE);
         }
         index++;
@@ -2179,9 +2165,9 @@ ft_bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
     ft_size_t index;
 
     out_block.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (out_block.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = out_block.get_error();
         return (FT_FALSE);
     }
     header_count = headers.size();
@@ -2192,16 +2178,16 @@ ft_bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
     }
     http2_append_raw_byte(out_block,
         static_cast<unsigned char>((header_count >> 8) & 0xFF));
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (out_block.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = out_block.get_error();
         return (FT_FALSE);
     }
     http2_append_raw_byte(out_block,
         static_cast<unsigned char>(header_count & 0xFF));
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (out_block.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = out_block.get_error();
         return (FT_FALSE);
     }
     index = 0;
@@ -2228,15 +2214,15 @@ ft_bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
             return (FT_FALSE);
         }
         name_length = field_name.size();
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (field_name.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = field_name.get_error();
             return (FT_FALSE);
         }
         value_length = field_value.size();
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (field_value.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = field_value.get_error();
             return (FT_FALSE);
         }
         if (name_length > 0xFFFF || value_length > 0xFFFF)
@@ -2246,22 +2232,22 @@ ft_bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>((name_length >> 8) & 0xFF));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (out_block.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = out_block.get_error();
             return (FT_FALSE);
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>(name_length & 0xFF));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (out_block.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = out_block.get_error();
             return (FT_FALSE);
         }
         name_data = field_name.c_str();
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (field_name.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = field_name.get_error();
             return (FT_FALSE);
         }
         name_index = 0;
@@ -2269,31 +2255,31 @@ ft_bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         {
             http2_append_raw_byte(out_block,
                 static_cast<unsigned char>(name_data[name_index]));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (out_block.get_error() != FT_ERR_SUCCESS)
             {
-                error_code = ft_string::get_error();
+                error_code = out_block.get_error();
                 return (FT_FALSE);
             }
             name_index++;
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>((value_length >> 8) & 0xFF));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (out_block.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = out_block.get_error();
             return (FT_FALSE);
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>(value_length & 0xFF));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (out_block.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = out_block.get_error();
             return (FT_FALSE);
         }
         value_data = field_value.c_str();
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (field_value.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = field_value.get_error();
             return (FT_FALSE);
         }
         value_index = 0;
@@ -2301,9 +2287,9 @@ ft_bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         {
             http2_append_raw_byte(out_block,
                 static_cast<unsigned char>(value_data[value_index]));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (out_block.get_error() != FT_ERR_SUCCESS)
             {
-                error_code = ft_string::get_error();
+                error_code = out_block.get_error();
                 return (FT_FALSE);
             }
             value_index++;
@@ -2326,15 +2312,15 @@ ft_bool http2_decompress_headers(const ft_string &block,
 
     out_headers.clear();
         buffer_length = block.size();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (block.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = block.get_error();
         return (FT_FALSE);
     }
     buffer = reinterpret_cast<const unsigned char*>(block.c_str());
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (block.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = block.get_error();
         return (FT_FALSE);
     }
     if (buffer_length < 2)

@@ -142,8 +142,7 @@ static void sound_device_call_is_thread_safe(test_sound_device_impl &sound_devic
     return ;
 }
 
-FT_TEST(test_dumb_sound_device_uninitialised_destroy_returns_invalid_state,
-    "dumb sound device destroy returns invalid state on uninitialised instance")
+FT_TEST(test_dumb_sound_device_uninitialised_destroy_returns_invalid_state)
 {
     test_sound_device_impl device;
 
@@ -151,29 +150,25 @@ FT_TEST(test_dumb_sound_device_uninitialised_destroy_returns_invalid_state,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialised_move_aborts,
-    "dumb sound device move aborts on uninitialised instance")
+FT_TEST(test_dumb_sound_device_uninitialised_move_aborts)
 {
     FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_move));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialised_enable_thread_safety_aborts,
-    "dumb sound device enable_thread_safety aborts on uninitialised instance")
+FT_TEST(test_dumb_sound_device_uninitialised_enable_thread_safety_aborts)
 {
     FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_enable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialised_disable_thread_safety_aborts,
-    "dumb sound device disable_thread_safety aborts on uninitialised instance")
+FT_TEST(test_dumb_sound_device_uninitialised_disable_thread_safety_aborts)
 {
     FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_disable_thread_safety));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialised_is_thread_safe_aborts,
-    "dumb sound device is_thread_safe_enabled aborts on uninitialised instance")
+FT_TEST(test_dumb_sound_device_uninitialised_is_thread_safe_aborts)
 {
     FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialised(sound_device_call_is_thread_safe));
     return (1);

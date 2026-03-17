@@ -211,8 +211,7 @@ static void render_window_initialize_move_destroyed_source_aborts_operation()
     return ;
 }
 
-FT_TEST(test_dumb_sound_device_initialize_destroy_reinitialize_success,
-    "dumb sound device supports initialize/destroy/reinitialize lifecycle")
+FT_TEST(test_dumb_sound_device_initialize_destroy_reinitialize_success)
 {
     test_sound_device_lifecycle_impl sound_device_instance;
 
@@ -223,24 +222,21 @@ FT_TEST(test_dumb_sound_device_initialize_destroy_reinitialize_success,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_initialize_copy_from_destroyed_source_aborts,
-    "dumb sound device initialize(copy) from destroyed source aborts")
+FT_TEST(test_dumb_sound_device_initialize_copy_from_destroyed_source_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(
         sound_device_initialize_copy_destroyed_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_initialize_move_from_destroyed_source_aborts,
-    "dumb sound device initialize(move) from destroyed source aborts")
+FT_TEST(test_dumb_sound_device_initialize_move_from_destroyed_source_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(
         sound_device_initialize_move_destroyed_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_move_self_initialised_is_noop,
-    "dumb sound device move(self) on initialised object returns success")
+FT_TEST(test_dumb_sound_device_move_self_initialised_is_noop)
 {
     test_sound_device_lifecycle_impl sound_device_instance;
 
@@ -250,8 +246,7 @@ FT_TEST(test_dumb_sound_device_move_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_initialize_copy_self_initialised_is_noop,
-    "dumb sound device initialize(copy self) on initialised object is a no-op")
+FT_TEST(test_dumb_sound_device_initialize_copy_self_initialised_is_noop)
 {
     test_sound_device_lifecycle_impl sound_device_instance;
 
@@ -261,8 +256,7 @@ FT_TEST(test_dumb_sound_device_initialize_copy_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_initialize_move_self_initialised_is_noop,
-    "dumb sound device initialize(move self) on initialised object is a no-op")
+FT_TEST(test_dumb_sound_device_initialize_move_self_initialised_is_noop)
 {
     test_sound_device_lifecycle_impl sound_device_instance;
 
@@ -274,8 +268,7 @@ FT_TEST(test_dumb_sound_device_initialize_move_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_move_uninitialised_destination_succeeds,
-    "dumb sound device move allows uninitialised destination")
+FT_TEST(test_dumb_sound_device_move_uninitialised_destination_succeeds)
 {
     test_sound_device_lifecycle_impl source_instance;
     test_sound_device_lifecycle_impl destination_instance;
@@ -286,8 +279,7 @@ FT_TEST(test_dumb_sound_device_move_uninitialised_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_move_destroyed_destination_succeeds,
-    "dumb sound device move allows destroyed destination")
+FT_TEST(test_dumb_sound_device_move_destroyed_destination_succeeds)
 {
     test_sound_device_lifecycle_impl source_instance;
     test_sound_device_lifecycle_impl destination_instance;
@@ -300,15 +292,13 @@ FT_TEST(test_dumb_sound_device_move_destroyed_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_initialize_twice_aborts,
-    "dumb sound device initialize aborts when called while initialised")
+FT_TEST(test_dumb_sound_device_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(sound_device_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_destroy_twice_returns_invalid_state,
-    "dumb sound device destroy returns invalid state when called twice")
+FT_TEST(test_dumb_sound_device_destroy_twice_returns_invalid_state)
 {
     test_sound_device_lifecycle_impl sound_device_instance;
 
@@ -318,8 +308,7 @@ FT_TEST(test_dumb_sound_device_destroy_twice_returns_invalid_state,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_destroy_reinitialize_success,
-    "dumb sound clip supports initialize/destroy/reinitialize lifecycle")
+FT_TEST(test_dumb_sound_clip_initialize_destroy_reinitialize_success)
 {
     ft_sound_clip sound_clip_instance;
 
@@ -330,24 +319,21 @@ FT_TEST(test_dumb_sound_clip_initialize_destroy_reinitialize_success,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_copy_from_destroyed_source_aborts,
-    "dumb sound clip initialize(copy) from destroyed source aborts")
+FT_TEST(test_dumb_sound_clip_initialize_copy_from_destroyed_source_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(
         sound_clip_initialize_copy_destroyed_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_move_from_destroyed_source_aborts,
-    "dumb sound clip initialize(move) from destroyed source aborts")
+FT_TEST(test_dumb_sound_clip_initialize_move_from_destroyed_source_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(
         sound_clip_initialize_move_destroyed_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_move_self_initialised_is_noop,
-    "dumb sound clip move(self) on initialised object returns success")
+FT_TEST(test_dumb_sound_clip_move_self_initialised_is_noop)
 {
     ft_sound_clip sound_clip_instance;
 
@@ -357,8 +343,7 @@ FT_TEST(test_dumb_sound_clip_move_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_copy_self_initialised_is_noop,
-    "dumb sound clip initialize(copy self) on initialised object is a no-op")
+FT_TEST(test_dumb_sound_clip_initialize_copy_self_initialised_is_noop)
 {
     ft_sound_clip sound_clip_instance;
 
@@ -368,8 +353,7 @@ FT_TEST(test_dumb_sound_clip_initialize_copy_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_move_self_initialised_is_noop,
-    "dumb sound clip initialize(move self) on initialised object is a no-op")
+FT_TEST(test_dumb_sound_clip_initialize_move_self_initialised_is_noop)
 {
     ft_sound_clip sound_clip_instance;
 
@@ -380,8 +364,7 @@ FT_TEST(test_dumb_sound_clip_initialize_move_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_move_uninitialised_destination_succeeds,
-    "dumb sound clip move allows uninitialised destination")
+FT_TEST(test_dumb_sound_clip_move_uninitialised_destination_succeeds)
 {
     ft_sound_clip source_instance;
     ft_sound_clip destination_instance;
@@ -392,8 +375,7 @@ FT_TEST(test_dumb_sound_clip_move_uninitialised_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_move_destroyed_destination_succeeds,
-    "dumb sound clip move allows destroyed destination")
+FT_TEST(test_dumb_sound_clip_move_destroyed_destination_succeeds)
 {
     ft_sound_clip source_instance;
     ft_sound_clip destination_instance;
@@ -406,15 +388,13 @@ FT_TEST(test_dumb_sound_clip_move_destroyed_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_twice_aborts,
-    "dumb sound clip initialize aborts when called while initialised")
+FT_TEST(test_dumb_sound_clip_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(sound_clip_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_destroy_twice_returns_invalid_state,
-    "dumb sound clip destroy returns invalid state when called twice")
+FT_TEST(test_dumb_sound_clip_destroy_twice_returns_invalid_state)
 {
     ft_sound_clip sound_clip_instance;
 
@@ -424,8 +404,7 @@ FT_TEST(test_dumb_sound_clip_destroy_twice_returns_invalid_state,
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_destroy_reinitialize_success,
-    "dumb render window supports initialize/destroy/reinitialize lifecycle")
+FT_TEST(test_dumb_render_window_initialize_destroy_reinitialize_success)
 {
     ft_render_window render_window_instance;
 
@@ -436,24 +415,21 @@ FT_TEST(test_dumb_render_window_initialize_destroy_reinitialize_success,
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_copy_from_destroyed_source_aborts,
-    "dumb render window initialize(copy) from destroyed source aborts")
+FT_TEST(test_dumb_render_window_initialize_copy_from_destroyed_source_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(
         render_window_initialize_copy_destroyed_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_move_from_destroyed_source_aborts,
-    "dumb render window initialize(move) from destroyed source aborts")
+FT_TEST(test_dumb_render_window_initialize_move_from_destroyed_source_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(
         render_window_initialize_move_destroyed_source_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_move_self_initialised_is_noop,
-    "dumb render window move(self) on initialised object returns success")
+FT_TEST(test_dumb_render_window_move_self_initialised_is_noop)
 {
     ft_render_window render_window_instance;
 
@@ -463,8 +439,7 @@ FT_TEST(test_dumb_render_window_move_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_copy_self_initialised_is_noop,
-    "dumb render window initialize(copy self) on initialised object is a no-op")
+FT_TEST(test_dumb_render_window_initialize_copy_self_initialised_is_noop)
 {
     ft_render_window render_window_instance;
 
@@ -475,8 +450,7 @@ FT_TEST(test_dumb_render_window_initialize_copy_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_move_self_initialised_is_noop,
-    "dumb render window initialize(move self) on initialised object is a no-op")
+FT_TEST(test_dumb_render_window_initialize_move_self_initialised_is_noop)
 {
     ft_render_window render_window_instance;
 
@@ -488,8 +462,7 @@ FT_TEST(test_dumb_render_window_initialize_move_self_initialised_is_noop,
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_move_uninitialised_destination_succeeds,
-    "dumb render window move allows uninitialised destination")
+FT_TEST(test_dumb_render_window_move_uninitialised_destination_succeeds)
 {
     ft_render_window source_instance;
     ft_render_window destination_instance;
@@ -500,8 +473,7 @@ FT_TEST(test_dumb_render_window_move_uninitialised_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_move_destroyed_destination_succeeds,
-    "dumb render window move allows destroyed destination")
+FT_TEST(test_dumb_render_window_move_destroyed_destination_succeeds)
 {
     ft_render_window source_instance;
     ft_render_window destination_instance;
@@ -514,15 +486,13 @@ FT_TEST(test_dumb_render_window_move_destroyed_destination_succeeds,
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_twice_aborts,
-    "dumb render window initialize aborts when called while initialised")
+FT_TEST(test_dumb_render_window_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(render_window_initialize_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_destroy_twice_returns_invalid_state,
-    "dumb render window destroy returns invalid state when called twice")
+FT_TEST(test_dumb_render_window_destroy_twice_returns_invalid_state)
 {
     ft_render_window render_window_instance;
 

@@ -100,8 +100,7 @@ static int32_t dumb_expect_recursive_mutex_usable(pt_recursive_mutex *mutex_poin
     return (1);
 }
 
-FT_TEST(test_dumb_render_mutex_is_recursive_and_balanced,
-    "dumb render runtime mutex supports recursive lock and balanced unlock")
+FT_TEST(test_dumb_render_mutex_is_recursive_and_balanced)
 {
     ft_render_window render_window_instance;
     ft_render_window_desc description;
@@ -127,8 +126,7 @@ FT_TEST(test_dumb_render_mutex_is_recursive_and_balanced,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_mutex_is_recursive_and_balanced,
-    "dumb sound clip runtime mutex supports recursive lock and balanced unlock")
+FT_TEST(test_dumb_sound_clip_mutex_is_recursive_and_balanced)
 {
     ft_sound_clip sound_clip_instance;
     pt_recursive_mutex *mutex_pointer;
@@ -143,8 +141,7 @@ FT_TEST(test_dumb_sound_clip_mutex_is_recursive_and_balanced,
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_mutex_is_recursive_and_balanced,
-    "dumb sound device runtime mutex supports recursive lock and balanced unlock")
+FT_TEST(test_dumb_sound_device_mutex_is_recursive_and_balanced)
 {
     test_sound_device_mutex_impl sound_device_instance;
     pt_recursive_mutex *mutex_pointer;
