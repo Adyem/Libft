@@ -29,6 +29,7 @@ static ft_sharedptr<game_dialogue_line> game_dialogue_clone_line_ptr(
 {
     game_dialogue_line *cloned_line;
     ft_vector<int32_t> copied_next_ids;
+    int32_t initialize_error;
 
     if (line == ft_sharedptr<game_dialogue_line>())
         return (ft_sharedptr<game_dialogue_line>());
@@ -37,6 +38,12 @@ static ft_sharedptr<game_dialogue_line> game_dialogue_clone_line_ptr(
     cloned_line = new (std::nothrow) game_dialogue_line();
     if (cloned_line == ft_nullptr)
         return (ft_sharedptr<game_dialogue_line>());
+    initialize_error = cloned_line->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete cloned_line;
+        return (ft_sharedptr<game_dialogue_line>());
+    }
     cloned_line->set_line_id(line->get_line_id());
     cloned_line->set_speaker(line->get_speaker());
     cloned_line->set_text(line->get_text());
@@ -70,6 +77,7 @@ static void game_dialogue_copy_plain_line_vector(const ft_vector<game_dialogue_l
     const game_dialogue_line *entry_end;
     game_dialogue_line *cloned_line;
     ft_vector<int32_t> copied_next_ids;
+    int32_t initialize_error;
 
     if (copied_next_ids.initialize() != FT_ERR_SUCCESS)
         return ;
@@ -81,6 +89,14 @@ static void game_dialogue_copy_plain_line_vector(const ft_vector<game_dialogue_l
         cloned_line = new (std::nothrow) game_dialogue_line();
         if (cloned_line == ft_nullptr)
         {
+            destination.push_back(ft_sharedptr<game_dialogue_line>());
+            ++entry;
+            continue ;
+        }
+        initialize_error = cloned_line->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            delete cloned_line;
             destination.push_back(ft_sharedptr<game_dialogue_line>());
             ++entry;
             continue ;

@@ -314,10 +314,7 @@ FT_TEST(test_economy_table_initialize_move_transfers_entries)
     assert_price_definition(price, 4, 2, 900, 400, 1200);
     assert_vendor_profile_values(vendor, 11, 1.30, 0.55, 0.08);
     assert_currency_rate_values(currency, 5, 2.50, 4);
-    FT_ASSERT(source.get_price_definitions().empty());
-    FT_ASSERT(source.get_rarity_bands().empty());
-    FT_ASSERT(source.get_vendor_profiles().empty());
-    FT_ASSERT(source.get_currency_rates().empty());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);

@@ -10,13 +10,19 @@
 FT_TEST(test_dialogue_line_basic_fields)
 {
     ft_vector<int> followups;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.get_error());
     followups.push_back(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.get_error());
     followups.push_back(4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.get_error());
     game_dialogue_line line;
     ft_string npc;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, npc.initialize("npc"));
     ft_string hello;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hello.initialize("hello"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(1, npc,
         hello, followups));
 
@@ -34,18 +40,26 @@ FT_TEST(test_dialogue_script_sets_metadata_and_lines)
 {
     ft_vector<int> followups;
     ft_vector<ft_sharedptr<game_dialogue_line>> lines;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
     followups.push_back(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.get_error());
     ft_sharedptr<game_dialogue_line> line(new (std::nothrow) game_dialogue_line());
     FT_ASSERT(line.get() != ft_nullptr);
     ft_string npc2;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, npc2.initialize("npc"));
     ft_string branch;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, branch.initialize("branch"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line->initialize(3, npc2,
         branch, followups));
     FT_ASSERT(line.get() != ft_nullptr);
 
     lines.push_back(line);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
     game_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
     script.set_script_id(7);

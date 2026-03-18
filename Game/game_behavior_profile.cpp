@@ -6,7 +6,7 @@
 #include <new>
 
 thread_local uint32_t game_behavior_profile::_last_error = FT_ERR_SUCCESS;
-static void game_behavior_copy_action_vector(
+static int32_t game_behavior_copy_action_vector(
     const ft_vector<game_behavior_action> &source,
     ft_vector<game_behavior_action> &destination)
 {
@@ -19,9 +19,11 @@ static void game_behavior_copy_action_vector(
     while (entry != entry_end)
     {
         destination.push_back(*entry);
+        if (destination.get_error() != FT_ERR_SUCCESS)
+            return (destination.get_error());
         ++entry;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 game_behavior_profile::game_behavior_profile() noexcept
@@ -104,16 +106,29 @@ game_behavior_profile::~game_behavior_profile() noexcept
 
 int32_t game_behavior_profile::initialize() noexcept
 {
+    int32_t actions_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "game_behavior_profile::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
+    if (this->_actions.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        actions_initialize_error = this->_actions.initialize();
+        if (actions_initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            this->set_error(actions_initialize_error);
+            return (actions_initialize_error);
+        }
+    }
+    else
+        this->_actions.clear();
     this->_profile_id = 0;
     this->_aggression_weight = 0.0;
     this->_caution_weight = 0.0;
-    this->_actions.clear();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -123,6 +138,7 @@ int32_t game_behavior_profile::initialize(const game_behavior_profile &other) no
 {
     int32_t initialize_error;
     int32_t destroy_error;
+    int32_t copy_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -153,7 +169,9 @@ int32_t game_behavior_profile::initialize(const game_behavior_profile &other) no
     this->_profile_id = other._profile_id;
     this->_aggression_weight = other._aggression_weight;
     this->_caution_weight = other._caution_weight;
-    game_behavior_copy_action_vector(other._actions, this->_actions);
+    copy_error = game_behavior_copy_action_vector(other._actions, this->_actions);
+    if (copy_error != FT_ERR_SUCCESS)
+        return (copy_error);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -214,6 +232,7 @@ int32_t game_behavior_profile::initialize(int32_t profile_id, double aggression_
     const ft_vector<game_behavior_action> &actions) noexcept
 {
     int32_t initialize_error;
+    int32_t copy_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
@@ -223,7 +242,9 @@ int32_t game_behavior_profile::initialize(int32_t profile_id, double aggression_
     this->_profile_id = profile_id;
     this->_aggression_weight = aggression_weight;
     this->_caution_weight = caution_weight;
-    game_behavior_copy_action_vector(actions, this->_actions);
+    copy_error = game_behavior_copy_action_vector(actions, this->_actions);
+    if (copy_error != FT_ERR_SUCCESS)
+        return (copy_error);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }

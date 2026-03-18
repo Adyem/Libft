@@ -6,19 +6,20 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static void populate_ingredient(game_crafting_ingredient &ingredient, int item_id, int count, int rarity)
+static int populate_ingredient(game_crafting_ingredient &ingredient, int item_id, int count, int rarity)
 {
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredient.initialize(item_id, count, rarity));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredient.get_error());
     ingredient.set_item_id(item_id);
     ingredient.set_count(count);
     ingredient.set_rarity(rarity);
-    return ;
+    return (1);
 }
 
 static int populate_loadout_entry(game_loadout_entry &entry, int slot, int item_id, int quantity)
 {
-    const int destroy_error = entry.destroy();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destroy_error);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
+    if (entry._initialised_state == FT_CLASS_STATE_INITIALISED)
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.initialize(slot, item_id, quantity));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
     return (1);
@@ -95,13 +96,17 @@ FT_TEST(test_catalog_recipe_copy_isolated)
     ft_vector<game_crafting_ingredient> ingredients;
     game_crafting_ingredient ingredient;
     game_recipe_blueprint recipe;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, recipe.initialize(5, 42, ingredients));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, recipe.get_error());
     game_recipe_blueprint first_fetch;
     game_recipe_blueprint second_fetch;
 
-    populate_ingredient(ingredient, 2, 3, 1);
+    FT_ASSERT_EQ(1, populate_ingredient(ingredient, 2, 3, 1));
     ingredients.push_back(ingredient);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.get_error());
     recipe.set_ingredients(ingredients);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.register_recipe(recipe));
@@ -126,6 +131,9 @@ FT_TEST(test_catalog_loadout_copy_isolated)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.get_error());
     ft_vector<game_loadout_entry> entries;
     game_loadout_blueprint loadout;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, loadout.initialize(7, entries));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, loadout.get_error());
     game_loadout_blueprint first_fetch;
@@ -135,10 +143,12 @@ FT_TEST(test_catalog_loadout_copy_isolated)
     FT_ASSERT_EQ(1, populate_loadout_entry(entry, 0, 10, 2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
     entries.push_back(entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.destroy());
     FT_ASSERT_EQ(1, populate_loadout_entry(entry, 1, 11, 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
     entries.push_back(entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     loadout.set_entries(entries);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.register_loadout(loadout));

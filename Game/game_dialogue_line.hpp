@@ -59,6 +59,7 @@ class game_dialogue_line
 
         int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
+        ft_bool is_initialised() const noexcept;
 
 };
 

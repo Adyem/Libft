@@ -98,7 +98,11 @@ ssize_t ft_istringstream::do_read(char *buffer, ft_size_t count)
 ft_string ft_istringstream::get_string() const
 {
     ft_string value;
+    int32_t initialize_error;
 
+    initialize_error = value.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (value);
     if (this->_buffer.get_string(value) != FT_ERR_SUCCESS)
         return (value);
     return (value);

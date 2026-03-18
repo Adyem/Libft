@@ -115,16 +115,50 @@ game_dialogue_line::~game_dialogue_line() noexcept
 
 int32_t game_dialogue_line::initialize() noexcept
 {
+    int32_t speaker_initialize_error;
+    int32_t text_initialize_error;
+    int32_t next_line_ids_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "game_dialogue_line::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
+    if (this->_speaker.is_initialised() == FT_FALSE)
+    {
+        speaker_initialize_error = this->_speaker.initialize();
+        if (speaker_initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            this->set_error(speaker_initialize_error);
+            return (speaker_initialize_error);
+        }
+    }
+    if (this->_text.is_initialised() == FT_FALSE)
+    {
+        text_initialize_error = this->_text.initialize();
+        if (text_initialize_error != FT_ERR_SUCCESS)
+        {
+            (void)this->_speaker.destroy();
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            this->set_error(text_initialize_error);
+            return (text_initialize_error);
+        }
+    }
+    if (this->_next_line_ids.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        next_line_ids_initialize_error = this->_next_line_ids.initialize();
+        if (next_line_ids_initialize_error != FT_ERR_SUCCESS)
+        {
+            (void)this->_text.destroy();
+            (void)this->_speaker.destroy();
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            this->set_error(next_line_ids_initialize_error);
+            return (next_line_ids_initialize_error);
+        }
+    }
     this->_line_id = 0;
-    this->_speaker.clear();
-    this->_text.clear();
-    this->_next_line_ids.clear();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -164,9 +198,12 @@ int32_t game_dialogue_line::destroy() noexcept
     }
     disable_error = this->disable_thread_safety();
     this->_line_id = 0;
-    this->_speaker.clear();
-    this->_text.clear();
-    this->_next_line_ids.clear();
+    if (this->_speaker.is_initialised() == FT_TRUE)
+        this->_speaker.clear();
+    if (this->_text.is_initialised() == FT_TRUE)
+        this->_text.clear();
+    if (this->_next_line_ids.is_initialised() == FT_CLASS_STATE_INITIALISED)
+        this->_next_line_ids.clear();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);
@@ -477,4 +514,9 @@ const char *game_dialogue_line::get_error_str() const noexcept
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_dialogue_line::get_error_str");
     return (ft_strerror(this->get_error()));
+}
+
+ft_bool game_dialogue_line::is_initialised() const noexcept
+{
+    return (this->_initialised_state == FT_CLASS_STATE_INITIALISED);
 }

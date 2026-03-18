@@ -1,0 +1,87 @@
+#include "../test_internal.hpp"
+#include "../../CPP_class/class_string.hpp"
+#include "../../GetNextLine/gnl_stream.hpp"
+#include "../../SCMA/SCMA.hpp"
+#include "../../Template/unordered_map.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+#include <csignal>
+#include <cstring>
+#include <sys/wait.h>
+#include <type_traits>
+#include <unistd.h>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+typedef ft_unordered_map<int, int> unordered_map_int_int;
+
+static int expect_sigabrt_for_void_operation(void (*operation)(void))
+{
+    pid_t child_process_id;
+    int child_status;
+
+    child_process_id = fork();
+    if (child_process_id == 0)
+    {
+        operation();
+        _exit(0);
+    }
+    if (child_process_id < 0)
+        return (0);
+    child_status = 0;
+    if (waitpid(child_process_id, &child_status, 0) < 0)
+        return (0);
+    if (WIFSIGNALED(child_status) == 0)
+        return (0);
+    return (WTERMSIG(child_status) == SIGABRT);
+}
+
+static void string_uninitialised_self_move_assignment_operation(void)
+{
+    alignas(ft_string) unsigned char storage[sizeof(ft_string)];
+    ft_string *string_pointer;
+
+    std::memset(storage, 0, sizeof(storage));
+    string_pointer = reinterpret_cast<ft_string *>(storage);
+    *string_pointer = static_cast<ft_string &&>(*string_pointer);
+    return ;
+}
+
+static void unordered_map_uninitialised_self_move_assignment_operation(void)
+{
+    alignas(unordered_map_int_int) unsigned char storage[sizeof(unordered_map_int_int)];
+    unordered_map_int_int *map_pointer;
+
+    std::memset(storage, 0, sizeof(storage));
+    map_pointer = reinterpret_cast<unordered_map_int_int *>(storage);
+    *map_pointer = static_cast<unordered_map_int_int &&>(*map_pointer);
+    return ;
+}
+
+FT_TEST(test_string_uninitialised_self_move_assignment_aborts)
+{
+    FT_ASSERT_EQ(1, expect_sigabrt_for_void_operation(
+        string_uninitialised_self_move_assignment_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_uninitialised_self_move_assignment_aborts)
+{
+    FT_ASSERT_EQ(1, expect_sigabrt_for_void_operation(
+        unordered_map_uninitialised_self_move_assignment_operation));
+    return (1);
+}
+
+FT_TEST(test_scma_proxy_uninitialised_self_move_assignment_aborts)
+{
+    FT_ASSERT_EQ(false,
+        std::is_move_assignable<scma_handle_accessor_element_proxy<int> >::value);
+    return (1);
+}
+
+FT_TEST(test_gnl_stream_move_operations_are_deleted)
+{
+    FT_ASSERT_EQ(false, std::is_move_constructible<gnl_stream>::value);
+    FT_ASSERT_EQ(false, std::is_move_assignable<gnl_stream>::value);
+    return (1);
+}

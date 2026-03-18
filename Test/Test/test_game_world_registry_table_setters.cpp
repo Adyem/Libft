@@ -20,6 +20,8 @@ FT_TEST(test_world_registry_setters)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, regions.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, worlds.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(2);
@@ -35,8 +37,15 @@ FT_TEST(test_world_registry_setters)
     region.set_recommended_level(8);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region_ids.push_back(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(5, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
     regions.insert(2, region);
     worlds.insert(5, world);
 

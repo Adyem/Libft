@@ -20,14 +20,17 @@ FT_TEST(test_behavior_register_and_fetch)
     ft_vector<game_behavior_action> actions;
     game_behavior_profile profile;
     game_behavior_profile fetched;
-    game_behavior_action action_entry;
+    game_behavior_action action_entry_first;
+    game_behavior_action action_entry_second;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.initialize(1, 0.6, 2.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.get_error());
-    actions.push_back(action_entry);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.initialize(2, 0.4, 5.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.get_error());
-    actions.push_back(action_entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, actions.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, actions.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry_first.initialize(1, 0.6, 2.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry_first.get_error());
+    actions.push_back(action_entry_first);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry_second.initialize(2, 0.4, 5.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry_second.get_error());
+    actions.push_back(action_entry_second);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize(5, 0.8, 0.2, actions));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
@@ -65,6 +68,8 @@ FT_TEST(test_behavior_profile_isolation)
     game_behavior_profile second_fetch;
     game_behavior_action action_entry;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, actions.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, actions.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.initialize(10, 1.0, 3.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.get_error());
     actions.push_back(action_entry);

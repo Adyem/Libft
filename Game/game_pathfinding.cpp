@@ -760,12 +760,22 @@ int32_t game_pathfinding::astar_grid(const game_map3d &grid,
 
     ft_vector<node> nodes;
     ft_vector<ft_size_t> open_set;
+    int32_t initialize_error;
 
     if (start_x >= grid.get_width() || start_y >= grid.get_height()
         || start_z >= grid.get_depth() || goal_x >= grid.get_width()
         || goal_y >= grid.get_height() || goal_z >= grid.get_depth())
         return (FT_ERR_GAME_INVALID_MOVE);
 
+    initialize_error = nodes.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    initialize_error = open_set.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)nodes.destroy();
+        return (initialize_error);
+    }
     out_path.clear();
 
     node start_node;
@@ -803,6 +813,13 @@ int32_t game_pathfinding::astar_grid(const game_map3d &grid,
             ft_size_t trace_index;
             ft_size_t reverse_index;
 
+            initialize_error = reverse_path.initialize();
+            if (initialize_error != FT_ERR_SUCCESS)
+            {
+                (void)open_set.destroy();
+                (void)nodes.destroy();
+                return (initialize_error);
+            }
             trace_index = current_index;
             while (FT_TRUE)
             {
@@ -822,6 +839,9 @@ int32_t game_pathfinding::astar_grid(const game_map3d &grid,
                 reverse_index -= 1;
                 out_path.push_back(reverse_path[reverse_index]);
             }
+            (void)reverse_path.destroy();
+            (void)open_set.destroy();
+            (void)nodes.destroy();
             return (FT_ERR_SUCCESS);
         }
 
@@ -908,6 +928,8 @@ int32_t game_pathfinding::astar_grid(const game_map3d &grid,
             neighbor_index += 1;
         }
     }
+    (void)open_set.destroy();
+    (void)nodes.destroy();
     return (FT_ERR_GAME_INVALID_MOVE);
 }
 
@@ -918,10 +940,32 @@ int32_t game_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
     ft_vector<int32_t> distance;
     ft_vector<int32_t> previous;
     ft_vector<ft_size_t> queue;
+    int32_t initialize_error;
 
+    initialize_error = distance.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    initialize_error = previous.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)distance.destroy();
+        return (initialize_error);
+    }
+    initialize_error = queue.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)previous.destroy();
+        (void)distance.destroy();
+        return (initialize_error);
+    }
     out_path.clear();
     if (start_vertex >= graph.size() || goal_vertex >= graph.size())
+    {
+        (void)queue.destroy();
+        (void)previous.destroy();
+        (void)distance.destroy();
         return (FT_ERR_GAME_INVALID_MOVE);
+    }
 
     distance.resize(graph.size(), -1);
     previous.resize(graph.size(), -1);
@@ -950,6 +994,14 @@ int32_t game_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
         ft_vector<ft_size_t> neighbors;
         ft_size_t neighbor_index;
 
+        initialize_error = neighbors.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            (void)queue.destroy();
+            (void)previous.destroy();
+            (void)distance.destroy();
+            return (initialize_error);
+        }
         graph.neighbors(current, neighbors);
         neighbor_index = 0;
         while (neighbor_index < neighbors.size())
@@ -967,14 +1019,28 @@ int32_t game_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
             }
             neighbor_index += 1;
         }
+        (void)neighbors.destroy();
     }
 
     if (distance[goal_vertex] == -1)
+    {
+        (void)queue.destroy();
+        (void)previous.destroy();
+        (void)distance.destroy();
         return (FT_ERR_GAME_INVALID_MOVE);
+    }
 
     ft_vector<ft_size_t> reverse_path;
     ft_size_t vertex;
 
+    initialize_error = reverse_path.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)queue.destroy();
+        (void)previous.destroy();
+        (void)distance.destroy();
+        return (initialize_error);
+    }
     vertex = goal_vertex;
     while (FT_TRUE)
     {
@@ -988,6 +1054,10 @@ int32_t game_pathfinding::dijkstra_graph(const ft_graph<int32_t> &graph,
         out_path.push_back(reverse_path[reverse_path.size() - 1]);
         reverse_path.pop_back();
     }
+    (void)reverse_path.destroy();
+    (void)queue.destroy();
+    (void)previous.destroy();
+    (void)distance.destroy();
     return (FT_ERR_SUCCESS);
 }
 

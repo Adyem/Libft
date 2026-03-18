@@ -28,13 +28,8 @@ FT_TEST(test_item_definition_copy_move)
     FT_ASSERT_EQ(7, copy.get_slot_requirement());
 
     FT_ASSERT_EQ(5, moved.get_item_id());
-    FT_ASSERT_EQ(0, original.get_item_id());
-    FT_ASSERT_EQ(0, original.get_rarity());
-    FT_ASSERT_EQ(0, original.get_max_stack());
-    FT_ASSERT_EQ(0, original.get_width());
-    FT_ASSERT_EQ(0, original.get_height());
-    FT_ASSERT_EQ(0, original.get_weight());
-    FT_ASSERT_EQ(0, original.get_slot_requirement());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, original._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     return (1);
 }
 
@@ -46,10 +41,15 @@ FT_TEST(test_recipe_blueprint_copy_move)
     game_recipe_blueprint copy;
     game_recipe_blueprint moved;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredient.initialize(9, 2, 4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredient.get_error());
     ingredient.set_item_id(9);
     ingredient.set_count(2);
     ingredient.set_rarity(4);
     ingredients.push_back(ingredient);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.initialize(12, 30, ingredients));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(blueprint));
@@ -63,9 +63,8 @@ FT_TEST(test_recipe_blueprint_copy_move)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     FT_ASSERT_EQ(12, moved.get_recipe_id());
     FT_ASSERT_EQ(30, moved.get_result_item_id());
-    FT_ASSERT_EQ(0, blueprint.get_recipe_id());
-    FT_ASSERT_EQ(0, blueprint.get_result_item_id());
-    FT_ASSERT_EQ(true, blueprint.get_ingredients().empty());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, blueprint._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.get_error());
     return (1);
 }
 
@@ -89,9 +88,8 @@ FT_TEST(test_loadout_entry_copy_move)
     FT_ASSERT_EQ(2, moved.get_slot());
     FT_ASSERT_EQ(15, moved.get_item_id());
     FT_ASSERT_EQ(3, moved.get_quantity());
-    FT_ASSERT_EQ(0, entry.get_slot());
-    FT_ASSERT_EQ(0, entry.get_item_id());
-    FT_ASSERT_EQ(0, entry.get_quantity());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, entry._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
     return (1);
 }
 
@@ -103,16 +101,20 @@ FT_TEST(test_loadout_blueprint_copy_move)
     game_loadout_blueprint copy;
     game_loadout_blueprint moved;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.initialize(0, 7, 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
     entry.set_slot(0);
     entry.set_item_id(7);
     entry.set_quantity(1);
     entries.push_back(entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     entry.set_slot(1);
     entry.set_item_id(8);
     entry.set_quantity(2);
     entries.push_back(entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.initialize(20, entries));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(blueprint));
@@ -125,8 +127,8 @@ FT_TEST(test_loadout_blueprint_copy_move)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.initialize(ft_move(blueprint)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     FT_ASSERT_EQ(20, moved.get_loadout_id());
-    FT_ASSERT_EQ(0, blueprint.get_loadout_id());
-    FT_ASSERT_EQ(true, blueprint.get_entries().empty());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, blueprint._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.get_error());
     FT_ASSERT_EQ(2u, moved.get_entries().size());
     return (1);
 }

@@ -15,8 +15,6 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds)
     game_region_definition region2;
     ft_vector<int> region_ids1;
     ft_vector<int> region_ids2;
-    region_ids1.push_back(1);
-    region_ids2.push_back(2);
     game_world_region world1;
     game_world_region world2;
     game_region_definition fetched_region;
@@ -24,6 +22,14 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids1.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids1.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids2.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids2.get_error());
+    region_ids1.push_back(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids1.get_error());
+    region_ids2.push_back(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids2.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     region1.set_region_id(1);
@@ -52,10 +58,18 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     region2.set_recommended_level(4);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world1.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world1.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world1.initialize(10, region_ids1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world1.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world2.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world2.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world2.initialize(11, region_ids2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world2.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
 
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region1));

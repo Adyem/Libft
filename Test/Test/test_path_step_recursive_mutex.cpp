@@ -1,0 +1,540 @@
+#include "../test_internal.hpp"
+#include "../../Game/game_pathfinding.hpp"
+#include "../../Template/move.hpp"
+#include "../../PThread/pthread.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_path_step_recursive_mutex_reentrant_lock)
+{
+    game_path_step step;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::lock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::lock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && !game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::unlock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::unlock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::unlock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::unlock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_release_depth)
+{
+    game_path_step step;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::lock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::lock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::unlock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::unlock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && !game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::unlock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::unlock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_accessors_while_locked)
+{
+    game_path_step step;
+    size_t value;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::lock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0)
+    {
+        value = step.get_x();
+        if (step.get_error() != FT_ERR_SUCCESS)
+        {
+            (void)value;
+            test_failed = 1;
+            failure_expression = "step.get_error() == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed == 0 && !game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::unlock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::unlock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_initialize_copy_unlocks)
+{
+    game_path_step step;
+    game_path_step copy;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(copy))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(copy)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_set_coordinates_unlocks)
+{
+    game_path_step step;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (step.set_coordinates(1, 2, 3) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "step.set_coordinates(1, 2, 3) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_set_axis_unlocks)
+{
+    game_path_step step;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (step.set_x(9) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "step.set_x(9) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && step.set_y(10) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "step.set_y(10) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && step.set_z(11) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "step.set_z(11) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_getters_unlock)
+{
+    game_path_step step;
+    size_t value;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    value = step.get_x();
+    if (step.get_error() != FT_ERR_SUCCESS)
+    {
+        (void)value;
+        test_failed = 1;
+        failure_expression = "step.get_error() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0)
+    {
+        value = step.get_y();
+        if (step.get_error() != FT_ERR_SUCCESS)
+        {
+            (void)value;
+            test_failed = 1;
+            failure_expression = "step.get_error() == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0)
+    {
+        value = step.get_z();
+        if (step.get_error() != FT_ERR_SUCCESS)
+        {
+            (void)value;
+            test_failed = 1;
+            failure_expression = "step.get_error() == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_get_error_unlocks)
+{
+    game_path_step step;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (step.get_error() != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "step.get_error() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_assignment_unlocks)
+{
+    game_path_step step;
+    game_path_step target;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(step));
+    if (target.get_error() != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "target.get_error() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(target))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(target)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_move_assignment_unlocks)
+{
+    game_path_step source;
+    game_path_step target;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(ft_move(source)));
+    if (target.get_error() != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "target.get_error() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(target))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(target)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(source))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(source)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_get_error_str_unlocks)
+{
+    game_path_step step;
+    const char *message;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    message = step.get_error_str();
+    if (message == ft_nullptr)
+    {
+        test_failed = 1;
+        failure_expression = "step.get_error_str() != ft_nullptr";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_locked(step))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_locked(step)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}
+
+FT_TEST(test_path_step_recursive_mutex_owned_state)
+{
+    game_path_step step;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (game_path_step_test_helper::is_owned_by_thread(step, THREAD_ID))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_owned_by_thread(step, THREAD_ID)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::lock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && !game_path_step_test_helper::is_owned_by_thread(step, THREAD_ID))
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::is_owned_by_thread(step, THREAD_ID)";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::unlock(step) != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "game_path_step_test_helper::unlock(step) == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (test_failed == 0 && game_path_step_test_helper::is_owned_by_thread(step, THREAD_ID))
+    {
+        test_failed = 1;
+        failure_expression = "!game_path_step_test_helper::is_owned_by_thread(step, THREAD_ID)";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
+    return (1);
+}

@@ -12,28 +12,26 @@ static ft_sharedptr<game_dialogue_line> game_dialogue_table_clone_line(
     const game_dialogue_line &line)
 {
     game_dialogue_line *cloned_line;
-    ft_vector<int32_t> copied_next_ids;
+    int32_t initialize_error;
 
+    if (line.is_initialised() == FT_FALSE)
+        return (ft_sharedptr<game_dialogue_line>());
     cloned_line = new (std::nothrow) game_dialogue_line();
     if (cloned_line == ft_nullptr)
         return (ft_sharedptr<game_dialogue_line>());
-    cloned_line->set_line_id(line.get_line_id());
-    cloned_line->set_speaker(line.get_speaker());
-    cloned_line->set_text(line.get_text());
-    copied_next_ids.clear();
+    initialize_error = cloned_line->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        const int32_t *entry;
-        const int32_t *entry_end;
-
-        entry = line.get_next_line_ids().begin();
-        entry_end = line.get_next_line_ids().end();
-        while (entry != entry_end)
-        {
-            copied_next_ids.push_back(*entry);
-            ++entry;
-        }
+        delete cloned_line;
+        return (ft_sharedptr<game_dialogue_line>());
     }
-    cloned_line->set_next_line_ids(copied_next_ids);
+    initialize_error = cloned_line->initialize(line.get_line_id(), line.get_speaker(),
+            line.get_text(), line.get_next_line_ids());
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete cloned_line;
+        return (ft_sharedptr<game_dialogue_line>());
+    }
     return (ft_sharedptr<game_dialogue_line>(cloned_line));
 }
 
@@ -388,6 +386,12 @@ int32_t game_dialogue_table::register_line(const game_dialogue_line &line) noexc
         this->set_error(lock_error);
         return (lock_error);
     }
+    if (line.is_initialised() == FT_FALSE)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
     stored_line = game_dialogue_table_clone_line(line);
     if (stored_line == ft_sharedptr<game_dialogue_line>())
     {
@@ -428,6 +432,7 @@ int32_t game_dialogue_table::fetch_line(int32_t line_id,
     ft_vector<int32_t> copied_next_ids;
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t initialize_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_table::fetch_line");
     lock_acquired = FT_FALSE;
@@ -453,10 +458,22 @@ int32_t game_dialogue_table::fetch_line(int32_t line_id,
         (void)this->unlock_internal(lock_acquired);
         return (FT_ERR_NOT_FOUND);
     }
+    if (stored_line->is_initialised() == FT_FALSE)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        (void)this->unlock_internal(lock_acquired);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = copied_next_ids.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(initialize_error);
+        (void)this->unlock_internal(lock_acquired);
+        return (initialize_error);
+    }
     out_line.set_line_id(stored_line->get_line_id());
     out_line.set_speaker(stored_line->get_speaker());
     out_line.set_text(stored_line->get_text());
-    copied_next_ids.clear();
     {
         const int32_t *next_line_id;
         const int32_t *next_line_end;

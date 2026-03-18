@@ -11,13 +11,18 @@
 FT_TEST(test_dialogue_line_setters_affect_getters)
 {
     ft_vector<int> ids;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.get_error());
     ids.push_back(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.get_error());
     game_dialogue_line line;
 
     ft_string empty_speaker;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_speaker.initialize(""));
     ft_string empty_text;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_text.initialize(""));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, empty_speaker, empty_text, ids));
 
     line.set_line_id(1);
@@ -41,18 +46,26 @@ FT_TEST(test_dialogue_line_setters_affect_getters)
 FT_TEST(test_dialogue_script_setters_store_shared_lines)
 {
     ft_vector<int> followups;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.get_error());
     followups.push_back(4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, followups.get_error());
     ft_sharedptr<game_dialogue_line> line(new (std::nothrow) game_dialogue_line());
     FT_ASSERT(line.get() != ft_nullptr);
     ft_string player;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, player.initialize("player"));
     ft_string reply;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.initialize("reply"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line->initialize(2, player,
         reply, followups));
     ft_vector<ft_sharedptr<game_dialogue_line>> lines;
     FT_ASSERT(line.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
     lines.push_back(line);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
 
     game_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());

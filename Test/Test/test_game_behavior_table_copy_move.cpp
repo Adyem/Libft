@@ -11,12 +11,16 @@ static int register_profile(game_behavior_table &table, int id, double aggressio
     ft_vector<game_behavior_action> actions;
     game_behavior_profile profile;
     game_behavior_action action_entry;
+    int initialize_error;
 
+    initialize_error = actions.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     if (action_entry.initialize(id * 2, 0.5, 1.5) != FT_ERR_SUCCESS)
         return (action_entry.get_error());
     actions.push_back(action_entry);
-    int initialize_error;
-
+    if (actions.get_error() != FT_ERR_SUCCESS)
+        return (actions.get_error());
     initialize_error = profile.initialize(id, aggression, caution, actions);
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);

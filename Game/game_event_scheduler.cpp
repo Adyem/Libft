@@ -180,14 +180,30 @@ uint32_t game_event_scheduler::set_error(uint32_t error_code) noexcept
 
 int32_t game_event_scheduler::initialize() noexcept
 {
+    int32_t initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "game_event_scheduler::initialize", "called while object is already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
+    initialize_error = this->_events.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error((uint32_t)initialize_error);
+        return (initialize_error);
+    }
+    initialize_error = this->_ready_cache.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_events.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error((uint32_t)initialize_error);
+        return (initialize_error);
+    }
     this->_events.clear();
-    this->_ready_cache.initialize();
     this->_ready_cache.clear();
     this->_profiling_enabled = FT_FALSE;
     event_scheduler_profile_reset_struct(this->_profile);

@@ -38,7 +38,8 @@ static int geometry_expect_sigabrt(void (*operation)())
 
 static void aabb_initialize_twice_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.initialize();
     return ;
@@ -62,7 +63,8 @@ static void aabb_set_bounds_uninitialised_aborts_operation()
 
 static void aabb_destroy_twice_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.destroy();
@@ -88,7 +90,8 @@ static void aabb_move_self_uninitialised_aborts_operation()
 static void aabb_initialize_copy_from_uninitialised_source_aborts_operation()
 {
     aabb source;
-    aabb destination(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)destination.destroy();
     (void)destination.initialize(source);
@@ -98,7 +101,8 @@ static void aabb_initialize_copy_from_uninitialised_source_aborts_operation()
 static void aabb_initialize_move_from_uninitialised_source_aborts_operation()
 {
     aabb source;
-    aabb destination(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)destination.destroy();
     (void)destination.initialize(static_cast<aabb &&>(source));
@@ -108,7 +112,8 @@ static void aabb_initialize_move_from_uninitialised_source_aborts_operation()
 static void aabb_initialize_copy_from_destroyed_source_aborts_operation()
 {
     aabb source;
-    aabb destination(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)source.initialize(2.0, 3.0, 4.0, 5.0);
     (void)source.destroy();
@@ -120,7 +125,8 @@ static void aabb_initialize_copy_from_destroyed_source_aborts_operation()
 static void aabb_initialize_move_from_destroyed_source_aborts_operation()
 {
     aabb source;
-    aabb destination(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)source.initialize(2.0, 3.0, 4.0, 5.0);
     (void)source.destroy();
@@ -139,7 +145,8 @@ static void aabb_get_minimum_x_uninitialised_aborts_operation()
 
 static void aabb_enable_thread_safety_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.enable_thread_safety();
@@ -148,8 +155,10 @@ static void aabb_enable_thread_safety_destroyed_aborts_operation()
 
 static void aabb_initialize_copy_destination_initialised_aborts_operation()
 {
-    aabb source(0.0, 0.0, 1.0, 1.0);
-    aabb destination(2.0, 2.0, 3.0, 3.0);
+    aabb source;
+    (void)source.initialize(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(2.0, 2.0, 3.0, 3.0);
 
     (void)destination.initialize(source);
     return ;
@@ -157,8 +166,10 @@ static void aabb_initialize_copy_destination_initialised_aborts_operation()
 
 static void aabb_initialize_move_destination_initialised_aborts_operation()
 {
-    aabb source(0.0, 0.0, 1.0, 1.0);
-    aabb destination(2.0, 2.0, 3.0, 3.0);
+    aabb source;
+    (void)source.initialize(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(2.0, 2.0, 3.0, 3.0);
 
     (void)destination.initialize(static_cast<aabb &&>(source));
     return ;
@@ -166,7 +177,8 @@ static void aabb_initialize_move_destination_initialised_aborts_operation()
 
 static void aabb_disable_thread_safety_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     box.disable_thread_safety();
@@ -175,7 +187,8 @@ static void aabb_disable_thread_safety_destroyed_aborts_operation()
 
 static void aabb_is_thread_safe_enabled_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.is_thread_safe();
@@ -289,7 +302,8 @@ static void aabb_move_two_uninitialised_aborts_operation()
 
 static void aabb_set_bounds_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.set_bounds(0.0, 0.0, 1.0, 1.0);
@@ -298,7 +312,8 @@ static void aabb_set_bounds_destroyed_aborts_operation()
 
 static void aabb_get_minimum_x_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.get_minimum_x();
@@ -307,8 +322,10 @@ static void aabb_get_minimum_x_destroyed_aborts_operation()
 
 static void aabb_move_destroyed_source_aborts_operation()
 {
-    aabb source(0.0, 0.0, 1.0, 1.0);
-    aabb destination(2.0, 2.0, 3.0, 3.0);
+    aabb source;
+    (void)source.initialize(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(2.0, 2.0, 3.0, 3.0);
 
     (void)source.destroy();
     (void)destination.move(source);
@@ -317,7 +334,8 @@ static void aabb_move_destroyed_source_aborts_operation()
 
 static void aabb_set_minimum_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.set_minimum(0.0, 0.0);
@@ -326,7 +344,8 @@ static void aabb_set_minimum_destroyed_aborts_operation()
 
 static void aabb_set_minimum_x_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.set_minimum_x(0.0);
@@ -335,7 +354,8 @@ static void aabb_set_minimum_x_destroyed_aborts_operation()
 
 static void aabb_set_minimum_y_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.set_minimum_y(0.0);
@@ -344,7 +364,8 @@ static void aabb_set_minimum_y_destroyed_aborts_operation()
 
 static void aabb_set_maximum_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.set_maximum(1.0, 1.0);
@@ -353,7 +374,8 @@ static void aabb_set_maximum_destroyed_aborts_operation()
 
 static void aabb_set_maximum_x_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.set_maximum_x(1.0);
@@ -362,7 +384,8 @@ static void aabb_set_maximum_x_destroyed_aborts_operation()
 
 static void aabb_set_maximum_y_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.set_maximum_y(1.0);
@@ -371,7 +394,8 @@ static void aabb_set_maximum_y_destroyed_aborts_operation()
 
 static void aabb_get_minimum_y_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.get_minimum_y();
@@ -380,7 +404,8 @@ static void aabb_get_minimum_y_destroyed_aborts_operation()
 
 static void aabb_get_maximum_x_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.get_maximum_x();
@@ -389,7 +414,8 @@ static void aabb_get_maximum_x_destroyed_aborts_operation()
 
 static void aabb_get_maximum_y_destroyed_aborts_operation()
 {
-    aabb box(0.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
     (void)box.get_maximum_y();
@@ -398,8 +424,10 @@ static void aabb_get_maximum_y_destroyed_aborts_operation()
 
 static int aabb_move_destroyed_destination_succeeds_operation()
 {
-    aabb source(0.0, 0.0, 1.0, 1.0);
-    aabb destination(2.0, 2.0, 3.0, 3.0);
+    aabb source;
+    (void)source.initialize(0.0, 0.0, 1.0, 1.0);
+    aabb destination;
+    (void)destination.initialize(2.0, 2.0, 3.0, 3.0);
     int move_error;
 
     (void)destination.destroy();
@@ -418,7 +446,8 @@ static int aabb_move_destroyed_destination_succeeds_operation()
 static void aabb_move_uninitialised_source_aborts_operation()
 {
     aabb source;
-    aabb destination(2.0, 2.0, 3.0, 3.0);
+    aabb destination;
+    (void)destination.initialize(2.0, 2.0, 3.0, 3.0);
 
     (void)destination.move(source);
     return ;
@@ -427,7 +456,8 @@ static void aabb_move_uninitialised_source_aborts_operation()
 static void intersect_aabb_uninitialised_first_aborts_operation()
 {
     aabb first;
-    aabb second(0.0, 0.0, 1.0, 1.0);
+    aabb second;
+    (void)second.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)intersect_aabb(first, second);
     return ;
@@ -435,7 +465,8 @@ static void intersect_aabb_uninitialised_first_aborts_operation()
 
 static void intersect_aabb_uninitialised_second_aborts_operation()
 {
-    aabb first(0.0, 0.0, 1.0, 1.0);
+    aabb first;
+    (void)first.initialize(0.0, 0.0, 1.0, 1.0);
     aabb second;
 
     (void)intersect_aabb(first, second);
@@ -453,8 +484,10 @@ static void intersect_aabb_uninitialised_both_aborts_operation()
 
 static void intersect_aabb_destroyed_first_aborts_operation()
 {
-    aabb first(0.0, 0.0, 1.0, 1.0);
-    aabb second(0.0, 0.0, 1.0, 1.0);
+    aabb first;
+    (void)first.initialize(0.0, 0.0, 1.0, 1.0);
+    aabb second;
+    (void)second.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)first.destroy();
     (void)intersect_aabb(first, second);
@@ -463,8 +496,10 @@ static void intersect_aabb_destroyed_first_aborts_operation()
 
 static void intersect_aabb_destroyed_second_aborts_operation()
 {
-    aabb first(0.0, 0.0, 1.0, 1.0);
-    aabb second(0.0, 0.0, 1.0, 1.0);
+    aabb first;
+    (void)first.initialize(0.0, 0.0, 1.0, 1.0);
+    aabb second;
+    (void)second.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)second.destroy();
     (void)intersect_aabb(first, second);
@@ -473,8 +508,10 @@ static void intersect_aabb_destroyed_second_aborts_operation()
 
 static void intersect_aabb_destroyed_both_aborts_operation()
 {
-    aabb first(0.0, 0.0, 1.0, 1.0);
-    aabb second(0.0, 0.0, 1.0, 1.0);
+    aabb first;
+    (void)first.initialize(0.0, 0.0, 1.0, 1.0);
+    aabb second;
+    (void)second.initialize(0.0, 0.0, 1.0, 1.0);
 
     (void)first.destroy();
     (void)second.destroy();
@@ -484,7 +521,8 @@ static void intersect_aabb_destroyed_both_aborts_operation()
 
 static void intersect_aabb_destroyed_and_uninitialised_aborts_operation()
 {
-    aabb first(0.0, 0.0, 1.0, 1.0);
+    aabb first;
+    (void)first.initialize(0.0, 0.0, 1.0, 1.0);
     aabb second;
 
     (void)first.destroy();
@@ -561,7 +599,8 @@ FT_TEST(test_aabb_reinitialize_after_destroy)
 
 FT_TEST(test_aabb_constructor_invalid_bounds_allows_reinitialize)
 {
-    aabb box(5.0, 0.0, 1.0, 1.0);
+    aabb box;
+    (void)box.initialize(5.0, 0.0, 1.0, 1.0);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 2.0, 2.0));
     FT_ASSERT_DOUBLE_EQ(0.0, box.get_minimum_x());
@@ -795,7 +834,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_failure_returns_null)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
     cma_set_alloc_limit(1);
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(false, box.is_thread_safe());
@@ -810,10 +849,10 @@ FT_TEST(test_aabb_get_mutex_for_testing_recovers_after_alloc_failure)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
     cma_set_alloc_limit(1);
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
     cma_set_alloc_limit(0);
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
@@ -939,7 +978,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_two_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
     cma_set_alloc_limit(2);
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, box.is_thread_safe());
@@ -956,7 +995,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_three_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
     cma_set_alloc_limit(3);
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, box.is_thread_safe());
@@ -1080,7 +1119,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_four_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
     cma_set_alloc_limit(4);
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, box.is_thread_safe());
@@ -1204,7 +1243,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_seven_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
     cma_set_alloc_limit(7);
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, box.is_thread_safe());
@@ -1976,13 +2015,13 @@ FT_TEST(test_aabb_mutex_testing_accessor_lifecycle)
     pt_recursive_mutex *mutex_pointer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
-    mutex_pointer = box.get_mutex_for_testing();
+    mutex_pointer = box._mutex;
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(true, box.is_thread_safe());
     box.disable_thread_safety();
     FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
-    FT_ASSERT_EQ(ft_nullptr, box.get_mutex_for_testing());
+    FT_ASSERT_EQ(ft_nullptr, box._mutex);
     return (1);
 }
 

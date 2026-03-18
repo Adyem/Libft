@@ -10,7 +10,6 @@ FT_TEST(test_world_registry_register_and_fetch_records)
 {
     game_world_registry registry;
     ft_vector<int> region_ids;
-    region_ids.push_back(4);
 
     game_region_definition region;
     game_world_region world;
@@ -19,6 +18,8 @@ FT_TEST(test_world_registry_register_and_fetch_records)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(4);
@@ -33,8 +34,15 @@ FT_TEST(test_world_registry_register_and_fetch_records)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(6);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(2, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
@@ -61,7 +69,6 @@ FT_TEST(test_world_registry_records_isolate_fetched_values)
 {
     game_world_registry registry;
     ft_vector<int> region_ids;
-    region_ids.push_back(11);
 
     game_region_definition region;
     game_world_region world;
@@ -72,6 +79,8 @@ FT_TEST(test_world_registry_records_isolate_fetched_values)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(11);
@@ -86,8 +95,19 @@ FT_TEST(test_world_registry_records_isolate_fetched_values)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(20);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(3, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, re_fetched_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, re_fetched_region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, re_fetched_world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, re_fetched_world.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());

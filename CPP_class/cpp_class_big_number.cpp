@@ -2154,79 +2154,67 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
 
 ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept
 {
+    const auto make_error_result = [&](int32_t error_code) -> ft_big_number
+    {
+        ft_big_number error_result;
+        int32_t error_result_initialization_error;
+        int32_t stored_error_code;
+
+        error_result_initialization_error = error_result.initialize();
+        stored_error_code = error_code;
+        if (stored_error_code == FT_ERR_SUCCESS)
+            stored_error_code = FT_ERR_INVALID_STATE;
+        if (error_result_initialization_error != FT_ERR_SUCCESS)
+        {
+            error_result._digits = ft_nullptr;
+            error_result._size = 0;
+            error_result._capacity = 0;
+            error_result._is_negative = FT_FALSE;
+            error_result._mutex = ft_nullptr;
+            error_result._initialised_state = FT_CLASS_STATE_DESTROYED;
+            error_result._operation_error = stored_error_code;
+            ft_big_number::_last_initialised_state = error_result._initialised_state;
+            ft_big_number::set_error(stored_error_code);
+            return (error_result);
+        }
+        error_result._operation_error = stored_error_code;
+        ft_big_number::set_error(stored_error_code);
+        return (error_result);
+    };
+
     ft_big_number base_value;
     int32_t base_value_initialization_error = base_value.initialize(*this);
 
     if (base_value_initialization_error != FT_ERR_SUCCESS)
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(base_value_initialization_error);
-        return (error_result);
-    }
+        return (make_error_result(base_value_initialization_error));
     ft_big_number exponent_value;
     int32_t exponent_value_initialization_error = exponent_value.initialize(exponent);
 
     if (exponent_value_initialization_error != FT_ERR_SUCCESS)
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(exponent_value_initialization_error);
-        return (error_result);
-    }
+        return (make_error_result(exponent_value_initialization_error));
     ft_big_number modulus_value;
     int32_t modulus_value_initialization_error = modulus_value.initialize(modulus);
 
     if (modulus_value_initialization_error != FT_ERR_SUCCESS)
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(modulus_value_initialization_error);
-        return (error_result);
-    }
+        return (make_error_result(modulus_value_initialization_error));
     if (modulus_value.is_zero_value())
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(FT_ERR_DIVIDE_BY_ZERO);
-        return (error_result);
-    }
+        return (make_error_result(FT_ERR_DIVIDE_BY_ZERO));
     if (modulus_value.is_negative())
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(FT_ERR_INVALID_ARGUMENT);
-        return (error_result);
-    }
+        return (make_error_result(FT_ERR_INVALID_ARGUMENT));
     if (exponent_value.is_negative())
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(FT_ERR_INVALID_ARGUMENT);
-        return (error_result);
-    }
+        return (make_error_result(FT_ERR_INVALID_ARGUMENT));
     modulus_value._is_negative = FT_FALSE;
     modulus_value.trim_leading_zeros();
     ft_big_number base_remainder = base_value % modulus_value;
 
     if (ft_big_number::_last_error != 0)
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(ft_big_number::_last_error);
-        return (error_result);
-    }
+        return (make_error_result(ft_big_number::_last_error));
     while (base_remainder.is_negative())
     {
         ft_big_number adjusted_base = base_remainder + modulus_value;
 
         if (ft_big_number::_last_error != 0)
-        {
-            ft_big_number error_result;
-
-            ft_big_number::set_error(ft_big_number::_last_error);
-            return (error_result);
-        }
+            return (make_error_result(ft_big_number::_last_error));
         base_remainder = adjusted_base;
     }
     base_remainder.trim_leading_zeros();
@@ -2237,31 +2225,16 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
 
     one_initialization_error = one.initialize();
     if (one_initialization_error != FT_ERR_SUCCESS)
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(one_initialization_error);
-        return (error_result);
-    }
+        return (make_error_result(one_initialization_error));
     one.append_digit('1');
     if (ft_big_number::_last_error != 0)
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(ft_big_number::_last_error);
-        return (error_result);
-    }
+        return (make_error_result(ft_big_number::_last_error));
     if (exponent_value.is_zero_value())
     {
         ft_big_number identity_result = one % modulus_value;
 
         if (ft_big_number::_last_error != 0)
-        {
-            ft_big_number error_result;
-
-            ft_big_number::set_error(ft_big_number::_last_error);
-            return (error_result);
-        }
+            return (make_error_result(ft_big_number::_last_error));
         identity_result._is_negative = FT_FALSE;
         if (identity_result.is_zero_value())
             identity_result._is_negative = FT_FALSE;
@@ -2272,42 +2245,22 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     int32_t accumulator_initialization_error = accumulator.initialize(one);
 
     if (accumulator_initialization_error != FT_ERR_SUCCESS)
-    {
-        ft_big_number error_result;
-
-        ft_big_number::set_error(accumulator_initialization_error);
-        return (error_result);
-    }
+        return (make_error_result(accumulator_initialization_error));
     while (!exponent_value.is_zero_value())
     {
         ft_big_number product_value = accumulator * base_remainder;
 
         if (ft_big_number::_last_error != 0)
-        {
-            ft_big_number error_result;
-
-            ft_big_number::set_error(ft_big_number::_last_error);
-            return (error_result);
-        }
+            return (make_error_result(ft_big_number::_last_error));
         ft_big_number reduced_value = product_value % modulus_value;
 
         if (ft_big_number::_last_error != 0)
-        {
-            ft_big_number error_result;
-
-            ft_big_number::set_error(ft_big_number::_last_error);
-            return (error_result);
-        }
+            return (make_error_result(ft_big_number::_last_error));
         accumulator = reduced_value;
         ft_big_number next_exponent = exponent_value - one;
 
         if (ft_big_number::_last_error != 0)
-        {
-            ft_big_number error_result;
-
-            ft_big_number::set_error(ft_big_number::_last_error);
-            return (error_result);
-        }
+            return (make_error_result(ft_big_number::_last_error));
         exponent_value = next_exponent;
         exponent_value._is_negative = FT_FALSE;
         exponent_value.trim_leading_zeros();

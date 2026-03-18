@@ -29,11 +29,20 @@ FT_TEST(test_world_register_and_fetch)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(3);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     region_ids.push_back(7);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(1, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     game_region_definition fetched_region;
     game_world_region fetched_world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
@@ -75,12 +84,23 @@ FT_TEST(test_world_isolation)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(20);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     region_ids.push_back(11);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(2, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     game_region_definition fetched_again;
     game_world_region world_again;
     game_world_region fetched_world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_again.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_again.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_again.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_again.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
@@ -93,6 +113,8 @@ FT_TEST(test_world_isolation)
     fetched_again.set_name(changed_name);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_again.get_error());
     game_region_definition fresh_region;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fresh_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fresh_region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(11, fresh_region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_STR_EQ("volcano", fresh_region.get_name().c_str());

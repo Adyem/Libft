@@ -7,7 +7,7 @@
 
 thread_local uint32_t game_world_region::_last_error = FT_ERR_SUCCESS;
 
-static void game_world_region_copy_ids(const ft_vector<int32_t> &source,
+static int32_t game_world_region_copy_ids(const ft_vector<int32_t> &source,
     ft_vector<int32_t> &destination)
 {
     ft_vector<int32_t>::const_iterator entry;
@@ -19,9 +19,11 @@ static void game_world_region_copy_ids(const ft_vector<int32_t> &source,
     while (entry != end_entry)
     {
         destination.push_back(*entry);
+        if (destination.get_error() != FT_ERR_SUCCESS)
+            return (destination.get_error());
         ++entry;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 game_world_region::game_world_region() noexcept
@@ -106,14 +108,25 @@ uint32_t game_world_region::set_error(uint32_t error_code) noexcept
 
 int32_t game_world_region::initialize() noexcept
 {
+    int32_t region_ids_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "game_world_region::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
+    if (this->_region_ids.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        region_ids_initialize_error = this->_region_ids.initialize();
+        if (region_ids_initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            this->set_error(region_ids_initialize_error);
+            return (region_ids_initialize_error);
+        }
+    }
     this->_world_id = 0;
-    this->_region_ids.clear();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -123,6 +136,7 @@ int32_t game_world_region::initialize(const game_world_region &other) noexcept
 {
     int32_t initialize_error;
     int32_t destroy_error;
+    int32_t copy_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -163,7 +177,12 @@ int32_t game_world_region::initialize(const game_world_region &other) noexcept
         return (initialize_error);
     }
     this->_world_id = other._world_id;
-    game_world_region_copy_ids(other._region_ids, this->_region_ids);
+    copy_error = game_world_region_copy_ids(other._region_ids, this->_region_ids);
+    if (copy_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(copy_error);
+        return (copy_error);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -198,6 +217,7 @@ int32_t game_world_region::initialize(int32_t world_id,
     const ft_vector<int32_t> &region_ids) noexcept
 {
     int32_t initialize_error;
+    int32_t copy_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -215,7 +235,12 @@ int32_t game_world_region::initialize(int32_t world_id,
         return (initialize_error);
     }
     this->_world_id = world_id;
-    game_world_region_copy_ids(region_ids, this->_region_ids);
+    copy_error = game_world_region_copy_ids(region_ids, this->_region_ids);
+    if (copy_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(copy_error);
+        return (copy_error);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -231,7 +256,8 @@ int32_t game_world_region::destroy() noexcept
     }
     disable_error = this->disable_thread_safety();
     this->_world_id = 0;
-    this->_region_ids.clear();
+    if (this->_region_ids.is_initialised() == FT_CLASS_STATE_INITIALISED)
+        this->_region_ids.clear();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(disable_error);
     return (disable_error);

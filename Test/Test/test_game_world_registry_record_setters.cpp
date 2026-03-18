@@ -50,16 +50,24 @@ FT_TEST(test_region_definition_setters)
 FT_TEST(test_world_region_setters)
 {
     ft_vector<int> region_ids;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     region_ids.push_back(6);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     region_ids.push_back(7);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     game_world_region world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(3, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
 
     world.set_world_id(10);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     region_ids.clear();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     region_ids.push_back(20);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     world.set_region_ids(region_ids);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
 

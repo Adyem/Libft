@@ -17,6 +17,8 @@ static ft_sharedptr<game_dialogue_line> create_line(int id,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
     ft_string text_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, text_string.initialize(text));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id,
         speaker_string, text_string, next_ids));
     return (stored);
@@ -29,16 +31,24 @@ FT_TEST(test_dialogue_table_register_fetch_lines)
     game_dialogue_line fetched;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.get_error());
     next_ids.push_back(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.get_error());
     next_ids.push_back(3);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.get_error());
     game_dialogue_line original;
     ft_string npc;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, npc.initialize("npc"));
     ft_string hello;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hello.initialize("hello"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(1, npc,
         hello, next_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_line(original));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(1, fetched));
     FT_ASSERT_EQ(1, fetched.get_line_id());
     FT_ASSERT_STR_EQ("npc", fetched.get_speaker().c_str());
@@ -57,8 +67,14 @@ FT_TEST(test_dialogue_table_scripts_copy_lines)
     ft_vector<ft_sharedptr<game_dialogue_line>> lines;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
     next_ids.push_back(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.get_error());
     lines.push_back(create_line(4, "player", "reply", next_ids));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
 
     game_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());

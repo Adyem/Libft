@@ -5,12 +5,14 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static void populate_ingredient(game_crafting_ingredient &ingredient, int item_id, int count, int rarity)
+static int populate_ingredient(game_crafting_ingredient &ingredient, int item_id, int count, int rarity)
 {
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredient.initialize(item_id, count, rarity));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredient.get_error());
     ingredient.set_item_id(item_id);
     ingredient.set_count(count);
     ingredient.set_rarity(rarity);
-    return ;
+    return (1);
 }
 
 FT_TEST(test_item_definition_setters)
@@ -43,10 +45,14 @@ FT_TEST(test_recipe_blueprint_setters)
     game_crafting_ingredient ingredient;
     game_recipe_blueprint recipe;
 
-    populate_ingredient(ingredient, 10, 3, 1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.get_error());
+    FT_ASSERT_EQ(1, populate_ingredient(ingredient, 10, 3, 1));
     ingredients.push_back(ingredient);
-    populate_ingredient(ingredient, 11, 4, 2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.get_error());
+    FT_ASSERT_EQ(1, populate_ingredient(ingredient, 11, 4, 2));
     ingredients.push_back(ingredient);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ingredients.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, recipe.initialize());
     recipe.set_recipe_id(6);
@@ -84,6 +90,8 @@ FT_TEST(test_loadout_blueprint_setters)
     game_loadout_entry second_entry;
     game_loadout_blueprint blueprint;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.initialize());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first_entry.initialize(0, 1, 2));
@@ -92,12 +100,14 @@ FT_TEST(test_loadout_blueprint_setters)
     first_entry.set_item_id(1);
     first_entry.set_quantity(2);
     entries.push_back(first_entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second_entry.initialize(2, 3, 4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second_entry.get_error());
     second_entry.set_slot(2);
     second_entry.set_item_id(3);
     second_entry.set_quantity(4);
     entries.push_back(second_entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entries.get_error());
 
     blueprint.set_loadout_id(18);
     blueprint.set_entries(entries);

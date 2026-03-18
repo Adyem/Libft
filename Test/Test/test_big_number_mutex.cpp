@@ -33,7 +33,7 @@ FT_TEST(test_big_number_mutex_enable_is_retryable)
     FT_ASSERT_EQ(FT_TRUE, number.is_thread_safe());
     FT_ASSERT(number._mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, number.destroy());
-    FT_ASSERT_EQ(FT_FALSE, number.is_thread_safe());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, number._initialised_state);
     FT_ASSERT_EQ(ft_nullptr, number._mutex);
     return (1);
 }
@@ -47,7 +47,7 @@ FT_TEST(test_big_number_mutex_destroy_disables_thread_safety)
     FT_ASSERT_EQ(FT_TRUE, number.is_thread_safe());
     FT_ASSERT(number._mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, number.destroy());
-    FT_ASSERT_EQ(FT_FALSE, number.is_thread_safe());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, number._initialised_state);
     FT_ASSERT_EQ(ft_nullptr, number._mutex);
     return (1);
 }

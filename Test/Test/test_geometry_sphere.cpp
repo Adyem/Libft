@@ -38,7 +38,8 @@ static int geometry_expect_sigabrt(void (*operation)())
 
 static void sphere_initialize_twice_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.initialize();
     return ;
@@ -62,7 +63,8 @@ static void sphere_set_radius_uninitialised_aborts_operation()
 
 static void sphere_destroy_twice_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.destroy();
@@ -88,7 +90,8 @@ static void sphere_move_self_uninitialised_aborts_operation()
 static void sphere_initialize_copy_from_uninitialised_source_aborts_operation()
 {
     sphere source;
-    sphere destination(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)destination.destroy();
     (void)destination.initialize(source);
@@ -98,7 +101,8 @@ static void sphere_initialize_copy_from_uninitialised_source_aborts_operation()
 static void sphere_initialize_move_from_uninitialised_source_aborts_operation()
 {
     sphere source;
-    sphere destination(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)destination.destroy();
     (void)destination.initialize(static_cast<sphere &&>(source));
@@ -108,7 +112,8 @@ static void sphere_initialize_move_from_uninitialised_source_aborts_operation()
 static void sphere_initialize_copy_from_destroyed_source_aborts_operation()
 {
     sphere source;
-    sphere destination(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)source.initialize(2.0, 3.0, 4.0, 5.0);
     (void)source.destroy();
@@ -120,7 +125,8 @@ static void sphere_initialize_copy_from_destroyed_source_aborts_operation()
 static void sphere_initialize_move_from_destroyed_source_aborts_operation()
 {
     sphere source;
-    sphere destination(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)source.initialize(2.0, 3.0, 4.0, 5.0);
     (void)source.destroy();
@@ -139,7 +145,8 @@ static void sphere_get_center_x_uninitialised_aborts_operation()
 
 static void sphere_enable_thread_safety_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.enable_thread_safety();
@@ -148,8 +155,10 @@ static void sphere_enable_thread_safety_destroyed_aborts_operation()
 
 static void sphere_initialize_copy_destination_initialised_aborts_operation()
 {
-    sphere source(0.0, 0.0, 0.0, 1.0);
-    sphere destination(2.0, 2.0, 2.0, 3.0);
+    sphere source;
+    (void)source.initialize(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(2.0, 2.0, 2.0, 3.0);
 
     (void)destination.initialize(source);
     return ;
@@ -157,8 +166,10 @@ static void sphere_initialize_copy_destination_initialised_aborts_operation()
 
 static void sphere_initialize_move_destination_initialised_aborts_operation()
 {
-    sphere source(0.0, 0.0, 0.0, 1.0);
-    sphere destination(2.0, 2.0, 2.0, 3.0);
+    sphere source;
+    (void)source.initialize(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(2.0, 2.0, 2.0, 3.0);
 
     (void)destination.initialize(static_cast<sphere &&>(source));
     return ;
@@ -166,7 +177,8 @@ static void sphere_initialize_move_destination_initialised_aborts_operation()
 
 static void sphere_disable_thread_safety_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     shape.disable_thread_safety();
@@ -175,7 +187,8 @@ static void sphere_disable_thread_safety_destroyed_aborts_operation()
 
 static void sphere_is_thread_safe_enabled_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.is_thread_safe();
@@ -273,7 +286,8 @@ static void sphere_move_two_uninitialised_aborts_operation()
 
 static void sphere_set_center_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.set_center(1.0, 2.0, 3.0);
@@ -282,7 +296,8 @@ static void sphere_set_center_destroyed_aborts_operation()
 
 static void sphere_get_center_x_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.get_center_x();
@@ -291,7 +306,8 @@ static void sphere_get_center_x_destroyed_aborts_operation()
 
 static void sphere_set_center_y_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.set_center_y(2.0);
@@ -300,7 +316,8 @@ static void sphere_set_center_y_destroyed_aborts_operation()
 
 static void sphere_get_radius_destroyed_aborts_second_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.get_radius();
@@ -309,8 +326,10 @@ static void sphere_get_radius_destroyed_aborts_second_operation()
 
 static void sphere_move_destroyed_source_aborts_operation()
 {
-    sphere source(0.0, 0.0, 0.0, 1.0);
-    sphere destination(2.0, 2.0, 2.0, 3.0);
+    sphere source;
+    (void)source.initialize(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(2.0, 2.0, 2.0, 3.0);
 
     (void)source.destroy();
     (void)destination.move(source);
@@ -319,7 +338,8 @@ static void sphere_move_destroyed_source_aborts_operation()
 
 static void sphere_set_center_x_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.set_center_x(1.0);
@@ -328,7 +348,8 @@ static void sphere_set_center_x_destroyed_aborts_operation()
 
 static void sphere_set_center_z_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.set_center_z(1.0);
@@ -337,7 +358,8 @@ static void sphere_set_center_z_destroyed_aborts_operation()
 
 static void sphere_get_center_y_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.get_center_y();
@@ -346,7 +368,8 @@ static void sphere_get_center_y_destroyed_aborts_operation()
 
 static void sphere_get_center_z_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.get_center_z();
@@ -355,7 +378,8 @@ static void sphere_get_center_z_destroyed_aborts_operation()
 
 static void sphere_set_radius_destroyed_aborts_operation()
 {
-    sphere shape(0.0, 0.0, 0.0, 1.0);
+    sphere shape;
+    (void)shape.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)shape.destroy();
     (void)shape.set_radius(2.0);
@@ -364,8 +388,10 @@ static void sphere_set_radius_destroyed_aborts_operation()
 
 static int sphere_move_destroyed_destination_succeeds_operation()
 {
-    sphere source(0.0, 0.0, 0.0, 1.0);
-    sphere destination(2.0, 2.0, 2.0, 3.0);
+    sphere source;
+    (void)source.initialize(0.0, 0.0, 0.0, 1.0);
+    sphere destination;
+    (void)destination.initialize(2.0, 2.0, 2.0, 3.0);
     int move_error;
 
     (void)destination.destroy();
@@ -384,7 +410,8 @@ static int sphere_move_destroyed_destination_succeeds_operation()
 static void sphere_move_uninitialised_source_aborts_operation()
 {
     sphere source;
-    sphere destination(2.0, 2.0, 2.0, 3.0);
+    sphere destination;
+    (void)destination.initialize(2.0, 2.0, 2.0, 3.0);
 
     (void)destination.move(source);
     return ;
@@ -393,7 +420,8 @@ static void sphere_move_uninitialised_source_aborts_operation()
 static void intersect_sphere_uninitialised_first_aborts_operation()
 {
     sphere first;
-    sphere second(0.0, 0.0, 0.0, 1.0);
+    sphere second;
+    (void)second.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)intersect_sphere(first, second);
     return ;
@@ -401,7 +429,8 @@ static void intersect_sphere_uninitialised_first_aborts_operation()
 
 static void intersect_sphere_uninitialised_second_aborts_operation()
 {
-    sphere first(0.0, 0.0, 0.0, 1.0);
+    sphere first;
+    (void)first.initialize(0.0, 0.0, 0.0, 1.0);
     sphere second;
 
     (void)intersect_sphere(first, second);
@@ -419,8 +448,10 @@ static void intersect_sphere_uninitialised_both_aborts_operation()
 
 static void intersect_sphere_destroyed_first_aborts_operation()
 {
-    sphere first(0.0, 0.0, 0.0, 1.0);
-    sphere second(0.0, 0.0, 0.0, 1.0);
+    sphere first;
+    (void)first.initialize(0.0, 0.0, 0.0, 1.0);
+    sphere second;
+    (void)second.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)first.destroy();
     (void)intersect_sphere(first, second);
@@ -429,8 +460,10 @@ static void intersect_sphere_destroyed_first_aborts_operation()
 
 static void intersect_sphere_destroyed_second_aborts_operation()
 {
-    sphere first(0.0, 0.0, 0.0, 1.0);
-    sphere second(0.0, 0.0, 0.0, 1.0);
+    sphere first;
+    (void)first.initialize(0.0, 0.0, 0.0, 1.0);
+    sphere second;
+    (void)second.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)second.destroy();
     (void)intersect_sphere(first, second);
@@ -439,8 +472,10 @@ static void intersect_sphere_destroyed_second_aborts_operation()
 
 static void intersect_sphere_destroyed_both_aborts_operation()
 {
-    sphere first(0.0, 0.0, 0.0, 1.0);
-    sphere second(0.0, 0.0, 0.0, 1.0);
+    sphere first;
+    (void)first.initialize(0.0, 0.0, 0.0, 1.0);
+    sphere second;
+    (void)second.initialize(0.0, 0.0, 0.0, 1.0);
 
     (void)first.destroy();
     (void)second.destroy();
@@ -450,7 +485,8 @@ static void intersect_sphere_destroyed_both_aborts_operation()
 
 static void intersect_sphere_destroyed_and_uninitialised_aborts_operation()
 {
-    sphere first(0.0, 0.0, 0.0, 1.0);
+    sphere first;
+    (void)first.initialize(0.0, 0.0, 0.0, 1.0);
     sphere second;
 
     (void)first.destroy();
@@ -724,7 +760,7 @@ FT_TEST(test_sphere_get_mutex_for_testing_alloc_failure_returns_null)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     cma_set_alloc_limit(1);
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(false, shape.is_thread_safe());
@@ -739,10 +775,10 @@ FT_TEST(test_sphere_get_mutex_for_testing_recovers_after_alloc_failure)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     cma_set_alloc_limit(1);
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
     cma_set_alloc_limit(0);
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
@@ -868,7 +904,7 @@ FT_TEST(test_sphere_get_mutex_for_testing_alloc_limit_two_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     cma_set_alloc_limit(2);
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, shape.is_thread_safe());
@@ -885,7 +921,7 @@ FT_TEST(test_sphere_get_mutex_for_testing_alloc_limit_three_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     cma_set_alloc_limit(3);
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, shape.is_thread_safe());
@@ -1009,7 +1045,7 @@ FT_TEST(test_sphere_get_mutex_for_testing_alloc_limit_four_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     cma_set_alloc_limit(4);
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, shape.is_thread_safe());
@@ -1133,7 +1169,7 @@ FT_TEST(test_sphere_get_mutex_for_testing_alloc_limit_seven_consistent)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     cma_set_alloc_limit(7);
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
         FT_ASSERT_EQ(false, shape.is_thread_safe());
@@ -1843,13 +1879,13 @@ FT_TEST(test_sphere_mutex_testing_accessor_lifecycle)
     pt_recursive_mutex *mutex_pointer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
-    mutex_pointer = shape.get_mutex_for_testing();
+    mutex_pointer = shape._mutex;
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(true, shape.is_thread_safe());
     shape.disable_thread_safety();
     FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
-    FT_ASSERT_EQ(ft_nullptr, shape.get_mutex_for_testing());
+    FT_ASSERT_EQ(ft_nullptr, shape._mutex);
     return (1);
 }
 

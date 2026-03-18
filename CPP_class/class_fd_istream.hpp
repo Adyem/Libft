@@ -27,6 +27,8 @@ class ft_fd_istream : public ft_istream
         ft_fd_istream &operator=(const ft_fd_istream &other) noexcept = delete;
         ft_fd_istream &operator=(ft_fd_istream &&other) noexcept = delete;
 
+        int32_t initialize() noexcept;
+        int32_t destroy() noexcept;
         void set_file_descriptor(int32_t file_descriptor) noexcept;
         int32_t move(ft_fd_istream &other) noexcept;
         int32_t get_file_descriptor() const noexcept;

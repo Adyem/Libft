@@ -115,6 +115,47 @@ ft_fd_istream::~ft_fd_istream() noexcept
     return ;
 }
 
+int32_t ft_fd_istream::initialize() noexcept
+{
+    int32_t initialize_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state, "ft_fd_istream::initialize",
+            "called while object is already initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = ft_istream::initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (initialize_error);
+    }
+    this->_file_descriptor = -1;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_fd_istream::destroy() noexcept
+{
+    int32_t disable_error;
+    int32_t base_destroy_error;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)ft_istream::destroy();
+        return (FT_ERR_SUCCESS);
+    }
+    disable_error = this->disable_thread_safety();
+    this->_file_descriptor = -1;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    base_destroy_error = ft_istream::destroy();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
+    return (base_destroy_error);
+}
+
 int32_t ft_fd_istream::move(ft_fd_istream &other) noexcept
 {
     if (&other == this)
