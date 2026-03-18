@@ -4,6 +4,7 @@
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
+#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -23,6 +24,11 @@ static int32_t render_expect_sigabrt_uninitialised(void (*operation)(render_wind
 {
     struct sigaction new_action;
     struct sigaction old_action;
+    int32_t error_pipe[2];
+    int32_t stderr_backup;
+    char error_output[512];
+    ssize_t read_size;
+    ft_bool has_lifecycle_error;
     int32_t result;
 
     std::memset(&new_action, 0, sizeof(new_action));
@@ -32,6 +38,24 @@ static int32_t render_expect_sigabrt_uninitialised(void (*operation)(render_wind
     new_action.sa_flags = 0;
     if (sigaction(SIGABRT, &new_action, &old_action) != 0)
         return (0);
+    error_pipe[0] = -1;
+    error_pipe[1] = -1;
+    stderr_backup = -1;
+    std::memset(error_output, 0, sizeof(error_output));
+    if (pipe(error_pipe) != 0)
+    {
+        (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+        return (0);
+    }
+    stderr_backup = dup(STDERR_FILENO);
+    if (stderr_backup < 0)
+    {
+        close(error_pipe[0]);
+        close(error_pipe[1]);
+        (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+        return (0);
+    }
+    (void)dup2(error_pipe[1], STDERR_FILENO);
 
     g_render_signal = 0;
     if (sigsetjmp(g_render_jump_buffer, 1) == 0)
@@ -48,6 +72,16 @@ static int32_t render_expect_sigabrt_uninitialised(void (*operation)(render_wind
     {
         result = (g_render_signal == SIGABRT);
     }
+    (void)dup2(stderr_backup, STDERR_FILENO);
+    close(stderr_backup);
+    close(error_pipe[1]);
+    read_size = read(error_pipe[0], error_output, sizeof(error_output) - 1);
+    close(error_pipe[0]);
+    has_lifecycle_error = FT_FALSE;
+    if (read_size > 0 && std::strstr(error_output, "lifecycle error:") != ft_nullptr)
+        has_lifecycle_error = FT_TRUE;
+    if (result != 0 && has_lifecycle_error == FT_FALSE)
+        result = 0;
 
     (void)sigaction(SIGABRT, &old_action, ft_nullptr);
     return (result);

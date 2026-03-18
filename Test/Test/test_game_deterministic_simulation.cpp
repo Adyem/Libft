@@ -22,6 +22,8 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     FT_ASSERT(world_instance.get() != ft_nullptr);
     game_character hero_character;
     game_character enemy_character;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_character.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, enemy_character.initialize());
     hero_character.set_damage_rule(FT_DAMAGE_RULE_FLAT);
     enemy_character.set_damage_rule(FT_DAMAGE_RULE_FLAT);
     hero_character.set_hit_points(52);
@@ -57,8 +59,9 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     game_crafting_ingredient iron_requirement;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, iron_requirement.initialize(102, 1, 2));
     ft_vector<game_crafting_ingredient> sword_recipe;
-    sword_recipe.push_back(oak_requirement);
-    sword_recipe.push_back(iron_requirement);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sword_recipe.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sword_recipe.push_back(oak_requirement));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sword_recipe.push_back(iron_requirement));
 
     int const crafted_sword_recipe_id = 501;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_system.initialize());

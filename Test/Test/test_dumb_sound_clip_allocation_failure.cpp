@@ -13,6 +13,16 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#if defined(__has_include)
+#if __has_include(<valgrind/valgrind.h>)
+#include <valgrind/valgrind.h>
+#define FT_HAS_VALGRIND_HEADER 1
+#else
+#define FT_HAS_VALGRIND_HEADER 0
+#endif
+#else
+#define FT_HAS_VALGRIND_HEADER 0
+#endif
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -45,6 +55,10 @@ static int32_t dumb_expect_load_wav_allocation_failure_child(void)
     char temporary_path[64];
     int32_t result_code;
 
+#if FT_HAS_VALGRIND_HEADER
+    if (RUNNING_ON_VALGRIND != 0)
+        return (1);
+#endif
     limit_data.rlim_cur = 8 * 1024 * 1024;
     limit_data.rlim_max = 8 * 1024 * 1024;
     if (setrlimit(RLIMIT_AS, &limit_data) != 0)

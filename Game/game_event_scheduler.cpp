@@ -344,6 +344,7 @@ void game_event_scheduler::cancel_event(int32_t id) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t queue_error;
     ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> temporary_queue;
     ft_sharedptr<game_event> current_event;
     ft_bool event_found;
@@ -354,6 +355,13 @@ void game_event_scheduler::cancel_event(int32_t id) noexcept
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
+        return ;
+    }
+    queue_error = temporary_queue.initialize();
+    if (queue_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        this->set_error(temporary_queue.get_error());
         return ;
     }
     event_found = FT_FALSE;
@@ -379,6 +387,7 @@ void game_event_scheduler::reschedule_event(int32_t id, int32_t new_duration) no
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t queue_error;
     ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> temporary_queue;
     ft_sharedptr<game_event> current_event;
     ft_bool event_found;
@@ -389,6 +398,13 @@ void game_event_scheduler::reschedule_event(int32_t id, int32_t new_duration) no
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
+        return ;
+    }
+    queue_error = temporary_queue.initialize();
+    if (queue_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        this->set_error(temporary_queue.get_error());
         return ;
     }
     event_found = FT_FALSE;
@@ -418,6 +434,7 @@ void game_event_scheduler::update_events(ft_sharedptr<game_world> &world,
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t queue_error;
     ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> temporary_queue;
     ft_sharedptr<game_event> current_event;
 
@@ -432,6 +449,13 @@ void game_event_scheduler::update_events(ft_sharedptr<game_world> &world,
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
+        return ;
+    }
+    queue_error = temporary_queue.initialize();
+    if (queue_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        this->set_error(temporary_queue.get_error());
         return ;
     }
     this->_ready_cache.clear();

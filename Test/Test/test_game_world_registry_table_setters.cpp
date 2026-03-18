@@ -36,7 +36,7 @@ FT_TEST(test_world_registry_setters)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(8);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    region_ids.push_back(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());

@@ -12,11 +12,17 @@ static int build_profile(game_behavior_profile &profile, int profile_id,
 {
     ft_vector<game_behavior_action> actions;
     game_behavior_action action_entry;
+    int32_t error_code;
+
+    error_code = actions.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+        return (actions.get_error());
 
     if (action_entry.initialize(action_id, 1.25, 2.5) != FT_ERR_SUCCESS)
         return (action_entry.get_error());
-    actions.push_back(action_entry);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.get_error());
+    error_code = actions.push_back(action_entry);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     return (profile.initialize(profile_id, aggression, caution, actions));
 }
 

@@ -640,17 +640,23 @@ int32_t game_crafting::register_recipe(int32_t recipe_id,
         this->set_error(lock_error);
         return (lock_error);
     }
+    lock_error = copied_ingredients.initialize();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        this->set_error(copied_ingredients.get_error());
+        return (copied_ingredients.get_error());
+    }
     ingredient_index = 0;
     ingredient_count = ingredients.size();
     while (ingredient_index < ingredient_count)
     {
-        copied_ingredients.push_back(ingredients[ingredient_index]);
-        if (copied_ingredients.get_error() != FT_ERR_SUCCESS)
+        lock_error = copied_ingredients.push_back(ingredients[ingredient_index]);
+        if (lock_error != FT_ERR_SUCCESS)
         {
-            int32_t error_code = static_cast<int32_t>(copied_ingredients.get_error());
             this->unlock_internal(lock_acquired);
-            this->set_error(error_code);
-            return (error_code);
+            this->set_error(lock_error);
+            return (lock_error);
         }
         ingredient_index++;
     }

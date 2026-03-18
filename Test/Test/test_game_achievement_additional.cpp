@@ -83,8 +83,8 @@ FT_TEST(test_goal_move_resets_source)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(4, destination.get_progress());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(0, original.get_target());
-    FT_ASSERT_EQ(0, original.get_progress());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, original._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     return (1);
 }
 
@@ -307,7 +307,8 @@ FT_TEST(test_achievement_move_clears_source_goals)
     FT_ASSERT_EQ(1, destination.get_goals().size());
     FT_ASSERT_EQ(12, destination.get_goal(4));
     FT_ASSERT_EQ(10, destination.get_progress(4));
-    FT_ASSERT_EQ(0, original.get_goals().size());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, original._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     return (1);
 }
 

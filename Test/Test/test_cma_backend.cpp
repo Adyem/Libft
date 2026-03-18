@@ -5,21 +5,53 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include <cstdlib>
-#include <unordered_map>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+typedef struct s_backend_allocation_entry
+{
+    void *memory_pointer;
+    ft_size_t size;
+}   t_backend_allocation_entry;
+
 struct test_backend_state
 {
-    std::unordered_map<void*, ft_size_t> allocation_sizes;
+    t_backend_allocation_entry allocations[256];
+    ft_size_t allocation_slots;
     ft_size_t allocation_count;
     ft_size_t free_count;
 };
 
+static int32_t backend_find_allocation_slot(const test_backend_state *state,
+        const void *memory_pointer)
+{
+    ft_size_t index;
+
+    if (memory_pointer == ft_nullptr)
+        return (-1);
+    index = 0;
+    while (index < state->allocation_slots)
+    {
+        if (state->allocations[index].memory_pointer == memory_pointer)
+            return (static_cast<int32_t>(index));
+        index++;
+    }
+    return (-1);
+}
+
 static void initialize_test_backend_state(test_backend_state *state)
 {
-    state->allocation_sizes.clear();
+    ft_size_t index;
+
+    index = 0;
+    while (index < 256)
+    {
+        state->allocations[index].memory_pointer = ft_nullptr;
+        state->allocations[index].size = 0;
+        index++;
+    }
+    state->allocation_slots = 0;
     state->allocation_count = 0;
     state->free_count = 0;
     return ;
@@ -33,7 +65,14 @@ static void *test_backend_allocate(ft_size_t size, void *user_data)
     {
         return (ft_nullptr);
     }
-    state->allocation_sizes[memory_pointer] = size;
+    if (state->allocation_slots >= 256)
+    {
+        std::free(memory_pointer);
+        return (ft_nullptr);
+    }
+    state->allocations[state->allocation_slots].memory_pointer = memory_pointer;
+    state->allocations[state->allocation_slots].size = size;
+    state->allocation_slots++;
     state->allocation_count++;
     return (memory_pointer);
 }
@@ -46,19 +85,31 @@ static void *test_backend_reallocate(void *memory_pointer, ft_size_t size,
         return (test_backend_allocate(size, user_data));
     if (size == 0)
     {
-        if (memory_pointer)
-            state->allocation_sizes.erase(memory_pointer);
+        int32_t slot_index = backend_find_allocation_slot(state, memory_pointer);
+
+        if (slot_index >= 0)
+        {
+            state->allocations[slot_index]
+                = state->allocations[state->allocation_slots - 1];
+            state->allocations[state->allocation_slots - 1].memory_pointer = ft_nullptr;
+            state->allocations[state->allocation_slots - 1].size = 0;
+            state->allocation_slots--;
+        }
         std::free(memory_pointer);
         state->free_count++;
         return (ft_nullptr);
     }
+    int32_t slot_index = backend_find_allocation_slot(state, memory_pointer);
     void *new_pointer = std::realloc(memory_pointer, size);
     if (!new_pointer)
     {
         return (ft_nullptr);
     }
-    state->allocation_sizes.erase(memory_pointer);
-    state->allocation_sizes[new_pointer] = size;
+    if (slot_index >= 0)
+    {
+        state->allocations[slot_index].memory_pointer = new_pointer;
+        state->allocations[slot_index].size = size;
+    }
     return (new_pointer);
 }
 
@@ -67,7 +118,16 @@ static void test_backend_deallocate(void *memory_pointer, void *user_data)
     test_backend_state *state = static_cast<test_backend_state*>(user_data);
     if (!memory_pointer)
         return ;
-    state->allocation_sizes.erase(memory_pointer);
+    int32_t slot_index = backend_find_allocation_slot(state, memory_pointer);
+
+    if (slot_index >= 0)
+    {
+        state->allocations[slot_index]
+            = state->allocations[state->allocation_slots - 1];
+        state->allocations[state->allocation_slots - 1].memory_pointer = ft_nullptr;
+        state->allocations[state->allocation_slots - 1].size = 0;
+        state->allocation_slots--;
+    }
     state->free_count++;
     std::free(memory_pointer);
     return ;
@@ -79,11 +139,11 @@ static ft_size_t test_backend_get_allocation_size(const void *memory_pointer,
     test_backend_state *state = static_cast<test_backend_state*>(user_data);
     if (!memory_pointer)
         return (0);
-    std::unordered_map<void*, ft_size_t>::iterator iterator =
-        state->allocation_sizes.find(const_cast<void*>(memory_pointer));
-    if (iterator == state->allocation_sizes.end())
+    int32_t slot_index = backend_find_allocation_slot(state, memory_pointer);
+
+    if (slot_index < 0)
         return (0);
-    return (iterator->second);
+    return (state->allocations[slot_index].size);
 }
 
 static ft_bool test_backend_owns_allocation(const void *memory_pointer,
@@ -92,9 +152,7 @@ static ft_bool test_backend_owns_allocation(const void *memory_pointer,
     test_backend_state *state = static_cast<test_backend_state*>(user_data);
     if (!memory_pointer)
         return (FT_FALSE);
-    std::unordered_map<void*, ft_size_t>::iterator iterator =
-        state->allocation_sizes.find(const_cast<void*>(memory_pointer));
-    if (iterator == state->allocation_sizes.end())
+    if (backend_find_allocation_slot(state, memory_pointer) < 0)
         return (FT_FALSE);
     return (FT_TRUE);
 }
@@ -121,8 +179,7 @@ static int32_t test_cma_backend_hooks_impl(void)
     void *memory_pointer = cma_malloc(64);
     if (!memory_pointer)
         return (0);
-    if (backend_state.allocation_sizes.find(memory_pointer)
-        == backend_state.allocation_sizes.end())
+    if (backend_find_allocation_slot(&backend_state, memory_pointer) < 0)
         return (0);
     if (cma_alloc_size(memory_pointer) != 64)
         return (0);
@@ -133,12 +190,11 @@ static int32_t test_cma_backend_hooks_impl(void)
         return (0);
     if (cma_alloc_size(reallocated_pointer) != 128)
         return (0);
-    if (backend_state.allocation_sizes.find(reallocated_pointer)
-        == backend_state.allocation_sizes.end())
+    if (backend_find_allocation_slot(&backend_state, reallocated_pointer) < 0)
         return (0);
 
     cma_free(reallocated_pointer);
-    if (!backend_state.allocation_sizes.empty())
+    if (backend_state.allocation_slots != 0)
         return (0);
 
     cma_clear_backend();

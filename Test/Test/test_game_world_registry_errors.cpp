@@ -32,7 +32,7 @@ FT_TEST(test_world_registry_clears_entries_after_destroy)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
-    region_ids.push_back(12);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(12));
     game_world_region world;
 
     ft_string fjord_name;

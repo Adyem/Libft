@@ -31,7 +31,7 @@ FT_TEST(test_world_register_and_fetch)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
-    region_ids.push_back(7);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(7));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
@@ -86,7 +86,7 @@ FT_TEST(test_world_isolation)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
-    region_ids.push_back(11);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(11));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());

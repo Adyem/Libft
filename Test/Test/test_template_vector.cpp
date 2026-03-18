@@ -29,7 +29,7 @@ FT_TEST(test_ft_vector_ft_string_growth)
         {
             ft_string stored_value;
             FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_value.initialize(sample_values[push_index]));
-            string_vector.push_back(stored_value);
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, string_vector.push_back(stored_value));
             ++push_index;
         }
         FT_ASSERT_EQ(7, string_vector.size());
@@ -65,7 +65,7 @@ FT_TEST(test_ft_vector_small_buffer_inline_capacity)
         size_t push_index = 0;
         while (push_index < inline_capacity)
         {
-            inline_vector.push_back(static_cast<int>(push_index));
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, inline_vector.push_back(static_cast<int>(push_index)));
             ++push_index;
         }
         ft_size_t allocation_count_mid = 0;

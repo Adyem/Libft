@@ -71,11 +71,9 @@ FT_TEST(test_currency_rate_move_assignment_clears_source)
     FT_ASSERT_EQ(7, destination.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(2.5, destination.get_rate_to_base());
     FT_ASSERT_EQ(4, destination.get_display_precision());
-    FT_ASSERT_EQ(0, source.get_currency_id());
-    FT_ASSERT_DOUBLE_EQ(0.0, source.get_rate_to_base());
-    FT_ASSERT_EQ(0, source.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }
 
@@ -83,6 +81,8 @@ FT_TEST(test_behavior_action_setters_update_values)
 {
     game_behavior_action action;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action.get_error());
     action.set_action_id(9);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, action.get_error());
     action.set_weight(1.75);
@@ -146,11 +146,7 @@ FT_TEST(test_price_definition_move_assignment_resets_source)
     FT_ASSERT_EQ(180, destination.get_base_value());
     FT_ASSERT_EQ(90, destination.get_minimum_value());
     FT_ASSERT_EQ(240, destination.get_maximum_value());
-    FT_ASSERT_EQ(0, source.get_item_id());
-    FT_ASSERT_EQ(0, source.get_rarity());
-    FT_ASSERT_EQ(0, source.get_base_value());
-    FT_ASSERT_EQ(0, source.get_minimum_value());
-    FT_ASSERT_EQ(0, source.get_maximum_value());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }
@@ -196,10 +192,7 @@ FT_TEST(test_region_definition_move_assignment_clears_source)
     FT_ASSERT_STR_EQ("Harbor", destination.get_name().c_str());
     FT_ASSERT_STR_EQ("Dockyards", destination.get_description().c_str());
     FT_ASSERT_EQ(7, destination.get_recommended_level());
-    FT_ASSERT_EQ(0, source.get_region_id());
-    FT_ASSERT_STR_EQ("", source.get_name().c_str());
-    FT_ASSERT_STR_EQ("", source.get_description().c_str());
-    FT_ASSERT_EQ(0, source.get_recommended_level());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);

@@ -135,7 +135,44 @@ int32_t game_currency_rate::initialize(const game_currency_rate &other) noexcept
 
 int32_t game_currency_rate::initialize(game_currency_rate &&other) noexcept
 {
-    return (this->move(other));
+    int32_t destroy_error;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_currency_rate::initialize(move)",
+            "source object is uninitialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (&other == this)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_currency_id = 0;
+        this->_rate_to_base = 1.0;
+        this->_display_precision = 2;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(other.get_error());
+        return (FT_ERR_SUCCESS);
+    }
+    this->_currency_id = other._currency_id;
+    this->_rate_to_base = other._rate_to_base;
+    this->_display_precision = other._display_precision;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._currency_id = 0;
+    other._rate_to_base = 1.0;
+    other._display_precision = 2;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t game_currency_rate::move(game_currency_rate &other) noexcept

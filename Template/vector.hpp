@@ -112,8 +112,8 @@ class ft_vector
         ft_size_t capacity() const;
         ft_bool empty() const;
 
-        void push_back(const ElementType &value);
-        void push_back(ElementType &&value);
+        int32_t push_back(const ElementType &value);
+        int32_t push_back(ElementType &&value);
         void pop_back();
 
         ElementType& operator[](ft_size_t index);
@@ -581,7 +581,7 @@ ft_bool ft_vector<ElementType>::empty() const
 }
 
 template <typename ElementType>
-void ft_vector<ElementType>::push_back(const ElementType &value)
+int32_t ft_vector<ElementType>::push_back(const ElementType &value)
 {
     ft_bool lock_acquired;
     ft_size_t new_capacity;
@@ -594,7 +594,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
     if (lock_error != FT_ERR_SUCCESS)
     {
         ft_vector<ElementType>::set_error(lock_error);
-        return ;
+        return (lock_error);
     }
     if (this->_size >= this->_capacity)
     {
@@ -607,24 +607,25 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
         {
             this->unlock_internal(lock_acquired);
             ft_vector<ElementType>::set_error(reserve_error);
-            return ;
+            return (reserve_error);
         }
     }
     if (this->construct_element_unlocked(&this->_data[this->_size], value)
         != FT_ERR_SUCCESS)
     {
+        reserve_error = ft_vector<ElementType>::get_error();
         this->unlock_internal(lock_acquired);
-        ft_vector<ElementType>::set_error(ft_vector<ElementType>::get_error());
-        return ;
+        ft_vector<ElementType>::set_error(reserve_error);
+        return (reserve_error);
     }
     this->_size += 1;
     this->unlock_internal(lock_acquired);
     ft_vector<ElementType>::set_error(FT_ERR_SUCCESS);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
-void ft_vector<ElementType>::push_back(ElementType &&value)
+int32_t ft_vector<ElementType>::push_back(ElementType &&value)
 {
     ft_bool lock_acquired;
     ft_size_t new_capacity;
@@ -637,7 +638,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
     if (lock_error != FT_ERR_SUCCESS)
     {
         ft_vector<ElementType>::set_error(lock_error);
-        return ;
+        return (lock_error);
     }
     if (this->_size >= this->_capacity)
     {
@@ -650,20 +651,21 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
         {
             this->unlock_internal(lock_acquired);
             ft_vector<ElementType>::set_error(reserve_error);
-            return ;
+            return (reserve_error);
         }
     }
     if (this->construct_element_unlocked(&this->_data[this->_size], ft_move(value))
         != FT_ERR_SUCCESS)
     {
+        reserve_error = ft_vector<ElementType>::get_error();
         this->unlock_internal(lock_acquired);
-        ft_vector<ElementType>::set_error(ft_vector<ElementType>::get_error());
-        return ;
+        ft_vector<ElementType>::set_error(reserve_error);
+        return (reserve_error);
     }
     this->_size += 1;
     this->unlock_internal(lock_acquired);
     ft_vector<ElementType>::set_error(FT_ERR_SUCCESS);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>

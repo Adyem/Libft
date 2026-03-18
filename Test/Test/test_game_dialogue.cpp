@@ -13,13 +13,15 @@ FT_TEST(test_game_dialogue_line_property_updates)
 {
     ft_vector<int> next_ids;
     game_dialogue_line line;
-    next_ids.push_back(3);
-    next_ids.push_back(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.push_back(3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.push_back(5));
 
     ft_string empty_speaker;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_speaker.initialize(""));
     ft_string empty_text;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_text.initialize(""));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, empty_speaker, empty_text, next_ids));
 
     line.set_line_id(8);
@@ -35,7 +37,7 @@ FT_TEST(test_game_dialogue_line_property_updates)
     FT_ASSERT_STR_EQ("guide", line.get_speaker().c_str());
     FT_ASSERT_EQ(2U, line.get_next_line_ids().size());
 
-    next_ids.push_back(11);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.push_back(11));
     line.set_next_line_ids(next_ids);
     FT_ASSERT_EQ(3U, line.get_next_line_ids().size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
@@ -48,14 +50,17 @@ FT_TEST(test_game_dialogue_script_line_management)
     ft_vector<ft_sharedptr<game_dialogue_line>> lines;
     ft_sharedptr<game_dialogue_line> first_line(new (std::nothrow) game_dialogue_line());
     FT_ASSERT(first_line.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
     ft_string npc;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, npc.initialize("npc"));
     ft_string intro;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, intro.initialize("intro"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_line->initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first_line->initialize(10, npc,
         intro, next_ids));
 
-    lines.push_back(first_line);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.push_back(first_line));
     game_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
     script.set_script_id(5);

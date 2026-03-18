@@ -20,7 +20,7 @@ FT_TEST(test_world_registry_register_fetch_round_trip)
     game_world_region world;
     game_world_region fetched_world;
 
-    region_ids.push_back(10);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(10));
     ft_string region_name;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_name.initialize("Harbor"));
     ft_string region_description;

@@ -26,9 +26,9 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids1.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids2.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids2.get_error());
-    region_ids1.push_back(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids1.push_back(1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids1.get_error());
-    region_ids2.push_back(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids2.push_back(2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids2.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());

@@ -6,6 +6,21 @@
 
 thread_local uint32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
 
+static int32_t data_buffer_prepare_storage(ft_vector<uint8_t> &storage) noexcept
+{
+    int32_t initialize_error;
+
+    if (storage.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        initialize_error = storage.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
+    else
+        storage.clear();
+    return (FT_ERR_SUCCESS);
+}
+
 data_buffer_proxy::data_buffer_proxy() noexcept
     : _data_buffer(ft_nullptr), _error_code(FT_ERR_SUCCESS)
 {
@@ -125,13 +140,20 @@ DataBuffer::~DataBuffer() noexcept
 
 int32_t DataBuffer::initialize() noexcept
 {
+    int32_t prepare_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "DataBuffer::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_buffer.clear();
+    prepare_error = data_buffer_prepare_storage(this->_buffer);
+    if (prepare_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (prepare_error);
+    }
     this->_read_pos = 0;
     this->_ok = FT_TRUE;
     this->_operation_error = FT_ERR_SUCCESS;
@@ -142,6 +164,8 @@ int32_t DataBuffer::initialize() noexcept
 
 int32_t DataBuffer::initialize(const DataBuffer &other) noexcept
 {
+    int32_t prepare_error;
+
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "DataBuffer::initialize(const DataBuffer &)",
@@ -156,7 +180,9 @@ int32_t DataBuffer::initialize(const DataBuffer &other) noexcept
             if (destroy_error != FT_ERR_SUCCESS)
                 return (destroy_error);
         }
-        this->_buffer.clear();
+        prepare_error = data_buffer_prepare_storage(this->_buffer);
+        if (prepare_error != FT_ERR_SUCCESS)
+            return (prepare_error);
         this->_read_pos = 0;
         this->_ok = FT_TRUE;
         this->_operation_error = FT_ERR_SUCCESS;
@@ -196,7 +222,14 @@ int32_t DataBuffer::initialize(const DataBuffer &other) noexcept
         (void)pt_recursive_mutex_unlock_if_not_null(first_locked->_mutex);
         return (second_lock_error);
     }
-    this->_buffer.clear();
+    prepare_error = data_buffer_prepare_storage(this->_buffer);
+    if (prepare_error != FT_ERR_SUCCESS)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(second_locked->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(first_locked->_mutex);
+        this->set_operation_error(prepare_error);
+        return (prepare_error);
+    }
     int32_t copy_error = FT_ERR_SUCCESS;
     ft_size_t index = 0;
     while (index < other._buffer.size() && copy_error == FT_ERR_SUCCESS)
@@ -220,6 +253,8 @@ int32_t DataBuffer::initialize(const DataBuffer &other) noexcept
 
 uint32_t DataBuffer::move(DataBuffer &other) noexcept
 {
+    int32_t prepare_error;
+
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
@@ -235,7 +270,9 @@ uint32_t DataBuffer::move(DataBuffer &other) noexcept
             if (destroy_error != FT_ERR_SUCCESS)
                 return (destroy_error);
         }
-        this->_buffer.clear();
+        prepare_error = data_buffer_prepare_storage(this->_buffer);
+        if (prepare_error != FT_ERR_SUCCESS)
+            return (prepare_error);
         this->_read_pos = 0;
         this->_ok = FT_TRUE;
         this->_operation_error = FT_ERR_SUCCESS;
@@ -275,7 +312,14 @@ uint32_t DataBuffer::move(DataBuffer &other) noexcept
         (void)pt_recursive_mutex_unlock_if_not_null(first_locked->_mutex);
         return (second_lock_error);
     }
-    this->_buffer.clear();
+    prepare_error = data_buffer_prepare_storage(this->_buffer);
+    if (prepare_error != FT_ERR_SUCCESS)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(second_locked->_mutex);
+        (void)pt_recursive_mutex_unlock_if_not_null(first_locked->_mutex);
+        this->set_operation_error(prepare_error);
+        return (prepare_error);
+    }
     int32_t move_error = FT_ERR_SUCCESS;
     ft_size_t index = 0;
     while (index < other._buffer.size() && move_error == FT_ERR_SUCCESS)
