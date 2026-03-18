@@ -1,0 +1,281 @@
+#include "../test_internal.hpp"
+#include "../../Math/math.hpp"
+#include "../../CMA/CMA.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_vector2_enable_thread_safety_alloc_failure_once)
+{
+    vector2 vector_value(1.0, 2.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector2_enable_thread_safety_alloc_failure_twice)
+{
+    vector2 vector_value(1.0, 2.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector2_enable_thread_safety_alloc_failure_then_recover)
+{
+    vector2 vector_value(1.0, 2.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(true, vector_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector3_enable_thread_safety_alloc_failure_once)
+{
+    vector3 vector_value(1.0, 2.0, 3.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector3_enable_thread_safety_alloc_failure_twice)
+{
+    vector3 vector_value(1.0, 2.0, 3.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector3_enable_thread_safety_alloc_failure_then_recover)
+{
+    vector3 vector_value(1.0, 2.0, 3.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(true, vector_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector4_enable_thread_safety_alloc_failure_once)
+{
+    vector4 vector_value(1.0, 2.0, 3.0, 4.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector4_enable_thread_safety_alloc_failure_twice)
+{
+    vector4 vector_value(1.0, 2.0, 3.0, 4.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_vector4_enable_thread_safety_alloc_failure_then_recover)
+{
+    vector4 vector_value(1.0, 2.0, 3.0, 4.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(vector_value.enable_thread_safety()));
+    FT_ASSERT_EQ(true, vector_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix2_enable_thread_safety_alloc_failure_once)
+{
+    matrix2 matrix_value(1.0, 0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix2_enable_thread_safety_alloc_failure_twice)
+{
+    matrix2 matrix_value(1.0, 0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix2_enable_thread_safety_alloc_failure_then_recover)
+{
+    matrix2 matrix_value(1.0, 0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(true, matrix_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix3_enable_thread_safety_alloc_failure_once)
+{
+    matrix3 matrix_value(1.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0,
+                         0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix3_enable_thread_safety_alloc_failure_twice)
+{
+    matrix3 matrix_value(1.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0,
+                         0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix3_enable_thread_safety_alloc_failure_then_recover)
+{
+    matrix3 matrix_value(1.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0,
+                         0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(true, matrix_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix4_enable_thread_safety_alloc_failure_once)
+{
+    matrix4 matrix_value(1.0, 0.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0, 0.0,
+                         0.0, 0.0, 1.0, 0.0,
+                         0.0, 0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix4_enable_thread_safety_alloc_failure_twice)
+{
+    matrix4 matrix_value(1.0, 0.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0, 0.0,
+                         0.0, 0.0, 1.0, 0.0,
+                         0.0, 0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_matrix4_enable_thread_safety_alloc_failure_then_recover)
+{
+    matrix4 matrix_value(1.0, 0.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0, 0.0,
+                         0.0, 0.0, 1.0, 0.0,
+                         0.0, 0.0, 0.0, 1.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(matrix_value.enable_thread_safety()));
+    FT_ASSERT_EQ(true, matrix_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_quaternion_enable_thread_safety_alloc_failure_once)
+{
+    quaternion quaternion_value(1.0, 0.0, 0.0, 0.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(quaternion_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_quaternion_enable_thread_safety_alloc_failure_twice)
+{
+    quaternion quaternion_value(1.0, 0.0, 0.0, 0.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(quaternion_value.enable_thread_safety()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(quaternion_value.enable_thread_safety()));
+    FT_ASSERT_EQ(false, quaternion_value.is_thread_safe());
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_quaternion_enable_thread_safety_alloc_failure_then_recover)
+{
+    quaternion quaternion_value(1.0, 0.0, 0.0, 0.0);
+
+    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(quaternion_value.enable_thread_safety()));
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(quaternion_value.enable_thread_safety()));
+    FT_ASSERT_EQ(true, quaternion_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.destroy());
+    return (1);
+}

@@ -254,6 +254,31 @@ int32_t game_economy_table::initialize(game_economy_table &&other) noexcept
     return (FT_ERR_SUCCESS);
 }
 
+int32_t game_economy_table::move(game_economy_table &other) noexcept
+{
+    int32_t initialize_error;
+
+    if (&other == this)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "game_economy_table::move",
+            "source object is uninitialised");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->initialize(static_cast<const game_economy_table &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)other.destroy();
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
 int32_t game_economy_table::destroy() noexcept
 {
     int32_t first_error;

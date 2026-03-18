@@ -1,0 +1,57 @@
+#include "../test_internal.hpp"
+#include "../../Math/math.hpp"
+#include "../../Basic/limits.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+#include <cstdint>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_math_lcm_basic_values)
+{
+    int32_t result;
+
+    result = math_lcm(21, 6);
+    FT_ASSERT_EQ(42, result);
+    return (1);
+}
+
+FT_TEST(test_math_lcm_with_zero)
+{
+    int64_t result;
+
+    result = math_lcm(static_cast<int64_t>(0), static_cast<int64_t>(12));
+    FT_ASSERT_EQ(static_cast<int64_t>(0), result);
+    return (1);
+}
+
+FT_TEST(test_math_lcm_negative_inputs)
+{
+    int64_t result;
+
+    result = math_lcm(static_cast<int64_t>(-15), static_cast<int64_t>(20));
+    FT_ASSERT_EQ(static_cast<int64_t>(60), result);
+    return (1);
+}
+
+FT_TEST(test_math_lcm_int_overflow)
+{
+    int32_t result;
+
+    result = math_lcm(FT_INT32_MAX, 2);
+    FT_ASSERT_EQ(0, result);
+    result = math_lcm(FT_INT32_MIN, 1);
+    FT_ASSERT_EQ(0, result);
+    return (1);
+}
+
+FT_TEST(test_math_lcm_long_overflow)
+{
+    int64_t result;
+
+    result = math_lcm(static_cast<int64_t>(FT_LLONG_MAX), static_cast<int64_t>(2));
+    FT_ASSERT_EQ(static_cast<int64_t>(0), result);
+    result = math_lcm(static_cast<int64_t>(FT_LLONG_MIN), static_cast<int64_t>(1));
+    FT_ASSERT_EQ(static_cast<int64_t>(0), result);
+    return (1);
+}
