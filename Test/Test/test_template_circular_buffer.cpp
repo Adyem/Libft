@@ -9,6 +9,7 @@
 FT_TEST(test_ft_circular_buffer_push_pop_cycle)
 {
     ft_circular_buffer<int> buffer_instance(3);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.initialize());
 
     FT_ASSERT_EQ(false, buffer_instance.is_full());
     FT_ASSERT_EQ(true, buffer_instance.is_empty());
@@ -51,6 +52,7 @@ FT_TEST(test_ft_circular_buffer_push_pop_cycle)
 FT_TEST(test_ft_circular_buffer_error_states)
 {
     ft_circular_buffer<int> buffer_instance(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.initialize());
 
     buffer_instance.push(10);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
@@ -83,6 +85,7 @@ FT_TEST(test_ft_circular_buffer_error_states)
 FT_TEST(test_ft_circular_buffer_wraparound_preserves_order)
 {
     ft_circular_buffer<int> buffer_instance(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.initialize());
     buffer_instance.push(9);
     buffer_instance.push(8);
     FT_ASSERT_EQ(9, buffer_instance.pop());

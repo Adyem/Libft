@@ -167,21 +167,32 @@ int32_t su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
     int32_t     unlock_error;
     char    **entries;
     ft_size_t   index;
-    ft_string   entry_copy;
     int32_t     string_error;
 
     if (snapshot == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
+    if (snapshot->entries.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        string_error = snapshot->entries.initialize();
+        if (string_error != FT_ERR_SUCCESS)
+            return (string_error);
+    }
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     snapshot->entries.clear();
+    if (snapshot->entries.get_error() != FT_ERR_SUCCESS)
+    {
+        (void)su_environment_unlock_mutex();
+        return (snapshot->entries.get_error());
+    }
     entries = su_environment_entries();
     if (entries != ft_nullptr)
     {
         index = 0;
         while (entries[index] != ft_nullptr)
         {
+            ft_string entry_copy;
             string_error = entry_copy.initialize(entries[index]);
             if (string_error != FT_ERR_SUCCESS)
             {
@@ -211,6 +222,12 @@ int32_t su_environment_snapshot_restore(const t_su_environment_snapshot *snapsho
 
     if (snapshot == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
+    error_code = name.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = value.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -272,7 +289,9 @@ int32_t su_environment_snapshot_restore(const t_su_environment_snapshot *snapsho
 
 void su_environment_snapshot_dispose(t_su_environment_snapshot *snapshot)
 {
-    if (snapshot != ft_nullptr)
+    if (snapshot == ft_nullptr)
+        return ;
+    if (snapshot->entries.is_initialised() == FT_CLASS_STATE_INITIALISED)
         snapshot->entries.clear();
     return ;
 }

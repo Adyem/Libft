@@ -348,6 +348,8 @@ int32_t kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_s
         {
             ft_string ttl_key;
             ft_string ttl_suffix;
+            if (ttl_key.initialize() != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_OPERATION);
             if (ttl_suffix.initialize(item_pointer->key + ttl_prefix_length) != FT_ERR_SUCCESS)
                 return (FT_ERR_INVALID_OPERATION);
             ttl_key = ttl_suffix;
@@ -367,6 +369,10 @@ int32_t kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_s
             continue ;
         }
         kv_store_snapshot_entry snapshot_entry;
+        if (snapshot_entry.key.initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_OPERATION);
+        if (snapshot_entry.value.initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_OPERATION);
 
         snapshot_entry.has_expiration = FT_FALSE;
         snapshot_entry.expiration_timestamp = 0;
@@ -382,6 +388,8 @@ int32_t kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_s
             if (encoded_value.initialize(item_pointer->value) != FT_ERR_SUCCESS)
                 return (FT_ERR_INVALID_OPERATION);
             ft_string decrypted_value;
+            if (decrypted_value.initialize() != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_OPERATION);
 
             int32_t encoded_value_error = storage_kv_move_string_error(encoded_value);
             if (encoded_value_error != FT_ERR_SUCCESS)
@@ -520,13 +528,21 @@ int32_t kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &e
         json_item *value_item;
         ft_string stored_value;
         const char *value_pointer;
+        if (stored_value.initialize() != FT_ERR_SUCCESS)
+        {
+            json_free_groups(store_group);
+            return (FT_ERR_INVALID_OPERATION);
+        }
 
         value_pointer = entry_cursor->value.c_str();
         if (this->_encryption_enabled)
         {
             ft_string encoded_value;
-
-            encoded_value = ft_string();
+            if (encoded_value.initialize() != FT_ERR_SUCCESS)
+            {
+                json_free_groups(store_group);
+                return (FT_ERR_INVALID_OPERATION);
+            }
             int32_t encoded_value_error = storage_kv_move_string_error(encoded_value);
             if (encoded_value_error != FT_ERR_SUCCESS)
             {
@@ -560,6 +576,11 @@ int32_t kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &e
             char expiration_buffer[32];
             int32_t written_length;
             int32_t ttl_key_error;
+            if (ttl_key.initialize() != FT_ERR_SUCCESS)
+            {
+                json_free_groups(store_group);
+                return (FT_ERR_INVALID_OPERATION);
+            }
 
             ttl_key = g_kv_store_ttl_prefix;
             ttl_key_error = storage_kv_move_string_error(ttl_key);
@@ -691,6 +712,11 @@ int32_t kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_ent
         char ttl_buffer[32];
         char *serialized_line;
         ft_size_t line_length;
+        if (stored_value.initialize() != FT_ERR_SUCCESS)
+        {
+            su_fclose(file_handle);
+            return (FT_ERR_INVALID_OPERATION);
+        }
 
         entry_group = json_create_json_group("entry");
         if (entry_group == ft_nullptr)
@@ -702,8 +728,12 @@ int32_t kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_ent
         if (this->_encryption_enabled)
         {
             ft_string encoded_value;
-
-            encoded_value = ft_string();
+            if (encoded_value.initialize() != FT_ERR_SUCCESS)
+            {
+                json_free_groups(entry_group);
+                su_fclose(file_handle);
+                return (FT_ERR_INVALID_OPERATION);
+            }
             int32_t encoded_value_error = storage_kv_move_string_error(encoded_value);
             if (encoded_value_error != FT_ERR_SUCCESS)
             {
@@ -895,6 +925,16 @@ int32_t kv_store::load_json_lines_entries(const char *location, ft_vector<kv_sto
         json_item *item_cursor;
         ft_bool has_expiration_flag;
         int64_t expiration_value;
+        if (snapshot_entry.key.initialize() != FT_ERR_SUCCESS)
+        {
+            json_free_groups(line_groups);
+            return (FT_ERR_INVALID_OPERATION);
+        }
+        if (snapshot_entry.value.initialize() != FT_ERR_SUCCESS)
+        {
+            json_free_groups(line_groups);
+            return (FT_ERR_INVALID_OPERATION);
+        }
 
         snapshot_entry.has_expiration = FT_FALSE;
         snapshot_entry.expiration_timestamp = 0;
@@ -924,6 +964,11 @@ int32_t kv_store::load_json_lines_entries(const char *location, ft_vector<kv_sto
                         return (FT_ERR_INVALID_OPERATION);
                     }
                     ft_string decrypted_value;
+                    if (decrypted_value.initialize() != FT_ERR_SUCCESS)
+                    {
+                        json_free_groups(line_groups);
+                        return (FT_ERR_INVALID_OPERATION);
+                    }
 
                     int32_t encoded_value_error = storage_kv_move_string_error(encoded_value);
                     if (encoded_value_error != FT_ERR_SUCCESS)
@@ -1096,13 +1141,25 @@ int32_t kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> 
     {
         ft_string stored_value;
         const char *value_pointer;
+        if (stored_value.initialize() != FT_ERR_SUCCESS)
+        {
+            sqlite3_finalize(insert_statement);
+            sqlite3_exec(database_handle, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
+            sqlite3_close(database_handle);
+            return (FT_ERR_INVALID_OPERATION);
+        }
 
         value_pointer = entry_cursor->value.c_str();
         if (this->_encryption_enabled)
         {
             ft_string encoded_value;
-
-            encoded_value = ft_string();
+            if (encoded_value.initialize() != FT_ERR_SUCCESS)
+            {
+                sqlite3_finalize(insert_statement);
+                sqlite3_exec(database_handle, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
+                sqlite3_close(database_handle);
+                return (FT_ERR_INVALID_OPERATION);
+            }
             int32_t encoded_value_error = storage_kv_move_string_error(encoded_value);
             if (encoded_value_error != FT_ERR_SUCCESS)
             {
@@ -1267,6 +1324,18 @@ int32_t kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_s
         int32_t has_expiration_flag;
         sqlite3_int64 expiration_value;
         kv_store_snapshot_entry snapshot_entry;
+        if (snapshot_entry.key.initialize() != FT_ERR_SUCCESS)
+        {
+            sqlite3_finalize(select_statement);
+            sqlite3_close(database_handle);
+            return (FT_ERR_INVALID_OPERATION);
+        }
+        if (snapshot_entry.value.initialize() != FT_ERR_SUCCESS)
+        {
+            sqlite3_finalize(select_statement);
+            sqlite3_close(database_handle);
+            return (FT_ERR_INVALID_OPERATION);
+        }
 
         key_text = sqlite3_column_text(select_statement, 0);
         value_text = sqlite3_column_text(select_statement, 1);
@@ -1296,6 +1365,12 @@ int32_t kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_s
                 return (FT_ERR_INVALID_OPERATION);
             }
             ft_string decrypted_value;
+            if (decrypted_value.initialize() != FT_ERR_SUCCESS)
+            {
+                sqlite3_finalize(select_statement);
+                sqlite3_close(database_handle);
+                return (FT_ERR_INVALID_OPERATION);
+            }
 
             int32_t encoded_value_error = storage_kv_move_string_error(encoded_value);
             if (encoded_value_error != FT_ERR_SUCCESS)
@@ -1390,13 +1465,21 @@ int32_t kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_
         ft_string stored_value;
         const char *value_pointer;
         char ttl_buffer[32];
+        if (stored_value.initialize() != FT_ERR_SUCCESS)
+        {
+            json_free_groups(store_group);
+            return (FT_ERR_INVALID_OPERATION);
+        }
 
         value_pointer = entry_cursor->value.c_str();
         if (this->_encryption_enabled)
         {
             ft_string encoded_value;
-
-            encoded_value = ft_string();
+            if (encoded_value.initialize() != FT_ERR_SUCCESS)
+            {
+                json_free_groups(store_group);
+                return (FT_ERR_INVALID_OPERATION);
+            }
             int32_t encoded_value_error = storage_kv_move_string_error(encoded_value);
             if (encoded_value_error != FT_ERR_SUCCESS)
             {
@@ -1429,6 +1512,11 @@ int32_t kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_
             int32_t written_length;
             ft_string ttl_key;
             int32_t ttl_key_error;
+            if (ttl_key.initialize() != FT_ERR_SUCCESS)
+            {
+                json_free_groups(store_group);
+                return (FT_ERR_INVALID_OPERATION);
+            }
 
             written_length = pf_snprintf(ttl_buffer, sizeof(ttl_buffer), "%ld", static_cast<long>(entry_cursor->expiration_timestamp));
             if (written_length < 0 || static_cast<ft_size_t>(written_length) >= sizeof(ttl_buffer))

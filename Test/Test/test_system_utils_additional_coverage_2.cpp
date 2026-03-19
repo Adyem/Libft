@@ -160,6 +160,7 @@ FT_TEST(test_su_locale_casefold_rejects_null_input)
 {
     ft_string output;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output.initialize());
     FT_ASSERT_EQ(-1, su_locale_casefold(ft_nullptr, ft_nullptr, output));
     return (1);
 }
@@ -168,6 +169,7 @@ FT_TEST(test_su_locale_casefold_lowercases_text)
 {
     ft_string output;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output.initialize());
     FT_ASSERT_EQ(0, su_locale_casefold("AbC", ft_nullptr, output));
     FT_ASSERT(output == "abc");
     return (1);

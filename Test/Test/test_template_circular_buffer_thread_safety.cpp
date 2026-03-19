@@ -15,6 +15,7 @@ FT_TEST(test_ft_circular_buffer_enable_thread_safety_installs_mutex)
     ft_bool                 lock_acquired;
     int                     popped_value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.initialize());
     FT_ASSERT_EQ(0, buffer_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     FT_ASSERT(buffer_instance.is_thread_safe());
@@ -61,6 +62,7 @@ FT_TEST(test_ft_circular_buffer_lock_blocks_until_release)
     std::atomic<long long>       wait_duration_ms;
     std::thread                  worker;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.initialize());
     FT_ASSERT_EQ(0, buffer_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 

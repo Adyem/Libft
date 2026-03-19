@@ -425,6 +425,13 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
                     replication_sinks_initialised, FT_ERR_INVALID_OPERATION));
             }
             ft_string decrypted_value;
+            if (decrypted_value.initialize() != FT_ERR_SUCCESS)
+            {
+                json_free_groups(group_head);
+                return (this->cleanup_partial_initialization(data_initialised,
+                    file_path_initialised, encryption_key_initialised,
+                    replication_sinks_initialised, FT_ERR_INVALID_OPERATION));
+            }
             if (this->decrypt_value(encoded_value, decrypted_value) != 0)
             {
                 json_free_groups(group_head);

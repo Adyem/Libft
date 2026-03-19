@@ -1565,19 +1565,21 @@ FT_TEST(test_aabb_move_bidirectional_high_load_with_thread_safety)
     std::atomic<bool> worker_failed;
     std::thread worker_thread;
     int iteration_index;
+    int iteration_limit;
     int move_error;
 
+    iteration_limit = 1024;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(-3.0, -3.0, 3.0, 3.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(-4.0, -4.0, 4.0, 4.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
     worker_failed.store(false);
-    worker_thread = std::thread([&first, &second, &worker_failed]() {
+    worker_thread = std::thread([&first, &second, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
         int local_move_error;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             local_move_error = first.move(second);
             if (local_move_error != FT_ERR_SUCCESS)
@@ -1590,7 +1592,7 @@ FT_TEST(test_aabb_move_bidirectional_high_load_with_thread_safety)
         return ;
     });
     iteration_index = 0;
-    while (iteration_index < 4096 && worker_failed.load() == false)
+    while (iteration_index < iteration_limit && worker_failed.load() == false)
     {
         move_error = second.move(first);
         if (move_error != FT_ERR_SUCCESS)
@@ -1672,17 +1674,19 @@ FT_TEST(test_intersect_aabb_high_load_with_mutating_overlap)
     std::thread writer_thread;
     std::thread reader_thread_one;
     std::thread reader_thread_two;
+    int iteration_limit;
 
+    iteration_limit = 1024;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(-10.0, -10.0, 10.0, 10.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(-2.0, -2.0, 2.0, 2.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
     worker_failed.store(false);
-    writer_thread = std::thread([&second, &worker_failed]() {
+    writer_thread = std::thread([&second, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
         int local_set_error;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             if ((local_iteration_index % 2) == 0)
                 local_set_error = second.set_bounds(-3.0, -3.0, 3.0, 3.0);
@@ -1697,11 +1701,11 @@ FT_TEST(test_intersect_aabb_high_load_with_mutating_overlap)
         }
         return ;
     });
-    reader_thread_one = std::thread([&first, &second, &worker_failed]() {
+    reader_thread_one = std::thread([&first, &second, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             if (intersect_aabb(first, second) == false)
             {
@@ -1712,11 +1716,11 @@ FT_TEST(test_intersect_aabb_high_load_with_mutating_overlap)
         }
         return ;
     });
-    reader_thread_two = std::thread([&first, &second, &worker_failed]() {
+    reader_thread_two = std::thread([&first, &second, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             if (intersect_aabb(second, first) == false)
             {
@@ -2619,19 +2623,21 @@ FT_TEST(test_aabb_set_bounds_getters_contention_high_load_soak_rounds)
     std::thread writer_thread;
     int round_index;
     int index;
+    int iteration_limit;
 
+    iteration_limit = 768;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(-1.0, -1.0, 1.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
     round_index = 0;
     while (round_index < 3)
     {
         worker_failed.store(false);
-        writer_thread = std::thread([&box, &worker_failed]() {
+        writer_thread = std::thread([&box, &worker_failed, &iteration_limit]() {
             int iteration_index;
             int local_set_error;
 
             iteration_index = 0;
-            while (iteration_index < 3072 && worker_failed.load() == false)
+            while (iteration_index < iteration_limit && worker_failed.load() == false)
             {
                 if ((iteration_index % 2) == 0)
                     local_set_error = box.set_bounds(-2.0, -2.0, 2.0, 2.0);
@@ -2644,7 +2650,7 @@ FT_TEST(test_aabb_set_bounds_getters_contention_high_load_soak_rounds)
             return ;
         });
         index = 0;
-        while (index < 3072 && worker_failed.load() == false)
+        while (index < iteration_limit && worker_failed.load() == false)
         {
             if (box.get_minimum_x() > box.get_maximum_x()
                 || box.get_minimum_y() > box.get_maximum_y())

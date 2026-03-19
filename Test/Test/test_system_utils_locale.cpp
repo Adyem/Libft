@@ -42,6 +42,7 @@ FT_TEST(test_su_locale_compare_invalid_locale_sets_configuration_error)
 FT_TEST(test_su_locale_casefold_lowercases_ascii_input)
 {
     ft_string output;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output.initialize());
     FT_ASSERT_EQ(0, su_locale_casefold("MiXeD CaSe", ft_nullptr, output));
     FT_ASSERT(output == "mixed case");
     return (1);
@@ -50,6 +51,7 @@ FT_TEST(test_su_locale_casefold_lowercases_ascii_input)
 FT_TEST(test_su_locale_casefold_rejects_null_input)
 {
     ft_string output;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output.initialize());
     FT_ASSERT_EQ(-1, su_locale_casefold(ft_nullptr, ft_nullptr, output));
     return (1);
 }
@@ -57,6 +59,7 @@ FT_TEST(test_su_locale_casefold_rejects_null_input)
 FT_TEST(test_su_locale_casefold_invalid_locale_sets_configuration_error)
 {
     ft_string output;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output.initialize());
     FT_ASSERT_EQ(-1, su_locale_casefold("Example", "invalid_locale_name", output));
     return (1);
 }

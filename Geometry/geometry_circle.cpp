@@ -187,7 +187,6 @@ uint32_t circle::move(circle &other) noexcept
 {
     const circle *lower;
     const circle *upper;
-    uint32_t destroy_error;
     uint32_t lock_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
@@ -198,12 +197,6 @@ uint32_t circle::move(circle &other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-    {
-        destroy_error = this->destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
-            return (destroy_error);
-    }
     this->_center_x = 0.0;
     this->_center_y = 0.0;
     this->_radius = 0.0;

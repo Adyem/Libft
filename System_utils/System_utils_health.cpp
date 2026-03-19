@@ -34,12 +34,17 @@ static int32_t su_health_execute_entry(const s_su_health_check_entry &entry,
 
     healthy = FT_TRUE;
     error_code = FT_ERR_SUCCESS;
+    if (detail.initialize() != FT_ERR_SUCCESS)
+    {
+        healthy = FT_FALSE;
+        error_code = FT_ERR_NO_MEMORY;
+    }
     if (entry.callback == ft_nullptr)
     {
         healthy = FT_FALSE;
         error_code = FT_ERR_INVALID_POINTER;
     }
-    else
+    else if (error_code == FT_ERR_SUCCESS)
     {
         callback_result = entry.callback(entry.context, detail);
         if (callback_result != 0)
@@ -50,6 +55,10 @@ static int32_t su_health_execute_entry(const s_su_health_check_entry &entry,
     }
     if (result != ft_nullptr)
     {
+        if (result->name.is_initialised() != FT_CLASS_STATE_INITIALISED)
+            (void)result->name.initialize();
+        if (result->detail.is_initialised() != FT_CLASS_STATE_INITIALISED)
+            (void)result->detail.initialize();
         result->name = entry.name;
         result->healthy = healthy;
         result->detail = detail;

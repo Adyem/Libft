@@ -263,6 +263,7 @@ FT_TEST(test_kv_store_transactional_batch_commit)
     kv_store store;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, store.initialize(file_path));
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, operations.initialize());
     FT_ASSERT_EQ(0, kv_store_init_set_operation(set_alpha, "alpha", "one"));
     FT_ASSERT_EQ(0, kv_store_init_set_operation(set_beta, "beta", "two", 60));
     FT_ASSERT_EQ(0, kv_store_init_delete_operation(delete_placeholder, "alpha"));
@@ -298,6 +299,7 @@ FT_TEST(test_kv_store_transactional_batch_rolls_back_on_error)
     kv_store store;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, store.initialize(file_path));
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, operations.initialize());
     FT_ASSERT_EQ(0, kv_store_init_set_operation(set_gamma, "gamma", "value"));
     FT_ASSERT_EQ(0, kv_store_init_delete_operation(delete_missing, "does-not-exist"));
     operations.push_back(set_gamma);

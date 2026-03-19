@@ -8,6 +8,7 @@
 FT_TEST(test_ft_bitset_basic_operations)
 {
     ft_bitset bitset_value(16);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.initialize());
 
     FT_ASSERT_EQ(16UL, bitset_value.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.get_error());
@@ -39,6 +40,7 @@ FT_TEST(test_ft_bitset_basic_operations)
 FT_TEST(test_ft_bitset_out_of_range_errors)
 {
     ft_bitset bitset_value(8);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.initialize());
 
     bitset_value.set(12);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, bitset_value.get_error());
@@ -58,6 +60,7 @@ FT_TEST(test_ft_bitset_out_of_range_errors)
 FT_TEST(test_ft_bitset_clear_and_set)
 {
     ft_bitset bitset_value(12);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.initialize());
 
     bitset_value.set(1);
     bitset_value.set(8);

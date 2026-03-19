@@ -15,6 +15,7 @@ FT_TEST(test_ft_vector_push_back_allocation_failure_sets_errno)
     size_t fill_index;
     size_t inline_capacity_limit;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.initialize());
     fill_index = 0;
     inline_capacity_limit = 8;
     while (fill_index < inline_capacity_limit)
@@ -63,18 +64,18 @@ FT_TEST(test_ft_map_resize_allocation_failure_sets_errno)
 
 FT_TEST(test_ft_unordered_map_initial_allocation_failure_sets_errno)
 {
-    ft_unordered_map<int, int> empty_map(0);
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_map.get_error());
-    cma_set_alloc_limit(1);
     ft_unordered_map<int, int> limited_map(32);
-    int construction_error_code;
+    int32_t initialize_error_code;
 
-    construction_error_code = limited_map.get_error();
+    cma_set_alloc_limit(1);
+    initialize_error_code = limited_map.initialize();
     cma_set_alloc_limit(0);
 
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, construction_error_code);
-    FT_ASSERT(limited_map.has_valid_storage() == false);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, initialize_error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, limited_map.initialize());
+    limited_map.insert(1, 1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, limited_map.get_error());
+    FT_ASSERT_EQ(static_cast<size_t>(1), limited_map.size());
 
     return (1);
 }

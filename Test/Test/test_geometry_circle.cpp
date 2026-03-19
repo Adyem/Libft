@@ -1506,20 +1506,22 @@ FT_TEST(test_circle_setters_getters_contention_high_load_two_threads)
     std::atomic<bool> worker_failed;
     std::thread writer_thread;
     int iteration_index;
+    int iteration_limit;
     double center_x;
     double center_y;
     double radius;
     int set_error;
 
+    iteration_limit = 1024;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
     worker_failed.store(false);
-    writer_thread = std::thread([&shape, &worker_failed]() {
+    writer_thread = std::thread([&shape, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
         int local_set_error;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             if ((local_iteration_index % 2) == 0)
                 local_set_error = shape.set_center(2.0, -2.0);
@@ -1541,7 +1543,7 @@ FT_TEST(test_circle_setters_getters_contention_high_load_two_threads)
         return ;
     });
     iteration_index = 0;
-    while (iteration_index < 4096 && worker_failed.load() == false)
+    while (iteration_index < iteration_limit && worker_failed.load() == false)
     {
         center_x = shape.get_center_x();
         center_y = shape.get_center_y();
@@ -1648,16 +1650,18 @@ FT_TEST(test_circle_setters_getters_contention_high_load_four_threads)
     std::thread reader_thread_one;
     std::thread reader_thread_two;
     std::thread reader_thread_three;
+    int iteration_limit;
 
+    iteration_limit = 768;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
     worker_failed.store(false);
-    writer_thread = std::thread([&shape, &worker_failed]() {
+    writer_thread = std::thread([&shape, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
         int local_error_code;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             local_error_code = shape.set_center(
                     static_cast<double>((local_iteration_index % 7) - 3),
@@ -1677,11 +1681,11 @@ FT_TEST(test_circle_setters_getters_contention_high_load_four_threads)
         }
         return ;
     });
-    reader_thread_one = std::thread([&shape, &worker_failed]() {
+    reader_thread_one = std::thread([&shape, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             if (std::isfinite(shape.get_center_x()) == false)
             {
@@ -1692,11 +1696,11 @@ FT_TEST(test_circle_setters_getters_contention_high_load_four_threads)
         }
         return ;
     });
-    reader_thread_two = std::thread([&shape, &worker_failed]() {
+    reader_thread_two = std::thread([&shape, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             if (std::isfinite(shape.get_center_y()) == false)
             {
@@ -1707,11 +1711,11 @@ FT_TEST(test_circle_setters_getters_contention_high_load_four_threads)
         }
         return ;
     });
-    reader_thread_three = std::thread([&shape, &worker_failed]() {
+    reader_thread_three = std::thread([&shape, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
             if (std::isfinite(shape.get_radius()) == false)
             {

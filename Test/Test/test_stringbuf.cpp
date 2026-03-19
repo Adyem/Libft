@@ -58,6 +58,7 @@ FT_TEST(test_ft_stringbuf_str_returns_remaining)
     FT_ASSERT_EQ(static_cast<std::size_t>(3), bytes_read);
     FT_ASSERT_EQ(0, ft_strcmp(storage, "abc"));
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, remaining.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.get_string(remaining));
     FT_ASSERT_EQ(0, ft_strcmp(remaining.c_str(), "def"));
     FT_ASSERT_EQ(true, buffer.is_valid());
