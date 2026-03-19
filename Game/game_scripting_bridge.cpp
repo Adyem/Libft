@@ -777,6 +777,7 @@ int32_t game_script_bridge::handle_call(game_script_context &context, const ft_v
     Pair<ft_string, ft_function<int32_t(game_script_context &, const ft_vector<ft_string> &)> > *entry;
     ft_size_t count;
     ft_size_t index;
+    int32_t initialize_error;
     int32_t result;
 
     if (tokens.size() < 2)
@@ -795,12 +796,23 @@ int32_t game_script_bridge::handle_call(game_script_context &context, const ft_v
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
+    initialize_error = arguments.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(arguments.get_error());
+        return (arguments.get_error());
+    }
     count = tokens.size();
     index = 2;
     while (index < count)
     {
         ft_string argument = tokens[index];
-        arguments.push_back(ft_move(argument));
+        initialize_error = arguments.push_back(ft_move(argument));
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
         index++;
     }
     result = entry->value(context, arguments);
@@ -818,6 +830,14 @@ int32_t game_script_bridge::execute_line(game_script_context &context, const ft_
     ft_vector<ft_string> tokens;
     ft_string command;
     char *command_data;
+    int32_t initialize_error;
+
+    initialize_error = tokens.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(tokens.get_error());
+        return (tokens.get_error());
+    }
 
     this->tokenize_line(line, tokens);
     if (tokens.empty())
@@ -975,8 +995,16 @@ int32_t game_script_bridge::check_sandbox_capabilities(const ft_string &script, 
                 ft_string command_original;
                 ft_string command_normalized;
                 char *command_data;
+                int32_t initialize_error;
 
                 operations++;
+                initialize_error = tokens.initialize();
+                if (initialize_error != FT_ERR_SUCCESS)
+                {
+                    this->set_error(tokens.get_error());
+                    this->unlock_internal(lock_acquired);
+                    return (tokens.get_error());
+                }
                 this->tokenize_line(line, tokens);
                 if (!tokens.empty())
                 {
@@ -1090,8 +1118,16 @@ int32_t game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<
                 ft_string command_original;
                 ft_string command_normalized;
                 char *command_data;
+                int32_t initialize_error;
 
                 operations++;
+                initialize_error = tokens.initialize();
+                if (initialize_error != FT_ERR_SUCCESS)
+                {
+                    this->set_error(tokens.get_error());
+                    this->unlock_internal(lock_acquired);
+                    return (tokens.get_error());
+                }
                 this->tokenize_line(line, tokens);
                 if (!tokens.empty())
                 {
@@ -1264,7 +1300,15 @@ int32_t game_script_bridge::inspect_bytecode_budget(const ft_string &script, int
                 ft_string command_original;
                 ft_string command_normalized;
                 char *command_data;
+                int32_t initialize_error;
 
+                initialize_error = tokens.initialize();
+                if (initialize_error != FT_ERR_SUCCESS)
+                {
+                    this->set_error(tokens.get_error());
+                    this->unlock_internal(lock_acquired);
+                    return (tokens.get_error());
+                }
                 this->tokenize_line(line, tokens);
                 if (!tokens.empty())
                 {

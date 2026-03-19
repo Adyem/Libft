@@ -17,6 +17,7 @@ int test_event_scheduler_cancel_missing_event(void)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first->initialize());
     ft_vector<ft_sharedptr<game_event> > events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
 
     first->set_id(1);
     first->set_duration(3);
@@ -39,6 +40,7 @@ int test_event_scheduler_reschedule_duration(void)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, timed->initialize());
     ft_vector<ft_sharedptr<game_event> > events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
 
     timed->set_id(4);
     timed->set_duration(4);
@@ -61,6 +63,7 @@ int test_event_scheduler_clear_queue(void)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pending->initialize());
     ft_vector<ft_sharedptr<game_event> > events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
 
     pending->set_id(9);
     pending->set_duration(2);
@@ -83,6 +86,7 @@ int test_event_scheduler_prioritizes_shorter_events(void)
     ft_sharedptr<game_event> short_event(new game_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, short_event->initialize());
     ft_vector<ft_sharedptr<game_event> > events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
 
     long_event->set_id(11);
     long_event->set_duration(5);
@@ -106,6 +110,7 @@ int test_event_scheduler_rejects_null_schedule(void)
 {
     game_event_scheduler scheduler;
     ft_vector<ft_sharedptr<game_event> > events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
 
     scheduler.schedule_event(ft_sharedptr<game_event>());
@@ -127,6 +132,7 @@ FT_TEST(test_game_event_scheduler_processes_ready_events)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ready_event->initialize());
     ft_vector<ft_sharedptr<game_event> > remaining;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, remaining.initialize());
     int callback_runs;
 
     callback_runs = 0;
@@ -158,6 +164,7 @@ FT_TEST(test_game_event_scheduler_reschedules_remaining_events)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, delayed_event->initialize());
     ft_vector<ft_sharedptr<game_event> > pending;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pending.initialize());
 
     delayed_event->set_id(22);
     delayed_event->set_duration(3);
@@ -178,6 +185,7 @@ FT_TEST(test_game_event_scheduler_rejects_null_world)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mission->initialize());
     ft_vector<ft_sharedptr<game_event> > queued;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queued.initialize());
     ft_sharedptr<game_world> world;
 
     mission->set_id(23);
@@ -274,6 +282,7 @@ FT_TEST(test_game_event_scheduler_cancel_existing_event_clears_queue)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest->initialize());
     ft_vector<ft_sharedptr<game_event> > events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
 
     quest->set_id(33);
     quest->set_duration(4);

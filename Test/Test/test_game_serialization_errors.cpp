@@ -53,6 +53,8 @@ FT_TEST(test_serialize_inventory_success_clears_errno)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     ft_sharedptr<game_item> item(new game_item());
+    FT_ASSERT(item.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item->initialize());
 
     item->set_item_id(42);
     item->set_max_stack(5);
@@ -81,7 +83,10 @@ FT_TEST(test_serialize_equipment_allocation_failure_sets_errno)
 FT_TEST(test_serialize_equipment_success_clears_errno)
 {
     game_character character;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.initialize());
     ft_sharedptr<game_item> weapon(new game_item());
+    FT_ASSERT(weapon.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, weapon->initialize());
 
     weapon->set_item_id(7);
     weapon->set_max_stack(1);
@@ -128,11 +133,13 @@ FT_TEST(test_serialize_quest_success_clears_errno)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     ft_sharedptr<game_item> reward(new game_item());
+    FT_ASSERT(reward.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reward->initialize());
 
     reward->set_item_id(9);
     reward->set_max_stack(3);
     reward->set_stack_size(1);
-    quest.get_reward_items().push_back(reward);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_reward_items().push_back(reward));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     json_group *group = serialize_quest(quest);
     FT_ASSERT(group != ft_nullptr);

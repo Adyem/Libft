@@ -219,6 +219,7 @@ int32_t game_vendor_profile::destroy() noexcept
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
@@ -266,6 +267,7 @@ int32_t game_vendor_profile::disable_thread_safety() noexcept
     pt_recursive_mutex *old_mutex;
     int32_t destroy_error;
 
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_vendor_profile::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -494,16 +496,14 @@ void game_vendor_profile::set_tax_rate(double tax_rate) noexcept
 
 int32_t game_vendor_profile::get_error() const noexcept
 {
-    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
-            "game_vendor_profile::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "game_vendor_profile::get_error");
     return (static_cast<int32_t>(game_vendor_profile::_last_error));
 }
 
 const char *game_vendor_profile::get_error_str() const noexcept
 {
-    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
-            "game_vendor_profile::get_error_str");
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "game_vendor_profile::get_error_str");
     return (ft_strerror(game_vendor_profile::_last_error));
 }

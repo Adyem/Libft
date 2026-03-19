@@ -429,13 +429,26 @@ void game_hooks::insert_listener_unlocked(
     Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_vector<ft_game_hook_listener_entry> listeners;
     ft_size_t index;
+    int32_t error_code;
 
     listeners_pair = this->_listener_catalog.find(entry.metadata.hook_identifier);
     if (listeners_pair == this->_listener_catalog.end())
     {
+        error_code = listeners.initialize();
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            this->set_error(listeners.get_error());
+            return ;
+        }
         listeners.clear();
-        listeners.push_back(entry);
+        error_code = listeners.push_back(entry);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            this->set_error(listeners.get_error());
+            return ;
+        }
         this->_listener_catalog.insert(entry.metadata.hook_identifier, listeners);
+        this->set_error(this->_listener_catalog.get_error());
         return ;
     }
     index = 0;

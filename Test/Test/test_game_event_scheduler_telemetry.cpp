@@ -23,6 +23,11 @@ static int game_event_scheduler_strings_equal(const char *left, const char *righ
 
 static int game_event_scheduler_reset_samples_state(void)
 {
+    if (g_scheduler_samples.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        if (g_scheduler_samples.initialize() != FT_ERR_SUCCESS)
+            return (-1);
+    }
     g_scheduler_samples.clear();
     return (0);
 }
@@ -38,7 +43,13 @@ static void game_event_scheduler_reset_samples(void)
 
 static int game_event_scheduler_capture_sample_state(const ft_game_observability_sample &sample)
 {
-    g_scheduler_samples.push_back(sample);
+    if (g_scheduler_samples.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        if (g_scheduler_samples.initialize() != FT_ERR_SUCCESS)
+            return (-1);
+    }
+    if (g_scheduler_samples.push_back(sample) != FT_ERR_SUCCESS)
+        return (-1);
     return (0);
 }
 

@@ -65,6 +65,7 @@ FT_TEST(test_game_equipment_invalid_slot_sets_errno)
 
     item = ft_sharedptr<game_item>(new game_item());
     FT_ASSERT(item.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, item->initialize());
     item->set_item_id(42);
     result = equipment.equip(99, item);
@@ -80,6 +81,7 @@ FT_TEST(test_game_equipment_invalid_item_sets_errno)
     ft_sharedptr<game_item> item;
     int result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.initialize());
     item = ft_sharedptr<game_item>();
     result = equipment.equip(EQUIP_HEAD, item);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);

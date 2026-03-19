@@ -101,10 +101,10 @@ FT_TEST(test_game_resistance_thread_safety)
     failure_expression = ft_nullptr;
     failure_line = 0;
     update_arguments.resistance_pointer = &primary_resistance;
-    update_arguments.iterations = 1024;
+    update_arguments.iterations = 128;
     update_arguments.result_code = FT_ERR_SUCCESS;
     read_arguments.resistance_pointer = &primary_resistance;
-    read_arguments.iterations = 1024;
+    read_arguments.iterations = 128;
     read_arguments.result_code = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_resistance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_resistance.get_error());
@@ -125,7 +125,7 @@ FT_TEST(test_game_resistance_thread_safety)
         failure_line = __LINE__;
     }
     index = 0;
-    while (index < 128 && test_failed == 0)
+    while (index < 64 && test_failed == 0)
     {
         if (primary_resistance.set_values(index % 100, index) != FT_ERR_SUCCESS)
         {

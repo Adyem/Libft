@@ -15,6 +15,7 @@ FT_TEST(test_experience_table_generate_total_resets_zero)
     initial_levels[0] = 5;
     initial_levels[1] = 10;
     initial_levels[2] = 20;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     result = table.set_levels(initial_levels, 3);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
     result = table.generate_levels_total(0, 50, 2.0);
@@ -33,6 +34,7 @@ FT_TEST(test_experience_table_rejects_unsorted_levels)
     invalid_levels[0] = 10;
     invalid_levels[1] = 5;
     invalid_levels[2] = 20;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     result = table.set_levels(invalid_levels, 3);
     FT_ASSERT_EQ(FT_ERR_CONFIGURATION, result);
     FT_ASSERT_EQ(3, table.get_count());
@@ -48,6 +50,7 @@ FT_TEST(test_experience_table_set_value_updates_single_entry)
     base_levels[0] = 10;
     base_levels[1] = 20;
     base_levels[2] = 40;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.set_levels(base_levels, 3));
     table.set_value(1, 30);
     FT_ASSERT_EQ(3, table.get_count());
@@ -63,6 +66,7 @@ FT_TEST(test_experience_table_resize_grows_and_keeps_values)
 
     levels[0] = 50;
     levels[1] = 100;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.set_levels(levels, 2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.resize(4));
     FT_ASSERT_EQ(4, table.get_count());
@@ -76,6 +80,7 @@ FT_TEST(test_experience_table_get_level_boundaries)
 {
     game_experience_table table;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.generate_levels_scaled(3, 100, 2.0));
     FT_ASSERT_EQ(0, table.get_level(50));
     FT_ASSERT_EQ(1, table.get_level(100));
@@ -89,6 +94,7 @@ FT_TEST(test_experience_table_thread_safety_toggle)
 {
     game_experience_table table;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     FT_ASSERT_EQ(false, table.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.enable_thread_safety());
     FT_ASSERT_EQ(true, table.is_thread_safe());

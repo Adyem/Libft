@@ -9,15 +9,17 @@ FT_TEST(test_dialogue_line_setters_populate_fields)
 {
     ft_vector<int> next_lines;
     game_dialogue_line line;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_lines.initialize());
 
     ft_string empty_speaker;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_speaker.initialize(""));
     ft_string empty_text;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_text.initialize(""));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, empty_speaker, empty_text, next_lines));
 
-    next_lines.push_back(5);
-    next_lines.push_back(8);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_lines.push_back(5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_lines.push_back(8));
     line.set_line_id(3);
     ft_string npc;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, npc.initialize("npc"));
@@ -40,15 +42,17 @@ FT_TEST(test_dialogue_line_setters_propagate_success)
 {
     ft_vector<int> next_lines;
     game_dialogue_line line;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_lines.initialize());
 
     ft_string empty_speaker2;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_speaker2.initialize(""));
     ft_string empty_text2;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_text2.initialize(""));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, empty_speaker2, empty_text2, next_lines));
 
-    next_lines.push_back(2);
-    next_lines.push_back(4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_lines.push_back(2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next_lines.push_back(4));
     line.set_line_id(7);
     ft_string guide;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, guide.initialize("guide"));
@@ -69,14 +73,16 @@ FT_TEST(test_dialogue_line_setters_propagate_success)
 FT_TEST(test_dialogue_line_conditional_vector_access)
 {
     ft_vector<int> ids;
-    ids.push_back(9);
-    ids.push_back(11);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.push_back(9));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.push_back(11));
     game_dialogue_line line;
 
     ft_string empty_speaker3;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_speaker3.initialize(""));
     ft_string empty_text3;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_text3.initialize(""));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, empty_speaker3, empty_text3, ids));
 
     line.set_line_id(4);
@@ -94,7 +100,7 @@ FT_TEST(test_dialogue_line_conditional_vector_access)
     FT_ASSERT_EQ(11, snapshot[1]);
 
     ft_vector<int> &editable = line.get_next_line_ids();
-    editable.push_back(13);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, editable.push_back(13));
     FT_ASSERT_EQ(3u, line.get_next_line_ids().size());
     return (1);
 }

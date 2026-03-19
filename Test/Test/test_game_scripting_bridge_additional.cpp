@@ -286,6 +286,7 @@ FT_TEST(test_game_script_bridge_validate_dry_run_counts_operations)
     int result;
 
     script = "# comment\nset score 1\n;another\ncall missing\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, warnings.initialize());
     result = bridge.validate_dry_run(script, warnings);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());

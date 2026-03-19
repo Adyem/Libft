@@ -14,13 +14,15 @@ static ft_sharedptr<game_dialogue_line> build_line(int id, const char *speaker,
         const char *text)
 {
     ft_vector<int> next;
-    next.push_back(id + 1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, next.push_back(id + 1));
     ft_sharedptr<game_dialogue_line> stored(new (std::nothrow) game_dialogue_line());
     FT_ASSERT(stored.get() != ft_nullptr);
     ft_string speaker_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
     ft_string text_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, text_string.initialize(text));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id,
         speaker_string, text_string, next));
     return (stored);
@@ -68,7 +70,8 @@ FT_TEST(test_dialogue_table_scripts_map_mutation_does_not_spoil_storage)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, intro.initialize("intro"));
     script.set_title(intro);
     ft_vector<ft_sharedptr<game_dialogue_line>> lines;
-    lines.push_back(build_line(7, "npc", "reply"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.push_back(build_line(7, "npc", "reply")));
     script.set_lines(lines);
     scripts.insert(7, script);
 

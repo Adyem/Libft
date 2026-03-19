@@ -71,13 +71,7 @@ FT_TEST(test_game_reputation_initialize_move_clears_source)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(17, destination.get_current_rep());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(0, source.get_total_rep());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
-    FT_ASSERT_EQ(0, source.get_current_rep());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
-    FT_ASSERT_EQ(0, source.get_milestones().size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
-    FT_ASSERT_EQ(0, source.get_reps().size());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

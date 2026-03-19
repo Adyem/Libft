@@ -12,8 +12,8 @@ FT_TEST(test_game_script_context_default_constructor_sets_success)
 {
     game_script_context context;
 
+    FT_ASSERT_EQ(FT_CLASS_STATE_UNINITIALISED, context._initialised_state);
     FT_ASSERT_EQ(ft_nullptr, context.get_state());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     FT_ASSERT_EQ(ft_nullptr, context.get_world().get());
     return (1);
 }

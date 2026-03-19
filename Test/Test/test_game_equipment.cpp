@@ -14,6 +14,8 @@ FT_TEST(test_game_equipment_equip)
     ft_sharedptr<game_item> helm(new game_item());
 
     FT_ASSERT(helm.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, helm->initialize());
     helm->set_item_id(1);
     helm->set_modifier1_id(1);
     helm->set_modifier1_value(5);
@@ -30,6 +32,8 @@ FT_TEST(test_game_equipment_unequip)
     ft_sharedptr<game_item> helm(new game_item());
 
     FT_ASSERT(helm.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, helm->initialize());
     helm->set_item_id(1);
     helm->set_modifier1_id(1);
     helm->set_modifier1_value(5);
@@ -44,6 +48,7 @@ FT_TEST(test_game_equipment_thread_safety_toggle)
 {
     game_equipment equipment;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.initialize());
     FT_ASSERT_EQ(false, equipment.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.enable_thread_safety());
     FT_ASSERT_EQ(true, equipment.is_thread_safe());

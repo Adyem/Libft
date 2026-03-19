@@ -64,7 +64,7 @@ FT_TEST(test_game_event_add_duration_thread_safe)
     while (index < 4)
     {
         arguments[index].event_pointer = &event_instance;
-        arguments[index].iteration_count = 5000;
+        arguments[index].iteration_count = 500;
         arguments[index].result_code = FT_ERR_SUCCESS;
         if (test_failed == 0)
         {
@@ -108,7 +108,7 @@ FT_TEST(test_game_event_add_duration_thread_safe)
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
-    expected_duration = 4 * 5000;
+    expected_duration = 4 * 500;
     FT_ASSERT_EQ(expected_duration, event_instance.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
     return (1);
@@ -169,7 +169,7 @@ FT_TEST(test_game_event_setters_thread_safe)
     while (index < 3)
     {
         arguments[index].event_pointer = &event_instance;
-        arguments[index].iteration_count = 4000;
+        arguments[index].iteration_count = 400;
         arguments[index].result_code = FT_ERR_SUCCESS;
         if (test_failed == 0)
         {

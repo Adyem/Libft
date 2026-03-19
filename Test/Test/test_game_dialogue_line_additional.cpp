@@ -8,14 +8,16 @@
 FT_TEST(test_dialogue_line_next_ids_reset)
 {
     ft_vector<int> initial_next_lines;
-    initial_next_lines.push_back(2);
-    initial_next_lines.push_back(4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initial_next_lines.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initial_next_lines.push_back(2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initial_next_lines.push_back(4));
     game_dialogue_line line;
 
     ft_string speaker;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker.initialize("speaker"));
     ft_string text;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, text.initialize("text"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(1, speaker,
         text, initial_next_lines));
 
@@ -25,7 +27,8 @@ FT_TEST(test_dialogue_line_next_ids_reset)
     line.set_next_line_ids(initial_next_lines);
 
     ft_vector<int> replacement_next_lines;
-    replacement_next_lines.push_back(9);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, replacement_next_lines.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, replacement_next_lines.push_back(9));
     line.set_next_line_ids(replacement_next_lines);
 
     FT_ASSERT_EQ(1u, line.get_next_line_ids().size());
@@ -37,14 +40,16 @@ FT_TEST(test_dialogue_line_next_ids_reset)
 FT_TEST(test_dialogue_line_getters_expose_vector_views)
 {
     ft_vector<int> ids;
-    ids.push_back(7);
-    ids.push_back(11);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.push_back(7));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ids.push_back(11));
     game_dialogue_line line;
 
     ft_string npc;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, npc.initialize("npc"));
     ft_string hint;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hint.initialize("hint"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(3, npc,
         hint, ids));
 
@@ -54,7 +59,7 @@ FT_TEST(test_dialogue_line_getters_expose_vector_views)
     line.set_next_line_ids(ids);
 
     ft_vector<int> &editable = line.get_next_line_ids();
-    editable.push_back(15);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, editable.push_back(15));
 
     const ft_vector<int> &readonly = line.get_next_line_ids();
     FT_ASSERT_EQ(3u, readonly.size());
@@ -66,13 +71,16 @@ FT_TEST(test_dialogue_line_getters_expose_vector_views)
 FT_TEST(test_dialogue_line_setters_apply_latest_values)
 {
     game_dialogue_line line;
+    ft_vector<int> empty_next_lines;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_next_lines.initialize());
 
     ft_string empty_speaker;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_speaker.initialize(""));
     ft_string empty_text;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_text.initialize(""));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, empty_speaker, empty_text,
-        ft_vector<int>()));
+        empty_next_lines));
 
     line.set_line_id(5);
     ft_string old_value;

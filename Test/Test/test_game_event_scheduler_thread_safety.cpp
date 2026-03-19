@@ -78,6 +78,8 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     failure_line = 0;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, identifier_counts.initialize());
     thread_index = 0;
     while (thread_index < 4)
     {
@@ -197,6 +199,7 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
 
     iteration_count = 64;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
     preload_index = 0;
     while (preload_index < 3)
     {
@@ -256,6 +259,7 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
     }
     scheduler_instance.dump_events(events);
     FT_ASSERT_EQ(static_cast<size_t>(3), events.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, final_durations.initialize());
     final_durations.resize(3, 0);
     size_t event_index = 0;
     while (event_index < events.size())

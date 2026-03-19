@@ -185,6 +185,7 @@ FT_TEST(test_game_script_bridge_sandbox_helper)
 
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, violations.initialize());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("set score 4\nteleport player base\ncall adjust_score 1\n"));
 
@@ -210,6 +211,7 @@ FT_TEST(test_game_script_bridge_dry_run_helper)
 
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, warnings.initialize());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("call missing\nset score\nunset\n"));
 
