@@ -28,6 +28,16 @@ void sha256_hash(const void *data, ft_size_t length, uint8_t *digest)
     };
     uint64_t bit_length = length * 8;
     ft_size_t padded_length = length + 1;
+    ft_size_t digest_index;
+
+    if (!digest)
+        return ;
+    digest_index = 0;
+    while (digest_index < 32)
+    {
+        digest[digest_index] = 0;
+        digest_index++;
+    }
     while (padded_length % 64 != 56)
     {
         ++padded_length;
@@ -123,7 +133,7 @@ void sha256_hash(const void *data, ft_size_t length, uint8_t *digest)
         hash_values[7] += hash_working_value_h;
         chunk_offset += 64;
     }
-    ft_size_t digest_index = 0;
+    digest_index = 0;
     while (digest_index < 8)
     {
         digest[digest_index * 4] = static_cast<uint8_t>((hash_values[digest_index] >> 24) & 0xFF);

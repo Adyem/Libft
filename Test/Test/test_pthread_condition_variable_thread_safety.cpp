@@ -93,6 +93,7 @@ FT_TEST(test_pt_condition_variable_wait_for_times_out_with_thread_safety)
 
     FT_ASSERT_EQ(0, condition.enable_thread_safety());
     FT_ASSERT(condition.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
 
     worker_ready.store(false);
     wait_result.store(0);

@@ -1,8 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_economy_table.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
-#include <csignal>
-#include <csetjmp>
 #include <cstdlib>
 #include <cstring>
 #include <new>
@@ -10,85 +8,10 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static volatile sig_atomic_t g_economy_table_signal_caught = 0;
-static sigjmp_buf g_economy_table_signal_jump_buffer;
-static struct sigaction g_economy_table_old_action_abort;
-static struct sigaction g_economy_table_old_action_iot;
-static struct sigaction g_economy_table_new_action_abort;
-static struct sigaction g_economy_table_new_action_iot;
-static sigset_t g_economy_table_signal_mask;
-static void *g_economy_table_uninitialised_storage = ft_nullptr;
-static int g_economy_table_uninitialised_operation_error = FT_ERR_SUCCESS;
-
-static void economy_table_signal_handler(int signal_value)
-{
-    g_economy_table_signal_caught = signal_value;
-    siglongjmp(g_economy_table_signal_jump_buffer, 1);
-}
-
 static int expect_sigabrt_on_uninitialised_table(void (*operation)(game_economy_table &))
 {
-    std::memset(&g_economy_table_old_action_abort, 0,
-        sizeof(g_economy_table_old_action_abort));
-    std::memset(&g_economy_table_old_action_iot, 0,
-        sizeof(g_economy_table_old_action_iot));
-    std::memset(&g_economy_table_new_action_abort, 0,
-        sizeof(g_economy_table_new_action_abort));
-    std::memset(&g_economy_table_new_action_iot, 0,
-        sizeof(g_economy_table_new_action_iot));
-    g_economy_table_new_action_abort.sa_handler = &economy_table_signal_handler;
-    g_economy_table_new_action_iot.sa_handler = &economy_table_signal_handler;
-    sigemptyset(&g_economy_table_new_action_abort.sa_mask);
-    sigemptyset(&g_economy_table_new_action_iot.sa_mask);
-    sigemptyset(&g_economy_table_signal_mask);
-    sigaddset(&g_economy_table_signal_mask, SIGABRT);
-    sigaddset(&g_economy_table_signal_mask, SIGIOT);
-    if (pthread_sigmask(SIG_UNBLOCK, &g_economy_table_signal_mask, ft_nullptr) != 0)
-    {
-    }
-    if (sigaction(SIGABRT, &g_economy_table_new_action_abort,
-            &g_economy_table_old_action_abort) != 0)
-        return (0);
-    if (SIGIOT != SIGABRT
-        && sigaction(SIGIOT, &g_economy_table_new_action_iot,
-            &g_economy_table_old_action_iot) != 0)
-    {
-        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
-        return (0);
-    }
-    g_economy_table_uninitialised_storage = std::malloc(sizeof(game_economy_table));
-    if (g_economy_table_uninitialised_storage == ft_nullptr)
-    {
-        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
-        if (SIGIOT != SIGABRT)
-            (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
-        return (0);
-    }
-    g_economy_table_signal_caught = 0;
-    g_economy_table_uninitialised_operation_error = FT_ERR_SUCCESS;
-    if (sigsetjmp(g_economy_table_signal_jump_buffer, 1) == 0)
-    {
-        game_economy_table *table_pointer;
-
-        std::memset(g_economy_table_uninitialised_storage, 0,
-            sizeof(game_economy_table));
-        table_pointer = reinterpret_cast<game_economy_table *>(
-            g_economy_table_uninitialised_storage);
-        operation(*table_pointer);
-    }
-    if (g_economy_table_uninitialised_storage != ft_nullptr)
-    {
-        std::free(g_economy_table_uninitialised_storage);
-        g_economy_table_uninitialised_storage = ft_nullptr;
-    }
-    (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
-    if (SIGIOT != SIGABRT)
-        (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
-    if (g_economy_table_signal_caught == SIGABRT)
-        return (1);
-    if (g_economy_table_signal_caught == SIGIOT)
-        return (1);
-    return (g_economy_table_uninitialised_operation_error == FT_ERR_SUCCESS);
+    return (test_expect_sigabrt_signal_uninitialised<game_economy_table>(
+        operation));
 }
 
 static void uninitialised_table_register_price_operation(game_economy_table &table)
@@ -99,21 +22,16 @@ static void uninitialised_table_register_price_operation(game_economy_table &tab
 
     storage = std::malloc(sizeof(game_price_definition));
     if (storage == ft_nullptr)
-    {
-        g_economy_table_uninitialised_operation_error = FT_ERR_NO_MEMORY;
         return ;
-    }
     definition = new (storage) game_price_definition();
     result = definition->initialize(10, 3, 500, 300, 800);
     if (result != FT_ERR_SUCCESS)
     {
-        g_economy_table_uninitialised_operation_error = result;
         definition->~game_price_definition();
         std::free(storage);
         return ;
     }
-    g_economy_table_uninitialised_operation_error =
-        table.register_price_definition(*definition);
+    (void)table.register_price_definition(*definition);
     definition->~game_price_definition();
     std::free(storage);
     return ;
@@ -127,21 +45,16 @@ static void uninitialised_table_fetch_price_operation(game_economy_table &table)
 
     storage = std::malloc(sizeof(game_price_definition));
     if (storage == ft_nullptr)
-    {
-        g_economy_table_uninitialised_operation_error = FT_ERR_NO_MEMORY;
         return ;
-    }
     fetched = new (storage) game_price_definition();
     result = fetched->initialize();
     if (result != FT_ERR_SUCCESS)
     {
-        g_economy_table_uninitialised_operation_error = result;
         fetched->~game_price_definition();
         std::free(storage);
         return ;
     }
-    g_economy_table_uninitialised_operation_error =
-        table.fetch_price_definition(10, *fetched);
+    (void)table.fetch_price_definition(10, *fetched);
     fetched->~game_price_definition();
     std::free(storage);
     return ;

@@ -798,6 +798,22 @@ static int32_t pf_engine_format_standard_sequential(const pf_engine_format_spec 
         *character_count = *written_count;
         return (FT_ERR_SUCCESS);
     }
+    ft_string custom_output;
+    ft_bool custom_handled;
+    int32_t custom_status;
+
+    custom_handled = FT_FALSE;
+    custom_status = pf_try_format_custom_specifier(format_spec.conversion_specifier, argument_list, custom_output, &custom_handled);
+    if (custom_status != FT_ERR_SUCCESS)
+        return (custom_status);
+    if (custom_handled == FT_TRUE)
+    {
+        custom_status = pf_engine_write_literal(custom_output, writer, context, written_count);
+        if (custom_status != FT_ERR_SUCCESS)
+            return (custom_status);
+        *character_count = *written_count;
+        return (FT_ERR_SUCCESS);
+    }
     ft_string format_string;
     format_string = pf_engine_build_format_string(format_spec, width_value, width_specified, precision_value, precision_specified);
     int32_t status;

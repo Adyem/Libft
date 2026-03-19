@@ -28,6 +28,25 @@ static ft_bool map_has_new_error(ft_unordered_map<int32_t, char*> &map, int32_t 
 static ft_unordered_map<int32_t, char*> g_gnl_leftovers;
 static ft_unordered_map<int32_t, gnl_stream*> g_gnl_streams;
 
+static int32_t gnl_ensure_maps_initialised(void)
+{
+    int32_t initialise_error;
+
+    if (g_gnl_leftovers.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        initialise_error = g_gnl_leftovers.initialize();
+        if (initialise_error != FT_ERR_SUCCESS)
+            return (initialise_error);
+    }
+    if (g_gnl_streams.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        initialise_error = g_gnl_streams.initialize();
+        if (initialise_error != FT_ERR_SUCCESS)
+            return (initialise_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
 static ft_bool stream_map_has_new_error(ft_unordered_map<int32_t, gnl_stream*> &map,
     int32_t previous_error, int32_t *current_error)
 {
@@ -61,6 +80,13 @@ static gnl_stream *gnl_acquire_stream(int32_t file_descriptor, int32_t *stream_e
     {
         if (stream_error)
             *stream_error = FT_ERR_INVALID_ARGUMENT;
+        return (ft_nullptr);
+    }
+    init_error = gnl_ensure_maps_initialised();
+    if (init_error != FT_ERR_SUCCESS)
+    {
+        if (stream_error)
+            *stream_error = init_error;
         return (ft_nullptr);
     }
     map_error_before = g_gnl_streams.get_error();
@@ -151,6 +177,8 @@ void    gnl_reset_leftover_alloc_hook(void)
 
 void    gnl_reset_all_streams(void)
 {
+    if (gnl_ensure_maps_initialised() != FT_ERR_SUCCESS)
+        return ;
     if (g_gnl_leftovers.has_valid_storage())
     {
         ft_unordered_map<int32_t, char*>::iterator map_iterator = g_gnl_leftovers.begin();
@@ -401,11 +429,15 @@ static char* read_stream(gnl_stream *stream, char* readed_string, ft_size_t buff
 
 int32_t gnl_clear_stream(int32_t file_descriptor)
 {
+    int32_t init_error;
     int32_t map_error_before;
     int32_t map_error_after;
     char *leftover;
     gnl_stream *stream_pointer;
 
+    init_error = gnl_ensure_maps_initialised();
+    if (init_error != FT_ERR_SUCCESS)
+        return (init_error);
     map_error_before = g_gnl_leftovers.get_error();
     ft_unordered_map<int32_t, char*>::iterator map_iterator(g_gnl_leftovers.find(file_descriptor));
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
@@ -458,11 +490,15 @@ char    *get_next_line(int32_t file_descriptor, ft_size_t buffer_size)
     int32_t                                     error_code;
     int32_t                                     read_error;
     int32_t                                     line_error;
+    int32_t                                     init_error;
 
     line = ft_nullptr;
     combined_buffer = ft_nullptr;
     leftover_string = ft_nullptr;
     if (buffer_size == 0 || file_descriptor < 0)
+        return (ft_nullptr);
+    init_error = gnl_ensure_maps_initialised();
+    if (init_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     stream = gnl_acquire_stream(file_descriptor, &stream_error);
     if (!stream)

@@ -130,6 +130,7 @@ FT_TEST(test_game_character_emits_observability_metrics)
     observability_game_reset_last_sample();
     g_game_export_count = 0;
     FT_ASSERT_EQ(0, observability_game_metrics_initialize(observability_game_test_exporter));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.initialize());
     character.set_hit_points(100);
     observability_game_reset_last_sample();
     g_game_export_count = 0;

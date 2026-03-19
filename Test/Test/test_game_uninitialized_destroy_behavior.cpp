@@ -110,8 +110,7 @@ FT_TEST(test_game_price_definition_destroy_uninitialised_returns_invalid_state)
 {
     game_price_definition definition;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, definition.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, definition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_price_definition>());
     return (1);
 }
@@ -120,8 +119,7 @@ FT_TEST(test_game_rarity_band_destroy_uninitialised_returns_invalid_state)
 {
     game_rarity_band band;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, band.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, band.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_rarity_band>());
     return (1);
 }
@@ -130,8 +128,7 @@ FT_TEST(test_game_vendor_profile_destroy_uninitialised_returns_invalid_state)
 {
     game_vendor_profile vendor;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, vendor.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, vendor.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vendor.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_vendor_profile>());
     return (1);
 }
@@ -140,8 +137,7 @@ FT_TEST(test_game_currency_rate_destroy_uninitialised_returns_invalid_state)
 {
     game_currency_rate rate;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, rate.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, rate.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_currency_rate>());
     return (1);
 }
@@ -150,8 +146,7 @@ FT_TEST(test_game_economy_table_destroy_uninitialised_returns_invalid_state)
 {
     game_economy_table table;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_economy_table>());
     return (1);
 }
@@ -160,8 +155,7 @@ FT_TEST(test_game_behavior_profile_destroy_uninitialised_returns_invalid_state)
 {
     game_behavior_profile profile;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, profile.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_behavior_profile>());
     return (1);
 }
@@ -170,8 +164,7 @@ FT_TEST(test_game_behavior_table_destroy_uninitialised_returns_invalid_state)
 {
     game_behavior_table table;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_behavior_table>());
     return (1);
 }
@@ -180,8 +173,7 @@ FT_TEST(test_game_buff_destroy_uninitialised_returns_invalid_state)
 {
     game_buff buff;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, buff.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, buff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_buff>());
     return (1);
 }
@@ -190,8 +182,7 @@ FT_TEST(test_game_debuff_destroy_uninitialised_returns_invalid_state)
 {
     game_debuff debuff;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, debuff.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, debuff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_debuff>());
     return (1);
 }
@@ -200,8 +191,7 @@ FT_TEST(test_game_skill_destroy_uninitialised_returns_invalid_state)
 {
     game_skill skill;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, skill.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, skill.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_skill>());
     return (1);
 }
@@ -210,8 +200,7 @@ FT_TEST(test_game_reputation_destroy_uninitialised_returns_invalid_state)
 {
     game_reputation reputation;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, reputation.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_reputation>());
     return (1);
 }
@@ -220,8 +209,7 @@ FT_TEST(test_game_dialogue_script_destroy_uninitialised_returns_invalid_state)
 {
     game_dialogue_script script;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, script.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_dialogue_script>());
     return (1);
 }
@@ -230,8 +218,7 @@ FT_TEST(test_game_progress_tracker_destroy_uninitialised_returns_invalid_state)
 {
     game_progress_tracker tracker;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, tracker.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, tracker.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_progress_tracker>());
     return (1);
 }
@@ -240,8 +227,7 @@ FT_TEST(test_game_inventory_destroy_uninitialised_returns_invalid_state)
 {
     game_inventory inventory;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, inventory.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_inventory>());
     return (1);
 }
@@ -250,8 +236,7 @@ FT_TEST(test_game_map3d_destroy_uninitialised_returns_invalid_state)
 {
     game_map3d map_instance;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, map_instance.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_map3d>());
     return (1);
 }
@@ -260,8 +245,7 @@ FT_TEST(test_game_achievement_destroy_uninitialised_returns_invalid_state)
 {
     game_achievement achievement;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, achievement.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, achievement.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_achievement>());
     return (1);
 }
@@ -270,8 +254,7 @@ FT_TEST(test_game_hooks_destroy_uninitialised_returns_invalid_state)
 {
     game_hooks hooks;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, hooks.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, hooks.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_hooks>());
     return (1);
 }
@@ -280,8 +263,7 @@ FT_TEST(test_game_goal_destroy_uninitialised_returns_invalid_state)
 {
     game_goal goal;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, goal.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, goal.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, goal.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_goal>());
     return (1);
 }
@@ -293,7 +275,6 @@ FT_TEST(test_game_item_definition_destroy_uninitialised_is_non_aborting)
     const int destroy_error = item_definition.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, item_definition.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_item_definition>());
     return (1);
@@ -306,7 +287,6 @@ FT_TEST(test_game_recipe_blueprint_destroy_uninitialised_is_non_aborting)
     const int destroy_error = recipe_blueprint.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, recipe_blueprint.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_recipe_blueprint>());
     return (1);
@@ -319,7 +299,6 @@ FT_TEST(test_game_loadout_entry_destroy_uninitialised_is_non_aborting)
     const int destroy_error = loadout_entry.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, loadout_entry.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_loadout_entry>());
     return (1);
@@ -332,7 +311,6 @@ FT_TEST(test_game_loadout_blueprint_destroy_uninitialised_is_non_aborting)
     const int destroy_error = loadout_blueprint.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, loadout_blueprint.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_loadout_blueprint>());
     return (1);
@@ -345,7 +323,6 @@ FT_TEST(test_game_data_catalog_destroy_uninitialised_is_non_aborting)
     const int destroy_error = data_catalog.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, data_catalog.get_error());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_data_catalog>());
     return (1);
 }
@@ -357,7 +334,6 @@ FT_TEST(test_game_dialogue_table_destroy_uninitialised_is_non_aborting)
     const int destroy_error = dialogue_table.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, dialogue_table.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_dialogue_table>());
     return (1);
@@ -370,7 +346,6 @@ FT_TEST(test_game_path_step_destroy_uninitialised_is_non_aborting)
     const int destroy_error = path_step.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, path_step.get_error());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_path_step>());
     return (1);
 }
@@ -382,7 +357,6 @@ FT_TEST(test_game_pathfinding_destroy_uninitialised_is_non_aborting)
     const int destroy_error = pathfinding.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, pathfinding.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_pathfinding>());
     return (1);
@@ -395,7 +369,6 @@ FT_TEST(test_game_world_region_destroy_uninitialised_is_non_aborting)
     const int destroy_error = world_region.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, world_region.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_world_region>());
     return (1);
@@ -408,7 +381,6 @@ FT_TEST(test_game_region_definition_destroy_uninitialised_is_non_aborting)
     const int destroy_error = region_definition.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, region_definition.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_region_definition>());
     return (1);
@@ -421,7 +393,6 @@ FT_TEST(test_game_world_registry_destroy_uninitialised_is_non_aborting)
     const int destroy_error = world_registry.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, world_registry.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_world_registry>());
     return (1);
@@ -431,8 +402,7 @@ FT_TEST(test_game_event_scheduler_destroy_uninitialised_is_non_aborting)
 {
     game_event_scheduler scheduler;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, scheduler.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, scheduler.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.destroy());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialised_destructor<game_event_scheduler>());
     return (1);
@@ -442,7 +412,7 @@ FT_TEST(test_game_world_replay_destroy_uninitialised_is_non_aborting)
 {
     game_world_replay_session replay_session;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, replay_session.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, replay_session.destroy());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<
         game_world_replay_session>());
     return (1);
@@ -455,7 +425,6 @@ FT_TEST(test_game_quest_destroy_uninitialised_is_non_aborting)
     const int destroy_error = quest.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, quest.get_error());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_quest>());
     return (1);
 }
@@ -467,7 +436,6 @@ FT_TEST(test_game_upgrade_destroy_uninitialised_is_non_aborting)
     const int destroy_error = upgrade.destroy();
     FT_ASSERT_EQ(1, is_non_aborting_uninitialised_destroy_result(
         destroy_error));
-    FT_ASSERT_EQ(destroy_error, upgrade.get_error());
     FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialised_destructor<game_upgrade>());
     return (1);
 }

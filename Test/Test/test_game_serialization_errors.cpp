@@ -72,6 +72,7 @@ FT_TEST(test_serialize_equipment_allocation_failure_sets_errno)
 {
     game_character character;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.initialize());
     cma_set_alloc_limit(1);
     json_group *group = serialize_equipment(character);
     cma_set_alloc_limit(0);
@@ -152,6 +153,7 @@ FT_TEST(test_serialize_character_allocation_failure_sets_errno)
 {
     game_character character;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.initialize());
     cma_set_alloc_limit(1);
     json_group *group = serialize_character(character);
     cma_set_alloc_limit(0);

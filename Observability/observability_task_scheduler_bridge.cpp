@@ -2,6 +2,7 @@
 #include "../Errno/errno.hpp"
 #include "../Template/unordered_map.hpp"
 #include "../PThread/mutex.hpp"
+#include <pthread.h>
 
 struct ft_otel_span_state
 {
@@ -16,9 +17,44 @@ struct ft_otel_span_state
 };
 
 static pt_mutex g_observability_bridge_mutex;
+static pthread_once_t g_observability_bridge_once = PTHREAD_ONCE_INIT;
+static int32_t g_observability_bridge_once_error = FT_ERR_SUCCESS;
 static ft_bool g_observability_bridge_initialised = FT_FALSE;
 static ft_otel_span_exporter g_observability_bridge_exporter = ft_nullptr;
 static ft_unordered_map<uint64_t, ft_otel_span_state> g_observability_span_states;
+
+static void observability_task_scheduler_bridge_initialize_once(void)
+{
+    int32_t initialize_error;
+
+    initialize_error = g_observability_bridge_mutex.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        g_observability_bridge_once_error = initialize_error;
+        return ;
+    }
+    initialize_error = g_observability_span_states.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        g_observability_bridge_once_error = initialize_error;
+        return ;
+    }
+    g_observability_bridge_once_error = FT_ERR_SUCCESS;
+    return ;
+}
+
+static int32_t observability_task_scheduler_bridge_ensure_runtime(void)
+{
+    int32_t once_status;
+
+    once_status = pthread_once(&g_observability_bridge_once,
+        observability_task_scheduler_bridge_initialize_once);
+    if (once_status != 0)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    if (g_observability_bridge_once_error != FT_ERR_SUCCESS)
+        return (g_observability_bridge_once_error);
+    return (FT_ERR_SUCCESS);
+}
 static ft_otel_span_state observability_span_state_create(void)
 {
     ft_otel_span_state state;
@@ -64,7 +100,11 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
     ft_bool should_emit;
     int32_t lock_result;
     int32_t unlock_result;
+    int32_t runtime_error;
 
+    runtime_error = observability_task_scheduler_bridge_ensure_runtime();
+    if (runtime_error != FT_ERR_SUCCESS)
+        return ;
     completed_metrics = observability_span_metrics_create();
     exporter_copy = ft_nullptr;
     should_emit = FT_FALSE;
@@ -177,9 +217,13 @@ int32_t observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exp
 {
     int32_t lock_result;
     int32_t unlock_result;
+    int32_t runtime_error;
 
     if (exporter == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
+    runtime_error = observability_task_scheduler_bridge_ensure_runtime();
+    if (runtime_error != FT_ERR_SUCCESS)
+        return (runtime_error);
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
@@ -229,7 +273,11 @@ int32_t observability_task_scheduler_bridge_shutdown(void)
 {
     int32_t lock_result;
     int32_t unlock_result;
+    int32_t runtime_error;
 
+    runtime_error = observability_task_scheduler_bridge_ensure_runtime();
+    if (runtime_error != FT_ERR_SUCCESS)
+        return (runtime_error);
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);

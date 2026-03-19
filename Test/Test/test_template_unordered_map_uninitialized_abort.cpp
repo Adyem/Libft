@@ -1,8 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Template/unordered_map.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
-#include <sys/wait.h>
-#include <unistd.h>
 #include <csignal>
 #include <cstring>
 #include <new>
@@ -14,28 +12,7 @@ typedef ft_unordered_map<int, int> unordered_map_int_int;
 
 static int unordered_map_expect_sigabrt_uninitialised(void (*operation)(unordered_map_int_int&))
 {
-    pid_t child_process_id;
-    int child_status;
-
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        alignas(unordered_map_int_int) unsigned char storage[sizeof(unordered_map_int_int)];
-        unordered_map_int_int *map_pointer;
-
-        std::memset(storage, 0, sizeof(storage));
-        map_pointer = reinterpret_cast<unordered_map_int_int *>(storage);
-        operation(*map_pointer);
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (!WIFSIGNALED(child_status))
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    return (test_expect_sigabrt_signal_uninitialised<unordered_map_int_int>(operation));
 }
 
 static void unordered_map_call_destructor(unordered_map_int_int& map_instance)

@@ -35,7 +35,7 @@ ft_bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monoton
         return (FT_FALSE);
     }
     anchor_monotonic = midpoint_sample;
-    anchor_wall_ms = static_cast<int64_t>(wall_now_ms);
+    anchor_wall_ms = wall_now_ms;
     (void)(FT_ERR_SUCCESS);
     return (FT_TRUE);
 }

@@ -4,6 +4,20 @@
 
 static thread_local ft_vector<s_log_context_entry> g_log_context_entries;
 
+static int32_t logger_context_ensure_entries_ready()
+{
+    uint8_t state_value;
+    int32_t initialize_error;
+
+    state_value = g_log_context_entries.is_initialised();
+    if (state_value == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    initialize_error = g_log_context_entries.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    return (FT_ERR_SUCCESS);
+}
+
 static int32_t logger_context_rollback(ft_size_t entry_count)
 {
     ft_size_t entry_index;
@@ -24,7 +38,11 @@ int32_t logger_context_push(const s_log_field *fields, ft_size_t field_count,
         ft_size_t *pushed_count)
 {
     ft_size_t entry_index;
+    int32_t ensure_error;
 
+    ensure_error = logger_context_ensure_entries_ready();
+    if (ensure_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     if (!pushed_count)
     {
         return (FT_ERR_INTERNAL);
@@ -103,7 +121,11 @@ void logger_context_pop(ft_size_t entry_count)
 {
     ft_size_t available;
     int32_t error_code_value;
+    int32_t ensure_error;
 
+    ensure_error = logger_context_ensure_entries_ready();
+    if (ensure_error != FT_ERR_SUCCESS)
+        return ;
     available = g_log_context_entries.size();
     error_code_value = g_log_context_entries.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
@@ -136,7 +158,11 @@ static int32_t logger_context_format_prefix(ft_string &prefix)
     ft_size_t entry_index;
     ft_bool first_entry;
     int32_t error_code_value;
+    int32_t ensure_error;
 
+    ensure_error = logger_context_ensure_entries_ready();
+    if (ensure_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     entry_count = g_log_context_entries.size();
     error_code_value = g_log_context_entries.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
@@ -357,7 +383,11 @@ int32_t logger_context_format_flat(ft_string &output)
     ft_size_t entry_index;
     ft_bool first_entry;
     int32_t error_code_value;
+    int32_t ensure_error;
 
+    ensure_error = logger_context_ensure_entries_ready();
+    if (ensure_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     output.clear();
     error_code_value = ft_string::get_error();
     if (error_code_value != FT_ERR_SUCCESS)
@@ -428,7 +458,11 @@ int32_t logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
     ft_size_t entry_count;
     ft_size_t entry_index;
     int32_t error_code_value;
+    int32_t ensure_error;
 
+    ensure_error = logger_context_ensure_entries_ready();
+    if (ensure_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     snapshot.clear();
     error_code_value = snapshot.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
@@ -470,7 +504,11 @@ void logger_context_clear()
 {
     ft_size_t entry_count;
     int32_t error_code_value;
+    int32_t ensure_error;
 
+    ensure_error = logger_context_ensure_entries_ready();
+    if (ensure_error != FT_ERR_SUCCESS)
+        return ;
     entry_count = g_log_context_entries.size();
     error_code_value = g_log_context_entries.get_error();
     if (error_code_value != FT_ERR_SUCCESS)

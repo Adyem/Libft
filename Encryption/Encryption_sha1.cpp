@@ -19,6 +19,15 @@ void sha1_hash(const void *data, ft_size_t length, uint8_t *digest)
     ft_size_t length_index;
     ft_size_t chunk_offset;
 
+    if (!digest)
+        return ;
+    copy_index = 0;
+    while (copy_index < 20)
+    {
+        digest[copy_index] = 0;
+        copy_index++;
+    }
+
     hash_values[0] = 0x67452301;
     hash_values[1] = 0xEFCDAB89;
     hash_values[2] = 0x98BADCFE;

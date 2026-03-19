@@ -112,7 +112,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int32_t offset_m
     int32_t snprintf_result;
 
     offset_seconds = static_cast<int64_t>(offset_minutes) * 60LL;
-    adjusted_epoch = static_cast<int64_t>(time_value) + offset_seconds;
+    adjusted_epoch = time_value + offset_seconds;
     if (adjusted_epoch > std::numeric_limits<std::time_t>::max())
         return (time_format_failure(FT_ERR_OUT_OF_RANGE));
     if (adjusted_epoch < std::numeric_limits<std::time_t>::min())

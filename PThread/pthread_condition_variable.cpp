@@ -47,38 +47,6 @@ pt_condition_variable::pt_condition_variable()
     : _condition(), _mutex(), _condition_initialised(false), _mutex_initialised(false),
     _state_mutex(ft_nullptr)
 {
-    if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
-        return ;
-    this->_mutex_initialised = true;
-#if defined(CLOCK_MONOTONIC)
-    pthread_condattr_t condition_attributes;
-
-    if (pthread_condattr_init(&condition_attributes) != 0)
-    {
-        pthread_mutex_destroy(&this->_mutex);
-        return ;
-    }
-    if (pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC) != 0)
-    {
-        pthread_condattr_destroy(&condition_attributes);
-        pthread_mutex_destroy(&this->_mutex);
-        return ;
-    }
-    if (pt_cond_init(&this->_condition, &condition_attributes) != 0)
-    {
-        pthread_condattr_destroy(&condition_attributes);
-        pthread_mutex_destroy(&this->_mutex);
-        return ;
-    }
-    pthread_condattr_destroy(&condition_attributes);
-#else
-    if (pt_cond_init(&this->_condition, ft_nullptr) != 0)
-    {
-        pthread_mutex_destroy(&this->_mutex);
-        return ;
-    }
-#endif
-    this->_condition_initialised = true;
     return ;
 }
 
@@ -90,6 +58,77 @@ pt_condition_variable::~pt_condition_variable()
         pthread_mutex_destroy(&this->_mutex);
     this->teardown_thread_safety();
     return ;
+}
+
+int pt_condition_variable::ensure_native_sync_objects()
+{
+    int native_error;
+    bool mutex_created;
+
+    if (this->_mutex_initialised && this->_condition_initialised)
+        return (FT_ERR_SUCCESS);
+    this->_initialization_mutex.lock();
+    if (this->_mutex_initialised && this->_condition_initialised)
+    {
+        this->_initialization_mutex.unlock();
+        return (FT_ERR_SUCCESS);
+    }
+    mutex_created = false;
+    if (!this->_mutex_initialised)
+    {
+        native_error = pthread_mutex_init(&this->_mutex, ft_nullptr);
+        if (native_error != 0)
+        {
+            this->_initialization_mutex.unlock();
+            return (cmp_map_system_error_to_ft(native_error));
+        }
+        this->_mutex_initialised = true;
+        mutex_created = true;
+    }
+#if defined(CLOCK_MONOTONIC)
+    pthread_condattr_t condition_attributes;
+
+    native_error = pthread_condattr_init(&condition_attributes);
+    if (native_error != 0)
+    {
+        if (mutex_created)
+        {
+            (void)pthread_mutex_destroy(&this->_mutex);
+            this->_mutex_initialised = false;
+        }
+        this->_initialization_mutex.unlock();
+        return (cmp_map_system_error_to_ft(native_error));
+    }
+    native_error = pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC);
+    if (native_error != 0)
+    {
+        (void)pthread_condattr_destroy(&condition_attributes);
+        if (mutex_created)
+        {
+            (void)pthread_mutex_destroy(&this->_mutex);
+            this->_mutex_initialised = false;
+        }
+        this->_initialization_mutex.unlock();
+        return (cmp_map_system_error_to_ft(native_error));
+    }
+    native_error = pt_cond_init(&this->_condition, &condition_attributes);
+    (void)pthread_condattr_destroy(&condition_attributes);
+#else
+    native_error = pt_cond_init(&this->_condition, ft_nullptr);
+#endif
+    if (native_error != 0)
+    {
+        if (mutex_created)
+        {
+            (void)pthread_mutex_destroy(&this->_mutex);
+            this->_mutex_initialised = false;
+        }
+        this->_initialization_mutex.unlock();
+        return (cmp_map_system_error_to_ft(native_error));
+    }
+    this->_condition_initialised = true;
+    this->_initialization_mutex.unlock();
+    return (FT_ERR_SUCCESS);
 }
 
 int pt_condition_variable::lock_internal(bool *lock_acquired) const
@@ -199,8 +238,11 @@ int pt_condition_variable::wait_for(pt_mutex &mutex, const struct timespec &rela
 
 int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &absolute_time)
 {
-    if (!this->_condition_initialised || !this->_mutex_initialised)
-        return (FT_ERR_INVALID_ARGUMENT);
+    int initialize_error;
+
+    initialize_error = this->ensure_native_sync_objects();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     if (!mutex.lockState())
         return (FT_ERR_MUTEX_NOT_OWNER);
 
@@ -234,8 +276,11 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
 
 int pt_condition_variable::signal()
 {
-    if (!this->_condition_initialised || !this->_mutex_initialised)
-        return (FT_ERR_INVALID_ARGUMENT);
+    int initialize_error;
+
+    initialize_error = this->ensure_native_sync_objects();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     int native_lock_error = pthread_mutex_lock(&this->_mutex);
     if (native_lock_error != 0)
         return (cmp_map_system_error_to_ft(native_lock_error));
@@ -254,8 +299,11 @@ int pt_condition_variable::signal()
 
 int pt_condition_variable::broadcast()
 {
-    if (!this->_condition_initialised || !this->_mutex_initialised)
-        return (FT_ERR_INVALID_ARGUMENT);
+    int initialize_error;
+
+    initialize_error = this->ensure_native_sync_objects();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     int native_lock_error = pthread_mutex_lock(&this->_mutex);
     if (native_lock_error != 0)
         return (cmp_map_system_error_to_ft(native_lock_error));

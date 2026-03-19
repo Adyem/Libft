@@ -4,8 +4,6 @@
 #include <csignal>
 #include <cstring>
 #include <new>
-#include <sys/wait.h>
-#include <unistd.h>
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../PThread/recursive_mutex.hpp"
 
@@ -132,35 +130,33 @@ FT_TEST(test_scma_accessor_uninitialised_destructor_tolerates_object)
     return (1);
 }
 
+static void scma_destructor_with_lock_failure_operation()
+{
+    alignas(scma_handle_accessor<int>) unsigned char storage[
+        sizeof(scma_handle_accessor<int>)];
+    scma_handle_accessor<int> *accessor_pointer;
+
+    accessor_pointer = new (storage) scma_handle_accessor<int>();
+    (void)accessor_pointer->initialize();
+    pt_recursive_mutex_lock_override_error_code.store(
+        FT_ERR_SYS_MUTEX_LOCK_FAILED, std::memory_order_release);
+    accessor_pointer->~scma_handle_accessor<int>();
+    pt_recursive_mutex_lock_override_error_code.store(
+        FT_ERR_SUCCESS, std::memory_order_release);
+    return ;
+}
+
 static int scma_expect_sigabrt_destructor_with_lock_failure(void)
 {
-    pid_t child_process_id;
-    int child_status;
+    int operation_result;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        alignas(scma_handle_accessor<int>) unsigned char storage[
-            sizeof(scma_handle_accessor<int>)];
-        scma_handle_accessor<int> *accessor_pointer;
-
-        accessor_pointer = new (storage) scma_handle_accessor<int>();
-        (void)accessor_pointer->initialize();
-        pt_recursive_mutex_lock_override_error_code.store(
-            FT_ERR_SYS_MUTEX_LOCK_FAILED, std::memory_order_release);
-        accessor_pointer->~scma_handle_accessor<int>();
-        pt_recursive_mutex_lock_override_error_code.store(
-            FT_ERR_SUCCESS, std::memory_order_release);
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    pt_recursive_mutex_lock_override_error_code.store(
+        FT_ERR_SUCCESS, std::memory_order_release);
+    operation_result = test_expect_sigabrt_signal(
+        scma_destructor_with_lock_failure_operation);
+    pt_recursive_mutex_lock_override_error_code.store(
+        FT_ERR_SUCCESS, std::memory_order_release);
+    return (operation_result);
 }
 
 FT_TEST(test_scma_accessor_destructor_survives_mutex_lock_failure)

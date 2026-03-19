@@ -17,7 +17,7 @@ static void su_service_signal_dispatch(int32_t signal_number,
     (void)user_context;
     if (g_su_service_signal_handler == ft_nullptr)
         return ;
-    g_su_service_signal_handler(static_cast<int32_t>(signal_number),
+    g_su_service_signal_handler(signal_number,
         g_su_service_signal_context);
     return ;
 }

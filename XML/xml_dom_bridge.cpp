@@ -108,8 +108,16 @@ static int32_t xml_dom_populate_node_locked(const xml_node *source, ft_dom_node 
         ft_dom_node *child_target;
 
         child_target = new(std::nothrow) ft_dom_node();
+        int32_t child_initialize_error;
+
         if (!child_target)
             return (xml_dom_report_error(FT_ERR_NO_MEMORY));
+        child_initialize_error = child_target->initialize();
+        if (child_initialize_error != FT_ERR_SUCCESS)
+        {
+            xml_dom_delete_node(child_target);
+            return (xml_dom_report_error(child_initialize_error));
+        }
         if (xml_dom_populate_node(child_source, child_target) != 0)
         {
             xml_dom_delete_node(child_target);
@@ -156,8 +164,16 @@ int32_t xml_document_to_dom(const xml_document &document, ft_dom_document &dom) 
     ft_dom_node *dom_root;
 
     dom_root = new(std::nothrow) ft_dom_node();
+    int32_t dom_root_initialize_error;
+
     if (!dom_root)
         return (xml_dom_report_error(FT_ERR_NO_MEMORY));
+    dom_root_initialize_error = dom_root->initialize();
+    if (dom_root_initialize_error != FT_ERR_SUCCESS)
+    {
+        xml_dom_delete_node(dom_root);
+        return (xml_dom_report_error(dom_root_initialize_error));
+    }
     if (xml_dom_populate_node(root_node, dom_root) != 0)
     {
         xml_dom_delete_node(dom_root);

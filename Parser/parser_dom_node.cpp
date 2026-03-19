@@ -45,26 +45,104 @@ ft_dom_node::~ft_dom_node() noexcept
 
 int32_t ft_dom_node::initialize() noexcept
 {
+    int32_t initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_dom_node::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_type = FT_DOM_NODE_NULL;
-    this->_children.clear();
-    this->_attribute_keys.clear();
-    this->_attribute_values.clear();
-    this->_name = "";
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+
+    if (this->_children.is_initialised() == FT_CLASS_STATE_INITIALISED)
     {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (ft_string::get_error());
+        this->_children.clear();
+        if (this->_children.get_error() != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (this->_children.get_error());
+        }
     }
-    this->_value = "";
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    else
     {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (ft_string::get_error());
+        initialize_error = this->_children.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (initialize_error);
+        }
+    }
+    if (this->_attribute_keys.is_initialised() == FT_CLASS_STATE_INITIALISED)
+    {
+        this->_attribute_keys.clear();
+        if (this->_attribute_keys.get_error() != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (this->_attribute_keys.get_error());
+        }
+    }
+    else
+    {
+        initialize_error = this->_attribute_keys.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (initialize_error);
+        }
+    }
+    if (this->_attribute_values.is_initialised() == FT_CLASS_STATE_INITIALISED)
+    {
+        this->_attribute_values.clear();
+        if (this->_attribute_values.get_error() != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (this->_attribute_values.get_error());
+        }
+    }
+    else
+    {
+        initialize_error = this->_attribute_values.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (initialize_error);
+        }
+    }
+    if (this->_name.is_initialised() == FT_TRUE)
+    {
+        initialize_error = this->_name.clear();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (initialize_error);
+        }
+    }
+    else
+    {
+        initialize_error = this->_name.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (initialize_error);
+        }
+    }
+    if (this->_value.is_initialised() == FT_TRUE)
+    {
+        initialize_error = this->_value.clear();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (initialize_error);
+        }
+    }
+    else
+    {
+        initialize_error = this->_value.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (initialize_error);
+        }
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -378,11 +456,15 @@ ft_string ft_dom_node::get_attribute(const ft_string &key) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t value_initialize_error;
     ft_size_t key_index;
     ft_size_t key_count;
     ft_string value;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_node::get_attribute");
+    value_initialize_error = value.initialize();
+    if (value_initialize_error != FT_ERR_SUCCESS)
+        return (ft_string::from_error(value_initialize_error));
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

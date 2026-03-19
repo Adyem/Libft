@@ -98,18 +98,21 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(seed_data));
     ft_stringbuf buffer;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, worker_output.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, main_output.initialize());
     start_flag.store(false);
     worker_done.store(false);
     worker_thread = std::thread([&buffer, &start_flag, &worker_done, &worker_output]() {
         char single_character[2];
-        std::size_t bytes_read;
+        ssize_t bytes_read;
 
         while (!start_flag.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         while (true)
         {
             bytes_read = buffer.read(single_character, 1);
-            if (bytes_read == 0)
+            if (bytes_read <= 0)
                 break ;
             single_character[1] = '\0';
             worker_output.append(single_character, 1);
@@ -121,12 +124,12 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized)
     start_flag.store(true);
 
     char single_character[2];
-    std::size_t bytes_read;
+    ssize_t bytes_read;
 
     while (true)
     {
         bytes_read = buffer.read(single_character, 1);
-        if (bytes_read == 0)
+        if (bytes_read <= 0)
             break ;
         single_character[1] = '\0';
         main_output.append(single_character, 1);
@@ -140,6 +143,7 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized)
 
     ft_string remaining;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, remaining.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.get_string(remaining));
     FT_ASSERT_EQ(0u, remaining.size());
 

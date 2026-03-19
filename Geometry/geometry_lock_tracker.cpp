@@ -149,7 +149,7 @@ static void geometry_lock_tracker_sleep_backoff()
         time_seed = static_cast<uint64_t>(
             std::chrono::steady_clock::now().time_since_epoch().count());
         address_seed = reinterpret_cast<uintptr_t>(&generator);
-        combined_seed = static_cast<uint32_t>(time_seed ^ static_cast<uint64_t>(address_seed));
+        combined_seed = static_cast<uint32_t>(time_seed ^ address_seed);
         if (combined_seed == 0)
             combined_seed = static_cast<uint32_t>(address_seed | static_cast<uintptr_t>(1U));
         generator.seed(combined_seed);

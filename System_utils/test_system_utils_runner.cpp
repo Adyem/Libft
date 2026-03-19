@@ -4,6 +4,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <exception>
+#include <fcntl.h>
+#include <unistd.h>
 #include "../Errno/errno.hpp"
 
 static int32_t *get_test_count(void)
@@ -114,8 +116,22 @@ static int32_t test_is_selected(const s_test_case *test)
 
 static int32_t execute_test_function(const s_test_case *test)
 {
+    int32_t saved_stdin_descriptor;
+    int32_t saved_stdout_descriptor;
+    int32_t saved_stderr_descriptor;
+    int32_t null_descriptor;
     int32_t result;
 
+    saved_stdin_descriptor = dup(STDIN_FILENO);
+    saved_stdout_descriptor = dup(STDOUT_FILENO);
+    saved_stderr_descriptor = dup(STDERR_FILENO);
+    null_descriptor = open("/dev/null", O_WRONLY);
+    if (saved_stdout_descriptor >= 0 && null_descriptor >= 0)
+        (void)dup2(null_descriptor, STDOUT_FILENO);
+    if (saved_stderr_descriptor >= 0 && null_descriptor >= 0)
+        (void)dup2(null_descriptor, STDERR_FILENO);
+    if (null_descriptor >= 0)
+        (void)close(null_descriptor);
     try
     {
         result = test->func();
@@ -131,7 +147,7 @@ static int32_t execute_test_function(const s_test_case *test)
                 test->name, exception.what());
             fclose(log_file);
         }
-        return (0);
+        result = 0;
     }
     catch (...)
     {
@@ -144,7 +160,22 @@ static int32_t execute_test_function(const s_test_case *test)
                 test->name);
             fclose(log_file);
         }
-        return (0);
+        result = 0;
+    }
+    if (saved_stdin_descriptor >= 0)
+    {
+        (void)dup2(saved_stdin_descriptor, STDIN_FILENO);
+        (void)close(saved_stdin_descriptor);
+    }
+    if (saved_stdout_descriptor >= 0)
+    {
+        (void)dup2(saved_stdout_descriptor, STDOUT_FILENO);
+        (void)close(saved_stdout_descriptor);
+    }
+    if (saved_stderr_descriptor >= 0)
+    {
+        (void)dup2(saved_stderr_descriptor, STDERR_FILENO);
+        (void)close(saved_stderr_descriptor);
     }
     return (result);
 }
@@ -184,6 +215,9 @@ void ft_test_fail(const char *expression, const char *file, int32_t line)
 int32_t ft_run_registered_tests(void)
 {
     FILE *log_file;
+    int32_t baseline_stdin_descriptor;
+    int32_t baseline_stdout_descriptor;
+    int32_t baseline_stderr_descriptor;
     int32_t index;
     int32_t passed;
     s_test_case *tests;
@@ -197,6 +231,9 @@ int32_t ft_run_registered_tests(void)
     sort_tests();
     tests = get_tests();
     test_count = get_test_count();
+    baseline_stdin_descriptor = dup(STDIN_FILENO);
+    baseline_stdout_descriptor = dup(STDOUT_FILENO);
+    baseline_stderr_descriptor = dup(STDERR_FILENO);
     total_tests = *test_count;
     selected_tests = 0;
     index = 0;
@@ -208,23 +245,35 @@ int32_t ft_run_registered_tests(void)
             index++;
             continue ;
         }
+        if (baseline_stdin_descriptor >= 0)
+            (void)dup2(baseline_stdin_descriptor, STDIN_FILENO);
+        if (baseline_stdout_descriptor >= 0)
+            (void)dup2(baseline_stdout_descriptor, STDOUT_FILENO);
+        if (baseline_stderr_descriptor >= 0)
+            (void)dup2(baseline_stderr_descriptor, STDERR_FILENO);
         selected_tests++;
         printf("Running test %d \"%s\"", selected_tests,
             tests[index].description);
         fflush(stdout);
         if (execute_test_function(&tests[index]))
         {
-            printf("\r\033[2KOK %d %s\n", selected_tests, tests[index].description);
+            printf("\r\033[2K\033[32mSUCCESS\033[0m %d %s\n", selected_tests, tests[index].description);
             fflush(stdout);
             passed++;
         }
         else
         {
-            printf("\r\033[2KKO %d %s\n", selected_tests, tests[index].description);
+            printf("\r\033[2K\033[31mFAIL\033[0m %d %s\n", selected_tests, tests[index].description);
             fflush(stdout);
         }
         index++;
     }
+    if (baseline_stdin_descriptor >= 0)
+        (void)close(baseline_stdin_descriptor);
+    if (baseline_stdout_descriptor >= 0)
+        (void)close(baseline_stdout_descriptor);
+    if (baseline_stderr_descriptor >= 0)
+        (void)close(baseline_stderr_descriptor);
     if (selected_tests == 0)
     {
         printf("0/0 tests passed\n");

@@ -29,6 +29,7 @@ FT_TEST(test_astar_blocked)
     grid.set(1, 0, 0, 1);
     grid.set(0, 1, 0, 1);
     game_pathfinding finder;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, finder.initialize());
     ft_vector<game_path_step> path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, path.initialize());
     FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, finder.astar_grid(grid, 0, 0, 0, 1, 1, 0, path));
@@ -47,6 +48,7 @@ FT_TEST(test_dijkstra_simple)
     graph.add_edge(1, 2);
     graph.add_edge(2, 3);
     game_pathfinding finder;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, finder.initialize());
     ft_vector<size_t> path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, path.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, finder.dijkstra_graph(graph, 0, 3, path));

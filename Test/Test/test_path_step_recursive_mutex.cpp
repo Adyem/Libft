@@ -19,6 +19,7 @@ FT_TEST(test_path_step_recursive_mutex_reentrant_lock)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     if (game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
     {
         test_failed = 1;
@@ -73,6 +74,7 @@ FT_TEST(test_path_step_recursive_mutex_release_depth)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     if (game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
     {
         test_failed = 1;
@@ -128,6 +130,7 @@ FT_TEST(test_path_step_recursive_mutex_accessors_while_locked)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     if (game_path_step_test_helper::lock(step) != FT_ERR_SUCCESS)
     {
         test_failed = 1;
@@ -182,6 +185,8 @@ FT_TEST(test_path_step_recursive_mutex_initialize_copy_unlocks)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize());
     if (game_path_step_test_helper::is_locked(step))
     {
         test_failed = 1;
@@ -212,6 +217,7 @@ FT_TEST(test_path_step_recursive_mutex_set_coordinates_unlocks)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     if (step.set_coordinates(1, 2, 3) != FT_ERR_SUCCESS)
     {
         test_failed = 1;
@@ -242,6 +248,7 @@ FT_TEST(test_path_step_recursive_mutex_set_axis_unlocks)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     if (step.set_x(9) != FT_ERR_SUCCESS)
     {
         test_failed = 1;
@@ -297,6 +304,7 @@ FT_TEST(test_path_step_recursive_mutex_getters_unlock)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     value = step.get_x();
     if (step.get_error() != FT_ERR_SUCCESS)
     {
@@ -363,6 +371,7 @@ FT_TEST(test_path_step_recursive_mutex_get_error_unlocks)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     if (step.get_error() != FT_ERR_SUCCESS)
     {
         test_failed = 1;
@@ -394,6 +403,8 @@ FT_TEST(test_path_step_recursive_mutex_assignment_unlocks)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(step));
     if (target.get_error() != FT_ERR_SUCCESS)
     {
@@ -432,6 +443,8 @@ FT_TEST(test_path_step_recursive_mutex_move_assignment_unlocks)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(ft_move(source)));
     if (target.get_error() != FT_ERR_SUCCESS)
     {
@@ -470,6 +483,7 @@ FT_TEST(test_path_step_recursive_mutex_get_error_str_unlocks)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     message = step.get_error_str();
     if (message == ft_nullptr)
     {
@@ -501,6 +515,7 @@ FT_TEST(test_path_step_recursive_mutex_owned_state)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, step.initialize());
     if (game_path_step_test_helper::is_owned_by_thread(step, THREAD_ID))
     {
         test_failed = 1;

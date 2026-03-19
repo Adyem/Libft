@@ -119,7 +119,14 @@ static void *pathfinding_recalc_task(void *argument)
     while (index < arguments->iterations)
     {
         ft_vector<game_path_step> thread_path;
+        int thread_path_initialize_result;
 
+        thread_path_initialize_result = thread_path.initialize();
+        if (thread_path_initialize_result != FT_ERR_SUCCESS)
+        {
+            arguments->result_code = thread_path_initialize_result;
+            return (ft_nullptr);
+        }
         arguments->result_code = arguments->finder_pointer->recalculate_path(
                 *arguments->grid_pointer,
                 0, 0, 0,
@@ -146,9 +153,16 @@ static void *pathfinding_read_task(void *argument)
     while (index < arguments->iterations)
     {
         ft_vector<game_path_step> thread_path;
+        int thread_path_initialize_result;
         int result_code;
         size_t path_index;
 
+        thread_path_initialize_result = thread_path.initialize();
+        if (thread_path_initialize_result != FT_ERR_SUCCESS)
+        {
+            arguments->result_code = thread_path_initialize_result;
+            return (ft_nullptr);
+        }
         result_code = arguments->finder_pointer->astar_grid(*arguments->grid_pointer,
                 0, 0, 0,
                 4, 4, 0,
@@ -413,6 +427,9 @@ FT_TEST(test_pathfinding_thread_safety)
     grid_pointer = new game_map3d();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, grid_pointer->initialize(5, 5, 1, 0));
     primary_finder = new game_pathfinding();
+    FT_ASSERT(primary_finder != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_finder->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, seed_path.initialize());
     recalc_arguments = new pathfinding_recalc_args();
     read_arguments = new pathfinding_read_args();
     if (primary_finder->recalculate_path(*grid_pointer, 0, 0, 0, 4, 4, 0, seed_path)
@@ -460,6 +477,16 @@ FT_TEST(test_pathfinding_thread_safety)
     while (index < 128 && test_failed == 0)
     {
         ft_vector<game_path_step> scratch_path;
+        int scratch_path_initialize_result;
+
+        scratch_path_initialize_result = scratch_path.initialize();
+        if (scratch_path_initialize_result != FT_ERR_SUCCESS)
+        {
+            test_failed = 1;
+            failure_expression = "scratch_path_initialize_result == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+            break;
+        }
         int recalculation_result = primary_finder->recalculate_path(*grid_pointer,
                 0, 0, 0, 0, 0, 0, scratch_path);
         if (recalculation_result != FT_ERR_SUCCESS)

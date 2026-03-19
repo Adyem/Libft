@@ -630,6 +630,9 @@ int ft_task_scheduler::initialize(size_t thread_count)
     size_t index;
     unsigned int cpu_count;
     bool worker_failure;
+    int queue_initialize_error;
+    int workers_initialize_error;
+    int scheduled_initialize_error;
 
     if (this->_initialised_state == ft_task_scheduler::_state_initialised)
     {
@@ -676,6 +679,39 @@ int ft_task_scheduler::initialize(size_t thread_count)
         this->_running.store(false);
         return (FT_ERR_INVALID_STATE);
     }
+    queue_initialize_error = this->_queue.initialize();
+    if (queue_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_running.store(false);
+        (void)this->_worker_metrics_mutex.destroy();
+        (void)this->_queue_metrics_mutex.destroy();
+        (void)this->_scheduled_mutex.destroy();
+        this->_initialised_state = ft_task_scheduler::_state_destroyed;
+        return (queue_initialize_error);
+    }
+    workers_initialize_error = this->_workers.initialize();
+    if (workers_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_running.store(false);
+        (void)this->_queue.destroy();
+        (void)this->_worker_metrics_mutex.destroy();
+        (void)this->_queue_metrics_mutex.destroy();
+        (void)this->_scheduled_mutex.destroy();
+        this->_initialised_state = ft_task_scheduler::_state_destroyed;
+        return (workers_initialize_error);
+    }
+    scheduled_initialize_error = this->_scheduled.initialize();
+    if (scheduled_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_running.store(false);
+        (void)this->_workers.destroy();
+        (void)this->_queue.destroy();
+        (void)this->_worker_metrics_mutex.destroy();
+        (void)this->_queue_metrics_mutex.destroy();
+        (void)this->_scheduled_mutex.destroy();
+        this->_initialised_state = ft_task_scheduler::_state_destroyed;
+        return (scheduled_initialize_error);
+    }
     worker_failure = false;
     this->_workers.reserve(thread_count);
     {
@@ -685,6 +721,9 @@ int ft_task_scheduler::initialize(size_t thread_count)
         if (worker_reserve_error != FT_ERR_SUCCESS)
         {
             this->_running.store(false);
+            (void)this->_scheduled.destroy();
+            (void)this->_workers.destroy();
+            (void)this->_queue.destroy();
             (void)this->_worker_metrics_mutex.destroy();
             (void)this->_queue_metrics_mutex.destroy();
             (void)this->_scheduled_mutex.destroy();
@@ -755,6 +794,9 @@ int ft_task_scheduler::initialize(size_t thread_count)
         (void)this->_worker_metrics_mutex.destroy();
         (void)this->_queue_metrics_mutex.destroy();
         (void)this->_scheduled_mutex.destroy();
+        (void)this->_scheduled.destroy();
+        (void)this->_workers.destroy();
+        (void)this->_queue.destroy();
         this->_initialised_state = ft_task_scheduler::_state_destroyed;
         return (FT_ERR_INVALID_STATE);
     }
@@ -789,6 +831,9 @@ int ft_task_scheduler::initialize(size_t thread_count)
             (void)this->_worker_metrics_mutex.destroy();
             (void)this->_queue_metrics_mutex.destroy();
             (void)this->_scheduled_mutex.destroy();
+            (void)this->_scheduled.destroy();
+            (void)this->_workers.destroy();
+            (void)this->_queue.destroy();
             this->_initialised_state = ft_task_scheduler::_state_destroyed;
             return (timer_error);
         }
@@ -830,9 +875,12 @@ int ft_task_scheduler::destroy()
     if (this->_timer_thread.joinable())
         this->_timer_thread.join();
     this->teardown_thread_safety();
+    (void)this->_queue.destroy();
     (void)this->_worker_metrics_mutex.destroy();
     (void)this->_queue_metrics_mutex.destroy();
     (void)this->_scheduled_mutex.destroy();
+    (void)this->_scheduled.destroy();
+    (void)this->_workers.destroy();
     this->_initialised_state = ft_task_scheduler::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }

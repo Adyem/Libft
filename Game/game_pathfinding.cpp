@@ -519,13 +519,21 @@ game_pathfinding::~game_pathfinding()
 
 int32_t game_pathfinding::initialize() noexcept
 {
+    int32_t path_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "game_pathfinding::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_needs_replan = FT_FALSE;
-    this->_current_path.clear();
+    path_initialize_error = this->_current_path.initialize();
+    if (path_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(path_initialize_error);
+        return (path_initialize_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -534,18 +542,25 @@ int32_t game_pathfinding::initialize() noexcept
 int32_t game_pathfinding::destroy() noexcept
 {
     int32_t disable_error;
+    int32_t path_destroy_error;
+    int32_t first_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    first_error = FT_ERR_SUCCESS;
     disable_error = this->disable_thread_safety();
-    this->_current_path.clear();
+    if (disable_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = disable_error;
+    path_destroy_error = this->_current_path.destroy();
+    if (path_destroy_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = path_destroy_error;
     this->_needs_replan = FT_FALSE;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    this->set_error(disable_error);
-    return (disable_error);
+    this->set_error(first_error);
+    return (first_error);
 }
 
 int32_t game_pathfinding::move(game_pathfinding &other) noexcept

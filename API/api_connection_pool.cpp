@@ -288,10 +288,7 @@ static void api_connection_pool_record_dispose_snapshot(
         socket_open_flag = 1;
     ft_log_debug(
         "api_connection_pool_dispose_entry snapshot cleanup_allowed=%d socket_open=%d socket_error=%d client_count=%llu",
-        cleanup_allowed_flag,
-        socket_open_flag,
-        socket_error,
-        static_cast<uint64_t>(client_count));
+        cleanup_allowed_flag, socket_open_flag, socket_error, client_count);
     return ;
 }
 

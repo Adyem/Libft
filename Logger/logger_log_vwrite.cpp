@@ -128,6 +128,9 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
     va_list args_copy;
     int32_t formatted_length;
     ft_size_t entry_index;
+    int32_t redaction_snapshot_initialize_error;
+    int32_t context_fragment_initialize_error;
+    int32_t final_message_initialize_error;
 
     if (!format_string)
         return ;
@@ -140,6 +143,15 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
     if (formatted_length < 0)
         return ;
     if (message_text.initialize(message_buffer) != FT_ERR_SUCCESS)
+        return ;
+    context_fragment_initialize_error = context_fragment.initialize();
+    if (context_fragment_initialize_error != FT_ERR_SUCCESS)
+        return ;
+    final_message_initialize_error = final_message.initialize();
+    if (final_message_initialize_error != FT_ERR_SUCCESS)
+        return ;
+    redaction_snapshot_initialize_error = redaction_snapshot.initialize();
+    if (redaction_snapshot_initialize_error != FT_ERR_SUCCESS)
         return ;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return ;

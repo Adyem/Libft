@@ -60,13 +60,20 @@ ft_dom_validation_report::ft_dom_validation_report(
 
 int32_t ft_dom_validation_report::initialize() noexcept
 {
+    int32_t member_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_dom_validation_report::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_valid = true;
-    this->_errors.clear();
+    member_initialize_error = this->_errors.initialize();
+    if (member_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (member_initialize_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }

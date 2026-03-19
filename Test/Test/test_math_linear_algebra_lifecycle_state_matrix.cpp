@@ -1,8 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
-#include <sys/wait.h>
-#include <unistd.h>
 #include <csignal>
 
 #ifndef LIBFT_TEST_BUILD
@@ -10,23 +8,7 @@
 
 static int math_expect_sigabrt_state_matrix(void (*operation)())
 {
-    pid_t child_process_id;
-    int child_status;
-
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        operation();
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (!WIFSIGNALED(child_status))
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    return (test_expect_sigabrt_signal(operation));
 }
 
 static void vector2_destroyed_get_x_aborts()

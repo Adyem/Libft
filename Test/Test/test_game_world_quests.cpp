@@ -99,11 +99,15 @@ FT_TEST(test_game_quest_reward_items_accept_valid_entries)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rewards.initialize());
     FT_ASSERT_EQ(true, potion.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, potion->initialize());
     potion->set_item_id(7);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, potion->get_error());
     potion->set_stack_size(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, potion->get_error());
     rewards.push_back(potion);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rewards.get_error());
     quest.set_reward_items(rewards);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     FT_ASSERT_EQ(1u, quest.get_reward_items().size());

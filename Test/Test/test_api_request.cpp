@@ -279,40 +279,6 @@ static std::atomic<int> g_api_request_stream_chunked_server_start_error(FT_ERR_S
 static std::atomic<bool> g_api_request_send_failure_server_ready(false);
 static std::atomic<int> g_api_request_send_failure_server_start_error(FT_ERR_SUCCESS);
 
-static void api_request_log_async_transfer_stats(void)
-{
-    size_t request_size;
-    size_t bytes_sent;
-    size_t bytes_received;
-    int send_state;
-    int send_timeout;
-    int receive_state;
-    int receive_timeout;
-    size_t server_bytes_received;
-    bool server_header_complete;
-    const char *server_header_status;
-    int server_last_recv_result;
-    int server_last_errno;
-
-    request_size = api_debug_get_last_async_request_size();
-    bytes_sent = api_debug_get_last_async_bytes_sent();
-    bytes_received = api_debug_get_last_async_bytes_received();
-    send_state = api_debug_get_last_async_send_state();
-    send_timeout = api_debug_get_last_async_send_timeout();
-    receive_state = api_debug_get_last_async_receive_state();
-    receive_timeout = api_debug_get_last_async_receive_timeout();
-    server_bytes_received = g_api_async_retry_server_bytes_received.load();
-    server_header_complete = g_api_async_retry_server_header_complete.load();
-    server_last_recv_result = g_api_async_retry_server_last_recv_result.load();
-    server_last_errno = g_api_async_retry_server_last_errno.load();
-    server_header_status = "incomplete";
-    if (server_header_complete)
-        server_header_status = "complete";
-    pf_printf("[test639-debug] request_size=%zu bytes_sent=%zu send_state=%d send_timeout=%d bytes_received=%zu receive_state=%d receive_timeout=%d server_bytes=%zu server_header=%s server_recv_result=%d server_errno=%d\n",
-              request_size, bytes_sent, send_state, send_timeout, bytes_received, receive_state, receive_timeout, server_bytes_received,
-              server_header_status, server_last_recv_result, server_last_errno);
-    return ;
-}
 
 static void api_request_send_failure_server(void);
 
@@ -1549,7 +1515,6 @@ FT_TEST(test_api_request_async_large_send_retries_do_not_timeout)
     cma_free(headers);
     if (!async_result)
     {
-        api_request_log_async_transfer_stats();
         server_thread.join();
         return (0);
     }
@@ -1561,27 +1526,22 @@ FT_TEST(test_api_request_async_large_send_retries_do_not_timeout)
     }
     if (!callback_completed.load())
     {
-        api_request_log_async_transfer_stats();
         server_thread.join();
         return (0);
     }
     server_thread.join();
-    api_request_log_async_transfer_stats();
     if (callback_status.load() != 200)
     {
-        api_request_log_async_transfer_stats();
         return (0);
     }
     body_result = callback_body.load();
     if (!body_result)
     {
-        api_request_log_async_transfer_stats();
         return (0);
     }
     if (ft_strncmp(body_result, "OK", 2) != 0)
     {
         cma_free(body_result);
-        api_request_log_async_transfer_stats();
         return (0);
     }
     cma_free(body_result);

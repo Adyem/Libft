@@ -47,6 +47,10 @@ FT_TEST(test_websocket_server_thread_safe_error_queries)
     context.server = &server;
     context.result = -1;
     context.client_fd = -1;
+    if (context.message.initialize() != 0)
+        return (0);
+    if (message.initialize() != 0)
+        return (0);
     server_thread = ft_thread(websocket_server_run_once, &context);
     if (!server_thread.joinable())
         return (0);

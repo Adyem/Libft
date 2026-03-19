@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <ctime>
+#include <mutex>
 
 class pt_mutex;
 
@@ -24,7 +25,9 @@ class pt_condition_variable
         bool _condition_initialised;
         bool _mutex_initialised;
         mutable pt_mutex *_state_mutex;
+        mutable std::mutex _initialization_mutex;
 
+        int ensure_native_sync_objects();
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();

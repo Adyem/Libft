@@ -32,14 +32,27 @@ static void initialize_simple_dom_document(ft_dom_document &document)
     ft_dom_node *root_node;
     ft_dom_node *child_node;
 
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return ;
     root_node = new(std::nothrow) ft_dom_node();
     if (!root_node)
         return ;
+    if (root_node->initialize() != FT_ERR_SUCCESS)
+    {
+        delete root_node;
+        return ;
+    }
     root_node->set_type(FT_DOM_NODE_OBJECT);
     root_node->set_name("root");
     child_node = new(std::nothrow) ft_dom_node();
     if (!child_node)
     {
+        delete root_node;
+        return ;
+    }
+    if (child_node->initialize() != FT_ERR_SUCCESS)
+    {
+        delete child_node;
         delete root_node;
         return ;
     }
@@ -92,6 +105,8 @@ FT_TEST(test_dom_schema_reports_missing_required_nodes)
     ft_dom_validation_report report;
 
     initialize_simple_dom_document(document);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, schema.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, report.initialize());
     ft_string child_rule;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, child_rule.initialize("child"));
     ft_string missing_rule;
@@ -118,6 +133,8 @@ FT_TEST(test_dom_schema_reports_type_mismatches)
     ft_dom_node *child_node;
 
     initialize_simple_dom_document(document);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, schema.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, report.initialize());
     root_node = document.get_root();
     FT_ASSERT(root_node != ft_nullptr);
     children_pointer = &root_node->get_children();
@@ -147,6 +164,7 @@ FT_TEST(test_json_dom_bridge_round_trip)
     json_item *big_number_item;
     ft_big_number big_number_value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_document.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, big_number_value.initialize());
     settings_group = source_document.create_group("settings");
     FT_ASSERT(settings_group != ft_nullptr);
@@ -163,6 +181,7 @@ FT_TEST(test_json_dom_bridge_round_trip)
     source_document.add_item(settings_group, big_number_item);
 
     ft_dom_document dom_document;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dom_document.initialize());
     FT_ASSERT_EQ(0, json_document_to_dom(source_document, dom_document));
     ft_dom_node *dom_root = dom_document.get_root();
     FT_ASSERT(dom_root != ft_nullptr);
@@ -201,6 +220,7 @@ FT_TEST(test_json_dom_bridge_round_trip)
     FT_ASSERT(found_big_number);
 
     json_document round_trip_document;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_document.initialize());
     FT_ASSERT_EQ(0, json_document_from_dom(dom_document, round_trip_document));
     json_group *round_trip_group = round_trip_document.find_group("settings");
     FT_ASSERT(round_trip_group != ft_nullptr);
@@ -221,9 +241,12 @@ FT_TEST(test_json_dom_bridge_rejects_non_object_root)
     ft_dom_node *root_node;
     json_document document;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dom_document.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.initialize());
     root_node = new(std::nothrow) ft_dom_node();
     if (!root_node)
         return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, root_node->initialize());
     root_node->set_type(FT_DOM_NODE_VALUE);
     if (root_node->set_name("root") != 0)
     {
@@ -243,9 +266,13 @@ FT_TEST(test_json_dom_bridge_rejects_non_object_root)
 FT_TEST(test_xml_dom_bridge_round_trip)
 {
     xml_document source_document;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_document.load_from_string("<root attr=\"value\"><child>text</child></root>"));
     ft_dom_document dom_document;
+    xml_document round_trip_document;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_document.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dom_document.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_document.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_document.load_from_string("<root attr=\"value\"><child>text</child></root>"));
     FT_ASSERT_EQ(0, xml_document_to_dom(source_document, dom_document));
     ft_dom_node *dom_root = dom_document.get_root();
     FT_ASSERT(dom_root != ft_nullptr);
@@ -261,7 +288,6 @@ FT_TEST(test_xml_dom_bridge_round_trip)
     FT_ASSERT(std::string(child_node->get_name().c_str()) == "child");
     FT_ASSERT(std::string(child_node->get_value().c_str()) == "text");
 
-    xml_document round_trip_document;
     FT_ASSERT_EQ(0, xml_document_from_dom(dom_document, round_trip_document));
     char *serialized = round_trip_document.write_to_string();
     FT_ASSERT(serialized != ft_nullptr);
@@ -291,6 +317,7 @@ FT_TEST(test_yaml_dom_bridge_round_trip)
     yaml_value *round_trip_first_value;
     yaml_value *round_trip_second_value;
     ft_string items_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dom_document.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, items_key.initialize("items"));
 
     root_guard.reset(new (std::nothrow) yaml_value());

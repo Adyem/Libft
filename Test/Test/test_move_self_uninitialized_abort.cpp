@@ -6,9 +6,7 @@
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
-#include <sys/wait.h>
 #include <type_traits>
-#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -17,23 +15,7 @@ typedef ft_unordered_map<int, int> unordered_map_int_int;
 
 static int expect_sigabrt_for_void_operation(void (*operation)(void))
 {
-    pid_t child_process_id;
-    int child_status;
-
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        operation();
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    return (test_expect_sigabrt_signal(operation));
 }
 
 static void string_uninitialised_self_move_assignment_operation(void)

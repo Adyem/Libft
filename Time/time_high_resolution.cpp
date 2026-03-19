@@ -28,7 +28,7 @@ ft_bool    time_high_resolution_now(t_high_resolution_time_point *time_point)
         (void)(error_code);
         return (FT_FALSE);
     }
-    time_point->nanoseconds = static_cast<int64_t>(nanoseconds);
+    time_point->nanoseconds = nanoseconds;
     (void)(FT_ERR_SUCCESS);
     return (FT_TRUE);
 }

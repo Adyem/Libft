@@ -93,14 +93,14 @@ void json_item_refresh_numeric_state(json_item *item)
             }
             else
             {
-                allocated_number->assign(item->value);
-                if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+                result_code = allocated_number->initialize();
+                if (result_code != FT_ERR_SUCCESS)
                 {
-                    result_code = ft_big_number::get_error();
                     delete allocated_number;
                 }
                 else
                 {
+                    allocated_number->assign(item->value);
                     item->big_number = allocated_number;
                     item->is_big_number = FT_TRUE;
                 }

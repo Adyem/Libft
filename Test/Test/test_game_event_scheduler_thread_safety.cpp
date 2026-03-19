@@ -54,9 +54,9 @@ static void *scheduler_schedule_task(void *argument)
 
 FT_TEST(test_game_event_scheduler_concurrent_schedule)
 {
-    game_event_scheduler scheduler_instance;
-    pthread_t threads[4];
-    scheduler_schedule_args arguments[4];
+    game_event_scheduler *scheduler_instance;
+    pthread_t *threads;
+    scheduler_schedule_args *arguments;
     int thread_index;
     int create_result;
     int join_result;
@@ -69,6 +69,7 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     int test_failed;
     const char *failure_expression;
     int failure_line;
+    long join_timeout_ms;
 
     events_per_thread = 32;
     expected_total = 4 * events_per_thread;
@@ -76,14 +77,21 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.enable_thread_safety());
+    join_timeout_ms = 30000;
+    scheduler_instance = new (std::nothrow) game_event_scheduler();
+    FT_ASSERT(scheduler_instance != ft_nullptr);
+    threads = new (std::nothrow) pthread_t[4];
+    FT_ASSERT(threads != ft_nullptr);
+    arguments = new (std::nothrow) scheduler_schedule_args[4];
+    FT_ASSERT(arguments != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, identifier_counts.initialize());
     thread_index = 0;
     while (thread_index < 4)
     {
-        arguments[thread_index].scheduler_pointer = &scheduler_instance;
+        arguments[thread_index].scheduler_pointer = scheduler_instance;
         arguments[thread_index].thread_index = thread_index;
         arguments[thread_index].events_per_thread = events_per_thread;
         arguments[thread_index].result_code = FT_ERR_SUCCESS;
@@ -107,7 +115,7 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     thread_index = 0;
     while (thread_index < created_thread_count)
     {
-        join_result = pt_thread_join(threads[thread_index], ft_nullptr);
+        join_result = pt_thread_timed_join(threads[thread_index], ft_nullptr, join_timeout_ms);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -130,8 +138,8 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
-    FT_ASSERT_EQ(static_cast<size_t>(expected_total), scheduler_instance.size());
-    scheduler_instance.dump_events(events);
+    FT_ASSERT_EQ(static_cast<size_t>(expected_total), scheduler_instance->size());
+    scheduler_instance->dump_events(events);
     FT_ASSERT_EQ(static_cast<size_t>(expected_total), events.size());
     identifier_counts.resize(expected_total, 0);
     event_index = 0;
@@ -183,9 +191,9 @@ static void *scheduler_reschedule_task(void *argument)
 
 FT_TEST(test_game_event_scheduler_concurrent_reschedule)
 {
-    game_event_scheduler scheduler_instance;
-    pthread_t threads[3];
-    scheduler_reschedule_args arguments[3];
+    game_event_scheduler *scheduler_instance;
+    pthread_t *threads;
+    scheduler_reschedule_args *arguments;
     int preload_index;
     int create_result;
     int join_result;
@@ -196,9 +204,17 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
     int test_failed;
     const char *failure_expression;
     int failure_line;
+    long join_timeout_ms;
 
     iteration_count = 64;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
+    join_timeout_ms = 30000;
+    scheduler_instance = new (std::nothrow) game_event_scheduler();
+    FT_ASSERT(scheduler_instance != ft_nullptr);
+    threads = new (std::nothrow) pthread_t[3];
+    FT_ASSERT(threads != ft_nullptr);
+    arguments = new (std::nothrow) scheduler_reschedule_args[3];
+    FT_ASSERT(arguments != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
     preload_index = 0;
     while (preload_index < 3)
@@ -209,18 +225,18 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
         FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance->initialize());
         event_instance->set_id(preload_index);
         event_instance->set_duration(1);
-        scheduler_instance.schedule_event(event_instance);
+        scheduler_instance->schedule_event(event_instance);
         preload_index += 1;
     }
     created_thread_count = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->enable_thread_safety());
     preload_index = 0;
     while (preload_index < 3)
     {
-        arguments[preload_index].scheduler_pointer = &scheduler_instance;
+        arguments[preload_index].scheduler_pointer = scheduler_instance;
         arguments[preload_index].event_identifier = preload_index;
         arguments[preload_index].iteration_count = iteration_count;
         if (test_failed == 0)
@@ -243,7 +259,7 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
     preload_index = 0;
     while (preload_index < created_thread_count)
     {
-        join_result = pt_thread_join(threads[preload_index], ft_nullptr);
+        join_result = pt_thread_timed_join(threads[preload_index], ft_nullptr, join_timeout_ms);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -257,7 +273,7 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
-    scheduler_instance.dump_events(events);
+    scheduler_instance->dump_events(events);
     FT_ASSERT_EQ(static_cast<size_t>(3), events.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, final_durations.initialize());
     final_durations.resize(3, 0);

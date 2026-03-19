@@ -42,10 +42,17 @@ static int32_t yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node
 
             child_value = list[index];
             ft_dom_node *child_node;
+            int32_t child_initialize_error;
 
             child_node = new(std::nothrow) ft_dom_node();
             if (!child_node)
                 return (FT_ERR_NO_MEMORY);
+            child_initialize_error = child_node->initialize();
+            if (child_initialize_error != FT_ERR_SUCCESS)
+            {
+                yaml_dom_delete_node(child_node);
+                return (child_initialize_error);
+            }
             if (child_node->set_name("item") != 0)
             {
                 yaml_dom_delete_node(child_node);
@@ -90,10 +97,17 @@ static int32_t yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node
 
             child_value = map_reference.at(key);
             ft_dom_node *child_node;
+            int32_t child_initialize_error;
 
             child_node = new(std::nothrow) ft_dom_node();
             if (!child_node)
                 return (FT_ERR_NO_MEMORY);
+            child_initialize_error = child_node->initialize();
+            if (child_initialize_error != FT_ERR_SUCCESS)
+            {
+                yaml_dom_delete_node(child_node);
+                return (child_initialize_error);
+            }
             if (child_node->set_name(key_cstr) != 0)
             {
                 yaml_dom_delete_node(child_node);
@@ -125,10 +139,17 @@ int32_t yaml_value_to_dom(const yaml_value *value, ft_dom_document &dom) noexcep
         return (FT_ERR_INVALID_ARGUMENT);
     dom.clear();
     ft_dom_node *root_node;
+    int32_t root_initialize_error;
 
     root_node = new(std::nothrow) ft_dom_node();
     if (!root_node)
         return (FT_ERR_NO_MEMORY);
+    root_initialize_error = root_node->initialize();
+    if (root_initialize_error != FT_ERR_SUCCESS)
+    {
+        yaml_dom_delete_node(root_node);
+        return (root_initialize_error);
+    }
     if (root_node->set_name("yaml") != 0)
     {
         yaml_dom_delete_node(root_node);

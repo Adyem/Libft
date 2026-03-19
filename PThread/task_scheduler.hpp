@@ -40,6 +40,7 @@ class ft_blocking_queue
         pt_mutex _mutex;
         pt_condition_variable _condition;
         bool _shutdown;
+        uint8_t _initialised_state;
         ft_queue<ElementType> _storage;
         mutable pt_mutex *_state_mutex;
         int lock_internal(bool *lock_acquired) const;
@@ -53,6 +54,8 @@ class ft_blocking_queue
         ft_blocking_queue(const ft_blocking_queue&) = delete;
         ft_blocking_queue &operator=(const ft_blocking_queue&) = delete;
 
+        int initialize();
+        int destroy();
         int enable_thread_safety();
         int disable_thread_safety();
         bool is_thread_safe() const;
@@ -259,7 +262,9 @@ class ft_task_scheduler
 
 template <typename ElementType>
 ft_blocking_queue<ElementType>::ft_blocking_queue()
-    : _mutex(), _condition(), _shutdown(false), _storage(), _state_mutex(ft_nullptr)
+    : _mutex(), _condition(), _shutdown(false),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      _storage(), _state_mutex(ft_nullptr)
 {
     return ;
 }
@@ -267,9 +272,70 @@ ft_blocking_queue<ElementType>::ft_blocking_queue()
 template <typename ElementType>
 ft_blocking_queue<ElementType>::~ft_blocking_queue()
 {
+    (void)this->destroy();
+    return ;
+}
+
+template <typename ElementType>
+int ft_blocking_queue<ElementType>::initialize()
+{
+    int mutex_initialize_error;
+    int storage_initialize_error;
+    int condition_enable_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_STATE);
+    this->_shutdown = false;
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (mutex_initialize_error);
+    }
+    storage_initialize_error = this->_storage.initialize();
+    if (storage_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (storage_initialize_error);
+    }
+    condition_enable_error = this->_condition.enable_thread_safety();
+    if (condition_enable_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_storage.destroy();
+        (void)this->_mutex.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (condition_enable_error);
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+template <typename ElementType>
+int ft_blocking_queue<ElementType>::destroy()
+{
+    int first_error;
+    int storage_destroy_error;
+    int condition_disable_error;
+    int mutex_destroy_error;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    first_error = FT_ERR_SUCCESS;
     this->shutdown();
     this->teardown_thread_safety();
-    return ;
+    storage_destroy_error = this->_storage.destroy();
+    if (first_error == FT_ERR_SUCCESS && storage_destroy_error != FT_ERR_SUCCESS)
+        first_error = storage_destroy_error;
+    condition_disable_error = this->_condition.disable_thread_safety();
+    if (first_error == FT_ERR_SUCCESS && condition_disable_error != FT_ERR_SUCCESS)
+        first_error = condition_disable_error;
+    mutex_destroy_error = this->_mutex.destroy();
+    if (first_error == FT_ERR_SUCCESS && mutex_destroy_error != FT_ERR_SUCCESS)
+        first_error = mutex_destroy_error;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (first_error);
 }
 
 template <typename ElementType>
@@ -414,6 +480,8 @@ int ft_blocking_queue<ElementType>::push(ElementType &&value)
     bool state_lock_acquired;
     int state_lock_error;
 
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_STATE);
     state_lock_acquired = false;
     state_lock_error = this->lock_internal(&state_lock_acquired);
     if (state_lock_error != FT_ERR_SUCCESS)
@@ -466,6 +534,8 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
     ElementType value;
     bool state_lock_acquired;
 
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (false);
     state_lock_acquired = false;
     int state_lock_error = this->lock_internal(&state_lock_acquired);
     if (state_lock_error != FT_ERR_SUCCESS)
@@ -517,6 +587,8 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
     ElementType value;
     bool state_lock_acquired;
 
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (false);
     state_lock_acquired = false;
     int state_lock_error = this->lock_internal(&state_lock_acquired);
     if (state_lock_error != FT_ERR_SUCCESS)
@@ -583,6 +655,8 @@ void ft_blocking_queue<ElementType>::shutdown()
 {
     bool state_lock_acquired;
 
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return ;
     state_lock_acquired = false;
     int state_lock_error = this->lock_internal(&state_lock_acquired);
     if (state_lock_error != FT_ERR_SUCCESS)
@@ -619,7 +693,11 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
 
     promise_type *promise_raw;
     ft_sharedptr<promise_type> promise_shared;
+    int promise_shared_initialize_error;
 
+    promise_shared_initialize_error = promise_shared.initialize();
+    if (promise_shared_initialize_error != FT_ERR_SUCCESS)
+        return (ft_future<return_type>());
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
     {
@@ -709,7 +787,12 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     ft_scheduled_task_state *state_raw;
     ft_sharedptr<ft_scheduled_task_state> state_shared;
     ft_scheduled_task_handle handle_instance;
+    int shared_initialize_error;
+    int state_shared_initialize_error;
 
+    shared_initialize_error = promise_shared.initialize();
+    if (shared_initialize_error != FT_ERR_SUCCESS)
+        return (result_pair);
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
     {
@@ -741,6 +824,9 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         return (result_pair);
     }
+    state_shared_initialize_error = state_shared.initialize();
+    if (state_shared_initialize_error != FT_ERR_SUCCESS)
+        return (result_pair);
     state_shared.reset(state_raw, 1, false);
     int state_error = state_shared.get_error();
 
@@ -841,6 +927,7 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
     t_monotonic_time_point start_point;
     ft_scheduled_task_state *state_raw;
     ft_sharedptr<ft_scheduled_task_state> state_shared;
+    int state_shared_initialize_error;
 
     interval_duration = std::chrono::duration_cast<std::chrono::milliseconds>(interval);
     interval_milliseconds = interval_duration.count();
@@ -852,6 +939,9 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
     {
         return (handle_result);
     }
+    state_shared_initialize_error = state_shared.initialize();
+    if (state_shared_initialize_error != FT_ERR_SUCCESS)
+        return (handle_result);
     state_shared.reset(state_raw, 1, false);
     int state_error = state_shared.get_error();
 

@@ -117,8 +117,7 @@ static int32_t logger_prepare_rotation_internal(s_file_sink *sink,
             return (FT_ERR_INTERNAL);
         if (current_time >= file_stats.st_mtime)
         {
-            age_seconds = static_cast<int64_t>(current_time)
-                - static_cast<int64_t>(file_stats.st_mtime);
+            age_seconds = current_time - file_stats.st_mtime;
             if (age_seconds >= static_cast<int64_t>(sink->max_age_seconds))
                 *rotate_for_age = FT_TRUE;
         }

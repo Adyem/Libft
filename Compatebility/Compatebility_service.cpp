@@ -43,7 +43,7 @@ static void cmp_service_c_signal_dispatch(int signal_number)
 {
     if (g_cmp_service_signal_handler == ft_nullptr)
         return ;
-    g_cmp_service_signal_handler(static_cast<int32_t>(signal_number),
+    g_cmp_service_signal_handler(signal_number,
         g_cmp_service_signal_context);
     return ;
 }
@@ -61,7 +61,7 @@ static void cmp_service_signal_dispatch(int signal_number)
 {
     if (g_cmp_service_signal_handler == ft_nullptr)
         return ;
-    g_cmp_service_signal_handler(static_cast<int32_t>(signal_number),
+    g_cmp_service_signal_handler(signal_number,
         g_cmp_service_signal_context);
     return ;
 }

@@ -40,12 +40,19 @@ ft_dom_schema::~ft_dom_schema() noexcept
 
 int32_t ft_dom_schema::initialize() noexcept
 {
+    int32_t member_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_dom_schema::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_rules.clear();
+    member_initialize_error = this->_rules.initialize();
+    if (member_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (member_initialize_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }

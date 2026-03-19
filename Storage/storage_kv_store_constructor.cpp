@@ -273,6 +273,10 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
         return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
             encryption_key_initialised, FT_FALSE, member_error));
     replication_sinks_initialised = FT_TRUE;
+    member_error = ttl_metadata.initialize();
+    if (member_error != FT_ERR_SUCCESS)
+        return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
+            encryption_key_initialised, replication_sinks_initialised, member_error));
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->_data.clear();
     this->_file_path.clear();

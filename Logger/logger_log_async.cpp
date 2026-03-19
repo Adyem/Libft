@@ -31,7 +31,11 @@ static void ft_log_process_message(const ft_string &message)
     ft_size_t sink_count;
     ft_vector<s_log_sink> sinks_snapshot;
     int32_t    lock_error;
+    int32_t    snapshot_initialize_error;
 
+    snapshot_initialize_error = sinks_snapshot.initialize();
+    if (snapshot_initialize_error != FT_ERR_SUCCESS)
+        return ;
     lock_error = logger_lock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -230,6 +234,9 @@ void ft_log_enqueue(t_log_level level, const char *format_string, va_list argume
     va_list args_copy;
     int32_t lock_error;
     int32_t redaction_error;
+    int32_t redaction_snapshot_initialize_error;
+    int32_t context_fragment_initialize_error;
+    int32_t final_message_initialize_error;
 
     if (!format_string)
     {
@@ -249,6 +256,17 @@ void ft_log_enqueue(t_log_level level, const char *format_string, va_list argume
         return ;
     }
     if (message_text.initialize(message_buffer) != FT_ERR_SUCCESS)
+    {
+        return ;
+    }
+    context_fragment_initialize_error = context_fragment.initialize();
+    if (context_fragment_initialize_error != FT_ERR_SUCCESS)
+        return ;
+    final_message_initialize_error = final_message.initialize();
+    if (final_message_initialize_error != FT_ERR_SUCCESS)
+        return ;
+    redaction_snapshot_initialize_error = redaction_snapshot.initialize();
+    if (redaction_snapshot_initialize_error != FT_ERR_SUCCESS)
     {
         return ;
     }

@@ -3,37 +3,49 @@
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../PThread/pthread.hpp"
 #include <atomic>
 #include <cmath>
 #include <chrono>
 #include <csignal>
 #include <limits>
-#include <sys/wait.h>
 #include <thread>
-#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
 static int geometry_expect_sigabrt(void (*operation)())
 {
-    pid_t child_process_id;
-    int child_status;
+    return (test_expect_sigabrt_signal(operation));
+}
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+struct sphere_move_bidirectional_worker_args
+{
+    sphere *source;
+    sphere *destination;
+    std::atomic<bool> *worker_failed;
+    int iteration_limit;
+};
+
+static void *sphere_move_bidirectional_worker(void *argument)
+{
+    sphere_move_bidirectional_worker_args *arguments;
+    int iteration_index;
+    int move_error;
+
+    arguments = static_cast<sphere_move_bidirectional_worker_args *>(argument);
+    if (arguments == ft_nullptr)
+        return (ft_nullptr);
+    iteration_index = 0;
+    while (iteration_index < arguments->iteration_limit
+        && arguments->worker_failed->load() == false)
     {
-        operation();
-        _exit(0);
+        move_error = arguments->source->move(*arguments->destination);
+        if (move_error != FT_ERR_SUCCESS)
+            arguments->worker_failed->store(true);
+        iteration_index = iteration_index + 1;
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    return (ft_nullptr);
 }
 
 static void sphere_initialize_twice_aborts_operation()
@@ -2407,50 +2419,64 @@ FT_TEST(test_intersect_sphere_high_load_separated_two_threads_soak_rounds)
 
 FT_TEST(test_sphere_move_bidirectional_high_load_soak_rounds)
 {
-    sphere first;
-    sphere second;
-    std::atomic<bool> worker_failed;
-    std::thread worker_thread;
+    sphere *first;
+    sphere *second;
+    std::atomic<bool> *worker_failed;
+    sphere_move_bidirectional_worker_args *thread_one_arguments;
+    sphere_move_bidirectional_worker_args *thread_two_arguments;
+    pthread_t thread_one;
+    pthread_t thread_two;
     int round_index;
-    int index;
-    int move_error;
+    int thread_create_result;
+    int thread_join_result;
+    long join_timeout_ms;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(0.0, 0.0, 0.0, 3.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(1.0, 1.0, 1.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
+    first = new (std::nothrow) sphere();
+    second = new (std::nothrow) sphere();
+    worker_failed = new (std::nothrow) std::atomic<bool>();
+    thread_one_arguments = new (std::nothrow) sphere_move_bidirectional_worker_args();
+    thread_two_arguments = new (std::nothrow) sphere_move_bidirectional_worker_args();
+    FT_ASSERT(first != ft_nullptr);
+    FT_ASSERT(second != ft_nullptr);
+    FT_ASSERT(worker_failed != ft_nullptr);
+    FT_ASSERT(thread_one_arguments != ft_nullptr);
+    FT_ASSERT(thread_two_arguments != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->initialize(0.0, 0.0, 0.0, 3.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->initialize(1.0, 1.0, 1.0, 4.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->enable_thread_safety());
+    join_timeout_ms = 10000;
     round_index = 0;
     while (round_index < 3)
     {
-        worker_failed.store(false);
-        worker_thread = std::thread([&first, &second, &worker_failed]() {
-            int iteration_index;
-            int local_move_error;
-
-            iteration_index = 0;
-            while (iteration_index < 2048 && worker_failed.load() == false)
-            {
-                local_move_error = first.move(second);
-                if (local_move_error != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                iteration_index = iteration_index + 1;
-            }
-            return ;
-        });
-        index = 0;
-        while (index < 2048 && worker_failed.load() == false)
-        {
-            move_error = second.move(first);
-            if (move_error != FT_ERR_SUCCESS)
-                worker_failed.store(true);
-            index = index + 1;
-        }
-        worker_thread.join();
-        FT_ASSERT_EQ(false, worker_failed.load());
+        worker_failed->store(false);
+        thread_one_arguments->source = first;
+        thread_one_arguments->destination = second;
+        thread_one_arguments->worker_failed = worker_failed;
+        thread_one_arguments->iteration_limit = 2048;
+        thread_two_arguments->source = second;
+        thread_two_arguments->destination = first;
+        thread_two_arguments->worker_failed = worker_failed;
+        thread_two_arguments->iteration_limit = 2048;
+        thread_create_result = pt_thread_create(&thread_one, ft_nullptr,
+                sphere_move_bidirectional_worker, thread_one_arguments);
+        FT_ASSERT_EQ(0, thread_create_result);
+        thread_create_result = pt_thread_create(&thread_two, ft_nullptr,
+                sphere_move_bidirectional_worker, thread_two_arguments);
+        FT_ASSERT_EQ(0, thread_create_result);
+        thread_join_result = pt_thread_timed_join(thread_one, ft_nullptr, join_timeout_ms);
+        if (thread_join_result != 0)
+            (void)pt_thread_detach(thread_one);
+        FT_ASSERT_EQ(0, thread_join_result);
+        thread_join_result = pt_thread_timed_join(thread_two, ft_nullptr, join_timeout_ms);
+        if (thread_join_result != 0)
+            (void)pt_thread_detach(thread_two);
+        FT_ASSERT_EQ(0, thread_join_result);
+        FT_ASSERT_EQ(false, worker_failed->load());
         round_index = round_index + 1;
     }
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.destroy());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->destroy());
     return (1);
 }
 

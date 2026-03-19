@@ -16,6 +16,8 @@ static void json_dom_delete_node(ft_dom_node *node) noexcept
 
 static int32_t json_dom_append_item(const json_item *item, ft_dom_node *group_node) noexcept
 {
+    int32_t node_initialize_error;
+
     if (!item || !group_node)
     {
         return (FT_ERR_INVALID_STATE);
@@ -26,6 +28,12 @@ static int32_t json_dom_append_item(const json_item *item, ft_dom_node *group_no
     if (!item_node)
     {
         return (FT_ERR_INVALID_STATE);
+    }
+    node_initialize_error = item_node->initialize();
+    if (node_initialize_error != FT_ERR_SUCCESS)
+    {
+        json_dom_delete_node(item_node);
+        return (node_initialize_error);
     }
     item_node->set_type(FT_DOM_NODE_VALUE);
     const char *item_key;
@@ -87,6 +95,8 @@ static int32_t json_dom_append_item(const json_item *item, ft_dom_node *group_no
 
 static int32_t json_dom_append_group(const json_group *group, ft_dom_node *root_node) noexcept
 {
+    int32_t node_initialize_error;
+
     if (!group || !root_node)
     {
         return (FT_ERR_INVALID_STATE);
@@ -97,6 +107,12 @@ static int32_t json_dom_append_group(const json_group *group, ft_dom_node *root_
     if (!group_node)
     {
         return (FT_ERR_INVALID_STATE);
+    }
+    node_initialize_error = group_node->initialize();
+    if (node_initialize_error != FT_ERR_SUCCESS)
+    {
+        json_dom_delete_node(group_node);
+        return (node_initialize_error);
     }
     group_node->set_type(FT_DOM_NODE_OBJECT);
     const char *group_name;
@@ -131,6 +147,8 @@ static int32_t json_dom_append_group(const json_group *group, ft_dom_node *root_
 
 int32_t json_document_to_dom(const json_document &document, ft_dom_document &dom) noexcept
 {
+    int32_t root_initialize_error;
+
     dom.clear();
     ft_dom_node *root_node;
 
@@ -138,6 +156,12 @@ int32_t json_document_to_dom(const json_document &document, ft_dom_document &dom
     if (!root_node)
     {
         return (FT_ERR_INVALID_STATE);
+    }
+    root_initialize_error = root_node->initialize();
+    if (root_initialize_error != FT_ERR_SUCCESS)
+    {
+        json_dom_delete_node(root_node);
+        return (root_initialize_error);
     }
     root_node->set_type(FT_DOM_NODE_OBJECT);
     if (root_node->set_name("json" ) != FT_ERR_SUCCESS)
@@ -201,7 +225,14 @@ static int32_t json_dom_apply_item(ft_dom_node *item_node, json_group *group, js
     {
         ft_big_number big_number_value;
         int32_t big_number_error;
+        int32_t big_number_initialize_error;
 
+        big_number_initialize_error = big_number_value.initialize();
+        if (big_number_initialize_error != FT_ERR_SUCCESS)
+        {
+            document.set_manual_error(big_number_initialize_error);
+            return (FT_ERR_INVALID_STATE);
+        }
         big_number_value.assign(item_value);
         big_number_error = ft_big_number::get_error();
         if (big_number_error != FT_ERR_SUCCESS)

@@ -1,8 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Template/queue.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
-#include <sys/wait.h>
-#include <unistd.h>
 #include <csignal>
 #include <cstring>
 
@@ -13,49 +11,12 @@ typedef ft_queue<int> queue_type;
 
 static int queue_expect_sigabrt(void (*operation)(void))
 {
-    pid_t child_process_id;
-    int child_status;
-
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        operation();
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    return (test_expect_sigabrt_signal(operation));
 }
 
 static int queue_expect_sigabrt_uninitialised(void (*operation)(queue_type &))
 {
-    pid_t child_process_id;
-    int child_status;
-
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        alignas(queue_type) unsigned char storage[sizeof(queue_type)];
-        queue_type *queue_pointer;
-
-        std::memset(storage, 0, sizeof(storage));
-        queue_pointer = reinterpret_cast<queue_type *>(storage);
-        operation(*queue_pointer);
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    return (test_expect_sigabrt_signal_uninitialised<queue_type>(operation));
 }
 
 static void queue_call_destructor_uninitialised(queue_type &queue_value)

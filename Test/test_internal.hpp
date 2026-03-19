@@ -5,4 +5,225 @@
 #define LIBFT_TEST_BUILD
 #endif
 
+#include <csetjmp>
+#include <cstddef>
+#include <cstdint>
+#include <csignal>
+#include <cstdio>
+#include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
+
+static thread_local sigjmp_buf g_test_abort_signal_jump_buffer __attribute__((unused));
+static volatile sig_atomic_t g_test_abort_signal_caught __attribute__((unused)) = 0;
+
+static void __attribute__((unused)) test_abort_signal_handler(int signal_value)
+{
+    g_test_abort_signal_caught = signal_value;
+    siglongjmp(g_test_abort_signal_jump_buffer, 1);
+}
+
+static int32_t __attribute__((unused)) test_output_contains_lifecycle_error(const char *output_buffer)
+{
+    if (output_buffer == nullptr)
+        return (0);
+    if (std::strstr(output_buffer, "lifecycle error:") != nullptr)
+        return (1);
+    if (std::strstr(output_buffer, "reason=") != nullptr)
+        return (1);
+    return (0);
+}
+
+static int32_t __attribute__((unused)) test_capture_abort_output_begin(
+    int32_t &saved_stdout,
+    int32_t &saved_stderr,
+    int32_t &pipe_read_descriptor,
+    int32_t &pipe_write_descriptor)
+{
+    int32_t pipe_descriptors[2];
+
+    saved_stdout = -1;
+    saved_stderr = -1;
+    pipe_read_descriptor = -1;
+    pipe_write_descriptor = -1;
+    if (pipe(pipe_descriptors) != 0)
+        return (0);
+    pipe_read_descriptor = pipe_descriptors[0];
+    pipe_write_descriptor = pipe_descriptors[1];
+    saved_stdout = dup(STDOUT_FILENO);
+    if (saved_stdout < 0)
+        return (0);
+    saved_stderr = dup(STDERR_FILENO);
+    if (saved_stderr < 0)
+        return (0);
+    if (dup2(pipe_write_descriptor, STDOUT_FILENO) < 0)
+        return (0);
+    if (dup2(pipe_write_descriptor, STDERR_FILENO) < 0)
+        return (0);
+    return (1);
+}
+
+static void __attribute__((unused)) test_capture_abort_output_end(
+    int32_t saved_stdout,
+    int32_t saved_stderr,
+    int32_t pipe_read_descriptor,
+    int32_t pipe_write_descriptor,
+    char *output_buffer,
+    size_t output_buffer_size)
+{
+    ssize_t read_result;
+    size_t write_index;
+
+    if (output_buffer != nullptr && output_buffer_size > 0)
+        output_buffer[0] = '\0';
+    std::fflush(stdout);
+    std::fflush(stderr);
+    if (saved_stdout >= 0)
+    {
+        (void)dup2(saved_stdout, STDOUT_FILENO);
+        (void)close(saved_stdout);
+    }
+    if (saved_stderr >= 0)
+    {
+        (void)dup2(saved_stderr, STDERR_FILENO);
+        (void)close(saved_stderr);
+    }
+    if (pipe_write_descriptor >= 0)
+        (void)close(pipe_write_descriptor);
+    write_index = 0;
+    if (output_buffer != nullptr && output_buffer_size > 1 && pipe_read_descriptor >= 0)
+    {
+        while (write_index + 1 < output_buffer_size)
+        {
+            read_result = read(pipe_read_descriptor,
+                    output_buffer + write_index,
+                    output_buffer_size - write_index - 1);
+            if (read_result <= 0)
+                break ;
+            write_index += static_cast<size_t>(read_result);
+        }
+        output_buffer[write_index] = '\0';
+    }
+    if (pipe_read_descriptor >= 0)
+        (void)close(pipe_read_descriptor);
+    return ;
+}
+
+static int __attribute__((unused)) test_expect_sigabrt_signal(void (*operation)(void))
+{
+    struct sigaction old_action_abort;
+    struct sigaction new_action_abort;
+    struct sigaction old_action_iot;
+    struct sigaction new_action_iot;
+    int jump_result;
+    int iot_handler_installed;
+    char output_buffer[8192];
+    int32_t saved_stdout;
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
+    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
+    new_action_abort.sa_handler = &test_abort_signal_handler;
+    new_action_iot.sa_handler = &test_abort_signal_handler;
+    sigemptyset(&new_action_abort.sa_mask);
+    sigemptyset(&new_action_iot.sa_mask);
+    iot_handler_installed = 0;
+    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
+        return (0);
+    if (SIGIOT != SIGABRT
+        && sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    {
+        (void)sigaction(SIGABRT, &old_action_abort, nullptr);
+        return (0);
+    }
+    if (SIGIOT != SIGABRT)
+        iot_handler_installed = 1;
+    if (test_capture_abort_output_begin(saved_stdout, saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+        return (0);
+    g_test_abort_signal_caught = 0;
+    jump_result = sigsetjmp(g_test_abort_signal_jump_buffer, 1);
+    if (jump_result == 0)
+        operation();
+    test_capture_abort_output_end(saved_stdout, saved_stderr,
+        pipe_read_descriptor, pipe_write_descriptor,
+        output_buffer, sizeof(output_buffer));
+    (void)sigaction(SIGABRT, &old_action_abort, nullptr);
+    if (iot_handler_installed != 0)
+        (void)sigaction(SIGIOT, &old_action_iot, nullptr);
+    if (g_test_abort_signal_caught == SIGABRT
+        && test_output_contains_lifecycle_error(output_buffer) == 1)
+        return (1);
+    if (iot_handler_installed != 0 && g_test_abort_signal_caught == SIGIOT
+        && test_output_contains_lifecycle_error(output_buffer) == 1)
+        return (1);
+    return (0);
+}
+
+template <typename TypeName>
+static int __attribute__((unused)) test_expect_sigabrt_signal_uninitialised(void (*operation)(TypeName &))
+{
+    struct sigaction old_action_abort;
+    struct sigaction new_action_abort;
+    struct sigaction old_action_iot;
+    struct sigaction new_action_iot;
+    int jump_result;
+    int iot_handler_installed;
+    alignas(TypeName) unsigned char object_storage[sizeof(TypeName)];
+    TypeName *object_pointer;
+    char output_buffer[8192];
+    int32_t saved_stdout;
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
+    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
+    new_action_abort.sa_handler = &test_abort_signal_handler;
+    new_action_iot.sa_handler = &test_abort_signal_handler;
+    sigemptyset(&new_action_abort.sa_mask);
+    sigemptyset(&new_action_iot.sa_mask);
+    iot_handler_installed = 0;
+    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
+        return (0);
+    if (SIGIOT != SIGABRT
+        && sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    {
+        (void)sigaction(SIGABRT, &old_action_abort, nullptr);
+        return (0);
+    }
+    if (SIGIOT != SIGABRT)
+        iot_handler_installed = 1;
+    if (test_capture_abort_output_begin(saved_stdout, saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+        return (0);
+    g_test_abort_signal_caught = 0;
+    jump_result = sigsetjmp(g_test_abort_signal_jump_buffer, 1);
+    if (jump_result == 0)
+    {
+        std::memset(object_storage, 0, sizeof(object_storage));
+        object_pointer = reinterpret_cast<TypeName *>(object_storage);
+        operation(*object_pointer);
+    }
+    test_capture_abort_output_end(saved_stdout, saved_stderr,
+        pipe_read_descriptor, pipe_write_descriptor,
+        output_buffer, sizeof(output_buffer));
+    (void)sigaction(SIGABRT, &old_action_abort, nullptr);
+    if (iot_handler_installed != 0)
+        (void)sigaction(SIGIOT, &old_action_iot, nullptr);
+    if (g_test_abort_signal_caught == SIGABRT
+        && test_output_contains_lifecycle_error(output_buffer) == 1)
+        return (1);
+    if (iot_handler_installed != 0 && g_test_abort_signal_caught == SIGIOT
+        && test_output_contains_lifecycle_error(output_buffer) == 1)
+        return (1);
+    return (0);
+}
+
 #endif

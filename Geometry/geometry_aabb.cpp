@@ -201,7 +201,6 @@ uint32_t aabb::move(aabb &other) noexcept
 {
     const aabb *lower;
     const aabb *upper;
-    uint32_t destroy_error;
     uint32_t lock_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
@@ -212,12 +211,6 @@ uint32_t aabb::move(aabb &other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
-    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-    {
-        destroy_error = this->destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
-            return (destroy_error);
-    }
     this->_minimum_x = 0.0;
     this->_minimum_y = 0.0;
     this->_maximum_x = 0.0;

@@ -132,7 +132,7 @@ ft_bool    time_get_local_offset(t_time time_value, int32_t *offset_minutes, ft_
         (void)(FT_ERR_OUT_OF_RANGE);
         return (FT_FALSE);
     }
-    difference_seconds = static_cast<int64_t>(local_epoch) - static_cast<int64_t>(utc_epoch);
+    difference_seconds = local_epoch - utc_epoch;
     minute_difference = difference_seconds / 60;
     if (minute_difference > static_cast<int64_t>(std::numeric_limits<int32_t>::max()))
     {
@@ -170,7 +170,7 @@ ft_bool    time_convert_timezone(t_time time_value, int32_t source_offset_minute
         (void)(FT_ERR_INVALID_ARGUMENT);
         return (FT_FALSE);
     }
-    base_seconds = static_cast<int64_t>(time_value);
+    base_seconds = time_value;
     source_offset_seconds = static_cast<int64_t>(source_offset_minutes) * 60LL;
     target_offset_seconds = static_cast<int64_t>(target_offset_minutes) * 60LL;
     utc_seconds = base_seconds - source_offset_seconds;

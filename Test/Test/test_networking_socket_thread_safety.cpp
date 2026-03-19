@@ -18,6 +18,7 @@
 # include <arpa/inet.h>
 # include <netinet/in.h>
 # include <sys/socket.h>
+# include <sys/time.h>
 # include <unistd.h>
 # define CLOSE_SOCKET close
 #endif
@@ -63,8 +64,27 @@ static void networking_socket_configure_client(SocketConfig &config, uint16_t po
     config._port = port;
     config._address_family = AF_INET;
     config._non_blocking = false;
-    config._recv_timeout = 0;
-    config._send_timeout = 0;
+    config._recv_timeout = 200;
+    config._send_timeout = 200;
+    return ;
+}
+
+static void networking_socket_set_receive_timeout(int file_descriptor, int milliseconds)
+{
+#ifdef _WIN32
+    DWORD timeout_value;
+
+    timeout_value = static_cast<DWORD>(milliseconds);
+    (void)setsockopt(file_descriptor, SOL_SOCKET, SO_RCVTIMEO,
+        reinterpret_cast<const char *>(&timeout_value), sizeof(timeout_value));
+#else
+    struct timeval timeout_value;
+
+    timeout_value.tv_sec = milliseconds / 1000;
+    timeout_value.tv_usec = (milliseconds % 1000) * 1000;
+    (void)setsockopt(file_descriptor, SOL_SOCKET, SO_RCVTIMEO,
+        &timeout_value, sizeof(timeout_value));
+#endif
     return ;
 }
 
@@ -83,8 +103,11 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
     const char message[] = "pingdata";
     int message_length;
     int send_iterations;
+    int expected_total;
     std::atomic<int> received_total;
     std::atomic<bool> thread_failed;
+    std::atomic<bool> send_completed;
+    int wait_iterations;
 
     server_fd = networking_socket_create_server(server_port);
     FT_ASSERT(server_fd >= 0);
@@ -103,16 +126,17 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.initialize(client_config));
     accept_thread.join();
     FT_ASSERT(accepted_fd >= 0);
+    networking_socket_set_receive_timeout(accepted_fd, 200);
     message_length = static_cast<int>(sizeof(message) - 1);
     send_iterations = 60;
+    expected_total = message_length * send_iterations;
     received_total.store(0);
     thread_failed.store(false);
-    reader_thread = std::thread([accepted_fd, message_length, send_iterations, &received_total]() {
+    send_completed.store(false);
+    reader_thread = std::thread([accepted_fd, expected_total, &received_total]() {
         char buffer[128];
-        int expected_total;
         int local_total;
 
-        expected_total = message_length * send_iterations;
         local_total = 0;
         while (local_total < expected_total)
         {
@@ -120,7 +144,11 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
 
             bytes_read = ::recv(accepted_fd, buffer, sizeof(buffer), 0);
             if (bytes_read > 0)
+            {
                 local_total += static_cast<int>(bytes_read);
+                continue ;
+            }
+            break ;
         }
         received_total.store(local_total);
         return ;
@@ -137,10 +165,11 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
                 thread_failed.store(true);
                 return ;
             }
+            pt_thread_sleep(1);
         }
         return ;
     });
-    send_thread = std::thread([&client_socket, message, message_length, send_iterations, &thread_failed]() {
+    send_thread = std::thread([&client_socket, message, message_length, send_iterations, &thread_failed, &send_completed]() {
         int iteration;
 
         iteration = 0;
@@ -156,16 +185,39 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
             }
             iteration++;
         }
+        send_completed.store(true);
         return ;
     });
-    send_thread.join();
-    while (received_total.load() < message_length * send_iterations)
+    wait_iterations = 0;
+    while (!send_completed.load() && wait_iterations < 5000)
+    {
         pt_thread_sleep(1);
+        wait_iterations++;
+    }
+    if (!send_completed.load())
+    {
+        thread_failed.store(true);
+        client_socket.close_socket();
+        CLOSE_SOCKET(accepted_fd);
+    }
+    send_thread.join();
+    wait_iterations = 0;
+    while (received_total.load() < expected_total && wait_iterations < 5000)
+    {
+        pt_thread_sleep(1);
+        wait_iterations++;
+    }
+    if (received_total.load() < expected_total)
+    {
+        thread_failed.store(true);
+        client_socket.close_socket();
+        CLOSE_SOCKET(accepted_fd);
+    }
     inspector_running.store(false);
     inspector_thread.join();
     reader_thread.join();
     FT_ASSERT(thread_failed.load() == false);
-    FT_ASSERT_EQ(message_length * send_iterations, received_total.load());
+    FT_ASSERT_EQ(expected_total, received_total.load());
     CLOSE_SOCKET(accepted_fd);
     CLOSE_SOCKET(server_fd);
     client_socket.close_socket();

@@ -154,7 +154,16 @@ int32_t logger_copy_redaction_rules(ft_vector<s_redaction_rule> &destination)
     ft_size_t rule_count;
     ft_size_t entry_index;
     int32_t error_code_value;
+    uint8_t destination_state;
+    int32_t destination_initialize_error;
 
+    destination_state = destination.is_initialised();
+    if (destination_state != FT_CLASS_STATE_INITIALISED)
+    {
+        destination_initialize_error = destination.initialize();
+        if (destination_initialize_error != FT_ERR_SUCCESS)
+            return (destination_initialize_error);
+    }
     rule_count = g_redaction_rules.size();
     if (g_redaction_rules.get_error() != FT_ERR_SUCCESS)
         return (g_redaction_rules.get_error());

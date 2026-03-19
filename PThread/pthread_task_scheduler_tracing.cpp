@@ -21,13 +21,34 @@ static uint32_t task_scheduler_trace_set_error(uint32_t error)
     return (error);
 }
 
+static int32_t task_scheduler_trace_ensure_runtime(void)
+{
+    uint8_t state_value;
+    int32_t initialize_error;
+
+    state_value = g_task_scheduler_trace_sinks.is_initialised();
+    if (state_value == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    initialize_error = g_task_scheduler_trace_sinks.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    return (FT_ERR_SUCCESS);
+}
+
 int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
 {
     bool lock_acquired;
+    int32_t runtime_error;
 
     if (sink == ft_nullptr)
     {
         task_scheduler_trace_set_error(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    runtime_error = task_scheduler_trace_ensure_runtime();
+    if (runtime_error != FT_ERR_SUCCESS)
+    {
+        task_scheduler_trace_set_error(static_cast<uint32_t>(runtime_error));
         return (-1);
     }
     lock_acquired = false;
@@ -67,10 +88,17 @@ int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
 int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
 {
     bool lock_acquired;
+    int32_t runtime_error;
 
     if (sink == ft_nullptr)
     {
         task_scheduler_trace_set_error(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    runtime_error = task_scheduler_trace_ensure_runtime();
+    if (runtime_error != FT_ERR_SUCCESS)
+    {
+        task_scheduler_trace_set_error(static_cast<uint32_t>(runtime_error));
         return (-1);
     }
     lock_acquired = false;
@@ -123,7 +151,21 @@ void task_scheduler_trace_emit(const ft_task_trace_event &event)
     bool lock_acquired;
     size_t index;
     size_t count;
+    int32_t runtime_error;
+    int32_t sinks_copy_initialize_error;
 
+    runtime_error = task_scheduler_trace_ensure_runtime();
+    if (runtime_error != FT_ERR_SUCCESS)
+    {
+        task_scheduler_trace_set_error(static_cast<uint32_t>(runtime_error));
+        return ;
+    }
+    sinks_copy_initialize_error = sinks_copy.initialize();
+    if (sinks_copy_initialize_error != FT_ERR_SUCCESS)
+    {
+        task_scheduler_trace_set_error(static_cast<uint32_t>(sinks_copy_initialize_error));
+        return ;
+    }
     lock_acquired = false;
     g_task_scheduler_trace_mutex.lock();
     lock_acquired = true;
