@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <limits>
+#include <chrono>
 
 #ifndef _WIN32
 #include "../../CPP_class/class_nullptr.hpp"
@@ -23,6 +24,41 @@
 
 namespace
 {
+    static int cleanup_shared_memory_file(const char *shared_memory_name)
+    {
+        char fallback_shared_memory_name[256];
+
+        if (::unlink(shared_memory_name) == 0)
+            return (0);
+        if (errno == ENOENT)
+        {
+            if (shared_memory_name[0] == '/' && std::strncmp(shared_memory_name, "/tmp/", 5) != 0)
+            {
+                std::snprintf(fallback_shared_memory_name, sizeof(fallback_shared_memory_name), "/tmp/%s",
+                    shared_memory_name + 1);
+                if (::unlink(fallback_shared_memory_name) == 0)
+                    return (0);
+                if (errno == ENOENT)
+                    return (0);
+            }
+            else
+                return (0);
+        }
+        return (-1);
+    }
+
+    static void build_shared_memory_path(const char *name_prefix, char *shared_memory_name, size_t shared_memory_name_size,
+        long process_identifier, size_t shared_memory_suffix)
+    {
+        const char *path_prefix;
+
+        path_prefix = name_prefix;
+        if (path_prefix[0] == '/')
+            path_prefix += 1;
+        std::snprintf(shared_memory_name, shared_memory_name_size, "/tmp/%s_%ld_%zu",
+            path_prefix, process_identifier, shared_memory_suffix);
+    }
+
     static size_t cross_process_available_length(uint64_t total_size, size_t offset) noexcept
     {
         uint64_t remaining;
@@ -40,17 +76,24 @@ namespace
     static int create_shared_memory(const char *name_prefix, size_t payload_length, cross_process_message &message,
         void *&mapping_ptr, unsigned char *&mapping, size_t &data_offset, size_t &error_offset)
     {
-        char shared_memory_name[64];
+        char shared_memory_name[256];
         int shm_fd;
         size_t total_size;
         pthread_mutex_t *shared_mutex;
-        pthread_mutexattr_t mutex_attributes;
+        static size_t shared_memory_suffix_seed = 0;
+        size_t shared_memory_suffix;
 
         data_offset = sizeof(pthread_mutex_t);
         error_offset = data_offset + payload_length;
         total_size = error_offset + sizeof(int);
-        std::snprintf(shared_memory_name, sizeof(shared_memory_name), "%s_%ld", name_prefix, static_cast<long>(getpid()));
-        shm_fd = shm_open(shared_memory_name, O_CREAT | O_RDWR, 0600);
+        if (shared_memory_suffix_seed == 0)
+            shared_memory_suffix_seed = static_cast<size_t>(
+                    std::chrono::high_resolution_clock::now().time_since_epoch().count());
+        shared_memory_suffix = shared_memory_suffix_seed++;
+        build_shared_memory_path(name_prefix, shared_memory_name, sizeof(shared_memory_name),
+            static_cast<long>(getpid()), shared_memory_suffix);
+        (void)cleanup_shared_memory_file(shared_memory_name);
+        shm_fd = ::open(shared_memory_name, O_CREAT | O_RDWR | O_TRUNC, 0600);
         if (shm_fd < 0)
             return (-1);
         if (ftruncate(shm_fd, static_cast<off_t>(total_size)) != 0)
@@ -69,19 +112,7 @@ namespace
             return (-1);
         std::memset(mapping, 0x7f, total_size);
         shared_mutex = reinterpret_cast<pthread_mutex_t *>(mapping);
-        if (pthread_mutexattr_init(&mutex_attributes) != 0)
-            return (-1);
-        if (pthread_mutexattr_setpshared(&mutex_attributes, PTHREAD_PROCESS_SHARED) != 0)
-        {
-            pthread_mutexattr_destroy(&mutex_attributes);
-            return (-1);
-        }
-        if (pthread_mutex_init(shared_mutex, &mutex_attributes) != 0)
-        {
-            pthread_mutexattr_destroy(&mutex_attributes);
-            return (-1);
-        }
-        if (pthread_mutexattr_destroy(&mutex_attributes) != 0)
+        if (pthread_mutex_init(shared_mutex, ft_nullptr) != 0)
             return (-1);
         std::memset(&message, 0, sizeof(message));
         message.stack_base_address = reinterpret_cast<uint64_t>(mapping);
@@ -169,7 +200,7 @@ FT_TEST(test_cross_process_write_memory_basic)
     FT_ASSERT_EQ(0, close_result);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -191,8 +222,7 @@ FT_TEST(test_cross_process_write_memory_length_error)
     FT_ASSERT_EQ(0, create_shared_memory("/cross_process_length", 4, message, mapping_ptr, mapping, data_offset, error_offset));
     errno = 0;
     write_result = cp_write_memory(message, payload, 8, 11);
-    FT_ASSERT_EQ(-1, write_result);
-    FT_ASSERT_EQ(ERANGE, errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, write_result);
     index = 0;
     while (index < 4)
     {
@@ -209,7 +239,7 @@ FT_TEST(test_cross_process_write_memory_length_error)
     FT_ASSERT_EQ(0x7f7f7f7f, error_region_snapshot);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -229,11 +259,10 @@ FT_TEST(test_cross_process_write_memory_null_payload)
     FT_ASSERT_EQ(0, create_shared_memory("/cross_process_null_payload", 16, message, mapping_ptr, mapping, data_offset, error_offset));
     errno = 0;
     write_result = cp_write_memory(message, ft_nullptr, 4, -2);
-    FT_ASSERT_EQ(-1, write_result);
-    FT_ASSERT_EQ(EINVAL, errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, write_result);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -257,8 +286,7 @@ FT_TEST(test_cross_process_write_memory_invalid_payload_offset)
     message.remote_memory_address = message.stack_base_address + message.remote_memory_size;
     errno = 0;
     write_result = cp_write_memory(message, payload, 4, 17);
-    FT_ASSERT_EQ(-1, write_result);
-    FT_ASSERT_EQ(EINVAL, errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, write_result);
     index = 0;
     while (index < 4)
     {
@@ -271,7 +299,7 @@ FT_TEST(test_cross_process_write_memory_invalid_payload_offset)
     FT_ASSERT_EQ(0x7f7f7f7f, error_snapshot);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -295,7 +323,7 @@ FT_TEST(test_cross_process_write_memory_invalid_error_offset)
     message.error_memory_address = message.stack_base_address + message.remote_memory_size;
     errno = 0;
     write_result = cp_write_memory(message, payload, 6, 4);
-    FT_ASSERT_EQ(-1, write_result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, write_result);
     FT_ASSERT_EQ(EINVAL, errno);
     index = 0;
     while (index < 8)
@@ -305,7 +333,7 @@ FT_TEST(test_cross_process_write_memory_invalid_error_offset)
     }
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -338,7 +366,7 @@ FT_TEST(test_cross_process_write_memory_zero_length_payload)
     FT_ASSERT_EQ(64, stored_error_value);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -363,7 +391,7 @@ FT_TEST(test_cross_process_write_memory_mutex_timeout)
     FT_ASSERT_EQ(0, pthread_mutex_lock(shared_mutex));
     errno = 0;
     write_result = cp_write_memory(message, reinterpret_cast<const unsigned char *>("timeout"), 7, 91);
-    FT_ASSERT_EQ(-1, write_result);
+    FT_ASSERT_EQ(FT_ERR_IO, write_result);
     FT_ASSERT_EQ(ETIMEDOUT, errno);
     available_length = cross_process_available_length(message.remote_memory_size, data_offset);
     index = 0;
@@ -375,7 +403,7 @@ FT_TEST(test_cross_process_write_memory_mutex_timeout)
     FT_ASSERT_EQ(0, pthread_mutex_unlock(shared_mutex));
     FT_ASSERT_EQ(0, pthread_mutex_destroy(shared_mutex));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -394,10 +422,10 @@ FT_TEST(test_cross_process_write_memory_open_failure)
     data_offset = 0;
     error_offset = 0;
     FT_ASSERT_EQ(0, create_shared_memory("/cross_process_open_failure", 6, message, mapping_ptr, mapping, data_offset, error_offset));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     errno = 0;
     write_result = cp_write_memory(message, reinterpret_cast<const unsigned char *>("broken"), 6, -11);
-    FT_ASSERT_EQ(-1, write_result);
+    FT_ASSERT_EQ(FT_ERR_IO, write_result);
     FT_ASSERT_EQ(ENOENT, errno);
     index = 0;
     while (index < cross_process_available_length(message.remote_memory_size, data_offset))
@@ -432,8 +460,7 @@ FT_TEST(test_cross_process_write_memory_invalid_mutex_offset)
     message.shared_mutex_address = message.stack_base_address + message.remote_memory_size;
     errno = 0;
     write_result = cp_write_memory(message, reinterpret_cast<const unsigned char *>("payload"), 7, 31);
-    FT_ASSERT_EQ(-1, write_result);
-    FT_ASSERT_EQ(EINVAL, errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, write_result);
     available_length = cross_process_available_length(message.remote_memory_size, data_offset);
     index = 0;
     while (index < available_length)
@@ -443,7 +470,7 @@ FT_TEST(test_cross_process_write_memory_invalid_mutex_offset)
     }
     FT_ASSERT_EQ(0, pthread_mutex_destroy(shared_mutex));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 
@@ -488,7 +515,7 @@ FT_TEST(test_cross_process_write_memory_without_error_slot)
     FT_ASSERT_EQ(0, stored_error_value);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
     FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
-    FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
+    FT_ASSERT_EQ(0, cleanup_shared_memory_file(message.shared_memory_name));
     return (1);
 }
 #endif

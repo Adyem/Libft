@@ -12,7 +12,7 @@ FT_TEST(test_rsa_generate_key_pair_null_output_sets_errno)
     uint64_t private_key_value = 0;
     uint64_t modulus_value = 0;
     int result_value = rsa_generate_key_pair(nullptr, &private_key_value, &modulus_value, 32);
-    FT_ASSERT_EQ(1, result_value);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result_value);
     return (1);
 }
 
@@ -24,7 +24,7 @@ FT_TEST(test_rsa_generate_key_pair_mod_inverse_failure_sets_errno)
     rsa_set_force_mod_inverse_failure(true);
     int result_value = rsa_generate_key_pair(&public_key_value, &private_key_value, &modulus_value, 32);
     rsa_set_force_mod_inverse_failure(false);
-    FT_ASSERT_EQ(1, result_value);
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, result_value);
     return (1);
 }
 

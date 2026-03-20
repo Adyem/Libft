@@ -7,6 +7,8 @@
 
 #include <cerrno>
 #include <cstring>
+#include <fcntl.h>
+#include <cstdio>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -16,6 +18,33 @@ static ft_size_t compute_offset(uint64_t pointer_value, uint64_t base_value)
     if (pointer_value < base_value)
         return (0);
     return (pointer_value - base_value);
+}
+
+static int32_t open_file_backing(const cross_process_message &message)
+{
+    int32_t file_descriptor;
+    char fallback_path[512];
+
+    if (message.shared_memory_name[0] == '\0')
+    {
+        errno = EINVAL;
+        return (-1);
+    }
+    file_descriptor = ::open(message.shared_memory_name, O_RDWR, 0600);
+    if (file_descriptor >= 0)
+        return (file_descriptor);
+    if (message.shared_memory_name[0] == '/')
+    {
+        if (std::strncmp(message.shared_memory_name, "/tmp/", 5) != 0)
+        {
+            std::snprintf(fallback_path, sizeof(fallback_path), "/tmp/%s",
+                message.shared_memory_name + 1);
+            file_descriptor = ::open(fallback_path, O_RDWR, 0600);
+            if (file_descriptor >= 0)
+                return (file_descriptor);
+        }
+    }
+    return (-1);
 }
 
 int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const cross_process_message &message)
@@ -31,8 +60,8 @@ int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const 
     {
         int64_t written;
 
-        written = ::send(socket_file_descriptor, raw_message + offset,
-                total_size - offset, 0);
+        written = ::write(socket_file_descriptor, raw_message + offset,
+                total_size - offset);
         if (written < 0)
         {
             if (errno == EINTR)
@@ -57,8 +86,8 @@ int32_t cmp_cross_process_receive_descriptor(int32_t socket_file_descriptor, cro
     {
         int64_t received;
 
-        received = ::recv(socket_file_descriptor, raw_message + offset,
-                total_size - offset, 0);
+        received = ::read(socket_file_descriptor, raw_message + offset,
+                total_size - offset);
         if (received < 0)
         {
             if (errno == EINTR)
@@ -82,7 +111,11 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
 
     shared_memory_fd = shm_open(message.shared_memory_name, O_RDWR, 0600);
     if (shared_memory_fd < 0)
-        return (cmp_map_system_error_to_ft(errno));
+    {
+        shared_memory_fd = open_file_backing(message);
+        if (shared_memory_fd < 0)
+            return (cmp_map_system_error_to_ft(errno));
+    }
     mapping_pointer = mmap(ft_nullptr, message.remote_memory_size, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_fd, 0);
     ::close(shared_memory_fd);
     if (mapping_pointer == MAP_FAILED)

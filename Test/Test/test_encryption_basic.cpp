@@ -42,7 +42,7 @@ FT_TEST(test_be_save_game_allocation_failure_sets_errno)
 
     cma_set_alloc_limit(1);
     save_result = be_save_game("be_save_game_alloc.txt", "data", "key");
-    FT_ASSERT_EQ(1, save_result);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, save_result);
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -54,7 +54,7 @@ FT_TEST(test_be_save_game_open_failure_sets_errno)
     be_set_save_game_hooks(mock_open_failure, ft_nullptr);
     save_result = be_save_game("be_save_game_open.txt", "data", "key");
     be_set_save_game_hooks(ft_nullptr, ft_nullptr);
-    FT_ASSERT_EQ(1, save_result);
+    FT_ASSERT_EQ(FT_ERR_FILE_OPEN_FAILED, save_result);
     return (1);
 }
 
@@ -66,7 +66,7 @@ FT_TEST(test_be_save_game_write_failure_sets_errno)
     save_result = be_save_game("be_save_game_write.txt", "data", "key");
     be_set_save_game_hooks(ft_nullptr, ft_nullptr);
     std::remove("be_save_game_write.txt");
-    FT_ASSERT_EQ(1, save_result);
+    FT_ASSERT_EQ(FT_ERR_IO, save_result);
     return (1);
 }
 

@@ -9,7 +9,8 @@
 
 FT_TEST(test_encryption_secure_wipe_null_buffer_sets_errno)
 {
-    FT_ASSERT_EQ(-1, encryption_secure_wipe(ft_nullptr, 4));
+    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER,
+            encryption_secure_wipe(ft_nullptr, 4));
     return (1);
 }
 
@@ -68,6 +69,7 @@ FT_TEST(test_encryption_secure_wipe_string_clears_contents)
 
 FT_TEST(test_encryption_secure_wipe_string_null_buffer_sets_errno)
 {
-    FT_ASSERT_EQ(-1, encryption_secure_wipe_string(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER,
+            encryption_secure_wipe_string(ft_nullptr));
     return (1);
 }
