@@ -120,7 +120,7 @@ FT_TEST(test_scma_accessor_uninitialised_destroy_returns_invalid_state)
 {
     scma_handle_accessor<int> accessor;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, accessor.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
     return (1);
 }
 

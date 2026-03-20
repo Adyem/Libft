@@ -45,7 +45,7 @@ FT_TEST(test_scma_initialize_mutex_lock_failure)
 FT_TEST(test_scma_allocate_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
     scma_handle result = scma_allocate(16);
@@ -62,7 +62,7 @@ FT_TEST(test_scma_allocate_mutex_lock_failure)
 FT_TEST(test_scma_free_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
     FT_ASSERT_EQ(0, scma_free(scma_invalid_handle()));
@@ -76,7 +76,7 @@ FT_TEST(test_scma_free_mutex_lock_failure)
 FT_TEST(test_scma_resize_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
     FT_ASSERT_EQ(0, scma_resize(scma_invalid_handle(), 32));
@@ -90,7 +90,7 @@ FT_TEST(test_scma_resize_mutex_lock_failure)
 FT_TEST(test_scma_shutdown_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
     scma_shutdown();
@@ -118,7 +118,7 @@ FT_TEST(test_scma_is_initialised_mutex_lock_failure)
 FT_TEST(test_scma_get_size_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     scma_handle handle = scma_allocate(8);
     if (handle.index == scma_invalid_handle().index
         && handle.generation == scma_invalid_handle().generation)
@@ -140,7 +140,7 @@ FT_TEST(test_scma_get_size_mutex_lock_failure)
 FT_TEST(test_scma_read_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     scma_handle handle = scma_allocate(8);
     if (handle.index == scma_invalid_handle().index
         && handle.generation == scma_invalid_handle().generation)
@@ -163,7 +163,7 @@ FT_TEST(test_scma_read_mutex_lock_failure)
 FT_TEST(test_scma_write_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     scma_handle handle = scma_allocate(8);
     if (handle.index == scma_invalid_handle().index
         && handle.generation == scma_invalid_handle().generation)
@@ -186,7 +186,7 @@ FT_TEST(test_scma_write_mutex_lock_failure)
 FT_TEST(test_scma_get_stats_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     scma_stats stats = {0, 0, 0};
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
@@ -201,7 +201,7 @@ FT_TEST(test_scma_get_stats_mutex_lock_failure)
 FT_TEST(test_scma_handle_is_valid_mutex_lock_failure)
 {
     scma_mutex_failure_prepare();
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     scma_handle handle = scma_allocate(8);
     if (handle.index == scma_invalid_handle().index
         && handle.generation == scma_invalid_handle().generation)

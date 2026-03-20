@@ -10,14 +10,16 @@
 FT_TEST(test_ft_priority_queue_move_constructor_rebuilds_mutex)
 {
     ft_priority_queue<int> source_queue;
+    ft_priority_queue<int> new_queue;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());
     source_queue.push(5);
     source_queue.push(12);
     source_queue.push(7);
     FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
     FT_ASSERT(source_queue.is_thread_safe());
 
-    ft_priority_queue<int> new_queue;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, new_queue.initialize());
     while (!source_queue.empty())
     {
         new_queue.push(source_queue.pop());
@@ -30,6 +32,8 @@ FT_TEST(test_ft_priority_queue_move_constructor_rebuilds_mutex)
     FT_ASSERT_EQ(12, new_queue.top());
     FT_ASSERT_EQ(12, new_queue.pop());
     FT_ASSERT_EQ(7, new_queue.top());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, new_queue.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.destroy());
     return (1);
 }
 
@@ -37,11 +41,14 @@ FT_TEST(test_ft_priority_queue_move_assignment_allows_reenable)
 {
     ft_priority_queue<int> destination_queue;
     ft_priority_queue<int> source_queue;
+    ft_priority_queue<int> temp_queue;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.initialize());
     destination_queue.push(1);
     FT_ASSERT_EQ(0, destination_queue.enable_thread_safety());
     FT_ASSERT(destination_queue.is_thread_safe());
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());
     source_queue.push(20);
     source_queue.push(15);
     FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
@@ -50,7 +57,7 @@ FT_TEST(test_ft_priority_queue_move_assignment_allows_reenable)
     FT_ASSERT(destination_queue.is_thread_safe());
     while (!destination_queue.empty())
         destination_queue.pop();
-    ft_priority_queue<int> temp_queue;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, temp_queue.initialize());
     while (!source_queue.empty())
     {
         temp_queue.push(source_queue.pop());
@@ -64,5 +71,8 @@ FT_TEST(test_ft_priority_queue_move_assignment_allows_reenable)
     FT_ASSERT_EQ(15, temp_queue.pop());
     FT_ASSERT(source_queue.empty());
     FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, temp_queue.destroy());
     return (1);
 }

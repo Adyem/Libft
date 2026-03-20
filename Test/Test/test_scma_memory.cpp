@@ -12,7 +12,7 @@ FT_TEST(test_scma_allocation_roundtrip)
     int write_value;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(128));
+    FT_ASSERT_EQ(0, scma_test_initialize(128));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     write_value = 123456789;
@@ -31,7 +31,7 @@ FT_TEST(test_scma_allocation_unsigned_char_payload)
     unsigned char readback[6];
     ft_size_t index;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(128));
+    FT_ASSERT_EQ(0, scma_test_initialize(128));
     handle = scma_allocate(6);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     index = 0;
@@ -63,7 +63,7 @@ FT_TEST(test_scma_compaction_preserves_live_blocks)
     int third_value;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(256));
+    FT_ASSERT_EQ(0, scma_test_initialize(256));
     first_handle = scma_allocate(sizeof(int));
     second_handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(first_handle));
@@ -72,7 +72,7 @@ FT_TEST(test_scma_compaction_preserves_live_blocks)
     second_value = 222;
     FT_ASSERT_EQ(1, scma_write(first_handle, 0, &first_value, sizeof(int)));
     FT_ASSERT_EQ(1, scma_write(second_handle, 0, &second_value, sizeof(int)));
-    FT_ASSERT_EQ(1, scma_free(first_handle));
+    FT_ASSERT_EQ(0, scma_free(first_handle));
     read_value = 0;
     FT_ASSERT_EQ(1, scma_read(second_handle, 0, &read_value, sizeof(int)));
     FT_ASSERT_EQ(second_value, read_value);
@@ -94,7 +94,7 @@ FT_TEST(test_scma_allocation_double_precision_roundtrip)
     double read_values[3];
     ft_size_t index;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(double) * 3));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(double) * 3));
     handle = scma_allocate(sizeof(double) * 3);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     index = 0;
@@ -126,7 +126,7 @@ FT_TEST(test_scma_compaction_reuses_space_for_new_blocks)
     int expanded_values[4];
     ft_size_t expanded_index;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(256));
+    FT_ASSERT_EQ(0, scma_test_initialize(256));
     index = 0;
     while (index < 3)
     {
@@ -136,7 +136,7 @@ FT_TEST(test_scma_compaction_reuses_space_for_new_blocks)
         FT_ASSERT_EQ(1, scma_write(handles[index], 0, &stored_values[index], sizeof(int)));
         index = index + 1;
     }
-    FT_ASSERT_EQ(1, scma_free(handles[1]));
+    FT_ASSERT_EQ(0, scma_free(handles[1]));
     expanded_handle = scma_allocate(sizeof(int) * 4);
     FT_ASSERT_EQ(1, scma_handle_is_valid(expanded_handle));
     expanded_index = 0;
@@ -169,7 +169,7 @@ FT_TEST(test_scma_resize_grow_and_shrink_preserves_data)
     unsigned char buffer[8];
     ft_size_t index;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(64));
+    FT_ASSERT_EQ(0, scma_test_initialize(64));
     handle = scma_allocate(4);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     index = 0;
@@ -212,7 +212,7 @@ FT_TEST(test_scma_resize_rejects_zero_size)
 {
     scma_handle handle;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(32));
+    FT_ASSERT_EQ(0, scma_test_initialize(32));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(0, scma_resize(handle, 0));
@@ -225,7 +225,7 @@ FT_TEST(test_scma_write_and_read_reject_null_pointers)
     scma_handle handle;
     int value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(0, scma_write(handle, 0, ft_nullptr, sizeof(int)));
@@ -242,11 +242,11 @@ FT_TEST(test_scma_reused_handle_invalidates_previous_generation)
     scma_handle cached_handle;
     scma_handle reused_handle;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int) * 2));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 2));
     first_handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(first_handle));
     cached_handle = first_handle;
-    FT_ASSERT_EQ(1, scma_free(first_handle));
+    FT_ASSERT_EQ(0, scma_free(first_handle));
     reused_handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(reused_handle));
     FT_ASSERT_EQ(cached_handle.index, reused_handle.index);
@@ -261,7 +261,7 @@ FT_TEST(test_scma_read_bounds_checks)
     scma_handle handle;
     int value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     value = 11;
@@ -278,7 +278,7 @@ FT_TEST(test_scma_late_allocate_failure_preserves_existing_data)
     int stored_value;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(128));
+    FT_ASSERT_EQ(0, scma_test_initialize(128));
     stable_handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(stable_handle));
     stored_value = 31415;
@@ -300,7 +300,7 @@ FT_TEST(test_scma_late_resize_failure_preserves_existing_data)
     int second_value;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(256));
+    FT_ASSERT_EQ(0, scma_test_initialize(256));
     first_handle = scma_allocate(sizeof(int));
     second_handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(first_handle));

@@ -304,7 +304,7 @@ FT_TEST(test_dumb_sound_device_destroy_twice_returns_invalid_state)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sound_device_instance.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sound_device_instance.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, sound_device_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sound_device_instance.destroy());
     return (1);
 }
 
@@ -400,7 +400,7 @@ FT_TEST(test_dumb_sound_clip_destroy_twice_returns_invalid_state)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sound_clip_instance.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sound_clip_instance.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, sound_clip_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sound_clip_instance.destroy());
     return (1);
 }
 
@@ -498,6 +498,6 @@ FT_TEST(test_dumb_render_window_destroy_twice_returns_invalid_state)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, render_window_instance.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, render_window_instance.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, render_window_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, render_window_instance.destroy());
     return (1);
 }

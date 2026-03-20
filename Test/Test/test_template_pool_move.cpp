@@ -10,6 +10,7 @@ FT_TEST(test_pool_manual_mutex_rebuild)
 {
     Pool<int> source_pool;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.initialize());
     source_pool.resize(1);
     FT_ASSERT_EQ(0, source_pool.enable_thread_safety());
     {
@@ -21,6 +22,7 @@ FT_TEST(test_pool_manual_mutex_rebuild)
     }
 
     Pool<int> manual_pool;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manual_pool.initialize());
     manual_pool.resize(1);
     FT_ASSERT_EQ(0, manual_pool.enable_thread_safety());
     {
@@ -35,6 +37,8 @@ FT_TEST(test_pool_manual_mutex_rebuild)
     FT_ASSERT_EQ(0, source_pool.enable_thread_safety());
     FT_ASSERT_EQ(true, source_pool.is_thread_safe());
     source_pool.resize(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manual_pool.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.destroy());
     return (1);
 }
 
@@ -43,8 +47,10 @@ FT_TEST(test_pool_manual_assignment_reinitializes_mutex)
     Pool<int> destination_pool;
     Pool<int> source_pool;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_pool.initialize());
     destination_pool.resize(1);
     FT_ASSERT_EQ(0, destination_pool.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.initialize());
     source_pool.resize(2);
     FT_ASSERT_EQ(0, source_pool.enable_thread_safety());
     {
@@ -55,6 +61,7 @@ FT_TEST(test_pool_manual_assignment_reinitializes_mutex)
     }
 
     FT_ASSERT_EQ(0, destination_pool.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_pool.initialize());
     destination_pool.resize(2);
     FT_ASSERT_EQ(0, destination_pool.enable_thread_safety());
     {
@@ -68,5 +75,7 @@ FT_TEST(test_pool_manual_assignment_reinitializes_mutex)
     FT_ASSERT_EQ(0, source_pool.enable_thread_safety());
     FT_ASSERT_EQ(true, source_pool.is_thread_safe());
     source_pool.resize(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_pool.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.destroy());
     return (1);
 }

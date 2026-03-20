@@ -3,6 +3,7 @@
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
+#include <chrono>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -51,11 +52,16 @@ FT_TEST(test_game_event_add_duration_thread_safe)
     int test_failed;
     const char *failure_expression;
     int failure_line;
+    std::chrono::steady_clock::time_point test_start_time;
+    std::chrono::milliseconds::rep timeout_ms;
+    std::chrono::milliseconds::rep elapsed_ms;
+    std::chrono::milliseconds::rep remaining_ms;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.initialize());
     event_instance.set_duration(0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
+    test_start_time = std::chrono::steady_clock::now();
     created_thread_count = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -85,9 +91,17 @@ FT_TEST(test_game_event_add_duration_thread_safe)
     index = 0;
     while (index < created_thread_count)
     {
-        join_result = pt_thread_join(threads[index], ft_nullptr);
+        timeout_ms = 5000;
+        elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - test_start_time).count();
+        remaining_ms = timeout_ms - elapsed_ms;
+        if (remaining_ms < 0)
+            remaining_ms = 0;
+        join_result = pt_thread_timed_join(threads[index], ft_nullptr,
+                remaining_ms);
         if (join_result != 0 && test_failed == 0)
         {
+            (void)pt_thread_detach(threads[index]);
             test_failed = 1;
             failure_expression = "join_result == 0";
             failure_line = __LINE__;
@@ -155,12 +169,17 @@ FT_TEST(test_game_event_setters_thread_safe)
     int test_failed;
     const char *failure_expression;
     int failure_line;
+    std::chrono::steady_clock::time_point test_start_time;
+    std::chrono::milliseconds::rep timeout_ms;
+    std::chrono::milliseconds::rep elapsed_ms;
+    std::chrono::milliseconds::rep remaining_ms;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.enable_thread_safety());
     event_instance.set_id(1);
     event_instance.set_duration(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
+    test_start_time = std::chrono::steady_clock::now();
     created_thread_count = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -190,9 +209,17 @@ FT_TEST(test_game_event_setters_thread_safe)
     index = 0;
     while (index < created_thread_count)
     {
-        join_result = pt_thread_join(threads[index], ft_nullptr);
+        timeout_ms = 5000;
+        elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - test_start_time).count();
+        remaining_ms = timeout_ms - elapsed_ms;
+        if (remaining_ms < 0)
+            remaining_ms = 0;
+        join_result = pt_thread_timed_join(threads[index], ft_nullptr,
+                remaining_ms);
         if (join_result != 0 && test_failed == 0)
         {
+            (void)pt_thread_detach(threads[index]);
             test_failed = 1;
             failure_expression = "join_result == 0";
             failure_line = __LINE__;
@@ -213,8 +240,8 @@ FT_TEST(test_game_event_setters_thread_safe)
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
-    (void)event_instance.get_id();
-    (void)event_instance.get_duration();
+    FT_ASSERT_EQ(1, event_instance.get_id());
+    FT_ASSERT_EQ(1, event_instance.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
     return (1);
 }

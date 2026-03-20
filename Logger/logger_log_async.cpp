@@ -26,7 +26,7 @@ static pthread_cond_t g_queue_condition = PTHREAD_COND_INITIALIZER;
 #pragma GCC diagnostic pop
 static pthread_t g_log_thread;
 
-static void ft_log_process_message(const ft_string &message)
+void ft_log_process_message(const ft_string &message)
 {
     ft_size_t sink_count;
     ft_vector<s_log_sink> sinks_snapshot;

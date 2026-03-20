@@ -13,6 +13,7 @@ FT_TEST(test_ft_graph_move_constructor_recreates_mutex)
     ft_vector<size_t> neighbor_vector;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.initialize());
     source_graph.add_vertex(10);
     source_graph.add_vertex(20);
     source_graph.add_edge(0, 1);
@@ -35,6 +36,7 @@ FT_TEST(test_ft_graph_move_constructor_recreates_mutex)
     FT_ASSERT(source_graph.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_graph.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.destroy());
     return (1);
 }
 
@@ -45,6 +47,7 @@ FT_TEST(test_ft_graph_move_assignment_resets_source_mutex)
     ft_vector<size_t> neighbor_vector;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.initialize());
     destination_graph.add_vertex(1);
     destination_graph.add_vertex(2);
     destination_graph.add_edge(0, 1);
@@ -69,6 +72,7 @@ FT_TEST(test_ft_graph_move_assignment_resets_source_mutex)
     FT_ASSERT(source_graph.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.destroy());
     return (1);
 }
 
@@ -79,6 +83,7 @@ FT_TEST(test_ft_graph_move_allows_reuse_after_transfer)
     ft_vector<size_t> neighbor_vector;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.initialize());
     source_graph.add_vertex(30);
     source_graph.add_vertex(40);
     source_graph.add_edge(0, 1);
@@ -98,12 +103,14 @@ FT_TEST(test_ft_graph_move_allows_reuse_after_transfer)
     source_graph.add_vertex(99);
     FT_ASSERT_EQ(1u, source_graph.size());
     source_graph.add_edge(0, 0);
-    neighbor_vector.clear();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.initialize());
     source_graph.neighbors(0, neighbor_vector);
     FT_ASSERT_EQ(1u, neighbor_vector.size());
     FT_ASSERT_EQ(0u, neighbor_vector[0]);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.destroy());
     return (1);
 }

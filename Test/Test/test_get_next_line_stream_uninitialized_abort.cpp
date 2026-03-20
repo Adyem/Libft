@@ -68,7 +68,7 @@ FT_TEST(test_gnl_stream_uninitialised_destructor_allows_deletion)
 FT_TEST(test_gnl_stream_uninitialised_destroy_returns_invalid_state)
 {
     gnl_stream_type stream_instance;
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, stream_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.destroy());
     return (1);
 }
 

@@ -8,6 +8,17 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static void world_registry_fetch_region_after_destroy_aborts()
+{
+    game_world_registry registry;
+    game_region_definition fetched_region;
+
+    (void)registry.initialize();
+    (void)registry.destroy();
+    (void)registry.fetch_region(12, fetched_region);
+    return ;
+}
+
 FT_TEST(test_world_registry_fetch_missing_entries_returns_not_found)
 {
     game_world_registry registry;
@@ -32,6 +43,7 @@ FT_TEST(test_world_registry_clears_entries_after_destroy)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(12));
     game_world_region world;
 
@@ -50,8 +62,9 @@ FT_TEST(test_world_registry_clears_entries_after_destroy)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
-
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, registry.fetch_region(12, fetched_region));
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, registry.get_error());
+    FT_ASSERT_EQ(1, test_expect_sigabrt_signal(
+        world_registry_fetch_region_after_destroy_aborts));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.destroy());
     return (1);
 }

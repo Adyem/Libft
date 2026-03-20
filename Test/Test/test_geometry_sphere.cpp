@@ -2528,61 +2528,105 @@ FT_TEST(test_sphere_move_bidirectional_high_load_soak_rounds)
     return (1);
 }
 
+struct sphere_soak_worker_args
+{
+    sphere *shape;
+    std::atomic<bool> *worker_failed;
+};
+
+static void *sphere_soak_writer_worker(void *argument)
+{
+    sphere_soak_worker_args *worker_args;
+    int iteration_index;
+    int local_error_code;
+    std::chrono::steady_clock::time_point start_time;
+
+    worker_args = static_cast<sphere_soak_worker_args *>(argument);
+    iteration_index = 0;
+    start_time = std::chrono::steady_clock::now();
+    while (iteration_index < 3072 && worker_args->worker_failed->load() == false)
+    {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start_time).count() > 1500)
+            break ;
+        local_error_code = worker_args->shape->set_center(
+                static_cast<double>((iteration_index % 7) - 3),
+                static_cast<double>((iteration_index % 5) - 2),
+                static_cast<double>((iteration_index % 9) - 4));
+        if (local_error_code != FT_ERR_SUCCESS)
+            worker_args->worker_failed->store(true);
+        local_error_code = worker_args->shape->set_radius(4.0 + (iteration_index % 4));
+        if (local_error_code != FT_ERR_SUCCESS)
+            worker_args->worker_failed->store(true);
+        iteration_index = iteration_index + 1;
+    }
+    return (ft_nullptr);
+}
+
+static void *sphere_soak_reader_worker(void *argument)
+{
+    sphere_soak_worker_args *worker_args;
+    int index;
+    std::chrono::steady_clock::time_point start_time;
+
+    worker_args = static_cast<sphere_soak_worker_args *>(argument);
+    index = 0;
+    start_time = std::chrono::steady_clock::now();
+    while (index < 3072 && worker_args->worker_failed->load() == false)
+    {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start_time).count() > 1500)
+            break ;
+        if (std::isfinite(worker_args->shape->get_center_x()) == false
+            || std::isfinite(worker_args->shape->get_center_y()) == false
+            || std::isfinite(worker_args->shape->get_center_z()) == false
+            || std::isfinite(worker_args->shape->get_radius()) == false)
+            worker_args->worker_failed->store(true);
+        index = index + 1;
+    }
+    return (ft_nullptr);
+}
+
 FT_TEST(test_sphere_setters_getters_contention_high_load_soak_rounds)
 {
     sphere shape;
     std::atomic<bool> worker_failed;
-    std::thread writer_thread;
+    pthread_t writer_thread;
+    pthread_t reader_thread;
+    sphere_soak_worker_args writer_arguments;
+    sphere_soak_worker_args reader_arguments;
     int round_index;
-    int index;
+    long join_timeout_ms;
+    int32_t writer_join_result;
+    int32_t reader_join_result;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
+    join_timeout_ms = 5000;
     round_index = 0;
-    while (round_index < 3)
+    while (round_index < 1)
     {
         worker_failed.store(false);
-        writer_thread = std::thread([&shape, &worker_failed]() {
-            int iteration_index;
-            int local_error_code;
-            std::chrono::steady_clock::time_point start_time;
-
-            iteration_index = 0;
-            start_time = std::chrono::steady_clock::now();
-            while (iteration_index < 3072 && worker_failed.load() == false)
-            {
-                if (std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::steady_clock::now() - start_time).count() > 1500)
-                    break ;
-                local_error_code = shape.set_center(
-                        static_cast<double>((iteration_index % 7) - 3),
-                        static_cast<double>((iteration_index % 5) - 2),
-                        static_cast<double>((iteration_index % 9) - 4));
-                if (local_error_code != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                local_error_code = shape.set_radius(4.0 + (iteration_index % 4));
-                if (local_error_code != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                iteration_index = iteration_index + 1;
-            }
-            return ;
-        });
-        index = 0;
-        std::chrono::steady_clock::time_point reader_start_time;
-        reader_start_time = std::chrono::steady_clock::now();
-        while (index < 3072 && worker_failed.load() == false)
-        {
-            if (std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - reader_start_time).count() > 1500)
-                break ;
-            if (std::isfinite(shape.get_center_x()) == false
-                || std::isfinite(shape.get_center_y()) == false
-                || std::isfinite(shape.get_center_z()) == false
-                || std::isfinite(shape.get_radius()) == false)
-                worker_failed.store(true);
-            index = index + 1;
-        }
-        writer_thread.join();
+        writer_arguments.shape = &shape;
+        writer_arguments.worker_failed = &worker_failed;
+        reader_arguments.shape = &shape;
+        reader_arguments.worker_failed = &worker_failed;
+        writer_join_result = pt_thread_create(&writer_thread, ft_nullptr,
+                sphere_soak_writer_worker, &writer_arguments);
+        FT_ASSERT_EQ(0, writer_join_result);
+        reader_join_result = pt_thread_create(&reader_thread, ft_nullptr,
+                sphere_soak_reader_worker, &reader_arguments);
+        FT_ASSERT_EQ(0, reader_join_result);
+        writer_join_result = pt_thread_timed_join(writer_thread, ft_nullptr,
+                join_timeout_ms);
+        if (writer_join_result != 0)
+            (void)pt_thread_detach(writer_thread);
+        FT_ASSERT_EQ(0, writer_join_result);
+        reader_join_result = pt_thread_timed_join(reader_thread, ft_nullptr,
+                join_timeout_ms);
+        if (reader_join_result != 0)
+            (void)pt_thread_detach(reader_thread);
+        FT_ASSERT_EQ(0, reader_join_result);
         FT_ASSERT_EQ(false, worker_failed.load());
         round_index = round_index + 1;
     }

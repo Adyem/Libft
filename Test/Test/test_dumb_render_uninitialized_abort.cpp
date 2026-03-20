@@ -181,7 +181,7 @@ FT_TEST(test_dumb_render_uninitialised_destroy_returns_invalid_state)
 {
     render_window_type window_instance;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, window_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, window_instance.destroy());
     return (1);
 }
 

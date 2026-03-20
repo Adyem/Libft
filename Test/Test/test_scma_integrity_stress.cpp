@@ -151,7 +151,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
     const size_t iteration_count = 8000;
 
     scma_test_reset();
-    FT_ASSERT_EQ(1, scma_initialize(1U << 16));
+    FT_ASSERT_EQ(0, scma_initialize(1U << 16));
     random_engine.seed(0xC0DE1234U);
     iteration_index = 0;
     while (iteration_index < iteration_count)
@@ -268,7 +268,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
             }
             else if (operation_selector == 5)
             {
-                FT_ASSERT_EQ(1, scma_free(record_pointer->handle));
+                FT_ASSERT_EQ(0, scma_free(record_pointer->handle));
                 FT_ASSERT_EQ(0, scma_handle_is_valid(record_pointer->handle));
                 records.erase(records.begin() + record_index);
             }
@@ -289,7 +289,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
     FT_ASSERT_EQ(1, scma_verify_stats_consistency(records));
     while (!records.empty())
     {
-        FT_ASSERT_EQ(1, scma_free(records.back().handle));
+        FT_ASSERT_EQ(0, scma_free(records.back().handle));
         records.pop_back();
     }
     scma_shutdown();

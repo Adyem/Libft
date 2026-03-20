@@ -26,7 +26,7 @@ FT_TEST(test_scma_accessor_struct_pointer_semantics)
     scma_handle_accessor<scma_test_pair> accessor;
     scma_test_pair result;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_test_pair)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_test_pair)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(scma_test_pair));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -51,7 +51,7 @@ FT_TEST(test_scma_accessor_float_array_semantics)
     float read_value;
     ft_size_t index;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(float) * 3));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(float) * 3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(float) * 3);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -77,7 +77,7 @@ FT_TEST(test_scma_accessor_array_indexing)
     scma_handle_accessor<int> accessor;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int) * 3));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int) * 3);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -101,7 +101,7 @@ FT_TEST(test_scma_accessor_struct_vector_semantics)
     scma_test_vector3 vector_value;
     scma_test_vector3 read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_test_vector3) * 2));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_test_vector3) * 2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(scma_test_vector3) * 2);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -152,7 +152,7 @@ FT_TEST(test_scma_accessor_shared_handle_binding_semantics)
     scma_handle_accessor<scma_test_pair> secondary_accessor;
     scma_test_pair pair_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_test_pair)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_test_pair)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_accessor.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, secondary_accessor.initialize());
     handle = scma_allocate(sizeof(scma_test_pair));
@@ -187,7 +187,7 @@ FT_TEST(test_scma_accessor_double_struct_semantics)
     scma_test_quad write_value;
     scma_test_quad read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_test_quad)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_test_quad)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(scma_test_quad));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -221,7 +221,7 @@ FT_TEST(test_scma_accessor_dereference_reads_value)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
     int read_value;
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int) * 2));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int) * 2);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -243,7 +243,7 @@ FT_TEST(test_scma_accessor_bind_rejects_invalid_handle)
     scma_handle_accessor<int> accessor;
     scma_handle invalid_handle;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(32));
+    FT_ASSERT_EQ(0, scma_test_initialize(32));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     invalid_handle.index = FT_SYSTEM_SIZE_MAX;
     invalid_handle.generation = FT_SYSTEM_SIZE_MAX;
@@ -259,12 +259,12 @@ FT_TEST(test_scma_accessor_detects_stale_handle)
     scma_handle_accessor<scma_test_pair> accessor;
     scma_test_pair pair_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_test_pair)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_test_pair)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(scma_test_pair));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, accessor.bind(handle));
-    FT_ASSERT_EQ(1, scma_free(handle));
+    FT_ASSERT_EQ(0, scma_free(handle));
     FT_ASSERT_EQ(0, accessor.read_struct(pair_value));
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.get_error());
     scma_shutdown();
@@ -276,7 +276,7 @@ FT_TEST(test_scma_accessor_get_count_matches_capacity)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int) * 4));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int) * 4);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));

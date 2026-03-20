@@ -401,8 +401,14 @@ FT_TEST(test_http_client_streaming_chunks)
     http_stream_handler_state handler_state;
     int client_result;
     ft_string port_string;
+    int headers_initialized;
+    int chunk_zero_initialized;
+    int chunk_one_initialized;
+    int chunk_two_initialized;
 
     if (server_configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (server_socket.enable_thread_safety() != FT_ERR_SUCCESS)
         return (0);
     server_configuration._type = SocketType::SERVER;
     std::strncpy(server_configuration._ip, "127.0.0.1",
@@ -410,17 +416,35 @@ FT_TEST(test_http_client_streaming_chunks)
     server_configuration._ip[sizeof(server_configuration._ip) - 1] = '\0';
     server_configuration._port = 0;
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
+    if (port_string.initialize() != FT_ERR_SUCCESS)
+        goto cleanup;
     if (get_socket_port_string(server_socket, port_string) == false)
-        return (0);
+        goto cleanup;
     server_context.server_socket = &server_socket;
     server_thread = ft_thread(http_stream_test_server, &server_context);
     if (!server_thread.joinable())
-        return (0);
+        goto cleanup;
     usleep(50000);
     handler_state.status_code = 0;
     handler_state.finished = FT_FALSE;
     handler_state.chunk_count = 0;
+    headers_initialized = 0;
+    chunk_zero_initialized = 0;
+    chunk_one_initialized = 0;
+    chunk_two_initialized = 0;
+    if (handler_state.headers.initialize() != FT_ERR_SUCCESS)
+        goto cleanup;
+    headers_initialized = 1;
+    if (handler_state.chunks[0].initialize() != FT_ERR_SUCCESS)
+        goto cleanup;
+    chunk_zero_initialized = 1;
+    if (handler_state.chunks[1].initialize() != FT_ERR_SUCCESS)
+        goto cleanup;
+    chunk_one_initialized = 1;
+    if (handler_state.chunks[2].initialize() != FT_ERR_SUCCESS)
+        goto cleanup;
+    chunk_two_initialized = 1;
     handler_state.headers.clear();
     handler_state.chunks[0].clear();
     handler_state.chunks[1].clear();
@@ -442,10 +466,41 @@ FT_TEST(test_http_client_streaming_chunks)
     if (ft_strcmp(handler_state.chunks[0].c_str(), "4\r\nWiki\r\n") != 0)
         return (0);
     if (ft_strcmp(handler_state.chunks[1].c_str(), "5\r\npedia\r\n") != 0)
-        return (0);
+        goto cleanup;
     if (ft_strcmp(handler_state.chunks[2].c_str(), "0\r\n\r\n") != 0)
+        goto cleanup;
+    goto cleanup_success;
+
+cleanup_success:
+    if (handler_state.chunks[2].destroy() != FT_ERR_SUCCESS)
+        return (0);
+    if (handler_state.chunks[1].destroy() != FT_ERR_SUCCESS)
+        return (0);
+    if (handler_state.chunks[0].destroy() != FT_ERR_SUCCESS)
+        return (0);
+    if (handler_state.headers.destroy() != FT_ERR_SUCCESS)
+        return (0);
+    if (port_string.destroy() != FT_ERR_SUCCESS)
+        return (0);
+    if (server_socket.destroy() != FT_ERR_SUCCESS)
         return (0);
     return (1);
+
+cleanup:
+    if (server_socket.destroy() != FT_ERR_SUCCESS)
+        return (0);
+    if (server_thread.joinable())
+        server_thread.join();
+    if (chunk_two_initialized == 1)
+        (void)handler_state.chunks[2].destroy();
+    if (chunk_one_initialized == 1)
+        (void)handler_state.chunks[1].destroy();
+    if (chunk_zero_initialized == 1)
+        (void)handler_state.chunks[0].destroy();
+    if (headers_initialized == 1)
+        (void)handler_state.headers.destroy();
+    (void)port_string.destroy();
+    return (0);
 }
 #endif
 

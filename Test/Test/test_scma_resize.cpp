@@ -11,7 +11,7 @@ FT_TEST(test_scma_resize_grows_preserves_data)
     int read_value;
     ft_size_t index;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int) * 4));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 4));
     handle = scma_allocate(sizeof(int) * 2);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     index = 0;
@@ -64,7 +64,7 @@ FT_TEST(test_scma_resize_shrinks_truncates_tail)
     int read_value;
     ft_size_t index;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int) * 3));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 3));
     handle = scma_allocate(sizeof(int) * 3);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     index = 0;
@@ -103,7 +103,7 @@ FT_TEST(test_scma_resize_rejects_zero_size)
 {
     scma_handle handle;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(0, scma_resize(handle, 0));

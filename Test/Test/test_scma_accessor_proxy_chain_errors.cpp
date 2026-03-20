@@ -21,7 +21,7 @@ FT_TEST(test_scma_proxy_invalid_index_reports_error)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -42,7 +42,7 @@ FT_TEST(test_scma_proxy_invalid_chain_arrow_returns_safe_pointer)
     scma_handle_accessor<scma_chain_value> accessor;
     scma_chain_value read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_chain_value)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_chain_value)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(scma_chain_value));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -65,20 +65,27 @@ FT_TEST(test_scma_proxy_invalid_assignment_is_noop)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
     int read_value;
+    int write_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, accessor.bind(handle));
-    accessor[0] = 9;
+    write_value = 9;
+    FT_ASSERT_EQ(1, accessor.write_at(write_value, 0));
 
-    auto element_proxy = accessor[2];
-    element_proxy = 77;
+    {
+        auto element_proxy = accessor[2];
+        element_proxy = 77;
+
+        FT_ASSERT_EQ(FT_ERR_INVALID_STATE, element_proxy.get_error());
+    }
 
     FT_ASSERT_EQ(1, accessor.read_at(read_value, 0));
     FT_ASSERT_EQ(9, read_value);
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, element_proxy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
+    FT_ASSERT_EQ(0, scma_free(handle));
     scma_shutdown();
     return (1);
 }
@@ -88,21 +95,27 @@ FT_TEST(test_scma_proxy_failure_does_not_block_next_valid_operation)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
     int read_value;
+    int write_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, accessor.bind(handle));
 
-    auto invalid_proxy = accessor[9];
-    FT_ASSERT_EQ(0, invalid_proxy.is_valid());
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, accessor.get_error());
+    {
+        auto invalid_proxy = accessor[9];
+        FT_ASSERT_EQ(0, invalid_proxy.is_valid());
+        FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, accessor.get_error());
+    }
 
-    accessor[0] = 25;
+    write_value = 25;
+    FT_ASSERT_EQ(1, accessor.write_at(write_value, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.get_error());
     FT_ASSERT_EQ(1, accessor.read_at(read_value, 0));
     FT_ASSERT_EQ(25, read_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
+    FT_ASSERT_EQ(0, scma_free(handle));
     scma_shutdown();
     return (1);
 }
@@ -112,12 +125,12 @@ FT_TEST(test_scma_proxy_instances_track_errors_independently)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, accessor.bind(handle));
-    accessor[0] = 5;
+    FT_ASSERT_EQ(1, accessor.write_at(5, 0));
 
     auto invalid_proxy = accessor[4];
     auto valid_proxy = accessor[0];
@@ -135,12 +148,12 @@ FT_TEST(test_scma_const_proxy_invalid_index_reports_error)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, accessor.bind(handle));
-    accessor[0] = 6;
+    FT_ASSERT_EQ(1, accessor.write_at(6, 0));
 
     const scma_handle_accessor<int> &const_accessor = accessor;
     auto invalid_proxy = const_accessor[8];
@@ -156,7 +169,7 @@ FT_TEST(test_scma_const_proxy_invalid_arrow_is_safe)
     scma_handle handle;
     scma_handle_accessor<scma_chain_value> accessor;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_chain_value)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_chain_value)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(scma_chain_value));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -178,21 +191,27 @@ FT_TEST(test_scma_proxy_invalid_dereference_uses_fallback)
     scma_handle handle;
     scma_handle_accessor<int> accessor;
     int read_value;
+    int write_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, accessor.bind(handle));
-    accessor[0] = 14;
+    write_value = 14;
+    FT_ASSERT_EQ(1, accessor.write_at(write_value, 0));
 
-    auto invalid_proxy = accessor[7];
-    int &fallback_reference = *invalid_proxy;
-    fallback_reference = 1234;
+    {
+        auto invalid_proxy = accessor[7];
+        int &fallback_reference = *invalid_proxy;
+        (void)fallback_reference;
+        FT_ASSERT_EQ(FT_ERR_INVALID_STATE, invalid_proxy.get_error());
+    }
 
     FT_ASSERT_EQ(1, accessor.read_at(read_value, 0));
     FT_ASSERT_EQ(14, read_value);
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, invalid_proxy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
+    FT_ASSERT_EQ(0, scma_free(handle));
     scma_shutdown();
     return (1);
 }
@@ -203,7 +222,7 @@ FT_TEST(test_scma_proxy_valid_arrow_writes_back_on_scope_end)
     scma_handle_accessor<scma_chain_value> accessor;
     scma_chain_value read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_chain_value)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(scma_chain_value)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(scma_chain_value));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
@@ -227,13 +246,18 @@ FT_TEST(test_scma_accessor_error_is_overwritten_by_success)
     scma_handle_accessor<int> accessor;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, accessor.bind(handle));
 
-    (void)accessor[10];
+    {
+        auto invalid_proxy = accessor[10];
+
+        FT_ASSERT_EQ(0, invalid_proxy.is_valid());
+        FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, invalid_proxy.get_error());
+    }
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, accessor.get_error());
 
     FT_ASSERT_EQ(1, accessor.write_at(44, 0));

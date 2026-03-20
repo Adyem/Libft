@@ -57,7 +57,7 @@ FT_TEST(test_scma_initialize_enables_thread_safety)
     scma_test_reset();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_disable_thread_safety());
     FT_ASSERT_EQ(false, scma_is_thread_safe_enabled());
-    FT_ASSERT_EQ(1, scma_initialize(64));
+    FT_ASSERT_EQ(0, scma_initialize(64));
     FT_ASSERT_EQ(true, scma_is_thread_safe_enabled());
     scma_shutdown();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_disable_thread_safety());

@@ -1620,17 +1620,29 @@ FT_TEST(test_api_request_formats_large_content_length)
 }
 
 #if NETWORKING_HAS_OPENSSL
-FT_TEST(test_http2_frame_roundtrip)
+struct api_http2_frame_roundtrip_result
+{
+    int32_t status;
+};
+
+static int32_t api_http2_frame_roundtrip_body(void)
 {
     http2_frame input_frame;
     ft_string encoded;
     http2_frame decoded_frame;
+    size_t offset;
+    int error_code;
+    uint8_t decoded_type;
+    uint8_t input_type;
+    uint8_t decoded_flags;
+    uint8_t input_flags;
+    uint32_t decoded_stream_identifier;
+    uint32_t input_stream_identifier;
+    ft_string decoded_payload;
+    ft_string input_payload;
 
     if (encoded.initialize() != FT_ERR_SUCCESS)
         return (0);
-    size_t offset;
-    int error_code;
-
     if (input_frame.initialize() != FT_ERR_SUCCESS)
         return (0);
     if (!input_frame.set_type(0x1))
@@ -1656,15 +1668,6 @@ FT_TEST(test_http2_frame_roundtrip)
         return (0);
     if (error_code != FT_ERR_SUCCESS)
         return (0);
-    uint8_t decoded_type;
-    uint8_t input_type;
-    uint8_t decoded_flags;
-    uint8_t input_flags;
-    uint32_t decoded_stream_identifier;
-    uint32_t input_stream_identifier;
-    ft_string decoded_payload;
-    ft_string input_payload;
-
     if (!decoded_frame.get_type(decoded_type))
         return (0);
     if (!input_frame.get_type(input_type))
@@ -1688,6 +1691,37 @@ FT_TEST(test_http2_frame_roundtrip)
     if (!input_frame.copy_payload(input_payload))
         return (0);
     if (!(decoded_payload == input_payload))
+        return (0);
+    return (1);
+}
+
+static void *api_http2_frame_roundtrip_worker(void *argument)
+{
+    api_http2_frame_roundtrip_result *result;
+
+    result = static_cast<api_http2_frame_roundtrip_result *>(argument);
+    result->status = api_http2_frame_roundtrip_body();
+    return (ft_nullptr);
+}
+
+FT_TEST(test_http2_frame_roundtrip)
+{
+    pthread_t worker_thread;
+    api_http2_frame_roundtrip_result worker_result;
+    int32_t thread_create_result;
+    int32_t thread_join_result;
+
+    worker_result.status = 0;
+    thread_create_result = pt_thread_create(&worker_thread, ft_nullptr,
+            api_http2_frame_roundtrip_worker, &worker_result);
+    if (thread_create_result != 0)
+        return (0);
+    thread_join_result = pt_thread_timed_join(worker_thread, ft_nullptr, 5000);
+    if (thread_join_result != 0)
+        (void)pt_thread_detach(worker_thread);
+    if (thread_join_result != 0)
+        return (0);
+    if (worker_result.status != 1)
         return (0);
     return (1);
 }

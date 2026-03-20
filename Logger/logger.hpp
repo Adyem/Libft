@@ -212,6 +212,8 @@ class ft_logger
         mutable int32_t _error_code;
 
         void set_error(int32_t error_code_value) const noexcept;
+        friend void ft_log_vwrite(t_log_level level, const char *format_string, va_list argument_list);
+        friend void ft_log_process_message(const ft_string &message);
 
         int32_t lock(ft_bool *lock_acquired) const noexcept;
         void unlock(ft_bool lock_acquired) const noexcept;

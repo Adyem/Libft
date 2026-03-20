@@ -101,9 +101,7 @@ static int expect_no_sigabrt_on_uninitialised_destructor()
 
 static int is_non_aborting_uninitialised_destroy_result(int error_code)
 {
-    if (error_code == FT_ERR_SUCCESS)
-        return (1);
-    return (error_code == FT_ERR_INVALID_STATE);
+    return (error_code == FT_ERR_SUCCESS);
 }
 
 FT_TEST(test_game_price_definition_destroy_uninitialised_returns_invalid_state)

@@ -30,7 +30,7 @@ FT_TEST(test_scma_runtime_recursive_mutex_depth_is_balanced)
 {
     pt_recursive_mutex *mutex_pointer;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     mutex_pointer = scma_runtime_mutex();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_expect_recursive_mutex_usable(mutex_pointer));
     scma_shutdown();
@@ -44,7 +44,7 @@ FT_TEST(test_scma_accessor_methods_leave_runtime_mutex_unlocked)
     pt_recursive_mutex *mutex_pointer;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int) * 2));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 2));
     handle = scma_allocate(sizeof(int) * 2);
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
@@ -73,7 +73,7 @@ FT_TEST(test_scma_failure_paths_leave_runtime_mutex_unlocked)
     invalid_handle.index = FT_SYSTEM_SIZE_MAX;
     invalid_handle.generation = FT_SYSTEM_SIZE_MAX;
     read_value = 0;
-    FT_ASSERT_EQ(1, scma_test_initialize(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
@@ -98,7 +98,7 @@ FT_TEST(test_scma_late_allocate_failure_leaves_runtime_mutex_unlocked)
     int stored_value;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(128));
+    FT_ASSERT_EQ(0, scma_test_initialize(128));
     stable_handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(stable_handle));
     stored_value = 42;
@@ -122,7 +122,7 @@ FT_TEST(test_scma_late_resize_failure_leaves_runtime_mutex_unlocked)
     int stored_value;
     int read_value;
 
-    FT_ASSERT_EQ(1, scma_test_initialize(128));
+    FT_ASSERT_EQ(0, scma_test_initialize(128));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     stored_value = 99;

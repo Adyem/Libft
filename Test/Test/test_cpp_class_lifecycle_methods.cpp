@@ -171,7 +171,7 @@ FT_TEST(test_data_buffer_destroy_tolerates_destroyed_instance)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, buffer_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
     return (1);
 }
 

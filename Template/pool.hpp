@@ -415,6 +415,11 @@ int32_t Pool<T>::initialize()
         errno_abort_lifecycle(this->_initialised_state, "Pool::initialize", "called while object is already initialised");
         return (set_error(FT_ERR_INVALID_STATE));
     }
+    if (this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        (void)this->_slots.destroy();
+        (void)this->_free_indices.destroy();
+    }
     slots_initialize_error = this->_slots.initialize();
     if (slots_initialize_error != FT_ERR_SUCCESS)
     {

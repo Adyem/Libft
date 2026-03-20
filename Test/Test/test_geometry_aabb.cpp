@@ -3,11 +3,13 @@
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../PThread/pthread.hpp"
 #include <atomic>
 #include <cmath>
 #include <chrono>
 #include <csignal>
 #include <limits>
+#include <new>
 #include <thread>
 
 #ifndef LIBFT_TEST_BUILD
@@ -1750,14 +1752,49 @@ FT_TEST(test_intersect_aabb_high_load_with_mutating_overlap)
 
 FT_TEST(test_aabb_move_ring_high_load_three_threads)
 {
+    struct s_aabb_ring_worker_args
+    {
+        aabb               *source;
+        aabb               *destination;
+        std::atomic<bool>  *worker_failed;
+        int                iteration_limit;
+    };
     aabb first;
     aabb second;
     aabb third;
     std::atomic<bool> worker_failed;
-    std::thread thread_one;
-    std::thread thread_two;
-    std::thread thread_three;
+    s_aabb_ring_worker_args thread_one_args;
+    s_aabb_ring_worker_args thread_two_args;
+    s_aabb_ring_worker_args thread_three_args;
+    pthread_t thread_one;
+    pthread_t thread_two;
+    pthread_t thread_three;
+    int thread_create_result;
+    int join_result;
+    long join_timeout_ms;
+    void *(*ring_worker)(void *);
 
+    ring_worker = [](void *argument) -> void *
+    {
+        s_aabb_ring_worker_args *worker_args;
+        int local_iteration_index;
+        int local_move_error;
+
+        worker_args = static_cast<s_aabb_ring_worker_args *>(argument);
+        local_iteration_index = 0;
+        while (local_iteration_index < worker_args->iteration_limit
+            && worker_args->worker_failed->load() == false)
+        {
+            local_move_error = worker_args->source->move(*worker_args->destination);
+            if (local_move_error != FT_ERR_SUCCESS)
+            {
+                worker_args->worker_failed->store(true);
+                break ;
+            }
+            local_iteration_index = local_iteration_index + 1;
+        }
+        return (ft_nullptr);
+    };
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(-1.0, -1.0, 1.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(-2.0, -2.0, 2.0, 2.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, third.initialize(-3.0, -3.0, 3.0, 3.0));
@@ -1765,60 +1802,49 @@ FT_TEST(test_aabb_move_ring_high_load_three_threads)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, third.enable_thread_safety());
     worker_failed.store(false);
-    thread_one = std::thread([&first, &second, &worker_failed]() {
-        int local_iteration_index;
-        int local_move_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < 2048 && worker_failed.load() == false)
-        {
-            local_move_error = first.move(second);
-            if (local_move_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    thread_two = std::thread([&second, &third, &worker_failed]() {
-        int local_iteration_index;
-        int local_move_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < 2048 && worker_failed.load() == false)
-        {
-            local_move_error = second.move(third);
-            if (local_move_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    thread_three = std::thread([&third, &first, &worker_failed]() {
-        int local_iteration_index;
-        int local_move_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < 2048 && worker_failed.load() == false)
-        {
-            local_move_error = third.move(first);
-            if (local_move_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    thread_one.join();
-    thread_two.join();
-    thread_three.join();
+    thread_one_args.source = &first;
+    thread_one_args.destination = &second;
+    thread_one_args.worker_failed = &worker_failed;
+    thread_one_args.iteration_limit = 2048;
+    thread_two_args.source = &second;
+    thread_two_args.destination = &third;
+    thread_two_args.worker_failed = &worker_failed;
+    thread_two_args.iteration_limit = 2048;
+    thread_three_args.source = &third;
+    thread_three_args.destination = &first;
+    thread_three_args.worker_failed = &worker_failed;
+    thread_three_args.iteration_limit = 2048;
+    thread_create_result = pt_thread_create(&thread_one, ft_nullptr,
+            ring_worker, &thread_one_args);
+    FT_ASSERT_EQ(0, thread_create_result);
+    thread_create_result = pt_thread_create(&thread_two, ft_nullptr,
+            ring_worker, &thread_two_args);
+    FT_ASSERT_EQ(0, thread_create_result);
+    thread_create_result = pt_thread_create(&thread_three, ft_nullptr,
+            ring_worker, &thread_three_args);
+    FT_ASSERT_EQ(0, thread_create_result);
+    join_timeout_ms = 5000;
+    join_result = pt_thread_timed_join(thread_one, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+    {
+        worker_failed.store(true);
+        (void)pt_thread_cancel(thread_one);
+    }
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(thread_two, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+    {
+        worker_failed.store(true);
+        (void)pt_thread_cancel(thread_two);
+    }
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(thread_three, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+    {
+        worker_failed.store(true);
+        (void)pt_thread_cancel(thread_three);
+    }
+    FT_ASSERT_EQ(0, join_result);
     FT_ASSERT_EQ(false, worker_failed.load());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.destroy());
@@ -1828,91 +1854,191 @@ FT_TEST(test_aabb_move_ring_high_load_three_threads)
 
 FT_TEST(test_aabb_set_bounds_getters_contention_high_load_four_threads)
 {
-    aabb box;
-    std::atomic<bool> worker_failed;
-    std::thread writer_thread;
-    std::thread reader_thread_one;
-    std::thread reader_thread_two;
-    std::thread reader_thread_three;
+    struct s_aabb_contention_worker_args
+    {
+        aabb               *box;
+        std::atomic<bool>  *worker_failed;
+        int                iteration_limit;
+    };
+    aabb *box;
+    std::atomic<bool> *worker_failed;
+    s_aabb_contention_worker_args *writer_args;
+    s_aabb_contention_worker_args *reader_args_one;
+    s_aabb_contention_worker_args *reader_args_two;
+    s_aabb_contention_worker_args *reader_args_three;
+    pthread_t writer_thread;
+    pthread_t reader_thread_one;
+    pthread_t reader_thread_two;
+    pthread_t reader_thread_three;
+    int thread_create_result;
+    int join_result;
+    long join_timeout_ms;
+    void *(*writer_worker)(void *);
+    void *(*reader_worker_one)(void *);
+    void *(*reader_worker_two)(void *);
+    void *(*reader_worker_three)(void *);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(-1.0, -1.0, 1.0, 1.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    worker_failed.store(false);
-    writer_thread = std::thread([&box, &worker_failed]() {
+    writer_worker = [](void *argument) -> void *
+    {
+        s_aabb_contention_worker_args *worker_args;
         int local_iteration_index;
         int local_set_error;
 
+        worker_args = static_cast<s_aabb_contention_worker_args *>(argument);
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < worker_args->iteration_limit
+            && worker_args->worker_failed->load() == false)
         {
             if ((local_iteration_index % 2) == 0)
-                local_set_error = box.set_bounds(-2.0, -2.0, 2.0, 2.0);
+                local_set_error = worker_args->box->set_bounds(-2.0, -2.0, 2.0, 2.0);
             else
-                local_set_error = box.set_bounds(-3.0, -1.0, 3.0, 1.0);
+                local_set_error = worker_args->box->set_bounds(-3.0, -1.0, 3.0, 1.0);
             if (local_set_error != FT_ERR_SUCCESS)
             {
-                worker_failed.store(true);
-                break;
+                worker_args->worker_failed->store(true);
+                break ;
             }
             local_iteration_index = local_iteration_index + 1;
         }
-        return ;
-    });
-    reader_thread_one = std::thread([&box, &worker_failed]() {
+        return (ft_nullptr);
+    };
+    reader_worker_one = [](void *argument) -> void *
+    {
+        s_aabb_contention_worker_args *worker_args;
         int local_iteration_index;
 
+        worker_args = static_cast<s_aabb_contention_worker_args *>(argument);
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < worker_args->iteration_limit
+            && worker_args->worker_failed->load() == false)
         {
-            if (box.get_minimum_x() > box.get_maximum_x())
+            if (worker_args->box->get_minimum_x() > worker_args->box->get_maximum_x())
             {
-                worker_failed.store(true);
-                break;
+                worker_args->worker_failed->store(true);
+                break ;
             }
             local_iteration_index = local_iteration_index + 1;
         }
-        return ;
-    });
-    reader_thread_two = std::thread([&box, &worker_failed]() {
+        return (ft_nullptr);
+    };
+    reader_worker_two = [](void *argument) -> void *
+    {
+        s_aabb_contention_worker_args *worker_args;
         int local_iteration_index;
 
+        worker_args = static_cast<s_aabb_contention_worker_args *>(argument);
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < worker_args->iteration_limit
+            && worker_args->worker_failed->load() == false)
         {
-            if (box.get_minimum_y() > box.get_maximum_y())
+            if (worker_args->box->get_minimum_y() > worker_args->box->get_maximum_y())
             {
-                worker_failed.store(true);
-                break;
+                worker_args->worker_failed->store(true);
+                break ;
             }
             local_iteration_index = local_iteration_index + 1;
         }
-        return ;
-    });
-    reader_thread_three = std::thread([&box, &worker_failed]() {
+        return (ft_nullptr);
+    };
+    reader_worker_three = [](void *argument) -> void *
+    {
+        s_aabb_contention_worker_args *worker_args;
         int local_iteration_index;
         double minimum_x;
         double maximum_x;
 
+        worker_args = static_cast<s_aabb_contention_worker_args *>(argument);
         local_iteration_index = 0;
-        while (local_iteration_index < 3072 && worker_failed.load() == false)
+        while (local_iteration_index < worker_args->iteration_limit
+            && worker_args->worker_failed->load() == false)
         {
-            minimum_x = box.get_minimum_x();
-            maximum_x = box.get_maximum_x();
+            minimum_x = worker_args->box->get_minimum_x();
+            maximum_x = worker_args->box->get_maximum_x();
             if (minimum_x > maximum_x)
             {
-                worker_failed.store(true);
-                break;
+                worker_args->worker_failed->store(true);
+                break ;
             }
             local_iteration_index = local_iteration_index + 1;
         }
-        return ;
-    });
-    writer_thread.join();
-    reader_thread_one.join();
-    reader_thread_two.join();
-    reader_thread_three.join();
-    FT_ASSERT_EQ(false, worker_failed.load());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
+        return (ft_nullptr);
+    };
+    box = new (std::nothrow) aabb();
+    worker_failed = new (std::nothrow) std::atomic<bool>();
+    writer_args = new (std::nothrow) s_aabb_contention_worker_args();
+    reader_args_one = new (std::nothrow) s_aabb_contention_worker_args();
+    reader_args_two = new (std::nothrow) s_aabb_contention_worker_args();
+    reader_args_three = new (std::nothrow) s_aabb_contention_worker_args();
+    FT_ASSERT(box != ft_nullptr);
+    FT_ASSERT(worker_failed != ft_nullptr);
+    FT_ASSERT(writer_args != ft_nullptr);
+    FT_ASSERT(reader_args_one != ft_nullptr);
+    FT_ASSERT(reader_args_two != ft_nullptr);
+    FT_ASSERT(reader_args_three != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box->initialize(-1.0, -1.0, 1.0, 1.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box->enable_thread_safety());
+    worker_failed->store(false);
+    writer_args->box = box;
+    writer_args->worker_failed = worker_failed;
+    writer_args->iteration_limit = 3072;
+    reader_args_one->box = box;
+    reader_args_one->worker_failed = worker_failed;
+    reader_args_one->iteration_limit = 3072;
+    reader_args_two->box = box;
+    reader_args_two->worker_failed = worker_failed;
+    reader_args_two->iteration_limit = 3072;
+    reader_args_three->box = box;
+    reader_args_three->worker_failed = worker_failed;
+    reader_args_three->iteration_limit = 3072;
+    thread_create_result = pt_thread_create(&writer_thread, ft_nullptr,
+            writer_worker, writer_args);
+    FT_ASSERT_EQ(0, thread_create_result);
+    thread_create_result = pt_thread_create(&reader_thread_one, ft_nullptr,
+            reader_worker_one, reader_args_one);
+    FT_ASSERT_EQ(0, thread_create_result);
+    thread_create_result = pt_thread_create(&reader_thread_two, ft_nullptr,
+            reader_worker_two, reader_args_two);
+    FT_ASSERT_EQ(0, thread_create_result);
+    thread_create_result = pt_thread_create(&reader_thread_three, ft_nullptr,
+            reader_worker_three, reader_args_three);
+    FT_ASSERT_EQ(0, thread_create_result);
+    join_timeout_ms = 5000;
+    join_result = pt_thread_timed_join(writer_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+    {
+        worker_failed->store(true);
+        (void)pt_thread_cancel(writer_thread);
+    }
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(reader_thread_one, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+    {
+        worker_failed->store(true);
+        (void)pt_thread_cancel(reader_thread_one);
+    }
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(reader_thread_two, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+    {
+        worker_failed->store(true);
+        (void)pt_thread_cancel(reader_thread_two);
+    }
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(reader_thread_three, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+    {
+        worker_failed->store(true);
+        (void)pt_thread_cancel(reader_thread_three);
+    }
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(false, worker_failed->load());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box->destroy());
+    delete reader_args_three;
+    delete reader_args_two;
+    delete reader_args_one;
+    delete writer_args;
+    delete worker_failed;
+    delete box;
     return (1);
 }
 

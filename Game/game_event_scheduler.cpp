@@ -192,7 +192,7 @@ int32_t game_event_scheduler::initialize() noexcept
     if (initialize_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error((uint32_t)initialize_error);
+        this->set_error(static_cast<uint32_t>(initialize_error));
         return (initialize_error);
     }
     initialize_error = this->_ready_cache.initialize();
@@ -200,7 +200,7 @@ int32_t game_event_scheduler::initialize() noexcept
     {
         (void)this->_events.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error((uint32_t)initialize_error);
+        this->set_error(static_cast<uint32_t>(initialize_error));
         return (initialize_error);
     }
     this->_events.clear();
