@@ -2703,6 +2703,7 @@ FT_TEST(test_intersect_aabb_high_load_mutating_overlap_soak_rounds)
                 if (local_set_error != FT_ERR_SUCCESS)
                     worker_failed.store(true);
                 iteration_index = iteration_index + 1;
+                std::this_thread::yield();
             }
             return ;
         });
@@ -2716,6 +2717,7 @@ FT_TEST(test_intersect_aabb_high_load_mutating_overlap_soak_rounds)
                     || intersect_aabb(second, first) == false)
                     worker_failed.store(true);
                 iteration_index = iteration_index + 1;
+                std::this_thread::yield();
             }
             return ;
         });

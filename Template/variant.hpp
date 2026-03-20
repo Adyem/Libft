@@ -362,8 +362,6 @@ ft_variant<Types...>::~ft_variant()
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
-    if (this->_mutex != ft_nullptr)
-        (void)this->disable_thread_safety();
     (void)set_error(previous_error);
     return ;
 }
@@ -411,6 +409,7 @@ int32_t ft_variant<Types...>::destroy()
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t disable_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (set_error(FT_ERR_SUCCESS));
@@ -425,6 +424,11 @@ int32_t ft_variant<Types...>::destroy()
         this->_data = ft_nullptr;
     }
     (void)this->unlock_internal(lock_acquired);
+    disable_error = FT_ERR_SUCCESS;
+    if (this->_mutex != ft_nullptr)
+        disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (set_error(disable_error));
     this->_index = npos;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (set_error(FT_ERR_SUCCESS));

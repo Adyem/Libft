@@ -11,11 +11,13 @@ FT_TEST(test_ft_deque_move_constructor_clears_empty_error)
 {
     ft_deque<int> source_deque;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.initialize());
     source_deque.pop_front();
     FT_ASSERT_EQ(FT_ERR_EMPTY, source_deque.get_error());
 
     ft_deque<int> moved_deque;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_deque.initialize());
     moved_deque.push_back(4);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_deque.get_error());
     moved_deque.push_back(6);
@@ -29,6 +31,8 @@ FT_TEST(test_ft_deque_move_constructor_clears_empty_error)
     FT_ASSERT_EQ(1u, source_deque.size());
     FT_ASSERT_EQ(8, source_deque.pop_back());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_deque.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.destroy());
     return (1);
 }
 
@@ -37,10 +41,12 @@ FT_TEST(test_ft_deque_move_assignment_clears_empty_error)
     ft_deque<int> destination_deque;
     ft_deque<int> source_deque;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_deque.initialize());
     destination_deque.push_back(1);
     destination_deque.pop_back();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_deque.get_error());
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.initialize());
     source_deque.pop_back();
     FT_ASSERT_EQ(FT_ERR_EMPTY, source_deque.get_error());
 
@@ -66,5 +72,7 @@ FT_TEST(test_ft_deque_move_assignment_clears_empty_error)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.get_error());
     FT_ASSERT_EQ(9, source_deque.pop_front());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_deque.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.destroy());
     return (1);
 }

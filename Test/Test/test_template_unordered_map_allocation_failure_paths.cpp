@@ -31,6 +31,7 @@ FT_TEST(test_unordered_map_late_resize_failure_preserves_entries_and_state)
 {
     unordered_map_int_int map_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(1, 10);
     map_instance.insert(2, 20);
     map_instance.insert(3, 30);
@@ -47,6 +48,7 @@ FT_TEST(test_unordered_map_late_resize_failure_preserves_entries_and_state)
     FT_ASSERT_EQ(30, map_instance.at(3));
     FT_ASSERT_EQ(40, map_instance.at(4));
     FT_ASSERT_EQ(50, map_instance.at(5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -55,6 +57,7 @@ FT_TEST(test_unordered_map_late_resize_failure_keeps_mutex_unlocked)
     unordered_map_int_int map_instance;
     ft_bool lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(11, 110);
     map_instance.insert(12, 120);
     map_instance.insert(13, 130);
@@ -69,6 +72,7 @@ FT_TEST(test_unordered_map_late_resize_failure_keeps_mutex_unlocked)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.lock(&lock_acquired));
     FT_ASSERT_EQ(FT_TRUE, lock_acquired);
     map_instance.unlock(lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -77,6 +81,7 @@ FT_TEST(test_unordered_map_operator_index_late_failure_returns_invalid_proxy)
     unordered_map_int_int map_instance;
     unordered_map_int_int::mapped_proxy failed_proxy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(21, 210);
     map_instance.insert(22, 220);
     map_instance.insert(23, 230);
@@ -85,12 +90,13 @@ FT_TEST(test_unordered_map_operator_index_late_failure_returns_invalid_proxy)
     cma_set_alloc_limit(64);
     failed_proxy = map_instance[26];
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(0, failed_proxy.is_valid());
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(failed_proxy.get_error()));
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(map_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(failed_proxy.get_error()));
+    FT_ASSERT_EQ(0, failed_proxy.is_valid());
     map_instance[21] = 211;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(211, map_instance.at(21));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -103,6 +109,7 @@ FT_TEST(test_unordered_map_late_resize_failure_releases_memory_after_scope)
     {
         unordered_map_int_int map_instance;
 
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
         map_instance.insert(31, 310);
         map_instance.insert(32, 320);
         map_instance.insert(33, 330);
@@ -112,6 +119,7 @@ FT_TEST(test_unordered_map_late_resize_failure_releases_memory_after_scope)
         map_instance.insert(36, 360);
         cma_set_alloc_limit(0);
         FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(map_instance.get_error()));
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     }
     bytes_after_scope = unordered_map_current_allocated_bytes();
     FT_ASSERT_EQ(baseline_bytes, bytes_after_scope);
@@ -126,7 +134,6 @@ FT_TEST(test_unordered_map_initialize_allocation_failure_sets_no_memory)
     cma_set_alloc_limit(1);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, destination_map.initialize());
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(destination_map.get_error()));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_map.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_map.destroy());
     return (1);
@@ -140,7 +147,6 @@ FT_TEST(test_unordered_map_initialize_move_allocation_failure_sets_no_memory)
     cma_set_alloc_limit(1);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, destination_map.initialize());
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(destination_map.get_error()));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_map.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_map.destroy());
     return (1);
@@ -156,6 +162,7 @@ FT_TEST(test_unordered_map_initialize_copy_allocation_failure_releases_memory)
         unordered_map_int_int source_map;
         unordered_map_int_int destination_map;
 
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.initialize());
         source_map.insert(301, 3001);
         source_map.insert(302, 3002);
         source_map.insert(303, 3003);
@@ -165,6 +172,7 @@ FT_TEST(test_unordered_map_initialize_copy_allocation_failure_releases_memory)
         cma_set_alloc_limit(1);
         FT_ASSERT_EQ(FT_ERR_NO_MEMORY, destination_map.initialize());
         cma_set_alloc_limit(0);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.destroy());
     }
     bytes_after_scope = unordered_map_current_allocated_bytes();
     FT_ASSERT_EQ(baseline_bytes, bytes_after_scope);

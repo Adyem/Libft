@@ -42,10 +42,10 @@ int32_t logger_context_push(const s_log_field *fields, ft_size_t field_count,
 
     ensure_error = logger_context_ensure_entries_ready();
     if (ensure_error != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+        return (ensure_error);
     if (!pushed_count)
     {
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     *pushed_count = 0;
     if (field_count == 0)
@@ -54,7 +54,7 @@ int32_t logger_context_push(const s_log_field *fields, ft_size_t field_count,
     }
     if (!fields)
     {
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     entry_index = 0;
     while (entry_index < field_count)
@@ -70,37 +70,41 @@ int32_t logger_context_push(const s_log_field *fields, ft_size_t field_count,
         if (error_code_value != FT_ERR_SUCCESS)
         {
             logger_context_rollback(entry_index);
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         if (!field->key)
         {
             log_field_unlock(field, lock_acquired);
             logger_context_rollback(entry_index);
-            return (FT_ERR_INTERNAL);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
-        entry.key = field->key;
-        error_code_value = ft_string::get_error();
+        error_code_value = entry.key.initialize(field->key);
         if (error_code_value != FT_ERR_SUCCESS)
         {
             log_field_unlock(field, lock_acquired);
             logger_context_rollback(entry_index);
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         if (field->value)
         {
-            entry.value = field->value;
-            error_code_value = ft_string::get_error();
+            error_code_value = entry.value.initialize(field->value);
             if (error_code_value != FT_ERR_SUCCESS)
             {
                 log_field_unlock(field, lock_acquired);
                 logger_context_rollback(entry_index);
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
             entry.has_value = FT_TRUE;
         }
         else
         {
-            entry.value.clear();
+            error_code_value = entry.value.initialize();
+            if (error_code_value != FT_ERR_SUCCESS)
+            {
+                log_field_unlock(field, lock_acquired);
+                logger_context_rollback(entry_index);
+                return (error_code_value);
+            }
             entry.has_value = FT_FALSE;
         }
         log_field_unlock(field, lock_acquired);
@@ -109,7 +113,7 @@ int32_t logger_context_push(const s_log_field *fields, ft_size_t field_count,
         if (error_code_value != FT_ERR_SUCCESS)
         {
             logger_context_rollback(entry_index);
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         entry_index += 1;
     }
@@ -162,24 +166,23 @@ static int32_t logger_context_format_prefix(ft_string &prefix)
 
     ensure_error = logger_context_ensure_entries_ready();
     if (ensure_error != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+        return (ensure_error);
     if (prefix.initialize() != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_NO_MEMORY);
     entry_count = g_log_context_entries.size();
     error_code_value = g_log_context_entries.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     if (entry_count == 0)
     {
         return (FT_ERR_SUCCESS);
     }
-    prefix.append('[');
-    error_code_value = ft_string::get_error();
+    error_code_value = prefix.append('[');
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     entry_index = 0;
     first_entry = FT_TRUE;
@@ -190,53 +193,47 @@ static int32_t logger_context_format_prefix(ft_string &prefix)
         error_code_value = g_log_context_entries.get_error();
         if (error_code_value != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         if (!first_entry)
         {
-            prefix.append(' ');
-            error_code_value = ft_string::get_error();
+            error_code_value = prefix.append(' ');
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
         }
         else
             first_entry = FT_FALSE;
-        prefix.append(entry.key);
-        error_code_value = ft_string::get_error();
+        error_code_value = prefix.append(entry.key);
         if (error_code_value != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         if (entry.has_value)
         {
-            prefix.append('=');
-            error_code_value = ft_string::get_error();
+            error_code_value = prefix.append('=');
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
-            prefix.append(entry.value);
-            error_code_value = ft_string::get_error();
+            error_code_value = prefix.append(entry.value);
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
         }
         entry_index += 1;
     }
-    prefix.append(']');
-    error_code_value = ft_string::get_error();
+    error_code_value = prefix.append(']');
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
-    prefix.append(' ');
-    error_code_value = ft_string::get_error();
+    error_code_value = prefix.append(' ');
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     return (1);
 }
@@ -247,32 +244,29 @@ int32_t logger_context_apply_plain(ft_string &text)
     int32_t operation_result;
 
     operation_result = logger_context_format_prefix(prefix);
-    if (operation_result <= 0)
+    if (operation_result < 0)
     {
-        if (operation_result == 0)
         return (operation_result);
     }
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (operation_result == 0)
     {
-        return (FT_ERR_INTERNAL);
+        return (operation_result);
     }
-    ft_string combined(prefix);
-    int32_t error_code_value = ft_string::get_error();
+    ft_string combined;
+    int32_t error_code_value = combined.initialize(prefix);
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
-    combined.append(text);
-    error_code_value = ft_string::get_error();
+    error_code_value = combined.append(text);
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
-    text = combined;
-    error_code_value = ft_string::get_error();
+    error_code_value = text.initialize(combined);
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     return (FT_ERR_SUCCESS);
 }
@@ -304,23 +298,21 @@ static int32_t logger_context_append_flat_value(ft_string &output, const char *v
 
     if (!value)
     {
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (!logger_context_value_needs_quotes(value))
     {
-        output.append(value);
-        error_code_value = ft_string::get_error();
+        error_code_value = output.append(value);
         if (error_code_value != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         return (FT_ERR_SUCCESS);
     }
-    output.append('"');
-    error_code_value = ft_string::get_error();
+    error_code_value = output.append('"');
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     entry_index = 0;
     while (value[entry_index] != '\0')
@@ -330,17 +322,15 @@ static int32_t logger_context_append_flat_value(ft_string &output, const char *v
         character = value[entry_index];
         if (character == '"' || character == '\\')
         {
-            output.append('\\');
-            error_code_value = ft_string::get_error();
+            error_code_value = output.append('\\');
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
-            output.append(character);
-            error_code_value = ft_string::get_error();
+            error_code_value = output.append(character);
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
         }
         else if (static_cast<unsigned char>(character) < 0x20)
@@ -352,29 +342,26 @@ static int32_t logger_context_append_flat_value(ft_string &output, const char *v
             escape_buffer[2] = hex_digits[(static_cast<unsigned char>(character) >> 4) & 0x0F];
             escape_buffer[3] = hex_digits[static_cast<unsigned char>(character) & 0x0F];
             escape_buffer[4] = '\0';
-            output.append(escape_buffer);
-            error_code_value = ft_string::get_error();
+            error_code_value = output.append(escape_buffer);
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
         }
         else
         {
-            output.append(character);
-            error_code_value = ft_string::get_error();
+            error_code_value = output.append(character);
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
         }
         entry_index += 1;
     }
-    output.append('"');
-    error_code_value = ft_string::get_error();
+    error_code_value = output.append('"');
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     return (FT_ERR_SUCCESS);
 }
@@ -389,18 +376,17 @@ int32_t logger_context_format_flat(ft_string &output)
 
     ensure_error = logger_context_ensure_entries_ready();
     if (ensure_error != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
-    output.clear();
-    error_code_value = ft_string::get_error();
+        return (ensure_error);
+    error_code_value = output.clear();
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     entry_count = g_log_context_entries.size();
     error_code_value = g_log_context_entries.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     if (entry_count == 0)
     {
@@ -415,40 +401,32 @@ int32_t logger_context_format_flat(ft_string &output)
         error_code_value = g_log_context_entries.get_error();
         if (error_code_value != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         if (!first_entry)
         {
-            output.append(' ');
-            error_code_value = ft_string::get_error();
+            error_code_value = output.append(' ');
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
         }
         else
             first_entry = FT_FALSE;
-        output.append(entry.key);
-        error_code_value = ft_string::get_error();
+        error_code_value = output.append(entry.key);
         if (error_code_value != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         if (entry.has_value)
         {
-            output.append('=');
-            error_code_value = ft_string::get_error();
+            error_code_value = output.append('=');
             if (error_code_value != FT_ERR_SUCCESS)
             {
-                return (FT_ERR_INTERNAL);
-            }
-            error_code_value = ft_string::get_error();
-            if (error_code_value != FT_ERR_SUCCESS)
-            {
-                return (FT_ERR_INTERNAL);
+                return (error_code_value);
             }
             if (logger_context_append_flat_value(output, entry.value.c_str()) != 0)
-                return (FT_ERR_INTERNAL);
+                return (FT_ERR_INVALID_ARGUMENT);
         }
         entry_index += 1;
     }
@@ -464,20 +442,20 @@ int32_t logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
 
     ensure_error = logger_context_ensure_entries_ready();
     if (ensure_error != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+        return (ensure_error);
     if (snapshot.initialize() != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_NO_MEMORY);
     snapshot.clear();
     error_code_value = snapshot.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     entry_count = g_log_context_entries.size();
     error_code_value = g_log_context_entries.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (error_code_value);
     }
     entry_index = 0;
     while (entry_index < entry_count)
@@ -488,16 +466,19 @@ int32_t logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
         error_code_value = g_log_context_entries.get_error();
         if (error_code_value != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         view.key = entry.key.c_str();
-        view.value = entry.value.c_str();
+        if (entry.has_value)
+            view.value = entry.value.c_str();
+        else
+            view.value = ft_nullptr;
         view.has_value = entry.has_value;
         snapshot.push_back(view);
         error_code_value = snapshot.get_error();
         if (error_code_value != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (error_code_value);
         }
         entry_index += 1;
     }
@@ -537,7 +518,7 @@ int32_t ft_log_context_push(const s_log_field *fields, ft_size_t field_count)
     ft_size_t pushed_count;
 
     if (logger_context_push(fields, field_count, &pushed_count) != 0)
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     return (FT_ERR_SUCCESS);
 }
 

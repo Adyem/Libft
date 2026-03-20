@@ -10,6 +10,7 @@ FT_TEST(test_ft_circular_buffer_thread_safe_ops)
     ft_circular_buffer<int> buffer_instance(3);
     ft_bool lock_acquired = FT_FALSE;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.initialize());
     FT_ASSERT_EQ(0, buffer_instance.enable_thread_safety());
     FT_ASSERT(buffer_instance.is_thread_safe());
     FT_ASSERT_EQ(0, buffer_instance.lock(&lock_acquired));
@@ -22,6 +23,7 @@ FT_TEST(test_ft_circular_buffer_thread_safe_ops)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     buffer_instance.disable_thread_safety();
     FT_ASSERT_EQ(false, buffer_instance.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.destroy());
     return (1);
 }
 

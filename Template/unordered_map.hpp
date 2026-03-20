@@ -1082,7 +1082,7 @@ ft_bool ft_unordered_map<Key, MappedType>::has_valid_storage() const
 template <typename Key, typename MappedType>
 uint32_t ft_unordered_map<Key, MappedType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_unordered_map::get_error");
     return (ft_unordered_map<Key, MappedType>::_last_error);
 }
@@ -1090,7 +1090,7 @@ uint32_t ft_unordered_map<Key, MappedType>::get_error() const noexcept
 template <typename Key, typename MappedType>
 const char *ft_unordered_map<Key, MappedType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_unordered_map::get_error_str");
     return (ft_strerror(this->get_error()));
 }

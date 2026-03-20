@@ -181,12 +181,16 @@ FT_TEST(test_network_send_receive_ipv4)
     char buffer[16];
     ssize_t bytes_received;
 
+    if (server_configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     server_configuration._type = SocketType::SERVER;
     server_configuration._port = 54340;
     std::strncpy(server_configuration._ip, "127.0.0.1",
         sizeof(server_configuration._ip) - 1);
     server_configuration._ip[sizeof(server_configuration._ip) - 1] = '\0';
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+        return (0);
+    if (client_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54340;
@@ -230,14 +234,22 @@ FT_TEST(test_udp_send_receive_ipv4)
     socklen_t address_length;
     ssize_t receive_result;
 
+    if (server_configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     server_configuration._type = SocketType::SERVER;
     server_configuration._protocol = IPPROTO_UDP;
     server_configuration._port = 54341;
+    if (server.initialize() != FT_ERR_SUCCESS)
+        return (0);
     if (server.initialize(server_configuration) != FT_ERR_SUCCESS)
+        return (0);
+    if (client_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._protocol = IPPROTO_UDP;
     client_configuration._port = 54341;
+    if (client.initialize() != FT_ERR_SUCCESS)
+        return (0);
     if (client.initialize(client_configuration) != FT_ERR_SUCCESS)
         return (0);
     destination_address = server.get_address();
@@ -262,6 +274,8 @@ FT_TEST(test_udp_socket_propagates_ft_errno_on_creation_failure)
     udp_socket socket_instance;
     int initialize_result;
 
+    if (config.initialize() != FT_ERR_SUCCESS)
+        return (0);
     config._type = SocketType::CLIENT;
     config._address_family = AF_INET;
     config._protocol = 0;
@@ -274,6 +288,11 @@ FT_TEST(test_udp_socket_propagates_ft_errno_on_creation_failure)
     config._ip[sizeof(config._ip) - 1] = '\0';
     errno = 0;
     nw_set_socket_hook(socket_creation_failure_hook);
+    if (socket_instance.initialize() != FT_ERR_SUCCESS)
+    {
+        nw_set_socket_hook(ft_nullptr);
+        return (0);
+    }
     initialize_result = socket_instance.initialize(config);
     nw_set_socket_hook(ft_nullptr);
     FT_ASSERT(initialize_result != FT_ERR_SUCCESS);
@@ -286,6 +305,8 @@ FT_TEST(test_network_invalid_ip_address)
     SocketConfig configuration;
     ft_socket server_socket;
 
+    if (configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     configuration._type = SocketType::SERVER;
     std::strncpy(configuration._ip, "256.1.1.1", sizeof(configuration._ip) - 1);
     configuration._ip[sizeof(configuration._ip) - 1] = '\0';
@@ -311,6 +332,8 @@ FT_TEST(test_network_poll_ipv6_ready)
     char buffer[16];
     ssize_t bytes_received;
 
+    if (server_configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     server_configuration._type = SocketType::SERVER;
     std::strncpy(server_configuration._ip, "::1",
         sizeof(server_configuration._ip) - 1);
@@ -318,6 +341,8 @@ FT_TEST(test_network_poll_ipv6_ready)
     server_configuration._address_family = AF_INET6;
     server_configuration._port = 54343;
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+        return (0);
+    if (client_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     std::strncpy(client_configuration._ip, "::1",
@@ -377,6 +402,8 @@ FT_TEST(test_http_client_streaming_chunks)
     int client_result;
     ft_string port_string;
 
+    if (server_configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     server_configuration._type = SocketType::SERVER;
     std::strncpy(server_configuration._ip, "127.0.0.1",
         sizeof(server_configuration._ip) - 1);
@@ -429,6 +456,8 @@ FT_TEST(test_server_config_ipv4_any_address)
     const struct sockaddr_storage *address;
     const struct sockaddr_in *address_ipv4;
 
+    if (configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     configuration._type = SocketType::SERVER;
     configuration._address_family = AF_INET;
     configuration._port = 0;
@@ -449,6 +478,8 @@ FT_TEST(test_server_config_ipv6_any_address)
     const struct sockaddr_storage *address;
     const struct sockaddr_in6 *address_ipv6;
 
+    if (configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     configuration._type = SocketType::SERVER;
     configuration._address_family = AF_INET6;
     configuration._port = 0;
@@ -571,12 +602,16 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect)
     int accepted_fd;
     int check_result;
 
+    if (server_configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     server_configuration._type = SocketType::SERVER;
     server_configuration._port = 54344;
     std::strncpy(server_configuration._ip, "127.0.0.1",
         sizeof(server_configuration._ip) - 1);
     server_configuration._ip[sizeof(server_configuration._ip) - 1] = '\0';
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+        return (0);
+    if (client_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54344;
@@ -619,12 +654,16 @@ FT_TEST(test_networking_check_socket_after_send_reports_success)
     int accepted_fd;
     int check_result;
 
+    if (server_configuration.initialize() != FT_ERR_SUCCESS)
+        return (0);
     server_configuration._type = SocketType::SERVER;
     server_configuration._port = 54345;
     std::strncpy(server_configuration._ip, "127.0.0.1",
         sizeof(server_configuration._ip) - 1);
     server_configuration._ip[sizeof(server_configuration._ip) - 1] = '\0';
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+        return (0);
+    if (client_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54345;

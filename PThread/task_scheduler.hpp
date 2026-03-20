@@ -806,6 +806,11 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     ft_future<return_type> promise_future(promise_shared);
+    int promise_future_initialize_error = promise_future.initialize();
+    if (promise_future_initialize_error != FT_ERR_SUCCESS)
+    {
+        return (result_pair);
+    }
     int future_initialize_error = future_value.initialize(ft_move(promise_future));
 
     if (future_initialize_error != FT_ERR_SUCCESS)

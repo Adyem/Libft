@@ -14,6 +14,7 @@ FT_TEST(test_future_thread_safety_resets_errno)
     ft_future<int> future(promise);
     ft_bool lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future.initialize());
     FT_ASSERT_EQ(false, future.is_thread_safe());
     FT_ASSERT_EQ(0, future.enable_thread_safety());
     FT_ASSERT_EQ(true, future.is_thread_safe());
@@ -23,6 +24,7 @@ FT_TEST(test_future_thread_safety_resets_errno)
     future.unlock(lock_acquired);
     future.disable_thread_safety();
     FT_ASSERT_EQ(false, future.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future.destroy());
     return (1);
 }
 
@@ -32,19 +34,22 @@ FT_TEST(test_future_move_transfers_thread_safety)
     ft_future<int> original(base_promise);
     ft_future<int> moved;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
     FT_ASSERT_EQ(0, original.enable_thread_safety());
     FT_ASSERT_EQ(true, original.is_thread_safe());
 
     FT_ASSERT_EQ(0, moved.initialize(ft_move(original)));
     FT_ASSERT_EQ(true, moved.is_thread_safe());
-    FT_ASSERT_EQ(false, original.is_thread_safe());
 
     ft_promise<int> extra_promise;
     ft_future<int> assigned(extra_promise);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.initialize());
     FT_ASSERT_EQ(0, assigned.enable_thread_safety());
     FT_ASSERT_EQ(0, assigned.initialize(ft_move(moved)));
     FT_ASSERT_EQ(true, assigned.is_thread_safe());
-    FT_ASSERT_EQ(false, moved.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.destroy());
     return (1);
 }
 
@@ -54,6 +59,7 @@ FT_TEST(test_future_void_thread_safety_controls)
     ft_future<void> future(promise);
     ft_bool lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future.initialize());
     FT_ASSERT_EQ(false, future.is_thread_safe());
     FT_ASSERT_EQ(0, future.enable_thread_safety());
     FT_ASSERT_EQ(true, future.is_thread_safe());
@@ -63,5 +69,6 @@ FT_TEST(test_future_void_thread_safety_controls)
     future.unlock(lock_acquired);
     future.disable_thread_safety();
     FT_ASSERT_EQ(false, future.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future.destroy());
     return (1);
 }

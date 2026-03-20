@@ -405,6 +405,7 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership)
     sigabrt_action.sa_flags = 0;
     RECORD_ASSERT(sigaction(SIGABRT, &sigabrt_action, &previous_sigabrt_action) == 0);
     handler_installed = 1;
+    RECORD_ASSERT(mutex_object.initialize() == FT_ERR_SUCCESS);
     initialize_unlock_shared_state(&shared_state, &mutex_object);
     RECORD_ASSERT(mutex_object.lock() == FT_ERR_SUCCESS);
     if (pt_thread_create(&worker_thread, ft_nullptr, unlock_worker, &shared_state) != 0)
@@ -414,7 +415,9 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership)
     else
         thread_created = 1;
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 2));
-    RECORD_ASSERT(g_sigabrt_received.load() == 1);
+    RECORD_ASSERT(shared_state.unlock_result.load() == FT_ERR_INVALID_ARGUMENT);
+    RECORD_ASSERT(shared_state.unlock_error.load() == FT_ERR_SUCCESS);
+    RECORD_ASSERT(g_sigabrt_received.load() == 0);
     RECORD_ASSERT(mutex_object.unlock() == FT_ERR_SUCCESS);
     goto cleanup;
 
@@ -435,6 +438,7 @@ cleanup:
     {
         sigaction(SIGABRT, &previous_sigabrt_action, ft_nullptr);
     }
+    (void)mutex_object.destroy();
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
@@ -451,29 +455,21 @@ FT_TEST(test_pt_mutex_unlock_without_locking)
     struct sigaction sigabrt_action;
     struct sigaction previous_sigabrt_action;
     int handler_installed;
-    int abort_captured;
 
     handler_installed = 0;
-    abort_captured = 0;
     sigabrt_action.sa_handler = handle_sigabrt;
     FT_ASSERT_EQ(0, sigemptyset(&sigabrt_action.sa_mask));
     sigabrt_action.sa_flags = 0;
     FT_ASSERT_EQ(0, sigaction(SIGABRT, &sigabrt_action, &previous_sigabrt_action));
     handler_installed = 1;
-    g_sigabrt_received.store(0);
-    if (sigsetjmp(g_sigabrt_jump_buffer, 1) == 0)
-    {
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
-    }
-    else
-        abort_captured = 1;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, mutex_object.unlock());
     if (handler_installed == 1)
     {
         sigaction(SIGABRT, &previous_sigabrt_action, ft_nullptr);
     }
-    FT_ASSERT_EQ(1, abort_captured);
-    FT_ASSERT_EQ(1, g_sigabrt_received.load());
     FT_ASSERT_EQ(false, mutex_object.lockState());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     return (1);
 }
 
@@ -481,13 +477,15 @@ FT_TEST(test_pt_mutex_try_lock_reports_already_locked)
 {
     pt_mutex mutex_object;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.try_lock());
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex_object.try_lock());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.try_lock());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     return (1);
 }
 
@@ -500,6 +498,7 @@ FT_TEST(test_pt_mutex_try_lock_owned_by_other_thread)
     int test_failed;
     const char *failure_expression;
     int failure_line;
+    int mutex_initialized;
 #define RECORD_ASSERT(expression) \
     if (!(expression) && test_failed == 0) \
     { \
@@ -510,9 +509,14 @@ FT_TEST(test_pt_mutex_try_lock_owned_by_other_thread)
     }
 
     thread_created = 0;
+    mutex_initialized = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    if (mutex_object.initialize() == FT_ERR_SUCCESS)
+        mutex_initialized = 1;
+    else
+        RECORD_ASSERT(0);
     initialize_try_lock_shared_state(&shared_state, &mutex_object);
     if (pt_thread_create(&worker_thread, ft_nullptr, try_lock_worker, &shared_state) != 0)
     {
@@ -523,7 +527,7 @@ FT_TEST(test_pt_mutex_try_lock_owned_by_other_thread)
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 2));
     RECORD_ASSERT(shared_state.lock_result.load() == FT_ERR_SUCCESS);
     RECORD_ASSERT(shared_state.lock_error.load() == FT_ERR_SUCCESS);
-    RECORD_ASSERT(mutex_object.try_lock() == FT_ERR_SUCCESS);
+    RECORD_ASSERT(mutex_object.try_lock() == FT_ERR_MUTEX_ALREADY_LOCKED);
     RECORD_ASSERT(mutex_object.lockState());
     shared_state.stage.store(3);
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 4));
@@ -553,6 +557,8 @@ cleanup:
         #undef RECORD_ASSERT
         return (0);
     }
+    if (mutex_initialized == 1)
+        (void)mutex_object.destroy();
     #undef RECORD_ASSERT
     return (1);
 }
@@ -561,45 +567,27 @@ FT_TEST(test_pt_mutex_lock_reports_reentrant_lock)
 {
     pt_mutex mutex_object;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex_object.lock());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     return (1);
 }
 
 FT_TEST(test_pt_mutex_unlock_twice_reports_invalid_argument)
 {
     pt_mutex mutex_object;
-    struct sigaction sigabrt_action;
-    struct sigaction previous_sigabrt_action;
-    int handler_installed;
-    int abort_captured;
+    int second_unlock_result;
 
-    handler_installed = 0;
-    abort_captured = 0;
-    sigabrt_action.sa_handler = handle_sigabrt;
-    FT_ASSERT_EQ(0, sigemptyset(&sigabrt_action.sa_mask));
-    sigabrt_action.sa_flags = 0;
-    FT_ASSERT_EQ(0, sigaction(SIGABRT, &sigabrt_action, &previous_sigabrt_action));
-    handler_installed = 1;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
-    g_sigabrt_received.store(0);
-    if (sigsetjmp(g_sigabrt_jump_buffer, 1) == 0)
-    {
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
-        FT_ASSERT(false);
-    }
-    else
-        abort_captured = 1;
-    if (handler_installed == 1)
-    {
-        sigaction(SIGABRT, &previous_sigabrt_action, ft_nullptr);
-    }
-    FT_ASSERT_EQ(1, abort_captured);
-    FT_ASSERT_EQ(1, g_sigabrt_received.load());
+    second_unlock_result = mutex_object.unlock();
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, second_unlock_result);
     FT_ASSERT_EQ(false, mutex_object.lockState());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     return (1);
 }
 
@@ -607,12 +595,14 @@ FT_TEST(test_pt_mutex_recovers_after_already_locked_error)
 {
     pt_mutex mutex_object;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(false, mutex_object.lockState());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     return (1);
 }
 

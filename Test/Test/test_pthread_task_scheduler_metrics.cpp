@@ -4,6 +4,7 @@
 #include <atomic>
 #include "../../Errno/errno.hpp"
 #include <chrono>
+#include <thread>
 #include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
@@ -32,6 +33,12 @@ FT_TEST(test_task_scheduler_metrics_flow)
 
     std::atomic<bool> release_flag;
     release_flag.store(false);
+    std::thread([&release_flag]()
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        release_flag.store(true);
+        return ;
+    }).detach();
     ft_future<void> blocking_future = scheduler_instance.submit([&release_flag]() mutable
     {
         while (!release_flag.load())

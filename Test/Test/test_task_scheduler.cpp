@@ -19,6 +19,7 @@ FT_TEST(test_task_scheduler_submit)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     auto future_value = scheduler_instance.submit([]() { return (7); });
     FT_ASSERT_EQ(7, future_value.get());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future_value.destroy());
     return (1);
 }
 
@@ -41,6 +42,7 @@ FT_TEST(test_task_scheduler_schedule_after)
     elapsed_milliseconds = time_monotonic_point_diff_ms(start_time, end_time);
     FT_ASSERT_EQ(3, result_value);
     FT_ASSERT(elapsed_milliseconds >= 50);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future_value.destroy());
     return (1);
 }
 
@@ -71,6 +73,7 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex)
     std::atomic<int> execution_count;
 
     execution_count.store(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_future.initialize());
     scheduler_instance.schedule_after(std::chrono::milliseconds(20),
         [&scheduler_instance, &completion_promise, &execution_count]()
     {
@@ -91,5 +94,6 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex)
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(1, completion_future.get());
     FT_ASSERT_EQ(2, execution_count.load());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_future.destroy());
     return (1);
 }

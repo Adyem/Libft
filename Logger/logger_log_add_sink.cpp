@@ -18,54 +18,35 @@ struct s_json_sink_field
     }
 };
 
-static void logger_json_sink_append_literal(ft_string &buffer, const char *literal, int32_t &error_code_value)
+static int32_t logger_json_sink_append_literal(ft_string &buffer, const char *literal)
 {
-    if (error_code_value != FT_ERR_SUCCESS)
-        return ;
     if (!literal)
     {
-        error_code_value = FT_ERR_INVALID_ARGUMENT;
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    buffer.append(literal);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        error_code_value = ft_string::get_error();
-    return ;
+    return (buffer.append(literal));
 }
 
-static void logger_json_sink_append_character_sequence(ft_string &buffer, const char *sequence, int32_t &error_code_value)
+static int32_t logger_json_sink_append_character_sequence(ft_string &buffer, const char *sequence)
 {
-    if (error_code_value != FT_ERR_SUCCESS)
-        return ;
     if (!sequence)
     {
-        error_code_value = FT_ERR_INVALID_ARGUMENT;
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    buffer.append(sequence);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        error_code_value = ft_string::get_error();
-    return ;
+    return (buffer.append(sequence));
 }
 
-static void logger_json_sink_append_json_escaped(ft_string &buffer, char character, int32_t &error_code_value)
+static int32_t logger_json_sink_append_json_escaped(ft_string &buffer, char character)
 {
     static const char hex_digits[] = "0123456789ABCDEF";
+    int32_t error_code_value;
 
-    if (error_code_value != FT_ERR_SUCCESS)
-        return ;
     if (character == '\\' || character == '"')
     {
-        buffer.append('\\');
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
-        {
-            error_code_value = ft_string::get_error();
-            return ;
-        }
-        buffer.append(character);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
-            error_code_value = ft_string::get_error();
-        return ;
+        error_code_value = buffer.append('\\');
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
+        return (buffer.append(character));
     }
     if (character >= 0 && character < 0x20)
     {
@@ -78,44 +59,32 @@ static void logger_json_sink_append_json_escaped(ft_string &buffer, char charact
         escape_buffer[4] = hex_digits[(static_cast<unsigned char>(character) >> 4) & 0x0F];
         escape_buffer[5] = hex_digits[static_cast<unsigned char>(character) & 0x0F];
         escape_buffer[6] = '\0';
-        logger_json_sink_append_literal(buffer, escape_buffer, error_code_value);
-        return ;
+        return (logger_json_sink_append_literal(buffer, escape_buffer));
     }
-    buffer.append(character);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        error_code_value = ft_string::get_error();
-    return ;
+    return (buffer.append(character));
 }
 
-static void logger_json_sink_append_json_string(ft_string &buffer, const char *value, int32_t &error_code_value)
+static int32_t logger_json_sink_append_json_string(ft_string &buffer, const char *value)
 {
     ft_size_t entry_index;
+    int32_t error_code_value;
 
-    if (error_code_value != FT_ERR_SUCCESS)
-        return ;
     if (!value)
     {
-        error_code_value = FT_ERR_INVALID_ARGUMENT;
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    buffer.append('"');
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-    {
-        error_code_value = ft_string::get_error();
-        return ;
-    }
+    error_code_value = buffer.append('"');
+    if (error_code_value != FT_ERR_SUCCESS)
+        return (error_code_value);
     entry_index = 0;
-    while (value[entry_index] != '\0' && error_code_value == FT_ERR_SUCCESS)
+    while (value[entry_index] != '\0')
     {
-        logger_json_sink_append_json_escaped(buffer, value[entry_index], error_code_value);
+        error_code_value = logger_json_sink_append_json_escaped(buffer, value[entry_index]);
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
         entry_index += 1;
     }
-    if (error_code_value != FT_ERR_SUCCESS)
-        return ;
-    buffer.append('"');
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        error_code_value = ft_string::get_error();
-    return ;
+    return (buffer.append('"'));
 }
 
 static int32_t logger_json_sink_hex_value(char character)
@@ -126,7 +95,7 @@ static int32_t logger_json_sink_hex_value(char character)
         return (10 + character - 'a');
     if (character >= 'A' && character <= 'F')
         return (10 + character - 'A');
-    return (FT_ERR_INTERNAL);
+    return (FT_ERR_INVALID_ARGUMENT);
 }
 
 static void logger_json_sink_decode_quoted(const char *message, ft_size_t &entry_index, char *destination, ft_size_t capacity)
@@ -192,7 +161,7 @@ int32_t ft_log_add_sink(t_log_sink sink, void *user_data)
 {
     if (!sink)
     {
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     s_log_sink entry;
     int32_t prepare_status;
@@ -201,13 +170,13 @@ int32_t ft_log_add_sink(t_log_sink sink, void *user_data)
     prepare_status = log_sink_prepare_thread_safety(&entry);
     if (prepare_status != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (prepare_status);
     }
     lock_error = logger_lock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
     {
         log_sink_teardown_thread_safety(&entry);
-        return (FT_ERR_INTERNAL);
+        return (lock_error);
     }
     entry.function = sink;
     entry.user_data = user_data;
@@ -218,14 +187,14 @@ int32_t ft_log_add_sink(t_log_sink sink, void *user_data)
         lock_error = logger_unlock_sinks();
         if (lock_error != FT_ERR_SUCCESS)
         {
-            return (FT_ERR_INTERNAL);
+            return (lock_error);
         }
-        return (FT_ERR_INTERNAL);
+        return (g_sinks.get_error());
     }
     lock_error = logger_unlock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (FT_ERR_INTERNAL);
+        return (lock_error);
     }
     return (FT_ERR_SUCCESS);
 }
@@ -336,21 +305,42 @@ int32_t ft_json_sink(const char *message, void *user_data)
     {
         return (FT_ERR_NO_MEMORY);
     }
-    error_code_value = ft_string::get_error();
-    logger_json_sink_append_literal(payload, "\"time\":", error_code_value);
-    logger_json_sink_append_json_string(payload, time_buffer, error_code_value);
-    logger_json_sink_append_literal(payload, ",\"level\":", error_code_value);
-    logger_json_sink_append_json_string(payload, level_buffer, error_code_value);
+    error_code_value = logger_json_sink_append_literal(payload, "\"time\":");
+    if (error_code_value != FT_ERR_SUCCESS)
+        return (error_code_value);
+    error_code_value = logger_json_sink_append_json_string(payload, time_buffer);
+    if (error_code_value != FT_ERR_SUCCESS)
+        return (error_code_value);
+    error_code_value = logger_json_sink_append_literal(payload, ",\"level\":");
+    if (error_code_value != FT_ERR_SUCCESS)
+        return (error_code_value);
+    error_code_value = logger_json_sink_append_json_string(payload, level_buffer);
+    if (error_code_value != FT_ERR_SUCCESS)
+        return (error_code_value);
     if (severity_buffer[0] != '\0')
     {
-        logger_json_sink_append_literal(payload, ",\"severity\":", error_code_value);
-        logger_json_sink_append_character_sequence(payload, severity_buffer, error_code_value);
+        error_code_value = logger_json_sink_append_literal(payload, ",\"severity\":");
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
+        error_code_value = logger_json_sink_append_character_sequence(payload, severity_buffer);
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
     }
-    logger_json_sink_append_literal(payload, ",\"message\":", error_code_value);
+    error_code_value = logger_json_sink_append_literal(payload, ",\"message\":");
+    if (error_code_value != FT_ERR_SUCCESS)
+        return (error_code_value);
     if (message_is_json)
-        logger_json_sink_append_character_sequence(payload, message_buffer, error_code_value);
+    {
+        error_code_value = logger_json_sink_append_character_sequence(payload, message_buffer);
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
+    }
     else
-        logger_json_sink_append_json_string(payload, message_buffer, error_code_value);
+    {
+        error_code_value = logger_json_sink_append_json_string(payload, message_buffer);
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
+    }
     ft_size_t context_count;
     ft_size_t context_index;
 
@@ -360,32 +350,46 @@ int32_t ft_json_sink(const char *message, void *user_data)
         return (context_fields.get_error());
     }
     context_index = 0;
-    while (context_index < context_count && error_code_value == FT_ERR_SUCCESS)
+    while (context_index < context_count)
     {
         const s_json_sink_field &field = context_fields[context_index];
 
-        logger_json_sink_append_literal(payload, ",\"", error_code_value);
-        logger_json_sink_append_character_sequence(payload, field.key.c_str(), error_code_value);
-        logger_json_sink_append_literal(payload, "\":", error_code_value);
+        error_code_value = logger_json_sink_append_literal(payload, ",\"");
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
+        error_code_value = logger_json_sink_append_character_sequence(payload, field.key.c_str());
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
+        error_code_value = logger_json_sink_append_literal(payload, "\":");
+        if (error_code_value != FT_ERR_SUCCESS)
+            return (error_code_value);
         if (field.has_value)
         {
             if (field.value_is_json)
-                logger_json_sink_append_character_sequence(payload, field.value.c_str(), error_code_value);
+            {
+                error_code_value = logger_json_sink_append_character_sequence(payload, field.value.c_str());
+                if (error_code_value != FT_ERR_SUCCESS)
+                    return (error_code_value);
+            }
             else
-                logger_json_sink_append_json_string(payload, field.value.c_str(), error_code_value);
+            {
+                error_code_value = logger_json_sink_append_json_string(payload, field.value.c_str());
+                if (error_code_value != FT_ERR_SUCCESS)
+                    return (error_code_value);
+            }
         }
         else
-            logger_json_sink_append_literal(payload, "FT_TRUE", error_code_value);
+        {
+            error_code_value = logger_json_sink_append_literal(payload, "true");
+            if (error_code_value != FT_ERR_SUCCESS)
+                return (error_code_value);
+        }
         context_index += 1;
     }
-    logger_json_sink_append_literal(payload, "}\n", error_code_value);
+    error_code_value = logger_json_sink_append_literal(payload, "}\n");
     if (error_code_value != FT_ERR_SUCCESS)
     {
         return (error_code_value);
-    }
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-    {
-        return (ft_string::get_error());
     }
     ssize_t write_result;
 
