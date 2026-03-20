@@ -12,6 +12,7 @@ FT_TEST(test_ft_priority_queue_push_pop_order)
 {
     ft_priority_queue<int> queue_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.initialize());
     queue_instance.push(5);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
     queue_instance.push(1);
@@ -38,6 +39,7 @@ FT_TEST(test_ft_priority_queue_push_pop_order)
     FT_ASSERT(queue_instance.empty());
     FT_ASSERT_EQ(0UL, queue_instance.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.destroy());
     return (1);
 }
 
@@ -45,6 +47,7 @@ FT_TEST(test_ft_priority_queue_custom_comparator)
 {
     ft_priority_queue<int, std::greater<int> > queue_instance(0, std::greater<int>());
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.initialize());
     queue_instance.push(4);
     queue_instance.push(2);
     queue_instance.push(7);
@@ -62,6 +65,7 @@ FT_TEST(test_ft_priority_queue_custom_comparator)
     queue_instance.pop();
     FT_ASSERT(queue_instance.empty());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.destroy());
     return (1);
 }
 
@@ -69,6 +73,7 @@ FT_TEST(test_ft_priority_queue_error_handling_and_moves)
 {
     ft_priority_queue<int> queue_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.initialize());
     int empty_value = queue_instance.pop();
     FT_ASSERT_EQ(0, empty_value);
     FT_ASSERT_EQ(FT_ERR_PRIORITY_QUEUE_EMPTY, static_cast<int32_t>(queue_instance.get_error()));
@@ -83,6 +88,7 @@ FT_TEST(test_ft_priority_queue_error_handling_and_moves)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
 
     ft_priority_queue<int> recreated_queue;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, recreated_queue.initialize());
     recreated_queue.push(11);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, recreated_queue.get_error());
     recreated_queue.push(3);
@@ -100,5 +106,7 @@ FT_TEST(test_ft_priority_queue_error_handling_and_moves)
     recreated_queue.clear();
     FT_ASSERT(recreated_queue.empty());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, recreated_queue.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, recreated_queue.destroy());
     return (1);
 }

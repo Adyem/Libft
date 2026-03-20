@@ -17,7 +17,7 @@ enum t_log_level {
     LOG_LEVEL_NONE
 };
 
-typedef void (*t_log_sink)(const char *message, void *user_data);
+typedef int32_t (*t_log_sink)(const char *message, void *user_data);
 int32_t     ft_log_add_sink(t_log_sink sink, void *user_data);
 void    ft_log_remove_sink(t_log_sink sink, void *user_data);
 
@@ -116,8 +116,8 @@ void    ft_log_set_api_logging(ft_bool enable);
 ft_bool    ft_log_get_api_logging();
 void    ft_log_set_color(ft_bool enable);
 ft_bool    ft_log_get_color();
-void    ft_json_sink(const char *message, void *user_data);
-void    ft_syslog_sink(const char *message, void *user_data);
+int32_t ft_json_sink(const char *message, void *user_data);
+int32_t ft_syslog_sink(const char *message, void *user_data);
 int32_t     ft_log_set_syslog(const char *identifier);
 int32_t     ft_log_set_remote_sink(const char *host, uint16_t port,
                                ft_bool use_tcp);

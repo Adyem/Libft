@@ -163,6 +163,8 @@ static int32_t logger_context_format_prefix(ft_string &prefix)
     ensure_error = logger_context_ensure_entries_ready();
     if (ensure_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
+    if (prefix.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     entry_count = g_log_context_entries.size();
     error_code_value = g_log_context_entries.get_error();
     if (error_code_value != FT_ERR_SUCCESS)
@@ -462,6 +464,8 @@ int32_t logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
 
     ensure_error = logger_context_ensure_entries_ready();
     if (ensure_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
+    if (snapshot.initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     snapshot.clear();
     error_code_value = snapshot.get_error();

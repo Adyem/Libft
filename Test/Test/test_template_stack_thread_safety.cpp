@@ -13,6 +13,7 @@ FT_TEST(test_ft_stack_enable_thread_safety_initializes_mutex)
 {
     ft_stack<int> stack_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.initialize());
     FT_ASSERT_EQ(0, stack_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
     FT_ASSERT(stack_instance.is_thread_safe());
@@ -39,6 +40,7 @@ FT_TEST(test_ft_stack_enable_thread_safety_initializes_mutex)
     FT_ASSERT(lock_acquired == FT_FALSE);
     stack_instance.unlock(lock_acquired);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.destroy());
     return (1);
 }
 
@@ -51,6 +53,7 @@ FT_TEST(test_ft_stack_lock_blocks_until_release)
     std::atomic<int64_t> wait_duration_ms;
     std::thread worker;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.initialize());
     FT_ASSERT_EQ(0, stack_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
 
@@ -94,5 +97,6 @@ FT_TEST(test_ft_stack_lock_blocks_until_release)
 
     stack_instance.disable_thread_safety();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.destroy());
     return (1);
 }

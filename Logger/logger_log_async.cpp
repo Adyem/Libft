@@ -104,7 +104,11 @@ static void ft_log_process_message(const ft_string &message)
                     sink_error = FT_ERR_INVALID_OPERATION;
             }
             if (sink_error == FT_ERR_SUCCESS)
-                entry.function(message.c_str(), entry.user_data);
+            {
+                sink_error = entry.function(message.c_str(), entry.user_data);
+                if (sink_error != FT_ERR_SUCCESS && g_logger != ft_nullptr)
+                    g_logger->set_error(sink_error);
+            }
             if (sink_error == FT_ERR_SUCCESS && entry.function == ft_file_sink)
             {
                 ft_bool rotate_for_size_post;

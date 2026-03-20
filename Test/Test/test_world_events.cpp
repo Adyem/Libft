@@ -21,15 +21,23 @@ FT_TEST(test_world_process_events)
 
     world->update_events(world, 1);
     ft_vector<ft_sharedptr<game_event> > events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
     world->get_event_scheduler()->dump_events(events);
     if (events.size() != 1 || events[0]->get_duration() != 2)
+    {
+        events.destroy();
         return (0);
+    }
 
     world->update_events(world, 2);
     events.clear();
     world->get_event_scheduler()->dump_events(events);
     if (events.size() != 0)
+    {
+        events.destroy();
         return (0);
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.destroy());
 
     return (1);
 }

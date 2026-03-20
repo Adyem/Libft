@@ -14,6 +14,7 @@ FT_TEST(test_ft_vector_default_thread_safety_installs_mutex)
     ft_vector<int> vector_instance;
     ft_bool           lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.initialize());
     FT_ASSERT(vector_instance.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
 
@@ -31,6 +32,7 @@ FT_TEST(test_ft_vector_default_thread_safety_installs_mutex)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
     vector_instance.unlock(lock_acquired);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.destroy());
 
     return (1);
 }
@@ -44,6 +46,7 @@ FT_TEST(test_ft_vector_lock_blocks_until_release)
     std::atomic<long long>          wait_duration_ms;
     std::thread                     worker;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.initialize());
     main_lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(0, vector_instance.lock(&main_lock_acquired));
     FT_ASSERT(main_lock_acquired);
@@ -83,5 +86,6 @@ FT_TEST(test_ft_vector_lock_blocks_until_release)
     FT_ASSERT(worker_succeeded.load());
     FT_ASSERT(wait_duration_ms.load() >= 40);
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.destroy());
     return (1);
 }

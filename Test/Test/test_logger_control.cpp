@@ -81,6 +81,7 @@ FT_TEST(test_ft_log_global_helpers_forward_to_logger)
     {
         ft_logger logger_instance;
 
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, logger_instance.initialize());
         logger_instance.set_global();
         ft_log_set_alloc_logging(true);
         FT_ASSERT_EQ(true, logger_instance.get_alloc_logging());
@@ -98,6 +99,7 @@ FT_TEST(test_ft_log_global_helpers_forward_to_logger)
         FT_ASSERT_EQ(false, logger_instance.get_api_logging());
 
         g_logger = previous_logger;
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, logger_instance.destroy());
     }
     return (1);
 }

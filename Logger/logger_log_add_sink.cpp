@@ -230,7 +230,7 @@ int32_t ft_log_add_sink(t_log_sink sink, void *user_data)
     return (FT_ERR_SUCCESS);
 }
 
-void ft_json_sink(const char *message, void *user_data)
+int32_t ft_json_sink(const char *message, void *user_data)
 {
     char time_buffer[64];
     char level_buffer[16];
@@ -245,12 +245,14 @@ void ft_json_sink(const char *message, void *user_data)
     int32_t error_code_value;
 
     if (!message)
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     time_buffer[0] = '\0';
     level_buffer[0] = '\0';
     severity_buffer[0] = '\0';
     message_buffer[0] = '\0';
     message_is_json = FT_FALSE;
+    if (context_fields.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     file_descriptor = 1;
     if (user_data)
         file_descriptor = *static_cast<int32_t *>(user_data);
@@ -316,20 +318,15 @@ void ft_json_sink(const char *message, void *user_data)
         {
             s_json_sink_field field;
 
-            field.key = key_buffer;
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
-                return ;
+            if (field.key.initialize(key_buffer) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             field.has_value = has_value;
             field.value_is_json = value_is_json;
-            if (has_value)
-            {
-                field.value = value_buffer;
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
-                    return ;
-            }
+            if (field.value.initialize(value_buffer) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             context_fields.push_back(field);
             if (context_fields.get_error() != FT_ERR_SUCCESS)
-                return ;
+                return (context_fields.get_error());
         }
         if (message[entry_index] == '\0' || message[entry_index] == '\n')
             break ;
@@ -337,7 +334,7 @@ void ft_json_sink(const char *message, void *user_data)
     ft_string payload;
     if (payload.initialize("{") != FT_ERR_SUCCESS)
     {
-        return ;
+        return (FT_ERR_NO_MEMORY);
     }
     error_code_value = ft_string::get_error();
     logger_json_sink_append_literal(payload, "\"time\":", error_code_value);
@@ -360,7 +357,7 @@ void ft_json_sink(const char *message, void *user_data)
     context_count = context_fields.size();
     if (context_fields.get_error() != FT_ERR_SUCCESS)
     {
-        return ;
+        return (context_fields.get_error());
     }
     context_index = 0;
     while (context_index < context_count && error_code_value == FT_ERR_SUCCESS)
@@ -384,15 +381,18 @@ void ft_json_sink(const char *message, void *user_data)
     logger_json_sink_append_literal(payload, "}\n", error_code_value);
     if (error_code_value != FT_ERR_SUCCESS)
     {
-        return ;
+        return (error_code_value);
     }
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        return ;
+        return (ft_string::get_error());
     }
     ssize_t write_result;
 
     write_result = write(file_descriptor, payload.c_str(), payload.size());
-    (void)write_result;
-    return ;
+    if (write_result < 0)
+        return (FT_ERR_IO);
+    if (write_result != static_cast<ssize_t>(payload.size()))
+        return (FT_ERR_IO);
+    return (FT_ERR_SUCCESS);
 }

@@ -207,6 +207,8 @@ void ft_log_structured(t_log_level level, const char *message,
         return ;
     }
     error_code_value = FT_ERR_SUCCESS;
+    if (payload.initialize() != FT_ERR_SUCCESS)
+        return ;
     logger_append_literal(payload, "{\"message\":", error_code_value);
     logger_append_json_string(payload, message, error_code_value);
     logger_append_literal(payload, ",\"fields\":{", error_code_value);
@@ -253,13 +255,16 @@ void ft_log_structured(t_log_level level, const char *message,
     logger_append_literal(payload, "}}", error_code_value);
     if (error_code_value != FT_ERR_SUCCESS)
     {
+        payload.destroy();
         return ;
     }
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
+        payload.destroy();
         return ;
     }
     logger_dispatch_structured(level, payload.c_str());
+    payload.destroy();
     return ;
 }
 

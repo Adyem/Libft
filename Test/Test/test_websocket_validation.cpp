@@ -54,6 +54,12 @@ FT_TEST(test_websocket_server_rejects_unmasked_frame)
         nw_close(client_socket);
         return (0);
     }
+    if (handshake_request.initialize() != FT_ERR_SUCCESS)
+    {
+        nw_close(client_socket);
+        server_thread.join();
+        return (0);
+    }
     handshake_request = "GET / HTTP/1.1\r\n";
     handshake_request.append("Host: 127.0.0.1\r\n");
     handshake_request.append("Upgrade: websocket\r\n");

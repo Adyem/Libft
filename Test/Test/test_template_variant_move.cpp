@@ -18,6 +18,7 @@ FT_TEST(test_variant_move_constructor_rebuilds_mutex)
 {
     ft_variant<int, std::string> tuple_variant;
 
+    FT_ASSERT_EQ(0, tuple_variant.initialize());
     FT_ASSERT_EQ(0, tuple_variant.enable_thread_safety());
     FT_ASSERT(tuple_variant.is_thread_safe());
     tuple_variant.emplace<int>(42);
@@ -30,6 +31,7 @@ FT_TEST(test_variant_move_constructor_rebuilds_mutex)
     tuple_variant.emplace<std::string>("reset");
     FT_ASSERT(tuple_variant.holds_alternative<std::string>());
     FT_ASSERT_EQ(std::string("reset"), variant_instance_get<std::string>(tuple_variant));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_variant.destroy());
     return (1);
 }
 
@@ -37,6 +39,7 @@ FT_TEST(test_variant_move_assignment_rebuilds_mutex)
 {
     ft_variant<int, std::string> variant_instance;
 
+    FT_ASSERT_EQ(0, variant_instance.initialize());
     variant_instance.emplace<int>(8);
     FT_ASSERT_EQ(0, variant_instance.enable_thread_safety());
     FT_ASSERT(variant_instance.is_thread_safe());
@@ -52,6 +55,7 @@ FT_TEST(test_variant_move_assignment_rebuilds_mutex)
     variant_instance.emplace<int>(15);
     FT_ASSERT_EQ(FT_TRUE, variant_instance.holds_alternative<int>());
     FT_ASSERT_EQ(15, variant_instance_get<int>(variant_instance));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_instance.destroy());
     return (1);
 }
 
@@ -59,8 +63,10 @@ FT_TEST(test_variant_move_preserves_disabled_thread_safety)
 {
     ft_variant<int, std::string> source_variant;
 
+    FT_ASSERT_EQ(0, source_variant.initialize());
     source_variant.emplace<int>(5);
     FT_ASSERT_EQ(FT_FALSE, source_variant.is_thread_safe());
     FT_ASSERT_EQ(5, variant_instance_get<int>(source_variant));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.destroy());
     return (1);
 }

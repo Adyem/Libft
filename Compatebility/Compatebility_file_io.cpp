@@ -68,6 +68,8 @@ static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t m
 {
     int32_t lock_error;
 
+    if (path_name == ft_nullptr)
+        return (-1);
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -303,6 +305,8 @@ void cmp_initialize_standard_file_descriptors()
 
 int32_t cmp_open(const char *path_name)
 {
+    if (path_name == ft_nullptr)
+        return (-1);
     int32_t file_descriptor = open(path_name, O_RDONLY);
     if (file_descriptor == -1)
     {
@@ -313,6 +317,8 @@ int32_t cmp_open(const char *path_name)
 
 int32_t cmp_open(const char *path_name, int32_t flags)
 {
+    if (path_name == ft_nullptr)
+        return (-1);
     int32_t file_descriptor = open(path_name, flags);
     if (file_descriptor == -1)
     {
@@ -323,6 +329,8 @@ int32_t cmp_open(const char *path_name, int32_t flags)
 
 int32_t cmp_open(const char *path_name, int32_t flags, mode_t mode)
 {
+    if (path_name == ft_nullptr)
+        return (-1);
     int32_t file_descriptor = open(path_name, flags, mode);
     if (file_descriptor == -1)
     {

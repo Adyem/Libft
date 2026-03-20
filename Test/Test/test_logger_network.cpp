@@ -230,7 +230,7 @@ FT_TEST(test_logger_remote_health_probe_records_success)
     FT_ASSERT(sink != ft_nullptr);
     sink->socket_fd = 777;
     sink->send_function = mock_partial_send;
-    sink->host = "127.0.0.1";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.initialize("127.0.0.1"));
     sink->port = 5555;
     sink->use_tcp = true;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
@@ -267,7 +267,7 @@ FT_TEST(test_logger_remote_health_probe_records_failure)
     FT_ASSERT(sink != ft_nullptr);
     sink->socket_fd = 888;
     sink->send_function = mock_partial_send;
-    sink->host = "10.0.0.5";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.initialize("10.0.0.5"));
     sink->port = 6000;
     sink->use_tcp = false;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
@@ -300,7 +300,7 @@ FT_TEST(test_logger_remote_health_probe_handles_removed_sink)
     FT_ASSERT(sink != ft_nullptr);
     sink->socket_fd = 4321;
     sink->send_function = mock_send_remove_sink;
-    sink->host = "removed.example.com";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.initialize("removed.example.com"));
     sink->port = 9001;
     sink->use_tcp = true;
     g_sink_to_remove = sink;
@@ -327,12 +327,12 @@ FT_TEST(test_logger_remote_health_probe_keeps_other_sinks_intact)
     FT_ASSERT(healthy_sink != ft_nullptr);
     removed_sink->socket_fd = 1111;
     removed_sink->send_function = mock_send_remove_sink;
-    removed_sink->host = "failing.example.com";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, removed_sink->host.initialize("failing.example.com"));
     removed_sink->port = 7777;
     removed_sink->use_tcp = true;
     healthy_sink->socket_fd = 2222;
     healthy_sink->send_function = mock_successful_send;
-    healthy_sink->host = "healthy.example.com";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, healthy_sink->host.initialize("healthy.example.com"));
     healthy_sink->port = 8888;
     healthy_sink->use_tcp = false;
     g_sink_to_remove = removed_sink;
@@ -389,14 +389,14 @@ FT_TEST(test_logger_remote_health_get_requires_capacity)
     FT_ASSERT(first_sink != ft_nullptr);
     first_sink->socket_fd = 3333;
     first_sink->send_function = mock_successful_send;
-    first_sink->host = "capacity-one.example";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_sink->host.initialize("capacity-one.example"));
     first_sink->port = 1000;
     first_sink->use_tcp = true;
     second_sink = new s_network_sink();
     FT_ASSERT(second_sink != ft_nullptr);
     second_sink->socket_fd = 4444;
     second_sink->send_function = mock_successful_send;
-    second_sink->host = "capacity-two.example";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_sink->host.initialize("capacity-two.example"));
     second_sink->port = 2000;
     second_sink->use_tcp = false;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, first_sink));

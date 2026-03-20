@@ -1,6 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Logger/logger.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -11,16 +12,16 @@ struct logger_async_sink_context
     size_t handled_messages;
 };
 
-static void logger_async_sink(const char *message, void *user_data)
+static int32_t logger_async_sink(const char *message, void *user_data)
 {
     logger_async_sink_context *context;
 
     (void)message;
     context = static_cast<logger_async_sink_context *>(user_data);
     if (context == ft_nullptr)
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     context->handled_messages = context->handled_messages + 1;
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 FT_TEST(test_logger_async_logging_teardown)

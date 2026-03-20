@@ -37,9 +37,11 @@ static void unordered_map_iterator_initialize_twice_aborts_operation()
     unordered_map_int_int map_instance;
     unordered_map_iterator iterator_instance;
 
+    (void)map_instance.initialize();
     map_instance.insert(1, 10);
     iterator_instance.initialize(map_instance.begin());
     iterator_instance.initialize(map_instance.begin());
+    (void)map_instance.destroy();
     return ;
 }
 
@@ -48,10 +50,12 @@ static void unordered_map_iterator_destroy_twice_aborts_operation()
     unordered_map_int_int map_instance;
     unordered_map_iterator iterator_instance;
 
+    (void)map_instance.initialize();
     map_instance.insert(1, 10);
     iterator_instance.initialize(map_instance.begin());
     (void)iterator_instance.destroy();
     (void)iterator_instance.destroy();
+    (void)map_instance.destroy();
     return ;
 }
 
@@ -84,9 +88,11 @@ static void unordered_map_const_iterator_initialize_twice_aborts_operation()
     unordered_map_int_int map_instance;
     unordered_map_const_iterator iterator_instance;
 
+    (void)map_instance.initialize();
     map_instance.insert(1, 10);
     iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
     iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
+    (void)map_instance.destroy();
     return ;
 }
 
@@ -95,10 +101,12 @@ static void unordered_map_const_iterator_destroy_twice_aborts_operation()
     unordered_map_int_int map_instance;
     unordered_map_const_iterator iterator_instance;
 
+    (void)map_instance.initialize();
     map_instance.insert(1, 10);
     iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
     (void)iterator_instance.destroy();
     (void)iterator_instance.destroy();
+    (void)map_instance.destroy();
     return ;
 }
 
@@ -116,6 +124,7 @@ FT_TEST(test_unordered_map_iterator_destroy_and_reinitialize_copy_success)
     unordered_map_iterator source_iterator;
     unordered_map_iterator destination_iterator;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(1, 10);
     map_instance.insert(2, 20);
     source_iterator.initialize(map_instance.begin());
@@ -127,6 +136,7 @@ FT_TEST(test_unordered_map_iterator_destroy_and_reinitialize_copy_success)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_iterator.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -136,6 +146,7 @@ FT_TEST(test_unordered_map_iterator_destroy_and_reinitialize_move_success)
     unordered_map_iterator source_iterator;
     unordered_map_iterator destination_iterator;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(4, 40);
     map_instance.insert(5, 50);
     source_iterator.initialize(map_instance.begin());
@@ -147,6 +158,7 @@ FT_TEST(test_unordered_map_iterator_destroy_and_reinitialize_move_success)
     FT_ASSERT_EQ(40, (*destination_iterator).second);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -155,11 +167,13 @@ FT_TEST(test_unordered_map_iterator_end_dereference_reports_out_of_range)
     unordered_map_int_int map_instance;
     unordered_map_iterator iterator_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(10, 100);
     iterator_instance.initialize(map_instance.end());
     (void)(*iterator_instance);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -168,11 +182,13 @@ FT_TEST(test_unordered_map_iterator_end_arrow_reports_out_of_range)
     unordered_map_int_int map_instance;
     unordered_map_iterator iterator_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(10, 100);
     iterator_instance.initialize(map_instance.end());
     (void)iterator_instance.operator->();
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -182,6 +198,7 @@ FT_TEST(test_unordered_map_const_iterator_destroy_and_reinitialize_copy_success)
     unordered_map_const_iterator source_iterator;
     unordered_map_const_iterator destination_iterator;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(1, 10);
     map_instance.insert(2, 20);
     source_iterator.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
@@ -193,6 +210,7 @@ FT_TEST(test_unordered_map_const_iterator_destroy_and_reinitialize_copy_success)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_iterator.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -202,6 +220,7 @@ FT_TEST(test_unordered_map_const_iterator_destroy_and_reinitialize_move_success)
     unordered_map_const_iterator source_iterator;
     unordered_map_const_iterator destination_iterator;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(4, 40);
     map_instance.insert(5, 50);
     source_iterator.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
@@ -213,6 +232,7 @@ FT_TEST(test_unordered_map_const_iterator_destroy_and_reinitialize_move_success)
     FT_ASSERT_EQ(40, (*destination_iterator).second);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -221,11 +241,13 @@ FT_TEST(test_unordered_map_const_iterator_end_dereference_reports_out_of_range)
     unordered_map_int_int map_instance;
     unordered_map_const_iterator iterator_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(10, 100);
     iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).end());
     (void)(*iterator_instance);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -234,11 +256,13 @@ FT_TEST(test_unordered_map_const_iterator_end_arrow_reports_out_of_range)
     unordered_map_int_int map_instance;
     unordered_map_const_iterator iterator_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(10, 100);
     iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).end());
     (void)iterator_instance.operator->();
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 

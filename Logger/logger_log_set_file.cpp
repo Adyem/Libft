@@ -7,7 +7,7 @@
 #include "../Basic/basic.hpp"
 #include "../System_utils/system_utils.hpp"
 
-void ft_file_sink(const char *message, void *user_data)
+int32_t ft_file_sink(const char *message, void *user_data)
 {
     s_file_sink *sink;
     ft_size_t       length;
@@ -15,15 +15,20 @@ void ft_file_sink(const char *message, void *user_data)
 
     sink = static_cast<s_file_sink *>(user_data);
     if (!sink)
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = FT_FALSE;
     if (file_sink_lock(sink, &lock_acquired) != 0)
-        return ;
+        return (FT_ERR_INTERNAL);
     length = ft_strlen(message);
-    su_write(sink->file_descriptor, message, length);
+    if (su_write(sink->file_descriptor, message, length) < 0)
+    {
+        if (lock_acquired)
+            file_sink_unlock(sink, lock_acquired);
+        return (FT_ERR_IO);
+    }
     if (lock_acquired)
         file_sink_unlock(sink, lock_acquired);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 static int32_t log_set_file_report(int32_t return_value)

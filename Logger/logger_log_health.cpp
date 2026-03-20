@@ -65,6 +65,7 @@ static int32_t logger_health_lock()
 {
     int32_t once_status;
     int32_t lock_status;
+    int32_t initialize_status;
 
     once_status = pthread_once(&g_health_mutex_once, logger_health_initialize_mutex);
     if (once_status != 0)
@@ -79,6 +80,15 @@ static int32_t logger_health_lock()
     if (lock_status != 0)
     {
         return (FT_ERR_INTERNAL);
+    }
+    if (g_health_states.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        initialize_status = g_health_states.initialize();
+        if (initialize_status != FT_ERR_SUCCESS)
+        {
+            (void)pthread_mutex_unlock(&g_health_mutex);
+            return (initialize_status);
+        }
     }
     return (FT_ERR_SUCCESS);
 }
@@ -636,6 +646,8 @@ int32_t ft_log_probe_remote_health()
         ft_size_t entry_index;
         ft_bool failure_detected;
 
+        if (snapshot.initialize() != FT_ERR_SUCCESS)
+            return (-1);
         if (logger_snapshot_network_sinks(snapshot) != 0)
         {
             final_result = -1;
@@ -711,6 +723,8 @@ int32_t ft_log_get_remote_health(s_log_remote_health *statuses, ft_size_t capaci
     {
         return (FT_ERR_INTERNAL);
     }
+    if (snapshot.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_INTERNAL);
     if (logger_snapshot_network_sinks(snapshot) != 0)
         return (FT_ERR_INTERNAL);
     if (logger_health_sync_states(snapshot) != 0)

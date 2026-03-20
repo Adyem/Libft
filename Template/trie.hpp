@@ -303,12 +303,21 @@ ft_trie<ValueType>::~ft_trie()
 template <typename ValueType>
 int32_t ft_trie<ValueType>::initialize()
 {
+    int32_t children_result;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_trie::initialize", "called while object is already initialised");
         return (set_error(FT_ERR_INVALID_STATE));
     }
     this->_data = ft_nullptr;
+    children_result = this->_children.initialize();
+    if (children_result != FT_ERR_SUCCESS)
+    {
+        (void)this->_children.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(children_result));
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (set_error(FT_ERR_SUCCESS));
 }
@@ -332,6 +341,7 @@ int32_t ft_trie<ValueType>::destroy()
         this->_data = ft_nullptr;
     }
     (void)this->unlock_internal(lock_acquired);
+    (void)this->_children.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (set_error(FT_ERR_SUCCESS));
 }
@@ -358,7 +368,7 @@ uint32_t ft_trie<ValueType>::move(ft_trie<ValueType> &other)
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_data = ft_nullptr;
-        this->_children.clear();
+        (void)this->_children.destroy();
         this->_mutex = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(FT_ERR_SUCCESS));

@@ -14,12 +14,8 @@ static int32_t logger_apply_redaction_rule(ft_string &text,
     const char  *source;
     ft_string   operation_result;
 
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (operation_result.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     pattern = rule.pattern.c_str();
     if (!pattern)
         return (FT_ERR_SUCCESS);

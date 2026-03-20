@@ -82,7 +82,7 @@ int32_t ft_log_set_remote_sink(const char *host, uint16_t port, ft_bool use_tcp)
     return (FT_ERR_SUCCESS);
 }
 
-void ft_network_sink(const char *message, void *user_data)
+int32_t ft_network_sink(const char *message, void *user_data)
 {
     s_network_sink *sink;
     ft_size_t message_length;
@@ -91,10 +91,10 @@ void ft_network_sink(const char *message, void *user_data)
 
     sink = static_cast<s_network_sink *>(user_data);
     if (!sink || !message)
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = FT_FALSE;
     if (network_sink_lock(sink, &lock_acquired) != 0)
-        return ;
+        return (FT_ERR_INTERNAL);
     if (sink->socket_fd < 0)
         goto cleanup;
     if (!sink->send_function)
@@ -116,7 +116,9 @@ void ft_network_sink(const char *message, void *user_data)
                 su_close(sink->socket_fd);
             sink->socket_fd = -1;
             sink->send_function = ft_nullptr;
-            goto cleanup;
+            if (lock_acquired)
+                network_sink_unlock(sink, lock_acquired);
+            return (FT_ERR_SOCKET_SEND_FAILED);
         }
         total_bytes_sent += static_cast<ft_size_t>(send_result);
     }
@@ -124,5 +126,5 @@ void ft_network_sink(const char *message, void *user_data)
 cleanup:
     if (lock_acquired)
         network_sink_unlock(sink, lock_acquired);
-    return ;
+    return (FT_ERR_SUCCESS);
 }

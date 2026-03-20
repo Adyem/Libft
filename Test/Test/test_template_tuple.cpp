@@ -49,8 +49,8 @@ FT_TEST(test_ft_tuple_reset_and_error_reporting)
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, tuple_instance.get_error());
 
     ft_string &missing_string = tuple_instance.get<1>();
-    FT_ASSERT_STR_EQ("", missing_string.c_str());
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, tuple_instance.get_error());
+    FT_ASSERT_EQ(FT_FALSE, missing_string.is_initialised());
 
     ft_string eleven_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, eleven_string.initialize("eleven"));
@@ -78,6 +78,8 @@ FT_TEST(test_ft_tuple_move_semantics)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy_tuple.get_error());
 
     ft_tuple<int, ft_string> empty_tuple;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_tuple.initialize());
+    empty_tuple.reset();
     int empty_value = empty_tuple.get<0>();
     FT_ASSERT_EQ(0, empty_value);
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, empty_tuple.get_error());

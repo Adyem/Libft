@@ -159,6 +159,7 @@ int32_t ft_thread_pool::initialize()
     ft_size_t worker_index;
     int32_t mutex_result;
     int32_t queue_result;
+    int32_t workers_result;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -181,10 +182,19 @@ int32_t ft_thread_pool::initialize()
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(mutex_result));
     }
-    this->_workers.clear();
+    workers_result = this->_workers.initialize();
+    if (workers_result != FT_ERR_SUCCESS)
+    {
+        (void)this->_work_mutex->destroy();
+        delete this->_work_mutex;
+        this->_work_mutex = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(workers_result));
+    }
     queue_result = this->_tasks.initialize();
     if (queue_result != FT_ERR_SUCCESS)
     {
+        (void)this->_workers.destroy();
         (void)this->_work_mutex->destroy();
         delete this->_work_mutex;
         this->_work_mutex = ft_nullptr;
@@ -197,6 +207,16 @@ int32_t ft_thread_pool::initialize()
         ft_thread worker(&ft_thread_pool::worker_entry, this);
 
         this->_workers.push_back(ft_move(worker));
+        if (this->_workers.get_error() != FT_ERR_SUCCESS)
+        {
+            (void)this->_tasks.destroy();
+            (void)this->_workers.destroy();
+            (void)this->_work_mutex->destroy();
+            delete this->_work_mutex;
+            this->_work_mutex = ft_nullptr;
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (set_error(this->_workers.get_error()));
+        }
         ++worker_index;
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
@@ -239,7 +259,8 @@ int32_t ft_thread_pool::destroy()
         ++worker_index;
     }
     this->_workers.clear();
-    this->_tasks.clear();
+    (void)this->_workers.destroy();
+    (void)this->_tasks.destroy();
     work_mutex_pointer = this->_work_mutex;
     this->_work_mutex = ft_nullptr;
     if (work_mutex_pointer != ft_nullptr)
@@ -386,14 +407,14 @@ void ft_thread_pool::unlock(ft_bool lock_acquired) const
 
 uint32_t ft_thread_pool::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_thread_pool::get_error");
     return (_last_error);
 }
 
 const char *ft_thread_pool::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_thread_pool::get_error_str");
     return (ft_strerror(_last_error));
 }

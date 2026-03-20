@@ -23,6 +23,17 @@ void ft_log_close()
         log_close_report();
         return ;
     }
+    if (sinks_snapshot.initialize() != FT_ERR_SUCCESS)
+    {
+        lock_error = logger_unlock_sinks();
+        if (lock_error != FT_ERR_SUCCESS)
+        {
+            log_close_report();
+            return ;
+        }
+        log_close_report();
+        return ;
+    }
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != FT_ERR_SUCCESS)
     {

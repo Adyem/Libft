@@ -208,13 +208,16 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
     {
         s_log_sink entry;
         ft_bool sink_lock_acquired;
+        int32_t sink_result;
 
         entry = g_sinks[entry_index];
         sink_lock_acquired = FT_FALSE;
         if (entry.function != ft_nullptr
             && log_sink_lock(&entry, &sink_lock_acquired) == FT_ERR_SUCCESS)
         {
-            entry.function(final_message.c_str(), entry.user_data);
+            sink_result = entry.function(final_message.c_str(), entry.user_data);
+            if (sink_result != FT_ERR_SUCCESS && g_logger != ft_nullptr)
+                g_logger->set_error(sink_result);
             if (entry.function == ft_file_sink)
                 logger_execute_rotation(static_cast<s_file_sink *>(entry.user_data));
         }

@@ -25,6 +25,7 @@ FT_TEST(test_ft_vector_ft_string_growth)
             "golf"
         };
         size_t push_index = 0;
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, string_vector.initialize());
         while (push_index < 7)
         {
             ft_string stored_value;
@@ -41,6 +42,7 @@ FT_TEST(test_ft_vector_ft_string_growth)
             ++verify_index;
         }
         FT_ASSERT_EQ(FT_ERR_SUCCESS, string_vector.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, string_vector.destroy());
     }
     ft_size_t allocation_count_after = 0;
     ft_size_t free_count_after = 0;
@@ -60,6 +62,7 @@ FT_TEST(test_ft_vector_small_buffer_inline_capacity)
     cma_get_stats(&allocation_count_before, &free_count_before);
     {
         ft_vector<int> inline_vector;
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, inline_vector.initialize());
         size_t inline_capacity = inline_vector.capacity();
         FT_ASSERT(inline_capacity > 0);
         size_t push_index = 0;
@@ -80,6 +83,7 @@ FT_TEST(test_ft_vector_small_buffer_inline_capacity)
             ++verify_index;
         }
         FT_ASSERT_EQ(inline_vector.capacity(), inline_capacity);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, inline_vector.destroy());
     }
     ft_size_t allocation_count_after = 0;
     ft_size_t free_count_after = 0;

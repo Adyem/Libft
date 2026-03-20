@@ -117,6 +117,13 @@ void ft_thread_pool::submit(Function &&function)
     {
         ft_function<void()> wrapper(ft_move(function));
         this->_tasks.enqueue(ft_move(wrapper));
+        if (this->_tasks.get_error() != FT_ERR_SUCCESS)
+        {
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_work_mutex);
+            this->unlock_internal(lock_acquired);
+            set_error(this->_tasks.get_error());
+            return ;
+        }
     }
     (void)pt_recursive_mutex_unlock_if_not_null(this->_work_mutex);
     this->unlock_internal(lock_acquired);

@@ -37,6 +37,14 @@ static void websocket_server_worker(websocket_server_context *context)
     if (context->server == ft_nullptr)
         return ;
     context->client_fd = -1;
+    if (context->message.is_initialised() == FT_FALSE)
+    {
+        if (context->message.initialize() != FT_ERR_SUCCESS)
+        {
+            context->result = -1;
+            return ;
+        }
+    }
     context->result = context->server->run_once(context->client_fd, context->message);
     return ;
 }

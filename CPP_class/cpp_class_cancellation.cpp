@@ -120,13 +120,21 @@ ft_cancellation_state::~ft_cancellation_state() noexcept
 
 int32_t ft_cancellation_state::initialize() noexcept
 {
+    int32_t callbacks_result;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_cancellation_state::initialize", "called while object is already initialised");
         return (set_error(FT_ERR_INVALID_STATE));
     }
     this->_cancelled.store(FT_FALSE, std::memory_order_release);
-    this->_callbacks.clear();
+    callbacks_result = this->_callbacks.initialize();
+    if (callbacks_result != FT_ERR_SUCCESS)
+    {
+        (void)this->_callbacks.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(callbacks_result));
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (set_error(FT_ERR_SUCCESS));
 }
@@ -145,6 +153,7 @@ int32_t ft_cancellation_state::destroy() noexcept
     this->_callbacks.clear();
     this->_cancelled.store(FT_FALSE, std::memory_order_release);
     (void)this->unlock_internal(lock_acquired);
+    (void)this->_callbacks.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (set_error(FT_ERR_SUCCESS));
 }
@@ -170,7 +179,6 @@ uint32_t ft_cancellation_state::move(ft_cancellation_state &other) noexcept
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_cancelled.store(FT_FALSE, std::memory_order_release);
-        this->_callbacks.clear();
         this->_mutex = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(FT_ERR_SUCCESS));
@@ -213,15 +221,22 @@ int32_t ft_cancellation_state::request_cancel() noexcept
     ft_vector<ft_function<void()> > callbacks_to_run;
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t callbacks_result;
     ft_size_t index;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_state::request_cancel");
     if (this->_cancelled.exchange(FT_TRUE, std::memory_order_acq_rel))
         return (set_error(FT_ERR_SUCCESS));
+    callbacks_result = callbacks_to_run.initialize();
+    if (callbacks_result != FT_ERR_SUCCESS)
+        return (set_error(callbacks_result));
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)callbacks_to_run.destroy();
         return (set_error(lock_error));
+    }
     index = 0;
     while (index < this->_callbacks.size())
     {
@@ -236,6 +251,7 @@ int32_t ft_cancellation_state::request_cancel() noexcept
         callbacks_to_run[index]();
         ++index;
     }
+    (void)callbacks_to_run.destroy();
     return (set_error(FT_ERR_SUCCESS));
 }
 

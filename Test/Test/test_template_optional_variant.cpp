@@ -13,6 +13,7 @@ FT_TEST(test_ft_optional_reports_empty_state)
 {
     ft_optional<int> optional_value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, optional_value.initialize());
     FT_ASSERT_EQ(false, optional_value.has_value());
     int &fallback_value = optional_value.value();
 
@@ -54,6 +55,7 @@ FT_TEST(test_ft_variant_emplace_and_get)
 {
     ft_variant<int, const char*> variant_value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_value.initialize());
     variant_value.emplace<int>(17);
     FT_ASSERT(variant_value.holds_alternative<int>());
     FT_ASSERT_EQ(17, variant_value.get<int>());

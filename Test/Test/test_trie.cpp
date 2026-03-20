@@ -15,6 +15,7 @@ FT_TEST(test_trie_insert_nullptr_sets_errno)
     size_t valid_key_length = ft_strlen_size_t("valid");
     const char *valid_key = "valid";
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, trie.initialize());
     FT_ASSERT_EQ(0, trie.insert(valid_key, &stored_value));
     const auto *stored_node = trie.search(valid_key);
     FT_ASSERT(stored_node != ft_nullptr);
@@ -27,6 +28,7 @@ FT_TEST(test_trie_insert_nullptr_sets_errno)
     FT_ASSERT_EQ(valid_key_length, stored_node->_key_length);
     FT_ASSERT_EQ(0, stored_node->_unset_value);
     FT_ASSERT_EQ(&stored_value, stored_node->_value_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, trie.destroy());
     return (1);
 }
 
@@ -35,6 +37,7 @@ FT_TEST(test_trie_thread_safety_controls_reset_errno)
     ft_trie<int> trie;
     ft_bool lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, trie.initialize());
     FT_ASSERT_EQ(FT_FALSE, trie.is_thread_safe());
     FT_ASSERT_EQ(0, trie.enable_thread_safety());
     FT_ASSERT_EQ(FT_TRUE, trie.is_thread_safe());
@@ -50,5 +53,6 @@ FT_TEST(test_trie_thread_safety_controls_reset_errno)
     FT_ASSERT_EQ(&stored_value, node->_value_pointer);
     trie.disable_thread_safety();
     FT_ASSERT_EQ(FT_FALSE, trie.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, trie.destroy());
     return (1);
 }

@@ -21,9 +21,9 @@ int32_t ft_log_set_syslog(const char *identifier)
     return (FT_ERR_SUCCESS);
 }
 
-void ft_syslog_sink(const char *message, void *user_data)
+int32_t ft_syslog_sink(const char *message, void *user_data)
 {
     (void)user_data;
     cmp_syslog_write(message);
-    return ;
+    return (FT_ERR_SUCCESS);
 }

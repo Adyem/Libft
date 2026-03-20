@@ -15,7 +15,7 @@ extern t_log_level g_level;
 extern ft_bool g_async_running;
 extern ft_bool g_use_color;
 
-typedef void (*t_log_sink)(const char *message, void *user_data);
+typedef int32_t (*t_log_sink)(const char *message, void *user_data);
 
 typedef ssize_t (*t_network_send_function)(int32_t socket_fd, const void *buffer, ft_size_t length, int32_t flags);
 
@@ -129,8 +129,8 @@ int32_t logger_build_standard_message(t_log_level level, const ft_string &messag
 void ft_log_rotate(s_file_sink *sink);
 int32_t logger_prepare_rotation(s_file_sink *sink, ft_bool *rotate_for_size, ft_bool *rotate_for_age);
 void logger_execute_rotation(s_file_sink *sink);
-void ft_file_sink(const char *message, void *user_data);
-void ft_network_sink(const char *message, void *user_data);
+int32_t ft_file_sink(const char *message, void *user_data);
+int32_t ft_network_sink(const char *message, void *user_data);
 const char *ft_level_to_str(t_log_level level);
 int32_t ft_log_level_to_severity(t_log_level level);
 void ft_log_vwrite(t_log_level level, const char *format_string, va_list argument_list);

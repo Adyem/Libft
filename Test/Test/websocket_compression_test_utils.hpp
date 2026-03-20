@@ -11,6 +11,11 @@ static bool websocket_permessage_deflate_compress(const ft_string &message,
     z_stream stream;
     int zlib_result;
 
+    if (compressed.is_initialised() == FT_FALSE)
+    {
+        if (compressed.initialize() != FT_ERR_SUCCESS)
+            return (false);
+    }
     compressed.clear();
     ft_memset(&stream, 0, sizeof(stream));
     stream.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(message.c_str()));
@@ -80,9 +85,20 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     tail_bytes[1] = 0x00;
     tail_bytes[2] = 0xFF;
     tail_bytes[3] = 0xFF;
+    if (input_buffer.initialize() != FT_ERR_SUCCESS)
+        return (false);
+    if (output_buffer.initialize() != FT_ERR_SUCCESS)
+    {
+        (void)input_buffer.destroy();
+        return (false);
+    }
     input_buffer.reserve(payload_length + 4);
     if (input_buffer.get_error() != FT_ERR_SUCCESS)
+    {
+        (void)output_buffer.destroy();
+        (void)input_buffer.destroy();
         return (false);
+    }
     std::size_t index_value;
 
     index_value = 0;
@@ -90,7 +106,11 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     {
         input_buffer.push_back(payload[index_value]);
         if (input_buffer.get_error() != FT_ERR_SUCCESS)
+        {
+            (void)output_buffer.destroy();
+            (void)input_buffer.destroy();
             return (false);
+        }
         index_value++;
     }
     index_value = 0;
@@ -98,7 +118,11 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     {
         input_buffer.push_back(tail_bytes[index_value]);
         if (input_buffer.get_error() != FT_ERR_SUCCESS)
+        {
+            (void)output_buffer.destroy();
+            (void)input_buffer.destroy();
             return (false);
+        }
         index_value++;
     }
     ft_memset(&stream, 0, sizeof(stream));
@@ -123,6 +147,8 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
             if (output_buffer.get_error() != FT_ERR_SUCCESS)
             {
                 inflateEnd(&stream);
+                (void)output_buffer.destroy();
+                (void)input_buffer.destroy();
                 return (false);
             }
             index_value++;
@@ -134,13 +160,30 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
         if (zlib_result != Z_OK && zlib_result != Z_BUF_ERROR)
         {
             inflateEnd(&stream);
+            (void)output_buffer.destroy();
+            (void)input_buffer.destroy();
             return (false);
         }
     }
     inflateEnd(&stream);
+    if (message.is_initialised() == FT_FALSE)
+    {
+        if (message.initialize() != FT_ERR_SUCCESS)
+        {
+            (void)output_buffer.destroy();
+            (void)input_buffer.destroy();
+            return (false);
+        }
+    }
     message.assign(reinterpret_cast<const char *>(output_buffer.begin()), output_buffer.size());
     if (ft_string::get_error() != FT_ERR_SUCCESS)
+    {
+        (void)output_buffer.destroy();
+        (void)input_buffer.destroy();
         return (false);
+    }
+    (void)output_buffer.destroy();
+    (void)input_buffer.destroy();
     return (true);
 }
 

@@ -16,6 +16,7 @@ FT_TEST(test_ft_priority_queue_enable_thread_safety_initializes_mutex)
     ft_priority_queue<int> queue_instance;
     ft_bool                lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.initialize());
     FT_ASSERT_EQ(0, queue_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
     FT_ASSERT(queue_instance.is_thread_safe());
@@ -43,6 +44,7 @@ FT_TEST(test_ft_priority_queue_enable_thread_safety_initializes_mutex)
     FT_ASSERT(lock_acquired == FT_FALSE);
     queue_instance.unlock(lock_acquired);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.destroy());
     return (1);
 }
 
@@ -55,6 +57,7 @@ FT_TEST(test_ft_priority_queue_lock_blocks_until_release)
     std::atomic<long long> wait_duration_ms;
     std::thread worker;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.initialize());
     FT_ASSERT_EQ(0, queue_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
 
@@ -98,5 +101,6 @@ FT_TEST(test_ft_priority_queue_lock_blocks_until_release)
 
     queue_instance.disable_thread_safety();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.destroy());
     return (1);
 }

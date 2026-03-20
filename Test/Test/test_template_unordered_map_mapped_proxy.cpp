@@ -54,11 +54,13 @@ FT_TEST(test_unordered_map_mapped_proxy_assignment_updates_value)
     ft_unordered_map<int, int> map_instance;
     int value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance[1] = 5;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     value = map_instance[1];
     FT_ASSERT_EQ(5, value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -66,24 +68,29 @@ FT_TEST(test_unordered_map_mapped_proxy_arrow_updates_struct)
 {
     ft_unordered_map<int, unordered_map_proxy_value> map_instance;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance[2]->number = 10;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     map_instance[2]->bump();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(11, map_instance[2]->number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
 FT_TEST(test_unordered_map_mapped_proxy_missing_key_creates_valid_entry)
 {
     ft_unordered_map<int, unordered_map_proxy_value> map_instance;
-    auto proxy = map_instance[9];
+    ft_unordered_map<int, unordered_map_proxy_value>::mapped_proxy proxy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
+    proxy = map_instance[9];
     FT_ASSERT_EQ(1, proxy.is_valid());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, proxy.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(1), map_instance.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -92,10 +99,12 @@ FT_TEST(test_unordered_map_mapped_proxy_conversion_reads_current_value)
     ft_unordered_map<int, int> map_instance;
     int value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance[3] = 12;
     value = map_instance[3];
     FT_ASSERT_EQ(12, value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -104,6 +113,7 @@ FT_TEST(test_unordered_map_invalid_proxy_does_not_poison_map_operations)
     ft_unordered_map<int, unordered_map_proxy_value> map_instance;
     ft_unordered_map<int, unordered_map_proxy_value>::mapped_proxy invalid_proxy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     invalid_proxy.operator->()->number = 99;
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, invalid_proxy.get_error());
 
@@ -111,6 +121,7 @@ FT_TEST(test_unordered_map_invalid_proxy_does_not_poison_map_operations)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(8, map_instance[5]->number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }
 
@@ -131,6 +142,7 @@ FT_TEST(test_unordered_map_proxy_chain_and_later_operation_are_independent)
     ft_unordered_map<int, unordered_map_proxy_value> map_instance;
     ft_unordered_map<int, unordered_map_proxy_value>::mapped_proxy invalid_proxy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance[1]->number = 1;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
 
@@ -141,5 +153,6 @@ FT_TEST(test_unordered_map_proxy_chain_and_later_operation_are_independent)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(2, map_instance[1]->number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     return (1);
 }

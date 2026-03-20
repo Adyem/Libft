@@ -48,6 +48,16 @@ static void websocket_invalid_handshake_server(websocket_invalid_handshake_conte
         return ;
     if (context->server_socket < 0)
         return ;
+    if (request.is_initialised() == FT_FALSE)
+    {
+        if (request.initialize() != FT_ERR_SUCCESS)
+            return ;
+    }
+    if (response.is_initialised() == FT_FALSE)
+    {
+        if (response.initialize() != FT_ERR_SUCCESS)
+            return ;
+    }
     context->result = -1;
     client_length = sizeof(client_address);
     client_socket = nw_accept(context->server_socket, reinterpret_cast<struct sockaddr*>(&client_address), &client_length);
@@ -118,11 +128,36 @@ FT_TEST(test_websocket_handshake_and_echo)
     }
     ft_string message;
 
+    if (message.initialize() != FT_ERR_SUCCESS)
+    {
+        server_thread.join();
+        client.close();
+        return (0);
+    }
+    if (reply.initialize() != FT_ERR_SUCCESS)
+    {
+        server_thread.join();
+        client.close();
+        message.destroy();
+        return (0);
+    }
+    if (received.initialize() != FT_ERR_SUCCESS)
+    {
+        server_thread.join();
+        client.close();
+        message.destroy();
+        reply.destroy();
+        return (0);
+    }
     message = "ping";
+    reply = "pong";
     if (client.send_text(message) != 0)
     {
         server_thread.join();
         client.close();
+        message.destroy();
+        reply.destroy();
+        received.destroy();
         return (0);
     }
     server_thread.join();
@@ -131,6 +166,9 @@ FT_TEST(test_websocket_handshake_and_echo)
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
+        message.destroy();
+        reply.destroy();
+        received.destroy();
         return (0);
     }
     if (!(context.message == message))
@@ -138,14 +176,19 @@ FT_TEST(test_websocket_handshake_and_echo)
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
+        message.destroy();
+        reply.destroy();
+        received.destroy();
         return (0);
     }
-    reply = "pong";
     if (server.send_text(context.client_fd, reply) != 0)
     {
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
+        message.destroy();
+        reply.destroy();
+        received.destroy();
         return (0);
     }
     if (client.receive_text(received) != 0)
@@ -153,12 +196,25 @@ FT_TEST(test_websocket_handshake_and_echo)
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
+        message.destroy();
+        reply.destroy();
+        received.destroy();
         return (0);
     }
     client.close();
     if (context.client_fd >= 0)
         nw_close(context.client_fd);
-    return (received == reply);
+    if (received == reply)
+    {
+        message.destroy();
+        reply.destroy();
+        received.destroy();
+        return (1);
+    }
+    message.destroy();
+    reply.destroy();
+    received.destroy();
+    return (0);
 }
 
 FT_TEST(test_websocket_server_handles_fragmented_handshake)
@@ -217,6 +273,12 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
         nw_close(client_socket);
         return (0);
     }
+    if (handshake_request.initialize() != FT_ERR_SUCCESS)
+    {
+        nw_close(client_socket);
+        server_thread.join();
+        return (0);
+    }
     handshake_request = "GET /chat HTTP/1.1\r\n";
     handshake_request.append("Host: 127.0.0.1\r\n");
     handshake_request.append("Upgrade: websocket\r\n");
@@ -242,6 +304,13 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
         if (total_sent < handshake_length)
             usleep(50000);
     }
+    if (handshake_response.initialize() != FT_ERR_SUCCESS)
+    {
+        nw_close(client_socket);
+        server_thread.join();
+        handshake_request.destroy();
+        return (0);
+    }
     handshake_response.clear();
     while (1)
     {
@@ -257,6 +326,14 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
         terminator = ft_strstr(handshake_response.c_str(), "\r\n\r\n");
         if (terminator != ft_nullptr)
             break;
+    }
+    if (expected_message.initialize() != FT_ERR_SUCCESS)
+    {
+        nw_close(client_socket);
+        server_thread.join();
+        handshake_request.destroy();
+        handshake_response.destroy();
+        return (0);
     }
     expected_message = "split";
     payload_length = expected_message.size();
@@ -290,7 +367,17 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
     nw_close(client_socket);
     if (context.client_fd >= 0)
         nw_close(context.client_fd);
-    return (context.result == 0 && context.message == expected_message);
+    if (context.result == 0 && context.message == expected_message)
+    {
+        handshake_request.destroy();
+        handshake_response.destroy();
+        expected_message.destroy();
+        return (1);
+    }
+    handshake_request.destroy();
+    handshake_response.destroy();
+    expected_message.destroy();
+    return (0);
 }
 
 FT_TEST(test_websocket_client_rejects_invalid_handshake)

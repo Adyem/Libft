@@ -29,6 +29,7 @@ FT_TEST(test_logger_json_sink)
 
     FT_ASSERT_EQ(0, pipe(pipe_fds));
     write_fd = pipe_fds[1];
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_json_sink(ft_nullptr, &write_fd));
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_json_sink, &write_fd));
     ft_log_info("json check");
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);

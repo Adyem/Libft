@@ -48,9 +48,7 @@ FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex)
     temp_fd = mkstemp(template_path);
     FT_ASSERT(temp_fd >= 0);
     sink.file_descriptor = temp_fd;
-    ft_string sink_path;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink_path.initialize(template_path));
-    sink.path = sink_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink.path.initialize(template_path));
     sink.max_size = 0;
     sink.retention_count = 1;
     sink.max_age_seconds = 0;
@@ -176,7 +174,7 @@ FT_TEST(test_logger_rotate_fstat_failure_sets_errno)
     sink.file_descriptor = -1;
     ft_string invalid_path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_path.initialize("/tmp/libft_logger_invalid_fd"));
-    sink.path = invalid_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink.path.initialize(invalid_path));
     sink.max_size = 1;
     errno = 0;
     ft_log_rotate(&sink);
@@ -196,14 +194,13 @@ FT_TEST(test_logger_rotate_success_clears_errno)
     write_result = write(temp_fd, "rotation-test", 13);
     FT_ASSERT_EQ(13, write_result);
     sink.file_descriptor = temp_fd;
-    ft_string sink_path;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink_path.initialize(template_path));
-    sink.path = sink_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink.path.initialize(template_path));
     sink.max_size = 4;
     errno = 0;
     ft_log_rotate(&sink);
     FT_ASSERT(sink.file_descriptor >= 0);
-    rotated_path = sink.path + ".1";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_path.initialize(sink.path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_path.append(".1"));
     FT_ASSERT_EQ(0, access(rotated_path.c_str(), F_OK));
     close(sink.file_descriptor);
     unlink(template_path);
@@ -223,16 +220,16 @@ FT_TEST(test_logger_rotate_rename_failure_reopens_file)
 
     directory_path = mkdtemp(directory_template);
     FT_ASSERT(directory_path != ft_nullptr);
-    file_path = directory_path;
-    file_path += "/";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path.initialize(directory_path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path.append("/"));
     std::string long_name_src(255, 'a');
-    file_path += long_name_src.c_str();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path.append(long_name_src.c_str()));
     file_descriptor = open(file_path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
     FT_ASSERT(file_descriptor >= 0);
     write_result = write(file_descriptor, "trigger", 7);
     FT_ASSERT_EQ(7, write_result);
     sink.file_descriptor = file_descriptor;
-    sink.path = file_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink.path.initialize(file_path));
     sink.max_size = 4;
     errno = 0;
     ft_log_rotate(&sink);
