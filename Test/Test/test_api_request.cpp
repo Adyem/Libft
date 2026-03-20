@@ -457,15 +457,17 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
     context->client_fd = -1;
     context->request_data.clear();
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        context->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
+        context->result.store(initialize_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
-        context->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
+        context->result.store(FT_ERR_INVALID_OPERATION,
+            std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
@@ -530,15 +532,17 @@ static void api_request_basic_server(api_request_basic_server_context *context)
     context->client_fd = -1;
     context->request_data.clear();
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        context->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
+        context->result.store(initialize_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
-        context->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
+        context->result.store(FT_ERR_INVALID_OPERATION,
+            std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
@@ -607,14 +611,15 @@ static void api_request_success_server(void)
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54338;
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        api_request_success_server_signal_ready(FT_ERR_SUCCESS);
+        api_request_success_server_signal_ready(initialize_error);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
-        api_request_success_server_signal_ready(FT_ERR_SUCCESS);
+        api_request_success_server_signal_ready(FT_ERR_INVALID_OPERATION);
         return ;
     }
     api_request_success_server_signal_ready(FT_ERR_SUCCESS);
@@ -669,14 +674,16 @@ static void api_request_stream_large_response_server(void)
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54358;
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        api_request_stream_large_server_signal_ready(FT_ERR_SUCCESS);
+        api_request_stream_large_server_signal_ready(initialize_error);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
-        api_request_stream_large_server_signal_ready(FT_ERR_SUCCESS);
+        api_request_stream_large_server_signal_ready(
+            FT_ERR_INVALID_OPERATION);
         return ;
     }
     api_request_stream_large_server_signal_ready(FT_ERR_SUCCESS);
@@ -773,7 +780,11 @@ static void api_request_retry_success_server(void)
     std::chrono::steady_clock::time_point start_time;
     std::chrono::steady_clock::time_point current_time;
     std::chrono::milliseconds elapsed;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+        return ;
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54339;
@@ -838,7 +849,11 @@ static void api_request_retry_failure_server(void)
     int client_fd;
     int accepted_count;
     std::chrono::steady_clock::time_point start_time;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+        return ;
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54340;
@@ -908,11 +923,18 @@ static void api_request_circuit_success_server(
 
     if (!context)
         return ;
+    int config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        context->ready.store(true, std::memory_order_release);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = context->port;
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
     {
         context->ready.store(true, std::memory_order_release);
         return ;
@@ -978,7 +1000,11 @@ static void api_request_retry_timeout_server(void)
     std::chrono::milliseconds accept_timeout;
     int poll_descriptors[1];
     int poll_result;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+        return ;
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54341;
@@ -1095,14 +1121,16 @@ static void api_request_stream_chunked_response_server(void)
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54359;
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        api_request_stream_chunked_server_signal_ready(FT_ERR_SUCCESS);
+        api_request_stream_chunked_server_signal_ready(initialize_error);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
-        api_request_stream_chunked_server_signal_ready(FT_ERR_SUCCESS);
+        api_request_stream_chunked_server_signal_ready(
+            FT_ERR_INVALID_OPERATION);
         return ;
     }
     api_request_stream_chunked_server_signal_ready(FT_ERR_SUCCESS);
@@ -1147,12 +1175,17 @@ static void api_request_async_retry_server(void)
     bool header_complete;
     int last_recv_result;
     int last_recv_errno;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+        return ;
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54339;
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
         return ;
     if (server_socket.get_file_descriptor() < 0)
         return ;
@@ -1265,10 +1298,6 @@ FT_TEST(test_api_request_send_failure_sets_errno)
     FT_ASSERT(server_thread.joinable());
     api_request_small_delay();
     FT_ASSERT(api_request_send_failure_server_wait_until_ready());
-    {
-        server_thread.join();
-        return (0);
-    }
     result = api_request_string("127.0.0.1", 54337, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     server_thread.join();
     FT_ASSERT(result == ft_nullptr);
@@ -1310,10 +1339,6 @@ FT_TEST(test_api_request_success_resets_errno)
     server_thread = ft_thread(api_request_success_server);
     FT_ASSERT(server_thread.joinable());
     FT_ASSERT(api_request_success_server_wait_until_ready());
-    {
-        server_thread.join();
-        return (0);
-    }
     body = api_request_string("127.0.0.1", 54338, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     server_thread.join();
     FT_ASSERT(body != ft_nullptr);

@@ -160,7 +160,14 @@ static ft_bool api_https_prepare_socket(api_connection_pool_handle &connection_h
     if (pooled_connection)
         return (FT_TRUE);
     SocketConfig config;
+    int32_t config_error;
 
+    config_error = config.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        error_code = config_error;
+        return (FT_FALSE);
+    }
     config._type = SocketType::CLIENT;
     ft_memset(config._ip, 0, sizeof(config._ip));
     if (host)

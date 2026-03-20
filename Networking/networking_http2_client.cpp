@@ -323,8 +323,15 @@ ft_bool http2_header_field::assign_from_cstr(const char *name_value, const char 
 {
     ft_string name_string;
     ft_string value_string;
+    int32_t initialize_error;
 
     if (name_value == ft_nullptr || value_value == ft_nullptr)
+        return (FT_FALSE);
+    initialize_error = name_string.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (FT_FALSE);
+    initialize_error = value_string.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
         return (FT_FALSE);
     name_string = name_value;
     if (ft_string::get_error() != FT_ERR_SUCCESS)

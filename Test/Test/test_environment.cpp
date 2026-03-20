@@ -35,8 +35,10 @@ FT_TEST(test_ft_getenv_missing_clears_errno)
     const char *variable_name;
 
     variable_name = "LIBFT_TEST_GETENV_MISSING";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     ft_unsetenv(variable_name);
     FT_ASSERT_EQ(ft_nullptr, ft_getenv(variable_name));
+    ft_environment_disable_thread_safety();
     return (1);
 }
 
@@ -46,11 +48,13 @@ FT_TEST(test_ft_getenv_returns_value)
     char *value;
 
     variable_name = "LIBFT_TEST_GETENV_PRESENT";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "present", 1));
     value = ft_getenv(variable_name);
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(value, "present"));
     ft_unsetenv(variable_name);
+    ft_environment_disable_thread_safety();
     return (1);
 }
 
@@ -84,11 +88,13 @@ FT_TEST(test_ft_setenv_success_resets_errno)
     char *value;
 
     variable_name = "LIBFT_TEST_SETENV_SUCCESS";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "stored", 1));
     value = ft_getenv(variable_name);
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(value, "stored"));
     ft_unsetenv(variable_name);
+    ft_environment_disable_thread_safety();
     return (1);
 }
 
@@ -98,12 +104,14 @@ FT_TEST(test_ft_setenv_overwrite_disabled_preserves_existing)
     char *value;
 
     variable_name = "LIBFT_TEST_SETENV_NO_OVERWRITE";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "initial", 1));
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "replacement", 0));
     value = ft_getenv(variable_name);
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(value, "initial"));
     FT_ASSERT_EQ(0, ft_unsetenv(variable_name));
+    ft_environment_disable_thread_safety();
     return (1);
 }
 
@@ -113,12 +121,14 @@ FT_TEST(test_ft_setenv_overwrite_disabled_creates_variable)
     char *value;
 
     variable_name = "LIBFT_TEST_SETENV_CREATE_NO_OVERWRITE";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     ft_unsetenv(variable_name);
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "created", 0));
     value = ft_getenv(variable_name);
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(value, "created"));
     FT_ASSERT_EQ(0, ft_unsetenv(variable_name));
+    ft_environment_disable_thread_safety();
     return (1);
 }
 
@@ -139,9 +149,11 @@ FT_TEST(test_ft_unsetenv_success_resets_errno)
     const char *variable_name;
 
     variable_name = "LIBFT_TEST_UNSET_OK";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
     FT_ASSERT_EQ(0, ft_unsetenv(variable_name));
     FT_ASSERT_EQ(ft_nullptr, ft_getenv(variable_name));
+    ft_environment_disable_thread_safety();
     return (1);
 }
 
@@ -151,12 +163,14 @@ FT_TEST(test_ft_unsetenv_failure_propagates_errno)
     int function_result;
 
     variable_name = "LIBFT_TEST_UNSET_FAIL";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
     cmp_set_force_unsetenv_result(-1, ENOMEM);
     function_result = ft_unsetenv(variable_name);
     cmp_clear_force_unsetenv_result();
     FT_ASSERT_EQ(-1, function_result);
     ft_unsetenv(variable_name);
+    ft_environment_disable_thread_safety();
     return (1);
 }
 
@@ -166,12 +180,14 @@ FT_TEST(test_ft_unsetenv_failure_without_errno)
     int function_result;
 
     variable_name = "LIBFT_TEST_UNSET_NO_ERRNO";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
     cmp_set_force_unsetenv_result(-1, 0);
     function_result = ft_unsetenv(variable_name);
     cmp_clear_force_unsetenv_result();
-    FT_ASSERT_EQ(-1, function_result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, function_result);
     ft_unsetenv(variable_name);
+    ft_environment_disable_thread_safety();
     return (1);
 }
 

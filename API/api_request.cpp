@@ -164,6 +164,14 @@ ft_bool api_request_stream(const char *ip_address, uint16_t port,
     }
 
     SocketConfig config;
+    int32_t config_error;
+
+    config_error = config.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        error_code = config_error;
+        return (FT_FALSE);
+    }
     config._type = SocketType::CLIENT;
     api_request_copy_ip(config._ip, ip_address);
     config._port = port;
@@ -289,6 +297,14 @@ ft_bool api_request_stream_http2(const char *ip_address, uint16_t port,
     }
 
     SocketConfig config;
+    int32_t config_error;
+
+    config_error = config.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        error_code = config_error;
+        return (FT_FALSE);
+    }
     config._type = SocketType::CLIENT;
     api_request_copy_ip(config._ip, ip_address);
     config._port = port;
@@ -449,6 +465,14 @@ char *api_request_string(const char *ip_address, uint16_t port,
         &error_code);
 
     SocketConfig config;
+    int32_t config_error;
+
+    config_error = config.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        error_code = config_error;
+        return (ft_nullptr);
+    }
     config._type = SocketType::CLIENT;
     api_request_copy_ip(config._ip, ip_address);
     config._port = port;
@@ -598,6 +622,14 @@ char *api_request_string_http2(const char *ip_address, uint16_t port,
         &error_code);
 
     SocketConfig config;
+    int32_t config_error;
+
+    config_error = config.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        error_code = config_error;
+        return (ft_nullptr);
+    }
     config._type = SocketType::CLIENT;
     api_request_copy_ip(config._ip, ip_address);
     config._port = port;

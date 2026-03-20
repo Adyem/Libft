@@ -295,8 +295,15 @@ ft_bool api_http_prepare_plain_socket(
         return (FT_TRUE);
     }
     SocketConfig config;
+    int32_t config_error;
     int32_t socket_error_code;
 
+    config_error = config.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        error_code = config_error;
+        return (FT_FALSE);
+    }
     config._type = SocketType::CLIENT;
     ft_memset(config._ip, 0, sizeof(config._ip));
     if (host)
@@ -1534,6 +1541,21 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
     connection_close = FT_TRUE;
     used_http2 = FT_FALSE;
     error_code = FT_ERR_SUCCESS;
+    if (settings_frame.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    if (encoded_frame.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    if (handshake_buffer.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
     if (!streaming_handler)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
@@ -1702,6 +1724,14 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             int32_t frame_error;
             ft_size_t previous_offset;
 
+            if (incoming_frame.initialize() != FT_ERR_SUCCESS)
+            {
+                api_connection_pool_disable_store(connection_handle);
+                error_code = FT_ERR_NO_MEMORY;
+                api_connection_pool_evict(connection_handle);
+                return (FT_FALSE);
+            }
+
             previous_offset = parse_offset;
             frame_error = FT_ERR_SUCCESS;
             if (!http2_decode_frame(reinterpret_cast<const unsigned char*>(handshake_buffer.c_str()),
@@ -1747,6 +1777,21 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                         http2_frame ack_frame;
                         ft_string ack_encoded;
                         ssize_t ack_bytes;
+
+                        if (ack_frame.initialize() != FT_ERR_SUCCESS)
+                        {
+                            api_connection_pool_disable_store(connection_handle);
+                            error_code = FT_ERR_NO_MEMORY;
+                            api_connection_pool_evict(connection_handle);
+                            return (FT_FALSE);
+                        }
+                        if (ack_encoded.initialize() != FT_ERR_SUCCESS)
+                        {
+                            api_connection_pool_disable_store(connection_handle);
+                            error_code = FT_ERR_NO_MEMORY;
+                            api_connection_pool_evict(connection_handle);
+                            return (FT_FALSE);
+                        }
 
                         if (!ack_frame.set_type(0x4))
                         {
@@ -1838,6 +1883,32 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
     ft_string headers_encoded;
     const char *authority_value;
 
+    if (request_headers.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    if (header_entry.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    if (compressed_headers.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    if (headers_frame.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    if (headers_encoded.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+
     authority_value = host_header;
     if (!authority_value || authority_value[0] == '\0')
         authority_value = host;
@@ -1899,8 +1970,16 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             ft_string header_name;
             ft_string header_value;
 
-            header_name.clear();
-            header_value.clear();
+            if (header_name.initialize() != FT_ERR_SUCCESS)
+            {
+                error_code = FT_ERR_NO_MEMORY;
+                return (FT_FALSE);
+            }
+            if (header_value.initialize() != FT_ERR_SUCCESS)
+            {
+                error_code = FT_ERR_NO_MEMORY;
+                return (FT_FALSE);
+            }
             index = 0;
             while (header_cursor[index] && header_cursor[index] != ':'
                 && header_cursor[index] != '\r')
@@ -1995,15 +2074,6 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         return (FT_FALSE);
     }
     ft_string response_buffer;
-
-    response_buffer = handshake_buffer;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-    {
-        api_connection_pool_disable_store(connection_handle);
-        error_code = ft_string::get_error();
-        api_connection_pool_evict(connection_handle);
-        return (FT_FALSE);
-    }
     ft_string header_block;
     ft_vector<http2_header_field> response_headers;
     ft_string header_lines;
@@ -2011,23 +2081,27 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
     ft_bool headers_dispatched;
     ft_bool final_chunk_sent;
 
-    header_block.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (response_buffer.initialize() != FT_ERR_SUCCESS)
     {
-        api_connection_pool_disable_store(connection_handle);
-        error_code = ft_string::get_error();
-        api_connection_pool_evict(connection_handle);
+        error_code = FT_ERR_NO_MEMORY;
         return (FT_FALSE);
     }
-    response_headers.clear();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
+    if (header_block.initialize() != FT_ERR_SUCCESS)
     {
-        api_connection_pool_disable_store(connection_handle);
-        error_code = FT_ERR_SUCCESS;
-        api_connection_pool_evict(connection_handle);
+        error_code = FT_ERR_NO_MEMORY;
         return (FT_FALSE);
     }
-    header_lines.clear();
+    if (response_headers.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    if (header_lines.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        return (FT_FALSE);
+    }
+    response_buffer = handshake_buffer;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         api_connection_pool_disable_store(connection_handle);
@@ -2072,6 +2146,14 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             uint32_t incoming_stream;
             ft_string payload_copy;
 
+            if (payload_copy.initialize() != FT_ERR_SUCCESS)
+            {
+                api_connection_pool_disable_store(connection_handle);
+                error_code = FT_ERR_NO_MEMORY;
+                api_connection_pool_evict(connection_handle);
+                return (FT_FALSE);
+            }
+
             if (!incoming_frame.get_type(incoming_type))
             {
                 api_connection_pool_disable_store(connection_handle);
@@ -2107,6 +2189,21 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                     http2_frame ack_frame;
                     ft_string ack_buffer;
                     ssize_t ack_sent_bytes;
+
+                    if (ack_frame.initialize() != FT_ERR_SUCCESS)
+                    {
+                        api_connection_pool_disable_store(connection_handle);
+                        error_code = FT_ERR_NO_MEMORY;
+                        api_connection_pool_evict(connection_handle);
+                        return (FT_FALSE);
+                    }
+                    if (ack_buffer.initialize() != FT_ERR_SUCCESS)
+                    {
+                        api_connection_pool_disable_store(connection_handle);
+                        error_code = FT_ERR_NO_MEMORY;
+                        api_connection_pool_evict(connection_handle);
+                        return (FT_FALSE);
+                    }
 
                     if (!ack_frame.set_type(0x4))
                     {
@@ -2168,6 +2265,21 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                     http2_frame ping_ack;
                     ft_string ping_buffer;
                     ssize_t ping_sent_bytes;
+
+                    if (ping_ack.initialize() != FT_ERR_SUCCESS)
+                    {
+                        api_connection_pool_disable_store(connection_handle);
+                        error_code = FT_ERR_NO_MEMORY;
+                        api_connection_pool_evict(connection_handle);
+                        return (FT_FALSE);
+                    }
+                    if (ping_buffer.initialize() != FT_ERR_SUCCESS)
+                    {
+                        api_connection_pool_disable_store(connection_handle);
+                        error_code = FT_ERR_NO_MEMORY;
+                        api_connection_pool_evict(connection_handle);
+                        return (FT_FALSE);
+                    }
 
                     if (!ping_ack.set_type(0x6))
                     {
