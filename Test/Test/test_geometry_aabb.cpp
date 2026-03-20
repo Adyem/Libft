@@ -1574,6 +1574,8 @@ FT_TEST(test_aabb_move_bidirectional_high_load_with_thread_safety)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
     worker_failed.store(false);
+    std::chrono::steady_clock::time_point start_time;
+    start_time = std::chrono::steady_clock::now();
     worker_thread = std::thread([&first, &second, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
         int local_move_error;
@@ -1594,6 +1596,12 @@ FT_TEST(test_aabb_move_bidirectional_high_load_with_thread_safety)
     iteration_index = 0;
     while (iteration_index < iteration_limit && worker_failed.load() == false)
     {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start_time).count() > 2000)
+        {
+            worker_failed.store(true);
+            break;
+        }
         move_error = second.move(first);
         if (move_error != FT_ERR_SUCCESS)
         {

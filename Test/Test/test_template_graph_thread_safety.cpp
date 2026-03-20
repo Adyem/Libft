@@ -18,6 +18,8 @@ FT_TEST(test_ft_graph_enable_thread_safety_controls)
     size_t vertex_b;
     ft_bool lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, graph_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_list.initialize());
     FT_ASSERT_EQ(0, graph_instance.enable_thread_safety());
     FT_ASSERT(graph_instance.is_thread_safe());
 
@@ -41,7 +43,8 @@ FT_TEST(test_ft_graph_enable_thread_safety_controls)
     FT_ASSERT(graph_instance.is_thread_safe() == false);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, graph_instance.get_error());
 
-    graph_instance.clear();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, graph_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_list.destroy());
     return (1);
 }
 
@@ -54,6 +57,7 @@ FT_TEST(test_ft_graph_lock_blocks_until_release)
     std::atomic<long long> wait_duration_ms;
     std::thread worker_thread;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, graph_instance.initialize());
     FT_ASSERT_EQ(0, graph_instance.enable_thread_safety());
     FT_ASSERT(graph_instance.is_thread_safe());
 
@@ -99,6 +103,6 @@ FT_TEST(test_ft_graph_lock_blocks_until_release)
     FT_ASSERT(graph_instance.is_thread_safe() == false);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, graph_instance.get_error());
 
-    graph_instance.clear();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, graph_instance.destroy());
     return (1);
 }

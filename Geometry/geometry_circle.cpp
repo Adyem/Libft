@@ -5,18 +5,13 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-static void circle_sleep_backoff()
-{
-    pt_thread_sleep(1);
-    return ;
-}
-
 uint32_t circle::lock_pair(const circle &other, const circle *&lower,
     const circle *&upper) const
 {
     const circle *ordered_first;
     const circle *ordered_second;
-    uint32_t attempt_count;
+    uint32_t lower_error;
+    uint32_t upper_error;
 
     ordered_first = this;
     ordered_second = &other;
@@ -33,34 +28,14 @@ uint32_t circle::lock_pair(const circle &other, const circle *&lower,
     }
     lower = ordered_first;
     upper = ordered_second;
-    attempt_count = 0;
-    while (attempt_count < 8192)
-    {
-        uint32_t lower_error;
-        uint32_t upper_error;
-
-        lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
-        if (lower_error == FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            attempt_count = attempt_count + 1;
-            circle_sleep_backoff();
-            continue;
-        }
-        if (lower_error != FT_ERR_SUCCESS)
-            return (lower_error);
-        upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
-        if (upper_error == FT_ERR_SUCCESS)
-            return (FT_ERR_SUCCESS);
-        (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
-        if (upper_error == FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            attempt_count = attempt_count + 1;
-            circle_sleep_backoff();
-            continue;
-        }
-        return (upper_error);
-    }
-    return (FT_ERR_MUTEX_ALREADY_LOCKED);
+    lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
+    if (lower_error != FT_ERR_SUCCESS)
+        return (lower_error);
+    upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
+    if (upper_error == FT_ERR_SUCCESS)
+        return (FT_ERR_SUCCESS);
+    (void)pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
+    return (upper_error);
 }
 
 void circle::unlock_pair(const circle *lower, const circle *upper)

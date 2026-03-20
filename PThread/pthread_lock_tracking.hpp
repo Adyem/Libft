@@ -70,7 +70,7 @@ class pt_lock_tracking
         static pt_mutex_vector get_owned_mutexes
             (pt_thread_id_type thread_identifier, int *error_code);
         static int notify_wait(pt_thread_id_type thread_identifier,
-                const void *requested_mutex, const pt_mutex_vector &owned_mutexes);
+                const void *requested_mutex);
         static int notify_acquired(pt_thread_id_type thread_identifier,
                 const void *mutex_pointer);
         static int notify_released(pt_thread_id_type thread_identifier,

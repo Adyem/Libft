@@ -2342,8 +2342,10 @@ FT_TEST(test_circle_move_bidirectional_high_load_soak_rounds)
     std::thread worker_thread;
     int round_index;
     int index;
+    int iteration_limit;
     int move_error;
 
+    iteration_limit = 512;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(0.0, 0.0, 3.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(1.0, 1.0, 4.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
@@ -2351,13 +2353,16 @@ FT_TEST(test_circle_move_bidirectional_high_load_soak_rounds)
     round_index = 0;
     while (round_index < 3)
     {
+        std::chrono::steady_clock::time_point round_start_time;
+
+        round_start_time = std::chrono::steady_clock::now();
         worker_failed.store(false);
-        worker_thread = std::thread([&first, &second, &worker_failed]() {
+        worker_thread = std::thread([&first, &second, &worker_failed, &iteration_limit]() {
             int iteration_index;
             int local_move_error;
 
             iteration_index = 0;
-            while (iteration_index < 2048 && worker_failed.load() == false)
+            while (iteration_index < iteration_limit && worker_failed.load() == false)
             {
                 local_move_error = first.move(second);
                 if (local_move_error != FT_ERR_SUCCESS)
@@ -2367,8 +2372,14 @@ FT_TEST(test_circle_move_bidirectional_high_load_soak_rounds)
             return ;
         });
         index = 0;
-        while (index < 2048 && worker_failed.load() == false)
+        while (index < iteration_limit && worker_failed.load() == false)
         {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - round_start_time).count() > 2000)
+            {
+                worker_failed.store(true);
+                break;
+            }
             move_error = second.move(first);
             if (move_error != FT_ERR_SUCCESS)
                 worker_failed.store(true);

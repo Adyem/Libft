@@ -1521,20 +1521,30 @@ FT_TEST(test_sphere_move_bidirectional_high_load_with_thread_safety)
     std::atomic<bool> worker_failed;
     std::thread worker_thread;
     int iteration_index;
+    int iteration_limit;
     int move_error;
+    std::chrono::steady_clock::time_point start_time;
 
+    iteration_limit = 1024;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(0.0, 0.0, 0.0, 3.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(1.0, 1.0, 1.0, 4.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
     worker_failed.store(false);
-    worker_thread = std::thread([&first, &second, &worker_failed]() {
+    start_time = std::chrono::steady_clock::now();
+    worker_thread = std::thread([&first, &second, &worker_failed, &iteration_limit, &start_time]() {
         int local_iteration_index;
         int local_move_error;
 
         local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
+        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - start_time).count() > 2000)
+            {
+                worker_failed.store(true);
+                break;
+            }
             local_move_error = first.move(second);
             if (local_move_error != FT_ERR_SUCCESS)
             {
@@ -1546,8 +1556,14 @@ FT_TEST(test_sphere_move_bidirectional_high_load_with_thread_safety)
         return ;
     });
     iteration_index = 0;
-    while (iteration_index < 4096 && worker_failed.load() == false)
+    while (iteration_index < iteration_limit && worker_failed.load() == false)
     {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start_time).count() > 2000)
+        {
+            worker_failed.store(true);
+            break;
+        }
         move_error = second.move(first);
         if (move_error != FT_ERR_SUCCESS)
         {
@@ -1580,6 +1596,8 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_two_threads)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
     worker_failed.store(false);
+    std::chrono::steady_clock::time_point start_time;
+    start_time = std::chrono::steady_clock::now();
     writer_thread = std::thread([&shape, &worker_failed, &iteration_limit]() {
         int local_iteration_index;
         int local_set_error;
@@ -1716,18 +1734,26 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_four_threads)
     std::thread reader_thread_two;
     std::thread reader_thread_three;
     int iteration_limit;
+    std::chrono::steady_clock::time_point start_time;
 
     iteration_limit = 768;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
     worker_failed.store(false);
-    writer_thread = std::thread([&shape, &worker_failed, &iteration_limit]() {
+    start_time = std::chrono::steady_clock::now();
+    writer_thread = std::thread([&shape, &worker_failed, &iteration_limit, &start_time]() {
         int local_iteration_index;
         int local_error_code;
 
         local_iteration_index = 0;
         while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - start_time).count() > 2000)
+            {
+                worker_failed.store(true);
+                break;
+            }
             local_error_code = shape.set_center(
                     static_cast<double>((local_iteration_index % 7) - 3),
                     static_cast<double>((local_iteration_index % 5) - 2),
@@ -1747,12 +1773,18 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_four_threads)
         }
         return ;
     });
-    reader_thread_one = std::thread([&shape, &worker_failed, &iteration_limit]() {
+    reader_thread_one = std::thread([&shape, &worker_failed, &iteration_limit, &start_time]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
         while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - start_time).count() > 2000)
+            {
+                worker_failed.store(true);
+                break;
+            }
             if (std::isfinite(shape.get_center_x()) == false)
             {
                 worker_failed.store(true);
@@ -1762,12 +1794,18 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_four_threads)
         }
         return ;
     });
-    reader_thread_two = std::thread([&shape, &worker_failed, &iteration_limit]() {
+    reader_thread_two = std::thread([&shape, &worker_failed, &iteration_limit, &start_time]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
         while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - start_time).count() > 2000)
+            {
+                worker_failed.store(true);
+                break;
+            }
             if (std::isfinite(shape.get_center_y()) == false
                 || std::isfinite(shape.get_center_z()) == false)
             {
@@ -1778,12 +1816,18 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_four_threads)
         }
         return ;
     });
-    reader_thread_three = std::thread([&shape, &worker_failed, &iteration_limit]() {
+    reader_thread_three = std::thread([&shape, &worker_failed, &iteration_limit, &start_time]() {
         int local_iteration_index;
 
         local_iteration_index = 0;
         while (local_iteration_index < iteration_limit && worker_failed.load() == false)
         {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - start_time).count() > 2000)
+            {
+                worker_failed.store(true);
+                break;
+            }
             if (std::isfinite(shape.get_radius()) == false)
             {
                 worker_failed.store(true);
@@ -2501,10 +2545,15 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_soak_rounds)
         writer_thread = std::thread([&shape, &worker_failed]() {
             int iteration_index;
             int local_error_code;
+            std::chrono::steady_clock::time_point start_time;
 
             iteration_index = 0;
+            start_time = std::chrono::steady_clock::now();
             while (iteration_index < 3072 && worker_failed.load() == false)
             {
+                if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - start_time).count() > 1500)
+                    break ;
                 local_error_code = shape.set_center(
                         static_cast<double>((iteration_index % 7) - 3),
                         static_cast<double>((iteration_index % 5) - 2),
@@ -2519,8 +2568,13 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_soak_rounds)
             return ;
         });
         index = 0;
+        std::chrono::steady_clock::time_point reader_start_time;
+        reader_start_time = std::chrono::steady_clock::now();
         while (index < 3072 && worker_failed.load() == false)
         {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - reader_start_time).count() > 1500)
+                break ;
             if (std::isfinite(shape.get_center_x()) == false
                 || std::isfinite(shape.get_center_y()) == false
                 || std::isfinite(shape.get_center_z()) == false

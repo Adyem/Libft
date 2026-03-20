@@ -311,7 +311,7 @@ bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin,
 }
 
 int pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier,
-        const void *requested_mutex, const pt_mutex_vector &owned_mutexes)
+        const void *requested_mutex)
 {
     int lock_error;
     s_pt_thread_lock_info *info;
@@ -339,33 +339,23 @@ int pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier,
     }
     else
     {
-        pt_buffer_destroy(info->owned_mutexes);
-        pt_buffer_init(info->owned_mutexes);
-        int copy_error = pt_buffer_copy(info->owned_mutexes, owned_mutexes);
-        if (copy_error != FT_ERR_SUCCESS)
-        {
-            result_code = copy_error;
-        }
+        if (info->waiting_mutex != requested_mutex)
+            info->wait_started_ms = time_now_ms();
+        if (info->wait_started_ms == 0)
+            info->wait_started_ms = time_now_ms();
+        info->waiting_mutex = requested_mutex;
+        pt_mutex_vector visited_mutexes_inner;
+        pt_thread_vector visited_threads_inner;
+        pt_buffer_init(visited_mutexes_inner);
+        pt_buffer_init(visited_threads_inner);
+        bool cycle_detected = pt_lock_tracking::detect_cycle(info, requested_mutex,
+                &visited_mutexes_inner, &visited_threads_inner);
+        if (cycle_detected)
+            result_code = FT_ERR_MUTEX_ALREADY_LOCKED;
         else
-        {
-            if (info->waiting_mutex != requested_mutex)
-                info->wait_started_ms = time_now_ms();
-            if (info->wait_started_ms == 0)
-                info->wait_started_ms = time_now_ms();
-            info->waiting_mutex = requested_mutex;
-            pt_mutex_vector visited_mutexes_inner;
-            pt_thread_vector visited_threads_inner;
-            pt_buffer_init(visited_mutexes_inner);
-            pt_buffer_init(visited_threads_inner);
-            bool cycle_detected = pt_lock_tracking::detect_cycle(info, requested_mutex,
-                    &visited_mutexes_inner, &visited_threads_inner);
-            if (cycle_detected)
-                result_code = FT_ERR_MUTEX_ALREADY_LOCKED;
-            else
-                result_code = FT_ERR_SUCCESS;
-            pt_buffer_destroy(visited_threads_inner);
-            pt_buffer_destroy(visited_mutexes_inner);
-        }
+            result_code = FT_ERR_SUCCESS;
+        pt_buffer_destroy(visited_threads_inner);
+        pt_buffer_destroy(visited_mutexes_inner);
     }
     if (lock_acquired)
     {
@@ -428,7 +418,9 @@ int pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier,
 {
     int lock_error;
     s_pt_thread_lock_info *info;
+    pt_buffer<s_pt_thread_lock_info> *thread_infos;
     ft_size_t index;
+    ft_size_t thread_index;
     bool lock_acquired = false;
     int error_code = FT_ERR_SUCCESS;
     int result_code = FT_ERR_SUCCESS;
@@ -467,6 +459,25 @@ int pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier,
     {
         info->waiting_mutex = ft_nullptr;
         info->wait_started_ms = 0;
+    }
+    if (info->owned_mutexes.size == 0 && info->waiting_mutex == ft_nullptr)
+    {
+        thread_infos = pt_lock_tracking::get_thread_infos(&error_code);
+        if (thread_infos != ft_nullptr)
+        {
+            thread_index = 0;
+            while (thread_index < thread_infos->size)
+            {
+                if (thread_infos->data[thread_index].thread_identifier
+                        == thread_identifier)
+                {
+                    pt_buffer_destroy(thread_infos->data[thread_index].owned_mutexes);
+                    pt_buffer_erase(*thread_infos, thread_index);
+                    break ;
+                }
+                thread_index += 1;
+            }
+        }
     }
 cleanup_released:
     if (lock_acquired)

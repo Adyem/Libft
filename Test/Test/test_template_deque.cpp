@@ -11,6 +11,7 @@
 FT_TEST(test_ft_deque_push_pop_order)
 {
     ft_deque<int> deque_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, deque_instance.initialize());
 
     deque_instance.push_back(5);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, deque_instance.get_error());
@@ -52,6 +53,7 @@ FT_TEST(test_ft_deque_push_pop_order)
 FT_TEST(test_ft_deque_pop_on_empty_sets_error)
 {
     ft_deque<int> deque_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, deque_instance.initialize());
 
     int value_from_front = deque_instance.pop_front();
     FT_ASSERT_EQ(0, value_from_front);
@@ -69,6 +71,7 @@ FT_TEST(test_ft_deque_pop_on_empty_sets_error)
 FT_TEST(test_ft_deque_allocation_failure_sets_error)
 {
     ft_deque<int> deque_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, deque_instance.initialize());
 
     cma_set_alloc_limit(1);
     deque_instance.push_back(42);
@@ -87,6 +90,7 @@ FT_TEST(test_ft_deque_allocation_failure_sets_error)
 FT_TEST(test_ft_deque_move_transfers_ownership)
 {
     ft_deque<int> source_deque;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.initialize());
     source_deque.push_back(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.get_error());
     source_deque.push_back(2);
@@ -95,6 +99,7 @@ FT_TEST(test_ft_deque_move_transfers_ownership)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.get_error());
 
     ft_deque<int> target_deque;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_deque.initialize());
     int transferred_value = 0;
 
     while (!source_deque.empty())

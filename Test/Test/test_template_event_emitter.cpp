@@ -48,6 +48,7 @@ static void emit_in_thread(ft_event_emitter<int, int>* emitter_instance, int eve
 FT_TEST(test_ft_event_emitter_invokes_registered_listeners)
 {
     ft_event_emitter<int, int> emitter_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.initialize());
 
     g_event_listener_one_total = 0;
     g_event_listener_two_total = 0;
@@ -70,6 +71,7 @@ FT_TEST(test_ft_event_emitter_invokes_registered_listeners)
 FT_TEST(test_ft_event_emitter_remove_listener_stops_callback)
 {
     ft_event_emitter<int, int> emitter_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.initialize());
 
     g_event_listener_one_total = 0;
     g_event_listener_two_total = 0;
@@ -96,6 +98,7 @@ FT_TEST(test_ft_event_emitter_remove_listener_stops_callback)
 FT_TEST(test_ft_event_emitter_emit_missing_sets_error)
 {
     ft_event_emitter<int, int> emitter_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.initialize());
 
     emitter_instance.emit(1, 10);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, emitter_instance.get_error());
@@ -107,6 +110,7 @@ FT_TEST(test_ft_event_emitter_emit_missing_sets_error)
 FT_TEST(test_ft_event_emitter_allocation_failure_sets_error)
 {
     ft_event_emitter<int, int> emitter_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.initialize());
 
     cma_set_alloc_limit(1);
     emitter_instance.on(9, event_listener_add_to_first);
@@ -121,6 +125,7 @@ FT_TEST(test_ft_event_emitter_allocation_failure_sets_error)
 FT_TEST(test_ft_event_emitter_growth_preserves_existing_listeners)
 {
     ft_event_emitter<int, int> emitter_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.initialize());
 
     g_event_listener_one_total = 0;
     g_event_listener_two_total = 0;
@@ -144,6 +149,7 @@ FT_TEST(test_ft_event_emitter_growth_preserves_existing_listeners)
 FT_TEST(test_ft_event_emitter_capacity_overflow_sets_error)
 {
     ft_event_emitter<int, int> emitter_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.initialize());
     cma_set_alloc_limit(1);
     emitter_instance.on(1, event_listener_add_to_first);
     cma_set_alloc_limit(0);
@@ -161,6 +167,7 @@ FT_TEST(test_ft_event_emitter_supports_concurrent_emitters)
     std::thread fourth_thread;
     int emit_iterations;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.initialize());
     g_concurrent_listener_total.store(0, std::memory_order_relaxed);
     emitter_instance.on(99, event_listener_add_to_atomic);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, emitter_instance.get_error());

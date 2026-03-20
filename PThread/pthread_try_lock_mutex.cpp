@@ -22,14 +22,8 @@ int pt_mutex::try_lock() const
             && pt_thread_equal(owner, thread_id))
         return (FT_ERR_MUTEX_ALREADY_LOCKED);
 
-    int tracking_error = FT_ERR_SUCCESS;
-    pt_mutex_vector owned_mutexes =
-        pt_lock_tracking::get_owned_mutexes(thread_id, &tracking_error);
-    if (tracking_error != FT_ERR_SUCCESS)
-        return (tracking_error);
-
     int wait_result = pt_lock_tracking::notify_wait(thread_id,
-            static_cast<const void *>(this), owned_mutexes);
+            static_cast<const void *>(this));
     if (wait_result != FT_ERR_SUCCESS)
         return (wait_result);
 
