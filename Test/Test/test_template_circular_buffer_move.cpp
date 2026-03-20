@@ -31,6 +31,7 @@ FT_TEST(test_ft_circular_buffer_dynamic_reset_after_errors)
 {
     ft_circular_buffer<int> buffer_instance(2);
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.initialize());
     buffer_instance.push(1);
     buffer_instance.push(2);
     buffer_instance.push(3); // triggers full error
@@ -42,5 +43,6 @@ FT_TEST(test_ft_circular_buffer_dynamic_reset_after_errors)
     FT_ASSERT_EQ(FT_ERR_EMPTY, static_cast<int32_t>(buffer_instance.get_error()));
     buffer_instance.push(4);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.destroy());
     return (1);
 }
