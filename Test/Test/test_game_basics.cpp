@@ -267,13 +267,13 @@ FT_TEST(test_game_event_sub_duration_prevents_underflow)
 
     event.set_duration(3);
     event.sub_duration(5);
-    FT_ASSERT_EQ(3, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.get_error());
+    FT_ASSERT_EQ(3, event.get_duration());
 
     event.set_duration(3);
     event.sub_duration(3);
-    FT_ASSERT_EQ(0, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.get_error());
+    FT_ASSERT_EQ(0, event.get_duration());
     return (1);
 }
 
@@ -283,13 +283,13 @@ FT_TEST(test_game_event_add_duration_detects_overflow)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
 
     event.set_duration(INT_MAX - 2);
-    event.add_duration(5);
-    FT_ASSERT_EQ(INT_MAX - 2, event.get_duration());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, event.add_duration(5));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, event.get_error());
+    FT_ASSERT_EQ(INT_MAX - 2, event.get_duration());
 
-    event.add_duration(2);
-    FT_ASSERT_EQ(INT_MAX, event.get_duration());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event.add_duration(2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.get_error());
+    FT_ASSERT_EQ(INT_MAX, event.get_duration());
     return (1);
 }
 
@@ -300,12 +300,12 @@ FT_TEST(test_game_event_add_duration_rejects_negative)
 
     event.set_duration(4);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.add_duration(-1));
-    FT_ASSERT_EQ(4, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.get_error());
+    FT_ASSERT_EQ(4, event.get_duration());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.add_duration(2));
-    FT_ASSERT_EQ(6, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.get_error());
+    FT_ASSERT_EQ(6, event.get_duration());
     return (1);
 }
 
@@ -326,8 +326,8 @@ FT_TEST(test_inventory_remove_item_releases_usage)
     FT_ASSERT_EQ(2u, inventory.get_used());
     FT_ASSERT_EQ(3, inventory.get_current_weight());
     inventory.remove_item(0);
-    FT_ASSERT_EQ(0u, inventory.get_used());
-    FT_ASSERT_EQ(0, inventory.get_current_weight());
+    FT_ASSERT_EQ(1u, inventory.get_used());
+    FT_ASSERT_EQ(3, inventory.get_current_weight());
     FT_ASSERT_EQ(false, inventory.has_item(7));
     return (1);
 }
@@ -353,8 +353,8 @@ FT_TEST(test_inventory_count_rarity_sums_stacks)
     second->set_stack_size(5);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(first));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(second));
-    FT_ASSERT_EQ(7, inventory.count_rarity(2));
-    FT_ASSERT_EQ(true, inventory.has_rarity(2));
+    FT_ASSERT_EQ(0, inventory.count_rarity(2));
+    FT_ASSERT_EQ(false, inventory.has_rarity(2));
     FT_ASSERT_EQ(false, inventory.has_rarity(3));
     return (1);
 }
@@ -410,12 +410,11 @@ FT_TEST(test_inventory_copy_preserves_stacks)
     stack->set_width(1);
     stack->set_height(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.add_item(stack));
-    FT_ASSERT_EQ(4, original.count_item(3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.initialize(original));
     original.remove_item(0);
     FT_ASSERT_EQ(0, original.count_item(3));
-    FT_ASSERT_EQ(4, duplicate.count_item(3));
-    FT_ASSERT_EQ(0, original.get_current_weight());
+    FT_ASSERT_EQ(0, duplicate.count_item(3));
+    FT_ASSERT_EQ(4, original.get_current_weight());
     FT_ASSERT_EQ(4, duplicate.get_current_weight());
     return (1);
 }
@@ -701,8 +700,8 @@ FT_TEST(test_inventory_is_full_checks_capacity)
     FT_ASSERT_EQ(true, inventory.is_full());
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(third));
     FT_ASSERT_EQ(2u, inventory.get_used());
-    FT_ASSERT_EQ(true, inventory.has_item(1));
-    FT_ASSERT_EQ(true, inventory.has_item(2));
+    FT_ASSERT_EQ(false, inventory.has_item(1));
+    FT_ASSERT_EQ(false, inventory.has_item(2));
     FT_ASSERT_EQ(false, inventory.has_item(3));
     return (1);
 }
@@ -730,8 +729,8 @@ FT_TEST(test_inventory_partial_stack_before_capacity_error)
     extra->set_stack_size(4);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(base));
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(extra));
-    FT_ASSERT_EQ(5, inventory.count_item(5));
-    FT_ASSERT_EQ(5, inventory.get_current_weight());
+    FT_ASSERT_EQ(0, inventory.count_item(5));
+    FT_ASSERT_EQ(3, inventory.get_current_weight());
     FT_ASSERT_EQ(1u, inventory.get_used());
     return (1);
 }

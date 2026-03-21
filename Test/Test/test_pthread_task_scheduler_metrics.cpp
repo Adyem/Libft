@@ -32,10 +32,8 @@ static int32_t task_scheduler_metrics_flow_body()
     bool cancel_result;
     int32_t wait_iteration;
 
-    (void)write(2, "A\n", 2);
     if (scheduler_instance.initialize() != FT_ERR_SUCCESS)
         return (0);
-    (void)write(2, "B\n", 2);
     queue_size = scheduler_instance.get_queue_size();
     if (queue_size != 0)
         return (0);
@@ -51,7 +49,6 @@ static int32_t task_scheduler_metrics_flow_body()
     worker_total = scheduler_instance.get_worker_total_count();
     if (worker_total != 1)
         return (0);
-    (void)write(2, "C\n", 2);
     release_flag = std::make_shared<std::atomic<bool> >(false);
     if (blocking_future.initialize(scheduler_instance.submit([release_flag]() mutable
     {
@@ -60,7 +57,6 @@ static int32_t task_scheduler_metrics_flow_body()
         return ;
     })) != FT_ERR_SUCCESS)
         return (0);
-    (void)write(2, "D\n", 2);
     if (!blocking_future.valid())
         return (0);
     usleep(50000);
@@ -70,20 +66,17 @@ static int32_t task_scheduler_metrics_flow_body()
     idle_count = scheduler_instance.get_worker_idle_count();
     if (idle_count != 0)
         return (0);
-    (void)write(2, "E\n", 2);
     if (queued_future.initialize(scheduler_instance.submit([]()
     {
         return ;
     })) != FT_ERR_SUCCESS)
         return (0);
-    (void)write(2, "F\n", 2);
     if (!queued_future.valid())
         return (0);
     usleep(20000);
     queue_size = scheduler_instance.get_queue_size();
     if (queue_size != 1)
         return (0);
-    (void)write(2, "G\n", 2);
     delayed_handle = scheduler_instance.schedule_after(std::chrono::milliseconds(200), []()
     {
         return ;
@@ -93,7 +86,6 @@ static int32_t task_scheduler_metrics_flow_body()
     scheduled_count = scheduler_instance.get_scheduled_task_count();
     if (scheduled_count != 1)
         return (0);
-    (void)write(2, "H\n", 2);
     cancel_result = delayed_handle.cancel();
     if (!cancel_result)
         return (0);
@@ -101,7 +93,6 @@ static int32_t task_scheduler_metrics_flow_body()
     scheduled_count = scheduler_instance.get_scheduled_task_count();
     if (scheduled_count != 0)
         return (0);
-    (void)write(2, "I\n", 2);
     release_flag->store(true);
     wait_iteration = 0;
     while (wait_iteration < 5000)
@@ -148,22 +139,18 @@ FT_TEST(test_task_scheduler_metrics_flow)
     pthread_t wait_thread;
     int32_t thread_create_result;
     int32_t thread_join_result;
-    (void)write(2, "M1\n", 3);
     wait_context = new (std::nothrow) task_scheduler_metrics_wait_context();
     if (wait_context == ft_nullptr)
         return (0);
-    (void)write(2, "M2\n", 3);
     wait_context->status = FT_ERR_INVALID_STATE;
     thread_create_result = pt_thread_create(&wait_thread, ft_nullptr,
             task_scheduler_metrics_wait_worker, wait_context);
-    (void)write(2, "M3\n", 3);
     if (thread_create_result != 0)
     {
         delete wait_context;
         return (0);
     }
     thread_join_result = pt_thread_timed_join(wait_thread, ft_nullptr, 5000);
-    (void)write(2, "M4\n", 3);
     if (thread_join_result != 0)
     {
         (void)pt_thread_detach(wait_thread);

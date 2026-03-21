@@ -37,6 +37,7 @@ class ft_future
         ft_future &operator=(const ft_future &other) = delete;
         ft_future &operator=(ft_future &&other) = delete;
         int32_t initialize();
+        int32_t initialize(ft_sharedptr<ft_promise<ValueType> > promise_pointer);
         int32_t destroy();
         int32_t initialize(const ft_future &other);
         int32_t initialize(ft_future &&other);
@@ -79,6 +80,7 @@ class ft_future<void>
         ft_future &operator=(const ft_future &other) = delete;
         ft_future &operator=(ft_future &&other) = delete;
         int32_t initialize();
+        int32_t initialize(ft_sharedptr<ft_promise<void> > promise_pointer);
         int32_t destroy();
         int32_t initialize(const ft_future &other);
         int32_t initialize(ft_future &&other);
@@ -177,6 +179,21 @@ int32_t ft_future<ValueType>::initialize()
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+template <typename ValueType>
+int32_t ft_future<ValueType>::initialize(ft_sharedptr<ft_promise<ValueType> > promise_pointer)
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state, "ft_future::initialize(promise)",
+            "called while object is already initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_shared_promise = promise_pointer;
+    this->_promise = promise_pointer.get();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -663,6 +680,20 @@ inline int32_t ft_future<void>::initialize()
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+inline int32_t ft_future<void>::initialize(ft_sharedptr<ft_promise<void> > promise_pointer)
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        errno_abort_lifecycle(this->_initialised_state, "ft_future<void>::initialize(promise)",
+            "called while object is already initialised");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_shared_promise = promise_pointer;
+    this->_promise = promise_pointer.get();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }

@@ -204,6 +204,8 @@ static bool http2_test_drain_client_headers(int socket_fd)
             http2_frame incoming_frame;
             int decode_error;
 
+            if (incoming_frame.initialize() != FT_ERR_SUCCESS)
+                return (false);
             previous_offset = parse_offset;
             decode_error = FT_ERR_SUCCESS;
             if (!http2_decode_frame(
@@ -290,7 +292,6 @@ static int http2_test_server(http2_test_server_state *state)
     int initialize_error = server_socket.initialize(server_configuration);
     state->start_error.store(initialize_error, std::memory_order_relaxed);
     state->ready.store(true, std::memory_order_release);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_error);
     if (server_socket.get_file_descriptor() < 0)
     {
         state->start_error.store(FT_ERR_INVALID_ARGUMENT,
@@ -605,6 +606,7 @@ static int http2_test_server(http2_test_server_state *state)
     }
     state->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     nw_close(client_fd);
+    (void)server_socket.destroy();
     return (FT_ERR_SUCCESS);
 }
 
@@ -692,16 +694,24 @@ FT_TEST(test_api_http_plain_http2_streaming_success)
     if (!ready_result)
     {
         server_thread.join();
-        FT_ASSERT(ready_result);
+        return (0);
     }
     start_error = server_state.start_error.load(std::memory_order_acquire);
     if (start_error != FT_ERR_SUCCESS)
     {
         server_thread.join();
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, start_error);
+        return (0);
     }
-    FT_ASSERT(http2_test_capture_reset(capture));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, streaming_handler.initialize());
+    if (!http2_test_capture_reset(capture))
+        return (0);
+    if (connection_handle.initialize() != FT_ERR_SUCCESS)
+    {
+        return (0);
+    }
+    if (streaming_handler.initialize() != FT_ERR_SUCCESS)
+    {
+        return (0);
+    }
     streaming_handler.reset();
     streaming_handler.set_headers_callback(http2_test_headers_callback);
     streaming_handler.set_body_callback(http2_test_body_callback);
@@ -714,18 +724,36 @@ FT_TEST(test_api_http_plain_http2_streaming_success)
         g_http2_test_server_port, ft_nullptr, &streaming_handler,
         used_http2, error_code);
     server_thread.join();
-    FT_ASSERT(request_result);
-    FT_ASSERT(used_http2);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(static_cast<unsigned int>(1), capture.header_calls);
-    FT_ASSERT_EQ(200, capture.status_code);
-    FT_ASSERT(capture.headers.find("content-type: text/plain")
-        != ft_string::npos);
-    FT_ASSERT_EQ(static_cast<unsigned int>(2), capture.body_calls);
-    FT_ASSERT(capture.final_chunk_seen);
-    FT_ASSERT_EQ(0, ft_strcmp(capture.body.c_str(), "hello world"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS,
-        server_state.result.load(std::memory_order_acquire));
+    if (!request_result)
+        return (0);
+    if (!used_http2)
+    {
+        fprintf(stderr, "used_http2 false\n");
+        fflush(stderr);
+        return (0);
+    }
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        fprintf(stderr, "error_code=%d\n", error_code);
+        fflush(stderr);
+        return (0);
+    }
+    if (capture.header_calls != 1U || capture.status_code != 200
+        || capture.headers.find("content-type: text/plain") == ft_string::npos
+        || capture.body_calls != 2U || !capture.final_chunk_seen
+        || ft_strcmp(capture.body.c_str(), "hello world") != 0
+        || server_state.result.load(std::memory_order_acquire) != FT_ERR_SUCCESS)
+    {
+        fprintf(stderr,
+            "diag: header_calls=%u status=%d body_calls=%u final=%d body=%s server_result=%d\n",
+            capture.header_calls, capture.status_code, capture.body_calls,
+            capture.final_chunk_seen ? 1 : 0, capture.body.c_str(),
+            server_state.result.load(std::memory_order_acquire));
+        fflush(stderr);
+        return (0);
+    }
+    if (connection_handle.destroy() != FT_ERR_SUCCESS)
+        return (0);
     return (1);
 }
 

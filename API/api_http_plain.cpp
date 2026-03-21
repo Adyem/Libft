@@ -311,6 +311,7 @@ ft_bool api_http_prepare_plain_socket(
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
+    (void)connection_handle.socket.destroy();
     socket_error_code = connection_handle.socket.initialize(config);
     if (socket_error_code != FT_ERR_SUCCESS)
     {
@@ -358,6 +359,15 @@ static char *api_http_finalize_downgrade_response(
     char *result_body;
     ft_string decoded_body;
 
+    if (decoded_body.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        if (decoded_body.initialize() != FT_ERR_SUCCESS)
+        {
+            api_connection_pool_disable_store(connection_handle);
+            error_code = decoded_body.get_error();
+            return (ft_nullptr);
+        }
+    }
     status_line = handshake_buffer.c_str();
     if (status)
     {
@@ -522,6 +532,14 @@ static ft_bool api_http_prepare_request(const char *method, const char *path,
 {
     ft_size_t payload_length;
 
+    if (request.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        if (request.initialize() != FT_ERR_SUCCESS)
+        {
+            error_code = request.get_error();
+            return (FT_FALSE);
+        }
+    }
     request.clear();
     if (!method || !path)
     {
@@ -840,6 +858,30 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
     use_prefetched = FT_FALSE;
     if (prefetched_response)
         use_prefetched = FT_TRUE;
+    if (response.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        if (response.initialize() != FT_ERR_SUCCESS)
+        {
+            error_code = response.get_error();
+            return (FT_FALSE);
+        }
+    }
+    if (header_storage.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        if (header_storage.initialize() != FT_ERR_SUCCESS)
+        {
+            error_code = header_storage.get_error();
+            return (FT_FALSE);
+        }
+    }
+    if (streaming_body_buffer.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    {
+        if (streaming_body_buffer.initialize() != FT_ERR_SUCCESS)
+        {
+            error_code = streaming_body_buffer.get_error();
+            return (FT_FALSE);
+        }
+    }
     response.clear();
     header_length = 0;
     connection_close = FT_FALSE;
@@ -1270,6 +1312,11 @@ static char *api_http_execute_plain_once(
     const char *result_source;
     ft_size_t result_length;
 
+    if (decoded_body.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = decoded_body.get_error();
+        return (ft_nullptr);
+    }
     result_source = body_start;
     result_length = body_length;
     if (chunked_encoding)
@@ -2125,6 +2172,13 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             int32_t frame_error;
             ft_size_t previous_offset;
 
+            if (incoming_frame.initialize() != FT_ERR_SUCCESS)
+            {
+                api_connection_pool_disable_store(connection_handle);
+                error_code = FT_ERR_NO_MEMORY;
+                api_connection_pool_evict(connection_handle);
+                return (FT_FALSE);
+            }
             previous_offset = parse_offset;
             frame_error = FT_ERR_SUCCESS;
             if (!http2_decode_frame(reinterpret_cast<const unsigned char*>(response_buffer.c_str()),
@@ -2989,6 +3043,21 @@ static char *api_http_execute_plain_http2_once(
 #endif
         return (ft_nullptr);
     }
+    if (settings_frame.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = settings_frame.get_error();
+        return (ft_nullptr);
+    }
+    if (encoded_frame.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = encoded_frame.get_error();
+        return (ft_nullptr);
+    }
+    if (handshake_buffer.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = handshake_buffer.get_error();
+        return (ft_nullptr);
+    }
     client_preface = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
     sent_bytes = socket_wrapper.send_all(client_preface, ft_strlen(client_preface));
     if (sent_bytes < 0)
@@ -3119,6 +3188,13 @@ static char *api_http_execute_plain_http2_once(
             int32_t frame_error;
             ft_size_t previous_offset;
 
+            if (incoming_frame.initialize() != FT_ERR_SUCCESS)
+            {
+                api_connection_pool_disable_store(connection_handle);
+                error_code = FT_ERR_NO_MEMORY;
+                api_connection_pool_evict(connection_handle);
+                return (ft_nullptr);
+            }
             previous_offset = parse_offset;
             frame_error = FT_ERR_SUCCESS;
             if (!http2_decode_frame(reinterpret_cast<const unsigned char*>(handshake_buffer.c_str()),

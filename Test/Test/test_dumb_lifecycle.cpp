@@ -145,69 +145,102 @@ static void render_window_initialize_twice_aborts_operation()
     return ;
 }
 
-static void sound_device_initialize_copy_destroyed_source_aborts_operation()
+static void sound_device_initialize_copy_destroyed_source_succeeds_as_destroyed()
 {
     test_sound_device_lifecycle_impl source_instance;
     test_sound_device_lifecycle_impl destination_copy;
+    int32_t initialize_error;
 
     (void)source_instance.initialize();
     (void)source_instance.destroy();
-    (void)destination_copy.initialize(source_instance);
+    initialize_error = destination_copy.initialize(source_instance);
+    if (initialize_error != FT_ERR_SUCCESS)
+        abort();
+    if (destination_copy._initialised_state != FT_CLASS_STATE_DESTROYED)
+        abort();
     return ;
 }
 
-static void sound_device_initialize_move_destroyed_source_aborts_operation()
+static void sound_device_initialize_move_destroyed_source_succeeds_as_destroyed()
 {
     test_sound_device_lifecycle_impl source_instance;
     test_sound_device_lifecycle_impl destination_move;
+    int32_t initialize_error;
 
     (void)source_instance.initialize();
     (void)source_instance.destroy();
-    (void)destination_move.initialize(static_cast<test_sound_device_lifecycle_impl &&>(source_instance));
+    initialize_error = destination_move.initialize(
+        static_cast<test_sound_device_lifecycle_impl &&>(source_instance));
+    if (initialize_error != FT_ERR_SUCCESS)
+        abort();
+    if (destination_move._initialised_state != FT_CLASS_STATE_DESTROYED)
+        abort();
     return ;
 }
 
-static void sound_clip_initialize_copy_destroyed_source_aborts_operation()
+static void sound_clip_initialize_copy_destroyed_source_succeeds_as_destroyed()
 {
     ft_sound_clip source_instance;
     ft_sound_clip destination_copy;
+    int32_t initialize_error;
 
     (void)source_instance.initialize();
     (void)source_instance.destroy();
-    (void)destination_copy.initialize(source_instance);
+    initialize_error = destination_copy.initialize(source_instance);
+    if (initialize_error != FT_ERR_SUCCESS)
+        abort();
+    if (destination_copy._initialised_state != FT_CLASS_STATE_DESTROYED)
+        abort();
     return ;
 }
 
-static void sound_clip_initialize_move_destroyed_source_aborts_operation()
+static void sound_clip_initialize_move_destroyed_source_succeeds_as_destroyed()
 {
     ft_sound_clip source_instance;
     ft_sound_clip destination_move;
+    int32_t initialize_error;
 
     (void)source_instance.initialize();
     (void)source_instance.destroy();
-    (void)destination_move.initialize(static_cast<ft_sound_clip &&>(source_instance));
+    initialize_error = destination_move.initialize(
+        static_cast<ft_sound_clip &&>(source_instance));
+    if (initialize_error != FT_ERR_SUCCESS)
+        abort();
+    if (destination_move._initialised_state != FT_CLASS_STATE_DESTROYED)
+        abort();
     return ;
 }
 
-static void render_window_initialize_copy_destroyed_source_aborts_operation()
+static void render_window_initialize_copy_destroyed_source_succeeds_as_destroyed()
 {
     ft_render_window source_instance;
     ft_render_window destination_copy;
+    int32_t initialize_error;
 
     (void)source_instance.initialize();
     (void)source_instance.destroy();
-    (void)destination_copy.initialize(source_instance);
+    initialize_error = destination_copy.initialize(source_instance);
+    if (initialize_error != FT_ERR_SUCCESS)
+        abort();
+    if (destination_copy._initialised_state != FT_CLASS_STATE_DESTROYED)
+        abort();
     return ;
 }
 
-static void render_window_initialize_move_destroyed_source_aborts_operation()
+static void render_window_initialize_move_destroyed_source_succeeds_as_destroyed()
 {
     ft_render_window source_instance;
     ft_render_window destination_move;
+    int32_t initialize_error;
 
     (void)source_instance.initialize();
     (void)source_instance.destroy();
-    (void)destination_move.initialize(static_cast<ft_render_window &&>(source_instance));
+    initialize_error = destination_move.initialize(
+        static_cast<ft_render_window &&>(source_instance));
+    if (initialize_error != FT_ERR_SUCCESS)
+        abort();
+    if (destination_move._initialised_state != FT_CLASS_STATE_DESTROYED)
+        abort();
     return ;
 }
 
@@ -222,17 +255,17 @@ FT_TEST(test_dumb_sound_device_initialize_destroy_reinitialize_success)
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_initialize_copy_from_destroyed_source_aborts)
+FT_TEST(test_dumb_sound_device_initialize_copy_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, dumb_expect_sigabrt(
-        sound_device_initialize_copy_destroyed_source_aborts_operation));
+    FT_ASSERT_EQ(0, dumb_expect_sigabrt(
+        sound_device_initialize_copy_destroyed_source_succeeds_as_destroyed));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_initialize_move_from_destroyed_source_aborts)
+FT_TEST(test_dumb_sound_device_initialize_move_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, dumb_expect_sigabrt(
-        sound_device_initialize_move_destroyed_source_aborts_operation));
+    FT_ASSERT_EQ(0, dumb_expect_sigabrt(
+        sound_device_initialize_move_destroyed_source_succeeds_as_destroyed));
     return (1);
 }
 
@@ -319,17 +352,17 @@ FT_TEST(test_dumb_sound_clip_initialize_destroy_reinitialize_success)
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_copy_from_destroyed_source_aborts)
+FT_TEST(test_dumb_sound_clip_initialize_copy_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, dumb_expect_sigabrt(
-        sound_clip_initialize_copy_destroyed_source_aborts_operation));
+    FT_ASSERT_EQ(0, dumb_expect_sigabrt(
+        sound_clip_initialize_copy_destroyed_source_succeeds_as_destroyed));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_initialize_move_from_destroyed_source_aborts)
+FT_TEST(test_dumb_sound_clip_initialize_move_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, dumb_expect_sigabrt(
-        sound_clip_initialize_move_destroyed_source_aborts_operation));
+    FT_ASSERT_EQ(0, dumb_expect_sigabrt(
+        sound_clip_initialize_move_destroyed_source_succeeds_as_destroyed));
     return (1);
 }
 
@@ -415,17 +448,17 @@ FT_TEST(test_dumb_render_window_initialize_destroy_reinitialize_success)
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_copy_from_destroyed_source_aborts)
+FT_TEST(test_dumb_render_window_initialize_copy_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, dumb_expect_sigabrt(
-        render_window_initialize_copy_destroyed_source_aborts_operation));
+    FT_ASSERT_EQ(0, dumb_expect_sigabrt(
+        render_window_initialize_copy_destroyed_source_succeeds_as_destroyed));
     return (1);
 }
 
-FT_TEST(test_dumb_render_window_initialize_move_from_destroyed_source_aborts)
+FT_TEST(test_dumb_render_window_initialize_move_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, dumb_expect_sigabrt(
-        render_window_initialize_move_destroyed_source_aborts_operation));
+    FT_ASSERT_EQ(0, dumb_expect_sigabrt(
+        render_window_initialize_move_destroyed_source_succeeds_as_destroyed));
     return (1);
 }
 

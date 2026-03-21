@@ -239,6 +239,8 @@ ft_bool http2_header_field::set_name_from_cstr(const char *name_value) noexcept
 
     if (name_value == ft_nullptr)
         return (FT_FALSE);
+    if (temporary_name.initialize() != FT_ERR_SUCCESS)
+        return (FT_FALSE);
     temporary_name = name_value;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);
@@ -276,6 +278,8 @@ ft_bool http2_header_field::set_value_from_cstr(const char *value_value) noexcep
     ft_string temporary_value;
 
     if (value_value == ft_nullptr)
+        return (FT_FALSE);
+    if (temporary_value.initialize() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     temporary_value = value_value;
     if (ft_string::get_error() != FT_ERR_SUCCESS)

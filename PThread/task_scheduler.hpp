@@ -710,12 +710,21 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     {
         return (ft_future<return_type>());
     }
+    auto make_future = [&promise_shared]() -> ft_future<return_type>
+    {
+        ft_future<return_type> promise_future(promise_shared);
+        ft_future<return_type> future_value;
+
+        if (promise_future.initialize() != FT_ERR_SUCCESS)
+            return (ft_future<return_type>());
+        if (future_value.initialize(ft_move(promise_future)) != FT_ERR_SUCCESS)
+            return (ft_future<return_type>());
+        return (future_value);
+    };
     {
         int future_error = promise_shared.get_error();
         if (future_error != FT_ERR_SUCCESS)
-        {
-            return (ft_future<return_type>(promise_shared));
-        }
+            return (make_future());
     }
     auto task_body = [promise_shared, function, args...]() mutable
     {
@@ -762,12 +771,14 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     {
         this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
                 g_ft_task_trace_label_async, false);
-        return (ft_future<return_type>(promise_shared));
+        return (make_future());
     }
     metrics_updated = this->update_queue_size(1);
     if (!metrics_updated)
-        return (ft_future<return_type>(promise_shared));
-    return (ft_future<return_type>(promise_shared));
+    {
+        return (make_future());
+    }
+    return (make_future());
 }
 
 template <typename Rep, typename Period, typename FunctionType, typename... Args>

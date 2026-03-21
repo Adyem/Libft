@@ -20,6 +20,8 @@ FT_TEST(test_world_registry_register_and_fetch_records)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(4);
@@ -80,6 +82,8 @@ FT_TEST(test_world_registry_records_isolate_fetched_values)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.push_back(11));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());

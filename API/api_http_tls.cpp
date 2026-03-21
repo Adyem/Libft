@@ -177,6 +177,7 @@ static ft_bool api_https_prepare_socket(api_connection_pool_handle &connection_h
     config._send_timeout = timeout;
     int32_t initialize_error;
 
+    (void)connection_handle.socket.destroy();
     initialize_error = connection_handle.socket.initialize(config);
     if (initialize_error != FT_ERR_SUCCESS)
     {

@@ -12,22 +12,13 @@ static ft_sharedptr<game_dialogue_line> game_dialogue_table_clone_line(
     const game_dialogue_line &line)
 {
     game_dialogue_line *cloned_line;
-    int32_t initialize_error;
 
     if (line.is_initialised() == FT_FALSE)
         return (ft_sharedptr<game_dialogue_line>());
-    cloned_line = new (std::nothrow) game_dialogue_line();
+    cloned_line = new (std::nothrow) game_dialogue_line(line);
     if (cloned_line == ft_nullptr)
         return (ft_sharedptr<game_dialogue_line>());
-    initialize_error = cloned_line->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        delete cloned_line;
-        return (ft_sharedptr<game_dialogue_line>());
-    }
-    initialize_error = cloned_line->initialize(line.get_line_id(), line.get_speaker(),
-            line.get_text(), line.get_next_line_ids());
-    if (initialize_error != FT_ERR_SUCCESS)
+    if (cloned_line->is_initialised() == FT_FALSE)
     {
         delete cloned_line;
         return (ft_sharedptr<game_dialogue_line>());

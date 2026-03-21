@@ -38,7 +38,8 @@ FT_TEST(test_strncpy_s_detects_truncation)
 
     source = "toolong";
     ft_memset(destination, 'Y', sizeof(destination));
-    FT_ASSERT_EQ(-1, ft_strncpy_s(destination, sizeof(destination), source, 4));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+            ft_strncpy_s(destination, sizeof(destination), source, 4));
     if (!assert_buffer_zeroed(destination, sizeof(destination)))
         return (0);
     return (1);
@@ -60,7 +61,8 @@ FT_TEST(test_strncat_s_detects_capacity_overflow)
     char buffer[8];
 
     FT_ASSERT_EQ(0, ft_strcpy_s(buffer, sizeof(buffer), "data"));
-    FT_ASSERT_EQ(-1, ft_strncat_s(buffer, sizeof(buffer), "more", 4));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+            ft_strncat_s(buffer, sizeof(buffer), "more", 4));
     if (!assert_buffer_zeroed(buffer, sizeof(buffer)))
         return (0);
     return (1);
@@ -71,7 +73,8 @@ FT_TEST(test_strncat_s_respects_append_length_limit)
     char buffer[16];
 
     FT_ASSERT_EQ(0, ft_strcpy_s(buffer, sizeof(buffer), "base"));
-    FT_ASSERT_EQ(-1, ft_strncat_s(buffer, sizeof(buffer), "suffix", 2));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+            ft_strncat_s(buffer, sizeof(buffer), "suffix", 2));
     if (!assert_buffer_zeroed(buffer, sizeof(buffer)))
         return (0);
     return (1);
