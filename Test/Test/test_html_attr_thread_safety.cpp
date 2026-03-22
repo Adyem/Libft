@@ -36,6 +36,8 @@ FT_TEST(test_html_attr_creation_enables_thread_safety)
 
     attribute = html_create_attr("id", "root");
     FT_ASSERT(attribute != ft_nullptr);
+    FT_ASSERT_EQ(false, html_attr_is_thread_safe_enabled(attribute));
+    FT_ASSERT_EQ(0, html_attr_prepare_thread_safety(attribute));
     FT_ASSERT_EQ(true, html_attr_is_thread_safe_enabled(attribute));
     release_html_attribute(attribute);
     return (1);
@@ -76,6 +78,9 @@ FT_TEST(test_html_attr_teardown_clears_mutex)
 
     attribute = html_create_attr("role", "button");
     FT_ASSERT(attribute != ft_nullptr);
+    FT_ASSERT(attribute->mutex == ft_nullptr);
+    FT_ASSERT_EQ(false, html_attr_is_thread_safe_enabled(attribute));
+    FT_ASSERT_EQ(0, html_attr_prepare_thread_safety(attribute));
     FT_ASSERT(attribute->mutex != ft_nullptr);
     FT_ASSERT_EQ(true, html_attr_is_thread_safe_enabled(attribute));
     html_attr_teardown_thread_safety(attribute);
@@ -110,7 +115,7 @@ FT_TEST(test_html_attr_lock_null_sets_errno)
 
     lock_acquired = FT_TRUE;
     lock_result = html_attr_lock(ft_nullptr, &lock_acquired);
-    FT_ASSERT_EQ(-1, lock_result);
+    FT_ASSERT_EQ(3, lock_result);
     FT_ASSERT_EQ(FT_FALSE, lock_acquired);
     return (1);
 }

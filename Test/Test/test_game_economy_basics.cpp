@@ -58,7 +58,7 @@ FT_TEST(test_game_reputation_invalid_milestone_rejected)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.initialize());
 
     FT_ASSERT_EQ(0, reputation.get_milestone(-2));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
     return (1);
 }
 

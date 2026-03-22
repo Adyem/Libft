@@ -47,6 +47,7 @@ FT_TEST(test_future_move_transfers_thread_safety)
     FT_ASSERT_EQ(0, assigned.enable_thread_safety());
     FT_ASSERT_EQ(0, assigned.initialize(ft_move(moved)));
     FT_ASSERT_EQ(true, assigned.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.destroy());

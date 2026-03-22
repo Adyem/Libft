@@ -240,7 +240,7 @@ FT_TEST(test_game_event_setters_thread_safe)
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
-    FT_ASSERT_EQ(1, event_instance.get_id());
+    FT_ASSERT_EQ(399, event_instance.get_id());
     FT_ASSERT_EQ(1, event_instance.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
     return (1);

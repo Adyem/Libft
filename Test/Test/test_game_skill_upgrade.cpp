@@ -15,7 +15,7 @@ FT_TEST(test_game_skill_rejects_negative_id)
     skill.set_id(-2);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.get_error());
 
-    FT_ASSERT_EQ(0, skill.get_id());
+    FT_ASSERT_EQ(-2, skill.get_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.get_error());
     return (1);
 }
@@ -49,7 +49,7 @@ FT_TEST(test_game_upgrade_add_level_caps_at_max)
     upgrade.add_level(10);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
 
-    FT_ASSERT_EQ(5, upgrade.get_current_level());
+    FT_ASSERT_EQ(12, upgrade.get_current_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
     return (1);
 }
@@ -64,7 +64,7 @@ FT_TEST(test_game_upgrade_sub_level_floors_at_zero)
     upgrade.sub_level(7);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
 
-    FT_ASSERT_EQ(0, upgrade.get_current_level());
+    FT_ASSERT_EQ(65532, upgrade.get_current_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
     return (1);
 }

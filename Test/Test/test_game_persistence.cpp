@@ -22,13 +22,13 @@ static void cleanup_game_persistence_store(void)
     int error_code;
 
     error_code = FT_ERR_SUCCESS;
-    cmp_file_delete("./Test/world_persistence_store.json", &error_code);
+    cmp_file_delete("world_persistence_store.json", &error_code);
     return ;
 }
 
 FT_TEST(test_game_world_persistence_round_trip)
 {
-    const char *store_path = "./Test/world_persistence_store.json";
+    const char *store_path = "world_persistence_store.json";
     int error_code = FT_ERR_SUCCESS;
 
     cleanup_game_persistence_store();

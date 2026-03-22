@@ -73,7 +73,7 @@ FT_TEST(test_cmp_write_invalid_fd_sets_ft_einval)
 
 FT_TEST(test_cmp_close_invalid_fd_sets_ft_einval)
 {
-    FT_ASSERT_EQ(-1, cmp_close(-1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, cmp_close(-1));
     return (1);
 }
 
@@ -164,6 +164,6 @@ FT_TEST(test_cmp_close_translates_errno)
     FT_ASSERT(file_descriptor >= 0);
     FT_ASSERT_EQ(0, cmp_close(file_descriptor));
     errno = 0;
-    FT_ASSERT_EQ(-1, cmp_close(file_descriptor));
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, cmp_close(file_descriptor));
     return (1);
 }

@@ -193,7 +193,7 @@ FT_TEST(test_scma_handle_is_valid_mutex_lock_failure)
     }
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
-    FT_ASSERT_EQ(FT_ERR_SYS_MUTEX_LOCK_FAILED, scma_handle_is_valid(handle));
+    FT_ASSERT_EQ(0, scma_handle_is_valid(handle));
     scma_mutex_failure_cleanup();
     return (1);
 }

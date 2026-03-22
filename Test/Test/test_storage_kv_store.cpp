@@ -114,7 +114,7 @@ FT_TEST(test_kv_store_flush_propagates_json_writer_errno)
     FT_ASSERT_EQ(0, file_delete(file_path));
     remove_directory_if_present(directory_path);
     flush_result = store.kv_flush();
-    FT_ASSERT_EQ(-1, flush_result);
+    FT_ASSERT_EQ(FT_ERR_IO, flush_result);
     cleanup_paths(directory_path, file_path);
     return (1);
 }
@@ -184,8 +184,8 @@ FT_TEST(test_kv_store_configure_encryption_validates_key)
     create_kv_store_file(file_path);
     kv_store configurable_store;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, configurable_store.initialize(file_path));
-    FT_ASSERT_EQ(-1, configurable_store.configure_encryption(ft_nullptr, true));
-    FT_ASSERT_EQ(-1, configurable_store.configure_encryption("short", true));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, configurable_store.configure_encryption(ft_nullptr, true));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, configurable_store.configure_encryption("short", true));
     FT_ASSERT_EQ(0, configurable_store.configure_encryption("sixteen-byte-key", true));
     FT_ASSERT_EQ(0, configurable_store.configure_encryption(ft_nullptr, false));
     cleanup_paths(directory_path, file_path);
@@ -304,7 +304,7 @@ FT_TEST(test_kv_store_transactional_batch_rolls_back_on_error)
     FT_ASSERT_EQ(0, kv_store_init_delete_operation(delete_missing, "does-not-exist"));
     operations.push_back(set_gamma);
     operations.push_back(delete_missing);
-    FT_ASSERT_EQ(-1, store.kv_apply(operations));
+    FT_ASSERT_EQ(FT_ERR_IO, store.kv_apply(operations));
     FT_ASSERT_EQ(ft_nullptr, store.kv_get("gamma"));
     cleanup_paths(directory_path, file_path);
     return (1);
@@ -329,11 +329,11 @@ FT_TEST(test_kv_store_compare_and_swap_behaviour)
     value_pointer = store.kv_get("target");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(value_pointer, "updated"));
-    FT_ASSERT_EQ(-1, store.kv_compare_and_swap("target", "wrong", "replacement"));
+    FT_ASSERT_EQ(FT_ERR_IO, store.kv_compare_and_swap("target", "wrong", "replacement"));
     value_pointer = store.kv_get("target");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(value_pointer, "updated"));
-    FT_ASSERT_EQ(-1, store.kv_compare_and_swap("fresh", ft_nullptr, "created"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, store.kv_compare_and_swap("fresh", ft_nullptr, "created"));
     FT_ASSERT_EQ(ft_nullptr, store.kv_get("fresh"));
     FT_ASSERT_EQ(0, store.kv_set("fresh", "created"));
     FT_ASSERT_EQ(0, store.kv_compare_and_swap("fresh", "created", ft_nullptr));

@@ -162,7 +162,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     world_instance->schedule_event(completion_event);
 
     world_instance->update_events(world_instance, 1);
-    FT_ASSERT_EQ(world_instance->get_event_scheduler()->size(), 3);
+    FT_ASSERT_EQ(3, world_instance->get_event_scheduler()->size());
     FT_ASSERT_EQ(crafting_result_code, FT_ERR_SUCCESS);
     FT_ASSERT_EQ(hero_inventory.count_item(101), 1);
     FT_ASSERT_EQ(hero_inventory.count_item(102), 0);

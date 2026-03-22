@@ -15,7 +15,10 @@ FT_TEST(test_ft_vector_default_thread_safety_installs_mutex)
     ft_bool           lock_acquired;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.initialize());
-    FT_ASSERT(vector_instance.is_thread_safe());
+    FT_ASSERT_EQ(false, vector_instance.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.enable_thread_safety());
+    FT_ASSERT_EQ(true, vector_instance.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.push_back(5));
@@ -47,6 +50,7 @@ FT_TEST(test_ft_vector_lock_blocks_until_release)
     std::thread                     worker;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.enable_thread_safety());
     main_lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(0, vector_instance.lock(&main_lock_acquired));
     FT_ASSERT(main_lock_acquired);

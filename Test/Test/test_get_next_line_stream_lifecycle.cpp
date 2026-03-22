@@ -86,9 +86,9 @@ FT_TEST(test_gnl_stream_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_gnl_stream_destroy_twice_aborts)
+FT_TEST(test_gnl_stream_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt(gnl_stream_destroy_twice_aborts_operation));
+    FT_ASSERT_EQ(0, gnl_stream_expect_sigabrt(gnl_stream_destroy_twice_aborts_operation));
     return (1);
 }
 

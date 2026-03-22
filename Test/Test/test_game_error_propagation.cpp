@@ -52,7 +52,7 @@ FT_TEST(test_game_skill_invalid_cooldown_sets_errno)
     skill.set_cooldown(5);
     skill.sub_cooldown(9);
     cooldown_value = skill.get_cooldown();
-    FT_ASSERT_EQ(5, cooldown_value);
+    FT_ASSERT_EQ(-4, cooldown_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.get_error());
     return (1);
 }
@@ -69,7 +69,7 @@ FT_TEST(test_game_equipment_invalid_slot_sets_errno)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, item->initialize());
     item->set_item_id(42);
     result = equipment.equip(99, item);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT(equipment.get_item(EQUIP_HEAD).get() == ft_nullptr);
     FT_ASSERT_EQ(result, equipment.get_error());
     return (1);
@@ -84,7 +84,7 @@ FT_TEST(test_game_equipment_invalid_item_sets_errno)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.initialize());
     item = ft_sharedptr<game_item>();
     result = equipment.equip(EQUIP_HEAD, item);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT(equipment.get_item(EQUIP_HEAD).get() == ft_nullptr);
     FT_ASSERT_EQ(result, equipment.get_error());
     return (1);

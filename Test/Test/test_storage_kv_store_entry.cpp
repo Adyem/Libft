@@ -58,8 +58,7 @@ FT_TEST(test_kv_store_entry_set_value_validates_input)
     FT_ASSERT_EQ(0, entry.set_value("initial"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);
 
-    FT_ASSERT_EQ(-1, entry.set_value(static_cast<const char *>(ft_nullptr)));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, entry.set_value(static_cast<const char *>(ft_nullptr)));
 
     FT_ASSERT_EQ(0, entry.copy_value(copied_value));
     FT_ASSERT(copied_value == "initial");
@@ -106,7 +105,7 @@ FT_TEST(test_kv_store_entry_expiration_controls)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);
 
     expired = true;
-    FT_ASSERT_EQ(-1, entry.is_expired(-5, expired));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, entry.is_expired(-5, expired));
     FT_ASSERT_EQ(false, expired);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, FT_ERR_SUCCESS);
 

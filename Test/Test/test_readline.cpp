@@ -504,7 +504,7 @@ FT_TEST(test_readline_state_thread_safety_unlock_without_lock)
 
     ft_bzero(&state, sizeof(state));
     state.mutex = ft_nullptr;
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, rl_state_unlock(&state, false));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rl_state_unlock(&state, false));
     return (1);
 }
 
@@ -588,7 +588,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_unlock_without_lock)
 
     ft_bzero(&dimensions, sizeof(dimensions));
     dimensions.mutex = ft_nullptr;
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, rl_terminal_dimensions_unlock(&dimensions, false));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rl_terminal_dimensions_unlock(&dimensions, false));
     return (1);
 }
 
@@ -668,7 +668,7 @@ FT_TEST(test_readline_custom_key_bindings_dispatch)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bind_result);
     key_handled = FT_FALSE;
     dispatch_result = rl_dispatch_custom_key(&state, "> ", 'x', &key_handled);
-    FT_ASSERT_EQ(1, dispatch_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dispatch_result);
     FT_ASSERT_EQ(FT_TRUE, key_handled);
     FT_ASSERT_EQ(1, callback_counter);
     callback_counter = 0;

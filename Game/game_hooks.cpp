@@ -485,7 +485,7 @@ void game_hooks::set_on_item_crafted(
     entry.metadata.argument_contract = "game_character&,game_item&";
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_character_item_adapter(
-        ft_move(this->_legacy_item_crafted));
+        ft_function<void(game_character&, game_item&)>(this->_legacy_item_crafted));
     this->remove_listener_unlocked(entry.metadata.hook_identifier,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
@@ -510,7 +510,7 @@ void game_hooks::set_on_character_damaged(
     entry.metadata.argument_contract = "game_character&,int32_t,uint8_t";
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_character_damage_adapter(
-        ft_move(this->_legacy_character_damaged));
+        ft_function<void(game_character&, int32_t, uint8_t)>(this->_legacy_character_damaged));
     this->remove_listener_unlocked(entry.metadata.hook_identifier,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
@@ -535,7 +535,7 @@ void game_hooks::set_on_event_triggered(
     entry.metadata.argument_contract = "game_world&,game_event&";
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_world_event_adapter(
-        ft_move(this->_legacy_event_triggered));
+        ft_function<void(game_world&, game_event&)>(this->_legacy_event_triggered));
     this->remove_listener_unlocked(entry.metadata.hook_identifier,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
@@ -671,15 +671,21 @@ void game_hooks::unregister_listener(const ft_string &hook_identifier,
 
 ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata() const noexcept
 {
+    ft_vector<ft_game_hook_metadata> result;
+
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata");
-    return (ft_vector<ft_game_hook_metadata>());
+    (void)result.initialize();
+    return (result);
 }
 
 ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata_for(
     const ft_string &) const noexcept
 {
+    ft_vector<ft_game_hook_metadata> result;
+
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata_for");
-    return (ft_vector<ft_game_hook_metadata>());
+    (void)result.initialize();
+    return (result);
 }
 
 void game_hooks::reset() noexcept

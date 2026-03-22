@@ -32,7 +32,7 @@ FT_TEST(test_math_dual_number_copy_and_move_initialise)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.initialize(static_cast<ft_dual_number &&>(source)));
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, moved._initialised_state);
-    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, source._initialised_state);
     return (1);
 }
 

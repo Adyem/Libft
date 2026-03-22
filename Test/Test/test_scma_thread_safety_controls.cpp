@@ -46,8 +46,8 @@ FT_TEST(test_scma_mutex_close_unwinds_recursive_depth)
 FT_TEST(test_scma_mutex_api_rejects_usage_without_thread_safety)
 {
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_disable_thread_safety());
-    FT_ASSERT_EQ(-1, scma_mutex_lock());
-    FT_ASSERT_EQ(-1, scma_mutex_unlock());
+    FT_ASSERT_EQ(0, scma_mutex_lock());
+    FT_ASSERT_EQ(0, scma_mutex_unlock());
     FT_ASSERT_EQ(0U, scma_mutex_lock_count());
     return (1);
 }

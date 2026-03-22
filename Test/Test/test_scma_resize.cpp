@@ -91,7 +91,7 @@ FT_TEST(test_scma_resize_shrinks_truncates_tail)
         index = index + 1;
     }
     read_value = 0;
-    FT_ASSERT_EQ(0, scma_read(handle,
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, scma_read(handle,
             sizeof(int) * 2,
             &read_value,
             sizeof(int)));

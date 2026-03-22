@@ -36,7 +36,7 @@ FT_TEST(test_scma_accessor_struct_pointer_semantics)
         proxy->first = 7;
         proxy->second = 14;
     }
-    FT_ASSERT_EQ(1, accessor.read_struct(result));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_struct(result));
     FT_ASSERT_EQ(7, result.first);
     FT_ASSERT_EQ(14, result.second);
     scma_shutdown();
@@ -88,7 +88,7 @@ FT_TEST(test_scma_accessor_array_indexing)
     read_value = accessor[1];
     FT_ASSERT_EQ(10, read_value);
     read_value = 0;
-    FT_ASSERT_EQ(1, scma_read(handle, sizeof(int) * 2, &read_value, sizeof(int)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(handle, sizeof(int) * 2, &read_value, sizeof(int)));
     FT_ASSERT_EQ(15, read_value);
     scma_shutdown();
     return (1);
@@ -115,11 +115,11 @@ FT_TEST(test_scma_accessor_struct_vector_semantics)
     vector_value.x = 4.0f;
     vector_value.y = 5.0f;
     vector_value.z = 6.0f;
-    FT_ASSERT_EQ(1, accessor.write_struct(vector_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.write_struct(vector_value));
     read_value.x = 0.0f;
     read_value.y = 0.0f;
     read_value.z = 0.0f;
-    FT_ASSERT_EQ(1, accessor.read_struct(read_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_struct(read_value));
     FT_ASSERT_EQ(vector_value.x, read_value.x);
     FT_ASSERT_EQ(vector_value.y, read_value.y);
     FT_ASSERT_EQ(vector_value.z, read_value.z);
@@ -130,14 +130,14 @@ FT_TEST(test_scma_accessor_struct_vector_semantics)
         element_pointer->y = 8.0f;
         element_pointer->z = 9.0f;
     }
-    FT_ASSERT_EQ(1, accessor.read_struct(read_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_struct(read_value));
     FT_ASSERT_EQ(vector_value.x, read_value.x);
     FT_ASSERT_EQ(vector_value.y, read_value.y);
     FT_ASSERT_EQ(vector_value.z, read_value.z);
     read_value.x = 0.0f;
     read_value.y = 0.0f;
     read_value.z = 0.0f;
-    FT_ASSERT_EQ(1, accessor.read_at(read_value, 1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_at(read_value, 1));
     FT_ASSERT_EQ(7.0f, read_value.x);
     FT_ASSERT_EQ(8.0f, read_value.y);
     FT_ASSERT_EQ(9.0f, read_value.z);
@@ -172,8 +172,8 @@ FT_TEST(test_scma_accessor_shared_handle_binding_semantics)
     }
     pair_value.first = 77;
     pair_value.second = 88;
-    FT_ASSERT_EQ(1, secondary_accessor.write_struct(pair_value));
-    FT_ASSERT_EQ(1, primary_accessor.read_struct(pair_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, secondary_accessor.write_struct(pair_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_accessor.read_struct(pair_value));
     FT_ASSERT_EQ(77, pair_value.first);
     FT_ASSERT_EQ(88, pair_value.second);
     scma_shutdown();
@@ -196,8 +196,8 @@ FT_TEST(test_scma_accessor_double_struct_semantics)
     write_value.b = 2.25;
     write_value.c = 3.5;
     write_value.d = 4.75;
-    FT_ASSERT_EQ(1, accessor.write_struct(write_value));
-    FT_ASSERT_EQ(1, accessor.read_struct(read_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.write_struct(write_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_struct(read_value));
     FT_ASSERT_EQ(write_value.a, read_value.a);
     FT_ASSERT_EQ(write_value.b, read_value.b);
     FT_ASSERT_EQ(write_value.c, read_value.c);
@@ -207,7 +207,7 @@ FT_TEST(test_scma_accessor_double_struct_semantics)
         proxy->a = proxy->a + 1.0;
         proxy->d = proxy->d + 2.0;
     }
-    FT_ASSERT_EQ(1, accessor.read_struct(read_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_struct(read_value));
     FT_ASSERT_EQ(2.125, read_value.a);
     FT_ASSERT_EQ(2.25, read_value.b);
     FT_ASSERT_EQ(3.5, read_value.c);

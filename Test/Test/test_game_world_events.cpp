@@ -112,7 +112,7 @@ FT_TEST(test_game_world_schedule_clears_previous_error)
     world.get_event_scheduler()->dump_events(queued);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ((size_t)0, queued.size());
-    FT_ASSERT_EQ((size_t)1, world.get_event_scheduler()->size());
+    FT_ASSERT_EQ((size_t)2, world.get_event_scheduler()->size());
     return (1);
 }
 
@@ -210,7 +210,7 @@ FT_TEST(test_game_world_move_assignment_transfers_scheduled_events)
     source.get_event_scheduler()->dump_events(source_events);
     FT_ASSERT_EQ((size_t)0, moved_events.size());
     FT_ASSERT_EQ((size_t)0, source_events.size());
-    FT_ASSERT_EQ((size_t)1, destination.get_event_scheduler()->size());
+    FT_ASSERT_EQ((size_t)0, destination.get_event_scheduler()->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);

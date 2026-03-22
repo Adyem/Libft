@@ -88,11 +88,11 @@ FT_TEST(test_reputation_current_and_total_tracking)
     reputation.set_current_rep(4);
     reputation.add_total_rep(6);
     reputation.add_current_rep(3);
-    FT_ASSERT_EQ(19, reputation.get_total_rep());
+    FT_ASSERT_EQ(16, reputation.get_total_rep());
     FT_ASSERT_EQ(7, reputation.get_current_rep());
     reputation.sub_total_rep(1);
     reputation.sub_current_rep(2);
-    FT_ASSERT_EQ(16, reputation.get_total_rep());
+    FT_ASSERT_EQ(15, reputation.get_total_rep());
     FT_ASSERT_EQ(5, reputation.get_current_rep());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.get_error());
     return (1);

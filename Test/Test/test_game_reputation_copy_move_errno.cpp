@@ -105,8 +105,8 @@ FT_TEST(test_game_reputation_accessors_return_values)
     FT_ASSERT_EQ(2, tracker.get_current_rep());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(0, tracker.get_milestone(999));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, tracker.get_error());
     FT_ASSERT_EQ(0, tracker.get_rep(999));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, tracker.get_error());
     return (1);
 }

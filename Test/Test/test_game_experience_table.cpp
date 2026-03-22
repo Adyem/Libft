@@ -37,8 +37,9 @@ FT_TEST(test_experience_table_rejects_unsorted_levels)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     result = table.set_levels(invalid_levels, 3);
     FT_ASSERT_EQ(FT_ERR_CONFIGURATION, result);
-    FT_ASSERT_EQ(3, table.get_count());
     FT_ASSERT_EQ(FT_ERR_CONFIGURATION, table.get_error());
+    FT_ASSERT_EQ(3, table.get_count());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 

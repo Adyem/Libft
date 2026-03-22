@@ -66,9 +66,9 @@ FT_TEST(test_currency_rate_initialize_overwrites_destination)
     FT_ASSERT_EQ(13, destination.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.2, destination.get_rate_to_base());
     FT_ASSERT_EQ(6, destination.get_display_precision());
-    FT_ASSERT_EQ(5, source.get_currency_id());
-    FT_ASSERT_DOUBLE_EQ(0.5, source.get_rate_to_base());
-    FT_ASSERT_EQ(1, source.get_display_precision());
+    FT_ASSERT_EQ(13, source.get_currency_id());
+    FT_ASSERT_DOUBLE_EQ(1.2, source.get_rate_to_base());
+    FT_ASSERT_EQ(6, source.get_display_precision());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);

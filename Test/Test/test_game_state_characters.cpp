@@ -36,8 +36,8 @@ FT_TEST(test_game_state_rejects_null_character)
 
     result = state.add_character(empty);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);
-    FT_ASSERT_EQ(0, state.get_characters().size());
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, state.get_error());
+    FT_ASSERT_EQ(0, state.get_characters().size());
     return (1);
 }
 
@@ -51,8 +51,8 @@ FT_TEST(test_game_state_remove_invalid_index_sets_error)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.add_character(hero));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     state.remove_character(5);
-    FT_ASSERT_EQ(1, state.get_characters().size());
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, state.get_error());
+    FT_ASSERT_EQ(1, state.get_characters().size());
     return (1);
 }
 

@@ -62,7 +62,7 @@ static void observability_test_wait_for_count(size_t expected_count)
 
 FT_TEST(test_observability_bridge_invalid_exporter)
 {
-    FT_ASSERT_EQ(-1, observability_task_scheduler_bridge_initialize(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, observability_task_scheduler_bridge_initialize(ft_nullptr));
     return (1);
 }
 

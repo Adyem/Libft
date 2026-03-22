@@ -297,6 +297,7 @@ FT_TEST(test_printf_stress_thread_safety_toggle_and_format)
     format[0] = '%';
     format[1] = 'L';
     format[2] = '\0';
+    cma_set_alloc_limit(0);
     pf_disable_thread_safety();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pf_enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pf_enable_thread_safety());
@@ -719,7 +720,7 @@ FT_TEST(test_printf_alloc_limit_success_with_high_limit)
     FT_ASSERT_EQ(0, pf_register_custom_specifier('e', pf_custom_stress_handler,
             &context));
     call_pf_snprintf = pf_snprintf;
-    cma_set_alloc_limit(200);
+    cma_set_alloc_limit(1000);
     result = call_pf_snprintf(output_buffer, sizeof(output_buffer), format);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(6144, result);

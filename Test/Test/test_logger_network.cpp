@@ -236,7 +236,7 @@ FT_TEST(test_logger_remote_health_probe_records_success)
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
     status_count = 0;
-    FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
+    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_log_get_remote_health(&status, 1, &status_count));
     FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
     FT_ASSERT(status.reachable);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, status.last_error);
@@ -275,7 +275,7 @@ FT_TEST(test_logger_remote_health_probe_records_failure)
     probe_result = ft_log_probe_remote_health();
     FT_ASSERT_EQ(-1, probe_result);
     status_count = 0;
-    FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
+    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_log_get_remote_health(&status, 1, &status_count));
     FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
     FT_ASSERT(!status.reachable);
     FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, status.last_error);
@@ -412,7 +412,7 @@ FT_TEST(test_logger_remote_health_get_requires_capacity)
     int get_result;
 
     get_result = ft_log_get_remote_health(statuses, 1, &status_count);
-    FT_ASSERT_EQ(-1, get_result);
+    FT_ASSERT_EQ(FT_ERR_INTERNAL, get_result);
     FT_ASSERT(status_count >= static_cast<size_t>(2));
     FT_ASSERT(statuses[0].host != ft_nullptr);
     FT_ASSERT(ft_strcmp(statuses[0].host, "retain") == 0);

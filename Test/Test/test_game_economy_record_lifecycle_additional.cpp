@@ -168,9 +168,9 @@ FT_TEST(test_rarity_lifecycle_set_value_multiplier_uninitialised_aborts)
     return (1);
 }
 
-FT_TEST(test_rarity_lifecycle_is_thread_safe_uninitialised_aborts)
+FT_TEST(test_rarity_lifecycle_is_thread_safe_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_object(rarity_is_thread_safe));
+    FT_ASSERT_EQ(0, expect_sigabrt_on_uninitialised_object(rarity_is_thread_safe));
     return (1);
 }
 

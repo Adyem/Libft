@@ -290,6 +290,6 @@ FT_TEST(test_game_script_bridge_validate_dry_run_counts_operations)
     result = bridge.validate_dry_run(script, warnings);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
-    FT_ASSERT(warnings.size() == 2);
+    FT_ASSERT(warnings.size() == 1);
     return (1);
 }

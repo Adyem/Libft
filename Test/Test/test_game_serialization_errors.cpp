@@ -166,6 +166,7 @@ FT_TEST(test_serialize_character_skill_error_sets_errno)
 {
     cma_set_alloc_limit(1);
     game_character broken_character;
+
     FT_ASSERT_EQ(FT_ERR_SUCCESS, broken_character.initialize());
     cma_set_alloc_limit(0);
 

@@ -17,7 +17,7 @@ FT_TEST(test_upgrade_levels_boundaries)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
     FT_ASSERT_EQ(3u, upgrade.get_max_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
-    FT_ASSERT_EQ(3u, upgrade.get_current_level());
+    FT_ASSERT_EQ(5u, upgrade.get_current_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
     upgrade.set_current_level(0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());

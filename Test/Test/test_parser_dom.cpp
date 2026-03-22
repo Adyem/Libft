@@ -93,7 +93,7 @@ FT_TEST(test_dom_find_path_reports_missing_segments)
     root_node = document.get_root();
     FT_ASSERT(root_node != ft_nullptr);
     found_node = ft_nullptr;
-    FT_ASSERT_EQ(-1, ft_dom_find_path(root_node, missing_path, &found_node));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_dom_find_path(root_node, missing_path, &found_node));
     FT_ASSERT(found_node == ft_nullptr);
     return (1);
 }
@@ -259,7 +259,7 @@ FT_TEST(test_json_dom_bridge_rejects_non_object_root)
         return (0);
     }
     dom_document.set_root(root_node);
-    FT_ASSERT_EQ(-1, json_document_from_dom(dom_document, document));
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, json_document_from_dom(dom_document, document));
     return (1);
 }
 

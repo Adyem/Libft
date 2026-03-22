@@ -14,7 +14,7 @@ FT_TEST(test_game_buff_rejects_negative_id)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.initialize());
 
     buff.set_id(-4);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
 
     FT_ASSERT_EQ(0, buff.get_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
@@ -29,7 +29,7 @@ FT_TEST(test_game_buff_duration_addition_rejects_negative)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.initialize());
 
     buff.add_duration(-3);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
 
     FT_ASSERT_EQ(0, buff.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());

@@ -204,7 +204,7 @@ static void logger_health_probe_sink(const s_network_sink_snapshot &snapshot_ent
             send_errno = FT_ERR_SUCCESS;
             if (send_errno == FT_ERR_SUCCESS || send_errno == previous_errno)
                 send_errno = FT_ERR_SOCKET_SEND_FAILED;
-            *error_code_value = FT_ERR_SUCCESS;
+            *error_code_value = send_errno;
             return ;
         }
         total_bytes_sent += static_cast<ft_size_t>(send_result);
