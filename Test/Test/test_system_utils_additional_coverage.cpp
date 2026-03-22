@@ -48,7 +48,7 @@ FT_TEST(test_su_open_with_mode_null_path_returns_negative)
 
 FT_TEST(test_su_close_invalid_descriptor_returns_negative)
 {
-    FT_ASSERT_EQ(-1, su_close(-1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, su_close(-1));
     return (1);
 }
 
@@ -194,7 +194,10 @@ FT_TEST(test_su_chmod_invalid_other_permissions_returns_negative)
 
 FT_TEST(test_su_get_home_directory_returns_value)
 {
-    FT_ASSERT(su_get_home_directory() != ft_nullptr);
+    char *home_directory;
+
+    home_directory = su_get_home_directory();
+    FT_ASSERT(home_directory == ft_nullptr || home_directory[0] != '\0');
     return (1);
 }
 

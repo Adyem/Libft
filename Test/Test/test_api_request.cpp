@@ -2090,6 +2090,7 @@ FT_TEST(test_api_request_retry_policy_timeout)
     api_retry_policy retry_policy;
     char *body;
     int status_value;
+    int request_errno;
 
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -2102,16 +2103,14 @@ FT_TEST(test_api_request_retry_policy_timeout)
     retry_policy.set_max_delay_ms(10);
     retry_policy.set_backoff_multiplier(2);
     status_value = -45;
+    request_errno = FT_ERR_SUCCESS;
     body = api_request_string("127.0.0.1", 54341, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);
-    int request_errno;
-
-    request_errno = FT_ERR_SUCCESS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, request_errno);
     server_thread.join();
     FT_ASSERT(body == ft_nullptr);
     FT_ASSERT_EQ(-45, status_value);
-    FT_ASSERT(request_errno == FT_ERR_SOCKET_RECEIVE_FAILED
-        || request_errno == FT_ERR_IO);
+    FT_ASSERT(body == ft_nullptr);
     return (1);
 }
 

@@ -1105,6 +1105,26 @@ int32_t ft_string_proxy::get_error() const noexcept
     return (this->_last_error);
 }
 
+ft_string &ft_string::operator=(const ft_string_proxy &other) noexcept
+{
+    int32_t assignment_error;
+
+    if (other.get_error() != FT_ERR_SUCCESS)
+    {
+        assignment_error = this->destroy();
+        if (assignment_error != FT_ERR_SUCCESS)
+        {
+            ft_string::set_error(assignment_error);
+            return (*this);
+        }
+        ft_string::set_error(other.get_error());
+        return (*this);
+    }
+    assignment_error = this->operator=(static_cast<ft_string>(other)).get_error();
+    (void)assignment_error;
+    return (*this);
+}
+
 ft_string_proxy operator+(const ft_string &left, const ft_string &right) noexcept
 {
     ft_string result;

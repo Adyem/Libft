@@ -9,6 +9,8 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../Basic/basic.hpp"
 
+class ft_string_proxy;
+
 class ft_string
 {
 #ifdef LIBFT_TEST_BUILD
@@ -53,6 +55,7 @@ class ft_string
 
         ft_string &operator=(const ft_string &other) noexcept;
         ft_string &operator=(ft_string &&other) noexcept;
+        ft_string &operator=(const ft_string_proxy &other) noexcept;
         ft_string &operator=(const char *string) noexcept;
         ft_string &operator=(char character) noexcept;
 

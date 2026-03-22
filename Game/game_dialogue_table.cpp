@@ -604,7 +604,6 @@ void game_dialogue_table::set_lines(
     const ft_map<int32_t, ft_sharedptr<game_dialogue_line> > &lines) noexcept
 {
     ft_bool lock_acquired;
-    ft_size_t count;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *entry;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *entry_end;
 
@@ -618,20 +617,19 @@ void game_dialogue_table::set_lines(
     }
     this->_lines.clear();
     game_dialogue_table_clear_line_cache(this->_line_cache);
-    count = lines.size();
-    if (count == 0)
+    if (lines.size() == 0)
     {
         this->set_error(FT_ERR_SUCCESS);
         (void)this->unlock_internal(lock_acquired);
         return ;
     }
     entry_end = lines.end();
-    entry = entry_end - count;
+    entry = entry_end - lines.size();
     while (entry != entry_end)
     {
         if (entry->value != ft_sharedptr<game_dialogue_line>()
             && entry->value->is_initialised() == FT_TRUE)
-            this->register_line(*entry->value.get());
+            (void)this->register_line(*entry->value.get());
         entry++;
     }
     this->set_error(FT_ERR_SUCCESS);

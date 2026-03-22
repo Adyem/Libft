@@ -61,11 +61,13 @@ FT_TEST(test_su_setenv_and_getenv_round_trip)
 {
     char *value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, su_setenv("FT_SU_ADD_ENV_1", "value_one", 1));
     value = su_getenv("FT_SU_ADD_ENV_1");
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ('v', value[0]);
     FT_ASSERT_EQ(0, ft_unsetenv("FT_SU_ADD_ENV_1"));
+    su_environment_disable_thread_safety();
     return (1);
 }
 
@@ -73,12 +75,14 @@ FT_TEST(test_su_setenv_overwrite_disabled_preserves_value)
 {
     char *value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, su_setenv("FT_SU_ADD_ENV_2", "original", 1));
     FT_ASSERT_EQ(0, su_setenv("FT_SU_ADD_ENV_2", "mutated", 0));
     value = su_getenv("FT_SU_ADD_ENV_2");
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ('o', value[0]);
     FT_ASSERT_EQ(0, ft_unsetenv("FT_SU_ADD_ENV_2"));
+    su_environment_disable_thread_safety();
     return (1);
 }
 
@@ -110,12 +114,14 @@ FT_TEST(test_su_environment_snapshot_capture_and_restore_succeeds)
 {
     t_su_environment_snapshot snapshot;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_enable_thread_safety());
     FT_ASSERT_EQ(0, su_setenv("FT_SU_ADD_ENV_3", "before", 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_snapshot_capture(&snapshot));
     FT_ASSERT_EQ(0, su_setenv("FT_SU_ADD_ENV_3", "after", 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_snapshot_restore(&snapshot));
     su_environment_snapshot_dispose(&snapshot);
     FT_ASSERT_EQ(0, ft_unsetenv("FT_SU_ADD_ENV_3"));
+    su_environment_disable_thread_safety();
     return (1);
 }
 
@@ -123,10 +129,12 @@ FT_TEST(test_su_environment_sandbox_begin_end_succeeds)
 {
     t_su_environment_snapshot sandbox_snapshot;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_sandbox_begin(&sandbox_snapshot));
     FT_ASSERT_EQ(0, su_setenv("FT_SU_ADD_ENV_4", "inside", 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, su_environment_sandbox_end(&sandbox_snapshot));
     FT_ASSERT_EQ(0, ft_unsetenv("FT_SU_ADD_ENV_4"));
+    su_environment_disable_thread_safety();
     return (1);
 }
 

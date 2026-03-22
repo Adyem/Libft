@@ -101,11 +101,11 @@ FT_TEST(test_game_inventory_remove_clears_usage)
     FT_ASSERT_EQ(2, inventory.get_current_weight());
 
     inventory.remove_item(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     FT_ASSERT_EQ((size_t)0, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(0, inventory.count_item(7));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shield->get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     return (1);
 }
 
@@ -198,8 +198,8 @@ FT_TEST(test_game_inventory_add_item_respects_weight_limit)
     heavy->set_width(1);
     heavy->set_height(1);
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(heavy));
-    FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
+    FT_ASSERT_EQ(0, inventory.get_current_weight());
     return (1);
 }
 
@@ -210,9 +210,9 @@ FT_TEST(test_game_inventory_rejects_null_item)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(2, 0));
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, inventory.add_item(none));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, inventory.get_error());
     FT_ASSERT_EQ((size_t)0, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, inventory.get_error());
     return (1);
 }
 
@@ -260,11 +260,11 @@ FT_TEST(test_game_inventory_full_addition_preserves_items)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(potion));
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(elixir));
+    FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
     FT_ASSERT_EQ((size_t)1, inventory.get_used());
     FT_ASSERT_EQ(1, inventory.count_item(3));
     FT_ASSERT_EQ(0, inventory.count_item(4));
     FT_ASSERT_EQ(1, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, potion->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, elixir->get_error());
     return (1);
@@ -286,11 +286,11 @@ FT_TEST(test_game_inventory_remove_missing_slot_noops)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(potion));
     FT_ASSERT_EQ(2, inventory.get_current_weight());
     inventory.remove_item(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     Pair<int, ft_sharedptr<game_item> > *slot = inventory.get_items().find(0);
     FT_ASSERT_NEQ(slot, inventory.get_items().end());
     FT_ASSERT_EQ(2, slot->value->get_stack_size());
     FT_ASSERT_EQ(2, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, potion->get_error());
     return (1);
 }
