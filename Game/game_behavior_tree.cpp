@@ -91,43 +91,47 @@ const char *game_behavior_node::get_error_str() const noexcept
     return (ft_strerror(game_behavior_node::_last_error));
 }
 
-game_behavior_action::game_behavior_action() noexcept
+game_behavior_tree_action::game_behavior_tree_action() noexcept
     : game_behavior_node(), _callback()
 {
     return ;
 }
 
-game_behavior_action::game_behavior_action(const game_behavior_action &other) noexcept
+game_behavior_tree_action::game_behavior_tree_action(
+    const game_behavior_tree_action &other) noexcept
     : game_behavior_node(other), _callback(other._callback)
 {
     return ;
 }
 
-game_behavior_action::game_behavior_action(game_behavior_action &&other) noexcept
+game_behavior_tree_action::game_behavior_tree_action(
+    game_behavior_tree_action &&other) noexcept
     : game_behavior_node(static_cast<game_behavior_node &&>(other)),
       _callback(ft_move(other._callback))
 {
     return ;
 }
 
-game_behavior_action::~game_behavior_action() noexcept
+game_behavior_tree_action::~game_behavior_tree_action() noexcept
 {
     return ;
 }
 
-void game_behavior_action::set_callback(const ft_function<int32_t(game_behavior_context &)> &callback) noexcept
+void game_behavior_tree_action::set_callback(
+    const ft_function<int32_t(game_behavior_context &)> &callback) noexcept
 {
     this->_callback = callback;
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-const ft_function<int32_t(game_behavior_context &)> &game_behavior_action::get_callback() const noexcept
+const ft_function<int32_t(game_behavior_context &)>
+    &game_behavior_tree_action::get_callback() const noexcept
 {
     return (this->_callback);
 }
 
-int32_t game_behavior_action::tick(game_behavior_context &context) noexcept
+int32_t game_behavior_tree_action::tick(game_behavior_context &context) noexcept
 {
     if (!this->_callback)
     {

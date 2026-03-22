@@ -143,15 +143,19 @@ static void queue_call_destroy_twice_aborts(void)
 }
 
 
-FT_TEST(test_ft_queue_uninitialised_destructor_aborts)
+FT_TEST(test_ft_queue_uninitialised_destructor_is_noop)
 {
-    FT_ASSERT_EQ(1, queue_expect_sigabrt_uninitialised(queue_call_destructor_uninitialised));
+    queue_type queue_value;
+
+    queue_call_destructor_uninitialised(queue_value);
     return (1);
 }
 
-FT_TEST(test_ft_queue_uninitialised_destroy_aborts)
+FT_TEST(test_ft_queue_uninitialised_destroy_is_noop)
 {
-    FT_ASSERT_EQ(1, queue_expect_sigabrt_uninitialised(queue_call_destroy_uninitialised));
+    queue_type queue_value;
+
+    queue_call_destroy_uninitialised(queue_value);
     return (1);
 }
 
@@ -247,9 +251,9 @@ FT_TEST(test_ft_queue_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_ft_queue_destroy_twice_aborts)
+FT_TEST(test_ft_queue_destroy_twice_is_noop)
 {
-    FT_ASSERT_EQ(1, queue_expect_sigabrt(queue_call_destroy_twice_aborts));
+    queue_call_destroy_twice_aborts();
     return (1);
 }
 

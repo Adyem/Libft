@@ -299,7 +299,7 @@ int32_t game_vendor_profile::lock_internal(ft_bool *lock_acquired) const noexcep
         this->set_error(lock_error);
         return (lock_error);
     }
-    if (lock_acquired != ft_nullptr)
+    if (lock_acquired != ft_nullptr && this->_mutex != ft_nullptr)
         *lock_acquired = FT_TRUE;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);

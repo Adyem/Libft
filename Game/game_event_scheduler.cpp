@@ -735,6 +735,8 @@ json_group *serialize_event_scheduler(const ft_sharedptr<game_event_scheduler> &
 
     if (!scheduler)
         return (ft_nullptr);
+    if (events.initialize() != FT_ERR_SUCCESS)
+        return (ft_nullptr);
     group = json_create_json_group("world");
     if (!group)
         return (ft_nullptr);

@@ -47,6 +47,7 @@ FT_TEST(test_gnl_stream_initialize_unlocks_mutex)
     gnl_stream stream_instance;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.destroy());
     return (1);
@@ -57,6 +58,7 @@ FT_TEST(test_gnl_stream_init_from_fd_unlocks_mutex_success)
     gnl_stream stream_instance;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.init_from_fd(0));
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.destroy());
@@ -68,6 +70,7 @@ FT_TEST(test_gnl_stream_init_from_fd_unlocks_mutex_failure)
     gnl_stream stream_instance;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream_instance.init_from_fd(-1));
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.destroy());
@@ -79,6 +82,7 @@ FT_TEST(test_gnl_stream_init_from_file_unlocks_mutex_failure)
     gnl_stream stream_instance;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream_instance.init_from_file(ft_nullptr, false));
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.destroy());
@@ -90,6 +94,7 @@ FT_TEST(test_gnl_stream_init_from_callback_unlocks_mutex_failure)
     gnl_stream stream_instance;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
         stream_instance.init_from_callback(ft_nullptr, ft_nullptr));
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
@@ -105,6 +110,7 @@ FT_TEST(test_gnl_stream_read_unlocks_mutex_invalid_arguments)
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(-1, stream_instance.read(buffer, 0));
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.destroy());
@@ -119,6 +125,7 @@ FT_TEST(test_gnl_stream_read_unlocks_mutex_invalid_state)
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(-1, stream_instance.read(buffer, 1));
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.destroy());
@@ -133,6 +140,7 @@ FT_TEST(test_gnl_stream_read_unlocks_mutex_callback_failure)
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS,
         stream_instance.init_from_callback(gnl_stream_mutex_callback_failure, ft_nullptr));
     FT_ASSERT_EQ(-1, stream_instance.read(buffer, 1));
@@ -149,6 +157,7 @@ FT_TEST(test_gnl_stream_read_unlocks_mutex_callback_success)
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS,
         stream_instance.init_from_callback(gnl_stream_mutex_callback_success, ft_nullptr));
     FT_ASSERT_EQ(1, stream_instance.read(buffer, 1));
@@ -166,6 +175,7 @@ FT_TEST(test_gnl_stream_reset_unlocks_mutex)
     if (file_pointer == ft_nullptr)
         return (1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.init_from_file(file_pointer, true));
     stream_instance.reset();
     FT_ASSERT_EQ(1, gnl_stream_expect_mutex_unlocked(stream_instance));
@@ -182,6 +192,7 @@ FT_TEST(test_gnl_stream_failure_paths_leave_mutex_unlocked)
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream_instance.init_from_fd(-1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
         stream_instance.init_from_callback(ft_nullptr, ft_nullptr));

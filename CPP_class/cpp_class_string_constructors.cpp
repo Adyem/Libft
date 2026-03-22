@@ -11,7 +11,6 @@ ft_string::ft_string() noexcept
     , _capacity(0)
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _operation_error(FT_ERR_SUCCESS)
 {
     ft_string::_last_initialised_state = this->_initialised_state;
     return ;
@@ -23,11 +22,12 @@ ft_string::ft_string(const ft_string &other) noexcept
     , _capacity(0)
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _operation_error(FT_ERR_SUCCESS)
 {
-    this->_operation_error = this->initialize(other);
-    if (this->_operation_error == FT_ERR_SUCCESS)
-        this->_operation_error = other._operation_error;
+    int32_t initialization_error;
+
+    initialization_error = this->initialize(other);
+    if (initialization_error == FT_ERR_SUCCESS)
+        ft_string::set_error(other.get_error());
     ft_string::_last_initialised_state = this->_initialised_state;
     return ;
 }
@@ -38,14 +38,12 @@ ft_string::ft_string(ft_string &&other) noexcept
     , _capacity(0)
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _operation_error(FT_ERR_SUCCESS)
 {
-    this->_operation_error = this->initialize(static_cast<ft_string &&>(other));
-    if (this->_operation_error == FT_ERR_SUCCESS)
-    {
-        this->_operation_error = other._operation_error;
-        other._operation_error = FT_ERR_SUCCESS;
-    }
+    int32_t initialization_error;
+
+    initialization_error = this->initialize(static_cast<ft_string &&>(other));
+    if (initialization_error == FT_ERR_SUCCESS)
+        ft_string::set_error(other.get_error());
     ft_string::_last_initialised_state = this->_initialised_state;
     return ;
 }
@@ -57,9 +55,9 @@ ft_string ft_string::from_error(int32_t error_code) noexcept
 
     initialization_error = value.initialize();
     if (initialization_error != FT_ERR_SUCCESS)
-        value._operation_error = initialization_error;
+        ft_string::set_error(initialization_error);
     else
-        value._operation_error = error_code;
+        ft_string::set_error(error_code);
     return (value);
 }
 
@@ -74,7 +72,6 @@ int32_t ft_string::initialize() noexcept
     this->_data = ft_nullptr;
     this->_length = 0;
     this->_capacity = 0;
-    this->_operation_error = FT_ERR_SUCCESS;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     ft_string::_last_initialised_state = this->_initialised_state;
     return (ft_string::set_error(FT_ERR_SUCCESS));
@@ -134,7 +131,6 @@ int32_t ft_string::initialize(const ft_string &other) noexcept
         this->_data = ft_nullptr;
         this->_length = 0;
         this->_capacity = 0;
-        this->_operation_error = FT_ERR_SUCCESS;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         ft_string::_last_initialised_state = this->_initialised_state;
         return (ft_string::set_error(FT_ERR_SUCCESS));
@@ -200,7 +196,6 @@ int32_t ft_string::initialize(ft_string &&other) noexcept
         this->_data = ft_nullptr;
         this->_length = 0;
         this->_capacity = 0;
-        this->_operation_error = FT_ERR_SUCCESS;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         ft_string::_last_initialised_state = this->_initialised_state;
         return (ft_string::set_error(FT_ERR_SUCCESS));
@@ -280,7 +275,6 @@ ft_string &ft_string::operator=(const ft_string &other) noexcept
                 return (*this);
             }
         }
-        this->_operation_error = FT_ERR_SUCCESS;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         ft_string::set_error(FT_ERR_SUCCESS);
         return (*this);
@@ -296,10 +290,9 @@ ft_string &ft_string::operator=(const ft_string &other) noexcept
     }
     assignment_error = this->initialize(other);
     if (assignment_error == FT_ERR_SUCCESS)
-        this->_operation_error = other._operation_error;
+        ft_string::set_error(other.get_error());
     else
-        this->_operation_error = assignment_error;
-    ft_string::set_error(this->_operation_error);
+        ft_string::set_error(assignment_error);
     return (*this);
 }
 
@@ -325,7 +318,6 @@ ft_string &ft_string::operator=(ft_string &&other) noexcept
                 return (*this);
             }
         }
-        this->_operation_error = FT_ERR_SUCCESS;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         ft_string::set_error(FT_ERR_SUCCESS);
         return (*this);
@@ -346,13 +338,9 @@ ft_string &ft_string::operator=(ft_string &&other) noexcept
     }
     assignment_error = this->initialize(static_cast<ft_string &&>(other));
     if (assignment_error == FT_ERR_SUCCESS)
-    {
-        this->_operation_error = other._operation_error;
-        other._operation_error = FT_ERR_SUCCESS;
-    }
+        ft_string::set_error(other.get_error());
     else
-        this->_operation_error = assignment_error;
-    ft_string::set_error(this->_operation_error);
+        ft_string::set_error(assignment_error);
     return (*this);
 }
 
@@ -373,8 +361,7 @@ ft_string &ft_string::operator=(const char *string) noexcept
         assignment_error = this->clear();
     else
         assignment_error = this->assign(string, ft_strlen_size_t(string));
-    this->_operation_error = assignment_error;
-    ft_string::set_error(this->_operation_error);
+    ft_string::set_error(assignment_error);
     return (*this);
 }
 

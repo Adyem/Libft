@@ -3,13 +3,17 @@
 #include "pthread.hpp"
 #include "recursive_mutex.hpp"
 #include "pthread_lock_tracking.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
 
 int pt_recursive_mutex::try_lock(pthread_t thread_id) const
 {
     int ensure_error = this->ensure_native_mutex();
+    const void *mutex_handle;
+
     if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
+    mutex_handle = static_cast<const void *>(this);
 
     if (this->_lock.load(std::memory_order_acquire))
     {
@@ -38,7 +42,7 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
     this->_lock_depth.store(1, std::memory_order_relaxed);
 
     int notify_error = pt_lock_tracking::notify_acquired(thread_id,
-            static_cast<const void *>(this));
+            mutex_handle);
     if (notify_error != FT_ERR_SUCCESS)
     {
         this->_lock.store(false, std::memory_order_release);
@@ -50,7 +54,9 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
         }
         catch (const std::system_error &)
         {
+            su_abort();
         }
+        pt_lock_tracking::notify_released(thread_id, mutex_handle);
         return (notify_error);
     }
 

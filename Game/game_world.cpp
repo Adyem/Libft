@@ -1099,6 +1099,11 @@ int32_t game_world::restore_from_groups(json_group *groups, game_character &char
         return (this->get_error());
     }
     ft_vector<ft_sharedptr<game_event> > scheduled_events;
+    if (scheduled_events.initialize() != FT_ERR_SUCCESS)
+    {
+        this->set_error(static_cast<int32_t>(scheduled_events.get_error()));
+        return (this->get_error());
+    }
     this->_event_scheduler->dump_events(scheduled_events);
     if (this->propagate_scheduler_state_error() == FT_TRUE)
         return (this->get_error());

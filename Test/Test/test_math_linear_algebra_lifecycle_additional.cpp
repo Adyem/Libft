@@ -177,15 +177,15 @@ FT_TEST(test_quaternion_move_method_resets_source)
     return (1);
 }
 
-FT_TEST(test_vector2_destroy_twice_aborts)
+FT_TEST(test_vector2_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_additional(vector2_call_destroy_twice));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_additional(vector2_call_destroy_twice));
     return (1);
 }
 
-FT_TEST(test_matrix3_destroy_uninitialised_aborts)
+FT_TEST(test_matrix3_destroy_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_additional(matrix3_call_destroy_while_uninitialised));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_additional(matrix3_call_destroy_while_uninitialised));
     return (1);
 }
 

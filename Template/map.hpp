@@ -629,10 +629,10 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    construct_at(&this->_data[this->_size]);
-    this->_data[this->_size].key = key;
     if constexpr (ft_map<Key, MappedType>::template has_initialize_copy<MappedType>::value)
     {
+        construct_at(&this->_data[this->_size]);
+        this->_data[this->_size].key = key;
         int32_t initialize_error = this->_data[this->_size].value.initialize(value);
         if (initialize_error != FT_ERR_SUCCESS)
         {
@@ -642,8 +642,14 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
             return ;
         }
     }
+    else if constexpr (std::is_copy_constructible<MappedType>::value)
+        construct_at(&this->_data[this->_size], key, value);
     else if constexpr (std::is_copy_assignable<MappedType>::value)
+    {
+        construct_at(&this->_data[this->_size]);
+        this->_data[this->_size].key = key;
         this->_data[this->_size].value = value;
+    }
     this->_size += 1;
     (void)this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
@@ -714,10 +720,10 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    construct_at(&this->_data[this->_size]);
-    this->_data[this->_size].key = key;
     if constexpr (ft_map<Key, MappedType>::template has_initialize_move<MappedType>::value)
     {
+        construct_at(&this->_data[this->_size]);
+        this->_data[this->_size].key = key;
         int32_t initialize_error = this->_data[this->_size].value.initialize(ft_move(value));
         if (initialize_error != FT_ERR_SUCCESS)
         {
@@ -727,8 +733,14 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
             return ;
         }
     }
+    else if constexpr (std::is_move_constructible<MappedType>::value)
+        construct_at(&this->_data[this->_size], key, ft_move(value));
     else if constexpr (std::is_move_assignable<MappedType>::value)
+    {
+        construct_at(&this->_data[this->_size]);
+        this->_data[this->_size].key = key;
         this->_data[this->_size].value = ft_move(value);
+    }
     this->_size += 1;
     (void)this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);

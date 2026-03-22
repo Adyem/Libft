@@ -4,7 +4,7 @@
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
 
-uint32_t    scma_write(scma_handle handle, ft_size_t offset,
+int32_t    scma_write(scma_handle handle, ft_size_t offset,
                 const void *source, ft_size_t size)
 {
     scma_block *block;
@@ -30,7 +30,7 @@ uint32_t    scma_write(scma_handle handle, ft_size_t offset,
     return (static_cast<uint32_t>(scma_unlock_and_return_int(FT_ERR_SUCCESS)));
 }
 
-uint32_t    scma_read(scma_handle handle, ft_size_t offset,
+int32_t    scma_read(scma_handle handle, ft_size_t offset,
                 void *destination, ft_size_t size)
 {
     scma_block *block;

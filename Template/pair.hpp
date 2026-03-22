@@ -1,10 +1,14 @@
 #ifndef PAIR_HPP
 # define PAIR_HPP
 
+#include "constructor.hpp"
 #include "move.hpp"
 #include "../Basic/basic.hpp"
 #include <type_traits>
 #include <utility>
+
+template <typename ManagedType>
+class ft_sharedptr;
 
 template <typename Type, typename = void>
 struct pair_has_initialize_copy : std::false_type
@@ -44,6 +48,15 @@ pair_assign_copy(Type &destination, const Type &source)
     return ;
 }
 
+template <typename ManagedType>
+void pair_assign_copy(ft_sharedptr<ManagedType> &destination,
+    const ft_sharedptr<ManagedType> &source)
+{
+    destroy_at(&destination);
+    construct_at(&destination, source);
+    return ;
+}
+
 template <typename Type>
 typename std::enable_if<pair_has_initialize_move<Type>::value, void>::type
 pair_assign_move(Type &destination, Type &source)
@@ -57,6 +70,15 @@ typename std::enable_if<!pair_has_initialize_move<Type>::value, void>::type
 pair_assign_move(Type &destination, Type &source)
 {
     destination = ft_move(source);
+    return ;
+}
+
+template <typename ManagedType>
+void pair_assign_move(ft_sharedptr<ManagedType> &destination,
+    ft_sharedptr<ManagedType> &source)
+{
+    destroy_at(&destination);
+    construct_at(&destination, ft_move(source));
     return ;
 }
 

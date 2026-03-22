@@ -216,6 +216,7 @@ FT_TEST(test_api_connection_pool_reuses_connections)
         wait_attempts++;
     }
     FT_ASSERT_EQ(0, context.result.load());
+    api_connection_pool_set_enabled(FT_TRUE);
     api_debug_reset_connection_pool_counters();
     api_connection_pool_flush();
     int first_status;
@@ -253,6 +254,7 @@ FT_TEST(test_api_connection_pool_reuses_connections)
             api_debug_get_connection_pool_misses());
     FT_ASSERT_EQ(1, context.accept_count.load());
     FT_ASSERT_EQ(2, context.handled_requests.load());
+    api_connection_pool_set_enabled(FT_FALSE);
     return (1);
 }
 

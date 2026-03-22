@@ -14,6 +14,8 @@ static int32_t world_replay_collect_callbacks(game_world &world,
     if (!scheduler)
         return (FT_ERR_GAME_GENERAL_ERROR);
     ft_vector<ft_sharedptr<game_event> > scheduled_events;
+    if (scheduled_events.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
 
     scheduler->dump_events(scheduled_events);
     if (scheduler->get_error() != FT_ERR_SUCCESS)
@@ -48,6 +50,8 @@ static int32_t world_replay_restore_callbacks(game_world &world,
     if (callbacks.size() == 0)
         return (FT_ERR_SUCCESS);
     ft_vector<ft_sharedptr<game_event> > scheduled_events;
+    if (scheduled_events.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
 
     scheduler->dump_events(scheduled_events);
     if (scheduler->get_error() != FT_ERR_SUCCESS)
@@ -252,6 +256,12 @@ int32_t game_world_replay_session::capture_snapshot(game_world &world,
     ft_size_t callback_count;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_replay_session::capture_snapshot");
+    result = snapshot_buffer.initialize();
+    if (result != FT_ERR_SUCCESS)
+        return (result);
+    callback_result = callback_snapshot.initialize();
+    if (callback_result != FT_ERR_SUCCESS)
+        return (callback_result);
     result = world.save_to_buffer(snapshot_buffer, character, inventory);
     if (result != FT_ERR_SUCCESS)
         return (result);

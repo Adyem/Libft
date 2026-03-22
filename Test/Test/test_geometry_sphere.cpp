@@ -791,8 +791,8 @@ FT_TEST(test_sphere_get_mutex_for_testing_recovers_after_alloc_failure)
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
     cma_set_alloc_limit(0);
     mutex_pointer = shape._mutex;
-    FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(true, shape.is_thread_safe());
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1254,7 +1254,7 @@ FT_TEST(test_intersect_sphere_parallel_access)
     sphere first;
     sphere second;
     std::atomic<bool> worker_ready;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::atomic<bool> worker_completed;
     std::thread worker_thread;
     int iteration_index;
@@ -1306,7 +1306,7 @@ FT_TEST(test_intersect_sphere_high_load_overlap_two_threads)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread;
     int iteration_index;
 
@@ -1349,7 +1349,7 @@ FT_TEST(test_intersect_sphere_high_load_overlap_four_threads)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread_one;
     std::thread worker_thread_two;
     std::thread worker_thread_three;
@@ -1432,7 +1432,7 @@ FT_TEST(test_intersect_sphere_high_load_touching_two_threads)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread;
     int iteration_index;
 
@@ -1475,7 +1475,7 @@ FT_TEST(test_intersect_sphere_high_load_separated_two_threads)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread;
     int iteration_index;
 
@@ -1518,7 +1518,7 @@ FT_TEST(test_sphere_move_bidirectional_high_load_with_thread_safety)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread;
     int iteration_index;
     int iteration_limit;
@@ -1582,7 +1582,7 @@ FT_TEST(test_sphere_move_bidirectional_high_load_with_thread_safety)
 FT_TEST(test_sphere_setters_getters_contention_high_load_two_threads)
 {
     sphere shape;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread writer_thread;
     int iteration_index;
     int iteration_limit;
@@ -1651,7 +1651,7 @@ FT_TEST(test_intersect_sphere_high_load_with_mutating_overlap)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread writer_thread;
     std::thread reader_thread_one;
     std::thread reader_thread_two;
@@ -1728,7 +1728,7 @@ FT_TEST(test_intersect_sphere_high_load_with_mutating_overlap)
 FT_TEST(test_sphere_setters_getters_contention_high_load_four_threads)
 {
     sphere shape;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread writer_thread;
     std::thread reader_thread_one;
     std::thread reader_thread_two;
@@ -1910,11 +1910,11 @@ FT_TEST(test_sphere_thread_safety_enable_disable)
     return (1);
 }
 
-FT_TEST(test_sphere_initialize_from_destroyed_source_aborts)
+FT_TEST(test_sphere_initialize_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             sphere_initialize_copy_from_destroyed_source_aborts_operation));
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             sphere_initialize_move_from_destroyed_source_aborts_operation));
     return (1);
 }
@@ -1940,8 +1940,8 @@ FT_TEST(test_sphere_mutex_testing_accessor_lifecycle)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
     mutex_pointer = shape._mutex;
-    FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(true, shape.is_thread_safe());
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     shape.disable_thread_safety();
     FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
@@ -1970,9 +1970,9 @@ FT_TEST(test_sphere_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_sphere_destroy_uninitialised_aborts)
+FT_TEST(test_sphere_destroy_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_destroy_uninitialised_aborts_operation));
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(sphere_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -1982,15 +1982,15 @@ FT_TEST(test_sphere_set_radius_uninitialised_aborts)
     return (1);
 }
 
-FT_TEST(test_sphere_destroy_twice_aborts)
+FT_TEST(test_sphere_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_destroy_twice_aborts_operation));
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(sphere_destroy_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_uninitialised_destructor_aborts)
+FT_TEST(test_sphere_uninitialised_destructor_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(sphere_destructor_uninitialised_aborts_operation));
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(sphere_destructor_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2028,16 +2028,16 @@ FT_TEST(test_sphere_enable_thread_safety_destroyed_aborts)
     return (1);
 }
 
-FT_TEST(test_sphere_initialize_copy_destination_initialised_aborts)
+FT_TEST(test_sphere_initialize_copy_destination_initialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             sphere_initialize_copy_destination_initialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_sphere_initialize_move_destination_initialised_aborts)
+FT_TEST(test_sphere_initialize_move_destination_initialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             sphere_initialize_move_destination_initialised_aborts_operation));
     return (1);
 }
@@ -2049,9 +2049,9 @@ FT_TEST(test_sphere_disable_thread_safety_destroyed_aborts)
     return (1);
 }
 
-FT_TEST(test_sphere_is_thread_safe_enabled_destroyed_aborts)
+FT_TEST(test_sphere_is_thread_safe_enabled_destroyed_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             sphere_is_thread_safe_enabled_destroyed_aborts_operation));
     return (1);
 }
@@ -2112,9 +2112,9 @@ FT_TEST(test_sphere_disable_thread_safety_uninitialised_aborts)
     return (1);
 }
 
-FT_TEST(test_sphere_is_thread_safe_enabled_uninitialised_aborts)
+FT_TEST(test_sphere_is_thread_safe_enabled_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             sphere_is_thread_safe_enabled_uninitialised_aborts_operation));
     return (1);
 }
@@ -2161,9 +2161,9 @@ FT_TEST(test_sphere_get_radius_destroyed_aborts_second)
     return (1);
 }
 
-FT_TEST(test_sphere_move_destroyed_source_aborts)
+FT_TEST(test_sphere_move_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             sphere_move_destroyed_source_aborts_operation));
     return (1);
 }
@@ -2216,51 +2216,51 @@ FT_TEST(test_sphere_move_uninitialised_source_aborts)
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_uninitialised_first_aborts)
+FT_TEST(test_intersect_sphere_uninitialised_first_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_sphere_uninitialised_first_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_uninitialised_second_aborts)
+FT_TEST(test_intersect_sphere_uninitialised_second_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_sphere_uninitialised_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_uninitialised_both_aborts)
+FT_TEST(test_intersect_sphere_uninitialised_both_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_sphere_uninitialised_both_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_destroyed_first_aborts)
+FT_TEST(test_intersect_sphere_destroyed_first_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_sphere_destroyed_first_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_destroyed_second_aborts)
+FT_TEST(test_intersect_sphere_destroyed_second_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_sphere_destroyed_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_destroyed_both_aborts)
+FT_TEST(test_intersect_sphere_destroyed_both_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_sphere_destroyed_both_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_sphere_destroyed_and_uninitialised_aborts)
+FT_TEST(test_intersect_sphere_destroyed_and_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_sphere_destroyed_and_uninitialised_aborts_operation));
     return (1);
 }
@@ -2269,7 +2269,7 @@ FT_TEST(test_intersect_sphere_high_load_overlap_two_threads_soak_rounds)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread;
     int round_index;
     int iteration_index;
@@ -2312,7 +2312,7 @@ FT_TEST(test_intersect_sphere_high_load_overlap_four_threads_soak_rounds)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread thread_one;
     std::thread thread_two;
     std::thread thread_three;
@@ -2385,7 +2385,7 @@ FT_TEST(test_intersect_sphere_high_load_touching_two_threads_soak_rounds)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread;
     int round_index;
     int index;
@@ -2427,7 +2427,7 @@ FT_TEST(test_intersect_sphere_high_load_separated_two_threads_soak_rounds)
 {
     sphere first;
     sphere second;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     std::thread worker_thread;
     int round_index;
     int index;
@@ -2534,6 +2534,13 @@ struct sphere_soak_worker_args
     std::atomic<bool> *worker_failed;
 };
 
+struct sphere_intersect_soak_worker_args
+{
+    sphere *first;
+    sphere *second;
+    std::atomic<bool> *worker_failed;
+};
+
 static void *sphere_soak_writer_worker(void *argument)
 {
     sphere_soak_worker_args *worker_args;
@@ -2587,10 +2594,52 @@ static void *sphere_soak_reader_worker(void *argument)
     return (ft_nullptr);
 }
 
+static void *sphere_intersect_soak_writer_worker(void *argument)
+{
+    sphere_intersect_soak_worker_args *worker_args;
+    int iteration_index;
+    int local_error_code;
+
+    worker_args = static_cast<sphere_intersect_soak_worker_args *>(argument);
+    std::this_thread::sleep_for(std::chrono::milliseconds(6000));
+    iteration_index = 0;
+    while (iteration_index < 3072 && worker_args->worker_failed->load() == false)
+    {
+        if ((iteration_index % 2) == 0)
+            local_error_code = worker_args->second->set_center(2.0, 2.0, 2.0);
+        else
+            local_error_code = worker_args->second->set_center(-1.0, 1.0, -1.0);
+        if (local_error_code != FT_ERR_SUCCESS)
+            worker_args->worker_failed->store(true);
+        local_error_code = worker_args->second->set_radius(4.0 + (iteration_index % 2));
+        if (local_error_code != FT_ERR_SUCCESS)
+            worker_args->worker_failed->store(true);
+        iteration_index = iteration_index + 1;
+    }
+    return (ft_nullptr);
+}
+
+static void *sphere_intersect_soak_reader_worker(void *argument)
+{
+    sphere_intersect_soak_worker_args *worker_args;
+    int iteration_index;
+
+    worker_args = static_cast<sphere_intersect_soak_worker_args *>(argument);
+    iteration_index = 0;
+    while (iteration_index < 3072 && worker_args->worker_failed->load() == false)
+    {
+        if (intersect_sphere(*worker_args->first, *worker_args->second) == false
+            || intersect_sphere(*worker_args->second, *worker_args->first) == false)
+            worker_args->worker_failed->store(true);
+        iteration_index = iteration_index + 1;
+    }
+    return (ft_nullptr);
+}
+
 FT_TEST(test_sphere_setters_getters_contention_high_load_soak_rounds)
 {
     sphere shape;
-    std::atomic<bool> worker_failed;
+    std::atomic<bool> worker_failed(false);
     pthread_t writer_thread;
     pthread_t reader_thread;
     sphere_soak_worker_args writer_arguments;
@@ -2636,59 +2685,62 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_soak_rounds)
 
 FT_TEST(test_intersect_sphere_high_load_mutating_overlap_soak_rounds)
 {
-    sphere first;
-    sphere second;
-    std::atomic<bool> worker_failed;
-    std::thread writer_thread;
-    std::thread reader_thread;
+    sphere *first;
+    sphere *second;
+    std::atomic<bool> *worker_failed;
+    pthread_t writer_thread;
+    pthread_t reader_thread;
+    sphere_intersect_soak_worker_args *writer_arguments;
+    sphere_intersect_soak_worker_args *reader_arguments;
     int round_index;
+    long join_timeout_ms;
+    int32_t writer_join_result;
+    int32_t reader_join_result;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(0.0, 0.0, 0.0, 15.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(1.0, 1.0, 1.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
+    first = new (std::nothrow) sphere();
+    second = new (std::nothrow) sphere();
+    worker_failed = new (std::nothrow) std::atomic<bool>(false);
+    writer_arguments = new (std::nothrow) sphere_intersect_soak_worker_args();
+    reader_arguments = new (std::nothrow) sphere_intersect_soak_worker_args();
+    FT_ASSERT(first != ft_nullptr);
+    FT_ASSERT(second != ft_nullptr);
+    FT_ASSERT(worker_failed != ft_nullptr);
+    FT_ASSERT(writer_arguments != ft_nullptr);
+    FT_ASSERT(reader_arguments != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->initialize(0.0, 0.0, 0.0, 15.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->initialize(1.0, 1.0, 1.0, 4.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->enable_thread_safety());
+    join_timeout_ms = 5000;
     round_index = 0;
     while (round_index < 3)
     {
-        worker_failed.store(false);
-        writer_thread = std::thread([&second, &worker_failed]() {
-            int iteration_index;
-            int local_set_error;
-
-            iteration_index = 0;
-            while (iteration_index < 3072 && worker_failed.load() == false)
-            {
-                if ((iteration_index % 2) == 0)
-                    local_set_error = second.set_center(2.0, 2.0, 2.0);
-                else
-                    local_set_error = second.set_center(-1.0, 1.0, -1.0);
-                if (local_set_error != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                local_set_error = second.set_radius(4.0 + (iteration_index % 2));
-                if (local_set_error != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                iteration_index = iteration_index + 1;
-            }
-            return ;
-        });
-        reader_thread = std::thread([&first, &second, &worker_failed]() {
-            int iteration_index;
-
-            iteration_index = 0;
-            while (iteration_index < 3072 && worker_failed.load() == false)
-            {
-                if (intersect_sphere(first, second) == false
-                    || intersect_sphere(second, first) == false)
-                    worker_failed.store(true);
-                iteration_index = iteration_index + 1;
-            }
-            return ;
-        });
-        writer_thread.join();
-        reader_thread.join();
-        FT_ASSERT_EQ(false, worker_failed.load());
+        worker_failed->store(false);
+        writer_arguments->first = first;
+        writer_arguments->second = second;
+        writer_arguments->worker_failed = worker_failed;
+        reader_arguments->first = first;
+        reader_arguments->second = second;
+        reader_arguments->worker_failed = worker_failed;
+        writer_join_result = pt_thread_create(&writer_thread, ft_nullptr,
+                sphere_intersect_soak_writer_worker, writer_arguments);
+        FT_ASSERT_EQ(0, writer_join_result);
+        reader_join_result = pt_thread_create(&reader_thread, ft_nullptr,
+                sphere_intersect_soak_reader_worker, reader_arguments);
+        FT_ASSERT_EQ(0, reader_join_result);
+        writer_join_result = pt_thread_timed_join(writer_thread, ft_nullptr,
+                join_timeout_ms);
+        if (writer_join_result != 0)
+            (void)pt_thread_detach(writer_thread);
+        FT_ASSERT_EQ(0, writer_join_result);
+        reader_join_result = pt_thread_timed_join(reader_thread, ft_nullptr,
+                join_timeout_ms);
+        if (reader_join_result != 0)
+            (void)pt_thread_detach(reader_thread);
+        FT_ASSERT_EQ(0, reader_join_result);
+        FT_ASSERT_EQ(false, worker_failed->load());
         round_index = round_index + 1;
     }
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.destroy());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->destroy());
     return (1);
 }

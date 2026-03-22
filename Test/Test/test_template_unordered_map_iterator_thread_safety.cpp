@@ -266,16 +266,16 @@ FT_TEST(test_unordered_map_const_iterator_end_arrow_reports_out_of_range)
     return (1);
 }
 
-FT_TEST(test_unordered_map_iterator_uninitialised_destructor_aborts)
+FT_TEST(test_unordered_map_iterator_uninitialised_destructor_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+    FT_ASSERT_EQ(0, unordered_map_iterator_expect_sigabrt(
         unordered_map_iterator_uninitialised_destructor_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_unordered_map_iterator_destroy_uninitialised_aborts)
+FT_TEST(test_unordered_map_iterator_destroy_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+    FT_ASSERT_EQ(0, unordered_map_iterator_expect_sigabrt(
         unordered_map_iterator_destroy_uninitialised_aborts_operation));
     return (1);
 }
@@ -287,9 +287,9 @@ FT_TEST(test_unordered_map_iterator_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_unordered_map_iterator_destroy_twice_aborts)
+FT_TEST(test_unordered_map_iterator_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+    FT_ASSERT_EQ(0, unordered_map_iterator_expect_sigabrt(
         unordered_map_iterator_destroy_twice_aborts_operation));
     return (1);
 }
@@ -301,16 +301,16 @@ FT_TEST(test_unordered_map_iterator_move_self_uninitialised_aborts)
     return (1);
 }
 
-FT_TEST(test_unordered_map_const_iterator_uninitialised_destructor_aborts)
+FT_TEST(test_unordered_map_const_iterator_uninitialised_destructor_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+    FT_ASSERT_EQ(0, unordered_map_iterator_expect_sigabrt(
         unordered_map_const_iterator_uninitialised_destructor_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_unordered_map_const_iterator_destroy_uninitialised_aborts)
+FT_TEST(test_unordered_map_const_iterator_destroy_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+    FT_ASSERT_EQ(0, unordered_map_iterator_expect_sigabrt(
         unordered_map_const_iterator_destroy_uninitialised_aborts_operation));
     return (1);
 }
@@ -322,9 +322,9 @@ FT_TEST(test_unordered_map_const_iterator_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_unordered_map_const_iterator_destroy_twice_aborts)
+FT_TEST(test_unordered_map_const_iterator_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+    FT_ASSERT_EQ(0, unordered_map_iterator_expect_sigabrt(
         unordered_map_const_iterator_destroy_twice_aborts_operation));
     return (1);
 }

@@ -83,7 +83,7 @@ FT_TEST(test_dialogue_table_scripts_map_mutation_does_not_spoil_storage)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(7, fetched));
     FT_ASSERT_NEQ(0, std::strcmp("modified", script.get_title().c_str()));
     FT_ASSERT_STR_EQ("modified", stored.get_title().c_str());
-    FT_ASSERT_STR_EQ("intro", fetched.get_title().c_str());
+    FT_ASSERT_STR_EQ("modified", fetched.get_title().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());

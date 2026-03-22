@@ -6,6 +6,7 @@
 #include "pthread.hpp"
 #include "mutex.hpp"
 #include "pthread_lock_tracking.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 
@@ -13,6 +14,7 @@ int pt_mutex::try_lock() const
 {
     pt_thread_id_type thread_id = pt_thread_self();
     int ensure_error = this->ensure_native_mutex();
+    int notify_error;
 
     if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
@@ -22,22 +24,13 @@ int pt_mutex::try_lock() const
             && pt_thread_equal(owner, thread_id))
         return (FT_ERR_MUTEX_ALREADY_LOCKED);
 
-    int wait_result = pt_lock_tracking::notify_wait(thread_id,
-            static_cast<const void *>(this));
-    if (wait_result != FT_ERR_SUCCESS)
-        return (wait_result);
-
     if (!this->_native_mutex->try_lock())
-    {
-        pt_lock_tracking::notify_released(thread_id,
-                static_cast<const void *>(this));
         return (FT_ERR_MUTEX_ALREADY_LOCKED);
-    }
 
     this->_owner.store(thread_id, std::memory_order_relaxed);
     this->_lock.store(true, std::memory_order_release);
 
-    int notify_error = pt_lock_tracking::notify_acquired(thread_id,
+    notify_error = pt_lock_tracking::notify_acquired(thread_id,
             static_cast<const void *>(this));
     if (notify_error != FT_ERR_SUCCESS)
     {
@@ -49,6 +42,7 @@ int pt_mutex::try_lock() const
         }
         catch (const std::system_error &)
         {
+            su_abort();
         }
         pt_lock_tracking::notify_released(thread_id,
                 static_cast<const void *>(this));

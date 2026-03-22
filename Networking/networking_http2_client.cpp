@@ -1102,11 +1102,6 @@ ft_bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
     if (success_state)
     {
         this->_stream_identifiers.push_back(stream_identifier);
-        if (FT_ERR_INVALID_STATE != FT_ERR_SUCCESS)
-        {
-            this->_streams.remove(stream_identifier);
-            success_state = FT_FALSE;
-        }
     }
     if (success_state)
     this->unlock(lock_acquired);

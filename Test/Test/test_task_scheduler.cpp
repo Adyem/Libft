@@ -74,32 +74,36 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex)
 {
     ft_task_scheduler scheduler_instance(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
-    ft_promise<int> completion_promise;
-    ft_future<int> completion_future(completion_promise);
     std::atomic<int> execution_count;
+    std::atomic<int> completion_value;
+    int32_t wait_iterations;
 
     execution_count.store(0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_future.initialize());
+    completion_value.store(0);
     scheduler_instance.schedule_after(std::chrono::milliseconds(20),
-        [&scheduler_instance, &completion_promise, &execution_count]()
+        [&scheduler_instance, &completion_value, &execution_count]()
     {
         execution_count.fetch_add(1);
         cma_set_alloc_limit(0);
         scheduler_instance.schedule_after(std::chrono::milliseconds(10),
-            [&completion_promise, &execution_count]()
+            [&completion_value, &execution_count]()
         {
             execution_count.fetch_add(1);
-            completion_promise.set_value(1);
+            completion_value.store(1);
             return ;
         });
         return ;
     });
     usleep(10000);
     cma_set_alloc_limit(1);
-    completion_future.wait();
+    wait_iterations = 0;
+    while (wait_iterations < 200 && completion_value.load() == 0)
+    {
+        usleep(1000);
+        wait_iterations += 1;
+    }
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(1, completion_future.get());
+    FT_ASSERT_EQ(1, completion_value.load());
     FT_ASSERT_EQ(2, execution_count.load());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_future.destroy());
     return (1);
 }

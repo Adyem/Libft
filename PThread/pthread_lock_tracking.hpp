@@ -57,9 +57,9 @@ class pt_lock_tracking
                 const void *mutex_pointer);
         static bool vector_contains_thread(const pt_thread_vector &thread_identifiers,
                 pt_thread_id_type thread_identifier);
-        static bool detect_cycle(const s_pt_thread_lock_info *origin,
+        static int detect_cycle(const s_pt_thread_lock_info *origin,
                 const void *requested_mutex, pt_mutex_vector *visited_mutexes,
-                pt_thread_vector *visited_threads);
+                pt_thread_vector *visited_threads, bool *cycle_detected);
         static int lock_registry_mutex(void);
         static int unlock_registry_mutex(void);
 
@@ -75,9 +75,15 @@ class pt_lock_tracking
                 const void *mutex_pointer);
         static int notify_released(pt_thread_id_type thread_identifier,
                 const void *mutex_pointer);
+        static int notify_thread_exit(pt_thread_id_type thread_identifier);
         static int snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot);
         static int get_thread_state(pt_thread_id_type thread_identifier,
                 s_pt_lock_tracking_thread_state &state);
 };
+
+#ifdef LIBFT_TEST_BUILD
+extern std::atomic<int> pt_lock_tracking_notify_acquired_override_error_code;
+extern std::atomic<int> pt_lock_tracking_detect_cycle_override_error_code;
+#endif
 
 #endif

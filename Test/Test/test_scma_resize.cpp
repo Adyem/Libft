@@ -18,19 +18,19 @@ FT_TEST(test_scma_resize_grows_preserves_data)
     while (index < 2)
     {
         write_values[index] = static_cast<int>(index * 10 + 1);
-        FT_ASSERT_EQ(1, scma_write(handle,
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(handle,
                 sizeof(int) * index,
                 &write_values[index],
                 sizeof(int)));
         index = index + 1;
     }
-    FT_ASSERT_EQ(1, scma_resize(handle, sizeof(int) * 4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_resize(handle, sizeof(int) * 4));
     FT_ASSERT_EQ(sizeof(int) * 4, scma_get_size(handle));
     index = 0;
     while (index < 2)
     {
         read_value = 0;
-        FT_ASSERT_EQ(1, scma_read(handle,
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(handle,
                 sizeof(int) * index,
                 &read_value,
                 sizeof(int)));
@@ -39,16 +39,16 @@ FT_TEST(test_scma_resize_grows_preserves_data)
     }
     write_values[2] = 33;
     write_values[3] = 44;
-    FT_ASSERT_EQ(1, scma_write(handle,
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(handle,
             sizeof(int) * 2,
             &write_values[2],
             sizeof(int)));
-    FT_ASSERT_EQ(1, scma_write(handle,
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(handle,
             sizeof(int) * 3,
             &write_values[3],
             sizeof(int)));
     read_value = 0;
-    FT_ASSERT_EQ(1, scma_read(handle,
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(handle,
             sizeof(int) * 3,
             &read_value,
             sizeof(int)));
@@ -71,19 +71,19 @@ FT_TEST(test_scma_resize_shrinks_truncates_tail)
     while (index < 3)
     {
         write_values[index] = static_cast<int>(index * 5 + 2);
-        FT_ASSERT_EQ(1, scma_write(handle,
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(handle,
                 sizeof(int) * index,
                 &write_values[index],
                 sizeof(int)));
         index = index + 1;
     }
-    FT_ASSERT_EQ(1, scma_resize(handle, sizeof(int) * 2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_resize(handle, sizeof(int) * 2));
     FT_ASSERT_EQ(sizeof(int) * 2, scma_get_size(handle));
     index = 0;
     while (index < 2)
     {
         read_value = 0;
-        FT_ASSERT_EQ(1, scma_read(handle,
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(handle,
                 sizeof(int) * index,
                 &read_value,
                 sizeof(int)));
@@ -106,7 +106,7 @@ FT_TEST(test_scma_resize_rejects_zero_size)
     FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int)));
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
-    FT_ASSERT_EQ(0, scma_resize(handle, 0));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, scma_resize(handle, 0));
     scma_shutdown();
     return (1);
 }

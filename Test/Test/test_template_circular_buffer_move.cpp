@@ -17,6 +17,7 @@ FT_TEST(test_ft_circular_buffer_thread_safe_ops)
     FT_ASSERT(lock_acquired == FT_TRUE);
     buffer_instance.push(1);
     FT_ASSERT_EQ(1, buffer_instance.pop());
+    buffer_instance.push(2);
     buffer_instance.unlock(lock_acquired);
     FT_ASSERT_EQ(false, buffer_instance.is_full());
     FT_ASSERT_EQ(false, buffer_instance.is_empty());

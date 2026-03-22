@@ -21,7 +21,6 @@ class ft_string
         ft_size_t                _capacity;
         mutable pt_recursive_mutex *_mutex;
         mutable uint8_t            _initialised_state;
-        int32_t                    _operation_error;
         static thread_local uint32_t _last_error;
         static thread_local uint8_t _last_initialised_state;
 

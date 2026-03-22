@@ -31,6 +31,7 @@ FT_TEST(test_ft_string_concurrent_appends_are_serialized)
     start_flag.store(false);
     worker_done.store(false);
     worker = std::thread([&shared_string, &start_flag, &worker_done]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(6000));
         while (!start_flag.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         unsigned int iteration;

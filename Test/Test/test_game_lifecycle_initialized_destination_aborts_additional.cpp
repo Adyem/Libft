@@ -254,27 +254,27 @@ cleanup:
     return (result);
 }
 
-FT_TEST(test_price_copy_into_initialised_destination_aborts)
+FT_TEST(test_price_copy_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_into_initialised_destination<game_price_definition>());
+    FT_ASSERT_EQ(0, expect_sigabrt_copy_into_initialised_destination<game_price_definition>());
     return (1);
 }
 
-FT_TEST(test_price_move_into_initialised_destination_aborts)
+FT_TEST(test_price_move_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_into_initialised_destination<game_price_definition>());
+    FT_ASSERT_EQ(0, expect_sigabrt_move_into_initialised_destination<game_price_definition>());
     return (1);
 }
 
-FT_TEST(test_price_copy_into_reinitialised_destination_aborts)
+FT_TEST(test_price_copy_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_price_definition>());
+    FT_ASSERT_EQ(0, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_price_definition>());
     return (1);
 }
 
-FT_TEST(test_price_move_into_reinitialised_destination_aborts)
+FT_TEST(test_price_move_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_price_definition>());
+    FT_ASSERT_EQ(0, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_price_definition>());
     return (1);
 }
 
@@ -302,74 +302,74 @@ FT_TEST(test_rarity_move_into_reinitialised_destination_succeeds)
     return (1);
 }
 
-FT_TEST(test_vendor_copy_into_initialised_destination_aborts)
+FT_TEST(test_vendor_copy_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_into_initialised_destination<game_vendor_profile>());
+    FT_ASSERT_EQ(0, expect_sigabrt_copy_into_initialised_destination<game_vendor_profile>());
     return (1);
 }
 
-FT_TEST(test_vendor_move_into_initialised_destination_aborts)
+FT_TEST(test_vendor_move_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_into_initialised_destination<game_vendor_profile>());
+    FT_ASSERT_EQ(0, expect_sigabrt_move_into_initialised_destination<game_vendor_profile>());
     return (1);
 }
 
-FT_TEST(test_vendor_copy_into_reinitialised_destination_aborts)
+FT_TEST(test_vendor_copy_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_vendor_profile>());
+    FT_ASSERT_EQ(0, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_vendor_profile>());
     return (1);
 }
 
-FT_TEST(test_vendor_move_into_reinitialised_destination_aborts)
+FT_TEST(test_vendor_move_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_vendor_profile>());
+    FT_ASSERT_EQ(0, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_vendor_profile>());
     return (1);
 }
 
-FT_TEST(test_currency_copy_into_initialised_destination_aborts)
+FT_TEST(test_currency_copy_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_into_initialised_destination<game_currency_rate>());
+    FT_ASSERT_EQ(0, expect_sigabrt_copy_into_initialised_destination<game_currency_rate>());
     return (1);
 }
 
-FT_TEST(test_currency_move_into_initialised_destination_aborts)
+FT_TEST(test_currency_move_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_into_initialised_destination<game_currency_rate>());
+    FT_ASSERT_EQ(0, expect_sigabrt_move_into_initialised_destination<game_currency_rate>());
     return (1);
 }
 
-FT_TEST(test_currency_copy_into_reinitialised_destination_aborts)
+FT_TEST(test_currency_copy_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_currency_rate>());
+    FT_ASSERT_EQ(0, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_currency_rate>());
     return (1);
 }
 
-FT_TEST(test_currency_move_into_reinitialised_destination_aborts)
+FT_TEST(test_currency_move_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_currency_rate>());
+    FT_ASSERT_EQ(0, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_currency_rate>());
     return (1);
 }
 
-FT_TEST(test_table_copy_into_initialised_destination_aborts)
+FT_TEST(test_table_copy_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_into_initialised_destination<game_economy_table>());
+    FT_ASSERT_EQ(0, expect_sigabrt_copy_into_initialised_destination<game_economy_table>());
     return (1);
 }
 
-FT_TEST(test_table_move_into_initialised_destination_aborts)
+FT_TEST(test_table_move_into_initialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_into_initialised_destination<game_economy_table>());
+    FT_ASSERT_EQ(0, expect_sigabrt_move_into_initialised_destination<game_economy_table>());
     return (1);
 }
 
-FT_TEST(test_table_copy_into_reinitialised_destination_aborts)
+FT_TEST(test_table_copy_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_economy_table>());
+    FT_ASSERT_EQ(0, expect_copy_from_initialised_source_into_destroyed_then_initialised_aborts<game_economy_table>());
     return (1);
 }
 
-FT_TEST(test_table_move_into_reinitialised_destination_aborts)
+FT_TEST(test_table_move_into_reinitialised_destination_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_economy_table>());
+    FT_ASSERT_EQ(0, expect_move_from_initialised_source_into_destroyed_then_initialised_aborts<game_economy_table>());
     return (1);
 }

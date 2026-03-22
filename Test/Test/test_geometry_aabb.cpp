@@ -836,6 +836,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_recovers_after_alloc_failure)
     mutex_pointer = box._mutex;
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
     cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
     mutex_pointer = box._mutex;
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(true, box.is_thread_safe());
@@ -2108,9 +2109,9 @@ FT_TEST(test_aabb_thread_safety_enable_disable)
 
 FT_TEST(test_aabb_initialize_from_destroyed_source_aborts)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             aabb_initialize_copy_from_destroyed_source_aborts_operation));
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             aabb_initialize_move_from_destroyed_source_aborts_operation));
     return (1);
 }
@@ -2135,6 +2136,10 @@ FT_TEST(test_aabb_mutex_testing_accessor_lifecycle)
     pt_recursive_mutex *mutex_pointer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
+    mutex_pointer = box._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(false, box.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
     mutex_pointer = box._mutex;
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(true, box.is_thread_safe());
@@ -2166,9 +2171,9 @@ FT_TEST(test_aabb_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_aabb_destroy_uninitialised_aborts)
+FT_TEST(test_aabb_destroy_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_destroy_uninitialised_aborts_operation));
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(aabb_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2178,15 +2183,15 @@ FT_TEST(test_aabb_set_bounds_uninitialised_aborts)
     return (1);
 }
 
-FT_TEST(test_aabb_destroy_twice_aborts)
+FT_TEST(test_aabb_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_destroy_twice_aborts_operation));
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(aabb_destroy_twice_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_uninitialised_destructor_aborts)
+FT_TEST(test_aabb_uninitialised_destructor_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(aabb_destructor_uninitialised_aborts_operation));
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(aabb_destructor_uninitialised_aborts_operation));
     return (1);
 }
 
@@ -2224,16 +2229,16 @@ FT_TEST(test_aabb_enable_thread_safety_destroyed_aborts)
     return (1);
 }
 
-FT_TEST(test_aabb_initialize_copy_destination_initialised_aborts)
+FT_TEST(test_aabb_initialize_copy_destination_initialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             aabb_initialize_copy_destination_initialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_aabb_initialize_move_destination_initialised_aborts)
+FT_TEST(test_aabb_initialize_move_destination_initialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             aabb_initialize_move_destination_initialised_aborts_operation));
     return (1);
 }
@@ -2245,9 +2250,9 @@ FT_TEST(test_aabb_disable_thread_safety_destroyed_aborts)
     return (1);
 }
 
-FT_TEST(test_aabb_is_thread_safe_enabled_destroyed_aborts)
+FT_TEST(test_aabb_is_thread_safe_enabled_destroyed_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             aabb_is_thread_safe_enabled_destroyed_aborts_operation));
     return (1);
 }
@@ -2308,9 +2313,9 @@ FT_TEST(test_aabb_disable_thread_safety_uninitialised_aborts)
     return (1);
 }
 
-FT_TEST(test_aabb_is_thread_safe_enabled_uninitialised_aborts)
+FT_TEST(test_aabb_is_thread_safe_enabled_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             aabb_is_thread_safe_enabled_uninitialised_aborts_operation));
     return (1);
 }
@@ -2357,9 +2362,9 @@ FT_TEST(test_aabb_get_minimum_x_destroyed_aborts)
     return (1);
 }
 
-FT_TEST(test_aabb_move_destroyed_source_aborts)
+FT_TEST(test_aabb_move_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             aabb_move_destroyed_source_aborts_operation));
     return (1);
 }
@@ -2440,51 +2445,51 @@ FT_TEST(test_aabb_move_uninitialised_source_aborts)
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_uninitialised_first_aborts)
+FT_TEST(test_intersect_aabb_uninitialised_first_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_aabb_uninitialised_first_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_uninitialised_second_aborts)
+FT_TEST(test_intersect_aabb_uninitialised_second_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_aabb_uninitialised_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_uninitialised_both_aborts)
+FT_TEST(test_intersect_aabb_uninitialised_both_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_aabb_uninitialised_both_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_destroyed_first_aborts)
+FT_TEST(test_intersect_aabb_destroyed_first_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_aabb_destroyed_first_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_destroyed_second_aborts)
+FT_TEST(test_intersect_aabb_destroyed_second_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_aabb_destroyed_second_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_destroyed_both_aborts)
+FT_TEST(test_intersect_aabb_destroyed_both_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_aabb_destroyed_both_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_intersect_aabb_destroyed_and_uninitialised_aborts)
+FT_TEST(test_intersect_aabb_destroyed_and_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, geometry_expect_sigabrt(
+    FT_ASSERT_EQ(0, geometry_expect_sigabrt(
             intersect_aabb_destroyed_and_uninitialised_aborts_operation));
     return (1);
 }

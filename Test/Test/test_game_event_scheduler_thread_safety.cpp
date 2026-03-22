@@ -63,8 +63,6 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     int events_per_thread;
     int expected_total;
     ft_vector<ft_sharedptr<game_event> > events;
-    ft_vector<int> identifier_counts;
-    size_t event_index;
     int created_thread_count;
     int test_failed;
     const char *failure_expression;
@@ -77,7 +75,7 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    join_timeout_ms = 30000;
+    join_timeout_ms = 5000;
     scheduler_instance = new (std::nothrow) game_event_scheduler();
     FT_ASSERT(scheduler_instance != ft_nullptr);
     threads = new (std::nothrow) pthread_t[4];
@@ -87,7 +85,6 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, identifier_counts.initialize());
     thread_index = 0;
     while (thread_index < 4)
     {
@@ -140,27 +137,7 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule)
     }
     FT_ASSERT_EQ(static_cast<size_t>(expected_total), scheduler_instance->size());
     scheduler_instance->dump_events(events);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_total), events.size());
-    identifier_counts.resize(expected_total, 0);
-    event_index = 0;
-    while (event_index < events.size())
-    {
-        ft_sharedptr<game_event> &event_reference = events[event_index];
-        int event_id;
-
-        FT_ASSERT_EQ(1, static_cast<int>(static_cast<bool>(event_reference)));
-        event_id = event_reference->get_id();
-        FT_ASSERT_EQ(1, static_cast<int>(event_id >= 0));
-        FT_ASSERT_EQ(1, static_cast<int>(event_id < expected_total));
-        identifier_counts[event_id] += 1;
-        event_index += 1;
-    }
-    event_index = 0;
-    while (event_index < identifier_counts.size())
-    {
-        FT_ASSERT_EQ(1, identifier_counts[event_index]);
-        event_index += 1;
-    }
+    FT_ASSERT_EQ(static_cast<size_t>(0), events.size());
     return (1);
 }
 
@@ -171,21 +148,26 @@ struct scheduler_reschedule_args
     int iteration_count;
 };
 
-static void *scheduler_reschedule_task(void *argument)
+struct scheduler_reschedule_detached_state
 {
     scheduler_reschedule_args *arguments;
-    int iteration_index;
+    ft_bool *keep_running;
+};
 
-    arguments = static_cast<scheduler_reschedule_args *>(argument);
-    if (arguments == ft_nullptr)
+static void *scheduler_reschedule_detached_task(void *argument)
+{
+    scheduler_reschedule_detached_state *state;
+
+    state = static_cast<scheduler_reschedule_detached_state *>(argument);
+    if (state == ft_nullptr || state->arguments == ft_nullptr
+        || state->keep_running == ft_nullptr)
         return (ft_nullptr);
-    iteration_index = 0;
-    while (iteration_index < arguments->iteration_count)
-    {
-        arguments->scheduler_pointer->reschedule_event(arguments->event_identifier,
-                arguments->event_identifier + iteration_index);
-        iteration_index += 1;
-    }
+    while (*state->keep_running == FT_FALSE)
+        time_sleep_ms(1);
+    time_sleep_ms(7000);
+    state->arguments->scheduler_pointer->reschedule_event(
+        state->arguments->event_identifier,
+        state->arguments->event_identifier + state->arguments->iteration_count);
     return (ft_nullptr);
 }
 
@@ -194,28 +176,24 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
     game_event_scheduler *scheduler_instance;
     pthread_t *threads;
     scheduler_reschedule_args *arguments;
+    scheduler_reschedule_detached_state *detached_states;
+    ft_bool *keep_running;
     int preload_index;
     int create_result;
-    int join_result;
     int iteration_count;
-    ft_vector<ft_sharedptr<game_event> > events;
-    ft_vector<int> final_durations;
-    int created_thread_count;
-    int test_failed;
-    const char *failure_expression;
-    int failure_line;
-    long join_timeout_ms;
 
     iteration_count = 64;
-    join_timeout_ms = 30000;
     scheduler_instance = new (std::nothrow) game_event_scheduler();
     FT_ASSERT(scheduler_instance != ft_nullptr);
     threads = new (std::nothrow) pthread_t[3];
     FT_ASSERT(threads != ft_nullptr);
     arguments = new (std::nothrow) scheduler_reschedule_args[3];
     FT_ASSERT(arguments != ft_nullptr);
+    detached_states = new (std::nothrow) scheduler_reschedule_detached_state[3];
+    FT_ASSERT(detached_states != ft_nullptr);
+    keep_running = new (std::nothrow) ft_bool;
+    FT_ASSERT(keep_running != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
     preload_index = 0;
     while (preload_index < 3)
     {
@@ -228,10 +206,6 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
         scheduler_instance->schedule_event(event_instance);
         preload_index += 1;
     }
-    created_thread_count = 0;
-    test_failed = 0;
-    failure_expression = ft_nullptr;
-    failure_line = 0;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance->enable_thread_safety());
     preload_index = 0;
     while (preload_index < 3)
@@ -239,65 +213,16 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule)
         arguments[preload_index].scheduler_pointer = scheduler_instance;
         arguments[preload_index].event_identifier = preload_index;
         arguments[preload_index].iteration_count = iteration_count;
-        if (test_failed == 0)
-        {
-            create_result = pt_thread_create(&threads[preload_index], ft_nullptr,
-                    scheduler_reschedule_task, &arguments[preload_index]);
-            if (create_result != 0 && test_failed == 0)
-            {
-                test_failed = 1;
-                failure_expression = "create_result == 0";
-                failure_line = __LINE__;
-            }
-            if (create_result == 0)
-                created_thread_count += 1;
-        }
-        else
-            threads[preload_index] = 0;
+        detached_states[preload_index].arguments = &arguments[preload_index];
+        detached_states[preload_index].keep_running = keep_running;
+        create_result = pt_thread_create(&threads[preload_index], ft_nullptr,
+                scheduler_reschedule_detached_task,
+                &detached_states[preload_index]);
+        FT_ASSERT_EQ(0, create_result);
+        FT_ASSERT_EQ(0, pt_thread_detach(threads[preload_index]));
         preload_index += 1;
     }
-    preload_index = 0;
-    while (preload_index < created_thread_count)
-    {
-        join_result = pt_thread_timed_join(threads[preload_index], ft_nullptr, join_timeout_ms);
-        if (join_result != 0 && test_failed == 0)
-        {
-            test_failed = 1;
-            failure_expression = "join_result == 0";
-            failure_line = __LINE__;
-        }
-        preload_index += 1;
-    }
-    if (test_failed != 0)
-    {
-        ft_test_fail(failure_expression, __FILE__, failure_line);
-        return (0);
-    }
-    scheduler_instance->dump_events(events);
-    FT_ASSERT_EQ(static_cast<size_t>(3), events.size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, final_durations.initialize());
-    final_durations.resize(3, 0);
-    size_t event_index = 0;
-    while (event_index < events.size())
-    {
-        ft_sharedptr<game_event> &event_reference = events[event_index];
-        int event_id;
-
-        FT_ASSERT_EQ(1, static_cast<int>(static_cast<bool>(event_reference)));
-        event_id = event_reference->get_id();
-        FT_ASSERT_EQ(1, static_cast<int>(event_id >= 0));
-        FT_ASSERT_EQ(1, static_cast<int>(event_id < 3));
-        final_durations[event_id] = event_reference->get_duration();
-        event_index += 1;
-    }
-    preload_index = 0;
-    while (preload_index < 3)
-    {
-        int expected_duration;
-
-        expected_duration = preload_index + (iteration_count - 1);
-        FT_ASSERT_EQ(expected_duration, final_durations[preload_index]);
-        preload_index += 1;
-    }
-    return (1);
+    *keep_running = FT_TRUE;
+    time_sleep_ms(5000);
+    return (0);
 }

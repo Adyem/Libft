@@ -6,24 +6,20 @@
 
 static thread_local bool g_registry_mutex_owned = false;
 
-static void pt_lock_tracking_try_shrink_owned_mutexes(pt_mutex_vector &owned_mutexes)
-{
-    ft_size_t target_capacity;
-    void *new_data;
+#ifdef LIBFT_TEST_BUILD
+std::atomic<int> pt_lock_tracking_notify_acquired_override_error_code(
+    FT_ERR_SUCCESS);
+std::atomic<int> pt_lock_tracking_detect_cycle_override_error_code(
+    FT_ERR_SUCCESS);
+#endif
 
-    if (owned_mutexes.capacity <= owned_mutexes.size + 5)
-        return ;
-    target_capacity = owned_mutexes.size + 5;
-    if (target_capacity < 4)
-        target_capacity = 4;
-    if (target_capacity >= owned_mutexes.capacity)
-        return ;
-    new_data = std::realloc(owned_mutexes.data, target_capacity * sizeof(const void *));
-    if (new_data == ft_nullptr)
-        return ;
-    owned_mutexes.data = static_cast<const void **>(new_data);
-    owned_mutexes.capacity = target_capacity;
-}
+struct s_pt_mutex_owner_info
+{
+    const void      *mutex_pointer;
+    pt_thread_id_type  owner_thread;
+};
+
+typedef pt_buffer<s_pt_mutex_owner_info> pt_mutex_owner_vector;
 
 int pt_lock_tracking::lock_registry_mutex(void)
 {
@@ -79,6 +75,133 @@ pt_buffer<s_pt_thread_lock_info> *pt_lock_tracking::get_thread_infos(int *error_
     return (thread_infos_pointer);
 }
 
+static pt_mutex_owner_vector *pt_lock_tracking_get_mutex_owners(int *error_code)
+{
+    static pt_mutex_owner_vector *mutex_owners_pointer = ft_nullptr;
+    void *memory_pointer;
+
+    if (mutex_owners_pointer != ft_nullptr)
+    {
+        if (error_code)
+            *error_code = FT_ERR_SUCCESS;
+        return (mutex_owners_pointer);
+    }
+    memory_pointer = std::malloc(sizeof(pt_mutex_owner_vector));
+    if (memory_pointer == ft_nullptr)
+    {
+        if (error_code)
+            *error_code = FT_ERR_INVALID_STATE;
+        return (ft_nullptr);
+    }
+    mutex_owners_pointer = static_cast<pt_mutex_owner_vector *>(memory_pointer);
+    new (mutex_owners_pointer) pt_mutex_owner_vector();
+    pt_buffer_init(*mutex_owners_pointer);
+    if (error_code)
+        *error_code = FT_ERR_SUCCESS;
+    return (mutex_owners_pointer);
+}
+
+static s_pt_mutex_owner_info *pt_lock_tracking_lookup_mutex_owner(
+    const void *mutex_pointer, int *error_code)
+{
+    pt_mutex_owner_vector *mutex_owners;
+    ft_size_t index;
+
+    mutex_owners = pt_lock_tracking_get_mutex_owners(error_code);
+    if (mutex_owners == ft_nullptr)
+        return (ft_nullptr);
+    index = 0;
+    while (index < mutex_owners->size)
+    {
+        if (mutex_owners->data[index].mutex_pointer == mutex_pointer)
+        {
+            if (error_code)
+                *error_code = FT_ERR_SUCCESS;
+            return (&mutex_owners->data[index]);
+        }
+        index += 1;
+    }
+    if (error_code)
+        *error_code = FT_ERR_SUCCESS;
+    return (ft_nullptr);
+}
+
+static int pt_lock_tracking_set_mutex_owner(const void *mutex_pointer,
+    pt_thread_id_type owner_thread)
+{
+    pt_mutex_owner_vector *mutex_owners;
+    s_pt_mutex_owner_info *owner_info;
+    s_pt_mutex_owner_info new_owner_info;
+    int error_code;
+    int push_error;
+
+    error_code = FT_ERR_SUCCESS;
+    owner_info = pt_lock_tracking_lookup_mutex_owner(mutex_pointer, &error_code);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (owner_info != ft_nullptr)
+    {
+        owner_info->owner_thread = owner_thread;
+        return (FT_ERR_SUCCESS);
+    }
+    mutex_owners = pt_lock_tracking_get_mutex_owners(&error_code);
+    if (mutex_owners == ft_nullptr)
+        return (error_code);
+    new_owner_info.mutex_pointer = mutex_pointer;
+    new_owner_info.owner_thread = owner_thread;
+    push_error = pt_buffer_push(*mutex_owners, new_owner_info);
+    if (push_error != FT_ERR_SUCCESS)
+        return (push_error);
+    return (FT_ERR_SUCCESS);
+}
+
+static void pt_lock_tracking_clear_mutex_owner(const void *mutex_pointer)
+{
+    pt_mutex_owner_vector *mutex_owners;
+    ft_size_t index;
+    int error_code;
+
+    error_code = FT_ERR_SUCCESS;
+    mutex_owners = pt_lock_tracking_get_mutex_owners(&error_code);
+    if (mutex_owners == ft_nullptr)
+        return ;
+    index = 0;
+    while (index < mutex_owners->size)
+    {
+        if (mutex_owners->data[index].mutex_pointer == mutex_pointer)
+        {
+            pt_buffer_erase(*mutex_owners, index);
+            return ;
+        }
+        index += 1;
+    }
+    return ;
+}
+
+static void pt_lock_tracking_clear_mutex_owners_for_thread(
+    pt_thread_id_type thread_identifier)
+{
+    pt_mutex_owner_vector *mutex_owners;
+    ft_size_t index;
+    int error_code;
+
+    error_code = FT_ERR_SUCCESS;
+    mutex_owners = pt_lock_tracking_get_mutex_owners(&error_code);
+    if (mutex_owners == ft_nullptr)
+        return ;
+    index = 0;
+    while (index < mutex_owners->size)
+    {
+        if (mutex_owners->data[index].owner_thread == thread_identifier)
+        {
+            pt_buffer_erase(*mutex_owners, index);
+            continue ;
+        }
+        index += 1;
+    }
+    return ;
+}
+
 pt_lock_tracking::pt_lock_tracking()
 {
     return ;
@@ -98,6 +221,7 @@ pt_mutex_vector pt_lock_tracking::get_owned_mutexes
     bool lock_acquired;
     int error_code;
 
+    pt_buffer_init(owned_mutexes);
     error_code = FT_ERR_SUCCESS;
     if (!pt_lock_tracking::ensure_registry_mutex_initialised(&error_code))
     {
@@ -118,10 +242,7 @@ pt_mutex_vector pt_lock_tracking::get_owned_mutexes
         g_registry_mutex_owned = true;
         lock_acquired = true;
     }
-    if (g_registry_mutex_owned)
-        info = pt_lock_tracking::find_thread_info(thread_identifier, &error_code);
-    else
-        info = pt_lock_tracking::lookup_thread_info(thread_identifier, &error_code);
+    info = pt_lock_tracking::lookup_thread_info(thread_identifier, &error_code);
     if (info == ft_nullptr && error_code != FT_ERR_SUCCESS)
     {
         if (lock_acquired)
@@ -141,7 +262,7 @@ pt_mutex_vector pt_lock_tracking::get_owned_mutexes
             g_registry_mutex_owned = false;
         }
         if (error_code_out)
-            *error_code_out = FT_ERR_INVALID_STATE;
+            *error_code_out = FT_ERR_SUCCESS;
         return (owned_mutexes);
     }
     pt_buffer_init(owned_mutexes);
@@ -256,58 +377,66 @@ bool pt_lock_tracking::vector_contains_thread(const pt_thread_vector
     return (false);
 }
 
-bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin,
+int pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin,
         const void *requested_mutex, pt_mutex_vector *visited_mutexes,
-        pt_thread_vector *visited_threads)
+        pt_thread_vector *visited_threads, bool *cycle_detected)
 {
     pt_buffer<s_pt_thread_lock_info> *thread_infos;
+    s_pt_mutex_owner_info *owner_info;
+    s_pt_thread_lock_info *info;
     int error_code;
 
+    *cycle_detected = false;
     if (pt_lock_tracking::vector_contains_mutex(*visited_mutexes, requested_mutex))
-        return (false);
+        return (FT_ERR_SUCCESS);
+#ifdef LIBFT_TEST_BUILD
+    error_code = pt_lock_tracking_detect_cycle_override_error_code.load();
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+#endif
     if (pt_buffer_push(*visited_mutexes, requested_mutex) != FT_ERR_SUCCESS)
-        return (false);
+        return (FT_ERR_NO_MEMORY);
     error_code = FT_ERR_SUCCESS;
+    owner_info = pt_lock_tracking_lookup_mutex_owner(requested_mutex, &error_code);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (owner_info == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    if (owner_info->owner_thread == origin->thread_identifier)
+        return (FT_ERR_SUCCESS);
     thread_infos = pt_lock_tracking::get_thread_infos(&error_code);
     if (thread_infos == ft_nullptr)
-        return (false);
-    ft_size_t index = 0;
-    while (index < thread_infos->size)
+        return (error_code);
+    info = pt_lock_tracking::lookup_thread_info(owner_info->owner_thread, &error_code);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (info == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    if (info->waiting_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    if (pt_lock_tracking::vector_contains_mutex(origin->owned_mutexes,
+                info->waiting_mutex))
     {
-        s_pt_thread_lock_info *info = &thread_infos->data[index];
-
-        if (!pt_lock_tracking::vector_contains_mutex(info->owned_mutexes,
-                    requested_mutex))
-        {
-            index += 1;
-            continue ;
-        }
-        if (info->thread_identifier == origin->thread_identifier)
-        {
-            index += 1;
-            continue ;
-        }
-        if (info->waiting_mutex == ft_nullptr)
-        {
-            index += 1;
-            continue ;
-        }
-        if (pt_lock_tracking::vector_contains_mutex(origin->owned_mutexes,
-                    info->waiting_mutex))
-            return (true);
-        if (!pt_lock_tracking::vector_contains_thread(*visited_threads,
-                    info->thread_identifier))
-        {
-            if (pt_buffer_push(*visited_threads, info->thread_identifier)
-                    != FT_ERR_SUCCESS)
-                return (false);
-            if (pt_lock_tracking::detect_cycle(origin, info->waiting_mutex,
-                        visited_mutexes, visited_threads))
-                return (true);
-        }
-        index += 1;
+        *cycle_detected = true;
+        return (FT_ERR_SUCCESS);
     }
-    return (false);
+    if (!pt_lock_tracking::vector_contains_thread(*visited_threads,
+                info->thread_identifier))
+    {
+#ifdef LIBFT_TEST_BUILD
+        error_code = pt_lock_tracking_detect_cycle_override_error_code.load();
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+#endif
+        if (pt_buffer_push(*visited_threads, info->thread_identifier)
+                != FT_ERR_SUCCESS)
+            return (FT_ERR_NO_MEMORY);
+        error_code = pt_lock_tracking::detect_cycle(origin, info->waiting_mutex,
+                visited_mutexes, visited_threads, cycle_detected);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 int pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier,
@@ -339,6 +468,9 @@ int pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier,
     }
     else
     {
+        bool cycle_detected;
+        int detect_error;
+
         if (info->waiting_mutex != requested_mutex)
             info->wait_started_ms = time_now_ms();
         if (info->wait_started_ms == 0)
@@ -348,9 +480,11 @@ int pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier,
         pt_thread_vector visited_threads_inner;
         pt_buffer_init(visited_mutexes_inner);
         pt_buffer_init(visited_threads_inner);
-        bool cycle_detected = pt_lock_tracking::detect_cycle(info, requested_mutex,
-                &visited_mutexes_inner, &visited_threads_inner);
-        if (cycle_detected)
+        detect_error = pt_lock_tracking::detect_cycle(info, requested_mutex,
+                &visited_mutexes_inner, &visited_threads_inner, &cycle_detected);
+        if (detect_error != FT_ERR_SUCCESS)
+            result_code = detect_error;
+        else if (cycle_detected)
             result_code = FT_ERR_MUTEX_ALREADY_LOCKED;
         else
             result_code = FT_ERR_SUCCESS;
@@ -376,6 +510,11 @@ int pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier,
 
     if (!pt_lock_tracking::ensure_registry_mutex_initialised(&error_code))
         return (error_code);
+#ifdef LIBFT_TEST_BUILD
+    result_code = pt_lock_tracking_notify_acquired_override_error_code.load();
+    if (result_code != FT_ERR_SUCCESS)
+        return (result_code);
+#endif
     if (!g_registry_mutex_owned)
     {
         lock_error = pt_lock_tracking::lock_registry_mutex();
@@ -402,6 +541,9 @@ int pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier,
             goto cleanup_acquired;
         }
     }
+    result_code = pt_lock_tracking_set_mutex_owner(mutex_pointer, thread_identifier);
+    if (result_code != FT_ERR_SUCCESS)
+        goto cleanup_acquired;
     info->waiting_mutex = ft_nullptr;
     info->wait_started_ms = 0;
 cleanup_acquired:
@@ -411,6 +553,57 @@ cleanup_acquired:
         g_registry_mutex_owned = false;
     }
     return (result_code);
+}
+
+int pt_lock_tracking::notify_thread_exit(pt_thread_id_type thread_identifier)
+{
+    int lock_error;
+    pt_buffer<s_pt_thread_lock_info> *thread_infos;
+    ft_size_t thread_index;
+    bool lock_acquired;
+    int error_code;
+
+    error_code = FT_ERR_SUCCESS;
+    lock_acquired = false;
+    if (!pt_lock_tracking::ensure_registry_mutex_initialised(&error_code))
+        return (error_code);
+    if (!g_registry_mutex_owned)
+    {
+        lock_error = pt_lock_tracking::lock_registry_mutex();
+        if (lock_error != FT_ERR_SUCCESS)
+            return (lock_error);
+        g_registry_mutex_owned = true;
+        lock_acquired = true;
+    }
+    pt_lock_tracking_clear_mutex_owners_for_thread(thread_identifier);
+    thread_infos = pt_lock_tracking::get_thread_infos(&error_code);
+    if (thread_infos == ft_nullptr)
+    {
+        if (lock_acquired)
+        {
+            pt_lock_tracking::unlock_registry_mutex();
+            g_registry_mutex_owned = false;
+        }
+        return (error_code);
+    }
+    thread_index = 0;
+    while (thread_index < thread_infos->size)
+    {
+        if (thread_infos->data[thread_index].thread_identifier
+                == thread_identifier)
+        {
+            pt_buffer_destroy(thread_infos->data[thread_index].owned_mutexes);
+            pt_buffer_erase(*thread_infos, thread_index);
+            break ;
+        }
+        thread_index += 1;
+    }
+    if (lock_acquired)
+    {
+        pt_lock_tracking::unlock_registry_mutex();
+        g_registry_mutex_owned = false;
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 int pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier,
@@ -450,11 +643,11 @@ int pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier,
         if (info->owned_mutexes.data[index] == mutex_pointer)
         {
             pt_buffer_erase(info->owned_mutexes, index);
-            pt_lock_tracking_try_shrink_owned_mutexes(info->owned_mutexes);
             break ;
         }
         index += 1;
     }
+    pt_lock_tracking_clear_mutex_owner(mutex_pointer);
     if (info->waiting_mutex == mutex_pointer)
     {
         info->waiting_mutex = ft_nullptr;
@@ -525,28 +718,21 @@ int pt_lock_tracking::snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot)
         if (info->waiting_mutex != ft_nullptr)
         {
             s_pt_lock_wait_snapshot entry;
-            ft_size_t owner_index = 0;
-            bool owner_found = false;
+            s_pt_mutex_owner_info *owner_info;
 
             entry.mutex_pointer = info->waiting_mutex;
             entry.waiting_thread = info->thread_identifier;
             entry.owner_thread = 0;
             entry.wait_started_ms = info->wait_started_ms;
-            while (owner_index < thread_infos->size)
+            owner_info = pt_lock_tracking_lookup_mutex_owner(info->waiting_mutex,
+                    &error_code);
+            if (error_code != FT_ERR_SUCCESS)
             {
-                s_pt_thread_lock_info *owner_info = &thread_infos->data[owner_index];
-
-                if (pt_lock_tracking::vector_contains_mutex(owner_info->owned_mutexes,
-                            info->waiting_mutex))
-                {
-                    entry.owner_thread = owner_info->thread_identifier;
-                    owner_found = true;
-                    break ;
-                }
-                owner_index += 1;
+                result_code = error_code;
+                goto cleanup_snapshot;
             }
-            if (!owner_found)
-                entry.owner_thread = 0;
+            if (owner_info != ft_nullptr)
+                entry.owner_thread = owner_info->owner_thread;
             int push_error = pt_buffer_push(snapshot, entry);
             if (push_error != FT_ERR_SUCCESS)
             {
@@ -578,6 +764,10 @@ int pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier,
 
     if (!pt_lock_tracking::ensure_registry_mutex_initialised(&error_code))
         return (error_code);
+    pt_buffer_clear(state.owned_mutexes);
+    state.thread_identifier = thread_identifier;
+    state.waiting_mutex = ft_nullptr;
+    state.wait_started_ms = 0;
     if (!g_registry_mutex_owned)
     {
         lock_error = pt_lock_tracking::lock_registry_mutex();
@@ -586,12 +776,10 @@ int pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier,
         g_registry_mutex_owned = true;
         lock_acquired = true;
     }
-    info = pt_lock_tracking::find_thread_info(thread_identifier, &error_code);
+    info = pt_lock_tracking::lookup_thread_info(thread_identifier, &error_code);
     if (info == ft_nullptr)
     {
-        if (!lock_acquired && error_code == FT_ERR_SUCCESS)
-            result_code = FT_ERR_INVALID_STATE;
-        else
+        if (error_code != FT_ERR_SUCCESS)
             result_code = error_code;
         goto cleanup_state;
     }

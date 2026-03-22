@@ -98,6 +98,14 @@ static int32_t build_item_from_group(game_item &item, json_group *group, const f
 
 int32_t deserialize_inventory(game_inventory &inventory, json_group *group)
 {
+    int32_t initialize_error;
+
+    initialize_error = inventory.destroy();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    initialize_error = inventory.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     json_item *capacity_item = json_find_item(group, "capacity");
     if (!capacity_item)
     {

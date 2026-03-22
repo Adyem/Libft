@@ -8,6 +8,7 @@
 #include <csetjmp>
 #include "../../Basic/basic.hpp"
 #include "../../PThread/mutex.hpp"
+#include "../../PThread/recursive_mutex.hpp"
 #include "../../PThread/pthread_lock_tracking.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
@@ -64,6 +65,29 @@ struct s_foreign_owned_shared_state
     std::atomic<int> unlock_result;
     std::atomic<int> unlock_error;
     pt_thread_id_type worker_thread_identifier;
+};
+
+struct s_thread_id_capture_state
+{
+    std::atomic<int> stage;
+    std::atomic<pt_thread_id_type> thread_identifier;
+};
+
+struct s_recursive_holder_shared_state
+{
+    pt_recursive_mutex *mutex_pointer;
+    std::atomic<int> stage;
+    std::atomic<int> lock_result;
+    std::atomic<int> unlock_result;
+    std::atomic<pt_thread_id_type> thread_identifier;
+};
+
+struct s_recursive_contender_shared_state
+{
+    pt_recursive_mutex *mutex_pointer;
+    std::atomic<int> stage;
+    std::atomic<int> lock_result;
+    std::atomic<pt_thread_id_type> thread_identifier;
 };
 
 static void initialize_shared_state(s_lock_cycle_shared *shared, pt_mutex *first_mutex, pt_mutex *second_mutex)
@@ -223,6 +247,37 @@ static void initialize_foreign_owned_shared_state(s_foreign_owned_shared_state *
     return ;
 }
 
+static void initialize_thread_id_capture_state(
+    s_thread_id_capture_state *shared_state)
+{
+    shared_state->stage.store(0);
+    shared_state->thread_identifier.store(0);
+    return ;
+}
+
+static void initialize_recursive_holder_shared_state(
+    s_recursive_holder_shared_state *shared_state,
+    pt_recursive_mutex *mutex_pointer)
+{
+    shared_state->mutex_pointer = mutex_pointer;
+    shared_state->stage.store(0);
+    shared_state->lock_result.store(0);
+    shared_state->unlock_result.store(0);
+    shared_state->thread_identifier.store(0);
+    return ;
+}
+
+static void initialize_recursive_contender_shared_state(
+    s_recursive_contender_shared_state *shared_state,
+    pt_recursive_mutex *mutex_pointer)
+{
+    shared_state->mutex_pointer = mutex_pointer;
+    shared_state->stage.store(0);
+    shared_state->lock_result.store(0);
+    shared_state->thread_identifier.store(0);
+    return ;
+}
+
 static void *try_lock_worker(void *argument)
 {
     s_try_lock_shared_state *shared_state;
@@ -261,6 +316,46 @@ static void *foreign_owned_mutex_worker(void *argument)
     shared_state->unlock_result.store(shared_state->mutex_pointer->unlock());
     shared_state->unlock_error.store(FT_ERR_SUCCESS);
     shared_state->stage.store(4);
+    return (ft_nullptr);
+}
+
+static void *thread_id_capture_worker(void *argument)
+{
+    s_thread_id_capture_state *shared_state;
+
+    shared_state = static_cast<s_thread_id_capture_state *>(argument);
+    shared_state->thread_identifier.store(THREAD_ID);
+    shared_state->stage.store(1);
+    return (ft_nullptr);
+}
+
+static void *recursive_holder_worker(void *argument)
+{
+    s_recursive_holder_shared_state *shared_state;
+
+    shared_state = static_cast<s_recursive_holder_shared_state *>(argument);
+    shared_state->thread_identifier.store(THREAD_ID);
+    shared_state->stage.store(1);
+    shared_state->lock_result.store(shared_state->mutex_pointer->lock());
+    shared_state->stage.store(2);
+    while (shared_state->stage.load() < 3)
+    {
+        pt_thread_sleep(1);
+    }
+    shared_state->unlock_result.store(shared_state->mutex_pointer->unlock());
+    shared_state->stage.store(4);
+    return (ft_nullptr);
+}
+
+static void *recursive_contender_worker(void *argument)
+{
+    s_recursive_contender_shared_state *shared_state;
+
+    shared_state = static_cast<s_recursive_contender_shared_state *>(argument);
+    shared_state->thread_identifier.store(THREAD_ID);
+    shared_state->stage.store(1);
+    shared_state->lock_result.store(shared_state->mutex_pointer->lock());
+    shared_state->stage.store(2);
     return (ft_nullptr);
 }
 
@@ -426,11 +521,11 @@ cleanup:
     {
         int join_result;
 
-        join_result = pt_thread_join(worker_thread, ft_nullptr);
+        join_result = pt_thread_timed_join(worker_thread, ft_nullptr, 5000);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
-            failure_expression = "join_result == 0";
+            failure_expression = "pt_thread_timed_join(worker_thread, ft_nullptr, 5000) == 0";
             failure_line = __LINE__;
         }
     }
@@ -672,6 +767,282 @@ cleanup:
             failure_line = __LINE__;
         }
     }
+    if (mutex_initialized == 1)
+        (void)mutex_object.destroy();
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        #undef RECORD_ASSERT
+        return (0);
+    }
+    #undef RECORD_ASSERT
+    return (1);
+}
+
+FT_TEST(test_pt_lock_tracking_query_apis_do_not_mutate_registry_on_miss)
+{
+    s_thread_id_capture_state capture_state;
+    pthread_t worker_thread;
+    pt_mutex_vector owned_mutexes;
+    s_pt_lock_tracking_thread_state state;
+    pt_buffer<s_pt_thread_lock_info> *thread_infos;
+    ft_size_t size_before;
+    ft_size_t size_after;
+    int error_code;
+
+    initialize_thread_id_capture_state(&capture_state);
+    pt_buffer_init(state.owned_mutexes);
+    FT_ASSERT_EQ(0, pt_thread_create(&worker_thread, ft_nullptr,
+        thread_id_capture_worker, &capture_state));
+    FT_ASSERT(wait_for_stage(&capture_state.stage, 1));
+    FT_ASSERT_NEQ(0, capture_state.thread_identifier.load());
+    FT_ASSERT_EQ(0, pt_thread_join(worker_thread, ft_nullptr));
+    error_code = FT_ERR_SUCCESS;
+    thread_infos = pt_lock_tracking::get_thread_infos(&error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
+    FT_ASSERT_NEQ(ft_nullptr, thread_infos);
+    size_before = thread_infos->size;
+    owned_mutexes = pt_lock_tracking::get_owned_mutexes(
+        capture_state.thread_identifier.load(), &error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
+    FT_ASSERT_EQ(0U, owned_mutexes.size);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::get_thread_state(
+        capture_state.thread_identifier.load(), state));
+    FT_ASSERT_EQ(capture_state.thread_identifier.load(), state.thread_identifier);
+    FT_ASSERT_EQ(0U, state.owned_mutexes.size);
+    FT_ASSERT_EQ(ft_nullptr, state.waiting_mutex);
+    FT_ASSERT_EQ(0L, state.wait_started_ms);
+    error_code = FT_ERR_SUCCESS;
+    thread_infos = pt_lock_tracking::get_thread_infos(&error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
+    FT_ASSERT_NEQ(ft_nullptr, thread_infos);
+    size_after = thread_infos->size;
+    FT_ASSERT_EQ(size_before, size_after);
+    pt_buffer_destroy(owned_mutexes);
+    pt_buffer_destroy(state.owned_mutexes);
+    return (1);
+}
+
+FT_TEST(test_pt_lock_tracking_owner_index_tracks_acquire_release)
+{
+    s_thread_id_capture_state capture_state;
+    pthread_t worker_thread;
+    pt_mutex mutex_object;
+    pt_lock_wait_snapshot_vector snapshot;
+    int snapshot_error;
+
+    initialize_thread_id_capture_state(&capture_state);
+    pt_buffer_init(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
+    FT_ASSERT_EQ(0, pt_thread_create(&worker_thread, ft_nullptr,
+        thread_id_capture_worker, &capture_state));
+    FT_ASSERT(wait_for_stage(&capture_state.stage, 1));
+    FT_ASSERT_NEQ(0, capture_state.thread_identifier.load());
+    FT_ASSERT_EQ(0, pt_thread_join(worker_thread, ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_acquired(
+        capture_state.thread_identifier.load(),
+        static_cast<const void *>(&mutex_object)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_wait(THREAD_ID,
+        static_cast<const void *>(&mutex_object)));
+    snapshot_error = pt_lock_tracking::snapshot_waiters(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, snapshot_error);
+    FT_ASSERT_EQ(1U, snapshot.size);
+    FT_ASSERT_EQ(static_cast<const void *>(&mutex_object),
+        snapshot.data[0].mutex_pointer);
+    FT_ASSERT_EQ(capture_state.thread_identifier.load(),
+        snapshot.data[0].owner_thread);
+    FT_ASSERT_EQ(THREAD_ID, snapshot.data[0].waiting_thread);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_released(
+        capture_state.thread_identifier.load(),
+        static_cast<const void *>(&mutex_object)));
+    snapshot_error = pt_lock_tracking::snapshot_waiters(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, snapshot_error);
+    FT_ASSERT_EQ(1U, snapshot.size);
+    FT_ASSERT_EQ(0, snapshot.data[0].owner_thread);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(THREAD_ID));
+    pt_buffer_destroy(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
+    return (1);
+}
+
+FT_TEST(test_pt_lock_tracking_notify_thread_exit_clears_stale_state)
+{
+    s_thread_id_capture_state capture_state;
+    pthread_t worker_thread;
+    pt_mutex first_mutex;
+    pt_mutex second_mutex;
+    s_pt_lock_tracking_thread_state state;
+    pt_lock_wait_snapshot_vector snapshot;
+
+    initialize_thread_id_capture_state(&capture_state);
+    pt_buffer_init(state.owned_mutexes);
+    pt_buffer_init(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_mutex.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.initialize());
+    FT_ASSERT_EQ(0, pt_thread_create(&worker_thread, ft_nullptr,
+        thread_id_capture_worker, &capture_state));
+    FT_ASSERT(wait_for_stage(&capture_state.stage, 1));
+    FT_ASSERT_EQ(0, pt_thread_join(worker_thread, ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_acquired(
+        capture_state.thread_identifier.load(),
+        static_cast<const void *>(&first_mutex)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_wait(
+        capture_state.thread_identifier.load(),
+        static_cast<const void *>(&second_mutex)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(
+        capture_state.thread_identifier.load()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::get_thread_state(
+        capture_state.thread_identifier.load(), state));
+    FT_ASSERT_EQ(0U, state.owned_mutexes.size);
+    FT_ASSERT_EQ(ft_nullptr, state.waiting_mutex);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::snapshot_waiters(snapshot));
+    FT_ASSERT_EQ(0U, snapshot.size);
+    pt_buffer_destroy(snapshot);
+    pt_buffer_destroy(state.owned_mutexes);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_mutex.destroy());
+    return (1);
+}
+
+FT_TEST(test_pt_lock_tracking_detect_cycle_reports_allocation_failure)
+{
+    s_thread_id_capture_state first_capture_state;
+    s_thread_id_capture_state second_capture_state;
+    pthread_t first_thread;
+    pthread_t second_thread;
+    pt_mutex first_mutex;
+    pt_mutex second_mutex;
+    pt_mutex third_mutex;
+    s_pt_thread_lock_info origin;
+    pt_mutex_vector visited_mutexes;
+    pt_thread_vector visited_threads;
+    bool cycle_detected;
+    int detect_error;
+
+    initialize_thread_id_capture_state(&first_capture_state);
+    initialize_thread_id_capture_state(&second_capture_state);
+    pt_buffer_init(origin.owned_mutexes);
+    pt_buffer_init(visited_mutexes);
+    pt_buffer_init(visited_threads);
+    origin.thread_identifier = THREAD_ID;
+    origin.waiting_mutex = ft_nullptr;
+    origin.wait_started_ms = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_mutex.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, third_mutex.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_buffer_push(origin.owned_mutexes,
+        static_cast<const void *>(&first_mutex)));
+    FT_ASSERT_EQ(0, pt_thread_create(&first_thread, ft_nullptr,
+        thread_id_capture_worker, &first_capture_state));
+    FT_ASSERT_EQ(0, pt_thread_create(&second_thread, ft_nullptr,
+        thread_id_capture_worker, &second_capture_state));
+    FT_ASSERT(wait_for_stage(&first_capture_state.stage, 1));
+    FT_ASSERT(wait_for_stage(&second_capture_state.stage, 1));
+    FT_ASSERT_EQ(0, pt_thread_join(first_thread, ft_nullptr));
+    FT_ASSERT_EQ(0, pt_thread_join(second_thread, ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_acquired(
+        first_capture_state.thread_identifier.load(),
+        static_cast<const void *>(&second_mutex)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_wait(
+        first_capture_state.thread_identifier.load(),
+        static_cast<const void *>(&third_mutex)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_acquired(
+        second_capture_state.thread_identifier.load(),
+        static_cast<const void *>(&third_mutex)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_wait(
+        second_capture_state.thread_identifier.load(),
+        static_cast<const void *>(&first_mutex)));
+    pt_lock_tracking_detect_cycle_override_error_code.store(FT_ERR_NO_MEMORY);
+    cycle_detected = false;
+    detect_error = pt_lock_tracking::detect_cycle(&origin,
+        static_cast<const void *>(&second_mutex), &visited_mutexes,
+        &visited_threads, &cycle_detected);
+    pt_lock_tracking_detect_cycle_override_error_code.store(FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, detect_error);
+    FT_ASSERT_EQ(false, cycle_detected);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(
+        first_capture_state.thread_identifier.load()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(
+        second_capture_state.thread_identifier.load()));
+    pt_buffer_destroy(visited_threads);
+    pt_buffer_destroy(visited_mutexes);
+    pt_buffer_destroy(origin.owned_mutexes);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, third_mutex.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_mutex.destroy());
+    return (1);
+}
+
+FT_TEST(test_pt_recursive_mutex_lock_notify_acquired_failure_clears_wait_state)
+{
+    pt_recursive_mutex mutex_object;
+    s_recursive_holder_shared_state holder_state;
+    s_recursive_contender_shared_state contender_state;
+    pthread_t holder_thread;
+    pthread_t contender_thread;
+    s_pt_lock_tracking_thread_state thread_state;
+    int holder_thread_created;
+    int contender_thread_created;
+    int mutex_initialized;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+#define RECORD_ASSERT(expression) \
+    if (!(expression) && test_failed == 0) \
+    { \
+        test_failed = 1; \
+        failure_expression = #expression; \
+        failure_line = __LINE__; \
+        goto cleanup; \
+    }
+
+    initialize_recursive_holder_shared_state(&holder_state, &mutex_object);
+    initialize_recursive_contender_shared_state(&contender_state, &mutex_object);
+    pt_buffer_init(thread_state.owned_mutexes);
+    holder_thread_created = 0;
+    contender_thread_created = 0;
+    mutex_initialized = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (mutex_object.initialize() != FT_ERR_SUCCESS)
+        RECORD_ASSERT(0);
+    mutex_initialized = 1;
+    if (pt_thread_create(&holder_thread, ft_nullptr, recursive_holder_worker,
+            &holder_state) != 0)
+        RECORD_ASSERT(0);
+    holder_thread_created = 1;
+    RECORD_ASSERT(wait_for_stage(&holder_state.stage, 2));
+    RECORD_ASSERT(holder_state.lock_result.load() == FT_ERR_SUCCESS);
+    pt_lock_tracking_notify_acquired_override_error_code.store(FT_ERR_NO_MEMORY);
+    if (pt_thread_create(&contender_thread, ft_nullptr,
+            recursive_contender_worker, &contender_state) != 0)
+        RECORD_ASSERT(0);
+    contender_thread_created = 1;
+    RECORD_ASSERT(wait_for_stage(&contender_state.stage, 1));
+    holder_state.stage.store(3);
+    RECORD_ASSERT(wait_for_stage(&holder_state.stage, 4));
+    RECORD_ASSERT(holder_state.unlock_result.load() == FT_ERR_SUCCESS);
+    RECORD_ASSERT(wait_for_stage(&contender_state.stage, 2));
+    pt_lock_tracking_notify_acquired_override_error_code.store(FT_ERR_SUCCESS);
+    RECORD_ASSERT(contender_state.lock_result.load() == FT_ERR_NO_MEMORY);
+    RECORD_ASSERT(pt_lock_tracking::get_thread_state(
+        contender_state.thread_identifier.load(), thread_state)
+        == FT_ERR_SUCCESS);
+    RECORD_ASSERT(thread_state.owned_mutexes.size == 0U);
+    RECORD_ASSERT(thread_state.waiting_mutex == ft_nullptr);
+    RECORD_ASSERT(thread_state.wait_started_ms == 0L);
+
+cleanup:
+    pt_lock_tracking_notify_acquired_override_error_code.store(FT_ERR_SUCCESS);
+    if (holder_thread_created == 1 && holder_state.stage.load() < 3)
+        holder_state.stage.store(3);
+    if (contender_thread_created == 1)
+        (void)pt_thread_join(contender_thread, ft_nullptr);
+    if (holder_thread_created == 1)
+        (void)pt_thread_join(holder_thread, ft_nullptr);
+    pt_buffer_destroy(thread_state.owned_mutexes);
     if (mutex_initialized == 1)
         (void)mutex_object.destroy();
     if (test_failed != 0)

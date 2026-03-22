@@ -14,8 +14,7 @@
 
 FT_TEST(test_encryption_fill_secure_buffer_null_buffer_sets_errno)
 {
-    if (encryption_fill_secure_buffer(ft_nullptr, 16) != -1)
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, encryption_fill_secure_buffer(ft_nullptr, 16));
     return (1);
 }
 
@@ -24,8 +23,7 @@ FT_TEST(test_encryption_fill_secure_buffer_zero_length_sets_errno)
     unsigned char buffer[1];
 
     buffer[0] = 0;
-    if (encryption_fill_secure_buffer(buffer, 0) != -1)
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, encryption_fill_secure_buffer(buffer, 0));
     return (1);
 }
 

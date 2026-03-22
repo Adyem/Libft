@@ -22,6 +22,8 @@ FT_TEST(test_game_world_replay_capture_restore_replay)
     game_world_replay_session session;
     game_character hero_character;
     game_inventory hero_inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_character.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_character.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.initialize(4, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.get_error());
     ft_sharedptr<game_item> healing_potion(new (std::nothrow) game_item());
@@ -33,6 +35,8 @@ FT_TEST(test_game_world_replay_capture_restore_replay)
 
     FT_ASSERT(world_pointer.get() != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, session.initialize());
+    FT_ASSERT(healing_potion.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, healing_potion->initialize());
     FT_ASSERT(damage_event.get() != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, damage_event->initialize());
 
@@ -109,6 +113,8 @@ FT_TEST(test_game_world_replay_import_export_clear)
     game_world_replay_session imported_session;
     game_character hero_character;
     game_inventory hero_inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_character.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_character.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.initialize(2, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.get_error());
     ft_string exported_snapshot;

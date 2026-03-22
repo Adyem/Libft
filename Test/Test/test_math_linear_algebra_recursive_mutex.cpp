@@ -11,6 +11,9 @@ FT_TEST(test_vector2_recursive_mutex_lock_unlock_paths)
     pt_recursive_mutex *mutex_pointer;
 
     mutex_pointer = vector_value._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
+    mutex_pointer = vector_value._mutex;
     FT_ASSERT_NE(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
@@ -29,6 +32,9 @@ FT_TEST(test_vector3_recursive_mutex_lock_unlock_paths)
     pt_recursive_mutex *mutex_pointer;
 
     mutex_pointer = vector_value._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
+    mutex_pointer = vector_value._mutex;
     FT_ASSERT_NE(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
@@ -45,6 +51,9 @@ FT_TEST(test_vector4_recursive_mutex_lock_unlock_paths)
     vector4 vector_value(1.0, 2.0, 3.0, 4.0);
     pt_recursive_mutex *mutex_pointer;
 
+    mutex_pointer = vector_value._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
     mutex_pointer = vector_value._mutex;
     FT_ASSERT_NE(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
@@ -63,6 +72,9 @@ FT_TEST(test_matrix2_recursive_mutex_lock_unlock_paths)
     vector2 vector_value(1.0, 1.0);
     pt_recursive_mutex *mutex_pointer;
 
+    mutex_pointer = matrix_value._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
     mutex_pointer = matrix_value._mutex;
     FT_ASSERT_NE(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
@@ -86,6 +98,9 @@ FT_TEST(test_matrix3_recursive_mutex_lock_unlock_paths)
     vector3 vector_value(1.0, 0.0, -1.0);
     pt_recursive_mutex *mutex_pointer;
 
+    mutex_pointer = matrix_value._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
     mutex_pointer = matrix_value._mutex;
     FT_ASSERT_NE(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
@@ -112,6 +127,9 @@ FT_TEST(test_matrix4_recursive_mutex_lock_unlock_paths)
     pt_recursive_mutex *mutex_pointer;
 
     mutex_pointer = matrix_value._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
+    mutex_pointer = matrix_value._mutex;
     FT_ASSERT_NE(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
@@ -134,6 +152,9 @@ FT_TEST(test_quaternion_recursive_mutex_lock_unlock_paths)
     pt_recursive_mutex *mutex_pointer;
     double normalized_length;
 
+    mutex_pointer = quaternion_value._mutex;
+    FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.enable_thread_safety());
     mutex_pointer = quaternion_value._mutex;
     FT_ASSERT_NE(ft_nullptr, mutex_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());

@@ -167,40 +167,64 @@ asan-ubsan-tests: sanitize-clean
 
 re: fclean all
 
-define EXTRACT
-cd temp_objs && $(AR) x ../$1 && cd ..;
-endef
-
 $(TARGET): $(LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
 	@$(RM) $@
+	@$(RMDIR) temp_objs
 	@$(MKDIR) temp_objs
-	@$(foreach lib,$(LIBS),$(call EXTRACT,$(lib)))
-	@$(AR) $(ARFLAGS) $@ temp_objs/*.o
+	@temp_index=0; \
+	for lib in $(LIBS); do \
+		temp_index=$$((temp_index + 1)); \
+		$(MKDIR) temp_objs/$$temp_index; \
+		cd temp_objs/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
+	done
+	@find temp_objs -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
+	@find temp_objs -mindepth 1 -exec rm -rf {} +
 	@$(RMDIR) temp_objs
 
 $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
+	@$(RMDIR) temp_objs
 	@$(MKDIR) temp_objs
-	@$(foreach lib,$(DEBUG_LIBS),$(call EXTRACT,$(lib)))
-	@$(AR) $(ARFLAGS) $@ temp_objs/*.o
+	@temp_index=0; \
+	for lib in $(DEBUG_LIBS); do \
+		temp_index=$$((temp_index + 1)); \
+		$(MKDIR) temp_objs/$$temp_index; \
+		cd temp_objs/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
+	done
+	@find temp_objs -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
+	@find temp_objs -mindepth 1 -exec rm -rf {} +
 	@$(RMDIR) temp_objs
 
 $(TEST_TARGET): $(TEST_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_TEST_LIBS) $@
 	@$(RM) $@
+	@$(RMDIR) temp_objs_test
 	@$(MKDIR) temp_objs_test
-	@$(foreach lib,$(TEST_LIBS),cd temp_objs_test && $(AR) x ../$(lib) && cd ..;)
-	@$(AR) $(ARFLAGS) $@ temp_objs_test/*.o
+	@temp_index=0; \
+	for lib in $(TEST_LIBS); do \
+		temp_index=$$((temp_index + 1)); \
+		$(MKDIR) temp_objs_test/$$temp_index; \
+		cd temp_objs_test/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
+	done
+	@find temp_objs_test -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
+	@find temp_objs_test -mindepth 1 -exec rm -rf {} +
 	@$(RMDIR) temp_objs_test
 
 $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
+	@$(RMDIR) temp_objs_test
 	@$(MKDIR) temp_objs_test
-	@$(foreach lib,$(DEBUG_LIBS),cd temp_objs_test && $(AR) x ../$(lib) && cd ..;)
-	@$(AR) $(ARFLAGS) $@ temp_objs_test/*.o
+	@temp_index=0; \
+	for lib in $(DEBUG_LIBS); do \
+		temp_index=$$((temp_index + 1)); \
+		$(MKDIR) temp_objs_test/$$temp_index; \
+		cd temp_objs_test/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
+	done
+	@find temp_objs_test -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
+	@find temp_objs_test -mindepth 1 -exec rm -rf {} +
 	@$(RMDIR) temp_objs_test
 
 %.a: FORCE

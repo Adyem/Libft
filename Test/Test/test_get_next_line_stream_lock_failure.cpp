@@ -14,7 +14,8 @@ static ssize_t gnl_stream_test_callback(void *, char *buffer, size_t max_size) n
 }
 
 #define GNL_STREAM_PREPARE(stream) \
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream.initialize()); \
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream.enable_thread_safety());
 
 #define GNL_STREAM_CLEANUP(stream) \
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream.destroy());

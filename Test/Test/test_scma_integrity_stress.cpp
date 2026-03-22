@@ -93,7 +93,7 @@ namespace
         reported_size = scma_get_size(record.handle);
         FT_ASSERT_EQ(record.bytes.size(), reported_size);
         read_buffer.resize(record.bytes.size());
-        FT_ASSERT_EQ(1, scma_read(record.handle, 0, read_buffer.data(),
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(record.handle, 0, read_buffer.data(),
             record.bytes.size()));
         FT_ASSERT(scma_buffers_match(record.bytes, read_buffer));
         return (1);
@@ -133,7 +133,7 @@ namespace
         ft_size_t expected_used_size;
 
         ft_bzero(&stats, sizeof(stats));
-        FT_ASSERT_EQ(1, scma_get_stats(&stats));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_get_stats(&stats));
         expected_used_size = scma_sum_record_sizes(records);
         FT_ASSERT_EQ(expected_used_size, stats.used_size);
         FT_ASSERT(stats.heap_capacity >= stats.used_size);
@@ -172,7 +172,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
             {
                 record.bytes.resize(allocation_size);
                 scma_fill_random_bytes(record.bytes, random_engine);
-                FT_ASSERT_EQ(1, scma_write(record.handle, 0, record.bytes.data(),
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(record.handle, 0, record.bytes.data(),
                     record.bytes.size()));
                 records.push_back(record);
                 FT_ASSERT_EQ(1, scma_handle_is_valid(record.handle));
@@ -189,7 +189,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
             if (operation_selector == 1)
             {
                 scma_fill_random_bytes(record_pointer->bytes, random_engine);
-                FT_ASSERT_EQ(1, scma_write(record_pointer->handle, 0,
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(record_pointer->handle, 0,
                     record_pointer->bytes.data(), record_pointer->bytes.size()));
             }
             else if (operation_selector == 2)
@@ -211,7 +211,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
                     % (record_size - offset)) + 1U);
                 patch_bytes.resize(write_size);
                 scma_fill_random_bytes(patch_bytes, random_engine);
-                FT_ASSERT_EQ(1, scma_write(record_pointer->handle, offset,
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(record_pointer->handle, offset,
                     patch_bytes.data(), patch_bytes.size()));
                 patch_index = 0;
                 while (patch_index < patch_bytes.size())
@@ -220,7 +220,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
                     patch_index += 1;
                 }
                 read_back_bytes.resize(write_size);
-                FT_ASSERT_EQ(1, scma_read(record_pointer->handle, offset,
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(record_pointer->handle, offset,
                     read_back_bytes.data(), read_back_bytes.size()));
                 FT_ASSERT(scma_buffers_match(patch_bytes, read_back_bytes));
             }
@@ -235,7 +235,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
 
                 previous_bytes = record_pointer->bytes;
                 new_size = (random_engine() % 1024U) + 1U;
-                FT_ASSERT_EQ(1, scma_resize(record_pointer->handle, new_size));
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_resize(record_pointer->handle, new_size));
                 FT_ASSERT_EQ(new_size, scma_get_size(record_pointer->handle));
                 preserved_size = previous_bytes.size();
                 if (preserved_size > new_size)
@@ -243,7 +243,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
                 preserved_bytes.resize(preserved_size);
                 if (preserved_size > 0)
                 {
-                    FT_ASSERT_EQ(1, scma_read(record_pointer->handle, 0,
+                    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(record_pointer->handle, 0,
                         preserved_bytes.data(), preserved_bytes.size()));
                     FT_ASSERT(scma_buffer_prefix_matches(previous_bytes,
                         preserved_bytes, preserved_size));
@@ -254,7 +254,7 @@ FT_TEST(test_scma_integrity_stress_random_operations)
                     tail_offset = preserved_size;
                     tail_bytes.resize(new_size - preserved_size);
                     scma_fill_random_bytes(tail_bytes, random_engine);
-                    FT_ASSERT_EQ(1, scma_write(record_pointer->handle, tail_offset,
+                    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(record_pointer->handle, tail_offset,
                         tail_bytes.data(), tail_bytes.size()));
                     size_t tail_index = 0;
 

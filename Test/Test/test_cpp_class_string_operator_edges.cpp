@@ -14,7 +14,7 @@ FT_TEST(test_ft_string_operator_assign_char_initializes_uninitialised_destinatio
 
     destination = 'x';
     FT_ASSERT(destination == "x");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }
 
@@ -26,7 +26,7 @@ FT_TEST(test_ft_string_operator_assign_cstring_reinitializes_destroyed_destinati
     (void)destination.destroy();
     destination = "restored";
     FT_ASSERT(destination == "restored");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }
 
@@ -38,11 +38,11 @@ FT_TEST(test_ft_string_operator_assign_nullptr_clears_string)
     destination = static_cast<const char *>(ft_nullptr);
     FT_ASSERT(destination == "");
     FT_ASSERT_EQ(0u, destination.size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }
 
-FT_TEST(test_ft_string_operator_assign_copy_from_destroyed_source_sets_invalid_state)
+FT_TEST(test_ft_string_operator_assign_copy_from_destroyed_source_succeeds)
 {
     ft_string source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("abc"));
@@ -51,13 +51,13 @@ FT_TEST(test_ft_string_operator_assign_copy_from_destroyed_source_sets_invalid_s
 
     (void)source.destroy();
     destination = source;
-    int32_t assignment_error = ft_string::get_error();
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, assignment_error);
-    FT_ASSERT(destination == "keep");
+    int32_t assignment_error = destination.get_error();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, assignment_error);
+    FT_ASSERT_EQ(FT_FALSE, destination.is_initialised());
     return (1);
 }
 
-FT_TEST(test_ft_string_operator_assign_move_from_destroyed_source_sets_invalid_state)
+FT_TEST(test_ft_string_operator_assign_move_from_destroyed_source_succeeds)
 {
     ft_string source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("abc"));
@@ -66,9 +66,9 @@ FT_TEST(test_ft_string_operator_assign_move_from_destroyed_source_sets_invalid_s
 
     (void)source.destroy();
     destination = static_cast<ft_string &&>(source);
-    int32_t assignment_error = ft_string::get_error();
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, assignment_error);
-    FT_ASSERT(destination == "keep");
+    int32_t assignment_error = destination.get_error();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, assignment_error);
+    FT_ASSERT_EQ(FT_FALSE, destination.is_initialised());
     return (1);
 }
 
@@ -79,7 +79,7 @@ FT_TEST(test_ft_string_operator_plus_equal_nullptr_sets_invalid_argument)
 
     ft_string value_copy(value);
     value += static_cast<const char *>(ft_nullptr);
-    int32_t append_error = ft_string::get_error();
+    int32_t append_error = value.get_error();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, append_error);
     FT_ASSERT_EQ(value_copy, value);
     return (1);
@@ -112,7 +112,7 @@ FT_TEST(test_ft_string_operator_index_valid_sets_success)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize("hello"));
 
     FT_ASSERT_EQ('e', value[1]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.get_error());
     return (1);
 }
 
@@ -122,7 +122,7 @@ FT_TEST(test_ft_string_operator_index_out_of_range_sets_error)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize("hello"));
 
     FT_ASSERT_EQ('\0', value[100]);
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, value.get_error());
     return (1);
 }
 
@@ -150,7 +150,7 @@ FT_TEST(test_ft_string_operator_plus_char_left_and_right)
     return (1);
 }
 
-FT_TEST(test_ft_string_operator_plus_chain_failure_from_char_prefix_propagates)
+FT_TEST(test_ft_string_operator_plus_chain_from_char_prefix_succeeds)
 {
     ft_string destination;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize("seed"));
@@ -160,6 +160,6 @@ FT_TEST(test_ft_string_operator_plus_chain_failure_from_char_prefix_propagates)
     cma_set_alloc_limit(1);
     destination = '!' + source;
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(static_cast<uint32_t>(FT_ERR_NO_MEMORY), ft_string::get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }

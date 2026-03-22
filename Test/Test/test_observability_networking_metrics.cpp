@@ -57,7 +57,7 @@ static void observability_test_exporter(const ft_networking_observability_sample
 FT_TEST(test_observability_networking_initialize_rejects_null_exporter)
 {
     observability_networking_metrics_shutdown();
-    FT_ASSERT_EQ(-1, observability_networking_metrics_initialize(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, observability_networking_metrics_initialize(ft_nullptr));
     observability_networking_metrics_shutdown();
     return (1);
 }
@@ -94,6 +94,7 @@ FT_TEST(test_observability_networking_record_populates_defaults)
     ft_networking_observability_sample sample;
 
     observability_networking_metrics_shutdown();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, observability_networking_metrics_enable_thread_safety());
     observability_reset_last_sample();
     g_observability_export_count = 0;
 
@@ -120,6 +121,7 @@ FT_TEST(test_observability_networking_record_populates_defaults)
     FT_ASSERT(observability_strings_equal("ok", g_observability_last_sample.error_tag));
 
     FT_ASSERT_EQ(0, observability_networking_metrics_shutdown());
+    FT_ASSERT_EQ(0, observability_networking_metrics_disable_thread_safety());
     return (1);
 }
 
@@ -129,6 +131,7 @@ FT_TEST(test_observability_networking_record_propagates_error_details)
     const char *expected_tag;
 
     observability_networking_metrics_shutdown();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, observability_networking_metrics_enable_thread_safety());
     observability_reset_last_sample();
     g_observability_export_count = 0;
 
@@ -156,5 +159,6 @@ FT_TEST(test_observability_networking_record_propagates_error_details)
     FT_ASSERT(g_observability_last_sample.success == false);
 
     FT_ASSERT_EQ(0, observability_networking_metrics_shutdown());
+    FT_ASSERT_EQ(0, observability_networking_metrics_disable_thread_safety());
     return (1);
 }

@@ -7,7 +7,7 @@
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
 
-uint32_t    scma_initialize(ft_size_t initial_capacity)
+int32_t    scma_initialize(ft_size_t initial_capacity)
 {
     int32_t thread_safety_result;
     unsigned char *&heap_data = scma_heap_data_ref();
@@ -205,7 +205,7 @@ scma_handle    scma_allocate(ft_size_t size)
     return (scma_unlock_and_return_handle(result_handle));
 }
 
-uint32_t    scma_free(scma_handle handle)
+int32_t    scma_free(scma_handle handle)
 {
     scma_block *block;
 
@@ -225,7 +225,7 @@ uint32_t    scma_free(scma_handle handle)
     return (static_cast<uint32_t>(scma_unlock_and_return_int(FT_ERR_SUCCESS)));
 }
 
-uint32_t    scma_resize(scma_handle handle, ft_size_t new_size)
+int32_t    scma_resize(scma_handle handle, ft_size_t new_size)
 {
     scma_block *block;
     ft_size_t old_size;

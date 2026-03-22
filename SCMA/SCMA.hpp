@@ -19,19 +19,19 @@ struct scma_handle
 
 scma_handle    scma_invalid_handle(void);
 
-uint32_t    scma_initialize(ft_size_t initial_capacity);
+int32_t    scma_initialize(ft_size_t initial_capacity);
 void    scma_shutdown(void);
 int32_t     scma_is_initialised(void);
 
 scma_handle    scma_allocate(ft_size_t size);
-uint32_t    scma_free(scma_handle handle);
-uint32_t    scma_resize(scma_handle handle, ft_size_t new_size);
+int32_t    scma_free(scma_handle handle);
+int32_t    scma_resize(scma_handle handle, ft_size_t new_size);
 ft_size_t    scma_get_size(scma_handle handle);
 int32_t     scma_handle_is_valid(scma_handle handle);
 
-uint32_t    scma_write(scma_handle handle, ft_size_t offset,
+int32_t    scma_write(scma_handle handle, ft_size_t offset,
             const void *source, ft_size_t size);
-uint32_t    scma_read(scma_handle handle, ft_size_t offset,
+int32_t    scma_read(scma_handle handle, ft_size_t offset,
             void *destination, ft_size_t size);
 
 struct scma_stats
@@ -459,12 +459,12 @@ inline int32_t    scma_handle_accessor<TValue>::read_struct(TValue &destination)
     if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
-        return (0);
+        return (FT_ERR_INVALID_STATE);
     }
     if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
-        return (0);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
     if (!std::is_trivially_copyable<TValue>::value)
     {
@@ -549,13 +549,13 @@ inline int32_t    scma_handle_accessor<TValue>::write_struct(const TValue &sourc
         this->set_error(FT_ERR_OUT_OF_RANGE);
         goto cleanup;
     }
-    if (!scma_write(this->_handle, 0, &source, required_size))
+    if (scma_write(this->_handle, 0, &source, required_size) != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_INVALID_OPERATION);
         goto cleanup;
     }
     this->set_error(FT_ERR_SUCCESS);
-    write_result = 1;
+    write_result = FT_ERR_SUCCESS;
 
 cleanup:
     (void)scma_mutex_unlock();
@@ -573,16 +573,16 @@ inline int32_t    scma_handle_accessor<TValue>::read_at
     ft_size_t host_size;
     ft_size_t block_size;
 
-    read_result = 0;
+    read_result = FT_ERR_INVALID_STATE;
     if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
-        return (0);
+        return (FT_ERR_INVALID_STATE);
     }
     if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
-        return (0);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
     if (!std::is_trivially_copyable<TValue>::value)
     {
@@ -625,13 +625,13 @@ inline int32_t    scma_handle_accessor<TValue>::read_at
         this->set_error(FT_ERR_OUT_OF_RANGE);
         goto cleanup;
     }
-    if (!scma_read(this->_handle, offset, &destination, element_size))
+    if (scma_read(this->_handle, offset, &destination, element_size) != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_INVALID_OPERATION);
         goto cleanup;
     }
     this->set_error(FT_ERR_SUCCESS);
-    read_result = 1;
+    read_result = FT_ERR_SUCCESS;
 
 cleanup:
     (void)scma_mutex_unlock();
@@ -649,16 +649,16 @@ inline int32_t    scma_handle_accessor<TValue>::write_at
     ft_size_t host_size;
     ft_size_t block_size;
 
-    write_result = 0;
+    write_result = FT_ERR_INVALID_STATE;
     if (!this->is_initialised())
     {
         this->set_error(FT_ERR_INVALID_STATE);
-        return (0);
+        return (FT_ERR_INVALID_STATE);
     }
     if (scma_mutex_lock() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
-        return (0);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
     if (!std::is_trivially_copyable<TValue>::value)
     {
@@ -701,13 +701,13 @@ inline int32_t    scma_handle_accessor<TValue>::write_at
         this->set_error(FT_ERR_OUT_OF_RANGE);
         goto cleanup;
     }
-    if (!scma_write(this->_handle, offset, &source, element_size))
+    if (scma_write(this->_handle, offset, &source, element_size) != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_INVALID_OPERATION);
         goto cleanup;
     }
     this->set_error(FT_ERR_SUCCESS);
-    write_result = 1;
+    write_result = FT_ERR_SUCCESS;
 
 cleanup:
     (void)scma_mutex_unlock();
@@ -889,7 +889,7 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
         this->set_error(FT_ERR_INVALID_POINTER);
         return ;
     }
-    if (!this->_parent->read_at(this->_value, this->_index))
+    if (this->_parent->read_at(this->_value, this->_index) != FT_ERR_SUCCESS)
     {
         this->set_error(this->_parent->get_error());
         this->_parent = ft_nullptr;
@@ -936,7 +936,7 @@ inline scma_handle_accessor_element_proxy<TValue>::~scma_handle_accessor_element
         return ;
     if (!this->_should_write_back)
         return ;
-    if (!this->_parent->write_at(this->_value, this->_index))
+    if (this->_parent->write_at(this->_value, this->_index) != FT_ERR_SUCCESS)
     {
         this->set_error(this->_parent->get_error());
         return ;
@@ -1057,7 +1057,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
         this->set_error(FT_ERR_INVALID_POINTER);
         return ;
     }
-    if (!this->_parent->read_at(this->_value, this->_index))
+    if (this->_parent->read_at(this->_value, this->_index) != FT_ERR_SUCCESS)
     {
         this->set_error(this->_parent->get_error());
         this->_parent = ft_nullptr;

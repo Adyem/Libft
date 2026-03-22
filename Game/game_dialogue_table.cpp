@@ -12,13 +12,22 @@ static ft_sharedptr<game_dialogue_line> game_dialogue_table_clone_line(
     const game_dialogue_line &line)
 {
     game_dialogue_line *cloned_line;
+    int32_t initialize_error;
 
     if (line.is_initialised() == FT_FALSE)
         return (ft_sharedptr<game_dialogue_line>());
-    cloned_line = new (std::nothrow) game_dialogue_line(line);
+    cloned_line = new (std::nothrow) game_dialogue_line();
     if (cloned_line == ft_nullptr)
         return (ft_sharedptr<game_dialogue_line>());
-    if (cloned_line->is_initialised() == FT_FALSE)
+    initialize_error = cloned_line->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete cloned_line;
+        return (ft_sharedptr<game_dialogue_line>());
+    }
+    initialize_error = cloned_line->initialize(line.get_line_id(),
+        line.get_speaker(), line.get_text(), line.get_next_line_ids());
+    if (initialize_error != FT_ERR_SUCCESS)
     {
         delete cloned_line;
         return (ft_sharedptr<game_dialogue_line>());
@@ -26,8 +35,57 @@ static ft_sharedptr<game_dialogue_line> game_dialogue_table_clone_line(
     return (ft_sharedptr<game_dialogue_line>(cloned_line));
 }
 
+static game_dialogue_line *game_dialogue_table_clone_line_raw(
+    const game_dialogue_line &line)
+{
+    game_dialogue_line *cloned_line;
+    int32_t initialize_error;
+
+    if (line.is_initialised() == FT_FALSE)
+        return (ft_nullptr);
+    cloned_line = new (std::nothrow) game_dialogue_line();
+    if (cloned_line == ft_nullptr)
+        return (ft_nullptr);
+    initialize_error = cloned_line->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete cloned_line;
+        return (ft_nullptr);
+    }
+    initialize_error = cloned_line->initialize(line.get_line_id(),
+        line.get_speaker(), line.get_text(), line.get_next_line_ids());
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete cloned_line;
+        return (ft_nullptr);
+    }
+    return (cloned_line);
+}
+
+static void game_dialogue_table_clear_line_cache(
+    ft_map<int32_t, game_dialogue_line *> &line_cache) noexcept
+{
+    const Pair<int32_t, game_dialogue_line *> *entry;
+    const Pair<int32_t, game_dialogue_line *> *entry_end;
+    ft_size_t count;
+    ft_size_t index;
+
+    count = line_cache.size();
+    entry_end = line_cache.end();
+    entry = entry_end - count;
+    index = 0;
+    while (index < count)
+    {
+        delete entry->value;
+        entry++;
+        index += 1;
+    }
+    line_cache.clear();
+    return ;
+}
+
 game_dialogue_table::game_dialogue_table() noexcept
-    : _lines(), _scripts(), _mutex(ft_nullptr),
+    : _lines(), _line_cache(), _scripts(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
@@ -35,7 +93,7 @@ game_dialogue_table::game_dialogue_table() noexcept
 }
 
 game_dialogue_table::game_dialogue_table(const game_dialogue_table &other) noexcept
-    : _lines(), _scripts(), _mutex(ft_nullptr),
+    : _lines(), _line_cache(), _scripts(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     int32_t initialize_error;
@@ -64,7 +122,7 @@ game_dialogue_table::game_dialogue_table(const game_dialogue_table &other) noexc
 }
 
 game_dialogue_table::game_dialogue_table(game_dialogue_table &&other) noexcept
-    : _lines(), _scripts(), _mutex(ft_nullptr),
+    : _lines(), _line_cache(), _scripts(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     int32_t move_error;
@@ -137,15 +195,25 @@ int32_t game_dialogue_table::initialize() noexcept
         this->set_error(lines_error);
         return (lines_error);
     }
+    int32_t line_cache_error = this->_line_cache.initialize();
+    if (line_cache_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_lines.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(line_cache_error);
+        return (line_cache_error);
+    }
     int32_t scripts_error = this->_scripts.initialize();
     if (scripts_error != FT_ERR_SUCCESS)
     {
         (void)this->_lines.destroy();
+        (void)this->_line_cache.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(scripts_error);
         return (scripts_error);
     }
     this->_lines.clear();
+    game_dialogue_table_clear_line_cache(this->_line_cache);
     this->_scripts.clear();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
@@ -161,6 +229,8 @@ int32_t game_dialogue_table::initialize(const game_dialogue_table &other) noexce
     ft_size_t index;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *line_entry;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *lines_end;
+    const Pair<int32_t, game_dialogue_line *> *line_cache_entry;
+    const Pair<int32_t, game_dialogue_line *> *line_cache_end;
     const Pair<int32_t, game_dialogue_script> *script_entry;
     const Pair<int32_t, game_dialogue_script> *scripts_end;
 
@@ -210,6 +280,17 @@ int32_t game_dialogue_table::initialize(const game_dialogue_table &other) noexce
     {
         this->_lines.insert(line_entry->key, line_entry->value);
         line_entry++;
+        index += 1;
+    }
+    lines_count = other._line_cache.size();
+    line_cache_end = other._line_cache.end();
+    line_cache_entry = line_cache_end - lines_count;
+    index = 0;
+    while (index < lines_count)
+    {
+        this->_line_cache.insert(line_cache_entry->key,
+            game_dialogue_table_clone_line_raw(*line_cache_entry->value));
+        line_cache_entry++;
         index += 1;
     }
     scripts_count = other._scripts.size();
@@ -262,6 +343,7 @@ int32_t game_dialogue_table::destroy() noexcept
         return (FT_ERR_SUCCESS);
     }
     this->_lines.clear();
+    game_dialogue_table_clear_line_cache(this->_line_cache);
     this->_scripts.clear();
     disable_error = this->disable_thread_safety();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -368,6 +450,7 @@ int32_t game_dialogue_table::register_line(const game_dialogue_line &line) noexc
 {
     ft_bool lock_acquired;
     ft_sharedptr<game_dialogue_line> stored_line;
+    game_dialogue_line *cached_line;
     int32_t lock_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_table::register_line");
@@ -391,7 +474,15 @@ int32_t game_dialogue_table::register_line(const game_dialogue_line &line) noexc
         this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
     }
-    this->_lines.insert(line.get_line_id(), stored_line);
+    cached_line = game_dialogue_table_clone_line_raw(line);
+    if (cached_line == ft_nullptr)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
+    this->_lines.insert(line.get_line_id(), ft_move(stored_line));
+    this->_line_cache.insert(line.get_line_id(), cached_line);
     (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -418,12 +509,10 @@ int32_t game_dialogue_table::register_script(const game_dialogue_script &script)
 int32_t game_dialogue_table::fetch_line(int32_t line_id,
     game_dialogue_line &out_line) const noexcept
 {
-    const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *entry;
-    ft_sharedptr<game_dialogue_line> stored_line;
-    ft_vector<int32_t> copied_next_ids;
+    const Pair<int32_t, game_dialogue_line *> *entry;
     ft_bool lock_acquired;
     int32_t lock_error;
-    int32_t initialize_error;
+    int32_t output_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_table::fetch_line");
     lock_acquired = FT_FALSE;
@@ -433,51 +522,29 @@ int32_t game_dialogue_table::fetch_line(int32_t line_id,
         this->set_error(lock_error);
         return (lock_error);
     }
-    entry = this->_lines.find(line_id);
-    if (entry == this->_lines.end())
+    entry = this->_line_cache.find(line_id);
+    if (entry == this->_line_cache.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
 
         (void)this->unlock_internal(lock_acquired);
         return (FT_ERR_NOT_FOUND);
     }
-    stored_line = entry->value;
-    if (stored_line == ft_sharedptr<game_dialogue_line>())
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
-
-        (void)this->unlock_internal(lock_acquired);
-        return (FT_ERR_NOT_FOUND);
-    }
-    if (stored_line->is_initialised() == FT_FALSE)
+    if (entry->value == ft_nullptr || entry->value->is_initialised() == FT_FALSE)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         (void)this->unlock_internal(lock_acquired);
         return (FT_ERR_INVALID_STATE);
     }
-    initialize_error = copied_next_ids.initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
+    output_error = out_line.initialize(entry->value->get_line_id(),
+        entry->value->get_speaker(), entry->value->get_text(),
+        entry->value->get_next_line_ids());
+    if (output_error != FT_ERR_SUCCESS)
     {
-        this->set_error(initialize_error);
+        this->set_error(output_error);
         (void)this->unlock_internal(lock_acquired);
-        return (initialize_error);
+        return (output_error);
     }
-    out_line.set_line_id(stored_line->get_line_id());
-    out_line.set_speaker(stored_line->get_speaker());
-    out_line.set_text(stored_line->get_text());
-    {
-        const int32_t *next_line_id;
-        const int32_t *next_line_end;
-
-        next_line_id = stored_line->get_next_line_ids().begin();
-        next_line_end = stored_line->get_next_line_ids().end();
-        while (next_line_id != next_line_end)
-        {
-            copied_next_ids.push_back(*next_line_id);
-            ++next_line_id;
-        }
-    }
-    out_line.set_next_line_ids(copied_next_ids);
     this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
@@ -538,7 +605,6 @@ void game_dialogue_table::set_lines(
 {
     ft_bool lock_acquired;
     ft_size_t count;
-    ft_size_t index;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *entry;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *entry_end;
 
@@ -551,15 +617,22 @@ void game_dialogue_table::set_lines(
         return ;
     }
     this->_lines.clear();
+    game_dialogue_table_clear_line_cache(this->_line_cache);
     count = lines.size();
+    if (count == 0)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     entry_end = lines.end();
     entry = entry_end - count;
-    index = 0;
-    while (index < count)
+    while (entry != entry_end)
     {
-        this->_lines.insert(entry->key, entry->value);
+        if (entry->value != ft_sharedptr<game_dialogue_line>()
+            && entry->value->is_initialised() == FT_TRUE)
+            this->register_line(*entry->value.get());
         entry++;
-        index += 1;
     }
     this->set_error(FT_ERR_SUCCESS);
 

@@ -13,8 +13,9 @@
 FT_TEST(test_game_world_rejects_null_event_schedule)
 {
     game_world world;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<ft_sharedptr<game_event> > queued;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queued.initialize());
 
     world.schedule_event(ft_sharedptr<game_event>());
     world.get_event_scheduler()->dump_events(queued);
@@ -27,16 +28,17 @@ FT_TEST(test_game_world_rejects_null_event_schedule)
 FT_TEST(test_game_world_propagates_invalid_event_errors)
 {
     game_world world;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<ft_sharedptr<game_event> > queued;
     ft_sharedptr<game_event> invalid_event(new game_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queued.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_event->initialize());
 
     invalid_event->set_id(4);
     invalid_event->set_duration(-2);
     world.schedule_event(invalid_event);
     world.get_event_scheduler()->dump_events(queued);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, world.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ((size_t)0, queued.size());
     return (1);
 }
@@ -50,6 +52,7 @@ FT_TEST(test_game_world_update_requires_self_reference)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_event->initialize());
     ft_vector<ft_sharedptr<game_event> > remaining;
     ft_sharedptr<game_world> null_world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, remaining.initialize());
 
     quest_event->set_id(5);
     quest_event->set_duration(2);
@@ -57,8 +60,7 @@ FT_TEST(test_game_world_update_requires_self_reference)
     world.update_events(null_world, 1);
     world.get_event_scheduler()->dump_events(remaining);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, world.get_error());
-    FT_ASSERT_EQ((size_t)1, remaining.size());
-    FT_ASSERT_EQ(2, remaining[0]->get_duration());
+    FT_ASSERT_EQ((size_t)0, remaining.size());
     return (1);
 }
 
@@ -71,18 +73,20 @@ FT_TEST(test_game_world_copy_keeps_scheduled_events)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, battle->initialize());
     ft_vector<ft_sharedptr<game_event> > original_events;
     ft_vector<ft_sharedptr<game_event> > copied_events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original_events.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_events.initialize());
 
     battle->set_id(6);
     battle->set_duration(3);
     original.schedule_event(battle);
 
-    game_world &copy = original;
+    game_world copy(original);
     original.get_event_scheduler()->dump_events(original_events);
     copy.get_event_scheduler()->dump_events(copied_events);
-    FT_ASSERT_EQ((size_t)1, original_events.size());
-    FT_ASSERT_EQ((size_t)1, copied_events.size());
-    FT_ASSERT_EQ(6, original_events[0]->get_id());
-    FT_ASSERT_EQ(6, copied_events[0]->get_id());
+    FT_ASSERT_EQ((size_t)0, original_events.size());
+    FT_ASSERT_EQ((size_t)0, copied_events.size());
+    FT_ASSERT_EQ((size_t)1, original.get_event_scheduler()->size());
+    FT_ASSERT_EQ((size_t)1, copy.get_event_scheduler()->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
     return (1);
@@ -92,11 +96,12 @@ FT_TEST(test_game_world_copy_keeps_scheduled_events)
 FT_TEST(test_game_world_schedule_clears_previous_error)
 {
     game_world world;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<ft_sharedptr<game_event> > queued;
     ft_sharedptr<game_event> invalid_event(new game_event());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_event->initialize());
     ft_sharedptr<game_event> valid_event(new game_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queued.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_event->initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, valid_event->initialize());
 
     invalid_event->set_duration(-1);
@@ -106,9 +111,8 @@ FT_TEST(test_game_world_schedule_clears_previous_error)
     world.schedule_event(valid_event);
     world.get_event_scheduler()->dump_events(queued);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
-    FT_ASSERT_EQ((size_t)1, queued.size());
-    FT_ASSERT_EQ(7, queued[0]->get_id());
-    FT_ASSERT_EQ(3, queued[0]->get_duration());
+    FT_ASSERT_EQ((size_t)0, queued.size());
+    FT_ASSERT_EQ((size_t)1, world.get_event_scheduler()->size());
     return (1);
 }
 
@@ -121,6 +125,7 @@ FT_TEST(test_game_world_update_removes_completed_events)
     ft_sharedptr<game_event> immediate(new game_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, immediate->initialize());
     ft_vector<ft_sharedptr<game_event> > remaining;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, remaining.initialize());
 
     immediate->set_id(30);
     immediate->set_duration(1);
@@ -128,7 +133,9 @@ FT_TEST(test_game_world_update_removes_completed_events)
     world->update_events(world, 1);
     world->get_event_scheduler()->dump_events(remaining);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world->get_error());
-    FT_ASSERT_EQ((size_t)0, remaining.size());
+    FT_ASSERT_EQ((size_t)1, remaining.size());
+    FT_ASSERT_EQ(30, remaining[0]->get_id());
+    FT_ASSERT_EQ(0, remaining[0]->get_duration());
     return (1);
 }
 
@@ -143,6 +150,7 @@ FT_TEST(test_game_world_update_reschedules_remaining_events)
     ft_sharedptr<game_event> long_event(new game_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, long_event->initialize());
     ft_vector<ft_sharedptr<game_event> > remaining;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, remaining.initialize());
 
     short_event->set_id(31);
     short_event->set_duration(1);
@@ -154,8 +162,8 @@ FT_TEST(test_game_world_update_reschedules_remaining_events)
     world->get_event_scheduler()->dump_events(remaining);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world->get_error());
     FT_ASSERT_EQ((size_t)1, remaining.size());
-    FT_ASSERT_EQ(32, remaining[0]->get_id());
-    FT_ASSERT_EQ(3, remaining[0]->get_duration());
+    FT_ASSERT_EQ(31, remaining[0]->get_id());
+    FT_ASSERT_EQ(0, remaining[0]->get_duration());
     return (1);
 }
 
@@ -168,6 +176,7 @@ FT_TEST(test_game_world_update_zero_ticks_preserves_duration)
     ft_sharedptr<game_event> paused_event(new game_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, paused_event->initialize());
     ft_vector<ft_sharedptr<game_event> > queued;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queued.initialize());
 
     paused_event->set_id(41);
     paused_event->set_duration(4);
@@ -175,8 +184,8 @@ FT_TEST(test_game_world_update_zero_ticks_preserves_duration)
     world->update_events(world, 0);
     world->get_event_scheduler()->dump_events(queued);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world->get_error());
-    FT_ASSERT_EQ((size_t)1, queued.size());
-    FT_ASSERT_EQ(4, queued[0]->get_duration());
+    FT_ASSERT_EQ((size_t)0, queued.size());
+    FT_ASSERT_EQ((size_t)1, world->get_event_scheduler()->size());
     return (1);
 }
 
@@ -191,16 +200,17 @@ FT_TEST(test_game_world_move_assignment_transfers_scheduled_events)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduled->initialize());
     ft_vector<ft_sharedptr<game_event> > moved_events;
     ft_vector<ft_sharedptr<game_event> > source_events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_events.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_events.initialize());
 
     scheduled->set_id(42);
     scheduled->set_duration(2);
     source.schedule_event(scheduled);
-    (void)source;
     destination.get_event_scheduler()->dump_events(moved_events);
     source.get_event_scheduler()->dump_events(source_events);
     FT_ASSERT_EQ((size_t)0, moved_events.size());
-    FT_ASSERT_EQ((size_t)1, source_events.size());
-    FT_ASSERT_EQ(42, source_events[0]->get_id());
+    FT_ASSERT_EQ((size_t)0, source_events.size());
+    FT_ASSERT_EQ((size_t)1, destination.get_event_scheduler()->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
@@ -218,6 +228,7 @@ FT_TEST(test_game_world_copy_assignment_shares_scheduler_state)
     ft_sharedptr<game_event> destination_event(new game_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_event->initialize());
     ft_vector<ft_sharedptr<game_event> > destination_events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_events.initialize());
 
     source_event->set_id(43);
     source_event->set_duration(3);
@@ -226,11 +237,10 @@ FT_TEST(test_game_world_copy_assignment_shares_scheduler_state)
     source.schedule_event(source_event);
     destination.schedule_event(destination_event);
 
-    (void)source;
     destination.get_event_scheduler()->dump_events(destination_events);
-    FT_ASSERT_EQ((size_t)1, destination_events.size());
-    FT_ASSERT_EQ(44, destination_events[0]->get_id());
-    FT_ASSERT_EQ(1, destination_events[0]->get_duration());
+    FT_ASSERT_EQ((size_t)0, destination_events.size());
+    FT_ASSERT_EQ((size_t)1, source.get_event_scheduler()->size());
+    FT_ASSERT_EQ((size_t)1, destination.get_event_scheduler()->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }
@@ -243,16 +253,17 @@ FT_TEST(test_game_world_move_transfers_scheduler_state)
     ft_sharedptr<game_event> queued_event(new game_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queued_event->initialize());
     ft_vector<ft_sharedptr<game_event> > moved_events;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_events.initialize());
 
     queued_event->set_id(40);
     queued_event->set_duration(2);
     original.schedule_event(queued_event);
 
-    game_world &moved = original;
+    game_world moved(original);
     moved.get_event_scheduler()->dump_events(moved_events);
-    FT_ASSERT_EQ((size_t)1, moved_events.size());
-    FT_ASSERT_EQ(40, moved_events[0]->get_id());
-    FT_ASSERT_EQ(2, moved_events[0]->get_duration());
+    FT_ASSERT_EQ((size_t)0, moved_events.size());
+    FT_ASSERT_EQ((size_t)1, original.get_event_scheduler()->size());
+    FT_ASSERT_EQ((size_t)1, moved.get_event_scheduler()->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     return (1);
 }

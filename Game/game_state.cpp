@@ -449,12 +449,6 @@ int32_t game_state::add_character(const ft_sharedptr<game_character> &character)
         this->unlock_internal(lock_acquired);
         return (this->get_error());
     }
-    if (character->get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(character->get_error());
-        this->unlock_internal(lock_acquired);
-        return (this->get_error());
-    }
     this->_characters.push_back(character);
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);

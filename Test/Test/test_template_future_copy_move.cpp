@@ -32,7 +32,9 @@ FT_TEST(test_ft_future_initialize_copy_from_uninitialised_rebuilds_mutex)
     original_future.unlock(original_lock_acquired);
     FT_ASSERT_EQ(19, copied_future.get());
     FT_ASSERT_EQ(19, original_future.get());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_future.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_future.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original_future.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original_future.destroy());
     return (1);
 }
@@ -64,7 +66,9 @@ FT_TEST(test_ft_future_initialize_copy_recreates_mutex)
     source_future.unlock(source_lock_acquired);
     FT_ASSERT_EQ(23, destination_future.get());
     FT_ASSERT_EQ(23, source_future.get());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_future.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_future.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_future.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_future.destroy());
     return (1);
 }
@@ -87,6 +91,7 @@ FT_TEST(test_ft_future_initialize_move_from_uninitialised_rebuilds_mutex)
     FT_ASSERT(moved_lock_acquired == FT_TRUE);
     moved_future.unlock(moved_lock_acquired);
     FT_ASSERT_EQ(31, moved_future.get());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_future.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_future.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original_future.destroy());
     return (1);
@@ -112,6 +117,7 @@ FT_TEST(test_ft_future_initialize_move_rebuilds_mutex)
     FT_ASSERT(destination_lock_acquired == FT_TRUE);
     destination_future.unlock(destination_lock_acquired);
     FT_ASSERT_EQ(47, destination_future.get());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_future.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_future.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_future.destroy());
     return (1);
@@ -135,6 +141,7 @@ FT_TEST(test_ft_future_void_move_rebuilds_mutex)
     moved_future.unlock(moved_lock_acquired);
     promise.set_value();
     moved_future.get();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_future.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_future.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original_future.destroy());
     return (1);

@@ -61,17 +61,17 @@ FT_TEST(test_ft_graph_move_assignment_resets_source_mutex)
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
 
-    FT_ASSERT(destination_graph.is_thread_safe() == false);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.move(source_graph));
+    FT_ASSERT(destination_graph.is_thread_safe());
     FT_ASSERT_EQ(2u, destination_graph.size());
     destination_graph.neighbors(0, neighbor_vector);
     FT_ASSERT_EQ(1u, neighbor_vector.size());
     FT_ASSERT_EQ(1u, neighbor_vector[0]);
     FT_ASSERT_EQ(0, destination_graph.enable_thread_safety());
     FT_ASSERT(destination_graph.is_thread_safe());
-    FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
-    FT_ASSERT(source_graph.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.destroy());
     return (1);
 }
@@ -91,16 +91,18 @@ FT_TEST(test_ft_graph_move_allows_reuse_after_transfer)
     FT_ASSERT(source_graph.is_thread_safe());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.initialize());
-    FT_ASSERT(destination_graph.is_thread_safe() == false);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.move(source_graph));
+    FT_ASSERT(destination_graph.is_thread_safe());
     FT_ASSERT_EQ(2u, destination_graph.size());
     destination_graph.neighbors(1, neighbor_vector);
     FT_ASSERT(neighbor_vector.empty());
     FT_ASSERT_EQ(0, destination_graph.enable_thread_safety());
     FT_ASSERT(destination_graph.is_thread_safe());
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.initialize());
+    source_graph.add_vertex(99);
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
-    source_graph.add_vertex(99);
     FT_ASSERT_EQ(1u, source_graph.size());
     source_graph.add_edge(0, 0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.destroy());

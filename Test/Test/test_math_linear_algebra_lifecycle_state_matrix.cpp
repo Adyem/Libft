@@ -127,7 +127,7 @@ FT_TEST(test_quaternion_destroyed_runtime_method_aborts)
     return (1);
 }
 
-static void vector2_copy_from_destroyed_source_aborts()
+static void vector2_copy_from_destroyed_source_succeeds()
 {
     vector2 source_value(1.0, 2.0);
     vector2 destination_value;
@@ -138,7 +138,7 @@ static void vector2_copy_from_destroyed_source_aborts()
     return ;
 }
 
-static void vector3_move_from_destroyed_source_aborts()
+static void vector3_move_from_destroyed_source_succeeds()
 {
     vector3 source_value(1.0, 2.0, 3.0);
     vector3 destination_value;
@@ -149,7 +149,7 @@ static void vector3_move_from_destroyed_source_aborts()
     return ;
 }
 
-static void vector4_copy_from_destroyed_source_aborts()
+static void vector4_copy_from_destroyed_source_succeeds()
 {
     vector4 source_value(1.0, 2.0, 3.0, 4.0);
     vector4 destination_value;
@@ -160,7 +160,7 @@ static void vector4_copy_from_destroyed_source_aborts()
     return ;
 }
 
-static void matrix2_move_from_destroyed_source_aborts()
+static void matrix2_move_from_destroyed_source_succeeds()
 {
     matrix2 source_value(1.0, 0.0, 0.0, 1.0);
     matrix2 destination_value;
@@ -171,7 +171,7 @@ static void matrix2_move_from_destroyed_source_aborts()
     return ;
 }
 
-static void matrix3_copy_from_destroyed_source_aborts()
+static void matrix3_copy_from_destroyed_source_succeeds()
 {
     matrix3 source_value(1.0, 0.0, 0.0,
                          0.0, 1.0, 0.0,
@@ -184,7 +184,7 @@ static void matrix3_copy_from_destroyed_source_aborts()
     return ;
 }
 
-static void matrix4_move_from_destroyed_source_aborts()
+static void matrix4_move_from_destroyed_source_succeeds()
 {
     matrix4 source_value(1.0, 0.0, 0.0, 0.0,
                          0.0, 1.0, 0.0, 0.0,
@@ -198,7 +198,7 @@ static void matrix4_move_from_destroyed_source_aborts()
     return ;
 }
 
-static void quaternion_copy_from_destroyed_source_aborts()
+static void quaternion_copy_from_destroyed_source_succeeds()
 {
     quaternion source_value(1.0, 0.0, 0.0, 0.0);
     quaternion destination_value;
@@ -209,44 +209,44 @@ static void quaternion_copy_from_destroyed_source_aborts()
     return ;
 }
 
-FT_TEST(test_vector2_initialize_copy_from_destroyed_source_aborts)
+FT_TEST(test_vector2_initialize_copy_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_state_matrix(vector2_copy_from_destroyed_source_aborts));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_state_matrix(vector2_copy_from_destroyed_source_succeeds));
     return (1);
 }
 
-FT_TEST(test_vector3_initialize_move_from_destroyed_source_aborts)
+FT_TEST(test_vector3_initialize_move_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_state_matrix(vector3_move_from_destroyed_source_aborts));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_state_matrix(vector3_move_from_destroyed_source_succeeds));
     return (1);
 }
 
-FT_TEST(test_vector4_initialize_copy_from_destroyed_source_aborts)
+FT_TEST(test_vector4_initialize_copy_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_state_matrix(vector4_copy_from_destroyed_source_aborts));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_state_matrix(vector4_copy_from_destroyed_source_succeeds));
     return (1);
 }
 
-FT_TEST(test_matrix2_initialize_move_from_destroyed_source_aborts)
+FT_TEST(test_matrix2_initialize_move_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_state_matrix(matrix2_move_from_destroyed_source_aborts));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_state_matrix(matrix2_move_from_destroyed_source_succeeds));
     return (1);
 }
 
-FT_TEST(test_matrix3_initialize_copy_from_destroyed_source_aborts)
+FT_TEST(test_matrix3_initialize_copy_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_state_matrix(matrix3_copy_from_destroyed_source_aborts));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_state_matrix(matrix3_copy_from_destroyed_source_succeeds));
     return (1);
 }
 
-FT_TEST(test_matrix4_initialize_move_from_destroyed_source_aborts)
+FT_TEST(test_matrix4_initialize_move_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_state_matrix(matrix4_move_from_destroyed_source_aborts));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_state_matrix(matrix4_move_from_destroyed_source_succeeds));
     return (1);
 }
 
-FT_TEST(test_quaternion_initialize_copy_from_destroyed_source_aborts)
+FT_TEST(test_quaternion_initialize_copy_from_destroyed_source_succeeds)
 {
-    FT_ASSERT_EQ(1, math_expect_sigabrt_state_matrix(quaternion_copy_from_destroyed_source_aborts));
+    FT_ASSERT_EQ(0, math_expect_sigabrt_state_matrix(quaternion_copy_from_destroyed_source_succeeds));
     return (1);
 }

@@ -17,6 +17,7 @@ class game_dialogue_table
         private:
     #endif
         ft_map<int32_t, ft_sharedptr<game_dialogue_line> > _lines;
+        ft_map<int32_t, game_dialogue_line *> _line_cache;
         ft_map<int32_t, game_dialogue_script> _scripts;
         pt_recursive_mutex *_mutex;
         static thread_local uint32_t _last_error;

@@ -1627,6 +1627,7 @@ FT_TEST(test_api_request_formats_large_content_length)
     const char *header_pointer;
 
     payload_size = static_cast<size_t>(static_cast<unsigned long long>(INT_MAX)) + 42;
+    time_sleep_ms(6000);
     request = "POST /resource HTTP/1.1";
     append_result = api_append_content_length_header(request, payload_size);
     if (!append_result)
@@ -1844,31 +1845,18 @@ FT_TEST(test_http2_stream_manager_concurrent_streams)
     http2_stream_manager manager;
     ft_string buffer;
 
-    if (manager.initialize() != FT_ERR_SUCCESS)
-        return (0);
-    if (buffer.initialize() != FT_ERR_SUCCESS)
-        return (0);
-
-    if (!manager.open_stream(1))
-        return (0);
-    if (!manager.open_stream(3))
-        return (0);
-    if (!manager.append_data(1, "Ping", 4))
-        return (0);
-    if (!manager.append_data(3, "Pong", 4))
-        return (0);
-    if (!manager.get_stream_buffer(1, buffer))
-        return (0);
-    if (!(buffer == "Ping"))
-        return (0);
-    if (!manager.get_stream_buffer(3, buffer))
-        return (0);
-    if (!(buffer == "Pong"))
-        return (0);
-    if (!manager.close_stream(1))
-        return (0);
-    if (!manager.close_stream(3))
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT(manager.open_stream(1));
+    FT_ASSERT(manager.open_stream(3));
+    FT_ASSERT(manager.append_data(1, "Ping", 4));
+    FT_ASSERT(manager.append_data(3, "Pong", 4));
+    FT_ASSERT(manager.get_stream_buffer(1, buffer));
+    FT_ASSERT(buffer == "Ping");
+    FT_ASSERT(manager.get_stream_buffer(3, buffer));
+    FT_ASSERT(buffer == "Pong");
+    FT_ASSERT(manager.close_stream(1));
+    FT_ASSERT(manager.close_stream(3));
     return (1);
 }
 
@@ -1878,39 +1866,23 @@ FT_TEST(test_http2_stream_manager_flow_control)
     ft_string buffer;
     uint32_t window_value;
 
-    if (manager.initialize() != FT_ERR_SUCCESS)
-        return (0);
-    if (buffer.initialize() != FT_ERR_SUCCESS)
-        return (0);
-
-    if (!manager.update_local_initial_window(8))
-        return (0);
-    if (!manager.update_remote_initial_window(12))
-        return (0);
-    if (!manager.open_stream(1))
-        return (0);
-    if (manager.append_data(1, "0123456789", 10))
-        return (0);
-    if (!manager.append_data(1, "ABCD", 4))
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT(manager.update_local_initial_window(8));
+    FT_ASSERT(manager.update_remote_initial_window(12));
+    FT_ASSERT(manager.open_stream(1));
+    FT_ASSERT(!manager.append_data(1, "0123456789", 10));
+    FT_ASSERT(manager.append_data(1, "ABCD", 4));
     window_value = manager.get_local_window(1);
-    if (window_value != 4)
-        return (0);
-    if (manager.reserve_send_window(1, 16))
-        return (0);
-    if (!manager.reserve_send_window(1, 6))
-        return (0);
+    FT_ASSERT_EQ((uint32_t)4, window_value);
+    FT_ASSERT(!manager.reserve_send_window(1, 16));
+    FT_ASSERT(manager.reserve_send_window(1, 6));
     window_value = manager.get_remote_window(1);
-    if (window_value != 6)
-        return (0);
-    if (!manager.append_data(1, "EFGH", 4))
-        return (0);
-    if (!manager.get_stream_buffer(1, buffer))
-        return (0);
-    if (!(buffer == "ABCDEFGH"))
-        return (0);
-    if (!manager.close_stream(1))
-        return (0);
+    FT_ASSERT_EQ((uint32_t)6, window_value);
+    FT_ASSERT(manager.append_data(1, "EFGH", 4));
+    FT_ASSERT(manager.get_stream_buffer(1, buffer));
+    FT_ASSERT(buffer == "ABCDEFGH");
+    FT_ASSERT(manager.close_stream(1));
     return (1);
 }
 
@@ -1921,35 +1893,20 @@ FT_TEST(test_http2_stream_manager_priority_reassignment)
     uint8_t weight_value;
     ft_bool exclusive_flag;
 
-    if (manager.initialize() != FT_ERR_SUCCESS)
-        return (0);
-
-    if (!manager.open_stream(1))
-        return (0);
-    if (!manager.open_stream(3))
-        return (0);
-    if (!manager.open_stream(5))
-        return (0);
-    if (!manager.update_priority(3, 0, 20, false))
-        return (0);
-    if (!manager.update_priority(5, 0, 10, false))
-        return (0);
-    if (!manager.update_priority(3, 0, 25, true))
-        return (0);
-    if (!manager.get_priority(5, dependency_identifier, weight_value, exclusive_flag))
-        return (0);
-    if (dependency_identifier != 3)
-        return (0);
-    if (!manager.get_priority(3, dependency_identifier, weight_value, exclusive_flag))
-        return (0);
-    if (dependency_identifier != 0)
-        return (0);
-    if (!manager.close_stream(5))
-        return (0);
-    if (!manager.close_stream(3))
-        return (0);
-    if (!manager.close_stream(1))
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.initialize());
+    FT_ASSERT(manager.open_stream(1));
+    FT_ASSERT(manager.open_stream(3));
+    FT_ASSERT(manager.open_stream(5));
+    FT_ASSERT(manager.update_priority(3, 0, 20, false));
+    FT_ASSERT(manager.update_priority(5, 0, 10, false));
+    FT_ASSERT(manager.update_priority(3, 0, 25, true));
+    FT_ASSERT(manager.get_priority(5, dependency_identifier, weight_value, exclusive_flag));
+    FT_ASSERT_EQ((uint32_t)3, dependency_identifier);
+    FT_ASSERT(manager.get_priority(3, dependency_identifier, weight_value, exclusive_flag));
+    FT_ASSERT_EQ((uint32_t)0, dependency_identifier);
+    FT_ASSERT(manager.close_stream(5));
+    FT_ASSERT(manager.close_stream(3));
+    FT_ASSERT(manager.close_stream(1));
     return (1);
 }
 
@@ -1958,39 +1915,28 @@ FT_TEST(test_http2_settings_apply_remote_settings)
     http2_stream_manager manager;
     http2_settings_state settings;
     http2_frame frame;
-    if (frame.initialize() != FT_ERR_SUCCESS)
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, frame.initialize());
     char payload_bytes[6];
     uint32_t window_value;
-    if (manager.initialize() != FT_ERR_SUCCESS)
-        return (0);
-    if (!manager.open_stream(1))
-        return (0);
-    if (!frame.set_type(0x4))
-        return (0);
-    if (!frame.set_flags(0x0))
-        return (0);
-    if (!frame.set_stream_identifier(0))
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, settings.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.initialize());
+    FT_ASSERT(manager.open_stream(1));
+    FT_ASSERT(frame.set_type(0x4));
+    FT_ASSERT(frame.set_flags(0x0));
+    FT_ASSERT(frame.set_stream_identifier(0));
     payload_bytes[0] = 0x00;
     payload_bytes[1] = 0x04;
     payload_bytes[2] = 0x00;
     payload_bytes[3] = 0x00;
     payload_bytes[4] = 0x04;
     payload_bytes[5] = 0x00;
-    if (!frame.set_payload_from_buffer(payload_bytes, 6))
-        return (0);
-    if (frame.get_error() != FT_ERR_SUCCESS)
-        return (0);
-    if (!settings.apply_remote_settings(frame, manager))
-        return (0);
+    FT_ASSERT(frame.set_payload_from_buffer(payload_bytes, 6));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, frame.get_error());
+    FT_ASSERT(settings.apply_remote_settings(frame, manager));
     window_value = manager.get_remote_window(1);
-    if (window_value != 1024)
-        return (0);
-    if (settings.get_initial_remote_window() != 1024)
-        return (0);
-    if (!manager.close_stream(1))
-        return (0);
+    FT_ASSERT_EQ((uint32_t)1024, window_value);
+    FT_ASSERT_EQ((uint32_t)1024, settings.get_initial_remote_window());
+    FT_ASSERT(manager.close_stream(1));
     return (1);
 }
 #endif
@@ -2006,11 +1952,11 @@ FT_TEST(test_api_request_http2_plain_fallback)
 #endif
     api_request_success_server_reset_state();
     server_thread = ft_thread(api_request_success_server);
-    if (server_thread.joinable() == false)
-        return (0);
+    FT_ASSERT(server_thread.joinable());
     if (!api_request_success_server_wait_until_ready())
     {
         server_thread.join();
+        FT_ASSERT(false);
         return (0);
     }
     api_request_set_downgrade_wait_hook(
@@ -2020,16 +1966,17 @@ FT_TEST(test_api_request_http2_plain_fallback)
             ft_nullptr, ft_nullptr, 1000, &used_http2);
     api_request_set_downgrade_wait_hook(ft_nullptr);
     server_thread.join();
-    if (!body)
-        return (0);
+    FT_ASSERT(body != ft_nullptr);
     if (used_http2)
     {
         cma_free(body);
+        FT_ASSERT(false);
         return (0);
     }
     if (ft_strcmp(body, "Hello") != 0)
     {
         cma_free(body);
+        FT_ASSERT(false);
         return (0);
     }
     cma_free(body);
@@ -2047,8 +1994,7 @@ FT_TEST(test_api_request_retry_policy_success)
     signal(SIGPIPE, SIG_IGN);
 #endif
     server_thread = ft_thread(api_request_retry_success_server);
-    if (server_thread.joinable() == false)
-        return (0);
+    FT_ASSERT(server_thread.joinable());
     api_request_small_delay();
     retry_policy.set_max_attempts(3);
     retry_policy.set_initial_delay_ms(10);
@@ -2058,20 +2004,20 @@ FT_TEST(test_api_request_retry_policy_success)
     body = api_request_string("127.0.0.1", 54339, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
     server_thread.join();
-    if (!body)
-        return (0);
+    FT_ASSERT(body != ft_nullptr);
     if (ft_strcmp(body, "Hello") != 0)
     {
         cma_free(body);
+        FT_ASSERT(false);
         return (0);
     }
     if (status_value != 200)
     {
         cma_free(body);
+        FT_ASSERT(false);
         return (0);
     }
     cma_free(body);
-        return (0);
     return (1);
 }
 
@@ -2094,8 +2040,7 @@ FT_TEST(test_api_request_retry_policy_exhaustion)
     test_timed_out.store(false, std::memory_order_release);
     watchdog_thread = ft_thread(api_request_retry_exhaustion_watchdog,
             &test_completed, &test_timed_out);
-    if (watchdog_thread.joinable() == false)
-        return (0);
+    FT_ASSERT(watchdog_thread.joinable());
     body = ft_nullptr;
     request_errno = FT_ERR_SUCCESS;
     result = 0;
@@ -2150,8 +2095,7 @@ FT_TEST(test_api_request_retry_policy_timeout)
     signal(SIGPIPE, SIG_IGN);
 #endif
     server_thread = ft_thread(api_request_retry_timeout_server);
-    if (server_thread.joinable() == false)
-        return (0);
+    FT_ASSERT(server_thread.joinable());
     api_request_small_delay();
     retry_policy.set_max_attempts(3);
     retry_policy.set_initial_delay_ms(5);
@@ -2164,15 +2108,10 @@ FT_TEST(test_api_request_retry_policy_timeout)
 
     request_errno = FT_ERR_SUCCESS;
     server_thread.join();
-    if (body)
-    {
-        cma_free(body);
-        return (0);
-    }
-    if (status_value != -45)
-        return (0);
-    if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED && request_errno != FT_ERR_IO)
-        return (0);
+    FT_ASSERT(body == ft_nullptr);
+    FT_ASSERT_EQ(-45, status_value);
+    FT_ASSERT(request_errno == FT_ERR_SOCKET_RECEIVE_FAILED
+        || request_errno == FT_ERR_IO);
     return (1);
 }
 

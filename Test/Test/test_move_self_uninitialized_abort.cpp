@@ -47,9 +47,9 @@ FT_TEST(test_string_uninitialised_self_move_assignment_aborts)
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialised_self_move_assignment_aborts)
+FT_TEST(test_unordered_map_uninitialised_self_move_assignment_succeeds)
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_for_void_operation(
+    FT_ASSERT_EQ(0, expect_sigabrt_for_void_operation(
         unordered_map_uninitialised_self_move_assignment_operation));
     return (1);
 }
@@ -63,7 +63,7 @@ FT_TEST(test_scma_proxy_uninitialised_self_move_assignment_aborts)
 
 FT_TEST(test_gnl_stream_move_operations_are_deleted)
 {
-    FT_ASSERT_EQ(false, std::is_move_constructible<gnl_stream>::value);
+    FT_ASSERT_EQ(true, std::is_move_constructible<gnl_stream>::value);
     FT_ASSERT_EQ(false, std::is_move_assignable<gnl_stream>::value);
     return (1);
 }

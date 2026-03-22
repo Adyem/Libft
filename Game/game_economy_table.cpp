@@ -372,7 +372,7 @@ int32_t game_economy_table::lock_internal(ft_bool *lock_acquired) const noexcept
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (lock_acquired != ft_nullptr)
+    if (lock_acquired != ft_nullptr && this->_mutex != ft_nullptr)
         *lock_acquired = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }

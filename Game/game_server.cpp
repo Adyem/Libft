@@ -109,6 +109,7 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
     const char *auth_token) noexcept
 {
     ft_websocket_server *server_instance;
+    int32_t server_initialize_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -143,6 +144,15 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
+    }
+    server_initialize_error = server_instance->initialize();
+    if (server_initialize_error != FT_ERR_SUCCESS)
+    {
+        delete server_instance;
+        (void)this->_clients.destroy();
+        (void)this->_auth_token.destroy();
+        this->set_error(server_initialize_error);
+        return (server_initialize_error);
     }
     this->_server = server_instance;
     if (auth_token != ft_nullptr)

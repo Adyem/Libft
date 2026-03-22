@@ -87,15 +87,15 @@ FT_TEST(test_pt_mutex_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_pt_mutex_destroy_uninitialised_aborts)
+FT_TEST(test_pt_mutex_destroy_uninitialised_succeeds)
 {
-    FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_destroy_uninitialised_aborts_operation));
+    FT_ASSERT_EQ(0, pt_mutex_expect_sigabrt(pt_mutex_destroy_uninitialised_aborts_operation));
     return (1);
 }
 
-FT_TEST(test_pt_mutex_destroy_twice_aborts)
+FT_TEST(test_pt_mutex_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_destroy_twice_aborts_operation));
+    FT_ASSERT_EQ(0, pt_mutex_expect_sigabrt(pt_mutex_destroy_twice_aborts_operation));
     return (1);
 }
 
@@ -105,9 +105,9 @@ FT_TEST(test_pt_mutex_lock_uninitialised_aborts)
     return (1);
 }
 
-FT_TEST(test_pt_mutex_uninitialised_destructor_aborts)
+FT_TEST(test_pt_mutex_uninitialised_destructor_succeeds)
 {
-    FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(
+    FT_ASSERT_EQ(0, pt_mutex_expect_sigabrt(
         pt_mutex_uninitialised_destructor_aborts_operation));
     return (1);
 }

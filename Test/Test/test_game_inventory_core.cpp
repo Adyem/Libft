@@ -209,10 +209,10 @@ FT_TEST(test_game_inventory_rejects_null_item)
     ft_sharedptr<game_item> none;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(2, 0));
 
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, inventory.add_item(none));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, inventory.add_item(none));
     FT_ASSERT_EQ((size_t)0, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, inventory.get_error());
     return (1);
 }
 

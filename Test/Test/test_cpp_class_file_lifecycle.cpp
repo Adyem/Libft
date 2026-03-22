@@ -76,8 +76,7 @@ FT_TEST(test_ft_file_copy_to_with_buffer_requires_open_source)
 
     destination_path = "tmp_ft_file_lifecycle_copy_invalid.txt";
     cleanup_file(destination_path);
-    FT_ASSERT_EQ(-1, file.copy_to_with_buffer(destination_path, 64));
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, file.copy_to_with_buffer(destination_path, 64));
     cleanup_file(destination_path);
     return (1);
 }
-

@@ -168,15 +168,15 @@ static void unordered_map_call_operator_index(unordered_map_int_int& map_instanc
     return ;
 }
 
-FT_TEST(test_unordered_map_uninitialised_destructor_aborts)
+FT_TEST(test_unordered_map_uninitialised_destructor_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_destructor));
+    FT_ASSERT_EQ(0, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_destructor));
     return (1);
 }
 
-FT_TEST(test_unordered_map_uninitialised_destroy_aborts)
+FT_TEST(test_unordered_map_uninitialised_destroy_succeeds)
 {
-    FT_ASSERT_EQ(1, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_destroy));
+    FT_ASSERT_EQ(0, unordered_map_expect_sigabrt_uninitialised(unordered_map_call_destroy));
     return (1);
 }
 

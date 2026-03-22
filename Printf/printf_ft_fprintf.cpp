@@ -7,6 +7,7 @@
 #include <cstdarg>
 #include <climits>
 #include <cerrno>
+#include <new>
 
 struct pf_stream_writer_context
 {
@@ -43,41 +44,63 @@ static int32_t pf_stream_writer(const char *data_pointer, ft_size_t data_length,
 
 int32_t ft_vfprintf(FILE *stream, const char *format, va_list argument_list)
 {
-    int32_t error_code;
-
-    if (stream == ft_nullptr || format == ft_nullptr)
-        return (-1);
-    pf_stream_writer_context context;
-    context.stream = stream;
-    ft_size_t written_count;
-    written_count = 0;
-    va_list current_args;
-    va_copy(current_args, argument_list);
-    int32_t engine_status;
-    engine_status = pf_engine_format(format, current_args, pf_stream_writer, &context, &written_count);
-    if (engine_status != FT_ERR_SUCCESS)
+    try
     {
+        int32_t error_code;
+
+        if (stream == ft_nullptr || format == ft_nullptr)
+            return (-1);
+        pf_stream_writer_context context;
+        context.stream = stream;
+        ft_size_t written_count;
+        written_count = 0;
+        va_list current_args;
+        va_copy(current_args, argument_list);
+        int32_t engine_status;
+        engine_status = pf_engine_format(format, current_args, pf_stream_writer, &context, &written_count);
+        if (engine_status != FT_ERR_SUCCESS)
+        {
+            va_end(current_args);
+            return (-1);
+        }
         va_end(current_args);
+        error_code = pf_flush_stream(stream);
+        if (error_code != FT_ERR_SUCCESS)
+            return (-1);
+        if (written_count > static_cast<ft_size_t>(INT_MAX))
+            return (-1);
+        return (static_cast<int32_t>(written_count));
+    }
+    catch (const std::bad_alloc &)
+    {
         return (-1);
     }
-    va_end(current_args);
-    error_code = pf_flush_stream(stream);
-    if (error_code != FT_ERR_SUCCESS)
+    catch (...)
+    {
         return (-1);
-    if (written_count > static_cast<ft_size_t>(INT_MAX))
-        return (-1);
-    return (static_cast<int32_t>(written_count));
+    }
 }
 
 int32_t ft_fprintf(FILE *stream, const char *format, ...)
 {
-    va_list argument_list;
-    int32_t result;
+    try
+    {
+        va_list argument_list;
+        int32_t result;
 
-    if (stream == ft_nullptr || format == ft_nullptr)
+        if (stream == ft_nullptr || format == ft_nullptr)
+            return (-1);
+        va_start(argument_list, format);
+        result = ft_vfprintf(stream, format, argument_list);
+        va_end(argument_list);
+        return (result);
+    }
+    catch (const std::bad_alloc &)
+    {
         return (-1);
-    va_start(argument_list, format);
-    result = ft_vfprintf(stream, format, argument_list);
-    va_end(argument_list);
-    return (result);
+    }
+    catch (...)
+    {
+        return (-1);
+    }
 }

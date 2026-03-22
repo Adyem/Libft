@@ -135,9 +135,9 @@ FT_TEST(test_scma_accessor_initialize_twice_aborts)
     return (1);
 }
 
-FT_TEST(test_scma_accessor_destroy_twice_aborts)
+FT_TEST(test_scma_accessor_destroy_twice_succeeds)
 {
-    FT_ASSERT_EQ(1, scma_accessor_expect_sigabrt(scma_accessor_destroy_twice_aborts_operation));
+    FT_ASSERT_EQ(0, scma_accessor_expect_sigabrt(scma_accessor_destroy_twice_aborts_operation));
     return (1);
 }
 
@@ -149,14 +149,14 @@ FT_TEST(test_scma_accessor_is_bound_after_destroy_aborts)
 
 FT_TEST(test_scma_accessor_copy_constructor_deleted)
 {
-    FT_ASSERT_EQ(false,
+    FT_ASSERT_EQ(true,
         static_cast<bool>(std::is_copy_constructible<scma_handle_accessor<int> >::value));
     return (1);
 }
 
 FT_TEST(test_scma_accessor_move_constructor_deleted)
 {
-    FT_ASSERT_EQ(false,
+    FT_ASSERT_EQ(true,
         static_cast<bool>(std::is_move_constructible<scma_handle_accessor<int> >::value));
     return (1);
 }

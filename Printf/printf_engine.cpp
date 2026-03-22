@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cwchar>
 #include <cerrno>
+#include <new>
 #include <type_traits>
 
 typedef typename std::make_signed<ft_size_t>::type pf_signed_size_t;
@@ -1525,32 +1526,43 @@ static int32_t pf_engine_process_positional(const std::vector<pf_engine_token> &
 
 int32_t pf_engine_format(const char *format, va_list argument_list, t_pf_engine_write_callback writer, void *context, ft_size_t *written_count)
 {
-    if (!format || !written_count || !writer)
-        return (FT_ERR_INVALID_ARGUMENT);
-    std::vector<pf_engine_token> tokens;
-    ft_bool uses_positional;
-    ft_bool uses_sequential;
-    uses_positional = FT_FALSE;
-    uses_sequential = FT_FALSE;
-    int32_t parse_status = pf_engine_parse_format(format, tokens, &uses_positional, &uses_sequential);
-    if (parse_status != FT_ERR_SUCCESS)
-        return (parse_status);
-    if (uses_positional && uses_sequential)
+    try
     {
-        return (FT_ERR_INVALID_ARGUMENT);
+        if (!format || !written_count || !writer)
+            return (FT_ERR_INVALID_ARGUMENT);
+        std::vector<pf_engine_token> tokens;
+        ft_bool uses_positional;
+        ft_bool uses_sequential;
+        uses_positional = FT_FALSE;
+        uses_sequential = FT_FALSE;
+        int32_t parse_status = pf_engine_parse_format(format, tokens, &uses_positional, &uses_sequential);
+        if (parse_status != FT_ERR_SUCCESS)
+            return (parse_status);
+        if (uses_positional && uses_sequential)
+        {
+            return (FT_ERR_INVALID_ARGUMENT);
+        }
+        ft_size_t initial_count;
+        initial_count = *written_count;
+        int32_t status;
+        if (uses_positional)
+            status = pf_engine_process_positional(tokens, argument_list, writer, context, written_count);
+        else
+            status = pf_engine_process_sequential(tokens, argument_list, writer, context, written_count);
+        if (status != FT_ERR_SUCCESS)
+            return (status);
+        if (*written_count < initial_count)
+        {
+            return (FT_ERR_INVALID_ARGUMENT);
+        }
+        return (FT_ERR_SUCCESS);
     }
-    ft_size_t initial_count;
-    initial_count = *written_count;
-    int32_t status;
-    if (uses_positional)
-        status = pf_engine_process_positional(tokens, argument_list, writer, context, written_count);
-    else
-        status = pf_engine_process_sequential(tokens, argument_list, writer, context, written_count);
-    if (status != FT_ERR_SUCCESS)
-        return (status);
-    if (*written_count < initial_count)
+    catch (const std::bad_alloc &)
     {
-        return (FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_NO_MEMORY);
     }
-    return (FT_ERR_SUCCESS);
+    catch (...)
+    {
+        return (FT_ERR_INTERNAL);
+    }
 }

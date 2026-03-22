@@ -69,7 +69,7 @@ FT_TEST(test_cma_checked_block_size_rejects_invalid_pointer)
 
     reported_size = 123;
     query_result = cma_checked_block_size(&stack_local, &reported_size);
-    FT_ASSERT_EQ(query_result, -1);
+    FT_ASSERT_EQ(query_result, FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(reported_size, 0);
     return (1);
 }
@@ -84,7 +84,7 @@ FT_TEST(test_cma_checked_block_size_null_output_pointer)
     if (!allocation_pointer)
         return (0);
     query_result = cma_checked_block_size(allocation_pointer, ft_nullptr);
-    FT_ASSERT_EQ(query_result, -1);
+    FT_ASSERT_EQ(query_result, FT_ERR_INVALID_ARGUMENT);
     cma_free(allocation_pointer);
     return (1);
 }
