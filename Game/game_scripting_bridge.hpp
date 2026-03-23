@@ -22,9 +22,9 @@ class game_script_context
         ft_sharedptr<game_world>                _world;
         ft_map<ft_string, ft_string>          _variables;
         uint8_t                               _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         game_script_context() noexcept;
@@ -68,10 +68,10 @@ class game_script_bridge
         ft_string _language;
         int32_t _max_operations;
         uint8_t _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         static ft_bool is_supported_language(const ft_string &language) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;

@@ -19,9 +19,9 @@ struct xml_namespace_entry
     xml_namespace_entry *next_local;
 };
 
-thread_local uint32_t xml_document::_last_error = static_cast<uint32_t>(FT_ERR_SUCCESS);
+thread_local int32_t xml_document::_last_error = FT_ERR_SUCCESS;
 
-uint32_t xml_document::set_error(uint32_t error_code) noexcept
+int32_t xml_document::set_error(int32_t error_code) noexcept
 {
     xml_document::_last_error = error_code;
     return (error_code);
@@ -595,7 +595,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
                 return (ft_nullptr);
             }
             node->children.push_back(child);
-            int32_t children_error_code = static_cast<int32_t>(node->children.get_error());
+            int32_t children_error_code = node->children.get_error();
             if (children_error_code != FT_ERR_SUCCESS)
             {
                 delete child;
@@ -1090,21 +1090,21 @@ char *xml_document::write_to_string() const noexcept
             error_code = write_status;
         if (error_code == FT_ERR_SUCCESS)
         {
-            buffer_error = static_cast<int32_t>(buffer.get_error());
+            buffer_error = buffer.get_error();
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESS)
         {
             buffer.push_back('\n');
-            buffer_error = static_cast<int32_t>(buffer.get_error());
+            buffer_error = buffer.get_error();
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESS)
         {
             buffer.push_back('\0');
-            buffer_error = static_cast<int32_t>(buffer.get_error());
+            buffer_error = buffer.get_error();
             if (buffer_error != FT_ERR_SUCCESS)
                 error_code = translate_vector_error(buffer_error);
         }

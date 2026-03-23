@@ -7,7 +7,7 @@
 #include <climits>
 #include <new>
 
-thread_local uint32_t game_event::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_event::_last_error = FT_ERR_SUCCESS;
 
 game_event::game_event() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
@@ -534,7 +534,7 @@ const char *game_event::get_error_str() const noexcept
     return (ft_strerror(game_event::_last_error));
 }
 
-uint32_t game_event::set_error(uint32_t error_code) noexcept
+int32_t game_event::set_error(int32_t error_code) noexcept
 {
     game_event::_last_error = error_code;
     return (error_code);

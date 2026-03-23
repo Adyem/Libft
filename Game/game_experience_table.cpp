@@ -6,7 +6,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_experience_table::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_experience_table::_last_error = FT_ERR_SUCCESS;
 
 game_experience_table::game_experience_table() noexcept
     : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr),
@@ -207,7 +207,7 @@ void game_experience_table::unlock_internal(ft_bool lock_acquired) const noexcep
 }
 
 
-uint32_t game_experience_table::set_error(uint32_t error_code) noexcept
+int32_t game_experience_table::set_error(int32_t error_code) noexcept
 {
     game_experience_table::_last_error = error_code;
     return (error_code);

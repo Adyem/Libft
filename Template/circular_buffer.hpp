@@ -26,9 +26,9 @@ class ft_circular_buffer
         ft_size_t                   _size;
         mutable pt_recursive_mutex  *_mutex;
         uint8_t                     _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         void destroy_elements_locked();
@@ -44,7 +44,7 @@ class ft_circular_buffer
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_circular_buffer<ElementType> &other);
+        int32_t move(ft_circular_buffer<ElementType> &other);
 
         void push(const ElementType& value);
         void push(ElementType&& value);
@@ -64,12 +64,12 @@ class ft_circular_buffer
 
         void clear();
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename ElementType>
-uint32_t ft_circular_buffer<ElementType>::set_error(uint32_t error_code) noexcept
+int32_t ft_circular_buffer<ElementType>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -296,7 +296,7 @@ int32_t ft_circular_buffer<ElementType>::destroy()
 }
 
 template <typename ElementType>
-uint32_t ft_circular_buffer<ElementType>::move(ft_circular_buffer<ElementType> &other)
+int32_t ft_circular_buffer<ElementType>::move(ft_circular_buffer<ElementType> &other)
 {
     int32_t destroy_result;
 
@@ -606,7 +606,7 @@ void ft_circular_buffer<ElementType>::clear()
 }
 
 template <typename ElementType>
-uint32_t ft_circular_buffer<ElementType>::get_error() const noexcept
+int32_t ft_circular_buffer<ElementType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_circular_buffer::get_error");
@@ -622,6 +622,6 @@ const char *ft_circular_buffer<ElementType>::get_error_str() const noexcept
 }
 
 template <typename ElementType>
-thread_local uint32_t ft_circular_buffer<ElementType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_circular_buffer<ElementType>::_last_error = FT_ERR_SUCCESS;
 
 #endif

@@ -60,7 +60,7 @@ FT_TEST(test_ft_circular_buffer_error_states)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     buffer_instance.push(30);
-    FT_ASSERT_EQ(FT_ERR_FULL, static_cast<int32_t>(buffer_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_FULL, buffer_instance.get_error());
 
     buffer_instance.clear();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
@@ -68,7 +68,7 @@ FT_TEST(test_ft_circular_buffer_error_states)
 
     int empty_value = buffer_instance.pop();
     FT_ASSERT_EQ(0, empty_value);
-    FT_ASSERT_EQ(FT_ERR_EMPTY, static_cast<int32_t>(buffer_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_EMPTY, buffer_instance.get_error());
 
     buffer_instance.push(50);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());

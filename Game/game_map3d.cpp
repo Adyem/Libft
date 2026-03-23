@@ -7,7 +7,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_map3d::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_map3d::_last_error = FT_ERR_SUCCESS;
 
 game_map3d::game_map3d()
     : _data(ft_nullptr), _width(0), _height(0), _depth(0),
@@ -85,7 +85,7 @@ game_map3d::~game_map3d()
     return ;
 }
 
-uint32_t game_map3d::set_error(uint32_t error_code) noexcept
+int32_t game_map3d::set_error(int32_t error_code) noexcept
 {
     game_map3d::_last_error = error_code;
     return (error_code);

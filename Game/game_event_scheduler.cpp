@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <new>
 
-thread_local uint32_t game_event_scheduler::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_event_scheduler::_last_error = FT_ERR_SUCCESS;
 static void event_scheduler_profile_reset_struct(t_event_scheduler_profile &profile)
 {
     profile.update_count = 0;
@@ -172,7 +172,7 @@ game_event_scheduler::~game_event_scheduler()
     return ;
 }
 
-uint32_t game_event_scheduler::set_error(uint32_t error_code) noexcept
+int32_t game_event_scheduler::set_error(int32_t error_code) noexcept
 {
     game_event_scheduler::_last_error = error_code;
     return (error_code);

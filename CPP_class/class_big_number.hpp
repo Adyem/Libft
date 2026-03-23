@@ -23,9 +23,9 @@ class ft_big_number
         mutable pt_recursive_mutex *_mutex;
         mutable uint8_t            _initialised_state;
         int32_t             _operation_error;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         static thread_local uint8_t _last_initialised_state;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
@@ -88,7 +88,7 @@ class ft_big_number
         ft_string   to_string_base(int32_t base) noexcept;
         ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
         static const char *get_error_str() noexcept;
-        static uint32_t get_error() noexcept;
+        static int32_t get_error() noexcept;
         int32_t     enable_thread_safety(void) noexcept;
         int32_t     disable_thread_safety(void) noexcept;
         ft_bool    is_thread_safe(void) const noexcept;

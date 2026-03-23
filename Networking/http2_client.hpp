@@ -75,11 +75,11 @@ class http2_frame
         uint32_t            _stream_identifier;
         ft_string           _payload;
         mutable pt_recursive_mutex   *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
         int32_t     lock(ft_bool *lock_acquired) const noexcept;
         void    unlock(ft_bool lock_acquired) const noexcept;
-        uint32_t set_error(uint32_t error_code) const noexcept;
+        int32_t set_error(int32_t error_code) const noexcept;
 
     public:
         http2_frame() noexcept;

@@ -14,6 +14,7 @@ typedef struct s_su_environment_snapshot
 
 char    *su_getenv(const char *name);
 int32_t     su_setenv(const char *name, const char *value, int32_t overwrite);
+int32_t     su_unsetenv(const char *name);
 int32_t     su_putenv(char *string);
 int32_t     su_environment_snapshot_capture(t_su_environment_snapshot *snapshot);
 int32_t     su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot);
@@ -79,14 +80,6 @@ void    su_file_unlock(su_file *stream, ft_bool lock_acquired);
 
 int32_t     su_environment_enable_thread_safety(void);
 void    su_environment_disable_thread_safety(void);
-
-char    *ft_getenv(const char *name);
-int32_t     ft_setenv(const char *name, const char *value, int32_t overwrite);
-int32_t     ft_unsetenv(const char *name);
-int32_t     ft_environment_lock(void);
-int32_t     ft_environment_unlock(void);
-int32_t     ft_environment_enable_thread_safety(void);
-void    ft_environment_disable_thread_safety(void);
 
 int32_t     su_copy_file(const char *source_path, const char *destination_path);
 int32_t     su_copy_directory_recursive(const char *source_path,

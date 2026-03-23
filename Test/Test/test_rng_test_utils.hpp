@@ -11,7 +11,7 @@ static uint32_t    ft_rng_test_seed_value(uint32_t default_seed, const char *con
     char        *environment_value;
     uint32_t    override_seed;
 
-    environment_value = ft_getenv("FT_RNG_TEST_SEED");
+    environment_value = su_getenv("FT_RNG_TEST_SEED");
     if (environment_value == ft_nullptr || *environment_value == '\0')
         return (default_seed);
     override_seed = ft_random_seed(environment_value);

@@ -7,7 +7,7 @@
 #include "class_nullptr.hpp"
 #include <climits>
 
-thread_local uint32_t ft_string::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_string::_last_error = FT_ERR_SUCCESS;
 thread_local uint8_t ft_string::_last_initialised_state = FT_CLASS_STATE_UNINITIALISED;
 
 void ft_string::sleep_backoff() noexcept
@@ -49,13 +49,13 @@ ft_bool ft_string::is_thread_safe() const noexcept
     return (this->_mutex != ft_nullptr);
 }
 
-uint32_t ft_string::set_error(uint32_t error_code) noexcept
+int32_t ft_string::set_error(int32_t error_code) noexcept
 {
     ft_string::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t ft_string::get_error() noexcept
+int32_t ft_string::get_error() noexcept
 {
     if (ft_string::_last_initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {

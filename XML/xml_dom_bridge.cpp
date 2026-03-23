@@ -97,7 +97,7 @@ static int32_t xml_dom_populate_node_locked(const xml_node *source, ft_dom_node 
         child_source = source->children[index];
         int32_t child_error_code;
 
-        child_error_code = static_cast<int32_t>(source->children.get_error());
+        child_error_code = source->children.get_error();
         if (child_error_code != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_error_code));
         if (!child_source)
@@ -232,12 +232,12 @@ static int32_t xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noex
 
         int32_t attribute_keys_error;
 
-        attribute_keys_error = static_cast<int32_t>(attribute_keys.get_error());
+        attribute_keys_error = attribute_keys.get_error();
         if (attribute_keys_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_keys_error));
         int32_t attribute_values_error;
 
-        attribute_values_error = static_cast<int32_t>(attribute_values.get_error());
+        attribute_values_error = attribute_values.get_error();
         if (attribute_values_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_values_error));
         output += " ";
@@ -266,7 +266,7 @@ static int32_t xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noex
     has_value = value.size() > 0;
     int32_t children_error_code;
 
-    children_error_code = static_cast<int32_t>(children.get_error());
+    children_error_code = children.get_error();
     if (children_error_code != FT_ERR_SUCCESS)
         return (xml_dom_report_error(children_error_code));
     if (!has_children && !has_value)
@@ -295,7 +295,7 @@ static int32_t xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noex
 
         int32_t child_vector_error;
 
-        child_vector_error = static_cast<int32_t>(children.get_error());
+        child_vector_error = children.get_error();
         if (child_vector_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_vector_error));
         if (xml_dom_serialize_node(child_node, output) != 0)

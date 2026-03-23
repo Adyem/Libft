@@ -32,9 +32,9 @@ class ft_event_emitter
         ft_size_t                  _size;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                    _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         ft_bool ensure_capacity_unlocked(ft_size_t desired);
@@ -51,7 +51,7 @@ class ft_event_emitter
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_event_emitter<EventType, Args...> &other);
+        int32_t move(ft_event_emitter<EventType, Args...> &other);
 
         int32_t enable_thread_safety();
         int32_t disable_thread_safety();
@@ -66,7 +66,7 @@ class ft_event_emitter
         ft_bool empty() const;
         void clear();
 
-        uint32_t get_error() const;
+        int32_t get_error() const;
         const char *get_error_str() const;
 };
 
@@ -372,7 +372,7 @@ int32_t ft_event_emitter<EventType, Args...>::destroy()
 }
 
 template <typename EventType, typename... Args>
-uint32_t ft_event_emitter<EventType, Args...>::move(
+int32_t ft_event_emitter<EventType, Args...>::move(
     ft_event_emitter<EventType, Args...> &other)
 {
     int32_t destroy_result;

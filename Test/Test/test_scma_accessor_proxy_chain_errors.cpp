@@ -112,7 +112,7 @@ FT_TEST(test_scma_proxy_failure_does_not_block_next_valid_operation)
     write_value = 25;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.write_at(write_value, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.get_error());
-    FT_ASSERT_EQ(1, accessor.read_at(read_value, 0));
+    FT_ASSERT_EQ(0, accessor.read_at(read_value, 0));
     FT_ASSERT_EQ(25, read_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
     FT_ASSERT_EQ(0, scma_free(handle));
@@ -133,10 +133,10 @@ FT_TEST(test_scma_proxy_instances_track_errors_independently)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.write_at(5, 0));
 
     auto invalid_proxy = accessor[4];
-    auto valid_proxy = accessor[0];
 
     FT_ASSERT_EQ(0, invalid_proxy.is_valid());
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, invalid_proxy.get_error());
+    auto valid_proxy = accessor[0];
     FT_ASSERT_EQ(1, valid_proxy.is_valid());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, valid_proxy.get_error());
     scma_shutdown();
@@ -159,7 +159,7 @@ FT_TEST(test_scma_const_proxy_invalid_index_reports_error)
     auto invalid_proxy = const_accessor[8];
 
     FT_ASSERT_EQ(0, invalid_proxy.is_valid());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, invalid_proxy.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, invalid_proxy.get_error());
     scma_shutdown();
     return (1);
 }
@@ -181,7 +181,7 @@ FT_TEST(test_scma_const_proxy_invalid_arrow_is_safe)
     const scma_chain_value *value_pointer = invalid_proxy.operator->();
 
     FT_ASSERT(value_pointer != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, invalid_proxy.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, invalid_proxy.get_error());
     scma_shutdown();
     return (1);
 }

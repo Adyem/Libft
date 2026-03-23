@@ -103,7 +103,7 @@ int32_t yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) 
             return (FT_ERR_NO_MEMORY);
         lines.push_back(part);
         if (lines.get_error() != FT_ERR_SUCCESS)
-            return (static_cast<int32_t>(lines.get_error()));
+            return (lines.get_error());
         start_index = end_index + 1;
     }
     return (FT_ERR_SUCCESS);

@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_vendor_profile::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_vendor_profile::_last_error = FT_ERR_SUCCESS;
 
 game_vendor_profile::game_vendor_profile() noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
@@ -85,7 +85,7 @@ game_vendor_profile::~game_vendor_profile() noexcept
     return ;
 }
 
-uint32_t game_vendor_profile::set_error(uint32_t error_code) noexcept
+int32_t game_vendor_profile::set_error(int32_t error_code) noexcept
 {
     game_vendor_profile::_last_error = error_code;
     return (error_code);

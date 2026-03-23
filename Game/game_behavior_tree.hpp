@@ -40,9 +40,9 @@ class game_behavior_context
 class game_behavior_node
 {
     protected:
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         game_behavior_node() noexcept;
@@ -132,9 +132,9 @@ class game_behavior_tree
         private:
     #endif
         ft_sharedptr<game_behavior_node> _root;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         game_behavior_tree() noexcept;

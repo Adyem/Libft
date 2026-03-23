@@ -6,7 +6,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_dialogue_table::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_dialogue_table::_last_error = FT_ERR_SUCCESS;
 
 static ft_sharedptr<game_dialogue_line> game_dialogue_table_clone_line(
     const game_dialogue_line &line)
@@ -158,7 +158,7 @@ game_dialogue_table::~game_dialogue_table() noexcept
     return ;
 }
 
-uint32_t game_dialogue_table::set_error(uint32_t error_code) noexcept
+int32_t game_dialogue_table::set_error(int32_t error_code) noexcept
 {
     game_dialogue_table::_last_error = error_code;
     return (error_code);
@@ -604,8 +604,12 @@ void game_dialogue_table::set_lines(
     const ft_map<int32_t, ft_sharedptr<game_dialogue_line> > &lines) noexcept
 {
     ft_bool lock_acquired;
+    ft_size_t count;
+    ft_size_t index;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *entry;
     const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *entry_end;
+    game_dialogue_line *cached_line;
+    int32_t error_code;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_dialogue_table::set_lines");
     int32_t lock_error;
@@ -623,16 +627,37 @@ void game_dialogue_table::set_lines(
         (void)this->unlock_internal(lock_acquired);
         return ;
     }
+    count = lines.size();
     entry_end = lines.end();
-    entry = entry_end - lines.size();
-    while (entry != entry_end)
+    entry = entry_end - count;
+    index = 0;
+    error_code = FT_ERR_SUCCESS;
+    while (index < count)
     {
+        this->_lines.insert(entry->key, entry->value);
+        if (this->_lines.get_error() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
+            error_code = this->_lines.get_error();
         if (entry->value != ft_sharedptr<game_dialogue_line>()
             && entry->value->is_initialised() == FT_TRUE)
-            (void)this->register_line(*entry->value.get());
+        {
+            cached_line = game_dialogue_table_clone_line_raw(*entry->value.get());
+            if (cached_line != ft_nullptr)
+            {
+                this->_line_cache.insert(entry->key, cached_line);
+                if (this->_line_cache.get_error() != FT_ERR_SUCCESS
+                    && error_code == FT_ERR_SUCCESS)
+                {
+                    error_code = this->_line_cache.get_error();
+                    delete cached_line;
+                }
+            }
+            else if (error_code == FT_ERR_SUCCESS)
+                error_code = FT_ERR_NO_MEMORY;
+        }
         entry++;
+        index += 1;
     }
-    this->set_error(FT_ERR_SUCCESS);
+    this->set_error(static_cast<uint32_t>(error_code));
 
     (void)this->unlock_internal(lock_acquired);
     return ;

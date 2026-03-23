@@ -1466,7 +1466,7 @@ void game_character::restore_magic_armor_internal() noexcept
     return ;
 }
 
-uint32_t game_character::set_error(uint32_t error_code) noexcept
+int32_t game_character::set_error(int32_t error_code) noexcept
 {
     game_character::_last_error = error_code;
     return (error_code);

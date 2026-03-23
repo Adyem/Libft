@@ -6,7 +6,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_resistance::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_resistance::_last_error = FT_ERR_SUCCESS;
 
 game_resistance::game_resistance() noexcept
     : _percent_value(0), _flat_value(0), _mutex(ft_nullptr),
@@ -376,7 +376,7 @@ const char *game_resistance::get_error_str() const noexcept
     return (ft_strerror(game_resistance::_last_error));
 }
 
-uint32_t game_resistance::set_error(uint32_t error_code) noexcept
+int32_t game_resistance::set_error(int32_t error_code) noexcept
 {
     game_resistance::_last_error = error_code;
     return (error_code);

@@ -18,7 +18,7 @@ FT_TEST(test_ft_optional_reports_empty_state)
     int &fallback_value = optional_value.value();
 
     FT_ASSERT_EQ(0, fallback_value);
-    FT_ASSERT_EQ(FT_ERR_EMPTY, static_cast<int32_t>(optional_value.get_error()));
+    FT_ASSERT_EQ(FT_ERR_EMPTY, optional_value.get_error());
     return (1);
 }
 
@@ -28,10 +28,10 @@ FT_TEST(test_ft_optional_holds_value_and_resets)
 
     FT_ASSERT(optional_value.has_value());
     FT_ASSERT_EQ(42, optional_value.value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(optional_value.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, optional_value.get_error());
     optional_value.reset();
     FT_ASSERT_EQ(false, optional_value.has_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(optional_value.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, optional_value.get_error());
     return (1);
 }
 
@@ -43,11 +43,11 @@ FT_TEST(test_ft_optional_move_transfers_state)
     int stored_value = source_optional.value();
     source_optional.reset();
     FT_ASSERT_EQ(false, source_optional.has_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(source_optional.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_optional.get_error());
     FT_ASSERT_EQ(0, destination_optional.initialize(stored_value));
     FT_ASSERT(destination_optional.has_value());
     FT_ASSERT_EQ(99, destination_optional.value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(destination_optional.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_optional.get_error());
     return (1);
 }
 
@@ -59,14 +59,14 @@ FT_TEST(test_ft_variant_emplace_and_get)
     variant_value.emplace<int>(17);
     FT_ASSERT(variant_value.holds_alternative<int>());
     FT_ASSERT_EQ(17, variant_value.get<int>());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(variant_value.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_value.get_error());
     variant_value.emplace<const char*>("hello");
     FT_ASSERT(variant_value.holds_alternative<const char*>());
     const char *string_value = variant_value.get<const char*>();
     FT_ASSERT_EQ(0, std::strcmp("hello", string_value));
     int wrong_access = variant_value.get<int>();
     FT_ASSERT_EQ(0, wrong_access);
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, static_cast<int32_t>(variant_value.get_error()));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, variant_value.get_error());
     return (1);
 }
 
@@ -77,12 +77,12 @@ FT_TEST(test_ft_variant_visit_and_reset)
 
     variant_value.visit([&visit_sum](const auto &value){ visit_sum += value; });
     FT_ASSERT_EQ(12L, visit_sum);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(variant_value.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_value.get_error());
     variant_value.reset();
     FT_ASSERT_EQ(false, variant_value.holds_alternative<int>());
     visit_sum = 5;
     variant_value.visit([&visit_sum](const auto &value){ visit_sum += value; });
     FT_ASSERT_EQ(5L, visit_sum);
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, static_cast<int32_t>(variant_value.get_error()));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, variant_value.get_error());
     return (1);
 }

@@ -113,14 +113,19 @@ static int32_t su_environment_split_entry(
 
 char *su_getenv(const char *name)
 {
-    char    *result;
     int32_t     lock_error;
     int32_t     unlock_error;
+    char        *result;
 
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
-    result = ft_getenv(name);
+    if (name == ft_nullptr || *name == '\0')
+    {
+        (void)su_environment_unlock_mutex();
+        return (ft_nullptr);
+    }
+    result = getenv(name);
     unlock_error = su_environment_unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -129,14 +134,40 @@ char *su_getenv(const char *name)
 
 int32_t su_setenv(const char *name, const char *value, int32_t overwrite)
 {
-    int32_t result;
     int32_t lock_error;
     int32_t unlock_error;
+    int32_t result;
 
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    result = ft_setenv(name, value, overwrite);
+    result = cmp_setenv(name, value, overwrite);
+    unlock_error = su_environment_unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (-1);
+    return (result);
+}
+
+int32_t su_unsetenv(const char *name)
+{
+    int32_t lock_error;
+    int32_t unlock_error;
+    int32_t result;
+
+    lock_error = su_environment_lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (-1);
+    if (name == ft_nullptr || *name == '\0')
+    {
+        (void)su_environment_unlock_mutex();
+        return (-1);
+    }
+    if (ft_strchr(name, '=') != ft_nullptr)
+    {
+        (void)su_environment_unlock_mutex();
+        return (-1);
+    }
+    result = cmp_unsetenv(name);
     unlock_error = su_environment_unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -154,7 +185,7 @@ int32_t su_putenv(char *string)
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    result = putenv(string);
+    result = cmp_putenv(string);
     unlock_error = su_environment_unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -240,7 +271,7 @@ int32_t su_environment_snapshot_restore(const t_su_environment_snapshot *snapsho
             (void)su_environment_unlock_mutex();
             return (error_code);
         }
-        if (ft_unsetenv(name.c_str()) != 0)
+        if (cmp_unsetenv(name.c_str()) != 0)
         {
             error_code = cmp_map_system_error_to_ft(errno);
             (void)su_environment_unlock_mutex();
@@ -263,7 +294,7 @@ int32_t su_environment_snapshot_restore(const t_su_environment_snapshot *snapsho
         }
         if (has_value == 0)
         {
-            if (ft_unsetenv(name.c_str()) != 0)
+            if (cmp_unsetenv(name.c_str()) != 0)
             {
                 error_code = cmp_map_system_error_to_ft(errno);
                 (void)su_environment_unlock_mutex();
@@ -272,7 +303,7 @@ int32_t su_environment_snapshot_restore(const t_su_environment_snapshot *snapsho
         }
         else
         {
-            if (ft_setenv(name.c_str(), value.c_str(), 1) != 0)
+            if (cmp_setenv(name.c_str(), value.c_str(), 1) != 0)
             {
                 error_code = cmp_map_system_error_to_ft(errno);
                 (void)su_environment_unlock_mutex();

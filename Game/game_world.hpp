@@ -47,10 +47,10 @@ class game_world
         ft_sharedptr<game_quest> _quest;
         ft_sharedptr<game_vendor_profile> _vendor_profile;
         ft_sharedptr<game_upgrade> _upgrade;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         uint8_t _initialised_state;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         ft_bool propagate_scheduler_state_error() const noexcept;
         ft_bool propagate_registry_state_error() const noexcept;
         ft_bool propagate_replay_state_error() const noexcept;

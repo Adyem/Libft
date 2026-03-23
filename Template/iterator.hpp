@@ -18,9 +18,9 @@ class Iterator
         ValueType                 *_ptr;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                    _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         static ValueType &fallback_reference() noexcept;
@@ -36,7 +36,7 @@ class Iterator
                 reference_proxy(ValueType *pointer, int32_t error) noexcept;
                 operator ValueType&() const noexcept;
                 ValueType *operator->() const noexcept;
-                uint32_t get_error() const noexcept;
+                int32_t get_error() const noexcept;
         };
 
         Iterator() noexcept;
@@ -51,7 +51,7 @@ class Iterator
         int32_t initialize() noexcept;
         int32_t initialize(ValueType *pointer) noexcept;
         int32_t destroy() noexcept;
-        uint32_t move(Iterator<ValueType> &other) noexcept;
+        int32_t move(Iterator<ValueType> &other) noexcept;
 
         Iterator& operator++() noexcept;
         ft_bool operator!=(const Iterator& other) const noexcept;
@@ -65,12 +65,12 @@ class Iterator
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename ValueType>
-uint32_t Iterator<ValueType>::set_error(uint32_t error_code) noexcept
+int32_t Iterator<ValueType>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -134,7 +134,7 @@ ValueType *Iterator<ValueType>::reference_proxy::operator->() const noexcept
 }
 
 template <typename ValueType>
-uint32_t Iterator<ValueType>::reference_proxy::get_error() const noexcept
+int32_t Iterator<ValueType>::reference_proxy::get_error() const noexcept
 {
     return (this->_error);
 }
@@ -221,7 +221,7 @@ int32_t Iterator<ValueType>::destroy() noexcept
 }
 
 template <typename ValueType>
-uint32_t Iterator<ValueType>::move(Iterator<ValueType> &other) noexcept
+int32_t Iterator<ValueType>::move(Iterator<ValueType> &other) noexcept
 {
     int32_t destroy_result;
 
@@ -431,7 +431,7 @@ void Iterator<ValueType>::unlock(ft_bool lock_acquired) const
 }
 
 template <typename ValueType>
-uint32_t Iterator<ValueType>::get_error() const noexcept
+int32_t Iterator<ValueType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Iterator::get_error");
     return (_last_error);
@@ -446,6 +446,6 @@ const char *Iterator<ValueType>::get_error_str() const noexcept
 }
 
 template <typename ValueType>
-thread_local uint32_t Iterator<ValueType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t Iterator<ValueType>::_last_error = FT_ERR_SUCCESS;
 
 #endif

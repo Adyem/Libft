@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_rarity_band::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_rarity_band::_last_error = FT_ERR_SUCCESS;
 
 game_rarity_band::game_rarity_band() noexcept
     : _rarity(0), _value_multiplier(1.0), _mutex(ft_nullptr),
@@ -82,7 +82,7 @@ game_rarity_band::~game_rarity_band() noexcept
     return ;
 }
 
-uint32_t game_rarity_band::set_error(uint32_t error_code) noexcept
+int32_t game_rarity_band::set_error(int32_t error_code) noexcept
 {
     game_rarity_band::_last_error = error_code;
     return (error_code);

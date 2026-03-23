@@ -8,7 +8,7 @@
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
-thread_local uint32_t ft_dual_number::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_dual_number::_last_error = FT_ERR_SUCCESS;
 
 static void math_autodiff_sleep_backoff()
 {
@@ -29,7 +29,7 @@ void ft_dual_number::abort_if_not_initialised(const char *method_name) const noe
     return ;
 }
 
-uint32_t ft_dual_number::set_error(uint32_t error_code) noexcept
+int32_t ft_dual_number::set_error(int32_t error_code) noexcept
 {
     ft_dual_number::_last_error = error_code;
     return (error_code);
@@ -905,7 +905,7 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
 }
 
 
-uint32_t ft_dual_number::get_error() const noexcept
+int32_t ft_dual_number::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->abort_lifecycle_error("ft_dual_number::get_error",

@@ -17,7 +17,7 @@ static void capture_environment_value(const char *name, std::string &storage, in
 {
     char    *current_value;
 
-    current_value = ft_getenv(name);
+    current_value = su_getenv(name);
     if (current_value != ft_nullptr)
     {
         was_present = 1;

@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_world_region::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_world_region::_last_error = FT_ERR_SUCCESS;
 
 static int32_t game_world_region_copy_ids(const ft_vector<int32_t> &source,
     ft_vector<int32_t> &destination)
@@ -100,7 +100,7 @@ game_world_region::~game_world_region() noexcept
     return ;
 }
 
-uint32_t game_world_region::set_error(uint32_t error_code) noexcept
+int32_t game_world_region::set_error(int32_t error_code) noexcept
 {
     game_world_region::_last_error = error_code;
     return (error_code);

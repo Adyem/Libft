@@ -374,55 +374,55 @@ int test_atol_invalid_input(void)
 
 int test_setenv_getenv_basic(void)
 {
-    if (ft_setenv("LIBFT_TEST_VAR", "hello", 1) != 0)
+    if (su_setenv("LIBFT_TEST_VAR", "hello", 1) != 0)
         return (0);
-    char *val = ft_getenv("LIBFT_TEST_VAR");
+    char *val = su_getenv("LIBFT_TEST_VAR");
     int ok = val != ft_nullptr && std::strcmp(val, "hello") == 0;
-    ft_unsetenv("LIBFT_TEST_VAR");
+    su_unsetenv("LIBFT_TEST_VAR");
     return (ok);
 }
 
 int test_setenv_no_overwrite(void)
 {
-    if (ft_setenv("LIBFT_TEST_VAR2", "first", 1) != 0)
+    if (su_setenv("LIBFT_TEST_VAR2", "first", 1) != 0)
         return (0);
-    ft_setenv("LIBFT_TEST_VAR2", "second", 0);
-    char *val = ft_getenv("LIBFT_TEST_VAR2");
+    su_setenv("LIBFT_TEST_VAR2", "second", 0);
+    char *val = su_getenv("LIBFT_TEST_VAR2");
     int ok = val != ft_nullptr && std::strcmp(val, "first") == 0;
-    ft_unsetenv("LIBFT_TEST_VAR2");
+    su_unsetenv("LIBFT_TEST_VAR2");
     return (ok);
 }
 
 int test_setenv_overwrite(void)
 {
-    if (ft_setenv("LIBFT_TEST_VAR3", "first", 1) != 0)
+    if (su_setenv("LIBFT_TEST_VAR3", "first", 1) != 0)
         return (0);
-    ft_setenv("LIBFT_TEST_VAR3", "second", 1);
-    char *val = ft_getenv("LIBFT_TEST_VAR3");
+    su_setenv("LIBFT_TEST_VAR3", "second", 1);
+    char *val = su_getenv("LIBFT_TEST_VAR3");
     int ok = val != ft_nullptr && std::strcmp(val, "second") == 0;
-    ft_unsetenv("LIBFT_TEST_VAR3");
+    su_unsetenv("LIBFT_TEST_VAR3");
     return (ok);
 }
 
 int test_setenv_invalid_name(void)
 {
-    return (ft_setenv("INVAL=NAME", "x", 1) == -1);
+    return (su_setenv("INVAL=NAME", "x", 1) == -1);
 }
 
 int test_setenv_null_name(void)
 {
-    return (ft_setenv(ft_nullptr, "x", 1) == -1);
+    return (su_setenv(ft_nullptr, "x", 1) == -1);
 }
 
 int test_unsetenv_null_name(void)
 {
-    return (ft_unsetenv(ft_nullptr) == -1);
+    return (su_unsetenv(ft_nullptr) == -1);
 }
 
 int test_unsetenv_missing(void)
 {
-    ft_unsetenv("LIBFT_TEST_MISSING");
-    return (ft_unsetenv("LIBFT_TEST_MISSING") == 0);
+    su_unsetenv("LIBFT_TEST_MISSING");
+    return (su_unsetenv("LIBFT_TEST_MISSING") == 0);
 }
 
 int test_su_get_cpu_count(void)
@@ -443,7 +443,7 @@ int test_su_get_home_directory_posix(void)
     char    *expected;
     char    *result;
 
-    expected = ft_getenv("HOME");
+    expected = su_getenv("HOME");
     result = su_get_home_directory();
     if (expected == ft_nullptr || result == ft_nullptr)
         return (0);
@@ -461,12 +461,12 @@ int test_su_get_home_directory_windows(void)
     char    *combined;
     int     test_ok;
 
-    expected = ft_getenv("USERPROFILE");
+    expected = su_getenv("USERPROFILE");
     result = su_get_home_directory();
     if (expected != ft_nullptr)
         return (result != ft_nullptr && std::strcmp(result, expected) == 0);
-    home_drive = ft_getenv("HOMEDRIVE");
-    home_path = ft_getenv("HOMEPATH");
+    home_drive = su_getenv("HOMEDRIVE");
+    home_path = su_getenv("HOMEPATH");
     if (home_drive == ft_nullptr || home_path == ft_nullptr)
         return (result == ft_nullptr);
     combined = cma_strjoin_multiple(2, home_drive, home_path);

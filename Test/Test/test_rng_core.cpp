@@ -20,7 +20,7 @@ FT_TEST(test_rng_seed_override_from_environment)
     int         first_sample;
     int         second_sample;
 
-    original_value = ft_getenv(environment_name);
+    original_value = su_getenv(environment_name);
     if (original_value != ft_nullptr && *original_value != '\0')
     {
         original_copy = original_value;
@@ -28,18 +28,18 @@ FT_TEST(test_rng_seed_override_from_environment)
             return (0);
         restore_original = true;
     }
-    ft_unsetenv(environment_name);
+    su_unsetenv(environment_name);
     baseline_seed = ft_rng_test_seed_value(100u, "baseline");
     FT_ASSERT_EQ(100u, baseline_seed);
     expected_override_seed = ft_random_seed("override");
     expected_override_seed = expected_override_seed ^ ft_random_seed("baseline");
     expected_override_seed = expected_override_seed ^ 100u;
-    if (ft_setenv(environment_name, "override", 1) != 0)
+    if (su_setenv(environment_name, "override", 1) != 0)
     {
         if (restore_original == true)
-            ft_setenv(environment_name, original_copy.c_str(), 1);
+            su_setenv(environment_name, original_copy.c_str(), 1);
         else
-            ft_unsetenv(environment_name);
+            su_unsetenv(environment_name);
         return (0);
     }
     override_seed = ft_rng_test_seed_value(100u, "baseline");
@@ -51,11 +51,11 @@ FT_TEST(test_rng_seed_override_from_environment)
     FT_ASSERT_EQ(first_sample, second_sample);
     if (restore_original == true)
     {
-        if (ft_setenv(environment_name, original_copy.c_str(), 1) != 0)
+        if (su_setenv(environment_name, original_copy.c_str(), 1) != 0)
             return (0);
     }
     else
-        ft_unsetenv(environment_name);
+        su_unsetenv(environment_name);
     return (1);
 }
 

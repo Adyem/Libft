@@ -22,9 +22,9 @@ struct game_crafting_ingredient
         int32_t             _rarity;
         uint8_t             _initialised_state;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
         int32_t  lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
@@ -70,9 +70,9 @@ class game_crafting
         ft_map<int32_t, ft_vector<game_crafting_ingredient>> _recipes;
         uint8_t                                     _initialised_state;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
         int32_t  lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;

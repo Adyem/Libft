@@ -8,7 +8,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_state::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_state::_last_error = FT_ERR_SUCCESS;
 
 game_state::game_state() noexcept
     : _worlds(), _characters(), _variables(), _hooks(), _mutex(ft_nullptr),
@@ -223,8 +223,8 @@ int32_t game_state::move(game_state &other) noexcept
         this->_worlds.push_back(other._worlds[index]);
         if (this->_worlds.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(static_cast<int32_t>(this->_worlds.get_error()));
-            return (static_cast<int32_t>(this->_worlds.get_error()));
+            this->set_error(this->_worlds.get_error());
+            return (this->_worlds.get_error());
         }
         index++;
     }
@@ -236,8 +236,8 @@ int32_t game_state::move(game_state &other) noexcept
         this->_characters.push_back(other._characters[index]);
         if (this->_characters.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(static_cast<int32_t>(this->_characters.get_error()));
-            return (static_cast<int32_t>(this->_characters.get_error()));
+            this->set_error(this->_characters.get_error());
+            return (this->_characters.get_error());
         }
         index++;
     }
@@ -674,7 +674,7 @@ ft_bool game_state::is_thread_safe() const noexcept
     return (this->_mutex != ft_nullptr);
 }
 
-uint32_t game_state::set_error(uint32_t error_code) noexcept
+int32_t game_state::set_error(int32_t error_code) noexcept
 {
     game_state::_last_error = error_code;
     return (error_code);

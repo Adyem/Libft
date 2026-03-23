@@ -20,9 +20,9 @@ static void game_dialogue_copy_int_vector(const ft_vector<int32_t> &source,
     return ;
 }
 
-thread_local uint32_t game_dialogue_line::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_dialogue_line::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_dialogue_line::set_error(uint32_t error_code) noexcept
+int32_t game_dialogue_line::set_error(int32_t error_code) noexcept
 {
     game_dialogue_line::_last_error = error_code;
     return (error_code);

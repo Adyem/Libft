@@ -12,7 +12,7 @@ static ft_size_t distance_component(ft_size_t left_value, ft_size_t right_value)
     return (right_value - left_value);
 }
 
-thread_local uint32_t game_path_step::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_path_step::_last_error = FT_ERR_SUCCESS;
 
 #ifdef LIBFT_TEST_BUILD
 
@@ -60,7 +60,7 @@ int32_t game_path_step_test_helper::get_mutex_error(const game_path_step &step) 
 
 #endif
 
-uint32_t game_path_step::set_error(uint32_t error_code) noexcept
+int32_t game_path_step::set_error(int32_t error_code) noexcept
 {
     game_path_step::_last_error = error_code;
     return (error_code);
@@ -409,9 +409,9 @@ const char *game_path_step::get_error_str() const noexcept
     return (ft_strerror(game_path_step::_last_error));
 }
 
-thread_local uint32_t game_pathfinding::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_pathfinding::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_pathfinding::set_error(uint32_t error_code) noexcept
+int32_t game_pathfinding::set_error(int32_t error_code) noexcept
 {
     game_pathfinding::_last_error = error_code;
     return (error_code);

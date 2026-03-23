@@ -21,7 +21,7 @@ class ft_dual_number
         mutable pt_recursive_mutex *_mutex = ft_nullptr;
         uint8_t         _initialised_state = FT_CLASS_STATE_UNINITIALISED;
         int32_t             _operation_error = FT_ERR_SUCCESS;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
         static int32_t      lock_pair(const ft_dual_number &first,
                             const ft_dual_number &second,
@@ -32,7 +32,7 @@ class ft_dual_number
         void            abort_lifecycle_error(const char *method_name,
                             const char *reason) const noexcept;
         void            abort_if_not_initialised(const char *method_name) const noexcept;
-        static uint32_t      set_error(uint32_t error_code) noexcept;
+        static int32_t      set_error(int32_t error_code) noexcept;
         friend class ft_dual_number_proxy;
 
     public:
@@ -71,7 +71,7 @@ class ft_dual_number
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

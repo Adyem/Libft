@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_behavior_action::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_behavior_action::_last_error = FT_ERR_SUCCESS;
 int32_t game_behavior_action::lock_pair(const game_behavior_action &first, const game_behavior_action &second,
         ft_bool *first_locked,
         ft_bool *second_locked)
@@ -450,7 +450,7 @@ const char *game_behavior_action::get_error_str() const noexcept
     return (ft_strerror(game_behavior_action::_last_error));
 }
 
-uint32_t game_behavior_action::set_error(uint32_t error_code) noexcept
+int32_t game_behavior_action::set_error(int32_t error_code) noexcept
 {
     game_behavior_action::_last_error = error_code;
     return (error_code);

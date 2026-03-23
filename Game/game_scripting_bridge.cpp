@@ -39,10 +39,10 @@ static void trim_whitespace(ft_string &target) noexcept
     return ;
 }
 
-thread_local uint32_t game_script_context::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t game_script_bridge::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_script_context::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_script_bridge::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_script_context::set_error(uint32_t error_code) noexcept
+int32_t game_script_context::set_error(int32_t error_code) noexcept
 {
     game_script_context::_last_error = error_code;
     return (error_code);
@@ -350,7 +350,7 @@ const char *game_script_context::get_error_str() const noexcept
     return (ft_strerror(game_script_context::_last_error));
 }
 
-uint32_t game_script_bridge::set_error(uint32_t error_code) noexcept
+int32_t game_script_bridge::set_error(int32_t error_code) noexcept
 {
     game_script_bridge::_last_error = error_code;
     return (error_code);

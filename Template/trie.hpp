@@ -31,7 +31,7 @@ class ft_trie
         uint8_t                                     _initialised_state;
         static thread_local uint32_t                _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         ft_size_t key_length(const char *key) const;
@@ -50,7 +50,7 @@ class ft_trie
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_trie<ValueType> &other);
+        int32_t move(ft_trie<ValueType> &other);
 
         int32_t insert(const char *key, ValueType *value_pointer,
             int32_t unset_value = 0);
@@ -63,12 +63,12 @@ class ft_trie
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename ValueType>
-uint32_t ft_trie<ValueType>::set_error(uint32_t error_code) noexcept
+int32_t ft_trie<ValueType>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -347,7 +347,7 @@ int32_t ft_trie<ValueType>::destroy()
 }
 
 template <typename ValueType>
-uint32_t ft_trie<ValueType>::move(ft_trie<ValueType> &other)
+int32_t ft_trie<ValueType>::move(ft_trie<ValueType> &other)
 {
     int32_t destroy_result;
 
@@ -531,7 +531,7 @@ void ft_trie<ValueType>::unlock(ft_bool lock_acquired) const
 }
 
 template <typename ValueType>
-uint32_t ft_trie<ValueType>::get_error() const noexcept
+int32_t ft_trie<ValueType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::get_error");
     return (_last_error);
@@ -546,6 +546,6 @@ const char *ft_trie<ValueType>::get_error_str() const noexcept
 }
 
 template <typename ValueType>
-thread_local uint32_t ft_trie<ValueType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_trie<ValueType>::_last_error = FT_ERR_SUCCESS;
 
 #endif

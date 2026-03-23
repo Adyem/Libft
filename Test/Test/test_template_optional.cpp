@@ -96,12 +96,12 @@ FT_TEST(test_ft_optional_non_default_constructible)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_optional.initialize());
     FT_ASSERT(empty_optional.has_value() == false);
     empty_optional.value();
-    FT_ASSERT_EQ(FT_ERR_EMPTY, static_cast<int32_t>(empty_optional.get_error()));
+    FT_ASSERT_EQ(FT_ERR_EMPTY, empty_optional.get_error());
 
     ft_optional<no_default_optional_value> value_optional(no_default_optional_value(42));
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(42, value_optional.value().get_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(value_optional.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.get_error());
 
     ft_optional<no_default_optional_value> moved_optional;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.initialize(no_default_optional_value(64)));
@@ -109,13 +109,13 @@ FT_TEST(test_ft_optional_non_default_constructible)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.initialize(moved_optional.value()));
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(64, value_optional.value().get_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(value_optional.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.get_error());
     FT_ASSERT(moved_optional.has_value() == true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(moved_optional.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.get_error());
 
     value_optional.reset();
     FT_ASSERT(value_optional.has_value() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, static_cast<int32_t>(value_optional.get_error()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty_optional.destroy());

@@ -97,9 +97,9 @@ class ft_variant
         ft_size_t                   _index;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                     _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         void destroy_unlocked();
@@ -127,7 +127,7 @@ class ft_variant
         int32_t initialize(TypeToStore&& value);
 
         int32_t destroy();
-        uint32_t move(ft_variant &other);
+        int32_t move(ft_variant &other);
 
         template <typename TypeToStore>
         void emplace(TypeToStore&& value);
@@ -146,7 +146,7 @@ class ft_variant
                 value_proxy(TypeToGet *pointer, int32_t error);
                 operator TypeToGet&() const;
                 TypeToGet *operator->() const;
-                uint32_t get_error() const;
+                int32_t get_error() const;
         };
 
         template <typename TypeToGet>
@@ -166,7 +166,7 @@ class ft_variant
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
@@ -435,7 +435,7 @@ int32_t ft_variant<Types...>::destroy()
 }
 
 template <typename... Types>
-uint32_t ft_variant<Types...>::move(ft_variant<Types...> &other)
+int32_t ft_variant<Types...>::move(ft_variant<Types...> &other)
 {
     int32_t init_result;
 

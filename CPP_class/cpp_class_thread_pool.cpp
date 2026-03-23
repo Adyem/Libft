@@ -1,6 +1,6 @@
 #include "thread_pool.hpp"
 
-uint32_t ft_thread_pool::set_error(uint32_t error_code) noexcept
+int32_t ft_thread_pool::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -274,7 +274,7 @@ int32_t ft_thread_pool::destroy()
     return (set_error(first_error));
 }
 
-uint32_t ft_thread_pool::move(ft_thread_pool &other) noexcept
+int32_t ft_thread_pool::move(ft_thread_pool &other) noexcept
 {
     int32_t destroy_result;
 
@@ -405,7 +405,7 @@ void ft_thread_pool::unlock(ft_bool lock_acquired) const
     return ;
 }
 
-uint32_t ft_thread_pool::get_error() const noexcept
+int32_t ft_thread_pool::get_error() const noexcept
 {
     errno_abort_if_uninitialised(this->_initialised_state,
         "ft_thread_pool::get_error");
@@ -419,4 +419,4 @@ const char *ft_thread_pool::get_error_str() const noexcept
     return (ft_strerror(_last_error));
 }
 
-thread_local uint32_t ft_thread_pool::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_thread_pool::_last_error = FT_ERR_SUCCESS;

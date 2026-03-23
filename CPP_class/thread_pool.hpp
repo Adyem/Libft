@@ -31,9 +31,9 @@ class ft_thread_pool
         mutable pt_recursive_mutex      *_work_mutex;
         mutable pt_recursive_mutex      *_thread_safe_mutex;
         uint8_t                         _initialised_state;
-        static thread_local uint32_t    _last_error;
+        static thread_local int32_t     _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         void unlock_internal(ft_bool lock_acquired) const;
 
@@ -52,7 +52,7 @@ class ft_thread_pool
         int32_t initialize();
         int32_t initialize(ft_size_t thread_count, ft_size_t max_tasks);
         int32_t destroy();
-        uint32_t move(ft_thread_pool &other) noexcept;
+        int32_t move(ft_thread_pool &other) noexcept;
 
         template <typename Function>
         void submit(Function &&function);
@@ -69,7 +69,7 @@ class ft_thread_pool
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

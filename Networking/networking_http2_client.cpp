@@ -10,7 +10,7 @@
 #include <openssl/ssl.h>
 #include <cstdlib>
 
-thread_local uint32_t http2_frame::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t http2_frame::_last_error = FT_ERR_SUCCESS;
 
 static void http2_append_raw_byte(ft_string &target, unsigned char value)
 {
@@ -732,7 +732,7 @@ ft_bool http2_frame::copy_payload(ft_string &out_payload) const noexcept
     return (ft_string::get_error() == FT_ERR_SUCCESS);
 }
 
-uint32_t http2_frame::set_error(uint32_t error_code) const noexcept
+int32_t http2_frame::set_error(int32_t error_code) const noexcept
 {
     http2_frame::_last_error = error_code;
     return (error_code);

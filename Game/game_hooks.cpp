@@ -6,9 +6,9 @@
  #include "../Template/move.hpp"
  #include <new>
 
-thread_local uint32_t game_hooks::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_hooks::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_hooks::set_error(uint32_t error_code) noexcept
+int32_t game_hooks::set_error(int32_t error_code) noexcept
 {
     game_hooks::_last_error = error_code;
     return (error_code);

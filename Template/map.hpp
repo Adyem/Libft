@@ -26,9 +26,9 @@ class ft_map
         mutable pt_recursive_mutex* _mutex;
         uint8_t                     _initialised_state;
         ft_size_t                      _initial_capacity;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        uint32_t set_error(uint32_t error_code) const noexcept;
+        int32_t set_error(int32_t error_code) const noexcept;
 
         ft_bool    ensure_capacity(ft_size_t desired_capacity);
         ft_size_t  find_index(const Key& key) const;
@@ -83,7 +83,7 @@ class ft_map
 
         int32_t     initialize();
         int32_t     destroy();
-        uint32_t    move(ft_map& other);
+        int32_t move(ft_map& other);
 
         int32_t copy_from(const ft_map& other);
         int32_t move_from(ft_map& other);
@@ -111,7 +111,7 @@ class ft_map
 
         int8_t      compare(const ft_map& other) const;
 
-            uint32_t get_error() const noexcept;
+            int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
@@ -288,7 +288,7 @@ int32_t ft_map<Key, MappedType>::destroy()
     }
     first_error = this->disable_thread_safety();
     this->clear();
-    clear_error = static_cast<int32_t>(this->get_error());
+    clear_error = this->get_error();
     if (first_error == FT_ERR_SUCCESS && clear_error != FT_ERR_SUCCESS)
         first_error = clear_error;
     if (this->_data != ft_nullptr)
@@ -303,9 +303,9 @@ int32_t ft_map<Key, MappedType>::destroy()
 }
 
 template <typename Key, typename MappedType>
-uint32_t ft_map<Key, MappedType>::move(ft_map<Key, MappedType>& other)
+int32_t ft_map<Key, MappedType>::move(ft_map<Key, MappedType>& other)
 {
-    return (this->set_error(static_cast<uint32_t>(this->move_from(other))));
+    return (this->set_error(this->move_from(other)));
 }
 
 template <typename Key, typename MappedType>
@@ -1136,17 +1136,17 @@ int8_t ft_map<Key, MappedType>::compare(const ft_map<Key, MappedType>& other) co
 
 
 template <typename Key, typename MappedType>
-thread_local uint32_t ft_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_map<Key, MappedType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename Key, typename MappedType>
-uint32_t ft_map<Key, MappedType>::set_error(uint32_t error_code) const noexcept
+int32_t ft_map<Key, MappedType>::set_error(int32_t error_code) const noexcept
 {
     ft_map<Key, MappedType>::_last_error = error_code;
     return (error_code);
 }
 
 template <typename Key, typename MappedType>
-uint32_t ft_map<Key, MappedType>::get_error() const noexcept
+int32_t ft_map<Key, MappedType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_map::get_error");
     return (ft_map<Key, MappedType>::_last_error);

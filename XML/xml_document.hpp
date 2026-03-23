@@ -41,11 +41,11 @@ class xml_document
     private:
 #endif
         xml_node *_root;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         void record_operation_error(int32_t error_code) const noexcept;
         int32_t lock(ft_bool *lock_acquired) const noexcept;
         void unlock(ft_bool lock_acquired) const noexcept;

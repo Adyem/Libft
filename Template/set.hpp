@@ -23,7 +23,7 @@ class ft_set
         uint8_t                       _initialised_state;
         static thread_local uint32_t  _last_error;
 
-        static uint32_t set_error(uint32_t error_code);
+        static int32_t set_error(int32_t error_code);
         ft_bool ensure_capacity(ft_size_t desired_capacity);
         ft_size_t find_index(const ElementType& value) const;
         ft_size_t lower_bound(const ElementType& value) const;
@@ -40,7 +40,7 @@ class ft_set
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_set<ElementType> &other);
+        int32_t move(ft_set<ElementType> &other);
         int32_t enable_thread_safety();
         int32_t disable_thread_safety();
         ft_bool is_thread_safe() const;
@@ -60,15 +60,15 @@ class ft_set
 
         void clear();
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename ElementType>
-thread_local uint32_t ft_set<ElementType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_set<ElementType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename ElementType>
-uint32_t ft_set<ElementType>::set_error(uint32_t error_code)
+int32_t ft_set<ElementType>::set_error(int32_t error_code)
 {
     _last_error = error_code;
     return (error_code);
@@ -346,7 +346,7 @@ int32_t ft_set<ElementType>::destroy()
 }
 
 template <typename ElementType>
-uint32_t ft_set<ElementType>::move(ft_set<ElementType> &other)
+int32_t ft_set<ElementType>::move(ft_set<ElementType> &other)
 {
     int32_t destroy_result;
 
@@ -682,7 +682,7 @@ void ft_set<ElementType>::clear()
 }
 
 template <typename ElementType>
-uint32_t ft_set<ElementType>::get_error() const noexcept
+int32_t ft_set<ElementType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::get_error");
     return (_last_error);

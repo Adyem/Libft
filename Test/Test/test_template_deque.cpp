@@ -77,7 +77,7 @@ FT_TEST(test_ft_deque_allocation_failure_sets_error)
     deque_instance.push_back(42);
     cma_set_alloc_limit(0);
 
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(deque_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, deque_instance.get_error());
     FT_ASSERT(deque_instance.empty());
 
     deque_instance.push_back(5);

@@ -13,8 +13,8 @@ class matrix4
         double _m[4][4];
         pt_recursive_mutex *_mutex = ft_nullptr;
         uint8_t _initialised_state = FT_CLASS_STATE_UNINITIALISED;
-        static thread_local uint32_t _last_error;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static thread_local int32_t _last_error;
+        static int32_t set_error(int32_t error_code) noexcept;
 
         void abort_lifecycle_error(const char *method_name,
                 const char *reason) const noexcept;
@@ -43,7 +43,7 @@ class matrix4
         int32_t initialize(const matrix4 &other) noexcept;
         int32_t initialize(matrix4 &&other) noexcept;
         uint32_t destroy() noexcept;
-        uint32_t move(matrix4 &other) noexcept;
+        int32_t move(matrix4 &other) noexcept;
         static matrix4 make_translation(double translation_x, double translation_y, double translation_z);
         static matrix4 make_scale(double scale_x, double scale_y, double scale_z);
         static matrix4 make_rotation_x(double angle);
@@ -55,7 +55,7 @@ class matrix4
         uint32_t enable_thread_safety() noexcept;
         uint32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

@@ -20,9 +20,9 @@ class ft_sharedptr
         ft_bool                    _is_array_type;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                    _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         void destroy_storage() noexcept;
@@ -39,7 +39,7 @@ class ft_sharedptr
                 ~reference_proxy();
                 operator ManagedType&() const noexcept;
                 ManagedType *operator->() const noexcept;
-                uint32_t get_error() const noexcept;
+                int32_t get_error() const noexcept;
         };
 
         class const_reference_proxy
@@ -54,7 +54,7 @@ class ft_sharedptr
                 ~const_reference_proxy();
                 operator const ManagedType&() const noexcept;
                 const ManagedType *operator->() const noexcept;
-                uint32_t get_error() const noexcept;
+                int32_t get_error() const noexcept;
         };
 
         ft_sharedptr() noexcept;
@@ -72,7 +72,7 @@ class ft_sharedptr
             ft_size_t array_size = 1) noexcept;
         int32_t initialize(ft_size_t size) noexcept;
         int32_t destroy() noexcept;
-        uint32_t move(ft_sharedptr<ManagedType> &other) noexcept;
+        int32_t move(ft_sharedptr<ManagedType> &other) noexcept;
 
         reference_proxy operator*() noexcept;
         const_reference_proxy operator*() const noexcept;
@@ -98,12 +98,12 @@ class ft_sharedptr
         int32_t lock(ft_bool *lock_acquired) const noexcept;
         void unlock(ft_bool lock_acquired) const noexcept;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename ManagedType>
-uint32_t ft_sharedptr<ManagedType>::set_error(uint32_t error_code) noexcept
+int32_t ft_sharedptr<ManagedType>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -204,7 +204,7 @@ ManagedType *ft_sharedptr<ManagedType>::reference_proxy::operator->() const noex
 }
 
 template <typename ManagedType>
-uint32_t ft_sharedptr<ManagedType>::reference_proxy::get_error() const noexcept
+int32_t ft_sharedptr<ManagedType>::reference_proxy::get_error() const noexcept
 {
     return (this->_error);
 }
@@ -239,7 +239,7 @@ const ManagedType *ft_sharedptr<ManagedType>::const_reference_proxy::operator->(
 }
 
 template <typename ManagedType>
-uint32_t ft_sharedptr<ManagedType>::const_reference_proxy::get_error() const noexcept
+int32_t ft_sharedptr<ManagedType>::const_reference_proxy::get_error() const noexcept
 {
     return (this->_error);
 }
@@ -482,7 +482,7 @@ int32_t ft_sharedptr<ManagedType>::destroy() noexcept
 }
 
 template <typename ManagedType>
-uint32_t ft_sharedptr<ManagedType>::move(ft_sharedptr<ManagedType> &other) noexcept
+int32_t ft_sharedptr<ManagedType>::move(ft_sharedptr<ManagedType> &other) noexcept
 {
     int32_t destroy_result;
 
@@ -801,7 +801,7 @@ void ft_sharedptr<ManagedType>::unlock(ft_bool lock_acquired) const noexcept
 }
 
 template <typename ManagedType>
-uint32_t ft_sharedptr<ManagedType>::get_error() const noexcept
+int32_t ft_sharedptr<ManagedType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_sharedptr::get_error");
@@ -817,7 +817,7 @@ const char *ft_sharedptr<ManagedType>::get_error_str() const noexcept
 }
 
 template <typename ManagedType>
-thread_local uint32_t ft_sharedptr<ManagedType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_sharedptr<ManagedType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename LeftType, typename RightType>
 ft_bool operator==(const ft_sharedptr<LeftType> &left,

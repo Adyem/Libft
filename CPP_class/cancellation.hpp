@@ -20,9 +20,9 @@ class ft_cancellation_state
         ft_vector<ft_function<void()> >  _callbacks;
         mutable pt_recursive_mutex       *_mutex;
         uint8_t                          _initialised_state;
-        static thread_local uint32_t     _last_error;
+        static thread_local int32_t      _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
 
@@ -37,7 +37,7 @@ class ft_cancellation_state
 
         int32_t initialize() noexcept;
         int32_t destroy() noexcept;
-        uint32_t move(ft_cancellation_state &other) noexcept;
+        int32_t move(ft_cancellation_state &other) noexcept;
         int32_t register_callback(const ft_function<void()> &callback) noexcept;
         int32_t request_cancel() noexcept;
         ft_bool is_cancelled() const noexcept;
@@ -45,7 +45,7 @@ class ft_cancellation_state
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
@@ -91,7 +91,7 @@ class ft_cancellation_source
 
         int32_t initialize() noexcept;
         int32_t destroy() noexcept;
-        uint32_t move(ft_cancellation_source &other) noexcept;
+        int32_t move(ft_cancellation_source &other) noexcept;
         ft_cancellation_token get_token() const noexcept;
         int32_t request_cancel() noexcept;
         ft_bool is_cancellation_requested() const noexcept;

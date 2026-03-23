@@ -41,7 +41,7 @@ FT_TEST(test_unordered_map_late_resize_failure_preserves_entries_and_state)
     cma_set_alloc_limit(64);
     map_instance.insert(6, 60);
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(map_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, map_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(5), map_instance.size());
     FT_ASSERT_EQ(10, map_instance.at(1));
     FT_ASSERT_EQ(20, map_instance.at(2));
@@ -66,7 +66,7 @@ FT_TEST(test_unordered_map_late_resize_failure_keeps_mutex_unlocked)
     cma_set_alloc_limit(64);
     map_instance.insert(16, 160);
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(map_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, map_instance.get_error());
     lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.lock(&lock_acquired));
@@ -90,8 +90,8 @@ FT_TEST(test_unordered_map_operator_index_late_failure_returns_invalid_proxy)
     cma_set_alloc_limit(64);
     failed_proxy = map_instance[26];
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(map_instance.get_error()));
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(failed_proxy.get_error()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, failed_proxy.get_error());
     FT_ASSERT_EQ(0, failed_proxy.is_valid());
     map_instance[21] = 211;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
@@ -118,7 +118,7 @@ FT_TEST(test_unordered_map_late_resize_failure_releases_memory_after_scope)
         cma_set_alloc_limit(64);
         map_instance.insert(36, 360);
         cma_set_alloc_limit(0);
-        FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(map_instance.get_error()));
+        FT_ASSERT_EQ(FT_ERR_NO_MEMORY, map_instance.get_error());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.destroy());
     }
     bytes_after_scope = unordered_map_current_allocated_bytes();

@@ -17,7 +17,7 @@ FT_TEST(test_cpp_class_string_append_reports_allocation_failure)
     append_error = string_value.append(" + growth that requires allocation");
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, append_error);
-    FT_ASSERT_EQ(static_cast<uint32_t>(FT_ERR_NO_MEMORY), string_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, string_value.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
     return (1);
 }
@@ -32,7 +32,7 @@ FT_TEST(test_cpp_class_string_assign_reports_allocation_failure)
     assign_error = string_value.assign("01234567890123456789", 20);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, assign_error);
-    FT_ASSERT_EQ(static_cast<uint32_t>(FT_ERR_NO_MEMORY), string_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, string_value.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
     return (1);
 }
@@ -48,7 +48,7 @@ FT_TEST(test_cpp_class_string_plus_proxy_failure_converts_to_string)
     cma_set_alloc_limit(1);
     result_value = left_value + right_value;
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(static_cast<uint32_t>(FT_ERR_NO_MEMORY), result_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, result_value.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, left_value.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, right_value.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result_value.destroy());

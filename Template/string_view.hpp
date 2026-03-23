@@ -19,9 +19,9 @@ class ft_string_view
         ft_size_t                   _size;
         mutable pt_recursive_mutex  *_mutex;
         uint8_t                     _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
 
@@ -37,7 +37,7 @@ class ft_string_view
             public:
                 char_proxy(CharType value, int32_t error);
                 operator CharType() const;
-                uint32_t get_error() const;
+                int32_t get_error() const;
         };
 
         ft_string_view();
@@ -53,7 +53,7 @@ class ft_string_view
         int32_t initialize(const CharType *string);
         int32_t initialize(const CharType *string, ft_size_t size);
         int32_t destroy();
-        uint32_t move(ft_string_view<CharType> &other);
+        int32_t move(ft_string_view<CharType> &other);
 
         const CharType* data() const;
         ft_size_t size() const;
@@ -70,12 +70,12 @@ class ft_string_view
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename CharType>
-uint32_t ft_string_view<CharType>::set_error(uint32_t error_code) noexcept
+int32_t ft_string_view<CharType>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -123,7 +123,7 @@ ft_string_view<CharType>::char_proxy::operator CharType() const
 }
 
 template <typename CharType>
-uint32_t ft_string_view<CharType>::char_proxy::get_error() const
+int32_t ft_string_view<CharType>::char_proxy::get_error() const
 {
     return (this->_error);
 }
@@ -320,7 +320,7 @@ int32_t ft_string_view<CharType>::destroy()
 }
 
 template <typename CharType>
-uint32_t ft_string_view<CharType>::move(ft_string_view<CharType> &other)
+int32_t ft_string_view<CharType>::move(ft_string_view<CharType> &other)
 {
     int32_t destroy_result;
 
@@ -606,7 +606,7 @@ void ft_string_view<CharType>::unlock(ft_bool lock_acquired) const
 }
 
 template <typename CharType>
-uint32_t ft_string_view<CharType>::get_error() const noexcept
+int32_t ft_string_view<CharType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_string_view::get_error");
@@ -625,6 +625,6 @@ template <typename CharType>
 const ft_size_t ft_string_view<CharType>::npos = static_cast<ft_size_t>(-1);
 
 template <typename CharType>
-thread_local uint32_t ft_string_view<CharType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_string_view<CharType>::_last_error = FT_ERR_SUCCESS;
 
 #endif

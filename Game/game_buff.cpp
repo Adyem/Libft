@@ -4,7 +4,7 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 
-thread_local uint32_t game_buff::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_buff::_last_error = FT_ERR_SUCCESS;
 
 game_buff::game_buff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
@@ -290,7 +290,7 @@ void game_buff::unlock(ft_bool lock_acquired) const noexcept
     return ;
 }
 
-uint32_t game_buff::set_error(uint32_t error_code) noexcept
+int32_t game_buff::set_error(int32_t error_code) noexcept
 {
     game_buff::_last_error = error_code;
     return (error_code);

@@ -19,8 +19,8 @@ class quaternion
         double _z_component;
         pt_recursive_mutex *_mutex = ft_nullptr;
         uint8_t _initialised_state = FT_CLASS_STATE_UNINITIALISED;
-        static thread_local uint32_t _last_error;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static thread_local int32_t _last_error;
+        static int32_t set_error(int32_t error_code) noexcept;
 
         static int32_t lock_pair(const quaternion &first, const quaternion &second,
                 const quaternion *&lower, const quaternion *&upper);
@@ -42,7 +42,7 @@ class quaternion
         int32_t initialize(const quaternion &other) noexcept;
         int32_t initialize(quaternion &&other) noexcept;
         uint32_t destroy() noexcept;
-        uint32_t move(quaternion &other) noexcept;
+        int32_t move(quaternion &other) noexcept;
         double      get_w() const;
         double      get_x() const;
         double      get_y() const;
@@ -55,7 +55,7 @@ class quaternion
         uint32_t enable_thread_safety() noexcept;
         uint32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

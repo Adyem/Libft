@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_behavior_profile::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_behavior_profile::_last_error = FT_ERR_SUCCESS;
 static int32_t game_behavior_copy_action_vector(
     const ft_vector<game_behavior_action> &source,
     ft_vector<game_behavior_action> &destination)
@@ -473,7 +473,7 @@ const char *game_behavior_profile::get_error_str() const noexcept
     return (ft_strerror(this->get_error()));
 }
 
-uint32_t game_behavior_profile::set_error(uint32_t error_code) noexcept
+int32_t game_behavior_profile::set_error(int32_t error_code) noexcept
 {
     game_behavior_profile::_last_error = error_code;
     return (error_code);

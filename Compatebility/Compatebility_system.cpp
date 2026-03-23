@@ -885,13 +885,13 @@ char *cmp_get_home_directory(void)
     char *home_path;
     char *combined_home;
 
-    home = ft_getenv("USERPROFILE");
+    home = su_getenv("USERPROFILE");
     if (home != ft_nullptr)
     {
         return (home);
     }
-    home_drive = ft_getenv("HOMEDRIVE");
-    home_path = ft_getenv("HOMEPATH");
+    home_drive = su_getenv("HOMEDRIVE");
+    home_path = su_getenv("HOMEPATH");
     if (home_drive == ft_nullptr || home_path == ft_nullptr)
     {
         return (ft_nullptr);
@@ -905,7 +905,7 @@ char *cmp_get_home_directory(void)
 #else
     char *home;
 
-    home = ft_getenv("HOME");
+    home = su_getenv("HOME");
     if (home == ft_nullptr)
     {
         return (ft_nullptr);

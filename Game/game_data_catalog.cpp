@@ -7,9 +7,9 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_item_definition::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_item_definition::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_item_definition::set_error(uint32_t error_code) noexcept
+int32_t game_item_definition::set_error(int32_t error_code) noexcept
 {
     game_item_definition::_last_error = error_code;
     return (error_code);
@@ -31,9 +31,9 @@ const char *game_item_definition::get_error_str() const noexcept
     return (ft_strerror(this->get_error()));
 }
 
-thread_local uint32_t game_loadout_entry::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_loadout_entry::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_loadout_entry::set_error(uint32_t error_code) noexcept
+int32_t game_loadout_entry::set_error(int32_t error_code) noexcept
 {
     game_loadout_entry::_last_error = error_code;
     return (error_code);
@@ -55,9 +55,9 @@ const char *game_loadout_entry::get_error_str() const noexcept
     return (ft_strerror(this->get_error()));
 }
 
-thread_local uint32_t game_loadout_blueprint::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_loadout_blueprint::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_loadout_blueprint::set_error(uint32_t error_code) noexcept
+int32_t game_loadout_blueprint::set_error(int32_t error_code) noexcept
 {
     game_loadout_blueprint::_last_error = error_code;
     return (error_code);
@@ -79,9 +79,9 @@ const char *game_loadout_blueprint::get_error_str() const noexcept
     return (ft_strerror(this->get_error()));
 }
 
-thread_local uint32_t game_recipe_blueprint::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_recipe_blueprint::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_recipe_blueprint::set_error(uint32_t error_code) noexcept
+int32_t game_recipe_blueprint::set_error(int32_t error_code) noexcept
 {
     game_recipe_blueprint::_last_error = error_code;
     return (error_code);
@@ -2158,9 +2158,9 @@ void game_loadout_blueprint::set_entries(const ft_vector<game_loadout_entry> &en
     return ;
 }
 
-thread_local uint32_t game_data_catalog::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_data_catalog::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_data_catalog::set_error(uint32_t error_code) noexcept
+int32_t game_data_catalog::set_error(int32_t error_code) noexcept
 {
     game_data_catalog::_last_error = error_code;
     return (error_code);

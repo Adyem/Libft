@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_dialogue_script::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_dialogue_script::_last_error = FT_ERR_SUCCESS;
 
 static void game_dialogue_copy_next_ids(const ft_vector<int32_t> &source,
     ft_vector<int32_t> &destination)
@@ -112,7 +112,7 @@ static void game_dialogue_copy_plain_line_vector(const ft_vector<game_dialogue_l
     return ;
 }
 
-uint32_t game_dialogue_script::set_error(uint32_t error_code) noexcept
+int32_t game_dialogue_script::set_error(int32_t error_code) noexcept
 {
     game_dialogue_script::_last_error = error_code;
     return (error_code);

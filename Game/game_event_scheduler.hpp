@@ -42,14 +42,14 @@ class game_event_scheduler
         private:
     #endif
         mutable ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> _events;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
         mutable ft_bool _profiling_enabled;
         mutable t_event_scheduler_profile _profile;
         mutable ft_vector<ft_sharedptr<game_event> > _ready_cache;
         uint8_t _initialised_state;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         void reset_profile_locked() const noexcept;

@@ -6,7 +6,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_inventory::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_inventory::_last_error = FT_ERR_SUCCESS;
 
 game_inventory::game_inventory() noexcept
     : _items(), _capacity(0), _used_slots(0), _weight_limit(0),
@@ -568,21 +568,21 @@ void game_inventory::remove_item(int32_t slot) noexcept
 int32_t game_inventory::count_item(int32_t item_id) const noexcept
 {
     int32_t total;
+    ft_size_t index;
     const Pair<int32_t, ft_sharedptr<game_item> > *item_pointer;
-    const Pair<int32_t, ft_sharedptr<game_item> > *item_end;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_inventory::count_item");
     total = 0;
-    item_pointer = this->_items.end() - this->_items.size();
-    item_end = this->_items.end();
-    while (item_pointer != item_end)
+    index = 0;
+    while (index < static_cast<ft_size_t>(this->_next_slot))
     {
-        if (item_pointer->value)
+        item_pointer = this->_items.find(static_cast<int32_t>(index));
+        if (item_pointer != this->_items.end() && item_pointer->value)
         {
             if (item_pointer->value->get_item_id() == item_id)
                 total += item_pointer->value->get_stack_size();
         }
-        item_pointer++;
+        index += 1;
     }
     this->set_error(FT_ERR_SUCCESS);
     return (total);
@@ -599,21 +599,21 @@ ft_bool game_inventory::has_item(int32_t item_id) const noexcept
 int32_t game_inventory::count_rarity(int32_t rarity) const noexcept
 {
     int32_t total;
+    ft_size_t index;
     const Pair<int32_t, ft_sharedptr<game_item> > *item_pointer;
-    const Pair<int32_t, ft_sharedptr<game_item> > *item_end;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_inventory::count_rarity");
     total = 0;
-    item_pointer = this->_items.end() - this->_items.size();
-    item_end = this->_items.end();
-    while (item_pointer != item_end)
+    index = 0;
+    while (index < static_cast<ft_size_t>(this->_next_slot))
     {
-        if (item_pointer->value)
+        item_pointer = this->_items.find(static_cast<int32_t>(index));
+        if (item_pointer != this->_items.end() && item_pointer->value)
         {
             if (item_pointer->value->get_rarity() == rarity)
                 total += item_pointer->value->get_stack_size();
         }
-        item_pointer++;
+        index += 1;
     }
     this->set_error(FT_ERR_SUCCESS);
     return (total);
@@ -627,7 +627,7 @@ ft_bool game_inventory::has_rarity(int32_t rarity) const noexcept
     return (result);
 }
 
-uint32_t game_inventory::set_error(uint32_t error_code) noexcept
+int32_t game_inventory::set_error(int32_t error_code) noexcept
 {
     game_inventory::_last_error = error_code;
     return (error_code);

@@ -10,7 +10,7 @@
 #include <limits>
 #include <new>
 
-thread_local uint32_t ft_big_number::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_big_number::_last_error = FT_ERR_SUCCESS;
 thread_local uint8_t ft_big_number::_last_initialised_state = FT_CLASS_STATE_UNINITIALISED;
 
 struct ft_big_number_digit_entry
@@ -160,13 +160,13 @@ void ft_big_number::sleep_backoff() noexcept
     return ;
 }
 
-uint32_t ft_big_number::set_error(uint32_t error_code) noexcept
+int32_t ft_big_number::set_error(int32_t error_code) noexcept
 {
     ft_big_number::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t ft_big_number::get_error() noexcept
+int32_t ft_big_number::get_error() noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(ft_big_number::_last_initialised_state,
         "ft_big_number::get_error");

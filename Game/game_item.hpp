@@ -16,9 +16,9 @@ class game_item_modifier
         int32_t             _value;
         uint8_t             _initialised_state;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         game_item_modifier() noexcept;
@@ -66,10 +66,10 @@ class game_item
         game_item_modifier _modifier3;
         game_item_modifier _modifier4;
         uint8_t         _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         static int32_t lock_pair(const game_item &first, const game_item &second,

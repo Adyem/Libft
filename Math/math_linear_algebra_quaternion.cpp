@@ -7,15 +7,15 @@
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
 
-thread_local uint32_t quaternion::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t quaternion::_last_error = FT_ERR_SUCCESS;
 
-uint32_t quaternion::set_error(uint32_t error_code) noexcept
+int32_t quaternion::set_error(int32_t error_code) noexcept
 {
     quaternion::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t quaternion::get_error() const noexcept
+int32_t quaternion::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "quaternion::get_error",
@@ -296,7 +296,7 @@ int32_t quaternion::initialize(const quaternion &other) noexcept
     return (quaternion::set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t quaternion::move(quaternion &other) noexcept
+int32_t quaternion::move(quaternion &other) noexcept
 {
     const quaternion *lower;
     const quaternion *upper;

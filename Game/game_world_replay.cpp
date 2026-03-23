@@ -34,7 +34,7 @@ static int32_t world_replay_collect_callbacks(game_world &world,
             return (scheduled_events[event_index]->get_error());
         callbacks.push_back(event_callback);
         if (callbacks.get_error() != FT_ERR_SUCCESS)
-            return (static_cast<int32_t>(callbacks.get_error()));
+            return (callbacks.get_error());
         event_index++;
     }
     return (FT_ERR_SUCCESS);
@@ -220,7 +220,7 @@ int32_t game_world_replay_session::move(game_world_replay_session &other) noexce
     {
         this->_event_callbacks.push_back(other._event_callbacks[callback_index]);
         if (this->_event_callbacks.get_error() != FT_ERR_SUCCESS)
-            return (static_cast<int32_t>(this->_event_callbacks.get_error()));
+            return (this->_event_callbacks.get_error());
         callback_index++;
     }
     other._snapshot_payload.clear();
@@ -278,7 +278,7 @@ int32_t game_world_replay_session::capture_snapshot(game_world &world,
     {
         this->_event_callbacks.push_back(callback_snapshot[callback_index]);
         if (this->_event_callbacks.get_error() != FT_ERR_SUCCESS)
-            return (static_cast<int32_t>(this->_event_callbacks.get_error()));
+            return (this->_event_callbacks.get_error());
         callback_index++;
     }
     return (FT_ERR_SUCCESS);

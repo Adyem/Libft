@@ -21,11 +21,11 @@ class ft_future
         ft_sharedptr<ft_promise<ValueType> > _shared_promise;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         int32_t wait_ready() const;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         ft_future();
@@ -45,7 +45,7 @@ class ft_future
         ValueType get() const;
         void wait() const;
         ft_bool valid() const;
-        uint32_t get_error() const;
+        int32_t get_error() const;
         const char *get_error_str() const;
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
@@ -64,11 +64,11 @@ class ft_future<void>
         ft_sharedptr<ft_promise<void> > _shared_promise;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         int32_t wait_ready() const;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         ft_future();
@@ -88,7 +88,7 @@ class ft_future<void>
         void get() const;
         void wait() const;
         ft_bool valid() const;
-        uint32_t get_error() const;
+        int32_t get_error() const;
         const char *get_error_str() const;
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
@@ -99,10 +99,10 @@ class ft_future<void>
 };
 
 template <typename ValueType>
-thread_local uint32_t ft_future<ValueType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_future<ValueType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename ValueType>
-uint32_t ft_future<ValueType>::set_error(uint32_t error_code) noexcept
+int32_t ft_future<ValueType>::set_error(int32_t error_code) noexcept
 {
     ft_future<ValueType>::_last_error = error_code;
     return (error_code);
@@ -157,7 +157,7 @@ ft_bool ft_future<ValueType>::is_thread_safe() const
 }
 
 template <typename ValueType>
-uint32_t ft_future<ValueType>::get_error() const
+int32_t ft_future<ValueType>::get_error() const
 {
     errno_abort_if_uninitialised(this->_initialised_state, "ft_future::get_error");
     return (ft_future<ValueType>::_last_error);
@@ -607,9 +607,9 @@ ft_bool ft_future<ValueType>::valid() const
     return (is_valid);
 }
 
-thread_local uint32_t ft_future<void>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_future<void>::_last_error = FT_ERR_SUCCESS;
 
-uint32_t ft_future<void>::set_error(uint32_t error_code) noexcept
+int32_t ft_future<void>::set_error(int32_t error_code) noexcept
 {
     ft_future<void>::_last_error = error_code;
     return (error_code);
@@ -660,7 +660,7 @@ inline ft_bool ft_future<void>::is_thread_safe() const
     return (this->_mutex != ft_nullptr);
 }
 
-inline uint32_t ft_future<void>::get_error() const
+inline int32_t ft_future<void>::get_error() const
 {
     errno_abort_if_uninitialised(this->_initialised_state, "ft_future<void>::get_error");
     return (ft_future<void>::_last_error);

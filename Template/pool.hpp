@@ -20,9 +20,9 @@ class Pool
         ft_vector<ft_size_t>        _free_indices;
         mutable pt_recursive_mutex  *_mutex;
         uint8_t                     _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         T* ptr_at(ft_size_t index) noexcept;
@@ -38,9 +38,9 @@ class Pool
                 mutable pt_recursive_mutex *_mutex;
                 uint8_t                  _initialised_state;
 
-                static thread_local uint32_t _last_error;
+                static thread_local int32_t _last_error;
 
-                static uint32_t set_error(uint32_t error_code) noexcept;
+                static int32_t set_error(int32_t error_code) noexcept;
                 int32_t lock_internal(ft_bool *lock_acquired) const;
                 int32_t unlock_internal(ft_bool lock_acquired) const;
 
@@ -64,7 +64,7 @@ class Pool
                 int32_t lock(ft_bool *lock_acquired) const;
                 void unlock(ft_bool lock_acquired) const;
 
-                uint32_t get_error() const noexcept;
+                int32_t get_error() const noexcept;
                 const char *get_error_str() const noexcept;
         };
 
@@ -78,7 +78,7 @@ class Pool
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(Pool<T> &other);
+        int32_t move(Pool<T> &other);
 
         void resize(ft_size_t new_size);
 
@@ -91,12 +91,12 @@ class Pool
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template<typename T>
-uint32_t Pool<T>::set_error(uint32_t error_code) noexcept
+int32_t Pool<T>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -164,7 +164,7 @@ void Pool<T>::release(ft_size_t index) noexcept
 }
 
 template<typename T>
-uint32_t Pool<T>::Object::set_error(uint32_t error_code) noexcept
+int32_t Pool<T>::Object::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -368,7 +368,7 @@ void Pool<T>::Object::unlock(ft_bool lock_acquired) const
 }
 
 template<typename T>
-uint32_t Pool<T>::Object::get_error() const noexcept
+int32_t Pool<T>::Object::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::Object::get_error");
     return (_last_error);
@@ -470,7 +470,7 @@ int32_t Pool<T>::destroy()
 }
 
 template<typename T>
-uint32_t Pool<T>::move(Pool<T> &other)
+int32_t Pool<T>::move(Pool<T> &other)
 {
     int32_t destroy_result;
 
@@ -645,7 +645,7 @@ void Pool<T>::unlock(ft_bool lock_acquired) const
 }
 
 template<typename T>
-uint32_t Pool<T>::get_error() const noexcept
+int32_t Pool<T>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "Pool::get_error");
     return (_last_error);
@@ -659,9 +659,9 @@ const char *Pool<T>::get_error_str() const noexcept
 }
 
 template<typename T>
-thread_local uint32_t Pool<T>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t Pool<T>::_last_error = FT_ERR_SUCCESS;
 
 template<typename T>
-thread_local uint32_t Pool<T>::Object::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t Pool<T>::Object::_last_error = FT_ERR_SUCCESS;
 
 #endif

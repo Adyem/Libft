@@ -24,9 +24,9 @@ class ft_priority_queue
         Compare                      _comp;
         mutable pt_recursive_mutex*  _mutex;
         uint8_t                      _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code);
+        static int32_t set_error(int32_t error_code);
         ft_bool ensure_capacity(ft_size_t desired);
         void heapify_up(ft_size_t index);
         void heapify_down(ft_size_t index);
@@ -44,7 +44,7 @@ class ft_priority_queue
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_priority_queue<ElementType, Compare> &other);
+        int32_t move(ft_priority_queue<ElementType, Compare> &other);
         int32_t enable_thread_safety();
         int32_t disable_thread_safety();
         ft_bool is_thread_safe() const;
@@ -63,15 +63,15 @@ class ft_priority_queue
 
         void clear();
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename ElementType, typename Compare>
-thread_local uint32_t ft_priority_queue<ElementType, Compare>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_priority_queue<ElementType, Compare>::_last_error = FT_ERR_SUCCESS;
 
 template <typename ElementType, typename Compare>
-uint32_t ft_priority_queue<ElementType, Compare>::set_error(uint32_t error_code)
+int32_t ft_priority_queue<ElementType, Compare>::set_error(int32_t error_code)
 {
     _last_error = error_code;
     return (error_code);
@@ -344,7 +344,7 @@ int32_t ft_priority_queue<ElementType, Compare>::destroy()
 }
 
 template <typename ElementType, typename Compare>
-uint32_t ft_priority_queue<ElementType, Compare>::move(
+int32_t ft_priority_queue<ElementType, Compare>::move(
     ft_priority_queue<ElementType, Compare> &other)
 {
     int32_t destroy_result;
@@ -664,7 +664,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
 }
 
 template <typename ElementType, typename Compare>
-uint32_t ft_priority_queue<ElementType, Compare>::get_error() const noexcept
+int32_t ft_priority_queue<ElementType, Compare>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_priority_queue::get_error");

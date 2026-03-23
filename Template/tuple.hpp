@@ -22,9 +22,9 @@ class ft_tuple
         tuple_t                     *_data;
         mutable pt_recursive_mutex  *_mutex;
         uint8_t                     _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code);
+        static int32_t set_error(int32_t error_code);
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         void destroy_locked();
@@ -47,7 +47,7 @@ class ft_tuple
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_tuple<Types...> &other);
+        int32_t move(ft_tuple<Types...> &other);
 
         template <ft_size_t I>
         typename std::tuple_element<I, tuple_t>::type& get();
@@ -69,7 +69,7 @@ class ft_tuple
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const;
+        int32_t get_error() const;
         const char *get_error_str() const;
 };
 
@@ -263,7 +263,7 @@ int32_t ft_tuple<Types...>::destroy()
 }
 
 template <typename... Types>
-uint32_t ft_tuple<Types...>::move(ft_tuple<Types...> &other)
+int32_t ft_tuple<Types...>::move(ft_tuple<Types...> &other)
 {
     int32_t destroy_result;
 

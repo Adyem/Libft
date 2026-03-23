@@ -116,7 +116,7 @@ FT_TEST(test_ft_event_emitter_allocation_failure_sets_error)
     emitter_instance.on(9, event_listener_add_to_first);
     cma_set_alloc_limit(0);
 
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(emitter_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, emitter_instance.get_error());
     FT_ASSERT_EQ(0UL, emitter_instance.size());
     FT_ASSERT(emitter_instance.empty());
     return (1);
@@ -153,7 +153,7 @@ FT_TEST(test_ft_event_emitter_capacity_overflow_sets_error)
     cma_set_alloc_limit(1);
     emitter_instance.on(1, event_listener_add_to_first);
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, static_cast<int32_t>(emitter_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, emitter_instance.get_error());
     FT_ASSERT(emitter_instance.empty());
     return (1);
 }

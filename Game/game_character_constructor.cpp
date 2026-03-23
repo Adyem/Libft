@@ -4,7 +4,7 @@
 #include "../PThread/pthread.hpp"
 #include <new>
 
-thread_local uint32_t game_character::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_character::_last_error = FT_ERR_SUCCESS;
 
 ft_bool game_character::handle_component_error(int32_t error) noexcept
 {
@@ -784,42 +784,42 @@ int32_t game_character::move(game_character &other) noexcept
         this->set_error(transfer_error);
         return (transfer_error);
     }
-    transfer_error = static_cast<int32_t>(this->_skills.move(other._skills));
+    transfer_error = this->_skills.move(other._skills);
     if (transfer_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         this->set_error(transfer_error);
         return (transfer_error);
     }
-    transfer_error = static_cast<int32_t>(this->_buffs.move(other._buffs));
+    transfer_error = this->_buffs.move(other._buffs);
     if (transfer_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         this->set_error(transfer_error);
         return (transfer_error);
     }
-    transfer_error = static_cast<int32_t>(this->_debuffs.move(other._debuffs));
+    transfer_error = this->_debuffs.move(other._debuffs);
     if (transfer_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         this->set_error(transfer_error);
         return (transfer_error);
     }
-    transfer_error = static_cast<int32_t>(this->_upgrades.move(other._upgrades));
+    transfer_error = this->_upgrades.move(other._upgrades);
     if (transfer_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         this->set_error(transfer_error);
         return (transfer_error);
     }
-    transfer_error = static_cast<int32_t>(this->_quests.move(other._quests));
+    transfer_error = this->_quests.move(other._quests);
     if (transfer_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         this->set_error(transfer_error);
         return (transfer_error);
     }
-    transfer_error = static_cast<int32_t>(this->_achievements.move(other._achievements));
+    transfer_error = this->_achievements.move(other._achievements);
     if (transfer_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();

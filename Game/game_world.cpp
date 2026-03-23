@@ -32,7 +32,7 @@ int32_t deserialize_inventory(game_inventory &inventory, json_group *group);
 json_group *serialize_equipment(const game_character &character);
 int32_t deserialize_equipment(game_character &character, json_group *group);
 
-thread_local uint32_t game_world::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_world::_last_error = FT_ERR_SUCCESS;
 
 static void default_event_callback(game_world &world, game_event &event) noexcept;
 static ft_function<void(game_world&, game_event&)> get_callback_by_id(int32_t type_id) noexcept;
@@ -900,7 +900,7 @@ const char *game_world::get_error_str() const noexcept
     return (ft_strerror(game_world::_last_error));
 }
 
-uint32_t game_world::set_error(uint32_t error_code) noexcept
+int32_t game_world::set_error(int32_t error_code) noexcept
 {
     game_world::_last_error = error_code;
     return (error_code);
@@ -1101,7 +1101,7 @@ int32_t game_world::restore_from_groups(json_group *groups, game_character &char
     ft_vector<ft_sharedptr<game_event> > scheduled_events;
     if (scheduled_events.initialize() != FT_ERR_SUCCESS)
     {
-        this->set_error(static_cast<int32_t>(scheduled_events.get_error()));
+        this->set_error(scheduled_events.get_error());
         return (this->get_error());
     }
     this->_event_scheduler->dump_events(scheduled_events);

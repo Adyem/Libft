@@ -1,6 +1,6 @@
 #include "cancellation.hpp"
 
-uint32_t ft_cancellation_state::set_error(uint32_t error_code) noexcept
+int32_t ft_cancellation_state::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -158,7 +158,7 @@ int32_t ft_cancellation_state::destroy() noexcept
     return (set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_cancellation_state::move(ft_cancellation_state &other) noexcept
+int32_t ft_cancellation_state::move(ft_cancellation_state &other) noexcept
 {
     int32_t destroy_result;
 
@@ -309,7 +309,7 @@ int32_t ft_cancellation_state::disable_thread_safety() noexcept
     return (set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_cancellation_state::get_error() const noexcept
+int32_t ft_cancellation_state::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_cancellation_state::get_error");
@@ -471,7 +471,7 @@ int32_t ft_cancellation_source::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-uint32_t ft_cancellation_source::move(ft_cancellation_source &other) noexcept
+int32_t ft_cancellation_source::move(ft_cancellation_source &other) noexcept
 {
     int32_t destroy_result;
 
@@ -524,4 +524,4 @@ ft_bool ft_cancellation_source::is_cancellation_requested() const noexcept
     return (this->_state->is_cancelled());
 }
 
-thread_local uint32_t ft_cancellation_state::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_cancellation_state::_last_error = FT_ERR_SUCCESS;

@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_world_registry::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_world_registry::_last_error = FT_ERR_SUCCESS;
 
 game_world_registry::game_world_registry() noexcept
     : _regions(), _world_regions(), _mutex(ft_nullptr),
@@ -81,7 +81,7 @@ game_world_registry::~game_world_registry() noexcept
     return ;
 }
 
-uint32_t game_world_registry::set_error(uint32_t error_code) noexcept
+int32_t game_world_registry::set_error(int32_t error_code) noexcept
 {
     game_world_registry::_last_error = error_code;
     return (error_code);

@@ -3,20 +3,20 @@
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 
-thread_local uint32_t vector2::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t vector3::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t vector4::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t matrix2::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t matrix3::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t matrix4::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t vector2::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t vector3::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t vector4::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t matrix2::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t matrix3::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t matrix4::_last_error = FT_ERR_SUCCESS;
 
-uint32_t vector2::set_error(uint32_t error_code) noexcept
+int32_t vector2::set_error(int32_t error_code) noexcept
 {
     vector2::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t vector2::get_error() const noexcept
+int32_t vector2::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "vector2::get_error",
@@ -32,13 +32,13 @@ const char *vector2::get_error_str() const noexcept
     return (ft_strerror(vector2::_last_error));
 }
 
-uint32_t vector3::set_error(uint32_t error_code) noexcept
+int32_t vector3::set_error(int32_t error_code) noexcept
 {
     vector3::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t vector3::get_error() const noexcept
+int32_t vector3::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "vector3::get_error",
@@ -54,13 +54,13 @@ const char *vector3::get_error_str() const noexcept
     return (ft_strerror(vector3::_last_error));
 }
 
-uint32_t vector4::set_error(uint32_t error_code) noexcept
+int32_t vector4::set_error(int32_t error_code) noexcept
 {
     vector4::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t vector4::get_error() const noexcept
+int32_t vector4::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "vector4::get_error",
@@ -76,13 +76,13 @@ const char *vector4::get_error_str() const noexcept
     return (ft_strerror(vector4::_last_error));
 }
 
-uint32_t matrix2::set_error(uint32_t error_code) noexcept
+int32_t matrix2::set_error(int32_t error_code) noexcept
 {
     matrix2::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t matrix2::get_error() const noexcept
+int32_t matrix2::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "matrix2::get_error",
@@ -98,13 +98,13 @@ const char *matrix2::get_error_str() const noexcept
     return (ft_strerror(matrix2::_last_error));
 }
 
-uint32_t matrix3::set_error(uint32_t error_code) noexcept
+int32_t matrix3::set_error(int32_t error_code) noexcept
 {
     matrix3::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t matrix3::get_error() const noexcept
+int32_t matrix3::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "matrix3::get_error",
@@ -120,13 +120,13 @@ const char *matrix3::get_error_str() const noexcept
     return (ft_strerror(matrix3::_last_error));
 }
 
-uint32_t matrix4::set_error(uint32_t error_code) noexcept
+int32_t matrix4::set_error(int32_t error_code) noexcept
 {
     matrix4::_last_error = error_code;
     return (error_code);
 }
 
-uint32_t matrix4::get_error() const noexcept
+int32_t matrix4::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "matrix4::get_error",
@@ -295,7 +295,7 @@ int32_t vector2::initialize(const vector2 &other) noexcept
     return (vector2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
 }
 
-uint32_t vector2::move(vector2 &other) noexcept
+int32_t vector2::move(vector2 &other) noexcept
 {
     const vector2 *lower;
     const vector2 *upper;
@@ -599,7 +599,7 @@ int32_t vector3::initialize(const vector3 &other) noexcept
     return (vector3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
 }
 
-uint32_t vector3::move(vector3 &other) noexcept
+int32_t vector3::move(vector3 &other) noexcept
 {
     const vector3 *lower;
     const vector3 *upper;
@@ -917,7 +917,7 @@ int32_t vector4::initialize(const vector4 &other) noexcept
     return (vector4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
 }
 
-uint32_t vector4::move(vector4 &other) noexcept
+int32_t vector4::move(vector4 &other) noexcept
 {
     const vector4 *lower;
     const vector4 *upper;
@@ -1248,7 +1248,7 @@ int32_t matrix2::initialize(const matrix2 &other) noexcept
     return (matrix2::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
 }
 
-uint32_t matrix2::move(matrix2 &other) noexcept
+int32_t matrix2::move(matrix2 &other) noexcept
 {
     const matrix2 *lower;
     const matrix2 *upper;
@@ -1571,7 +1571,7 @@ int32_t matrix3::initialize(const matrix3 &other) noexcept
     return (matrix3::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
 }
 
-uint32_t matrix3::move(matrix3 &other) noexcept
+int32_t matrix3::move(matrix3 &other) noexcept
 {
     const matrix3 *lower;
     const matrix3 *upper;
@@ -1904,7 +1904,7 @@ int32_t matrix4::initialize(const matrix4 &other) noexcept
     return (matrix4::set_error(static_cast<uint32_t>(FT_ERR_SUCCESS)));
 }
 
-uint32_t matrix4::move(matrix4 &other) noexcept
+int32_t matrix4::move(matrix4 &other) noexcept
 {
     const matrix4 *lower;
     const matrix4 *upper;

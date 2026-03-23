@@ -23,14 +23,14 @@ class game_item_definition
         int32_t             _weight;
         int32_t             _slot_requirement;
         mutable pt_recursive_mutex *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         uint8_t         _initialised_state;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         static int32_t lock_pair(const game_item_definition &first, const game_item_definition &second,
                 ft_bool *first_locked,
                 ft_bool *second_locked);
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         game_item_definition() noexcept;
@@ -87,9 +87,9 @@ class game_recipe_blueprint
         int32_t                                  _result_item_id;
         ft_vector<game_crafting_ingredient>    _ingredients;
         mutable pt_recursive_mutex                    *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         uint8_t                              _initialised_state;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         static int32_t lock_pair(const game_recipe_blueprint &first, const game_recipe_blueprint &second,
@@ -141,8 +141,8 @@ class game_loadout_entry
         int32_t             _quantity;
         mutable pt_recursive_mutex *_mutex;
         uint8_t         _initialised_state;
-        static thread_local uint32_t _last_error;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static thread_local int32_t _last_error;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         static int32_t lock_pair(const game_loadout_entry &first, const game_loadout_entry &second,
@@ -190,10 +190,10 @@ class game_loadout_blueprint
         int32_t                           _loadout_id;
         ft_vector<game_loadout_entry>   _entries;
         mutable pt_recursive_mutex             *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         uint8_t                       _initialised_state;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         static int32_t lock_pair(const game_loadout_blueprint &first, const game_loadout_blueprint &second,
@@ -240,10 +240,10 @@ class game_data_catalog
         ft_map<int32_t, game_recipe_blueprint>  _recipes;
         ft_map<int32_t, game_loadout_blueprint> _loadouts;
         mutable pt_recursive_mutex                 *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         uint8_t                           _initialised_state;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         void unlock_internal(ft_bool lock_acquired) const noexcept;
         static int32_t lock_pair(const game_data_catalog &first, const game_data_catalog &second,

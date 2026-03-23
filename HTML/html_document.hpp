@@ -14,10 +14,10 @@ class html_document
     private:
 #endif
         html_node *_root;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         html_document() noexcept;

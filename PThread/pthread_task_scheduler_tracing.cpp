@@ -71,7 +71,7 @@ int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
         index += 1;
     }
     g_task_scheduler_trace_sinks.push_back(sink);
-    int push_error = static_cast<int>(g_task_scheduler_trace_sinks.get_error());
+    int push_error = g_task_scheduler_trace_sinks.get_error();
     if (push_error != FT_ERR_SUCCESS)
     {
         if (lock_acquired)
@@ -114,7 +114,7 @@ int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
         if (g_task_scheduler_trace_sinks[index] == sink)
         {
             g_task_scheduler_trace_sinks.erase(g_task_scheduler_trace_sinks.begin() + index);
-            int erase_error = static_cast<int>(g_task_scheduler_trace_sinks.get_error());
+            int erase_error = g_task_scheduler_trace_sinks.get_error();
             if (erase_error != FT_ERR_SUCCESS)
             {
                 if (lock_acquired)
@@ -177,7 +177,7 @@ void task_scheduler_trace_emit(const ft_task_trace_event &event)
 
         sink_instance = g_task_scheduler_trace_sinks[index];
         sinks_copy.push_back(sink_instance);
-        int push_error = static_cast<int>(sinks_copy.get_error());
+        int push_error = sinks_copy.get_error();
         if (push_error != FT_ERR_SUCCESS)
         {
             if (lock_acquired)

@@ -4,7 +4,7 @@
 #include "../PThread/pthread_internal.hpp"
 #include <new>
 
-thread_local uint32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
 
 static int32_t data_buffer_prepare_storage(ft_vector<uint8_t> &storage) noexcept
 {
@@ -57,13 +57,13 @@ int32_t data_buffer_proxy::get_error() const noexcept
     return (this->_error_code);
 }
 
-uint32_t DataBuffer::set_last_error(uint32_t error_code) noexcept
+int32_t DataBuffer::set_last_error(int32_t error_code) noexcept
 {
     DataBuffer::_last_error = error_code;
     return (error_code);
 }
 
-void DataBuffer::set_operation_error(uint32_t error_code) noexcept
+void DataBuffer::set_operation_error(int32_t error_code) noexcept
 {
     this->_operation_error = error_code;
     this->_ok = (error_code == FT_ERR_SUCCESS);
@@ -107,7 +107,7 @@ DataBuffer::DataBuffer(const DataBuffer& other) noexcept
     : _buffer(), _read_pos(0), _ok(FT_TRUE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _operation_error(FT_ERR_SUCCESS)
 {
-    uint32_t initialization_error = this->initialize(other);
+    int32_t initialization_error = this->initialize(other);
 
     if (initialization_error != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -118,7 +118,7 @@ DataBuffer::DataBuffer(DataBuffer&& other) noexcept
     : _buffer(), _read_pos(0), _ok(FT_TRUE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _operation_error(FT_ERR_SUCCESS)
 {
-    uint32_t initialization_error = this->move(other);
+    int32_t initialization_error = this->move(other);
 
     if (initialization_error != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -251,7 +251,7 @@ int32_t DataBuffer::initialize(const DataBuffer &other) noexcept
     return (final_error);
 }
 
-uint32_t DataBuffer::move(DataBuffer &other) noexcept
+int32_t DataBuffer::move(DataBuffer &other) noexcept
 {
     int32_t prepare_error;
 

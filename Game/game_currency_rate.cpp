@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_currency_rate::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_currency_rate::_last_error = FT_ERR_SUCCESS;
 
 game_currency_rate::game_currency_rate() noexcept
     : _currency_id(0), _rate_to_base(1.0), _display_precision(2),
@@ -358,7 +358,7 @@ void game_currency_rate::set_display_precision(int32_t display_precision) noexce
 }
 
 
-uint32_t game_currency_rate::set_error(uint32_t error_code) noexcept
+int32_t game_currency_rate::set_error(int32_t error_code) noexcept
 {
     game_currency_rate::_last_error = error_code;
     return (error_code);

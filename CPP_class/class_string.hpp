@@ -23,10 +23,10 @@ class ft_string
         ft_size_t                _capacity;
         mutable pt_recursive_mutex *_mutex;
         mutable uint8_t            _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         static thread_local uint8_t _last_initialised_state;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         friend class ft_string_proxy;
 
 
@@ -103,7 +103,7 @@ class ft_string
         static ft_string from_error(int32_t error_code) noexcept;
 
         static const ft_size_t npos = static_cast<ft_size_t>(-1);
-        static uint32_t get_error() noexcept;
+        static int32_t get_error() noexcept;
         static const char  *get_error_str() noexcept;
 
 };

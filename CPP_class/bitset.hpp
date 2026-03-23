@@ -22,9 +22,9 @@ class ft_bitset
         ft_size_t                    *_data;
         mutable pt_recursive_mutex   *_mutex;
         uint8_t                      _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code);
+        static int32_t set_error(int32_t error_code);
         ft_size_t block_index(ft_size_t position) const;
         ft_size_t bit_mask(ft_size_t position) const;
         void destroy_data();
@@ -45,7 +45,7 @@ class ft_bitset
         int32_t initialize(const ft_bitset &other);
         int32_t initialize(ft_bitset &&other);
         int32_t destroy();
-        uint32_t move(ft_bitset &other);
+        int32_t move(ft_bitset &other);
 
         void set(ft_size_t position);
         void reset(ft_size_t position);
@@ -61,7 +61,7 @@ class ft_bitset
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const;
+        int32_t get_error() const;
         const char *get_error_str() const;
 };
 

@@ -161,7 +161,7 @@ int32_t ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, ft
     this->_rules.push_back(rule);
     (void)this->unlock_internal(lock_acquired);
     if (this->_rules.get_error() != FT_ERR_SUCCESS)
-        return (static_cast<int32_t>(this->_rules.get_error()));
+        return (this->_rules.get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -279,7 +279,7 @@ int32_t ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validati
         if (this->_rules.get_error() != FT_ERR_SUCCESS)
         {
             (void)this->unlock_internal(lock_acquired);
-            return (static_cast<int32_t>(this->_rules.get_error()));
+            return (this->_rules.get_error());
         }
         ft_string rule_path;
         if (rule_path.initialize("") != FT_ERR_SUCCESS)

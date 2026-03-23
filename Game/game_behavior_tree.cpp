@@ -2,8 +2,8 @@
 #include "../Template/move.hpp"
 #include "../Basic/basic.hpp"
 
-thread_local uint32_t game_behavior_node::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t game_behavior_tree::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_behavior_node::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_behavior_tree::_last_error = FT_ERR_SUCCESS;
 
 game_behavior_context::game_behavior_context() noexcept
     : _character(ft_nullptr), _user_data(ft_nullptr)
@@ -75,7 +75,7 @@ game_behavior_node::~game_behavior_node() noexcept
     return ;
 }
 
-uint32_t game_behavior_node::set_error(uint32_t error_code) noexcept
+int32_t game_behavior_node::set_error(int32_t error_code) noexcept
 {
     game_behavior_node::_last_error = error_code;
     return (error_code);
@@ -367,7 +367,7 @@ game_behavior_tree::~game_behavior_tree() noexcept
     return ;
 }
 
-uint32_t game_behavior_tree::set_error(uint32_t error_code) noexcept
+int32_t game_behavior_tree::set_error(int32_t error_code) noexcept
 {
     game_behavior_tree::_last_error = error_code;
     return (error_code);

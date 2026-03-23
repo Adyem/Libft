@@ -20,10 +20,10 @@ class game_dialogue_table
         ft_map<int32_t, game_dialogue_line *> _line_cache;
         ft_map<int32_t, game_dialogue_script> _scripts;
         pt_recursive_mutex *_mutex;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
         uint8_t _initialised_state;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
 
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;

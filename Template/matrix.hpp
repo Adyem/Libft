@@ -27,9 +27,9 @@ class ft_matrix
         ft_size_t                  _cols;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                    _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         void clear_unlocked();
@@ -47,7 +47,7 @@ class ft_matrix
         int32_t initialize();
         int32_t initialize(ft_size_t rows, ft_size_t cols);
         int32_t destroy();
-        uint32_t move(ft_matrix<ElementType> &other);
+        int32_t move(ft_matrix<ElementType> &other);
 
         int32_t enable_thread_safety();
         int32_t disable_thread_safety();
@@ -68,15 +68,15 @@ class ft_matrix
         ElementType determinant() const;
 
         void clear();
-        uint32_t get_error() const;
+        int32_t get_error() const;
         const char *get_error_str() const;
 };
 
 template <typename ElementType>
-thread_local uint32_t ft_matrix<ElementType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_matrix<ElementType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename ElementType>
-uint32_t ft_matrix<ElementType>::set_error(uint32_t error_code) noexcept
+int32_t ft_matrix<ElementType>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -312,7 +312,7 @@ int32_t ft_matrix<ElementType>::destroy()
 }
 
 template <typename ElementType>
-uint32_t ft_matrix<ElementType>::move(ft_matrix<ElementType> &other)
+int32_t ft_matrix<ElementType>::move(ft_matrix<ElementType> &other)
 {
     int32_t destroy_result;
 
@@ -847,7 +847,7 @@ void ft_matrix<ElementType>::clear()
 }
 
 template <typename ElementType>
-uint32_t ft_matrix<ElementType>::get_error() const
+int32_t ft_matrix<ElementType>::get_error() const
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_matrix::get_error");

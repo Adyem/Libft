@@ -238,7 +238,7 @@ int32_t ft_dom_validation_report::add_error(const ft_string &path,
     this->_errors.push_back(error_entry);
     (void)this->unlock_internal(lock_acquired);
     if (this->_errors.get_error() != FT_ERR_SUCCESS)
-        return (static_cast<int32_t>(this->_errors.get_error()));
+        return (this->_errors.get_error());
     return (FT_ERR_SUCCESS);
 }
 

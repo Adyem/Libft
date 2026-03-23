@@ -31,12 +31,12 @@ class ft_queue
         mutable pt_recursive_mutex* _mutex;
         mutable uint8_t             _initialised_state;
 
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
         void destroy_all_unlocked();
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         class value_proxy
@@ -57,7 +57,7 @@ class ft_queue
                 ElementType *operator->();
                 ElementType &operator*();
                 operator ElementType() const;
-                uint32_t get_error() const;
+                int32_t get_error() const;
                 int32_t is_valid() const;
         };
 
@@ -70,7 +70,7 @@ class ft_queue
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_queue<ElementType> &other);
+        int32_t move(ft_queue<ElementType> &other);
 
         int32_t enable_thread_safety();
         int32_t disable_thread_safety();
@@ -91,16 +91,16 @@ class ft_queue
 
         void clear();
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
 };
 
 template <typename ElementType>
-thread_local uint32_t ft_queue<ElementType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_queue<ElementType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename ElementType>
-uint32_t ft_queue<ElementType>::set_error(uint32_t error_code) noexcept
+int32_t ft_queue<ElementType>::set_error(int32_t error_code) noexcept
 {
     ft_queue<ElementType>::_last_error = error_code;
     return (error_code);
@@ -175,7 +175,7 @@ ft_queue<ElementType>::value_proxy::operator ElementType() const
 }
 
 template <typename ElementType>
-uint32_t ft_queue<ElementType>::value_proxy::get_error() const
+int32_t ft_queue<ElementType>::value_proxy::get_error() const
 {
     return (this->_last_error);
 }
@@ -340,7 +340,7 @@ int32_t ft_queue<ElementType>::destroy()
 }
 
 template <typename ElementType>
-uint32_t ft_queue<ElementType>::move(ft_queue<ElementType> &other)
+int32_t ft_queue<ElementType>::move(ft_queue<ElementType> &other)
 {
     int32_t destroy_result;
 
@@ -747,7 +747,7 @@ void ft_queue<ElementType>::clear()
 }
 
 template <typename ElementType>
-uint32_t ft_queue<ElementType>::get_error() const noexcept
+int32_t ft_queue<ElementType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::get_error");
     return (ft_queue<ElementType>::_last_error);

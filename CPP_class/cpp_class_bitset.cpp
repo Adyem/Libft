@@ -1,6 +1,6 @@
 #include "bitset.hpp"
 
-uint32_t ft_bitset::set_error(uint32_t error_code)
+int32_t ft_bitset::set_error(int32_t error_code)
 {
     _last_error = error_code;
     return (error_code);
@@ -229,9 +229,9 @@ int32_t ft_bitset::destroy()
     return (set_error(FT_ERR_SUCCESS));
 }
 
-uint32_t ft_bitset::move(ft_bitset &other)
+int32_t ft_bitset::move(ft_bitset &other)
 {
-    return (static_cast<uint32_t>(this->initialize(ft_move(other))));
+    return (this->initialize(ft_move(other)));
 }
 
 void ft_bitset::set(ft_size_t position)
@@ -424,7 +424,7 @@ void ft_bitset::unlock(ft_bool lock_acquired) const
     return ;
 }
 
-uint32_t ft_bitset::get_error() const
+int32_t ft_bitset::get_error() const
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::get_error");
     return (_last_error);
@@ -436,4 +436,4 @@ const char *ft_bitset::get_error_str() const
     return (ft_strerror(_last_error));
 }
 
-thread_local uint32_t ft_bitset::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_bitset::_last_error = FT_ERR_SUCCESS;

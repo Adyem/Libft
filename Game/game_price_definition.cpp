@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_price_definition::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_price_definition::_last_error = FT_ERR_SUCCESS;
 
 game_price_definition::game_price_definition() noexcept
     : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0),
@@ -85,7 +85,7 @@ game_price_definition::~game_price_definition() noexcept
     return ;
 }
 
-uint32_t game_price_definition::set_error(uint32_t error_code) noexcept
+int32_t game_price_definition::set_error(int32_t error_code) noexcept
 {
     game_price_definition::_last_error = error_code;
     return (error_code);

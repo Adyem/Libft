@@ -5,10 +5,10 @@
 #include "game_crafting.hpp"
 #include <new>
 
-thread_local uint32_t game_crafting_ingredient::_last_error = FT_ERR_SUCCESS;
-thread_local uint32_t game_crafting::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_crafting_ingredient::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_crafting::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_crafting_ingredient::set_error(uint32_t error_code) noexcept
+int32_t game_crafting_ingredient::set_error(int32_t error_code) noexcept
 {
     game_crafting_ingredient::_last_error = error_code;
     return (error_code);
@@ -30,7 +30,7 @@ const char *game_crafting_ingredient::get_error_str() const noexcept
     return (ft_strerror(this->get_error()));
 }
 
-uint32_t game_crafting::set_error(uint32_t error_code) noexcept
+int32_t game_crafting::set_error(int32_t error_code) noexcept
 {
     game_crafting::_last_error = error_code;
     return (error_code);

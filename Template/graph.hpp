@@ -34,9 +34,9 @@ class ft_graph
         ft_size_t                 _initial_capacity;
         mutable pt_recursive_mutex *_mutex;
         uint8_t                   _initialised_state;
-        static thread_local uint32_t _last_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_error(uint32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;
         int32_t unlock_internal(ft_bool lock_acquired) const;
         void reset_node(graph_node &node);
@@ -55,7 +55,7 @@ class ft_graph
 
         int32_t initialize();
         int32_t destroy();
-        uint32_t move(ft_graph<VertexType> &other);
+        int32_t move(ft_graph<VertexType> &other);
 
         ft_size_t add_vertex(const VertexType& value);
         ft_size_t add_vertex(VertexType&& value);
@@ -78,15 +78,15 @@ class ft_graph
         int32_t lock(ft_bool *lock_acquired) const;
         void unlock(ft_bool lock_acquired) const;
 
-        uint32_t get_error() const noexcept;
+        int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 template <typename VertexType>
-thread_local uint32_t ft_graph<VertexType>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_graph<VertexType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename VertexType>
-uint32_t ft_graph<VertexType>::set_error(uint32_t error_code) noexcept
+int32_t ft_graph<VertexType>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -453,7 +453,7 @@ int32_t ft_graph<VertexType>::destroy()
 }
 
 template <typename VertexType>
-uint32_t ft_graph<VertexType>::move(ft_graph<VertexType> &other)
+int32_t ft_graph<VertexType>::move(ft_graph<VertexType> &other)
 {
     int32_t destroy_result;
 
@@ -919,7 +919,7 @@ void ft_graph<VertexType>::unlock(ft_bool lock_acquired) const
 }
 
 template <typename VertexType>
-uint32_t ft_graph<VertexType>::get_error() const noexcept
+int32_t ft_graph<VertexType>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::get_error");
     return (_last_error);

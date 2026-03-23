@@ -60,11 +60,11 @@ class DataBuffer
         ft_bool _ok;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
-        uint32_t _operation_error;
-        static thread_local uint32_t _last_error;
+        int32_t _operation_error;
+        static thread_local int32_t _last_error;
 
-        static uint32_t set_last_error(uint32_t error_code) noexcept;
-        void set_operation_error(uint32_t error_code) noexcept;
+        static int32_t set_last_error(int32_t error_code) noexcept;
+        void set_operation_error(int32_t error_code) noexcept;
         int32_t write_length_locked(ft_size_t length) noexcept;
         int32_t read_length_locked(ft_size_t &length) noexcept;
 
@@ -85,7 +85,7 @@ class DataBuffer
 
         int32_t initialize() noexcept;
         int32_t initialize(const DataBuffer &other) noexcept;
-        uint32_t move(DataBuffer &other) noexcept;
+        int32_t move(DataBuffer &other) noexcept;
         int32_t destroy() noexcept;
 
         void clear() noexcept;

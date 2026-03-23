@@ -76,11 +76,11 @@ FT_TEST(test_ft_priority_queue_error_handling_and_moves)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.initialize());
     int empty_value = queue_instance.pop();
     FT_ASSERT_EQ(0, empty_value);
-    FT_ASSERT_EQ(FT_ERR_PRIORITY_QUEUE_EMPTY, static_cast<int32_t>(queue_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_PRIORITY_QUEUE_EMPTY, queue_instance.get_error());
 
     int top_empty = queue_instance.top();
     FT_ASSERT_EQ(0, top_empty);
-    FT_ASSERT_EQ(FT_ERR_PRIORITY_QUEUE_EMPTY, static_cast<int32_t>(queue_instance.get_error()));
+    FT_ASSERT_EQ(FT_ERR_PRIORITY_QUEUE_EMPTY, queue_instance.get_error());
 
     queue_instance.push(11);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());

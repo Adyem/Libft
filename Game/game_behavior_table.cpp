@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_behavior_table::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_behavior_table::_last_error = FT_ERR_SUCCESS;
 
 game_behavior_table::game_behavior_table() noexcept
     : _profiles(), _mutex(ft_nullptr),
@@ -369,7 +369,7 @@ const char *game_behavior_table::get_error_str() const noexcept
     return (ft_strerror(this->get_error()));
 }
 
-uint32_t game_behavior_table::set_error(uint32_t error_code) noexcept
+int32_t game_behavior_table::set_error(int32_t error_code) noexcept
 {
     game_behavior_table::_last_error = error_code;
     return (error_code);

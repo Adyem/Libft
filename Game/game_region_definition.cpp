@@ -5,7 +5,7 @@
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
-thread_local uint32_t game_region_definition::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_region_definition::_last_error = FT_ERR_SUCCESS;
 
 game_region_definition::game_region_definition() noexcept
     : _region_id(0), _name(), _description(), _recommended_level(0),
@@ -84,7 +84,7 @@ game_region_definition::~game_region_definition() noexcept
     return ;
 }
 
-uint32_t game_region_definition::set_error(uint32_t error_code) noexcept
+int32_t game_region_definition::set_error(int32_t error_code) noexcept
 {
     game_region_definition::_last_error = error_code;
     return (error_code);

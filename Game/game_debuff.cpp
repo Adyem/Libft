@@ -4,9 +4,9 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 
-thread_local uint32_t game_debuff::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t game_debuff::_last_error = FT_ERR_SUCCESS;
 
-uint32_t game_debuff::set_error(uint32_t error_code) noexcept
+int32_t game_debuff::set_error(int32_t error_code) noexcept
 {
     game_debuff::_last_error = error_code;
     return (error_code);
