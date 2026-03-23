@@ -71,6 +71,8 @@ class ft_sharedptr
         int32_t initialize(ManagedType *pointer, ft_bool array_type = FT_FALSE,
             ft_size_t array_size = 1) noexcept;
         int32_t initialize(ft_size_t size) noexcept;
+        int32_t initialize(const ft_sharedptr &other) noexcept;
+        int32_t initialize(ft_sharedptr &&other) noexcept;
         int32_t destroy() noexcept;
         int32_t move(ft_sharedptr<ManagedType> &other) noexcept;
 
@@ -461,6 +463,53 @@ int32_t ft_sharedptr<ManagedType>::initialize(ft_size_t size) noexcept
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+int32_t ft_sharedptr<ManagedType>::initialize(const ft_sharedptr &other) noexcept
+{
+    int32_t destroy_result;
+
+    if (this == &other)
+        return (set_error(FT_ERR_SUCCESS));
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_sharedptr::initialize(copy)",
+            "source object is uninitialised");
+        return (set_error(FT_ERR_INVALID_STATE));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (set_error(destroy_result));
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_managed_pointer = ft_nullptr;
+        this->_reference_count = ft_nullptr;
+        this->_array_size = 0;
+        this->_is_array_type = FT_FALSE;
+        this->_mutex = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(FT_ERR_SUCCESS));
+    }
+    this->_managed_pointer = other._managed_pointer;
+    this->_reference_count = other._reference_count;
+    this->_array_size = other._array_size;
+    this->_is_array_type = other._is_array_type;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    if (this->_reference_count != ft_nullptr)
+        *this->_reference_count = *this->_reference_count + 1;
+    return (set_error(FT_ERR_SUCCESS));
+}
+
+template <typename ManagedType>
+int32_t ft_sharedptr<ManagedType>::initialize(ft_sharedptr &&other) noexcept
+{
+    if (this == &other)
+        return (set_error(FT_ERR_SUCCESS));
+    return (this->move(other));
 }
 
 template <typename ManagedType>

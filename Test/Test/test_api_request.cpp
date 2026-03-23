@@ -211,6 +211,7 @@ FT_TEST(test_api_request_disables_http2_streaming)
 struct api_request_bearer_server_context
 {
     std::atomic<bool> ready;
+    std::atomic<int> start_error;
     std::atomic<bool> header_received;
     std::atomic<int> result;
     int client_fd;
@@ -220,6 +221,7 @@ struct api_request_bearer_server_context
 struct api_request_basic_server_context
 {
     std::atomic<bool> ready;
+    std::atomic<int> start_error;
     std::atomic<bool> basic_header_received;
     std::atomic<bool> basic_header_after_custom;
     std::atomic<int> result;
@@ -230,6 +232,7 @@ struct api_request_basic_server_context
 struct api_request_circuit_server_context
 {
     std::atomic<bool> ready;
+    std::atomic<int> start_error;
     uint16_t port;
     int responses;
 };
@@ -278,6 +281,8 @@ static std::atomic<bool> g_api_request_stream_chunked_server_ready(false);
 static std::atomic<int> g_api_request_stream_chunked_server_start_error(FT_ERR_SUCCESS);
 static std::atomic<bool> g_api_request_send_failure_server_ready(false);
 static std::atomic<int> g_api_request_send_failure_server_start_error(FT_ERR_SUCCESS);
+static std::atomic<bool> g_api_request_retry_success_server_ready(false);
+static std::atomic<int> g_api_request_retry_success_server_start_error(FT_ERR_SUCCESS);
 
 
 static void api_request_send_failure_server(void);
@@ -430,6 +435,26 @@ static bool api_request_stream_chunked_server_wait_until_ready(void)
     return (true);
 }
 
+static void api_request_retry_success_server_reset_state(void)
+{
+    g_api_request_retry_success_server_ready.store(false,
+        std::memory_order_relaxed);
+    g_api_request_retry_success_server_start_error.store(FT_ERR_SUCCESS,
+        std::memory_order_relaxed);
+    return ;
+}
+
+static bool api_request_retry_success_server_wait_until_ready(void)
+{
+    while (!g_api_request_retry_success_server_ready.load(
+        std::memory_order_acquire))
+    {
+        api_request_small_delay();
+    }
+    return (g_api_request_retry_success_server_start_error.load(
+        std::memory_order_acquire) == FT_ERR_SUCCESS);
+}
+
 static void api_request_bearer_server(api_request_bearer_server_context *context)
 {
     SocketConfig server_configuration;
@@ -447,6 +472,7 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
     int config_error = server_configuration.initialize();
     if (config_error != FT_ERR_SUCCESS)
     {
+        context->start_error.store(config_error, std::memory_order_relaxed);
         context->result.store(config_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
@@ -460,17 +486,21 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
     int initialize_error = server_socket.initialize(server_configuration);
     if (initialize_error != FT_ERR_SUCCESS)
     {
+        context->start_error.store(initialize_error, std::memory_order_relaxed);
         context->result.store(initialize_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
+        context->start_error.store(FT_ERR_INVALID_OPERATION,
+            std::memory_order_relaxed);
         context->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
+    context->start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     context->result.store(0, std::memory_order_relaxed);
     context->ready.store(true, std::memory_order_release);
     address_length = sizeof(address_storage);
@@ -522,6 +552,7 @@ static void api_request_basic_server(api_request_basic_server_context *context)
     config_error = server_configuration.initialize();
     if (config_error != FT_ERR_SUCCESS)
     {
+        context->start_error.store(config_error, std::memory_order_relaxed);
         context->result.store(config_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
@@ -535,17 +566,21 @@ static void api_request_basic_server(api_request_basic_server_context *context)
     int initialize_error = server_socket.initialize(server_configuration);
     if (initialize_error != FT_ERR_SUCCESS)
     {
+        context->start_error.store(initialize_error, std::memory_order_relaxed);
         context->result.store(initialize_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
+        context->start_error.store(FT_ERR_INVALID_OPERATION,
+            std::memory_order_relaxed);
         context->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
+    context->start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     context->result.store(0, std::memory_order_relaxed);
     context->ready.store(true, std::memory_order_release);
     address_length = sizeof(address_storage);
@@ -784,16 +819,41 @@ static void api_request_retry_success_server(void)
 
     config_error = server_configuration.initialize();
     if (config_error != FT_ERR_SUCCESS)
+    {
+        g_api_request_retry_success_server_start_error.store(config_error,
+            std::memory_order_relaxed);
+        g_api_request_retry_success_server_ready.store(true,
+            std::memory_order_release);
         return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54339;
     server_configuration._non_blocking = true;
     ft_socket server_socket;
-    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    int initialize_error;
+
+    initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        g_api_request_retry_success_server_start_error.store(
+            initialize_error, std::memory_order_relaxed);
+        g_api_request_retry_success_server_ready.store(true,
+            std::memory_order_release);
         return ;
+    }
     if (server_socket.get_file_descriptor() < 0)
+    {
+        g_api_request_retry_success_server_start_error.store(
+            FT_ERR_INVALID_OPERATION, std::memory_order_relaxed);
+        g_api_request_retry_success_server_ready.store(true,
+            std::memory_order_release);
         return ;
+    }
+    g_api_request_retry_success_server_start_error.store(FT_ERR_SUCCESS,
+        std::memory_order_relaxed);
+    g_api_request_retry_success_server_ready.store(true,
+        std::memory_order_release);
     accepted_count = 0;
     start_time = std::chrono::steady_clock::now();
     while (accepted_count < 2)
@@ -926,6 +986,7 @@ static void api_request_circuit_success_server(
     int config_error = server_configuration.initialize();
     if (config_error != FT_ERR_SUCCESS)
     {
+        context->start_error.store(config_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
@@ -936,11 +997,14 @@ static void api_request_circuit_success_server(
     int initialize_error = server_socket.initialize(server_configuration);
     if (initialize_error != FT_ERR_SUCCESS)
     {
+        context->start_error.store(initialize_error, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
     if (server_socket.get_file_descriptor() < 0)
     {
+        context->start_error.store(FT_ERR_INVALID_OPERATION,
+            std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
@@ -948,6 +1012,7 @@ static void api_request_circuit_success_server(
     long long start_time_ms;
 
     start_time_ms = time_monotonic();
+    context->start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     context->ready.store(true, std::memory_order_release);
     while (served_count < context->responses)
     {
@@ -1357,6 +1422,7 @@ FT_TEST(test_api_request_host_bearer_adds_header)
     signal(SIGPIPE, SIG_IGN);
 #endif
     context.ready.store(false, std::memory_order_relaxed);
+    context.start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     context.header_received.store(false, std::memory_order_relaxed);
     context.result.store(-99, std::memory_order_relaxed);
     context.client_fd = -1;
@@ -1367,11 +1433,15 @@ FT_TEST(test_api_request_host_bearer_adds_header)
     FT_ASSERT(server_thread.joinable());
     while (!context.ready.load(std::memory_order_acquire))
         api_request_small_delay();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        context.start_error.load(std::memory_order_acquire));
     status_code = 0;
     body = api_request_string_host_bearer("127.0.0.1", 54365, "GET", "/",
                                           "test-token", ft_nullptr, ft_nullptr,
                                           &status_code, 1000, ft_nullptr);
     server_thread.join();
+    if (body == ft_nullptr)
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, context.result.load(std::memory_order_relaxed));
     FT_ASSERT(body != ft_nullptr);
     cma_free(body);
     FT_ASSERT(context.result.load(std::memory_order_relaxed) == 0);
@@ -1391,6 +1461,7 @@ FT_TEST(test_api_request_host_basic_appends_after_existing_header)
     signal(SIGPIPE, SIG_IGN);
 #endif
     context.ready.store(false, std::memory_order_relaxed);
+    context.start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     context.basic_header_received.store(false, std::memory_order_relaxed);
     context.basic_header_after_custom.store(false, std::memory_order_relaxed);
     context.result.store(-99, std::memory_order_relaxed);
@@ -1403,12 +1474,16 @@ FT_TEST(test_api_request_host_basic_appends_after_existing_header)
         return (0);
     while (!context.ready.load(std::memory_order_acquire))
         api_request_small_delay();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        context.start_error.load(std::memory_order_acquire));
     status_code = 0;
     body = api_request_string_host_basic("127.0.0.1", 54366, "GET", "/",
                                          "dXNlcjpwYXNz", ft_nullptr,
                                          "X-Test-Header: Value",
                                          &status_code, 1000, ft_nullptr);
     server_thread.join();
+    if (body == ft_nullptr)
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, context.result.load(std::memory_order_relaxed));
     FT_ASSERT(body != ft_nullptr);
     cma_free(body);
     FT_ASSERT(context.result.load(std::memory_order_relaxed) == 0);
@@ -1448,6 +1523,9 @@ FT_TEST(test_api_request_stream_large_response)
     if (!stream_large_ready)
     {
         server_thread.join();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS,
+            g_api_request_stream_large_server_start_error.load(
+                std::memory_order_acquire));
         FT_ASSERT(stream_large_ready);
     }
     expected_size = 2 * 1024 * 1024;
@@ -1492,6 +1570,9 @@ FT_TEST(test_api_request_stream_chunked_response)
     if (!stream_chunked_ready)
     {
         server_thread.join();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS,
+            g_api_request_stream_chunked_server_start_error.load(
+                std::memory_order_acquire));
         FT_ASSERT(stream_chunked_ready);
     }
     expected_size = 24;
@@ -1993,9 +2074,10 @@ FT_TEST(test_api_request_retry_policy_success)
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
+    api_request_retry_success_server_reset_state();
     server_thread = ft_thread(api_request_retry_success_server);
     FT_ASSERT(server_thread.joinable());
-    api_request_small_delay();
+    FT_ASSERT(api_request_retry_success_server_wait_until_ready());
     retry_policy.set_max_attempts(3);
     retry_policy.set_initial_delay_ms(10);
     retry_policy.set_max_delay_ms(0);
@@ -2004,6 +2086,12 @@ FT_TEST(test_api_request_retry_policy_success)
     body = api_request_string("127.0.0.1", 54339, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
     server_thread.join();
+    if (body == ft_nullptr)
+    {
+        FT_ASSERT_EQ(FT_ERR_SUCCESS,
+            g_api_request_retry_success_server_start_error.load(
+                std::memory_order_acquire));
+    }
     FT_ASSERT(body != ft_nullptr);
     if (ft_strcmp(body, "Hello") != 0)
     {
@@ -2145,6 +2233,7 @@ FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold)
     FT_ASSERT_EQ(ft_nullptr, body);
     api_retry_circuit_reset();
     server_context.ready.store(false, std::memory_order_relaxed);
+    server_context.start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     server_context.port = 55310;
     server_context.responses = 1;
     server_thread = ft_thread(api_request_circuit_success_server,
@@ -2157,6 +2246,8 @@ FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold)
         time_sleep_ms(10);
         wait_attempts++;
     }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        server_context.start_error.load(std::memory_order_acquire));
     status_value = 0;
     body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 200, &retry_policy);
@@ -2204,6 +2295,7 @@ FT_TEST(test_api_request_circuit_breaker_half_open_recovers)
     }
     time_sleep_ms(150);
     server_context.ready.store(false, std::memory_order_relaxed);
+    server_context.start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     server_context.port = 55311;
     server_context.responses = 2;
     server_thread = ft_thread(api_request_circuit_success_server,
@@ -2217,6 +2309,8 @@ FT_TEST(test_api_request_circuit_breaker_half_open_recovers)
         time_sleep_ms(10);
         wait_attempts++;
     }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        server_context.start_error.load(std::memory_order_acquire));
     status_value = 0;
     body = api_request_string("127.0.0.1", 55311, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 200, &retry_policy);

@@ -510,6 +510,8 @@ int32_t game_dialogue_table::fetch_line(int32_t line_id,
     game_dialogue_line &out_line) const noexcept
 {
     const Pair<int32_t, game_dialogue_line *> *entry;
+    const Pair<int32_t, ft_sharedptr<game_dialogue_line> > *line_entry;
+    const game_dialogue_line *source_line;
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t output_error;
@@ -522,23 +524,36 @@ int32_t game_dialogue_table::fetch_line(int32_t line_id,
         this->set_error(lock_error);
         return (lock_error);
     }
+    source_line = ft_nullptr;
     entry = this->_line_cache.find(line_id);
-    if (entry == this->_line_cache.end())
+    if (entry != this->_line_cache.end()
+        && entry->value != ft_nullptr
+        && entry->value->is_initialised() == FT_TRUE)
     {
-        this->set_error(FT_ERR_NOT_FOUND);
-
-        (void)this->unlock_internal(lock_acquired);
-        return (FT_ERR_NOT_FOUND);
+        source_line = entry->value;
     }
-    if (entry->value == ft_nullptr || entry->value->is_initialised() == FT_FALSE)
+    else
+    {
+        line_entry = this->_lines.find(line_id);
+        if (line_entry == this->_lines.end()
+            || line_entry->value == ft_sharedptr<game_dialogue_line>()
+            || line_entry->value->is_initialised() == FT_FALSE)
+        {
+            this->set_error(FT_ERR_NOT_FOUND);
+            (void)this->unlock_internal(lock_acquired);
+            return (FT_ERR_NOT_FOUND);
+        }
+        source_line = line_entry->value.get();
+    }
+    if (source_line == ft_nullptr || source_line->is_initialised() == FT_FALSE)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         (void)this->unlock_internal(lock_acquired);
         return (FT_ERR_INVALID_STATE);
     }
-    output_error = out_line.initialize(entry->value->get_line_id(),
-        entry->value->get_speaker(), entry->value->get_text(),
-        entry->value->get_next_line_ids());
+    output_error = out_line.initialize(source_line->get_line_id(),
+        source_line->get_speaker(), source_line->get_text(),
+        source_line->get_next_line_ids());
     if (output_error != FT_ERR_SUCCESS)
     {
         this->set_error(output_error);

@@ -59,25 +59,27 @@ FT_TEST(test_ft_getenv_returns_value)
 
 FT_TEST(test_ft_setenv_null_value_sets_errno)
 {
-    FT_ASSERT_EQ(-1, su_setenv("LIBFT_TEST_NULL_VALUE", ft_nullptr, 1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+        su_setenv("LIBFT_TEST_NULL_VALUE", ft_nullptr, 1));
     return (1);
 }
 
 FT_TEST(test_ft_setenv_null_name_sets_errno)
 {
-    FT_ASSERT_EQ(-1, su_setenv(ft_nullptr, "value", 1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, su_setenv(ft_nullptr, "value", 1));
     return (1);
 }
 
 FT_TEST(test_ft_setenv_empty_name_sets_errno)
 {
-    FT_ASSERT_EQ(-1, su_setenv("", "value", 1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, su_setenv("", "value", 1));
     return (1);
 }
 
 FT_TEST(test_ft_setenv_equals_sign_sets_errno)
 {
-    FT_ASSERT_EQ(-1, su_setenv("INVALID=NAME", "value", 1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION,
+        su_setenv("INVALID=NAME", "value", 1));
     return (1);
 }
 

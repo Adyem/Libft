@@ -226,7 +226,10 @@ FT_TEST(test_api_connection_pool_reuses_connections)
     first_body = api_request_string("127.0.0.1", g_api_pool_test_port,
             "GET", "/pool", ft_nullptr, ft_nullptr, &first_status, 2000);
     if (!first_body)
+    {
         server_thread.join();
+        FT_ASSERT_EQ(0, context.result.load());
+    }
     FT_ASSERT_NEQ(ft_nullptr, first_body);
     FT_ASSERT_EQ(200, first_status);
     FT_ASSERT(ft_strncmp(first_body, "Hello", 5) == 0);

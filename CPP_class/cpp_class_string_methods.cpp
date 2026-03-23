@@ -1013,11 +1013,13 @@ char ft_string::operator[](ft_size_t index) const noexcept
 }
 
 ft_string_proxy::ft_string_proxy() noexcept
-    : _value()
+    : _error_restorer()
+    , _value()
     , _last_error(FT_ERR_SUCCESS)
 {
     int32_t initialization_error;
 
+    this->_error_restorer.set_error_pointer(&this->_last_error);
     initialization_error = this->_value.initialize("");
     if (initialization_error != FT_ERR_SUCCESS)
         this->_last_error = initialization_error;
@@ -1028,11 +1030,13 @@ ft_string_proxy::ft_string_proxy() noexcept
 }
 
 ft_string_proxy::ft_string_proxy(int32_t error_code) noexcept
-    : _value()
+    : _error_restorer()
+    , _value()
     , _last_error(error_code)
 {
     int32_t initialization_error;
 
+    this->_error_restorer.set_error_pointer(&this->_last_error);
     initialization_error = this->_value.initialize("");
     if (initialization_error != FT_ERR_SUCCESS)
         this->_last_error = initialization_error;
@@ -1043,9 +1047,11 @@ ft_string_proxy::ft_string_proxy(int32_t error_code) noexcept
 }
 
 ft_string_proxy::ft_string_proxy(const ft_string &value, int32_t error_code) noexcept
-    : _value(value)
+    : _error_restorer()
+    , _value(value)
     , _last_error(error_code)
 {
+    this->_error_restorer.set_error_pointer(&this->_last_error);
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         this->_last_error = ft_string::get_error();
     ft_string::set_error(this->_last_error);
@@ -1053,9 +1059,11 @@ ft_string_proxy::ft_string_proxy(const ft_string &value, int32_t error_code) noe
 }
 
 ft_string_proxy::ft_string_proxy(const ft_string_proxy &other) noexcept
-    : _value(other._value)
+    : _error_restorer()
+    , _value(other._value)
     , _last_error(other._last_error)
 {
+    this->_error_restorer.set_error_pointer(&this->_last_error);
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         this->_last_error = ft_string::get_error();
     ft_string::set_error(this->_last_error);
@@ -1063,13 +1071,42 @@ ft_string_proxy::ft_string_proxy(const ft_string_proxy &other) noexcept
 }
 
 ft_string_proxy::ft_string_proxy(ft_string_proxy &&other) noexcept
-    : _value(static_cast<ft_string &&>(other._value))
+    : _error_restorer()
+    , _value(static_cast<ft_string &&>(other._value))
     , _last_error(other._last_error)
 {
+    this->_error_restorer.set_error_pointer(&this->_last_error);
     other._last_error = FT_ERR_SUCCESS;
     if (ft_string::get_error() != FT_ERR_SUCCESS)
         this->_last_error = ft_string::get_error();
     ft_string::set_error(this->_last_error);
+    return ;
+}
+
+ft_string_proxy::error_restorer::error_restorer() noexcept
+    : _error_pointer(ft_nullptr)
+{
+    return ;
+}
+
+ft_string_proxy::error_restorer::error_restorer(
+    const error_restorer &other) noexcept
+    : _error_pointer(other._error_pointer)
+{
+    return ;
+}
+
+ft_string_proxy::error_restorer::~error_restorer() noexcept
+{
+    if (this->_error_pointer != ft_nullptr)
+        ft_string::set_error(*this->_error_pointer);
+    return ;
+}
+
+void ft_string_proxy::error_restorer::set_error_pointer(
+    const int32_t *error_pointer) noexcept
+{
+    this->_error_pointer = error_pointer;
     return ;
 }
 

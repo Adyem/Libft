@@ -115,6 +115,23 @@ class ft_string_proxy
 #else
     private:
 #endif
+        class error_restorer
+        {
+            private:
+                const int32_t *_error_pointer;
+
+            public:
+                error_restorer() noexcept;
+                error_restorer(const error_restorer &other) noexcept;
+                ~error_restorer() noexcept;
+
+                error_restorer &operator=(const error_restorer &other) noexcept = delete;
+                error_restorer &operator=(error_restorer &&other) noexcept = delete;
+
+                void set_error_pointer(const int32_t *error_pointer) noexcept;
+        };
+
+        error_restorer _error_restorer;
         ft_string   _value;
         int32_t     _last_error;
 

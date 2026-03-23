@@ -193,10 +193,9 @@ FT_TEST(test_game_event_scheduler_rejects_null_world)
     scheduler.schedule_event(mission);
     scheduler.update_events(world, 1);
     scheduler.dump_events(queued);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
-    FT_ASSERT_EQ((size_t)1, queued.size());
-    FT_ASSERT_EQ(23, queued[0]->get_id());
-    FT_ASSERT_EQ(2, queued[0]->get_duration());
+    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, scheduler.get_error());
+    FT_ASSERT_EQ((size_t)1, scheduler.size());
+    FT_ASSERT_EQ((size_t)0, queued.size());
     return (1);
 }
 
