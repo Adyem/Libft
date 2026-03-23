@@ -398,7 +398,7 @@ int32_t game_path_step::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_path_step::get_error");
-    return (static_cast<int32_t>(game_path_step::_last_error));
+    return (game_path_step::_last_error);
 }
 
 const char *game_path_step::get_error_str() const noexcept
@@ -1081,7 +1081,7 @@ int32_t game_pathfinding::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_pathfinding::get_error");
-    return (static_cast<int32_t>(game_pathfinding::_last_error));
+    return (game_pathfinding::_last_error);
 }
 
 const char *game_pathfinding::get_error_str() const noexcept

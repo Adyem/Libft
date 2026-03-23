@@ -20,7 +20,7 @@ int32_t game_item_definition::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_item_definition::get_error");
-    return (static_cast<int32_t>(game_item_definition::_last_error));
+    return (game_item_definition::_last_error);
 }
 
 const char *game_item_definition::get_error_str() const noexcept
@@ -44,7 +44,7 @@ int32_t game_loadout_entry::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_loadout_entry::get_error");
-    return (static_cast<int32_t>(game_loadout_entry::_last_error));
+    return (game_loadout_entry::_last_error);
 }
 
 const char *game_loadout_entry::get_error_str() const noexcept
@@ -68,7 +68,7 @@ int32_t game_loadout_blueprint::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_loadout_blueprint::get_error");
-    return (static_cast<int32_t>(game_loadout_blueprint::_last_error));
+    return (game_loadout_blueprint::_last_error);
 }
 
 const char *game_loadout_blueprint::get_error_str() const noexcept
@@ -92,7 +92,7 @@ int32_t game_recipe_blueprint::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_recipe_blueprint::get_error");
-    return (static_cast<int32_t>(game_recipe_blueprint::_last_error));
+    return (game_recipe_blueprint::_last_error);
 }
 
 const char *game_recipe_blueprint::get_error_str() const noexcept
@@ -2171,7 +2171,7 @@ int32_t game_data_catalog::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_data_catalog::get_error");
-    return (static_cast<int32_t>(game_data_catalog::_last_error));
+    return (game_data_catalog::_last_error);
 }
 
 const char *game_data_catalog::get_error_str() const noexcept

@@ -688,7 +688,7 @@ int32_t html_document::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_error");
-    return (static_cast<int32_t>(html_document::_last_error));
+    return (html_document::_last_error);
 }
 
 const char *html_document::get_error_str() const noexcept
@@ -697,7 +697,7 @@ const char *html_document::get_error_str() const noexcept
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_error_str");
-    message = ft_strerror(static_cast<int32_t>(html_document::_last_error));
+    message = ft_strerror(html_document::_last_error);
     if (message == ft_nullptr)
         message = "unknown error";
     return (message);

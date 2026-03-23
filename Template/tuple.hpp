@@ -74,10 +74,10 @@ class ft_tuple
 };
 
 template <typename... Types>
-thread_local uint32_t ft_tuple<Types...>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_tuple<Types...>::_last_error = FT_ERR_SUCCESS;
 
 template <typename... Types>
-uint32_t ft_tuple<Types...>::set_error(uint32_t error_code)
+int32_t ft_tuple<Types...>::set_error(int32_t error_code)
 {
     _last_error = error_code;
     return (error_code);
@@ -487,7 +487,7 @@ void ft_tuple<Types...>::unlock(ft_bool lock_acquired) const
 }
 
 template <typename... Types>
-uint32_t ft_tuple<Types...>::get_error() const
+int32_t ft_tuple<Types...>::get_error() const
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::get_error");
     return (_last_error);

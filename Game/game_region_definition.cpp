@@ -450,7 +450,7 @@ int32_t game_region_definition::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_region_definition::get_error");
-    return (static_cast<int32_t>(game_region_definition::_last_error));
+    return (game_region_definition::_last_error);
 }
 
 const char *game_region_definition::get_error_str() const noexcept

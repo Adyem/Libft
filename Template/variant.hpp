@@ -171,10 +171,10 @@ class ft_variant
 };
 
 template <typename... Types>
-thread_local uint32_t ft_variant<Types...>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_variant<Types...>::_last_error = FT_ERR_SUCCESS;
 
 template <typename... Types>
-uint32_t ft_variant<Types...>::set_error(uint32_t error_code) noexcept
+int32_t ft_variant<Types...>::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -564,7 +564,7 @@ TypeToGet *ft_variant<Types...>::value_proxy<TypeToGet>::operator->() const
 
 template <typename... Types>
 template <typename TypeToGet>
-uint32_t ft_variant<Types...>::value_proxy<TypeToGet>::get_error() const
+int32_t ft_variant<Types...>::value_proxy<TypeToGet>::get_error() const
 {
     return (this->_error);
 }
@@ -738,7 +738,7 @@ void ft_variant<Types...>::unlock(ft_bool lock_acquired) const
 }
 
 template <typename... Types>
-uint32_t ft_variant<Types...>::get_error() const noexcept
+int32_t ft_variant<Types...>::get_error() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::get_error");
     return (_last_error);

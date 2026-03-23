@@ -595,7 +595,7 @@ int32_t game_experience_table::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_experience_table::get_error");
-    return (static_cast<int32_t>(game_experience_table::_last_error));
+    return (game_experience_table::_last_error);
 }
 
 const char *game_experience_table::get_error_str() const noexcept

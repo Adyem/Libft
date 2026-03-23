@@ -523,7 +523,7 @@ int32_t game_event::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_event::get_error");
-    return (static_cast<int32_t>(game_event::_last_error));
+    return (game_event::_last_error);
 }
 
 const char *game_event::get_error_str() const noexcept

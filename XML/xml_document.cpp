@@ -1252,7 +1252,7 @@ int32_t xml_document::get_error() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->unlock(lock_acquired);
-    return (static_cast<int32_t>(xml_document::_last_error));
+    return (xml_document::_last_error);
 }
 
 const char *xml_document::get_error_str() const noexcept

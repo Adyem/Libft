@@ -403,7 +403,7 @@ int32_t game_price_definition::get_error() const noexcept
 {
     errno_abort_if_uninitialised(this->_initialised_state,
         "game_price_definition::get_error");
-    return (static_cast<int32_t>(game_price_definition::_last_error));
+    return (game_price_definition::_last_error);
 }
 
 const char *game_price_definition::get_error_str() const noexcept

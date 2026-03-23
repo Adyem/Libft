@@ -71,7 +71,7 @@ class ft_event_emitter
 };
 
 template <typename EventType, typename... Args>
-uint32_t ft_event_emitter<EventType, Args...>::set_error(uint32_t error_code) noexcept
+int32_t ft_event_emitter<EventType, Args...>::set_error(int32_t error_code) noexcept
 {
     ft_event_emitter<EventType, Args...>::_last_error = error_code;
     return (error_code);
@@ -651,7 +651,7 @@ void ft_event_emitter<EventType, Args...>::clear()
 }
 
 template <typename EventType, typename... Args>
-uint32_t ft_event_emitter<EventType, Args...>::get_error() const
+int32_t ft_event_emitter<EventType, Args...>::get_error() const
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_event_emitter::get_error");
@@ -667,6 +667,6 @@ const char *ft_event_emitter<EventType, Args...>::get_error_str() const
 }
 
 template <typename EventType, typename... Args>
-thread_local uint32_t ft_event_emitter<EventType, Args...>::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_event_emitter<EventType, Args...>::_last_error = FT_ERR_SUCCESS;
 
 #endif

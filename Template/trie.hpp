@@ -29,7 +29,7 @@ class ft_trie
         ft_unordered_map<char, ft_trie<ValueType>*> _children;
         mutable pt_recursive_mutex                  *_mutex;
         uint8_t                                     _initialised_state;
-        static thread_local uint32_t                _last_error;
+        static thread_local int32_t                 _last_error;
 
         static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const;

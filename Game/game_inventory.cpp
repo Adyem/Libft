@@ -638,7 +638,7 @@ int32_t game_inventory::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_inventory::get_error");
-    return (static_cast<int32_t>(game_inventory::_last_error));
+    return (game_inventory::_last_error);
 }
 
 const char *game_inventory::get_error_str() const noexcept

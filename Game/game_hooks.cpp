@@ -19,7 +19,7 @@ int32_t game_hooks::get_error() const noexcept
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
             "game_hooks::get_error");
-    return (static_cast<int32_t>(game_hooks::_last_error));
+    return (game_hooks::_last_error);
 }
 
 const char *game_hooks::get_error_str() const noexcept
@@ -484,8 +484,7 @@ void game_hooks::set_on_item_crafted(
     entry.metadata.description = "Legacy callback set via set_on_item_crafted";
     entry.metadata.argument_contract = "game_character&,game_item&";
     entry.priority = 1000;
-    entry.callback = ft_game_hook_make_character_item_adapter(
-        ft_function<void(game_character&, game_item&)>(this->_legacy_item_crafted));
+    entry.callback = ft_game_hook_make_character_item_adapter(ft_move(this->_legacy_item_crafted));
     this->remove_listener_unlocked(entry.metadata.hook_identifier,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
@@ -509,8 +508,7 @@ void game_hooks::set_on_character_damaged(
     entry.metadata.description = "Legacy callback set via set_on_character_damaged";
     entry.metadata.argument_contract = "game_character&,int32_t,uint8_t";
     entry.priority = 1000;
-    entry.callback = ft_game_hook_make_character_damage_adapter(
-        ft_function<void(game_character&, int32_t, uint8_t)>(this->_legacy_character_damaged));
+    entry.callback = ft_game_hook_make_character_damage_adapter(ft_move(this->_legacy_character_damaged));
     this->remove_listener_unlocked(entry.metadata.hook_identifier,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
@@ -534,8 +532,7 @@ void game_hooks::set_on_event_triggered(
     entry.metadata.description = "Legacy callback set via set_on_event_triggered";
     entry.metadata.argument_contract = "game_world&,game_event&";
     entry.priority = 1000;
-    entry.callback = ft_game_hook_make_world_event_adapter(
-        ft_function<void(game_world&, game_event&)>(this->_legacy_event_triggered));
+    entry.callback = ft_game_hook_make_world_event_adapter(ft_move(this->_legacy_event_triggered));
     this->remove_listener_unlocked(entry.metadata.hook_identifier,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);

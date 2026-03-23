@@ -50,7 +50,7 @@ static const char *ft_test_value_to_string(char *buffer, ft_size_t buffer_size,
         return ("ft_nullptr");
     else if constexpr (std::is_enum<typename std::decay<ValueType>::type>::value)
     {
-        std::snprintf(buffer, static_cast<size_t>(buffer_size), "%lld",
+        std::snprintf(buffer, buffer_size, "%lld",
             static_cast<long long>(static_cast<typename ft_test_numeric_type_helper<
                 ValueType, true>::type>(value)));
         return (buffer);
@@ -59,29 +59,29 @@ static const char *ft_test_value_to_string(char *buffer, ft_size_t buffer_size,
         || std::is_same<typename std::decay<ValueType>::type, signed char>::value
         || std::is_same<typename std::decay<ValueType>::type, unsigned char>::value)
     {
-        std::snprintf(buffer, static_cast<size_t>(buffer_size), "%d",
+        std::snprintf(buffer, buffer_size, "%d",
             static_cast<int32_t>(value));
         return (buffer);
     }
     else if constexpr (std::is_integral<typename std::decay<ValueType>::type>::value)
     {
         if constexpr (std::is_signed<typename std::decay<ValueType>::type>::value)
-            std::snprintf(buffer, static_cast<size_t>(buffer_size), "%lld",
+            std::snprintf(buffer, buffer_size, "%lld",
                 static_cast<long long>(value));
         else
-            std::snprintf(buffer, static_cast<size_t>(buffer_size), "%llu",
+            std::snprintf(buffer, buffer_size, "%llu",
                 static_cast<unsigned long long>(value));
         return (buffer);
     }
     else if constexpr (std::is_floating_point<typename std::decay<ValueType>::type>::value)
     {
-        std::snprintf(buffer, static_cast<size_t>(buffer_size), "%.17g",
+        std::snprintf(buffer, buffer_size, "%.17g",
             static_cast<double>(value));
         return (buffer);
     }
     else if constexpr (std::is_pointer<typename std::decay<ValueType>::type>::value)
     {
-        std::snprintf(buffer, static_cast<size_t>(buffer_size), "%p",
+        std::snprintf(buffer, buffer_size, "%p",
             static_cast<const void *>(value));
         return (buffer);
     }
