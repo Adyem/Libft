@@ -672,19 +672,58 @@ void game_hooks::unregister_listener(const ft_string &hook_identifier,
 ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata() const noexcept
 {
     ft_vector<ft_game_hook_metadata> result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t index;
+    ft_size_t metadata_count;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata");
-    (void)result.initialize();
+    if (result.initialize() != FT_ERR_SUCCESS)
+        return (result);
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (result);
+    index = 0;
+    metadata_count = this->_catalog_metadata.size();
+    while (index < metadata_count)
+    {
+        if (result.push_back(this->_catalog_metadata[index]) != FT_ERR_SUCCESS)
+            break ;
+        index += 1;
+    }
+    (void)this->unlock_internal(lock_acquired);
     return (result);
 }
 
 ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata_for(
-    const ft_string &) const noexcept
+    const ft_string &hook_identifier) const noexcept
 {
     ft_vector<ft_game_hook_metadata> result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ft_size_t index;
+    ft_size_t metadata_count;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata_for");
-    (void)result.initialize();
+    if (result.initialize() != FT_ERR_SUCCESS)
+        return (result);
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (result);
+    index = 0;
+    metadata_count = this->_catalog_metadata.size();
+    while (index < metadata_count)
+    {
+        if (this->_catalog_metadata[index].hook_identifier == hook_identifier)
+        {
+            if (result.push_back(this->_catalog_metadata[index]) != FT_ERR_SUCCESS)
+                break ;
+        }
+        index += 1;
+    }
+    (void)this->unlock_internal(lock_acquired);
     return (result);
 }
 

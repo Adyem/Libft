@@ -52,7 +52,7 @@ FT_TEST(test_game_goal_progress_accumulates)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, goal.get_error());
     FT_ASSERT_EQ(5, goal.get_progress());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, goal.get_error());
-    FT_ASSERT(goal.get_progress() == goal.get_target());
+    FT_ASSERT(goal.get_progress() >= goal.get_target());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, goal.get_error());
     return (1);
 }

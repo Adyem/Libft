@@ -87,7 +87,7 @@ FT_TEST(test_game_world_persistence_round_trip)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, restored_inventory.initialize(1, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, restored_inventory.get_error());
 
-    FT_ASSERT_EQ(world_instance.load_from_store(persistence_store, "slot-primary", restored_hero, restored_inventory), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_instance.load_from_store(persistence_store, "slot-primary", restored_hero, restored_inventory));
     FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);
 
     FT_ASSERT_EQ(restored_hero.get_hit_points(), hero.get_hit_points());

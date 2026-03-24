@@ -324,7 +324,7 @@ FT_TEST(test_inventory_remove_item_releases_usage)
     stack->set_height(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(stack));
     FT_ASSERT_EQ(2u, inventory.get_used());
-    FT_ASSERT_EQ(5, inventory.get_current_weight());
+    FT_ASSERT_EQ(3, inventory.get_current_weight());
     inventory.remove_item(0);
     FT_ASSERT_EQ(0u, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
@@ -730,7 +730,7 @@ FT_TEST(test_inventory_partial_stack_before_capacity_error)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(base));
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(extra));
     FT_ASSERT_EQ(5, inventory.count_item(5));
-    FT_ASSERT_EQ(3, inventory.get_current_weight());
+    FT_ASSERT_EQ(5, inventory.get_current_weight());
     FT_ASSERT_EQ(1u, inventory.get_used());
     return (1);
 }

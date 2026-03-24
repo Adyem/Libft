@@ -8,7 +8,7 @@ FT_TEST(test_scma_initialize_cycle)
 {
     scma_test_reset();
     FT_ASSERT_EQ(0, scma_initialize(64));
-    FT_ASSERT_EQ(0, scma_initialize(64));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_INITIALISED, scma_initialize(64));
     scma_shutdown();
     FT_ASSERT_EQ(0, scma_is_initialised());
     return (1);
@@ -37,10 +37,10 @@ FT_TEST(test_scma_double_free_and_bounds_errors)
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     value = 42;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(handle, 0, &value, sizeof(int)));
-    FT_ASSERT_EQ(0, scma_write(handle, sizeof(int) * 2,
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, scma_write(handle, sizeof(int) * 2,
                 &value, sizeof(int)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_free(handle));
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, scma_free(handle));
-    FT_ASSERT_EQ(0, scma_free(handle));
     scma_shutdown();
     return (1);
 }

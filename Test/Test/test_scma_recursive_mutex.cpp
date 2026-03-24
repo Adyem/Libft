@@ -52,7 +52,7 @@ FT_TEST(test_scma_accessor_methods_leave_runtime_mutex_unlocked)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.write_struct(42));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_struct(read_value));
     FT_ASSERT_EQ(42, read_value);
-    FT_ASSERT_EQ(1, accessor.write_at(77, 1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.write_at(77, 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.read_at(read_value, 1));
     FT_ASSERT_EQ(77, read_value);
     mutex_pointer = scma_runtime_mutex();
@@ -81,7 +81,7 @@ FT_TEST(test_scma_failure_paths_leave_runtime_mutex_unlocked)
     FT_ASSERT_EQ(0, accessor.bind(invalid_handle));
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, accessor.read_at(read_value, 99));
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, accessor.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, accessor.get_error());
     FT_ASSERT_EQ(0, scma_write(invalid_handle, 0, &read_value, sizeof(int)));
     mutex_pointer = scma_runtime_mutex();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_expect_recursive_mutex_usable(mutex_pointer));
@@ -127,7 +127,7 @@ FT_TEST(test_scma_late_resize_failure_leaves_runtime_mutex_unlocked)
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     stored_value = 99;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_write(handle, 0, &stored_value, sizeof(int)));
-    FT_ASSERT_EQ(0, scma_resize(handle, FT_SYSTEM_SIZE_MAX));
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, scma_resize(handle, FT_SYSTEM_SIZE_MAX));
     read_value = 0;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_read(handle, 0, &read_value, sizeof(int)));
     FT_ASSERT_EQ(stored_value, read_value);

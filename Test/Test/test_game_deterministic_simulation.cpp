@@ -163,7 +163,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
 
     world_instance->update_events(world_instance, 1);
     FT_ASSERT_EQ(2, world_instance->get_event_scheduler()->size());
-    FT_ASSERT_EQ(crafting_result_code, FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_result_code);
     FT_ASSERT_EQ(hero_inventory.count_item(101), 1);
     FT_ASSERT_EQ(hero_inventory.count_item(102), 0);
     FT_ASSERT_EQ(hero_inventory.count_item(501), 1);
@@ -175,11 +175,11 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     FT_ASSERT_EQ(hero_inventory.count_item(501), 1);
 
     world_instance->update_events(world_instance, 1);
-    FT_ASSERT_EQ(combat_result_code, FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, combat_result_code);
     FT_ASSERT_EQ(enemy_character.get_hit_points(), 22);
 
     world_instance->update_events(world_instance, 1);
-    FT_ASSERT_EQ(completion_result_code, FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_result_code);
     Pair<int, game_quest> *quest_entry_after_completion = hero_character.get_quests().find(quest_identifier);
     FT_ASSERT(quest_entry_after_completion != ft_nullptr);
     FT_ASSERT(quest_entry_after_completion->value.is_complete());
