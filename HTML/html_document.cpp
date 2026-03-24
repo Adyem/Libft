@@ -32,7 +32,6 @@ static void html_free_attribute_list(html_attr *attribute) noexcept
         release_result = cma_checked_free(current_attribute->value);
         if (release_result != FT_ERR_SUCCESS)
             release_result = FT_ERR_SUCCESS;
-        html_attr_teardown_thread_safety(current_attribute);
         delete current_attribute;
         current_attribute = next_attribute;
     }

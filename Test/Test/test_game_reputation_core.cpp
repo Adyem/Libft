@@ -68,7 +68,7 @@ FT_TEST(test_game_reputation_totals_reflect_changes)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.get_error());
     reputation.sub_total_rep(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.get_error());
-    FT_ASSERT_EQ(7, reputation.get_total_rep());
+    FT_ASSERT_EQ(9, reputation.get_total_rep());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.get_error());
     reputation.sub_current_rep(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.get_error());

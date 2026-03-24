@@ -9,32 +9,19 @@ static void html_write_attrs(int32_t file_descriptor, html_attr *attribute)
 {
     while (attribute)
     {
-        ft_bool       lock_acquired;
-        int32_t        lock_status;
         html_attr *next_attribute;
 
-        lock_acquired = FT_FALSE;
-        lock_status = html_attr_lock(attribute, &lock_acquired);
-        if (lock_status != 0)
-            return ;
         next_attribute = attribute->next;
         if (attribute->key && attribute->value)
             pf_printf_fd(file_descriptor, " %s=\"%s\"", attribute->key, attribute->value);
-        html_attr_unlock(attribute, lock_acquired);
         attribute = next_attribute;
     }
 }
 
 static void html_write_node(int32_t file_descriptor, html_node *node_item, int32_t indent)
 {
-    ft_bool node_lock_acquired;
-    int32_t  lock_status;
     int32_t  indent_index;
 
-    node_lock_acquired = FT_FALSE;
-    lock_status = html_node_lock(node_item, &node_lock_acquired);
-    if (lock_status != 0)
-        return ;
     indent_index = 0;
     while (indent_index < indent)
     {
@@ -46,7 +33,6 @@ static void html_write_node(int32_t file_descriptor, html_node *node_item, int32
     if (!node_item->text && !node_item->children)
     {
         pf_printf_fd(file_descriptor, "/>\n");
-        html_node_unlock(node_item, node_lock_acquired);
         return ;
     }
     pf_printf_fd(file_descriptor, ">");
@@ -71,7 +57,6 @@ static void html_write_node(int32_t file_descriptor, html_node *node_item, int32
         }
     }
     pf_printf_fd(file_descriptor, "</%s>\n", node_item->tag);
-    html_node_unlock(node_item, node_lock_acquired);
 }
 
 int32_t html_write_to_file(const char *file_path, html_node *node_list)
@@ -79,8 +64,6 @@ int32_t html_write_to_file(const char *file_path, html_node *node_list)
     int32_t file_descriptor;
     html_node *current_node;
     html_node *next_node;
-    ft_bool       node_lock_acquired;
-    int32_t        lock_status;
 
     if (!file_path)
         return (FT_ERR_INTERNAL);
@@ -90,15 +73,7 @@ int32_t html_write_to_file(const char *file_path, html_node *node_list)
     current_node = node_list;
     while (current_node)
     {
-        node_lock_acquired = FT_FALSE;
-        lock_status = html_node_lock(current_node, &node_lock_acquired);
-        if (lock_status == 0 && node_lock_acquired)
-        {
-            next_node = current_node->next;
-            html_node_unlock(current_node, node_lock_acquired);
-        }
-        else
-            next_node = current_node->next;
+        next_node = current_node->next;
         html_write_node(file_descriptor, current_node, 0);
         current_node = next_node;
     }

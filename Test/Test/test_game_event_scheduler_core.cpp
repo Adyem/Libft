@@ -192,8 +192,8 @@ FT_TEST(test_game_event_scheduler_rejects_null_world)
     mission->set_duration(2);
     scheduler.schedule_event(mission);
     scheduler.update_events(world, 1);
-    scheduler.dump_events(queued);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, scheduler.get_error());
+    scheduler.dump_events(queued);
     FT_ASSERT_EQ((size_t)1, scheduler.size());
     FT_ASSERT_EQ((size_t)0, queued.size());
     return (1);

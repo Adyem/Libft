@@ -37,10 +37,12 @@ FT_TEST(test_serialize_inventory_allocation_failure_sets_errno)
 FT_TEST(test_serialize_inventory_null_item_sets_errno)
 {
     game_inventory inventory;
+    ft_sharedptr<game_item> null_item(ft_nullptr);
+
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
 
-    inventory.get_items().insert(0, ft_sharedptr<game_item>());
+    inventory.get_items().insert(0, null_item);
     json_group *group = serialize_inventory(inventory);
     FT_ASSERT(group == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
@@ -118,10 +120,12 @@ FT_TEST(test_serialize_quest_allocation_failure_sets_errno)
 FT_TEST(test_serialize_quest_null_reward_sets_errno)
 {
     game_quest quest;
+    ft_sharedptr<game_item> null_reward(ft_nullptr);
+
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
 
-    quest.get_reward_items().push_back(ft_sharedptr<game_item>());
+    quest.get_reward_items().push_back(null_reward);
     json_group *group = serialize_quest(quest);
     FT_ASSERT(group == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
@@ -164,12 +168,10 @@ FT_TEST(test_serialize_character_allocation_failure_sets_errno)
 
 FT_TEST(test_serialize_character_skill_error_sets_errno)
 {
-    cma_set_alloc_limit(1);
     game_character broken_character;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, broken_character.initialize());
-    cma_set_alloc_limit(0);
-
+    cma_set_alloc_limit(1);
     json_group *group = serialize_character(broken_character);
     FT_ASSERT(group == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, broken_character.get_error());

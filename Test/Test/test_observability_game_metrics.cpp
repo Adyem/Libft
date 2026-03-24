@@ -44,7 +44,8 @@ static void observability_game_test_exporter(const ft_game_observability_sample 
 FT_TEST(test_observability_game_initialize_rejects_null_exporter)
 {
     observability_game_metrics_shutdown();
-    FT_ASSERT_EQ(-1, observability_game_metrics_initialize(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+        observability_game_metrics_initialize(ft_nullptr));
     return (1);
 }
 

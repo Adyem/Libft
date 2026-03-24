@@ -1453,50 +1453,82 @@ FT_TEST(test_intersect_circle_high_load_separated_two_threads)
 
 FT_TEST(test_circle_move_bidirectional_high_load_with_thread_safety)
 {
-    circle first;
-    circle second;
-    std::atomic<bool> worker_failed;
-    std::thread worker_thread;
-    int iteration_index;
-    int move_error;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(0.0, 0.0, 3.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(1.0, 1.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
-    worker_failed.store(false);
-    worker_thread = std::thread([&first, &second, &worker_failed]() {
-        int local_iteration_index;
-        int local_move_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
-        {
-            local_move_error = first.move(second);
-            if (local_move_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    iteration_index = 0;
-    while (iteration_index < 4096 && worker_failed.load() == false)
+    struct circle_move_test_context
     {
-        move_error = second.move(first);
-        if (move_error != FT_ERR_SUCCESS)
+        std::atomic<int> result;
+    };
+    circle_move_test_context context;
+    pthread_t test_thread;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
+
+    context.result.store(0);
+    FT_ASSERT_EQ(0, pt_thread_create(&test_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            worker_failed.store(true);
-            break;
-        }
-        iteration_index = iteration_index + 1;
-    }
-    worker_thread.join();
-    FT_ASSERT_EQ(false, worker_failed.load());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.destroy());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.destroy());
+            circle_move_test_context *context_pointer;
+            circle first;
+            circle second;
+            std::atomic<bool> worker_failed;
+            std::thread worker_thread;
+            int iteration_index;
+            int move_error;
+
+            context_pointer = static_cast<circle_move_test_context *>(argument);
+            if (context_pointer == ft_nullptr)
+                return (ft_nullptr);
+            if (first.initialize(0.0, 0.0, 3.0) != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (second.initialize(1.0, 1.0, 4.0) != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (first.enable_thread_safety() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (second.enable_thread_safety() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            worker_failed.store(false);
+            worker_thread = std::thread([&first, &second, &worker_failed]() {
+                int local_iteration_index;
+                int local_move_error;
+
+                local_iteration_index = 0;
+                while (local_iteration_index < 4096 && worker_failed.load() == false)
+                {
+                    local_move_error = first.move(second);
+                    if (local_move_error != FT_ERR_SUCCESS)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_iteration_index = local_iteration_index + 1;
+                }
+                return ;
+            });
+            iteration_index = 0;
+            while (iteration_index < 4096 && worker_failed.load() == false)
+            {
+                move_error = second.move(first);
+                if (move_error != FT_ERR_SUCCESS)
+                {
+                    worker_failed.store(true);
+                    break;
+                }
+                iteration_index = iteration_index + 1;
+            }
+            worker_thread.join();
+            if (worker_failed.load() != false)
+                return (ft_nullptr);
+            if (first.destroy() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (second.destroy() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            context_pointer->result.store(1);
+            return (ft_nullptr);
+        }, &context));
+    join_result = pt_thread_timed_join(test_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(test_thread);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, context.result.load());
     return (1);
 }
 

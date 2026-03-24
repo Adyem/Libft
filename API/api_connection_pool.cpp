@@ -21,6 +21,7 @@
 
 struct api_pooled_connection
 {
+    ft_string key;
     ft_socket socket;
 #if NETWORKING_HAS_OPENSSL
     SSL *tls_session;
@@ -66,6 +67,65 @@ struct api_connection_pool_storage
 
 static void api_connection_pool_dispose_entry(api_pooled_connection &entry);
 static ft_bool api_connection_pool_socket_is_alive(ft_socket &socket);
+
+static void api_connection_pool_remove_entry_at(
+    api_connection_pool_storage &storage,
+    ft_size_t entry_index)
+{
+    ft_size_t shift_index;
+
+    if (entry_index >= storage.entry_count)
+        return ;
+    delete storage.entries[entry_index];
+    shift_index = entry_index;
+    while (shift_index + 1 < storage.entry_count)
+    {
+        storage.entries[shift_index] = storage.entries[shift_index + 1];
+        shift_index += 1;
+    }
+    storage.entry_count -= 1;
+    storage.entries[storage.entry_count] = ft_nullptr;
+    return ;
+}
+
+static ft_bool api_connection_pool_ensure_capacity(
+    api_connection_pool_storage &storage,
+    ft_size_t required_capacity)
+{
+    api_pooled_connection **new_entries;
+    ft_size_t new_capacity;
+    ft_size_t entry_index;
+
+    if (storage.entry_capacity >= required_capacity)
+        return (FT_TRUE);
+    if (storage.entry_capacity == 0)
+        new_capacity = 4;
+    else
+        new_capacity = storage.entry_capacity * 2;
+    while (new_capacity < required_capacity)
+        new_capacity = new_capacity * 2;
+    new_entries = static_cast<api_pooled_connection **>(
+        cma_malloc(sizeof(api_pooled_connection *) * new_capacity));
+    if (new_entries == ft_nullptr)
+        return (FT_FALSE);
+    entry_index = 0;
+    while (entry_index < new_capacity)
+    {
+        new_entries[entry_index] = ft_nullptr;
+        entry_index += 1;
+    }
+    entry_index = 0;
+    while (entry_index < storage.entry_count)
+    {
+        new_entries[entry_index] = storage.entries[entry_index];
+        entry_index += 1;
+    }
+    if (storage.entries != ft_nullptr)
+        cma_free(storage.entries);
+    storage.entries = new_entries;
+    storage.entry_capacity = new_capacity;
+    return (FT_TRUE);
+}
 
 static api_connection_pool_storage &api_connection_pool_get_storage(void)
 {
@@ -372,7 +432,10 @@ ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         api_connection_security_mode security_mode,
         const char *security_identity)
 {
+    api_connection_pool_storage &storage = api_connection_pool_get_storage();
     ft_bool handle_lock_acquired;
+    int32_t lock_error;
+    ft_size_t entry_index;
 
     handle_lock_acquired = FT_FALSE;
     if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
@@ -392,6 +455,7 @@ ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     handle.from_pool = FT_FALSE;
     handle.should_store = FT_FALSE;
     handle.negotiated_http2 = FT_FALSE;
+    handle.plain_socket_timed_out = FT_FALSE;
     handle.plain_socket_validated = FT_FALSE;
     g_api_connection_pool_acquire_calls++;
     if (!g_api_connection_pool_enabled)
@@ -401,7 +465,69 @@ ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         return (FT_FALSE);
     }
     handle.should_store = FT_TRUE;
-    handle.should_store = FT_FALSE;
+    lock_error = api_connection_pool_get_mutex().lock();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        handle.unlock(handle_lock_acquired);
+        g_api_connection_pool_acquire_misses++;
+        return (FT_FALSE);
+    }
+    entry_index = 0;
+    while (entry_index < storage.entry_count)
+    {
+        api_pooled_connection *entry;
+        ft_bool entry_matches;
+
+        entry = storage.entries[entry_index];
+        entry_matches = FT_FALSE;
+        if (entry != ft_nullptr && entry->key.c_str() != ft_nullptr
+            && handle.key.c_str() != ft_nullptr
+            && ft_strcmp(entry->key.c_str(), handle.key.c_str()) == 0)
+            entry_matches = FT_TRUE;
+        if (entry_matches == FT_FALSE)
+        {
+            entry_index += 1;
+            continue ;
+        }
+        if ((g_api_connection_idle_timeout_ms > 0)
+            && (time_monotonic() - entry->idle_timestamp_ms
+                > g_api_connection_idle_timeout_ms))
+        {
+            api_connection_pool_remove_entry_at(storage, entry_index);
+            continue ;
+        }
+        if (!api_connection_pool_socket_is_alive(entry->socket))
+        {
+            api_connection_pool_remove_entry_at(storage, entry_index);
+            continue ;
+        }
+        if (handle.socket.move(entry->socket) != FT_ERR_SUCCESS)
+        {
+            api_connection_pool_remove_entry_at(storage, entry_index);
+            (void)api_connection_pool_get_mutex().unlock();
+            handle.unlock(handle_lock_acquired);
+            g_api_connection_pool_acquire_misses++;
+            return (FT_FALSE);
+        }
+#if NETWORKING_HAS_OPENSSL
+        handle.tls_session = entry->tls_session;
+        handle.tls_context = entry->tls_context;
+        entry->tls_session = ft_nullptr;
+        entry->tls_context = ft_nullptr;
+#endif
+        handle.has_socket = FT_TRUE;
+        handle.from_pool = FT_TRUE;
+        handle.should_store = FT_TRUE;
+        handle.negotiated_http2 = entry->negotiated_http2;
+        handle.plain_socket_timed_out = FT_FALSE;
+        handle.plain_socket_validated = FT_FALSE;
+        api_connection_pool_remove_entry_at(storage, entry_index);
+        (void)api_connection_pool_get_mutex().unlock();
+        handle.unlock(handle_lock_acquired);
+        g_api_connection_pool_reuse_hits++;
+        return (FT_TRUE);
+    }
+    (void)api_connection_pool_get_mutex().unlock();
     handle.unlock(handle_lock_acquired);
     g_api_connection_pool_acquire_misses++;
     return (FT_FALSE);
@@ -409,7 +535,10 @@ ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
 
 void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 {
+    api_connection_pool_storage &storage = api_connection_pool_get_storage();
+    api_pooled_connection *entry;
     ft_bool handle_lock_acquired;
+    int32_t lock_error;
 
     handle_lock_acquired = FT_FALSE;
     if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
@@ -455,14 +584,62 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         api_connection_pool_evict(handle);
         return ;
     }
-    handle.unlock(handle_lock_acquired);
-    api_connection_pool_evict(handle);
-    handle_lock_acquired = FT_FALSE;
-    if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
+    entry = new (std::nothrow) api_pooled_connection();
+    if (entry == ft_nullptr)
+    {
+        handle.unlock(handle_lock_acquired);
+        api_connection_pool_evict(handle);
         return ;
+    }
+    entry->key = handle.key;
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    {
+        delete entry;
+        handle.unlock(handle_lock_acquired);
+        api_connection_pool_evict(handle);
+        return ;
+    }
+    if (entry->socket.move(handle.socket) != FT_ERR_SUCCESS)
+    {
+        delete entry;
+        handle.unlock(handle_lock_acquired);
+        api_connection_pool_evict(handle);
+        return ;
+    }
 #if NETWORKING_HAS_OPENSSL
+    entry->tls_session = handle.tls_session;
+    entry->tls_context = handle.tls_context;
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
+#endif
+    entry->uses_tls = (handle.security_mode == api_connection_security_mode::TLS);
+    entry->negotiated_http2 = handle.negotiated_http2;
+    entry->idle_timestamp_ms = time_monotonic();
+    lock_error = api_connection_pool_get_mutex().lock();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        handle.unlock(handle_lock_acquired);
+        api_connection_pool_dispose_entry(*entry);
+        delete entry;
+        api_connection_pool_evict(handle);
+        return ;
+    }
+    if (g_api_connection_max_idle > 0
+        && storage.entry_count >= g_api_connection_max_idle)
+        api_connection_pool_remove_entry_at(storage, 0);
+    if (!api_connection_pool_ensure_capacity(storage, storage.entry_count + 1))
+    {
+        (void)api_connection_pool_get_mutex().unlock();
+        handle.unlock(handle_lock_acquired);
+        api_connection_pool_dispose_entry(*entry);
+        delete entry;
+        api_connection_pool_evict(handle);
+        return ;
+    }
+    storage.entries[storage.entry_count] = entry;
+    storage.entry_count += 1;
+    (void)api_connection_pool_get_mutex().unlock();
+#if NETWORKING_HAS_OPENSSL
 #endif
     handle.has_socket = FT_FALSE;
     handle.from_pool = FT_FALSE;

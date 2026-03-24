@@ -157,9 +157,8 @@ FT_TEST(test_ft_string_operator_plus_chain_from_char_prefix_succeeds)
     ft_string source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("abcdefghijklmnop"));
 
-    cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(1));
     destination = '!' + source;
-    cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, destination.get_error());
     return (1);
 }

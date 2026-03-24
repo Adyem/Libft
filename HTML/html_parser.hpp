@@ -2,13 +2,8 @@
 #define HTML_PARSER_HPP
 
 #include "../Errno/errno.hpp"
-
-class pt_mutex;
-
 typedef struct html_attr
 {
-    pt_mutex *mutex;
-    ft_bool thread_safe_enabled;
     char *key;
     char *value;
     struct html_attr *next;
@@ -16,8 +11,6 @@ typedef struct html_attr
 
 typedef struct html_node
 {
-    pt_mutex *mutex;
-    ft_bool thread_safe_enabled;
     char *tag;
     char *text;
     html_attr *attributes;
@@ -44,17 +37,5 @@ html_node   *html_find_by_selector(html_node *node_list, const char *selector);
 
 html_node   *html_query_selector(html_node *node_list, const char *selector);
 ft_size_t   html_count_nodes_by_tag(html_node *node_list, const char *tag_name);
-
-int32_t     html_node_prepare_thread_safety(html_node *node);
-void        html_node_teardown_thread_safety(html_node *node);
-int32_t     html_node_lock(const html_node *node, ft_bool *lock_acquired);
-void        html_node_unlock(const html_node *node, ft_bool lock_acquired);
-ft_bool     html_node_is_thread_safe_enabled(const html_node *node);
-
-int32_t     html_attr_prepare_thread_safety(html_attr *attribute);
-void        html_attr_teardown_thread_safety(html_attr *attribute);
-int32_t     html_attr_lock(const html_attr *attribute, ft_bool *lock_acquired);
-void        html_attr_unlock(const html_attr *attribute, ft_bool lock_acquired);
-ft_bool     html_attr_is_thread_safe_enabled(const html_attr *attribute);
 
 #endif

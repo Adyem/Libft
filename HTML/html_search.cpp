@@ -35,25 +35,12 @@ html_node *html_find_by_tag(html_node *node_list, const char *tag_name)
     while (current_node)
     {
         html_node *next_node;
-        ft_bool       lock_acquired;
-        int32_t        lock_status;
 
-        lock_acquired = FT_FALSE;
-        lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
-        if (lock_status != 0)
-        {
-            current_node = next_node;
-            continue ;
-        }
         if (current_node->tag && ft_strcmp(current_node->tag, tag_name) == 0)
-        {
-            html_node_unlock(current_node, lock_acquired);
             return (current_node);
-        }
         html_node *found = html_find_by_tag(current_node->children, tag_name);
 
-        html_node_unlock(current_node, lock_acquired);
         if (found)
             return (found);
         current_node = next_node;
@@ -69,48 +56,24 @@ html_node *html_find_by_attr(html_node *node_list, const char *key, const char *
     while (current_node)
     {
         html_node *next_node;
-        ft_bool       lock_acquired;
-        int32_t        lock_status;
 
-        lock_acquired = FT_FALSE;
-        lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
-        if (lock_status != 0)
-        {
-            current_node = next_node;
-            continue ;
-        }
         html_attr *attribute = current_node->attributes;
 
         while (attribute)
         {
-            ft_bool       attribute_lock_acquired;
-            int32_t        attribute_lock_status;
             html_attr *next_attribute;
 
-            attribute_lock_acquired = FT_FALSE;
-            attribute_lock_status = html_attr_lock(attribute, &attribute_lock_acquired);
-            if (attribute_lock_status != 0)
-            {
-                attribute = attribute->next;
-                continue ;
-            }
             next_attribute = attribute->next;
             if (attribute->key && ft_strcmp(attribute->key, key) == 0)
             {
                 if (!value || (attribute->value && ft_strcmp(attribute->value, value) == 0))
-                {
-                    html_attr_unlock(attribute, attribute_lock_acquired);
-                    html_node_unlock(current_node, lock_acquired);
                     return (current_node);
-                }
             }
-            html_attr_unlock(attribute, attribute_lock_acquired);
             attribute = next_attribute;
         }
         html_node *found = html_find_by_attr(current_node->children, key, value);
 
-        html_node_unlock(current_node, lock_acquired);
         if (found)
             return (found);
         current_node = next_node;
@@ -126,25 +89,12 @@ html_node *html_find_by_text(html_node *node_list, const char *text_content)
     while (current_node)
     {
         html_node *next_node;
-        ft_bool       lock_acquired;
-        int32_t        lock_status;
 
-        lock_acquired = FT_FALSE;
-        lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
-        if (lock_status != 0)
-        {
-            current_node = next_node;
-            continue ;
-        }
         if (current_node->text && ft_strcmp(current_node->text, text_content) == 0)
-        {
-            html_node_unlock(current_node, lock_acquired);
             return (current_node);
-        }
         html_node *found = html_find_by_text(current_node->children, text_content);
 
-        html_node_unlock(current_node, lock_acquired);
         if (found)
             return (found);
         current_node = next_node;
@@ -162,21 +112,11 @@ ft_size_t html_count_nodes_by_tag(html_node *node_list, const char *tag_name)
     while (current_node)
     {
         html_node *next_node;
-        ft_bool       lock_acquired;
-        int32_t        lock_status;
 
-        lock_acquired = FT_FALSE;
-        lock_status = html_node_lock(current_node, &lock_acquired);
         next_node = current_node->next;
-        if (lock_status != 0)
-        {
-            current_node = next_node;
-            continue ;
-        }
         if (current_node->tag && ft_strcmp(current_node->tag, tag_name) == 0)
             ++count;
         count += html_count_nodes_by_tag(current_node->children, tag_name);
-        html_node_unlock(current_node, lock_acquired);
         current_node = next_node;
     }
     return (count);

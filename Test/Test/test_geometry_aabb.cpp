@@ -1622,58 +1622,103 @@ FT_TEST(test_aabb_move_bidirectional_high_load_with_thread_safety)
 
 FT_TEST(test_aabb_set_bounds_getters_contention_high_load_two_threads)
 {
-    aabb box;
-    std::atomic<bool> worker_failed;
-    std::thread writer_thread;
-    int iteration_index;
-    double minimum_x;
-    double minimum_y;
-    double maximum_x;
-    double maximum_y;
-    int set_error;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(-1.0, -1.0, 1.0, 1.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    worker_failed.store(false);
-    writer_thread = std::thread([&box, &worker_failed]() {
-        int local_iteration_index;
-        int local_set_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
-        {
-            if ((local_iteration_index % 2) == 0)
-                local_set_error = box.set_bounds(-2.0, -2.0, 2.0, 2.0);
-            else
-                local_set_error = box.set_bounds(-3.0, -1.0, 3.0, 1.0);
-            if (local_set_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    iteration_index = 0;
-    while (iteration_index < 4096 && worker_failed.load() == false)
+    struct aabb_contention_test_context
     {
-        minimum_x = box.get_minimum_x();
-        minimum_y = box.get_minimum_y();
-        maximum_x = box.get_maximum_x();
-        maximum_y = box.get_maximum_y();
-        if (minimum_x > maximum_x || minimum_y > maximum_y)
+        std::atomic<int> result;
+    };
+    aabb_contention_test_context context;
+    pthread_t test_thread;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
+
+    context.result.store(0);
+    FT_ASSERT_EQ(0, pt_thread_create(&test_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            worker_failed.store(true);
-            break;
-        }
-        iteration_index = iteration_index + 1;
-    }
-    writer_thread.join();
-    FT_ASSERT_EQ(false, worker_failed.load());
-    set_error = box.set_bounds(-4.0, -4.0, 4.0, 4.0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, set_error);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
+            aabb_contention_test_context *context_pointer;
+            aabb box;
+            std::atomic<bool> worker_failed;
+            std::thread writer_thread;
+            int iteration_index;
+            double minimum_x;
+            double minimum_y;
+            double maximum_x;
+            double maximum_y;
+            int set_error;
+
+            context_pointer = static_cast<aabb_contention_test_context *>(argument);
+            if (context_pointer == ft_nullptr)
+                return (ft_nullptr);
+            if (box.initialize(-1.0, -1.0, 1.0, 1.0) != FT_ERR_SUCCESS)
+            {
+                context_pointer->result.store(0);
+                return (ft_nullptr);
+            }
+            if (box.enable_thread_safety() != FT_ERR_SUCCESS)
+            {
+                context_pointer->result.store(0);
+                return (ft_nullptr);
+            }
+            worker_failed.store(false);
+            writer_thread = std::thread([&box, &worker_failed]() {
+                int local_iteration_index;
+                int local_set_error;
+
+                local_iteration_index = 0;
+                while (local_iteration_index < 4096 && worker_failed.load() == false)
+                {
+                    if ((local_iteration_index % 2) == 0)
+                        local_set_error = box.set_bounds(-2.0, -2.0, 2.0, 2.0);
+                    else
+                        local_set_error = box.set_bounds(-3.0, -1.0, 3.0, 1.0);
+                    if (local_set_error != FT_ERR_SUCCESS)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_iteration_index = local_iteration_index + 1;
+                }
+                return ;
+            });
+            iteration_index = 0;
+            while (iteration_index < 4096 && worker_failed.load() == false)
+            {
+                minimum_x = box.get_minimum_x();
+                minimum_y = box.get_minimum_y();
+                maximum_x = box.get_maximum_x();
+                maximum_y = box.get_maximum_y();
+                if (minimum_x > maximum_x || minimum_y > maximum_y)
+                {
+                    worker_failed.store(true);
+                    break;
+                }
+                iteration_index = iteration_index + 1;
+            }
+            writer_thread.join();
+            if (worker_failed.load() != false)
+            {
+                context_pointer->result.store(0);
+                return (ft_nullptr);
+            }
+            set_error = box.set_bounds(-4.0, -4.0, 4.0, 4.0);
+            if (set_error != FT_ERR_SUCCESS)
+            {
+                context_pointer->result.store(0);
+                return (ft_nullptr);
+            }
+            if (box.destroy() != FT_ERR_SUCCESS)
+            {
+                context_pointer->result.store(0);
+                return (ft_nullptr);
+            }
+            context_pointer->result.store(1);
+            return (ft_nullptr);
+        }, &context));
+    join_result = pt_thread_timed_join(test_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(test_thread);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, context.result.load());
     return (1);
 }
 
@@ -2708,50 +2753,82 @@ FT_TEST(test_intersect_aabb_high_load_separated_two_threads_soak_rounds)
 
 FT_TEST(test_aabb_move_bidirectional_high_load_soak_rounds)
 {
-    aabb first;
-    aabb second;
-    std::atomic<bool> worker_failed;
-    std::thread worker_thread;
-    int round_index;
-    int index;
-    int move_error;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(-3.0, -3.0, 3.0, 3.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(-4.0, -4.0, 4.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
-    round_index = 0;
-    while (round_index < 3)
+    struct aabb_move_soak_test_context
     {
-        worker_failed.store(false);
-        worker_thread = std::thread([&first, &second, &worker_failed]() {
-            int iteration_index;
-            int local_move_error;
+        std::atomic<int> result;
+    };
+    aabb_move_soak_test_context context;
+    pthread_t test_thread;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
 
-            iteration_index = 0;
-            while (iteration_index < 2048 && worker_failed.load() == false)
-            {
-                local_move_error = first.move(second);
-                if (local_move_error != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                iteration_index = iteration_index + 1;
-            }
-            return ;
-        });
-        index = 0;
-        while (index < 2048 && worker_failed.load() == false)
+    context.result.store(0);
+    FT_ASSERT_EQ(0, pt_thread_create(&test_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            move_error = second.move(first);
-            if (move_error != FT_ERR_SUCCESS)
-                worker_failed.store(true);
-            index = index + 1;
-        }
-        worker_thread.join();
-        FT_ASSERT_EQ(false, worker_failed.load());
-        round_index = round_index + 1;
-    }
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.destroy());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.destroy());
+            aabb_move_soak_test_context *context_pointer;
+            aabb first;
+            aabb second;
+            std::atomic<bool> worker_failed;
+            std::thread worker_thread;
+            int round_index;
+            int index;
+            int move_error;
+
+            context_pointer = static_cast<aabb_move_soak_test_context *>(argument);
+            if (context_pointer == ft_nullptr)
+                return (ft_nullptr);
+            if (first.initialize(-3.0, -3.0, 3.0, 3.0) != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (second.initialize(-4.0, -4.0, 4.0, 4.0) != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (first.enable_thread_safety() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (second.enable_thread_safety() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            round_index = 0;
+            while (round_index < 3)
+            {
+                worker_failed.store(false);
+                worker_thread = std::thread([&first, &second, &worker_failed]() {
+                    int iteration_index;
+                    int local_move_error;
+
+                    iteration_index = 0;
+                    while (iteration_index < 2048 && worker_failed.load() == false)
+                    {
+                        local_move_error = first.move(second);
+                        if (local_move_error != FT_ERR_SUCCESS)
+                            worker_failed.store(true);
+                        iteration_index = iteration_index + 1;
+                    }
+                    return ;
+                });
+                index = 0;
+                while (index < 2048 && worker_failed.load() == false)
+                {
+                    move_error = second.move(first);
+                    if (move_error != FT_ERR_SUCCESS)
+                        worker_failed.store(true);
+                    index = index + 1;
+                }
+                worker_thread.join();
+                if (worker_failed.load() != false)
+                    return (ft_nullptr);
+                round_index = round_index + 1;
+            }
+            if (first.destroy() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (second.destroy() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            context_pointer->result.store(1);
+            return (ft_nullptr);
+        }, &context));
+    join_result = pt_thread_timed_join(test_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(test_thread);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, context.result.load());
     return (1);
 }
 

@@ -94,44 +94,22 @@ static int32_t html_builder_append_attributes(html_string_builder *builder, html
 {
     while (attribute != ft_nullptr)
     {
-        ft_bool lock_acquired;
-        int32_t lock_status;
         html_attr *next_attribute;
 
-        lock_acquired = FT_FALSE;
-        lock_status = html_attr_lock(attribute, &lock_acquired);
-        if (lock_status != 0)
-            return (FT_ERR_INTERNAL);
         next_attribute = attribute->next;
         if (attribute->key != ft_nullptr && attribute->value != ft_nullptr)
         {
             if (html_builder_append_char(builder, ' ') != 0)
-            {
-                html_attr_unlock(attribute, lock_acquired);
                 return (FT_ERR_INTERNAL);
-            }
             if (html_builder_append_c_string(builder, attribute->key) != 0)
-            {
-                html_attr_unlock(attribute, lock_acquired);
                 return (FT_ERR_INTERNAL);
-            }
             if (html_builder_append_c_string(builder, "=\"") != 0)
-            {
-                html_attr_unlock(attribute, lock_acquired);
                 return (FT_ERR_INTERNAL);
-            }
             if (html_builder_append_c_string(builder, attribute->value) != 0)
-            {
-                html_attr_unlock(attribute, lock_acquired);
                 return (FT_ERR_INTERNAL);
-            }
             if (html_builder_append_char(builder, '"') != 0)
-            {
-                html_attr_unlock(attribute, lock_acquired);
                 return (FT_ERR_INTERNAL);
-            }
         }
-        html_attr_unlock(attribute, lock_acquired);
         attribute = next_attribute;
     }
     return (FT_ERR_SUCCESS);
@@ -139,67 +117,36 @@ static int32_t html_builder_append_attributes(html_string_builder *builder, html
 
 static int32_t html_builder_append_node(html_string_builder *builder, html_node *node, int32_t indent_level)
 {
-    ft_bool lock_acquired;
-    int32_t lock_status;
     int32_t result;
 
-    lock_acquired = FT_FALSE;
-    lock_status = html_node_lock(node, &lock_acquired);
-    if (lock_status != 0)
-        return (FT_ERR_INTERNAL);
     result = html_builder_append_indent(builder, indent_level);
     if (result != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
     if (html_builder_append_char(builder, '<') != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
     if (html_builder_append_c_string(builder, node->tag) != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
     if (html_builder_append_attributes(builder, node->attributes) != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
     if (node->text == ft_nullptr && node->children == ft_nullptr)
     {
         if (html_builder_append_c_string(builder, "/>\n") != 0)
-        {
-            html_node_unlock(node, lock_acquired);
             return (FT_ERR_INTERNAL);
-        }
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_SUCCESS);
     }
     if (html_builder_append_char(builder, '>') != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
     if (node->text != ft_nullptr)
     {
         if (html_builder_append_c_string(builder, node->text) != 0)
-        {
-            html_node_unlock(node, lock_acquired);
             return (FT_ERR_INTERNAL);
-        }
     }
     if (node->children != ft_nullptr)
     {
         html_node *child;
 
         if (html_builder_append_char(builder, '\n') != 0)
-        {
-            html_node_unlock(node, lock_acquired);
             return (FT_ERR_INTERNAL);
-        }
         child = node->children;
         while (child != ft_nullptr)
         {
@@ -207,34 +154,18 @@ static int32_t html_builder_append_node(html_string_builder *builder, html_node 
 
             next_child = child->next;
             if (html_builder_append_node(builder, child, indent_level + 1) != 0)
-            {
-                html_node_unlock(node, lock_acquired);
                 return (FT_ERR_INTERNAL);
-            }
             child = next_child;
         }
         if (html_builder_append_indent(builder, indent_level) != 0)
-        {
-            html_node_unlock(node, lock_acquired);
             return (FT_ERR_INTERNAL);
-        }
     }
     if (html_builder_append_c_string(builder, "</") != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
     if (html_builder_append_c_string(builder, node->tag) != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
     if (html_builder_append_c_string(builder, ">\n") != 0)
-    {
-        html_node_unlock(node, lock_acquired);
         return (FT_ERR_INTERNAL);
-    }
-    html_node_unlock(node, lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 

@@ -1649,76 +1649,122 @@ FT_TEST(test_sphere_setters_getters_contention_high_load_two_threads)
 
 FT_TEST(test_intersect_sphere_high_load_with_mutating_overlap)
 {
+    struct sphere_intersect_worker_args
+    {
+        sphere *first;
+        sphere *second;
+        std::atomic<bool> *worker_failed;
+    };
     sphere first;
     sphere second;
     std::atomic<bool> worker_failed(false);
-    std::thread writer_thread;
-    std::thread reader_thread_one;
-    std::thread reader_thread_two;
+    sphere_intersect_worker_args writer_arguments;
+    sphere_intersect_worker_args reader_one_arguments;
+    sphere_intersect_worker_args reader_two_arguments;
+    pthread_t writer_thread;
+    pthread_t reader_thread_one;
+    pthread_t reader_thread_two;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize(0.0, 0.0, 0.0, 15.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize(1.0, 1.0, 1.0, 4.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
-    worker_failed.store(false);
-    writer_thread = std::thread([&second, &worker_failed]() {
-        int local_iteration_index;
-        int local_set_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
+    writer_arguments.first = &first;
+    writer_arguments.second = &second;
+    writer_arguments.worker_failed = &worker_failed;
+    reader_one_arguments.first = &first;
+    reader_one_arguments.second = &second;
+    reader_one_arguments.worker_failed = &worker_failed;
+    reader_two_arguments.first = &second;
+    reader_two_arguments.second = &first;
+    reader_two_arguments.worker_failed = &worker_failed;
+    FT_ASSERT_EQ(0, pt_thread_create(&writer_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            if ((local_iteration_index % 2) == 0)
-                local_set_error = second.set_center(2.0, 2.0, 2.0);
-            else
-                local_set_error = second.set_center(-1.0, 1.0, -1.0);
-            if (local_set_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_set_error = second.set_radius(4.0 + (local_iteration_index % 2));
-            if (local_set_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    reader_thread_one = std::thread([&first, &second, &worker_failed]() {
-        int local_iteration_index;
+            sphere_intersect_worker_args *worker_arguments;
+            int local_iteration_index;
+            int local_set_error;
 
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
-        {
-            if (intersect_sphere(first, second) == false)
+            worker_arguments = static_cast<sphere_intersect_worker_args *>(argument);
+            local_iteration_index = 0;
+            while (local_iteration_index < 4096
+                && worker_arguments->worker_failed->load() == false)
             {
-                worker_failed.store(true);
-                break;
+                if ((local_iteration_index % 2) == 0)
+                    local_set_error = worker_arguments->second->set_center(2.0, 2.0, 2.0);
+                else
+                    local_set_error = worker_arguments->second->set_center(-1.0, 1.0, -1.0);
+                if (local_set_error != FT_ERR_SUCCESS)
+                {
+                    worker_arguments->worker_failed->store(true);
+                    break ;
+                }
+                local_set_error = worker_arguments->second->set_radius(
+                    4.0 + (local_iteration_index % 2));
+                if (local_set_error != FT_ERR_SUCCESS)
+                {
+                    worker_arguments->worker_failed->store(true);
+                    break ;
+                }
+                local_iteration_index = local_iteration_index + 1;
             }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    reader_thread_two = std::thread([&first, &second, &worker_failed]() {
-        int local_iteration_index;
+            return (ft_nullptr);
+        }, &writer_arguments));
+    FT_ASSERT_EQ(0, pt_thread_create(&reader_thread_one, ft_nullptr,
+        [](void *argument) -> void *
+        {
+            sphere_intersect_worker_args *worker_arguments;
+            int local_iteration_index;
 
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed.load() == false)
-        {
-            if (intersect_sphere(second, first) == false)
+            worker_arguments = static_cast<sphere_intersect_worker_args *>(argument);
+            local_iteration_index = 0;
+            while (local_iteration_index < 4096
+                && worker_arguments->worker_failed->load() == false)
             {
-                worker_failed.store(true);
-                break;
+                if (intersect_sphere(*worker_arguments->first,
+                        *worker_arguments->second) == false)
+                {
+                    worker_arguments->worker_failed->store(true);
+                    break ;
+                }
+                local_iteration_index = local_iteration_index + 1;
             }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    writer_thread.join();
-    reader_thread_one.join();
-    reader_thread_two.join();
+            return (ft_nullptr);
+        }, &reader_one_arguments));
+    FT_ASSERT_EQ(0, pt_thread_create(&reader_thread_two, ft_nullptr,
+        [](void *argument) -> void *
+        {
+            sphere_intersect_worker_args *worker_arguments;
+            int local_iteration_index;
+
+            worker_arguments = static_cast<sphere_intersect_worker_args *>(argument);
+            local_iteration_index = 0;
+            while (local_iteration_index < 4096
+                && worker_arguments->worker_failed->load() == false)
+            {
+                if (intersect_sphere(*worker_arguments->first,
+                        *worker_arguments->second) == false)
+                {
+                    worker_arguments->worker_failed->store(true);
+                    break ;
+                }
+                local_iteration_index = local_iteration_index + 1;
+            }
+            return (ft_nullptr);
+        }, &reader_two_arguments));
+    join_result = pt_thread_timed_join(writer_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(writer_thread);
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(reader_thread_one, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(reader_thread_one);
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(reader_thread_two, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(reader_thread_two);
+    FT_ASSERT_EQ(0, join_result);
     FT_ASSERT_EQ(false, worker_failed.load());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.destroy());
@@ -2601,7 +2647,7 @@ static void *sphere_intersect_soak_writer_worker(void *argument)
     int local_error_code;
 
     worker_args = static_cast<sphere_intersect_soak_worker_args *>(argument);
-    std::this_thread::sleep_for(std::chrono::milliseconds(6000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     iteration_index = 0;
     while (iteration_index < 3072 && worker_args->worker_failed->load() == false)
     {

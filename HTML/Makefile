@@ -2,7 +2,7 @@ include ../compiler_flags.mk
 TARGET         := HTMLParser.a
 DEBUG_TARGET   := HTMLParser_debug.a
 
-SRCS := html_node.cpp html_writer.cpp html_cleanup.cpp html_search.cpp html_string_writer.cpp html_document.cpp html_node_thread_safety.cpp html_attr_thread_safety.cpp
+SRCS := html_node.cpp html_writer.cpp html_cleanup.cpp html_search.cpp html_string_writer.cpp html_document.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -119,4 +119,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

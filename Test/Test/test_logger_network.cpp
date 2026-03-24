@@ -236,7 +236,7 @@ FT_TEST(test_logger_remote_health_probe_records_success)
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
     status_count = 0;
-    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_log_get_remote_health(&status, 1, &status_count));
+    FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
     FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
     FT_ASSERT(status.reachable);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, status.last_error);

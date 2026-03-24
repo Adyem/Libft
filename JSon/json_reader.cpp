@@ -796,7 +796,7 @@ json_group *json_read_from_file(const char *filename)
         index++;
         json_item *items = parse_items(content, index);
         int32_t items_error = json_reader_get_error();
-        if (!items)
+        if (items_error != FT_ERR_SUCCESS)
         {
             cma_free(group_name);
             json_free_groups(head);
@@ -918,10 +918,8 @@ json_group *json_read_from_string(const char *content)
         index++;
         json_item *items = parse_items(content, index);
         int32_t items_error = json_reader_get_error();
-        if (!items)
+        if (items_error != FT_ERR_SUCCESS)
         {
-            if (items_error == FT_ERR_SUCCESS)
-                items_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(group_name);
             json_free_groups(head);
             json_reader_set_error(items_error);

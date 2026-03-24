@@ -105,6 +105,8 @@ FT_TEST(test_string_view_thread_safety)
     string_view_thread_data data;
     pthread_t assign_thread;
     pthread_t compare_thread;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shared.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.enable_thread_safety());
@@ -117,11 +119,19 @@ FT_TEST(test_string_view_thread_safety)
     if (pt_thread_create(&compare_thread, ft_nullptr,
             string_view_comparison_worker, &data) != 0)
     {
-        pt_thread_join(assign_thread, ft_nullptr);
+        join_result = pt_thread_timed_join(assign_thread, ft_nullptr, join_timeout_ms);
+        if (join_result != 0)
+            (void)pt_thread_detach(assign_thread);
         return (0);
     }
-    pt_thread_join(assign_thread, ft_nullptr);
-    pt_thread_join(compare_thread, ft_nullptr);
+    join_result = pt_thread_timed_join(assign_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(assign_thread);
+    FT_ASSERT_EQ(0, join_result);
+    join_result = pt_thread_timed_join(compare_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(compare_thread);
+    FT_ASSERT_EQ(0, join_result);
     FT_ASSERT_EQ(0, shared.compare(expected));
     shared.disable_thread_safety();
     source.disable_thread_safety();

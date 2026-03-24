@@ -321,12 +321,41 @@ int32_t ft_socket::initialize(const ft_socket &other) noexcept
 
 int32_t ft_socket::initialize(ft_socket &&other) noexcept
 {
-    int32_t initialize_error;
+    int32_t connected_error;
 
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS)
-        return (initialize_error);
-    (void)other.destroy();
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state, "ft_socket::initialize(ft_socket &&)",
+            "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_SUCCESS);
+    }
+    this->_address = other._address;
+    this->_socket_file_descriptor = other._socket_file_descriptor;
+    connected_error = this->_connected.destroy();
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
+    connected_error = this->_connected.initialize(ft_move(other._connected));
+    if (connected_error != FT_ERR_SUCCESS)
+    {
+        this->_socket_file_descriptor = -1;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (connected_error);
+    }
+    this->_mutex = other._mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    ft_bzero(&other._address, sizeof(other._address));
+    other._socket_file_descriptor = -1;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
 }
 

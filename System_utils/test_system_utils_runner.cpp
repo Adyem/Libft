@@ -1,6 +1,7 @@
 #include "test_system_utils_runner.hpp"
 
 #include "../CMA/CMA.hpp"
+#include "../Logger/logger.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_lock_tracking.hpp"
@@ -284,6 +285,7 @@ static int32_t execute_test_function(const s_test_case *test)
             "runner failed to close saved stderr after pre-test CMA reset failure");
         return (0);
     }
+    ft_log_close();
     reset_mutex_failure_overrides();
     try
     {
@@ -323,6 +325,7 @@ static int32_t execute_test_function(const s_test_case *test)
         report_runner_failure("runner failed to reset CMA alloc limit after test");
         result = 0;
     }
+    ft_log_close();
     reset_mutex_failure_overrides();
     restore_ok = restore_descriptor_checked(saved_stdin_descriptor, STDIN_FILENO,
         "runner failed to restore stdin after test");

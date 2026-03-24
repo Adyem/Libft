@@ -132,6 +132,24 @@ static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pt_mutex
     return (false);
 }
 
+static ft_size_t find_wait_snapshot_index(
+    const pt_lock_wait_snapshot_vector &snapshot,
+    const void *mutex_pointer,
+    pt_thread_id_type waiting_thread)
+{
+    ft_size_t index;
+
+    index = 0;
+    while (index < snapshot.size)
+    {
+        if (snapshot.data[index].mutex_pointer == mutex_pointer
+            && snapshot.data[index].waiting_thread == waiting_thread)
+            return (index);
+        index += 1;
+    }
+    return (snapshot.size);
+}
+
 static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pt_mutex *owned_mutex_pointer,
         pt_mutex *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)
 {
@@ -387,6 +405,7 @@ FT_TEST(test_pt_lock_tracking_detects_cycle)
     second_mutex_locked = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    RECORD_ASSERT(pt_lock_tracking::notify_thread_exit(THREAD_ID) == FT_ERR_SUCCESS);
     RECORD_ASSERT(first_mutex.initialize() == FT_ERR_SUCCESS);
     RECORD_ASSERT(second_mutex.initialize() == FT_ERR_SUCCESS);
     initialize_shared_state(&shared, &first_mutex, &second_mutex);
@@ -693,7 +712,7 @@ FT_TEST(test_pt_mutex_recovers_after_already_locked_error)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
     FT_ASSERT(mutex_object.lockState());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.lock());
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex_object.lock());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(false, mutex_object.lockState());
@@ -830,10 +849,16 @@ FT_TEST(test_pt_lock_tracking_owner_index_tracks_acquire_release)
     pt_mutex mutex_object;
     pt_lock_wait_snapshot_vector snapshot;
     int snapshot_error;
+    ft_size_t baseline_size;
+    ft_size_t snapshot_index;
 
     initialize_thread_id_capture_state(&capture_state);
     pt_buffer_init(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(THREAD_ID));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.initialize());
+    snapshot_error = pt_lock_tracking::snapshot_waiters(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, snapshot_error);
+    baseline_size = snapshot.size;
     FT_ASSERT_EQ(0, pt_thread_create(&worker_thread, ft_nullptr,
         thread_id_capture_worker, &capture_state));
     FT_ASSERT(wait_for_stage(&capture_state.stage, 1));
@@ -846,19 +871,25 @@ FT_TEST(test_pt_lock_tracking_owner_index_tracks_acquire_release)
         static_cast<const void *>(&mutex_object)));
     snapshot_error = pt_lock_tracking::snapshot_waiters(snapshot);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, snapshot_error);
-    FT_ASSERT_EQ(1U, snapshot.size);
+    FT_ASSERT_EQ(baseline_size + 1U, snapshot.size);
+    snapshot_index = find_wait_snapshot_index(snapshot,
+        static_cast<const void *>(&mutex_object), THREAD_ID);
+    FT_ASSERT_NEQ(snapshot.size, snapshot_index);
     FT_ASSERT_EQ(static_cast<const void *>(&mutex_object),
-        snapshot.data[0].mutex_pointer);
+        snapshot.data[snapshot_index].mutex_pointer);
     FT_ASSERT_EQ(capture_state.thread_identifier.load(),
-        snapshot.data[0].owner_thread);
-    FT_ASSERT_EQ(THREAD_ID, snapshot.data[0].waiting_thread);
+        snapshot.data[snapshot_index].owner_thread);
+    FT_ASSERT_EQ(THREAD_ID, snapshot.data[snapshot_index].waiting_thread);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_released(
         capture_state.thread_identifier.load(),
         static_cast<const void *>(&mutex_object)));
     snapshot_error = pt_lock_tracking::snapshot_waiters(snapshot);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, snapshot_error);
-    FT_ASSERT_EQ(1U, snapshot.size);
-    FT_ASSERT_EQ(0, snapshot.data[0].owner_thread);
+    FT_ASSERT_EQ(baseline_size + 1U, snapshot.size);
+    snapshot_index = find_wait_snapshot_index(snapshot,
+        static_cast<const void *>(&mutex_object), THREAD_ID);
+    FT_ASSERT_NEQ(snapshot.size, snapshot_index);
+    FT_ASSERT_EQ(0, snapshot.data[snapshot_index].owner_thread);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(THREAD_ID));
     pt_buffer_destroy(snapshot);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
@@ -873,12 +904,16 @@ FT_TEST(test_pt_lock_tracking_notify_thread_exit_clears_stale_state)
     pt_mutex second_mutex;
     s_pt_lock_tracking_thread_state state;
     pt_lock_wait_snapshot_vector snapshot;
+    ft_size_t baseline_size;
 
     initialize_thread_id_capture_state(&capture_state);
     pt_buffer_init(state.owned_mutexes);
     pt_buffer_init(snapshot);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(THREAD_ID));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first_mutex.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::snapshot_waiters(snapshot));
+    baseline_size = snapshot.size;
     FT_ASSERT_EQ(0, pt_thread_create(&worker_thread, ft_nullptr,
         thread_id_capture_worker, &capture_state));
     FT_ASSERT(wait_for_stage(&capture_state.stage, 1));
@@ -896,7 +931,7 @@ FT_TEST(test_pt_lock_tracking_notify_thread_exit_clears_stale_state)
     FT_ASSERT_EQ(0U, state.owned_mutexes.size);
     FT_ASSERT_EQ(ft_nullptr, state.waiting_mutex);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::snapshot_waiters(snapshot));
-    FT_ASSERT_EQ(0U, snapshot.size);
+    FT_ASSERT_EQ(baseline_size, snapshot.size);
     pt_buffer_destroy(snapshot);
     pt_buffer_destroy(state.owned_mutexes);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.destroy());
