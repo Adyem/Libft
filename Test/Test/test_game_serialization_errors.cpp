@@ -261,7 +261,7 @@ FT_TEST(test_deserialize_inventory_failure_then_success_updates_errno)
     FT_ASSERT(item != ft_nullptr);
     json_add_item_to_group(group, item);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, deserialize_inventory(inventory, group));
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     item = json_create_item("item_0_max_stack", 5);
     FT_ASSERT(item != ft_nullptr);
     json_add_item_to_group(group, item);

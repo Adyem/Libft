@@ -435,8 +435,11 @@ void game_event_scheduler::update_events(ft_sharedptr<game_world> &world,
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t queue_error;
+    int32_t ready_events_error;
     ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> temporary_queue;
+    ft_vector<ft_sharedptr<game_event> > ready_events;
     ft_sharedptr<game_event> current_event;
+    ft_size_t ready_event_index;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::update_events");
     if (!world)
@@ -458,6 +461,13 @@ void game_event_scheduler::update_events(ft_sharedptr<game_world> &world,
         this->set_error(temporary_queue.get_error());
         return ;
     }
+    ready_events_error = ready_events.initialize();
+    if (ready_events_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        this->set_error(ready_events.get_error());
+        return ;
+    }
     this->_ready_cache.clear();
     while (!this->_events.empty())
     {
@@ -472,14 +482,39 @@ void game_event_scheduler::update_events(ft_sharedptr<game_world> &world,
             if (log_buffer)
                 log_event_to_buffer(*current_event, *log_buffer);
             this->_ready_cache.push_back(current_event);
+            if (this->_ready_cache.get_error() != FT_ERR_SUCCESS)
+            {
+                this->unlock_internal(lock_acquired);
+                this->set_error(this->_ready_cache.get_error());
+                return ;
+            }
+            ready_events.push_back(current_event);
+            if (ready_events.get_error() != FT_ERR_SUCCESS)
+            {
+                this->unlock_internal(lock_acquired);
+                this->set_error(ready_events.get_error());
+                return ;
+            }
         }
         else
             temporary_queue.push(current_event);
     }
     while (!temporary_queue.empty())
         this->_events.push(temporary_queue.pop());
-    this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
+    ready_event_index = 0;
+    while (ready_event_index < ready_events.size())
+    {
+        current_event = ready_events[ready_event_index];
+        if (current_event)
+        {
+            const ft_function<void(game_world&, game_event&)> &callback = current_event->get_callback();
+            if (callback)
+                callback(*world, *current_event);
+        }
+        ready_event_index++;
+    }
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -557,6 +592,8 @@ void game_event_scheduler::dump_events(ft_vector<ft_sharedptr<game_event> > &out
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> queued_events;
+    ft_sharedptr<game_event> current_event;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::dump_events");
     lock_acquired = FT_FALSE;
@@ -567,11 +604,18 @@ void game_event_scheduler::dump_events(ft_vector<ft_sharedptr<game_event> > &out
         return ;
     }
     out.clear();
-    while (out.size() < this->_ready_cache.size())
+    queued_events = ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr>(this->_events);
+    if (queued_events.get_error() != FT_ERR_SUCCESS)
     {
-        out.push_back(this->_ready_cache[out.size()]);
+        this->unlock_internal(lock_acquired);
+        return ;
     }
     this->unlock_internal(lock_acquired);
+    while (!queued_events.empty())
+    {
+        current_event = queued_events.pop();
+        out.push_back(current_event);
+    }
     return ;
 }
 

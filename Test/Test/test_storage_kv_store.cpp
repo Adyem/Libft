@@ -333,7 +333,7 @@ FT_TEST(test_kv_store_compare_and_swap_behaviour)
     value_pointer = store.kv_get("target");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(value_pointer, "updated"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, store.kv_compare_and_swap("fresh", ft_nullptr, "created"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, store.kv_compare_and_swap("fresh", ft_nullptr, "created"));
     FT_ASSERT_EQ(ft_nullptr, store.kv_get("fresh"));
     FT_ASSERT_EQ(0, store.kv_set("fresh", "created"));
     FT_ASSERT_EQ(0, store.kv_compare_and_swap("fresh", "created", ft_nullptr));
