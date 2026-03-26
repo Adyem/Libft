@@ -3,9 +3,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "file_utils.hpp"
 
-static int32_t file_string_error(void) noexcept
+static int32_t file_string_error(const ft_string &string_value) noexcept
 {
-    return (ft_string::get_error());
+    return (string_value.get_error());
 }
 
 ft_string file_path_normalize(const char *path)
@@ -19,7 +19,7 @@ ft_string file_path_normalize(const char *path)
     ft_string original;
     if (original.initialize(path) != FT_ERR_SUCCESS)
         return (empty_result);
-    if (file_string_error() != FT_ERR_SUCCESS)
+    if (file_string_error(original) != FT_ERR_SUCCESS)
         return (original);
     char *data = original.print();
     if (data == ft_nullptr)
@@ -28,7 +28,7 @@ ft_string file_path_normalize(const char *path)
     ft_string result;
     if (result.initialize() != FT_ERR_SUCCESS)
         return (empty_result);
-    if (file_string_error() != FT_ERR_SUCCESS)
+    if (file_string_error(result) != FT_ERR_SUCCESS)
         return (result);
     ft_size_t index = 0;
     char path_sep = cmp_path_separator();
@@ -46,7 +46,7 @@ ft_string file_path_normalize(const char *path)
             index++;
         }
     }
-    if (file_string_error() != FT_ERR_SUCCESS)
+    if (file_string_error(result) != FT_ERR_SUCCESS)
         return (result);
     return (result);
 }

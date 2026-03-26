@@ -56,7 +56,7 @@ static int32_t json_dom_append_item(const json_item *item, ft_dom_node *group_no
         ft_string number_string;
 
         number_string = item->big_number->to_string_base(10);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (number_string.get_error() != FT_ERR_SUCCESS)
         {
             json_dom_delete_node(item_node);
             return (FT_ERR_INVALID_STATE);

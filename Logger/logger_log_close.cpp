@@ -10,7 +10,12 @@ static void log_close_report(void)
 
 void ft_log_close()
 {
+    ft_log_enable_async(FT_FALSE);
     ft_log_enable_remote_health(FT_FALSE);
+    ft_log_clear_redactions();
+    logger_context_clear();
+    g_level = LOG_LEVEL_INFO;
+    g_use_color = FT_TRUE;
     ft_size_t entry_index;
     ft_vector<s_log_sink> sinks_snapshot;
     ft_size_t sink_count;

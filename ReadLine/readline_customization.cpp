@@ -860,11 +860,11 @@ int32_t rl_state_set_cursor(readline_state_t *state, int32_t new_position)
 
     if (state == ft_nullptr)
     {
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (new_position < 0)
     {
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     lock_acquired = FT_FALSE;
     if (rl_state_lock(state, &lock_acquired) != FT_ERR_SUCCESS)
@@ -873,7 +873,7 @@ int32_t rl_state_set_cursor(readline_state_t *state, int32_t new_position)
     if (new_position > buffer_length)
     {
         rl_state_unlock(state, lock_acquired);
-        return (FT_ERR_INTERNAL);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     state->position = new_position;
     rl_state_unlock(state, lock_acquired);

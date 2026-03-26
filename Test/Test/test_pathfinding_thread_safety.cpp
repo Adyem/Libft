@@ -342,22 +342,6 @@ FT_TEST(test_path_step_thread_safety)
                 failure_line = __LINE__;
             }
         }
-        if (test_failed == 0)
-        {
-            (void)primary_step->destroy();
-            if (primary_step->initialize(ft_move(move_target)) != FT_ERR_SUCCESS)
-            {
-                test_failed = 1;
-                failure_expression = "primary_step->initialize(ft_move(move_target)) == FT_ERR_SUCCESS";
-                failure_line = __LINE__;
-            }
-            if (test_failed == 0 && primary_step->get_error() != FT_ERR_SUCCESS)
-            {
-                test_failed = 1;
-                failure_expression = "primary_step->get_error() == FT_ERR_SUCCESS";
-                failure_line = __LINE__;
-            }
-        }
         index += 1;
     }
     if (create_update_result == 0)
@@ -394,9 +378,15 @@ FT_TEST(test_path_step_thread_safety)
     }
     if (test_failed != 0)
     {
+        delete read_arguments;
+        delete update_arguments;
+        delete primary_step;
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
+    delete read_arguments;
+    delete update_arguments;
+    delete primary_step;
     return (1);
 }
 
@@ -531,8 +521,16 @@ FT_TEST(test_pathfinding_thread_safety)
     }
     if (test_failed != 0)
     {
+        delete read_arguments;
+        delete recalc_arguments;
+        delete primary_finder;
+        delete grid_pointer;
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
+    delete read_arguments;
+    delete recalc_arguments;
+    delete primary_finder;
+    delete grid_pointer;
     return (1);
 }

@@ -53,4 +53,27 @@ int32_t     cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
 int32_t     cma_get_extended_stats(ft_size_t *allocation_count,
                 ft_size_t *free_count, ft_size_t *current_bytes,
                 ft_size_t *peak_bytes);
+
+#ifdef LIBFT_TEST_BUILD
+struct cma_leak_entry
+{
+    void        *memory_pointer;
+    ft_size_t   size;
+};
+
+struct cma_leak_summary
+{
+    ft_size_t   live_block_count;
+    ft_size_t   live_bytes;
+    ft_size_t   ignored_block_count;
+    ft_size_t   ignored_bytes;
+};
+
+int32_t     cma_get_leak_summary(cma_leak_summary *out_summary);
+int32_t     cma_get_leak_entries(cma_leak_entry *entries, ft_size_t capacity,
+                ft_size_t *entry_count);
+int32_t     cma_report_leaks(void);
+int32_t     cma_untrack_leak(void *memory_pointer);
+int32_t     cma_track_leak(void *memory_pointer);
+#endif
 #endif

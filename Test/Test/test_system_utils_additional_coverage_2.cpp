@@ -88,7 +88,7 @@ FT_TEST(test_su_setenv_overwrite_disabled_preserves_value)
 
 FT_TEST(test_su_setenv_null_name_fails)
 {
-    FT_ASSERT_EQ(-1, su_setenv(ft_nullptr, "value", 1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, su_setenv(ft_nullptr, "value", 1));
     return (1);
 }
 

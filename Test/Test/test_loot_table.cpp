@@ -14,6 +14,7 @@ FT_TEST(test_loot_table_get_random_success_sets_success)
     int treasure_value = 42;
     Pair<int, int *> result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     result = table.get_random_loot();
     FT_ASSERT_EQ(FT_ERR_EMPTY, result.key);
     FT_ASSERT_EQ(ft_nullptr, result.value);
@@ -24,6 +25,7 @@ FT_TEST(test_loot_table_get_random_success_sets_success)
         return (0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result.key);
     FT_ASSERT_EQ(&treasure_value, result.value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
     return (1);
 }
 
@@ -34,12 +36,14 @@ FT_TEST(test_loot_table_get_random_overflow_sets_error)
     int common_item = 50;
     Pair<int, int *> result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.add_element(&rare_gem, INT_MAX, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.add_element(&common_item, 1, 0));
 
     result = table.get_random_loot();
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, result.key);
     FT_ASSERT_EQ(ft_nullptr, result.value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
     return (1);
 }
 
@@ -49,6 +53,7 @@ FT_TEST(test_loot_table_pop_random_success_sets_success)
     int loot_piece = 7;
     Pair<int, int *> result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     result = table.pop_random_loot();
     FT_ASSERT_EQ(FT_ERR_EMPTY, result.key);
     FT_ASSERT_EQ(ft_nullptr, result.value);
@@ -59,6 +64,7 @@ FT_TEST(test_loot_table_pop_random_success_sets_success)
         return (0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result.key);
     FT_ASSERT_EQ(0u, table.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
     return (1);
 }
 
@@ -69,11 +75,13 @@ FT_TEST(test_loot_table_pop_random_overflow_sets_error)
     int mundane_item = 6;
     Pair<int, int *> result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.add_element(&legendary_item, INT_MAX, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.add_element(&mundane_item, 1, 0));
 
     result = table.pop_random_loot();
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, result.key);
     FT_ASSERT_EQ(ft_nullptr, result.value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
     return (1);
 }

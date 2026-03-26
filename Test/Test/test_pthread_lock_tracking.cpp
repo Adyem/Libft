@@ -423,9 +423,8 @@ FT_TEST(test_pt_lock_tracking_detects_cycle)
     RECORD_ASSERT(shared.first_lock_error.load() == FT_ERR_SUCCESS);
     RECORD_ASSERT(wait_for_thread_state(THREAD_ID, &first_mutex, ft_nullptr, 1, 20));
     RECORD_ASSERT(wait_for_thread_state(shared.worker_thread_identifier.load(), &second_mutex, &first_mutex, 1, 100));
-    RECORD_ASSERT(second_mutex.lock() == FT_ERR_SUCCESS);
-    RECORD_ASSERT(second_mutex.lockState());
-    second_mutex_locked = 1;
+    RECORD_ASSERT(second_mutex.lock() == FT_ERR_MUTEX_ALREADY_LOCKED);
+    RECORD_ASSERT(second_mutex.lockState() == true);
     RECORD_ASSERT(first_mutex.unlock() == FT_ERR_SUCCESS);
     first_mutex_locked = 0;
     RECORD_ASSERT(wait_for_stage(&shared.stage, 5));
@@ -477,6 +476,7 @@ FT_TEST(test_pt_lock_tracking_reports_owned_mutexes)
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(THREAD_ID, &owned_error);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, owned_error);
     FT_ASSERT_EQ(2, static_cast<int>(owned_mutexes.size));
+    pt_buffer_destroy(owned_mutexes);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first_mutex.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.destroy());
@@ -484,6 +484,7 @@ FT_TEST(test_pt_lock_tracking_reports_owned_mutexes)
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(THREAD_ID, &owned_error);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, owned_error);
     FT_ASSERT_EQ(0, static_cast<int>(owned_mutexes.size));
+    pt_buffer_destroy(owned_mutexes);
     return (1);
 }
 
@@ -764,6 +765,7 @@ FT_TEST(test_pt_lock_tracking_reports_other_thread_mutexes)
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(shared_state.worker_thread_identifier, &owned_error);
     RECORD_ASSERT(owned_error == FT_ERR_SUCCESS);
     RECORD_ASSERT(static_cast<int>(owned_mutexes.size) == 1);
+    pt_buffer_destroy(owned_mutexes);
     shared_state.stage.store(3);
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 4));
     RECORD_ASSERT(shared_state.unlock_result.load() == FT_ERR_SUCCESS);
@@ -771,6 +773,7 @@ FT_TEST(test_pt_lock_tracking_reports_other_thread_mutexes)
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(shared_state.worker_thread_identifier, &owned_error);
     RECORD_ASSERT(owned_error == FT_ERR_SUCCESS);
     RECORD_ASSERT(static_cast<int>(owned_mutexes.size) == 0);
+    pt_buffer_destroy(owned_mutexes);
     goto cleanup;
 
 cleanup:

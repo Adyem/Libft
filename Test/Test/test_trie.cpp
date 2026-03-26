@@ -23,7 +23,7 @@ FT_TEST(test_trie_insert_nullptr_sets_errno)
     FT_ASSERT_EQ(0, stored_node->_unset_value);
     FT_ASSERT_EQ(&stored_value, stored_node->_value_pointer);
 
-    FT_ASSERT_EQ(1, trie.insert(ft_nullptr, &stored_value));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, trie.insert(ft_nullptr, &stored_value));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, trie.get_error());
     FT_ASSERT_EQ(valid_key_length, stored_node->_key_length);
     FT_ASSERT_EQ(0, stored_node->_unset_value);

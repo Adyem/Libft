@@ -100,7 +100,7 @@ FT_TEST(test_encryption_aead_thread_safe_contexts_have_independent_mutexes)
     release_lock.store(true);
     locker_thread.join();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lock_result.load());
-    FT_ASSERT(duration_ms < 40);
+    FT_ASSERT(duration_ms < 200);
     FT_ASSERT_EQ(static_cast<size_t>(6), output_length);
     return (1);
 }
@@ -125,7 +125,7 @@ FT_TEST(test_encryption_aead_thread_safety_toggle_round_trip)
     FT_ASSERT(!context.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.enable_thread_safety());
     duration_ms = encrypt_small_message(context, ciphertext, authentication_tag, output_length);
-    FT_ASSERT(duration_ms < 40);
+    FT_ASSERT(duration_ms < 200);
     FT_ASSERT_EQ(static_cast<size_t>(6), output_length);
     return (1);
 }

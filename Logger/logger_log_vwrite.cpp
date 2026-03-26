@@ -7,12 +7,13 @@
 static int32_t logger_append_quoted_token(ft_string &buffer, const char *value)
 {
     ft_size_t entry_index;
+    int32_t append_error;
     static const char hex_digits[] = "0123456789ABCDEF";
 
     if (!value)
         return (FT_ERR_INTERNAL);
-    buffer.append('"');
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    append_error = buffer.append('"');
+    if (append_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     entry_index = 0;
     while (value[entry_index] != '\0')
@@ -22,11 +23,11 @@ static int32_t logger_append_quoted_token(ft_string &buffer, const char *value)
         character = static_cast<unsigned char>(value[entry_index]);
         if (character == '"' || character == '\\')
         {
-            buffer.append('\\');
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            append_error = buffer.append('\\');
+            if (append_error != FT_ERR_SUCCESS)
                 return (FT_ERR_INTERNAL);
-            buffer.append(static_cast<char>(character));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            append_error = buffer.append(static_cast<char>(character));
+            if (append_error != FT_ERR_SUCCESS)
                 return (FT_ERR_INTERNAL);
         }
         else if (character < 0x20)
@@ -38,20 +39,20 @@ static int32_t logger_append_quoted_token(ft_string &buffer, const char *value)
             escape_buffer[2] = hex_digits[(character >> 4) & 0x0F];
             escape_buffer[3] = hex_digits[character & 0x0F];
             escape_buffer[4] = '\0';
-            buffer.append(escape_buffer);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            append_error = buffer.append(escape_buffer);
+            if (append_error != FT_ERR_SUCCESS)
                 return (FT_ERR_INTERNAL);
         }
         else
         {
-            buffer.append(static_cast<char>(character));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            append_error = buffer.append(static_cast<char>(character));
+            if (append_error != FT_ERR_SUCCESS)
                 return (FT_ERR_INTERNAL);
         }
         entry_index += 1;
     }
-    buffer.append('"');
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    append_error = buffer.append('"');
+    if (append_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     return (FT_ERR_SUCCESS);
 }
@@ -61,12 +62,14 @@ int32_t logger_build_standard_message(t_log_level level, const ft_string &messag
 {
     ft_string timestamp;
     ft_string assembled;
+    int32_t string_error;
     int32_t severity_value;
     char severity_buffer[16];
     int32_t severity_length;
 
     timestamp = time_format_iso8601(time_now());
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = timestamp.get_error();
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     severity_value = ft_log_level_to_severity(level);
     severity_length = pf_snprintf(severity_buffer, sizeof(severity_buffer), "%d",
@@ -74,44 +77,44 @@ int32_t logger_build_standard_message(t_log_level level, const ft_string &messag
     if (severity_length <= 0
         || severity_length >= static_cast<int32_t>(sizeof(severity_buffer)))
         return (FT_ERR_INTERNAL);
-    if (assembled.initialize("time=") != FT_ERR_SUCCESS)
+    string_error = assembled.initialize("time=");
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = assembled.append(timestamp);
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
-    assembled.append(timestamp);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = assembled.append(" level=");
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
-    assembled.append(" level=");
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = assembled.append(ft_level_to_str(level));
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
-    assembled.append(ft_level_to_str(level));
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = assembled.append(" severity=");
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
-    assembled.append(" severity=");
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = assembled.append(severity_buffer);
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
-    assembled.append(severity_buffer);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
-    assembled.append(" message=");
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = assembled.append(" message=");
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     if (logger_append_quoted_token(assembled, message_text.c_str()) != 0)
         return (FT_ERR_INTERNAL);
     if (context_fragment.size() > 0)
     {
-        assembled.append(' ');
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        string_error = assembled.append(' ');
+        if (string_error != FT_ERR_SUCCESS)
             return (FT_ERR_INTERNAL);
-        assembled.append(context_fragment);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        string_error = assembled.append(context_fragment);
+        if (string_error != FT_ERR_SUCCESS)
             return (FT_ERR_INTERNAL);
     }
-    assembled.append('\n');
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = assembled.append('\n');
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     formatted_message = assembled;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    string_error = formatted_message.get_error();
+    if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     return (FT_ERR_SUCCESS);
 }
@@ -152,8 +155,6 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
         return ;
     redaction_snapshot_initialize_error = redaction_snapshot.initialize();
     if (redaction_snapshot_initialize_error != FT_ERR_SUCCESS)
-        return ;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return ;
     if (logger_lock_sinks() != 0)
         return ;
@@ -215,11 +216,43 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
         if (entry.function != ft_nullptr
             && log_sink_lock(&entry, &sink_lock_acquired) == FT_ERR_SUCCESS)
         {
-            sink_result = entry.function(final_message.c_str(), entry.user_data);
-            if (sink_result != FT_ERR_SUCCESS && g_logger != ft_nullptr)
-                g_logger->set_error(sink_result);
+            ft_bool rotate_for_size_pre;
+            ft_bool rotate_for_age_pre;
+            s_file_sink *file_sink;
+
+            rotate_for_size_pre = FT_FALSE;
+            rotate_for_age_pre = FT_FALSE;
+            file_sink = ft_nullptr;
             if (entry.function == ft_file_sink)
-                logger_execute_rotation(static_cast<s_file_sink *>(entry.user_data));
+            {
+                file_sink = static_cast<s_file_sink *>(entry.user_data);
+                sink_result = logger_prepare_rotation(file_sink, &rotate_for_size_pre,
+                        &rotate_for_age_pre);
+                if (sink_result != FT_ERR_SUCCESS)
+                    sink_result = FT_ERR_INVALID_OPERATION;
+            }
+            else
+                sink_result = FT_ERR_SUCCESS;
+            if (sink_result == FT_ERR_SUCCESS)
+            {
+                sink_result = entry.function(final_message.c_str(), entry.user_data);
+                if (sink_result != FT_ERR_SUCCESS && g_logger != ft_nullptr)
+                    g_logger->set_error(sink_result);
+            }
+            if (sink_result == FT_ERR_SUCCESS && entry.function == ft_file_sink)
+            {
+                ft_bool rotate_for_size_post;
+                ft_bool rotate_for_age_post;
+
+                rotate_for_size_post = FT_FALSE;
+                rotate_for_age_post = FT_FALSE;
+                if (logger_prepare_rotation(file_sink, &rotate_for_size_post,
+                        &rotate_for_age_post) != FT_ERR_SUCCESS)
+                    sink_result = FT_ERR_INVALID_OPERATION;
+                else if (rotate_for_size_pre || rotate_for_age_pre
+                    || rotate_for_size_post || rotate_for_age_post)
+                    logger_execute_rotation(file_sink);
+            }
         }
         if (sink_lock_acquired)
             log_sink_unlock(&entry, sink_lock_acquired);

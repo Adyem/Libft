@@ -23,7 +23,7 @@ static void observability_test_exporter(const ft_otel_span_metrics &span)
 static void observability_test_clear_spans(void)
 {
     std::lock_guard<std::mutex> guard(g_span_mutex);
-    g_recorded_spans.clear();
+    std::vector<ft_otel_span_metrics>().swap(g_recorded_spans);
     return ;
 }
 
@@ -125,6 +125,7 @@ FT_TEST(test_observability_bridge_async_span)
     FT_ASSERT(!span.timer_thread);
     FT_ASSERT(span.thread_id != 0);
     FT_ASSERT_EQ(0, observability_task_scheduler_bridge_shutdown());
+    observability_test_clear_spans();
     return (1);
 }
 
@@ -172,5 +173,6 @@ FT_TEST(test_observability_bridge_cancelled_span)
     FT_ASSERT(span.cancelled);
     FT_ASSERT(!span.timer_thread);
     FT_ASSERT_EQ(0, observability_task_scheduler_bridge_shutdown());
+    observability_test_clear_spans();
     return (1);
 }

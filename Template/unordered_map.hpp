@@ -28,7 +28,11 @@ struct ft_pair
 template <typename Key, typename MappedType>
 class ft_unordered_map
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         ft_pair<Key, MappedType>      *_data;
         ft_bool                          *_occupied;
         ft_size_t                        _capacity;

@@ -188,6 +188,10 @@ scma_handle    scma_allocate(ft_size_t size)
         block->size = size;
         block->in_use = 1;
         block->generation = 1;
+#ifdef LIBFT_TEST_BUILD
+        block->leak_ignored = FT_FALSE;
+        scma_capture_leak_stack(block, 2);
+#endif
         block_count = block_count + 1;
         used_size += size;
         result_handle.index = new_index;
@@ -199,6 +203,10 @@ scma_handle    scma_allocate(ft_size_t size)
     block->size = size;
     block->in_use = 1;
     block->generation = scma_next_generation(block->generation);
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    scma_capture_leak_stack(block, 2);
+#endif
     result_handle.index = index;
     result_handle.generation = block->generation;
     used_size += size;
@@ -221,6 +229,10 @@ int32_t    scma_free(scma_handle handle)
     block->in_use = 0;
     block->size = 0;
     block->generation = scma_next_generation(block->generation);
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    block->leak_stack_frame_count = 0;
+#endif
     scma_compact();
     return (static_cast<uint32_t>(scma_unlock_and_return_int(FT_ERR_SUCCESS)));
 }

@@ -37,7 +37,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, oak_plank->initialize());
     oak_plank->set_item_id(101);
     oak_plank->set_max_stack(10);
-    oak_plank->set_stack_size(3);
+    oak_plank->set_stack_size(4);
     oak_plank->set_rarity(1);
 
     ft_sharedptr<game_item> iron_ingot(new (std::nothrow) game_item());
@@ -45,7 +45,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, iron_ingot->initialize());
     iron_ingot->set_item_id(102);
     iron_ingot->set_max_stack(10);
-    iron_ingot->set_stack_size(1);
+    iron_ingot->set_stack_size(2);
     iron_ingot->set_rarity(2);
 
     FT_ASSERT_EQ(hero_inventory.add_item(oak_plank), FT_ERR_SUCCESS);
@@ -91,13 +91,34 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     int combat_result_code = FT_ERR_GAME_GENERAL_ERROR;
     int completion_result_code = FT_ERR_GAME_GENERAL_ERROR;
 
-    ft_sharedptr<game_event> crafting_event(new (std::nothrow) game_event());
-    FT_ASSERT(crafting_event.get() != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_event->initialize());
-    crafting_event->set_id(1);
-    crafting_event->set_duration(1);
-    crafting_event->set_modifier1(crafted_sword_recipe_id);
-    crafting_event->set_callback(ft_function<void(game_world&, game_event&)>([&](game_world &world_reference, game_event &event_reference)
+    ft_sharedptr<game_event> crafting_event_one(new (std::nothrow) game_event());
+    FT_ASSERT(crafting_event_one.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_event_one->initialize());
+    crafting_event_one->set_id(1);
+    crafting_event_one->set_duration(1);
+    crafting_event_one->set_modifier1(crafted_sword_recipe_id);
+    crafting_event_one->set_callback(ft_function<void(game_world&, game_event&)>([&](game_world &world_reference, game_event &event_reference)
+    {
+        (void)world_reference;
+        crafting_result_code = crafting_system.craft_item(hero_inventory, event_reference.get_modifier1(), crafted_sword);
+        if (crafting_result_code == FT_ERR_SUCCESS)
+        {
+            Pair<int, game_quest> *quest_entry;
+
+            quest_entry = hero_character.get_quests().find(quest_identifier);
+            if (quest_entry != hero_character.get_quests().end())
+            {
+                quest_entry->value.advance_phase();
+            }
+        }
+    }));
+    ft_sharedptr<game_event> crafting_event_two(new (std::nothrow) game_event());
+    FT_ASSERT(crafting_event_two.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_event_two->initialize());
+    crafting_event_two->set_id(4);
+    crafting_event_two->set_duration(1);
+    crafting_event_two->set_modifier1(crafted_sword_recipe_id);
+    crafting_event_two->set_callback(ft_function<void(game_world&, game_event&)>([&](game_world &world_reference, game_event &event_reference)
     {
         (void)world_reference;
         crafting_result_code = crafting_system.craft_item(hero_inventory, event_reference.get_modifier1(), crafted_sword);
@@ -156,23 +177,23 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     }));
     FT_ASSERT_EQ(completion_event->get_error(), FT_ERR_SUCCESS);
 
-    world_instance->schedule_event(crafting_event);
-    world_instance->schedule_event(crafting_event);
+    world_instance->schedule_event(crafting_event_one);
+    world_instance->schedule_event(crafting_event_two);
     world_instance->schedule_event(combat_event);
     world_instance->schedule_event(completion_event);
 
     world_instance->update_events(world_instance, 1);
     FT_ASSERT_EQ(2, world_instance->get_event_scheduler()->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_result_code);
-    FT_ASSERT_EQ(hero_inventory.count_item(101), 1);
+    FT_ASSERT_EQ(hero_inventory.count_item(101), 0);
     FT_ASSERT_EQ(hero_inventory.count_item(102), 0);
-    FT_ASSERT_EQ(hero_inventory.count_item(501), 1);
+    FT_ASSERT_EQ(hero_inventory.count_item(501), 2);
     Pair<int, game_quest> *quest_entry_after_crafting = hero_character.get_quests().find(quest_identifier);
     FT_ASSERT(quest_entry_after_crafting != ft_nullptr);
-    FT_ASSERT_EQ(quest_entry_after_crafting->value.get_current_phase(), 1);
+    FT_ASSERT_EQ(quest_entry_after_crafting->value.get_current_phase(), 2);
 
     world_instance->update_events(world_instance, 1);
-    FT_ASSERT_EQ(hero_inventory.count_item(501), 1);
+    FT_ASSERT_EQ(hero_inventory.count_item(501), 2);
 
     world_instance->update_events(world_instance, 1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, combat_result_code);

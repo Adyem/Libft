@@ -21,17 +21,19 @@
 static void test_readline_cleanup_state(readline_state_t *state)
 {
     ft_bool lock_acquired;
+    int32_t lock_result;
 
     if (state == ft_nullptr)
         return ;
     lock_acquired = false;
-    if (rl_state_lock(state, &lock_acquired) == 0)
+    lock_result = rl_state_lock(state, &lock_acquired);
+    if (lock_result == 0 && state->buffer != ft_nullptr)
     {
-        if (lock_acquired == true && state->buffer != ft_nullptr)
-        {
-            cma_free(state->buffer);
-            state->buffer = ft_nullptr;
-        }
+        cma_free(state->buffer);
+        state->buffer = ft_nullptr;
+    }
+    if (lock_result == 0)
+    {
         if (lock_acquired == true)
             rl_state_unlock(state, lock_acquired);
     }
@@ -686,16 +688,16 @@ FT_TEST(test_readline_custom_key_bindings_dispatch)
 FT_TEST(test_readline_state_insert_and_delete_text)
 {
     readline_state_t state;
+    int initialize_result;
     int insert_result;
     int delete_result;
     const char *buffer_pointer;
     int position;
 
     ft_bzero(&state, sizeof(state));
-    state.buffer = static_cast<char *>(cma_malloc(4));
-    if (state.buffer == ft_nullptr)
+    initialize_result = rl_initialize_state(&state);
+    if (initialize_result != FT_ERR_SUCCESS)
         return (0);
-    state.buffer_size = 4;
     state.position = 0;
     insert_result = rl_state_insert_text(&state, "hello");
     FT_ASSERT_EQ(FT_ERR_SUCCESS, insert_result);
@@ -719,8 +721,8 @@ FT_TEST(test_readline_state_insert_and_delete_text)
     FT_ASSERT_EQ(0, position);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rl_state_set_cursor(&state, 0));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, rl_state_set_cursor(&state, INT_MAX));
-    cma_free(state.buffer);
-    state.buffer = ft_nullptr;
+    rl_disable_raw_mode();
+    test_readline_cleanup_state(&state);
     return (1);
 }
 

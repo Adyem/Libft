@@ -158,8 +158,8 @@ FT_TEST(test_scma_const_proxy_invalid_index_reports_error)
     const scma_handle_accessor<int> &const_accessor = accessor;
     auto invalid_proxy = const_accessor[8];
 
-    FT_ASSERT_EQ(0, invalid_proxy.is_valid());
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, invalid_proxy.get_error());
+    FT_ASSERT_EQ(0, invalid_proxy.is_valid());
     scma_shutdown();
     return (1);
 }

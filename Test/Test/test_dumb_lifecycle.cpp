@@ -82,6 +82,7 @@ void test_sound_device_lifecycle_impl::stop(void)
 
 static sigjmp_buf g_dumb_lifecycle_jump_buffer;
 static volatile sig_atomic_t g_dumb_lifecycle_signal;
+static ft_sound_clip g_sound_clip_abort_instance;
 
 static void dumb_lifecycle_sigabrt_handler(int32_t signal_number)
 {
@@ -129,10 +130,8 @@ static void sound_device_initialize_twice_aborts_operation()
 
 static void sound_clip_initialize_twice_aborts_operation()
 {
-    ft_sound_clip sound_clip_instance;
-
-    (void)sound_clip_instance.initialize();
-    (void)sound_clip_instance.initialize();
+    (void)g_sound_clip_abort_instance.initialize();
+    (void)g_sound_clip_abort_instance.initialize();
     return ;
 }
 
@@ -424,6 +423,7 @@ FT_TEST(test_dumb_sound_clip_move_destroyed_destination_succeeds)
 FT_TEST(test_dumb_sound_clip_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(sound_clip_initialize_twice_aborts_operation));
+    (void)g_sound_clip_abort_instance.destroy();
     return (1);
 }
 

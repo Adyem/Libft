@@ -29,7 +29,7 @@ FT_TEST(test_su_putenv_forced_failure_overwrites_errno)
 {
     static char environment_entry[] = "FT_TEST_SU_PUTENV_FAIL=1";
     cmp_set_force_putenv_result(-1, EACCES);
-    FT_ASSERT_EQ(0, su_putenv(environment_entry));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, su_putenv(environment_entry));
     cmp_clear_force_putenv_result();
     cmp_unsetenv("FT_TEST_SU_PUTENV_FAIL");
     return (1);

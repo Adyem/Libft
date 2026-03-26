@@ -16,6 +16,11 @@ static int unordered_map_iterator_expect_sigabrt(void (*operation)())
     return (test_expect_sigabrt_signal(operation));
 }
 
+static unordered_map_int_int g_unordered_map_iterator_abort_map;
+static unordered_map_iterator g_unordered_map_iterator_abort_iterator;
+static unordered_map_int_int g_unordered_map_const_iterator_abort_map;
+static unordered_map_const_iterator g_unordered_map_const_iterator_abort_iterator;
+
 static void unordered_map_iterator_uninitialised_destructor_aborts_operation()
 {
     unordered_map_iterator iterator_instance;
@@ -34,14 +39,12 @@ static void unordered_map_iterator_destroy_uninitialised_aborts_operation()
 
 static void unordered_map_iterator_initialize_twice_aborts_operation()
 {
-    unordered_map_int_int map_instance;
-    unordered_map_iterator iterator_instance;
-
-    (void)map_instance.initialize();
-    map_instance.insert(1, 10);
-    iterator_instance.initialize(map_instance.begin());
-    iterator_instance.initialize(map_instance.begin());
-    (void)map_instance.destroy();
+    (void)g_unordered_map_iterator_abort_map.initialize();
+    g_unordered_map_iterator_abort_map.insert(1, 10);
+    g_unordered_map_iterator_abort_iterator.initialize(
+        g_unordered_map_iterator_abort_map.begin());
+    g_unordered_map_iterator_abort_iterator.initialize(
+        g_unordered_map_iterator_abort_map.begin());
     return ;
 }
 
@@ -85,14 +88,14 @@ static void unordered_map_const_iterator_destroy_uninitialised_aborts_operation(
 
 static void unordered_map_const_iterator_initialize_twice_aborts_operation()
 {
-    unordered_map_int_int map_instance;
-    unordered_map_const_iterator iterator_instance;
-
-    (void)map_instance.initialize();
-    map_instance.insert(1, 10);
-    iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
-    iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
-    (void)map_instance.destroy();
+    (void)g_unordered_map_const_iterator_abort_map.initialize();
+    g_unordered_map_const_iterator_abort_map.insert(1, 10);
+    g_unordered_map_const_iterator_abort_iterator.initialize(
+        static_cast<const unordered_map_int_int &>(
+            g_unordered_map_const_iterator_abort_map).begin());
+    g_unordered_map_const_iterator_abort_iterator.initialize(
+        static_cast<const unordered_map_int_int &>(
+            g_unordered_map_const_iterator_abort_map).begin());
     return ;
 }
 
@@ -284,6 +287,8 @@ FT_TEST(test_unordered_map_iterator_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
         unordered_map_iterator_initialize_twice_aborts_operation));
+    (void)g_unordered_map_iterator_abort_iterator.destroy();
+    (void)g_unordered_map_iterator_abort_map.destroy();
     return (1);
 }
 
@@ -319,6 +324,8 @@ FT_TEST(test_unordered_map_const_iterator_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
         unordered_map_const_iterator_initialize_twice_aborts_operation));
+    (void)g_unordered_map_const_iterator_abort_iterator.destroy();
+    (void)g_unordered_map_const_iterator_abort_map.destroy();
     return (1);
 }
 

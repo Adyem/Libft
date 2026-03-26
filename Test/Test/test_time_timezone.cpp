@@ -15,6 +15,7 @@ FT_TEST(test_time_format_iso8601_with_offset_zero)
     ft_string result_string;
 
     result_string = time_format_iso8601_with_offset(0, 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string.get_error());
     FT_ASSERT_EQ(expected_string, result_string);
     return (1);
 }
@@ -26,6 +27,7 @@ FT_TEST(test_time_format_iso8601_with_offset_positive)
     ft_string result_string;
 
     result_string = time_format_iso8601_with_offset(0, 330);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string.get_error());
     FT_ASSERT_EQ(expected_string, result_string);
     return (1);
 }
@@ -37,6 +39,7 @@ FT_TEST(test_time_format_iso8601_with_offset_negative)
     ft_string result_string;
 
     result_string = time_format_iso8601_with_offset(0, -480);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string.get_error());
     FT_ASSERT_EQ(expected_string, result_string);
     return (1);
 }

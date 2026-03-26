@@ -78,6 +78,10 @@ void* cma_malloc(ft_size_t size)
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_malloc split", ft_nullptr);
     cma_mark_block_allocated(block);
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    cma_capture_leak_stack(block, 2);
+#endif
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)

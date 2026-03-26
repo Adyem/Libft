@@ -12,6 +12,7 @@
 #include <vector>
 #include <openssl/x509v3.h>
 #include "../Basic/basic.hpp"
+#include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Time/time.hpp"
 #include "../Observability/observability_networking_metrics.hpp"
@@ -79,6 +80,18 @@ static ft_size_t g_http_client_pool_acquire_calls = 0;
 static ft_size_t g_http_client_pool_reuse_hits = 0;
 static ft_size_t g_http_client_pool_acquire_misses = 0;
 
+#ifdef LIBFT_TEST_BUILD
+static void http_client_pool_untrack_runtime_leaks(void)
+{
+    if (g_http_client_pool_mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_http_client_pool_mutex);
+    if (!g_http_client_pool_entries.empty()
+        && g_http_client_pool_entries.data() != NULL)
+        (void)cma_untrack_leak(g_http_client_pool_entries.data());
+    return ;
+}
+#endif
+
 static int32_t http_client_reinitialize_string(ft_string &value)
 {
     int32_t destroy_error;
@@ -110,6 +123,9 @@ int32_t http_client_pool_enable_thread_safety(void)
         return (initialize_error);
     }
     g_http_client_pool_mutex = mutex_pointer;
+#ifdef LIBFT_TEST_BUILD
+    http_client_pool_untrack_runtime_leaks();
+#endif
     return (FT_ERR_SUCCESS);
 }
 
@@ -234,6 +250,9 @@ static void http_client_pool_release_connection(http_client_active_connection &c
     }
     connection.entry.last_used = now;
     g_http_client_pool_entries.push_back(connection.entry);
+#ifdef LIBFT_TEST_BUILD
+    http_client_pool_untrack_runtime_leaks();
+#endif
     (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     http_client_pool_reset_active(connection);
     return ;
@@ -467,6 +486,9 @@ void http_client_pool_flush(void)
         index++;
     }
     g_http_client_pool_entries.clear();
+#ifdef LIBFT_TEST_BUILD
+    http_client_pool_untrack_runtime_leaks();
+#endif
     (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return ;
 }
@@ -490,6 +512,9 @@ void http_client_pool_set_max_idle(ft_size_t max_idle)
             index++;
         }
         g_http_client_pool_entries.resize(g_http_client_pool_max_idle);
+#ifdef LIBFT_TEST_BUILD
+        http_client_pool_untrack_runtime_leaks();
+#endif
     }
     (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
     return ;

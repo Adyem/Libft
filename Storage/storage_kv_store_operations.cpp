@@ -2553,7 +2553,14 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
     ft_size_t operation_count;
     ft_size_t operation_index;
     int32_t lock_error;
+    ft_map<ft_string, kv_store_entry> data_snapshot;
+    int32_t snapshot_initialize_error;
+    int64_t metrics_set_operations_snapshot;
+    int64_t metrics_delete_operations_snapshot;
 
+    snapshot_initialize_error = data_snapshot.initialize();
+    if (snapshot_initialize_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_OPERATION);
     lock_error = this->lock_store(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -2565,6 +2572,14 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
         return (FT_ERR_INVALID_OPERATION);
     }
+    data_snapshot = this->_data;
+    if (data_snapshot.get_error() != FT_ERR_SUCCESS)
+    {
+        this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    metrics_set_operations_snapshot = this->_metrics_set_operations;
+    metrics_delete_operations_snapshot = this->_metrics_delete_operations;
     operation_count = operations.size();
     operation_index = 0;
     while (operation_index < operation_count)
@@ -2575,6 +2590,9 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 
         if (operation._key.c_str() == ft_nullptr || operation._key.size() == 0)
         {
+            this->_data = ft_move(data_snapshot);
+            this->_metrics_set_operations = metrics_set_operations_snapshot;
+            this->_metrics_delete_operations = metrics_delete_operations_snapshot;
             this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_ARGUMENT);
             return (FT_ERR_INVALID_OPERATION);
         }
@@ -2584,6 +2602,9 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         {
             if (existing_pair == map_end)
             {
+                this->_data = ft_move(data_snapshot);
+                this->_metrics_set_operations = metrics_set_operations_snapshot;
+                this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                 this->unlock_store_guard(lock_acquired, FT_ERR_NOT_FOUND);
                 return (FT_ERR_INVALID_OPERATION);
             }
@@ -2594,6 +2615,9 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         }
         if (operation._has_value == FT_FALSE)
         {
+            this->_data = ft_move(data_snapshot);
+            this->_metrics_set_operations = metrics_set_operations_snapshot;
+            this->_metrics_delete_operations = metrics_delete_operations_snapshot;
             this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_ARGUMENT);
             return (FT_ERR_INVALID_OPERATION);
         }
@@ -2601,6 +2625,9 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         {
             if (existing_pair->value.set_value(operation._value) != 0)
             {
+                this->_data = ft_move(data_snapshot);
+                this->_metrics_set_operations = metrics_set_operations_snapshot;
+                this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                 this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
                 return (FT_ERR_INVALID_OPERATION);
             }
@@ -2611,11 +2638,17 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 
                 if (this->compute_expiration(operation._ttl_seconds, has_expiration, expiration_timestamp) != 0)
                 {
+                    this->_data = ft_move(data_snapshot);
+                    this->_metrics_set_operations = metrics_set_operations_snapshot;
+                    this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                     this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_ARGUMENT);
                     return (FT_ERR_INVALID_OPERATION);
                 }
                 if (existing_pair->value.configure_expiration(has_expiration, expiration_timestamp) != 0)
                 {
+                    this->_data = ft_move(data_snapshot);
+                    this->_metrics_set_operations = metrics_set_operations_snapshot;
+                    this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                     this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
                     return (FT_ERR_INVALID_OPERATION);
                 }
@@ -2629,11 +2662,17 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 
             if (new_entry.initialize() != FT_ERR_SUCCESS)
             {
+                this->_data = ft_move(data_snapshot);
+                this->_metrics_set_operations = metrics_set_operations_snapshot;
+                this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                 this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
                 return (FT_ERR_INVALID_OPERATION);
             }
             if (new_entry.set_value(operation._value) != 0)
             {
+                this->_data = ft_move(data_snapshot);
+                this->_metrics_set_operations = metrics_set_operations_snapshot;
+                this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                 this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
                 return (FT_ERR_INVALID_OPERATION);
             }
@@ -2643,16 +2682,30 @@ int32_t kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
             {
                 if (this->compute_expiration(operation._ttl_seconds, has_expiration, expiration_timestamp) != 0)
                 {
+                    this->_data = ft_move(data_snapshot);
+                    this->_metrics_set_operations = metrics_set_operations_snapshot;
+                    this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                     this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_ARGUMENT);
                     return (FT_ERR_INVALID_OPERATION);
                 }
             }
             if (new_entry.configure_expiration(has_expiration, expiration_timestamp) != 0)
             {
+                this->_data = ft_move(data_snapshot);
+                this->_metrics_set_operations = metrics_set_operations_snapshot;
+                this->_metrics_delete_operations = metrics_delete_operations_snapshot;
                 this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
                 return (FT_ERR_INVALID_OPERATION);
             }
             this->_data.insert(operation._key, new_entry);
+            if (this->_data.get_error() != FT_ERR_SUCCESS)
+            {
+                this->_data = ft_move(data_snapshot);
+                this->_metrics_set_operations = metrics_set_operations_snapshot;
+                this->_metrics_delete_operations = metrics_delete_operations_snapshot;
+                this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
+                return (FT_ERR_INVALID_OPERATION);
+            }
         }
         this->record_set_operation();
         operation_index++;

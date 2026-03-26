@@ -186,11 +186,7 @@ int32_t xml_document_to_dom(const xml_document &document, ft_dom_document &dom) 
 
 static int32_t xml_dom_check_string_error(const ft_string &value) noexcept
 {
-    int32_t error_code;
-
-    (void)value;
-    error_code = ft_string::get_error();
-    return (error_code);
+    return (value.get_error());
 }
 
 static int32_t xml_dom_append_text(ft_string &output, const char *text) noexcept

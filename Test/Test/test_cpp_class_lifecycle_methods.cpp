@@ -14,6 +14,8 @@
 #endif
 
 static sigjmp_buf g_lifecycle_abort_jump;
+static ft_string g_stringbuf_abort_source_value;
+static ft_stringbuf g_stringbuf_abort_buffer_value;
 
 static void lifecycle_abort_handler(int /*signal_number*/)
 {
@@ -64,14 +66,12 @@ static void data_buffer_initialize_move_uninitialised_source_aborts(void)
 
 static void stringbuf_initialize_twice_aborts(void)
 {
-    ft_string source_value;
-    ft_stringbuf buffer_value;
-
-    if (source_value.initialize("abc") != FT_ERR_SUCCESS)
+    if (g_stringbuf_abort_source_value.initialize("abc") != FT_ERR_SUCCESS)
         return ;
-    if (buffer_value.initialize(source_value) != FT_ERR_SUCCESS)
+    if (g_stringbuf_abort_buffer_value.initialize(g_stringbuf_abort_source_value)
+        != FT_ERR_SUCCESS)
         return ;
-    (void)buffer_value.initialize(source_value);
+    (void)g_stringbuf_abort_buffer_value.initialize(g_stringbuf_abort_source_value);
     return ;
 }
 
@@ -175,6 +175,24 @@ FT_TEST(test_data_buffer_destroy_tolerates_destroyed_instance)
     return (1);
 }
 
+FT_TEST(test_data_buffer_string_round_trip_preserves_instance_error_success)
+{
+    DataBuffer buffer_value;
+    ft_string write_value;
+    ft_string read_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, write_value.initialize("payload"));
+    buffer_value << write_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.get_error());
+    buffer_value >> read_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, read_value.get_error());
+    FT_ASSERT(read_value == "payload");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
+    return (1);
+}
+
 
 FT_TEST(test_ft_stringbuf_initialize_destroy_cycle)
 {
@@ -192,6 +210,8 @@ FT_TEST(test_ft_stringbuf_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         stringbuf_initialize_twice_aborts));
+    (void)g_stringbuf_abort_buffer_value.destroy();
+    (void)g_stringbuf_abort_source_value.destroy();
     return (1);
 }
 

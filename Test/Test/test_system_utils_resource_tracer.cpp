@@ -41,6 +41,7 @@ FT_TEST(test_su_resource_tracer_runs_with_reason)
     if (!(g_su_tracer_reason == "unit test reason"))
         return (0);
     su_clear_resource_tracers();
+    (void)g_su_tracer_reason.destroy();
     return (1);
 }
 
@@ -52,6 +53,7 @@ FT_TEST(test_su_register_resource_tracer_detects_duplicates)
     if (su_register_resource_tracer(&su_test_tracer) != -1)
         return (0);
     su_clear_resource_tracers();
+    (void)g_su_tracer_reason.destroy();
     return (1);
 }
 
@@ -60,6 +62,7 @@ FT_TEST(test_su_unregister_resource_tracer_reports_missing)
     su_clear_resource_tracers();
     if (su_unregister_resource_tracer(&su_test_tracer) != -1)
         return (0);
+    (void)g_su_tracer_reason.destroy();
     return (1);
 }
 
@@ -76,5 +79,6 @@ FT_TEST(test_su_unregister_resource_tracer_succeeds)
     if (g_su_tracer_invocations != 0)
         return (0);
     su_clear_resource_tracers();
+    (void)g_su_tracer_reason.destroy();
     return (1);
 }

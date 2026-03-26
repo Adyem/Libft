@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstring>
 #include <limits>
 #include "cma_internal.hpp"
@@ -31,6 +32,10 @@ void cma_debug_initialize_block(Block *block)
 {
     if (!block)
         return ;
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    block->leak_stack_frame_count = 0;
+#endif
     block->debug_base_pointer = block->payload;
     block->debug_user_size = 0;
     return ;
@@ -167,4 +172,232 @@ ft_size_t cma_debug_user_size(const Block *block)
     return (block->debug_user_size);
 }
 
+#endif
+
+#ifdef LIBFT_TEST_BUILD
+void    cma_capture_leak_stack(Block *block, ft_size_t skip_count)
+{
+    if (block == ft_nullptr)
+        return ;
+    block->leak_stack_frame_count = cmp_stack_trace_capture(
+            block->leak_stack_frames,
+            CMP_STACK_TRACE_MAX_FRAMES,
+            skip_count);
+    return ;
+}
+
+static Block *cma_next_live_block(Block *block)
+{
+    while (block != ft_nullptr)
+    {
+        if (cma_block_is_free(block) == FT_FALSE)
+            return (block);
+        block = block->next;
+    }
+    return (ft_nullptr);
+}
+
+int32_t cma_get_leak_summary(cma_leak_summary *out_summary)
+{
+    ft_bool lock_acquired;
+    Page *page;
+    cma_leak_summary summary;
+
+    if (out_summary == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_acquired = FT_FALSE;
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    summary.live_block_count = 0;
+    summary.live_bytes = 0;
+    summary.ignored_block_count = 0;
+    summary.ignored_bytes = 0;
+    page = page_list;
+    while (page != ft_nullptr)
+    {
+        Block *block;
+
+        block = cma_next_live_block(page->blocks);
+        while (block != ft_nullptr)
+        {
+            if (block->leak_ignored == FT_TRUE)
+            {
+                summary.ignored_block_count += 1;
+                summary.ignored_bytes += cma_block_user_size(block);
+            }
+            else
+            {
+                summary.live_block_count += 1;
+                summary.live_bytes += cma_block_user_size(block);
+            }
+            block = cma_next_live_block(block->next);
+        }
+        page = page->next;
+    }
+    *out_summary = summary;
+    cma_unlock_allocator(lock_acquired);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cma_get_leak_entries(cma_leak_entry *entries, ft_size_t capacity,
+    ft_size_t *entry_count)
+{
+    ft_bool lock_acquired;
+    ft_size_t leak_count;
+    ft_size_t output_index;
+    Page *page;
+
+    if (entry_count == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (entries == ft_nullptr && capacity != 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_acquired = FT_FALSE;
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    leak_count = 0;
+    page = page_list;
+    while (page != ft_nullptr)
+    {
+        Block *block;
+
+        block = cma_next_live_block(page->blocks);
+        while (block != ft_nullptr)
+        {
+            if (block->leak_ignored == FT_FALSE)
+                leak_count += 1;
+            block = cma_next_live_block(block->next);
+        }
+        page = page->next;
+    }
+    *entry_count = leak_count;
+    if (capacity < leak_count)
+    {
+        cma_unlock_allocator(lock_acquired);
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    output_index = 0;
+    page = page_list;
+    while (page != ft_nullptr)
+    {
+        Block *block;
+
+        block = cma_next_live_block(page->blocks);
+        while (block != ft_nullptr)
+        {
+            if (block->leak_ignored == FT_FALSE)
+            {
+                entries[output_index].memory_pointer = cma_block_user_pointer(block);
+                entries[output_index].size = cma_block_user_size(block);
+                output_index += 1;
+            }
+            block = cma_next_live_block(block->next);
+        }
+        page = page->next;
+    }
+    cma_unlock_allocator(lock_acquired);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cma_report_leaks(void)
+{
+    ft_bool lock_acquired;
+    Page *page;
+    cma_leak_summary summary;
+
+    lock_acquired = FT_FALSE;
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    summary.live_block_count = 0;
+    summary.live_bytes = 0;
+    summary.ignored_block_count = 0;
+    summary.ignored_bytes = 0;
+    page = page_list;
+    while (page != ft_nullptr)
+    {
+        Block *block;
+
+        block = cma_next_live_block(page->blocks);
+        while (block != ft_nullptr)
+        {
+            if (block->leak_ignored == FT_TRUE)
+            {
+                summary.ignored_block_count += 1;
+                summary.ignored_bytes += cma_block_user_size(block);
+            }
+            else
+            {
+                summary.live_block_count += 1;
+                summary.live_bytes += cma_block_user_size(block);
+            }
+            block = cma_next_live_block(block->next);
+        }
+        page = page->next;
+    }
+    std::printf("[cma] leak summary: live_blocks=%zu live_bytes=%zu ignored_blocks=%zu ignored_bytes=%zu\n",
+        summary.live_block_count, summary.live_bytes,
+        summary.ignored_block_count, summary.ignored_bytes);
+    page = page_list;
+    while (page != ft_nullptr)
+    {
+        Block *block;
+
+        block = cma_next_live_block(page->blocks);
+        while (block != ft_nullptr)
+        {
+            if (block->leak_ignored == FT_FALSE)
+            {
+                std::printf("  [leak] pointer=%p size=%zu\n",
+                    cma_block_user_pointer(block), cma_block_user_size(block));
+                cmp_stack_trace_print(stdout, block->leak_stack_frames,
+                    block->leak_stack_frame_count);
+            }
+            block = cma_next_live_block(block->next);
+        }
+        page = page->next;
+    }
+    cma_unlock_allocator(lock_acquired);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cma_untrack_leak(void *memory_pointer)
+{
+    ft_bool lock_acquired;
+    Block *block;
+
+    if (memory_pointer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_acquired = FT_FALSE;
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    block = cma_find_block_for_pointer(memory_pointer);
+    if (block == ft_nullptr || cma_block_is_free(block) == FT_TRUE)
+    {
+        cma_unlock_allocator(lock_acquired);
+        return (FT_ERR_INVALID_HANDLE);
+    }
+    block->leak_ignored = FT_TRUE;
+    cma_unlock_allocator(lock_acquired);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cma_track_leak(void *memory_pointer)
+{
+    ft_bool lock_acquired;
+    Block *block;
+
+    if (memory_pointer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_acquired = FT_FALSE;
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    block = cma_find_block_for_pointer(memory_pointer);
+    if (block == ft_nullptr || cma_block_is_free(block) == FT_TRUE)
+    {
+        cma_unlock_allocator(lock_acquired);
+        return (FT_ERR_INVALID_HANDLE);
+    }
+    block->leak_ignored = FT_FALSE;
+    cma_unlock_allocator(lock_acquired);
+    return (FT_ERR_SUCCESS);
+}
 #endif

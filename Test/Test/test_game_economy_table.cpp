@@ -8,55 +8,41 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static game_price_definition g_uninitialised_table_register_definition;
+static game_price_definition g_uninitialised_table_fetch_definition;
+
 static int expect_sigabrt_on_uninitialised_table(void (*operation)(game_economy_table &))
 {
-    return (test_expect_sigabrt_signal_uninitialised<game_economy_table>(
-        operation));
+    int result;
+
+    result = test_expect_sigabrt_signal_uninitialised<game_economy_table>(
+        operation);
+    (void)g_uninitialised_table_register_definition.destroy();
+    (void)g_uninitialised_table_fetch_definition.destroy();
+    return (result);
 }
 
 static void uninitialised_table_register_price_operation(game_economy_table &table)
 {
-    void *storage;
-    game_price_definition *definition;
     int result;
 
-    storage = std::malloc(sizeof(game_price_definition));
-    if (storage == ft_nullptr)
-        return ;
-    definition = new (storage) game_price_definition();
-    result = definition->initialize(10, 3, 500, 300, 800);
+    (void)g_uninitialised_table_register_definition.destroy();
+    result = g_uninitialised_table_register_definition.initialize(10, 3, 500, 300, 800);
     if (result != FT_ERR_SUCCESS)
-    {
-        definition->~game_price_definition();
-        std::free(storage);
         return ;
-    }
-    (void)table.register_price_definition(*definition);
-    definition->~game_price_definition();
-    std::free(storage);
+    (void)table.register_price_definition(g_uninitialised_table_register_definition);
     return ;
 }
 
 static void uninitialised_table_fetch_price_operation(game_economy_table &table)
 {
-    void *storage;
-    game_price_definition *fetched;
     int result;
 
-    storage = std::malloc(sizeof(game_price_definition));
-    if (storage == ft_nullptr)
-        return ;
-    fetched = new (storage) game_price_definition();
-    result = fetched->initialize();
+    (void)g_uninitialised_table_fetch_definition.destroy();
+    result = g_uninitialised_table_fetch_definition.initialize();
     if (result != FT_ERR_SUCCESS)
-    {
-        fetched->~game_price_definition();
-        std::free(storage);
         return ;
-    }
-    (void)table.fetch_price_definition(10, *fetched);
-    fetched->~game_price_definition();
-    std::free(storage);
+    (void)table.fetch_price_definition(10, g_uninitialised_table_fetch_definition);
     return ;
 }
 

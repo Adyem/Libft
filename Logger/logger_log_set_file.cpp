@@ -10,8 +10,10 @@
 int32_t ft_file_sink(const char *message, void *user_data)
 {
     s_file_sink *sink;
-    ft_size_t       length;
-    ft_bool         lock_acquired;
+    ft_size_t length;
+    ft_size_t total_written;
+    ft_bool lock_acquired;
+    int64_t write_result;
 
     sink = static_cast<s_file_sink *>(user_data);
     if (!sink)
@@ -20,11 +22,18 @@ int32_t ft_file_sink(const char *message, void *user_data)
     if (file_sink_lock(sink, &lock_acquired) != 0)
         return (FT_ERR_INTERNAL);
     length = ft_strlen(message);
-    if (su_write(sink->file_descriptor, message, length) < 0)
+    total_written = 0;
+    while (total_written < length)
     {
-        if (lock_acquired)
-            file_sink_unlock(sink, lock_acquired);
-        return (FT_ERR_IO);
+        write_result = su_write(sink->file_descriptor, message + total_written,
+                length - total_written);
+        if (write_result <= 0)
+        {
+            if (lock_acquired)
+                file_sink_unlock(sink, lock_acquired);
+            return (FT_ERR_IO);
+        }
+        total_written += static_cast<ft_size_t>(write_result);
     }
     if (lock_acquired)
         file_sink_unlock(sink, lock_acquired);

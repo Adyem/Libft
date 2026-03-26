@@ -149,10 +149,8 @@ FT_TEST(test_game_event_scheduler_processes_ready_events)
     scheduler.update_events(world, 1);
     scheduler.dump_events(remaining);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
-    FT_ASSERT_EQ((size_t)1, remaining.size());
-    FT_ASSERT_EQ(21, remaining[0]->get_id());
-    FT_ASSERT_EQ(0, remaining[0]->get_duration());
-    FT_ASSERT_EQ(0, callback_runs);
+    FT_ASSERT_EQ((size_t)0, remaining.size());
+    FT_ASSERT_EQ(1, callback_runs);
     return (1);
 }
 
@@ -174,7 +172,9 @@ FT_TEST(test_game_event_scheduler_reschedules_remaining_events)
     scheduler.update_events(world, 1);
     scheduler.dump_events(pending);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
-    FT_ASSERT_EQ((size_t)0, pending.size());
+    FT_ASSERT_EQ((size_t)1, pending.size());
+    FT_ASSERT_EQ(22, pending[0]->get_id());
+    FT_ASSERT_EQ(2, pending[0]->get_duration());
     return (1);
 }
 
@@ -195,7 +195,7 @@ FT_TEST(test_game_event_scheduler_rejects_null_world)
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, scheduler.get_error());
     scheduler.dump_events(queued);
     FT_ASSERT_EQ((size_t)1, scheduler.size());
-    FT_ASSERT_EQ((size_t)0, queued.size());
+    FT_ASSERT_EQ((size_t)1, queued.size());
     return (1);
 }
 

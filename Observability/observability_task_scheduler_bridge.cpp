@@ -1,4 +1,5 @@
 #include "observability_task_scheduler_bridge.hpp"
+#include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Template/unordered_map.hpp"
 #include "../PThread/mutex.hpp"
@@ -23,6 +24,24 @@ static ft_bool g_observability_bridge_initialised = FT_FALSE;
 static ft_otel_span_exporter g_observability_bridge_exporter = ft_nullptr;
 static ft_unordered_map<uint64_t, ft_otel_span_state> g_observability_span_states;
 
+#ifdef LIBFT_TEST_BUILD
+static void observability_task_scheduler_bridge_untrack_runtime_leaks(void)
+{
+    if (g_observability_bridge_mutex._native_mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_observability_bridge_mutex._native_mutex);
+    if (g_observability_span_states.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_observability_span_states._data != ft_nullptr)
+        (void)cma_untrack_leak(g_observability_span_states._data);
+    if (g_observability_span_states.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_observability_span_states._occupied != ft_nullptr)
+        (void)cma_untrack_leak(g_observability_span_states._occupied);
+    if (g_observability_span_states.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_observability_span_states._mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_observability_span_states._mutex);
+    return ;
+}
+#endif
+
 static void observability_task_scheduler_bridge_initialize_once(void)
 {
     int32_t initialize_error;
@@ -39,6 +58,9 @@ static void observability_task_scheduler_bridge_initialize_once(void)
         g_observability_bridge_once_error = initialize_error;
         return ;
     }
+#ifdef LIBFT_TEST_BUILD
+    observability_task_scheduler_bridge_untrack_runtime_leaks();
+#endif
     g_observability_bridge_once_error = FT_ERR_SUCCESS;
     return ;
 }
@@ -133,6 +155,9 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
                 (void)g_observability_bridge_mutex.unlock();
                 return ;
             }
+#ifdef LIBFT_TEST_BUILD
+            observability_task_scheduler_bridge_untrack_runtime_leaks();
+#endif
             ft_unordered_map<uint64_t, ft_otel_span_state>::iterator
                 inserted_iterator(g_observability_span_states.find(event.trace_id));
             if (g_observability_span_states.get_error() != FT_ERR_SUCCESS

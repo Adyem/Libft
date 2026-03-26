@@ -1,5 +1,6 @@
 #include "readline_internal.hpp"
 #include <new>
+#include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
@@ -37,6 +38,11 @@ int32_t rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimens
         return (mutex_error);
     }
     dimensions->mutex = mutex_pointer;
+#ifdef LIBFT_TEST_BUILD
+    (void)cma_untrack_leak(dimensions->mutex);
+    if (dimensions->mutex->_native_mutex != ft_nullptr)
+        (void)cma_untrack_leak(dimensions->mutex->_native_mutex);
+#endif
     return (FT_ERR_SUCCESS);
 }
 

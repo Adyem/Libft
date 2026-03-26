@@ -102,7 +102,9 @@ void    scma_compact(void)
     scma_block_span span;
     unsigned char *heap_data;
     ft_size_t new_offset;
-    ft_size_t index;
+    ft_size_t processed_count;
+    ft_size_t last_source_offset;
+    int32_t has_last_source_offset;
 
     if (!scma_initialised_ref())
     {
@@ -116,24 +118,50 @@ void    scma_compact(void)
     }
     heap_data = scma_get_heap_data();
     new_offset = 0;
-    index = 0;
-    while (index < span.count)
+    processed_count = 0;
+    last_source_offset = 0;
+    has_last_source_offset = 0;
+    while (processed_count < span.count)
     {
         scma_block *block;
+        ft_size_t index;
+        int32_t found_block;
 
-        block = &span.data[index];
-        if (block->in_use)
+        block = ft_nullptr;
+        index = 0;
+        found_block = 0;
+        while (index < span.count)
         {
-            if (block->offset != new_offset)
+            scma_block *candidate;
+
+            candidate = &span.data[index];
+            if (candidate->in_use)
             {
-                std::memmove(heap_data + new_offset,
-                    heap_data + block->offset,
-                    block->size);
-                block->offset = new_offset;
+                if (has_last_source_offset == 0
+                    || candidate->offset > last_source_offset)
+                {
+                    if (found_block == 0 || candidate->offset < block->offset)
+                    {
+                        block = candidate;
+                        found_block = 1;
+                    }
+                }
             }
-            new_offset += block->size;
+            index++;
         }
-        index++;
+        if (found_block == 0)
+            break ;
+        last_source_offset = block->offset;
+        has_last_source_offset = 1;
+        if (block->offset != new_offset)
+        {
+            std::memmove(heap_data + new_offset,
+                heap_data + block->offset,
+                block->size);
+            block->offset = new_offset;
+        }
+        new_offset += block->size;
+        processed_count += 1;
     }
     scma_used_size_ref() = new_offset;
     return ;

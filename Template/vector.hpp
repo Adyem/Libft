@@ -613,7 +613,7 @@ int32_t ft_vector<ElementType>::push_back(const ElementType &value)
     if (this->construct_element_unlocked(&this->_data[this->_size], value)
         != FT_ERR_SUCCESS)
     {
-        reserve_error = ft_vector<ElementType>::get_error();
+        reserve_error = ft_vector<ElementType>::_last_error;
         this->unlock_internal(lock_acquired);
         ft_vector<ElementType>::set_error(reserve_error);
         return (reserve_error);
@@ -657,7 +657,7 @@ int32_t ft_vector<ElementType>::push_back(ElementType &&value)
     if (this->construct_element_unlocked(&this->_data[this->_size], ft_move(value))
         != FT_ERR_SUCCESS)
     {
-        reserve_error = ft_vector<ElementType>::get_error();
+        reserve_error = ft_vector<ElementType>::_last_error;
         this->unlock_internal(lock_acquired);
         ft_vector<ElementType>::set_error(reserve_error);
         return (reserve_error);
@@ -695,7 +695,6 @@ void ft_vector<ElementType>::pop_back()
 template <typename ElementType>
 ElementType& ft_vector<ElementType>::operator[](ft_size_t index)
 {
-    static ElementType default_instance = ElementType();
     ft_bool lock_acquired;
     ElementType       *ref_pointer;
     int32_t lock_error;
@@ -704,11 +703,15 @@ ElementType& ft_vector<ElementType>::operator[](ft_size_t index)
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
+        static ElementType default_instance = ElementType();
+
         ft_vector<ElementType>::set_error(lock_error);
         return (default_instance);
     }
     if (index >= this->_size)
     {
+        static ElementType default_instance = ElementType();
+
         this->unlock_internal(lock_acquired);
         ft_vector<ElementType>::set_error(FT_ERR_OUT_OF_RANGE);
         return (default_instance);
@@ -722,7 +725,6 @@ ElementType& ft_vector<ElementType>::operator[](ft_size_t index)
 template <typename ElementType>
 const ElementType& ft_vector<ElementType>::operator[](ft_size_t index) const
 {
-    static ElementType default_instance = ElementType();
     ft_bool lock_acquired;
     const ElementType *ref_pointer;
     int32_t lock_error;
@@ -731,11 +733,15 @@ const ElementType& ft_vector<ElementType>::operator[](ft_size_t index) const
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
+        static ElementType default_instance = ElementType();
+
         ft_vector<ElementType>::set_error(lock_error);
         return (default_instance);
     }
     if (index >= this->_size)
     {
+        static ElementType default_instance = ElementType();
+
         this->unlock_internal(lock_acquired);
         ft_vector<ElementType>::set_error(FT_ERR_OUT_OF_RANGE);
         return (default_instance);
@@ -832,7 +838,7 @@ void ft_vector<ElementType>::resize(ft_size_t new_size, const ElementType& value
                     ::destroy_at(&this->_data[index]);
                 }
                 this->unlock_internal(lock_acquired);
-                ft_vector<ElementType>::set_error(ft_vector<ElementType>::get_error());
+                ft_vector<ElementType>::set_error(ft_vector<ElementType>::_last_error);
                 return ;
             }
             ++index;
@@ -894,7 +900,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
                 this->_data[move_index - 1]) != FT_ERR_SUCCESS)
         {
             this->unlock_internal(lock_acquired);
-            ft_vector<ElementType>::set_error(ft_vector<ElementType>::get_error());
+            ft_vector<ElementType>::set_error(ft_vector<ElementType>::_last_error);
             return (this->_data + this->_size);
         }
         ::destroy_at(&this->_data[move_index - 1]);
@@ -904,7 +910,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
         != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
-        ft_vector<ElementType>::set_error(ft_vector<ElementType>::get_error());
+        ft_vector<ElementType>::set_error(ft_vector<ElementType>::_last_error);
         return (this->_data + this->_size);
     }
     this->_size += 1;
@@ -947,7 +953,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
                 ft_move(this->_data[shift_index + 1])) != FT_ERR_SUCCESS)
         {
             this->unlock_internal(lock_acquired);
-            ft_vector<ElementType>::set_error(ft_vector<ElementType>::get_error());
+            ft_vector<ElementType>::set_error(ft_vector<ElementType>::_last_error);
             return (this->_data + this->_size);
         }
         ::destroy_at(&this->_data[shift_index + 1]);

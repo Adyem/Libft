@@ -8,8 +8,7 @@
 
 FT_TEST(test_rng_stream_seed_rejects_null_output)
 {
-    if (rng_stream_seed(42, 7, ft_nullptr) != -1)
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, rng_stream_seed(42, 7, ft_nullptr));
     return (1);
 }
 
@@ -66,7 +65,7 @@ FT_TEST(test_rng_stream_seed_from_string_matches_manual_seed)
 FT_TEST(test_rng_stream_seed_sequence_from_string_rejects_null)
 {
     uint32_t buffer[2];
-    if (rng_stream_seed_sequence_from_string(ft_nullptr, 3, buffer, 2) != -1)
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+        rng_stream_seed_sequence_from_string(ft_nullptr, 3, buffer, 2));
     return (1);
 }

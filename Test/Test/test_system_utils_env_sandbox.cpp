@@ -11,8 +11,7 @@
 
 FT_TEST(test_su_environment_snapshot_capture_rejects_null)
 {
-    if (su_environment_snapshot_capture(ft_nullptr) != -1)
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, su_environment_snapshot_capture(ft_nullptr));
     return (1);
 }
 

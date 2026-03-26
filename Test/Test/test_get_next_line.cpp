@@ -298,6 +298,7 @@ FT_TEST(test_get_next_line_late_allocation_failure_releases_memory_after_cleanup
     bytes_after_cleanup = gnl_current_allocated_bytes();
     FT_ASSERT(bytes_after_cleanup >= baseline_bytes);
     FT_ASSERT(bytes_after_cleanup <= bytes_after_failure);
+    gnl_reset_all_streams();
     return (1);
 }
 
@@ -337,6 +338,7 @@ FT_TEST(test_get_next_line_late_leftover_hook_failure_releases_memory_after_clea
     bytes_after_cleanup = gnl_current_allocated_bytes();
     FT_ASSERT(bytes_after_cleanup >= baseline_bytes);
     FT_ASSERT(bytes_after_cleanup <= bytes_after_failure);
+    gnl_reset_all_streams();
     return (1);
 }
 

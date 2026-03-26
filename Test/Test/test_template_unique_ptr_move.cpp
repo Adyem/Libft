@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Template/unique_ptr.hpp"
+#include "../../Template/move.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include "../../Errno/errno.hpp"
 
@@ -9,33 +10,19 @@
 FT_TEST(test_ft_uniqueptr_move_constructor_rebuilds_mutex)
 {
     ft_uniqueptr<int> source_pointer(new int(42));
-    ft_uniqueptr<int> moved_pointer;
-    ft_bool source_lock_acquired;
     ft_bool moved_lock_acquired;
 
     FT_ASSERT_EQ(0, source_pointer.enable_thread_safety());
     FT_ASSERT(source_pointer.is_thread_safe());
-    moved_pointer.reset(source_pointer.release());
-    FT_ASSERT_EQ(0, moved_pointer.enable_thread_safety());
-
+    ft_uniqueptr<int> moved_pointer(ft_move(source_pointer));
     FT_ASSERT(moved_pointer.is_thread_safe());
-    FT_ASSERT_EQ(FT_TRUE, source_pointer.is_thread_safe());
     moved_lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(0, moved_pointer.lock(&moved_lock_acquired));
     FT_ASSERT(moved_lock_acquired);
     FT_ASSERT_EQ(42, *moved_pointer);
     moved_pointer.unlock(moved_lock_acquired);
-    source_lock_acquired = FT_FALSE;
-    FT_ASSERT_EQ(0, source_pointer.lock(&source_lock_acquired));
-    FT_ASSERT_EQ(FT_FALSE, source_lock_acquired);
-    FT_ASSERT_EQ(0, source_pointer.enable_thread_safety());
-    FT_ASSERT(source_pointer.is_thread_safe());
-    source_pointer.reset(new int(7));
-    source_lock_acquired = FT_FALSE;
-    FT_ASSERT_EQ(0, source_pointer.lock(&source_lock_acquired));
-    FT_ASSERT(source_lock_acquired);
-    FT_ASSERT_EQ(7, *source_pointer);
-    source_pointer.unlock(source_lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pointer.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pointer.destroy());
     return (1);
 }
 

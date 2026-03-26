@@ -458,11 +458,9 @@ int32_t ft_future<ValueType>::initialize(ft_future<ValueType> &&other)
     this->_shared_promise = other._shared_promise;
     this->_promise = transferred_promise;
     transferred_mutex = other._mutex;
-    this->_mutex = transferred_mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._promise = ft_nullptr;
     other._shared_promise = ft_sharedptr<ft_promise<ValueType> >();
-    other._mutex = ft_nullptr;
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
     if (second_lock_target == this)
         this->unlock_internal(this_lock_acquired);
@@ -472,6 +470,8 @@ int32_t ft_future<ValueType>::initialize(ft_future<ValueType> &&other)
         this->unlock_internal(this_lock_acquired);
     else
         other.unlock_internal(other_lock_acquired);
+    this->_mutex = transferred_mutex;
+    other._mutex = ft_nullptr;
     return (FT_ERR_SUCCESS);
 }
 
@@ -924,6 +924,8 @@ inline int32_t ft_future<void>::initialize(ft_future<void> &&other)
         this->unlock_internal(this_lock_acquired);
     else
         other.unlock_internal(other_lock_acquired);
+    this->_mutex = other._mutex;
+    other._mutex = ft_nullptr;
     return (FT_ERR_SUCCESS);
 }
 

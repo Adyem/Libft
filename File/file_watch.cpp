@@ -283,7 +283,7 @@ ft_bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int32_t
     *callback = this->_callback;
     user_data = this->_user_data;
     path_snapshot = this->_path;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (path_snapshot.get_error() != FT_ERR_SUCCESS)
         path_snapshot.clear();
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (FT_TRUE);

@@ -160,10 +160,15 @@ int32_t DataBuffer::read_value(ValueType &value) noexcept
         return (FT_ERR_NO_MEMORY);
     ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, length);
     this->_read_pos += length;
-    ft_string string_value(bytes);
+    ft_string string_value;
+    int32_t string_initialize_error;
+
+    string_initialize_error = string_value.initialize(bytes);
     cma_free(bytes);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (string_initialize_error != FT_ERR_SUCCESS)
+        return (string_initialize_error);
+    if (string_value.get_error() != FT_ERR_SUCCESS)
+        return (string_value.get_error());
     ft_istringstream input_stream;
     uint32_t input_stream_initialize_error = input_stream.initialize(string_value);
     if (input_stream_initialize_error != FT_ERR_SUCCESS)

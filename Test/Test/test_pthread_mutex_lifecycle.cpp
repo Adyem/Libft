@@ -7,6 +7,8 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static pt_mutex g_pt_mutex_abort_object;
+
 static int pt_mutex_expect_sigabrt(void (*operation)())
 {
     return (test_expect_sigabrt_signal(operation));
@@ -14,10 +16,8 @@ static int pt_mutex_expect_sigabrt(void (*operation)())
 
 static void pt_mutex_initialize_twice_aborts_operation()
 {
-    pt_mutex mutex_object;
-
-    (void)mutex_object.initialize();
-    (void)mutex_object.initialize();
+    (void)g_pt_mutex_abort_object.initialize();
+    (void)g_pt_mutex_abort_object.initialize();
     return ;
 }
 
@@ -84,6 +84,7 @@ FT_TEST(test_pt_mutex_destroy_busy_then_unlock)
 FT_TEST(test_pt_mutex_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_initialize_twice_aborts_operation));
+    (void)g_pt_mutex_abort_object.destroy();
     return (1);
 }
 

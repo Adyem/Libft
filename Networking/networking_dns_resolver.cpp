@@ -7,6 +7,7 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../Basic/basic.hpp"
+#include "../CMA/CMA.hpp"
 #include "../Time/time.hpp"
 #include <climits>
 #include <cstdio>
@@ -103,6 +104,18 @@ static ft_map<ft_string, networking_dns_cache_entry>   g_networking_dns_cache;
 static pt_mutex                                        *g_networking_dns_cache_mutex = ft_nullptr;
 static const int64_t                                      g_networking_dns_cache_ttl_ms = 60000;
 
+#ifdef LIBFT_TEST_BUILD
+static void networking_dns_untrack_runtime_leaks(void) noexcept
+{
+    if (g_networking_dns_cache.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_networking_dns_cache._data != ft_nullptr)
+        (void)cma_untrack_leak(g_networking_dns_cache._data);
+    if (g_networking_dns_cache_mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_networking_dns_cache_mutex);
+    return ;
+}
+#endif
+
 static void networking_push_failure(int32_t error_code) noexcept
 {
     (void)(error_code);
@@ -139,6 +152,9 @@ static int32_t networking_dns_cache_ensure_initialised(void) noexcept
     initialise_error = g_networking_dns_cache.initialize();
     if (initialise_error != FT_ERR_SUCCESS)
         return (initialise_error);
+#ifdef LIBFT_TEST_BUILD
+    networking_dns_untrack_runtime_leaks();
+#endif
     return (FT_ERR_SUCCESS);
 }
 
@@ -159,6 +175,9 @@ int32_t networking_dns_enable_thread_safety(void) noexcept
         return (initialise_error);
     }
     g_networking_dns_cache_mutex = new_mutex;
+#ifdef LIBFT_TEST_BUILD
+    networking_dns_untrack_runtime_leaks();
+#endif
     return (FT_ERR_SUCCESS);
 }
 
@@ -501,6 +520,9 @@ ft_bool networking_dns_resolve(const char *host, const char *service,
             {
                 g_networking_dns_cache.remove(cache_key);
                 g_networking_dns_cache.insert(cache_key, cache_value);
+#ifdef LIBFT_TEST_BUILD
+                networking_dns_untrack_runtime_leaks();
+#endif
                 int32_t update_unlock_error = networking_dns_cache_unlock(update_lock_acquired);
 
                 if (update_unlock_error != FT_ERR_SUCCESS)

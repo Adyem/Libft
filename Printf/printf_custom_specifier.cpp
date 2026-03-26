@@ -109,6 +109,7 @@ int32_t pf_try_format_custom_specifier(char specifier, va_list *argument_list, f
     int32_t                   callback_error;
     int32_t                   lock_error;
     int32_t               initialization_error;
+    int32_t               clear_error;
 
     if (handled == ft_nullptr)
     {
@@ -131,18 +132,12 @@ int32_t pf_try_format_custom_specifier(char specifier, va_list *argument_list, f
     (void)pt_recursive_mutex_unlock_if_not_null(g_pf_custom_specifiers_mutex);
     if (handler == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    output.clear();
-    int32_t string_error = ft_string::get_error();
-    if (string_error != FT_ERR_SUCCESS)
-        return (string_error);
+    clear_error = output.clear();
+    if (clear_error != FT_ERR_SUCCESS)
+        return (clear_error);
     *handled = FT_TRUE;
     callback_error = handler(argument_list, output, context);
     if (callback_error != FT_ERR_SUCCESS)
-    {
         return (callback_error);
-    }
-    string_error = ft_string::get_error();
-    if (string_error != FT_ERR_SUCCESS)
-        return (string_error);
     return (FT_ERR_SUCCESS);
 }

@@ -23,7 +23,7 @@ static void task_scheduler_trace_test_sink(const ft_task_trace_event &event)
 static void task_scheduler_trace_clear_events(void)
 {
     std::lock_guard<std::mutex> guard(g_trace_mutex);
-    g_recorded_events.clear();
+    std::vector<ft_task_trace_event>().swap(g_recorded_events);
     return ;
 }
 
@@ -105,6 +105,7 @@ FT_TEST(test_task_scheduler_tracing_submit)
     FT_ASSERT_EQ(FT_TASK_TRACE_PHASE_STARTED, phases[3]);
     FT_ASSERT_EQ(FT_TASK_TRACE_PHASE_FINISHED, phases[4]);
     FT_ASSERT_EQ(0, task_scheduler_unregister_trace_sink(&task_scheduler_trace_test_sink));
+    task_scheduler_trace_clear_events();
     return (1);
 }
 
@@ -180,5 +181,6 @@ FT_TEST(test_task_scheduler_tracing_schedule_after)
         index += 1;
     }
     FT_ASSERT_EQ(0, task_scheduler_unregister_trace_sink(&task_scheduler_trace_test_sink));
+    task_scheduler_trace_clear_events();
     return (1);
 }

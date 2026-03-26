@@ -90,7 +90,7 @@ int32_t su_unregister_resource_tracer(t_su_resource_tracer tracer)
 void su_clear_resource_tracers(void)
 {
     g_su_resource_tracers_mutex.lock();
-    g_su_resource_tracers.clear();
+    t_tracer_vector().swap(g_su_resource_tracers);
     g_su_resource_tracers_mutex.unlock();
     return ;
 }

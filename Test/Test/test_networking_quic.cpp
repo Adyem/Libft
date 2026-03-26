@@ -263,6 +263,7 @@ FT_TEST(test_networking_quic_configure_requires_feature)
 FT_TEST(test_networking_quic_encrypt_roundtrip)
 {
     quic_test_tls_pair pair;
+    int32_t cleanup_error;
 
     FT_ASSERT(quic_test_setup_tls_pair(pair));
     FT_ASSERT(networking_quic_enable_experimental());
@@ -309,6 +310,14 @@ FT_TEST(test_networking_quic_encrypt_roundtrip)
     FT_ASSERT(client_session.get_feature_configuration(echoed_configuration));
     FT_ASSERT(echoed_configuration.enable_datagram_pacing);
     FT_ASSERT(!echoed_configuration.enable_loss_recovery);
+    cleanup_error = decrypted_payload.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cleanup_error);
+    cleanup_error = ciphertext.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cleanup_error);
+    cleanup_error = server_session.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cleanup_error);
+    cleanup_error = client_session.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cleanup_error);
     quic_test_teardown_tls_pair(pair);
     FT_ASSERT(networking_quic_disable_experimental());
     return (1);

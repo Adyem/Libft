@@ -496,6 +496,8 @@ int test_time_format_iso8601_epoch(void)
     ft_string formatted;
 
     formatted = time_format_iso8601(0);
+    if (formatted.get_error() != FT_ERR_SUCCESS)
+        return (0);
     return (std::strcmp(formatted.c_str(), "1970-01-01T00:00:00Z") == 0);
 }
 
@@ -504,5 +506,7 @@ int test_time_format_iso8601_20210101(void)
     ft_string formatted;
 
     formatted = time_format_iso8601(1609459200);
+    if (formatted.get_error() != FT_ERR_SUCCESS)
+        return (0);
     return (std::strcmp(formatted.c_str(), "2021-01-01T00:00:00Z") == 0);
 }

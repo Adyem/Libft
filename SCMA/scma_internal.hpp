@@ -2,6 +2,7 @@
 # define SCMA_INTERNAL_HPP
 
 #include <cstddef>
+#include "../Compatebility/compatebility_stack_trace.hpp"
 #include "SCMA.hpp"
 
 struct scma_block
@@ -10,6 +11,11 @@ struct scma_block
     ft_size_t    size;
     int32_t          in_use;
     ft_size_t    generation;
+#ifdef LIBFT_TEST_BUILD
+    ft_bool leak_ignored;
+    ft_size_t leak_stack_frame_count;
+    void *leak_stack_frames[CMP_STACK_TRACE_MAX_FRAMES];
+#endif
 };
 
 struct scma_block_span
@@ -42,5 +48,8 @@ scma_handle    scma_unlock_and_return_handle(scma_handle value);
 void    *scma_unlock_and_return_pointer(void *value);
 void    scma_unlock_and_return_void(void);
 
+#ifdef LIBFT_TEST_BUILD
+void    scma_capture_leak_stack(scma_block *block, ft_size_t skip_count);
+#endif
 
 #endif

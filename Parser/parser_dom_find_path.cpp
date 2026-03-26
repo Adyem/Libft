@@ -52,10 +52,10 @@ int32_t ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const f
             if (segment_initialize_error != FT_ERR_SUCCESS)
                 return (segment_initialize_error);
             segment.assign(raw_path + start_index, segment_length);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (segment.get_error() != FT_ERR_SUCCESS)
             {
                 status = -1;
-                error_code = ft_string::get_error();
+                error_code = segment.get_error();
             }
             else
             {

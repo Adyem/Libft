@@ -141,7 +141,7 @@ int32_t su_health_unregister_check(const char *name)
 void su_health_clear_checks(void)
 {
     g_su_health_checks_mutex.lock();
-    g_su_health_checks.clear();
+    std::vector<s_su_health_check_entry>().swap(g_su_health_checks);
     g_su_health_checks_mutex.unlock();
     return ;
 }

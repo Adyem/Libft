@@ -32,20 +32,23 @@ FT_TEST(test_template_pool_thread_safety_controls)
 FT_TEST(test_template_pool_thread_safety_object_lock_unlock)
 {
     Pool<int32_t> pool;
-    Pool<int32_t>::Object object;
     ft_bool lock_acquired;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pool.initialize());
     pool.resize(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pool.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pool.enable_thread_safety());
+    {
+        Pool<int32_t>::Object object;
 
-    object = pool.acquire(42);
-    FT_ASSERT_EQ(FT_TRUE, static_cast<ft_bool>(object));
+        object = pool.acquire(42);
+        FT_ASSERT_EQ(FT_TRUE, static_cast<ft_bool>(object));
 
-    lock_acquired = FT_FALSE;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, object.lock(&lock_acquired));
-    FT_ASSERT_EQ(FT_TRUE, lock_acquired);
-    object.unlock(lock_acquired);
+        lock_acquired = FT_FALSE;
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, object.lock(&lock_acquired));
+        FT_ASSERT_EQ(FT_TRUE, lock_acquired);
+        object.unlock(lock_acquired);
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pool.destroy());
     return (1);
 }

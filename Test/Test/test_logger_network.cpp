@@ -47,7 +47,10 @@ static ssize_t mock_partial_send(int socket_fd, const void *buffer, size_t lengt
 
 static void reset_mock_network_send_state(void)
 {
+    std::string empty_string;
+
     g_mock_network_send_state.transmitted_data.clear();
+    g_mock_network_send_state.transmitted_data.swap(empty_string);
     g_mock_network_send_state.chunk_size = 0;
     g_mock_network_send_state.call_count = 0;
     g_mock_network_send_state.failure_call_index = 0;
@@ -168,6 +171,7 @@ FT_TEST(test_logger_network_sink_handles_partial_writes)
     FT_ASSERT(g_mock_network_send_state.call_count > 1);
     FT_ASSERT_EQ(expected_length, g_mock_network_send_state.transmitted_data.size());
     FT_ASSERT(g_mock_network_send_state.transmitted_data == log_message);
+    reset_mock_network_send_state();
     return (1);
 }
 
@@ -191,6 +195,7 @@ FT_TEST(test_logger_network_sink_handles_send_failure)
     FT_ASSERT(sink.send_function == ft_nullptr);
     FT_ASSERT_EQ(prefix_length, g_mock_network_send_state.transmitted_data.size());
     FT_ASSERT(g_mock_network_send_state.transmitted_data == expected_prefix);
+    reset_mock_network_send_state();
     return (1);
 }
 
@@ -215,6 +220,7 @@ FT_TEST(test_logger_network_sink_handles_zero_byte_send)
     FT_ASSERT(sink.send_function == ft_nullptr);
     FT_ASSERT(transmitted_length > 0);
     FT_ASSERT(transmitted_length < message_length);
+    reset_mock_network_send_state();
     return (1);
 }
 
@@ -275,7 +281,7 @@ FT_TEST(test_logger_remote_health_probe_records_failure)
     probe_result = ft_log_probe_remote_health();
     FT_ASSERT_EQ(-1, probe_result);
     status_count = 0;
-    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_log_get_remote_health(&status, 1, &status_count));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_log_get_remote_health(&status, 1, &status_count));
     FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
     FT_ASSERT(!status.reachable);
     FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, status.last_error);

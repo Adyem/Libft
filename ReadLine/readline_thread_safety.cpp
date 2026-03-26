@@ -1,5 +1,6 @@
 #include "readline_internal.hpp"
 #include <new>
+#include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
@@ -24,6 +25,11 @@ int32_t rl_state_prepare_thread_safety(readline_state_t *state)
         return (mutex_error);
     }
     state->mutex = mutex_pointer;
+#ifdef LIBFT_TEST_BUILD
+    (void)cma_untrack_leak(state->mutex);
+    if (state->mutex->_native_mutex != ft_nullptr)
+        (void)cma_untrack_leak(state->mutex->_native_mutex);
+#endif
     return (FT_ERR_SUCCESS);
 }
 

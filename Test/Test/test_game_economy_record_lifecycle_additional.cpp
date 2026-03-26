@@ -31,6 +31,7 @@ static int expect_sigabrt_on_uninitialised_object(void (*operation)(TypeName &))
     int jump_result;
     bool iot_handler_installed;
     int restore_error;
+    static TypeName *object_pointer = ft_nullptr;
 
     std::memset(&old_action_abort, 0, sizeof(old_action_abort));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
@@ -59,8 +60,6 @@ static int expect_sigabrt_on_uninitialised_object(void (*operation)(TypeName &))
     jump_result = sigsetjmp(g_record_lifecycle_signal_jump_buffer, 1);
     if (jump_result == 0)
     {
-        TypeName *object_pointer;
-
         object_pointer = new (std::nothrow) TypeName();
         if (object_pointer == ft_nullptr)
         {
@@ -75,6 +74,12 @@ static int expect_sigabrt_on_uninitialised_object(void (*operation)(TypeName &))
         }
         operation(*object_pointer);
         delete object_pointer;
+        object_pointer = ft_nullptr;
+    }
+    if (object_pointer != ft_nullptr)
+    {
+        delete object_pointer;
+        object_pointer = ft_nullptr;
     }
     restore_error = sigaction(SIGABRT, &old_action_abort, ft_nullptr);
     if (restore_error != 0)

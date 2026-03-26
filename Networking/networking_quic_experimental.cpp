@@ -268,11 +268,18 @@ ft_bool    quic_experimental_session::prepare_nonce(uint64_t sequence_number,
         const ft_vector<unsigned char> &base_iv,
         ft_vector<unsigned char> &out_nonce) noexcept
 {
+    ft_vector<unsigned char> sequence_bytes;
+    int32_t initialise_error;
+    ft_bool result;
+
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "quic_experimental_session::prepare_nonce");
+    result = FT_FALSE;
     if (base_iv.size() == 0)
         return (FT_FALSE);
+    initialise_error = sequence_bytes.initialize();
+    if (initialise_error != FT_ERR_SUCCESS)
+        return (FT_FALSE);
     out_nonce.resize(base_iv.size(), 0);
-    ft_vector<unsigned char> sequence_bytes;
     sequence_bytes.resize(base_iv.size(), 0);
     ft_size_t index;
 
@@ -301,7 +308,9 @@ ft_bool    quic_experimental_session::prepare_nonce(uint64_t sequence_number,
         out_nonce[index] = base_iv[index] ^ sequence_bytes[index];
         index++;
     }
-    return (FT_TRUE);
+    result = FT_TRUE;
+    (void)sequence_bytes.destroy();
+    return (result);
 }
 
 ft_bool    quic_experimental_session::configure(SSL *ssl_session,
@@ -333,8 +342,10 @@ ft_bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plain
     ft_vector<unsigned char> nonce;
     int32_t initialise_error;
     ft_size_t payload_length;
+    ft_bool result;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "quic_experimental_session::encrypt_datagram");
+    result = FT_FALSE;
     if (!this->ensure_feature_enabled())
         return (FT_FALSE);
     if (!this->ensure_configured())
@@ -352,11 +363,11 @@ ft_bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plain
     }
     payload_length = plaintext.payload_length;
     if (plaintext.payload_length > 0 && plaintext.payload == ft_nullptr)
-        return (FT_FALSE);
+        goto cleanup;
     if (plaintext.associated_data_length > 0 && plaintext.associated_data == ft_nullptr)
-        return (FT_FALSE);
+        goto cleanup;
     if (!this->prepare_nonce(this->_send_sequence, this->_send_iv, nonce))
-        return (FT_FALSE);
+        goto cleanup;
     ft_size_t ciphertext_size;
 
     ciphertext_size = payload_length + QUIC_EXPERIMENTAL_TAG_LENGTH;
@@ -372,9 +383,13 @@ ft_bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plain
             nonce.begin(), nonce.size(), plaintext.associated_data,
             plaintext.associated_data_length, plaintext.payload, payload_length,
             ciphertext_pointer, tag_pointer, QUIC_EXPERIMENTAL_TAG_LENGTH))
-        return (FT_FALSE);
+        goto cleanup;
     this->_send_sequence += 1;
-    return (FT_TRUE);
+    result = FT_TRUE;
+
+cleanup:
+    (void)nonce.destroy();
+    return (result);
 }
 
 ft_bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned char> &ciphertext,
@@ -386,8 +401,10 @@ ft_bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned 
     int32_t initialise_error;
     ft_size_t ciphertext_length;
     ft_size_t payload_length;
+    ft_bool result;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "quic_experimental_session::decrypt_datagram");
+    result = FT_FALSE;
     if (!this->ensure_feature_enabled())
         return (FT_FALSE);
     if (!this->ensure_configured())
@@ -405,11 +422,11 @@ ft_bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned 
     }
     ciphertext_length = ciphertext.size();
     if (ciphertext_length < QUIC_EXPERIMENTAL_TAG_LENGTH)
-        return (FT_FALSE);
+        goto cleanup;
     if (associated_data_length > 0 && associated_data == ft_nullptr)
-        return (FT_FALSE);
+        goto cleanup;
     if (!this->prepare_nonce(this->_receive_sequence, this->_receive_iv, nonce))
-        return (FT_FALSE);
+        goto cleanup;
     payload_length = ciphertext_length - QUIC_EXPERIMENTAL_TAG_LENGTH;
     out_plaintext.resize(payload_length, 0);
     const unsigned char *ciphertext_pointer;
@@ -421,9 +438,13 @@ ft_bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned 
             nonce.begin(), nonce.size(), associated_data, associated_data_length,
             ciphertext_pointer, payload_length, tag_pointer,
             QUIC_EXPERIMENTAL_TAG_LENGTH, out_plaintext.begin()))
-        return (FT_FALSE);
+        goto cleanup;
     this->_receive_sequence += 1;
-    return (FT_TRUE);
+    result = FT_TRUE;
+
+cleanup:
+    (void)nonce.destroy();
+    return (result);
 }
 
 ft_bool    quic_experimental_session::get_feature_configuration(quic_feature_configuration &out_configuration) const noexcept

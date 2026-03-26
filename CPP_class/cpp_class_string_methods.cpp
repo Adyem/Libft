@@ -1023,8 +1023,8 @@ ft_string_proxy::ft_string_proxy() noexcept
     initialization_error = this->_value.initialize("");
     if (initialization_error != FT_ERR_SUCCESS)
         this->_last_error = initialization_error;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        this->_last_error = ft_string::get_error();
+    if (this->_value.get_error() != FT_ERR_SUCCESS)
+        this->_last_error = this->_value.get_error();
     ft_string::set_error(this->_last_error);
     return ;
 }
@@ -1040,8 +1040,8 @@ ft_string_proxy::ft_string_proxy(int32_t error_code) noexcept
     initialization_error = this->_value.initialize("");
     if (initialization_error != FT_ERR_SUCCESS)
         this->_last_error = initialization_error;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        this->_last_error = ft_string::get_error();
+    if (this->_value.get_error() != FT_ERR_SUCCESS)
+        this->_last_error = this->_value.get_error();
     ft_string::set_error(this->_last_error);
     return ;
 }
@@ -1052,8 +1052,8 @@ ft_string_proxy::ft_string_proxy(const ft_string &value, int32_t error_code) noe
     , _last_error(error_code)
 {
     this->_error_restorer.set_error_pointer(&this->_last_error);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        this->_last_error = ft_string::get_error();
+    if (this->_value.get_error() != FT_ERR_SUCCESS)
+        this->_last_error = this->_value.get_error();
     ft_string::set_error(this->_last_error);
     return ;
 }
@@ -1064,8 +1064,8 @@ ft_string_proxy::ft_string_proxy(const ft_string_proxy &other) noexcept
     , _last_error(other._last_error)
 {
     this->_error_restorer.set_error_pointer(&this->_last_error);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        this->_last_error = ft_string::get_error();
+    if (this->_value.get_error() != FT_ERR_SUCCESS)
+        this->_last_error = this->_value.get_error();
     ft_string::set_error(this->_last_error);
     return ;
 }
@@ -1077,8 +1077,8 @@ ft_string_proxy::ft_string_proxy(ft_string_proxy &&other) noexcept
 {
     this->_error_restorer.set_error_pointer(&this->_last_error);
     other._last_error = FT_ERR_SUCCESS;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        this->_last_error = ft_string::get_error();
+    if (this->_value.get_error() != FT_ERR_SUCCESS)
+        this->_last_error = this->_value.get_error();
     ft_string::set_error(this->_last_error);
     return ;
 }

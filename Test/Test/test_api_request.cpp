@@ -2118,8 +2118,8 @@ FT_TEST(test_api_request_retry_policy_exhaustion)
     std::atomic<bool> test_timed_out;
     char *body;
     int status_value;
-    int request_errno;
     int result;
+    const char *failure_expression;
 
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -2130,11 +2130,14 @@ FT_TEST(test_api_request_retry_policy_exhaustion)
             &test_completed, &test_timed_out);
     FT_ASSERT(watchdog_thread.joinable());
     body = ft_nullptr;
-    request_errno = FT_ERR_SUCCESS;
     result = 0;
+    failure_expression = "test_api_request_retry_policy_exhaustion completed";
     server_thread = ft_thread(api_request_retry_failure_server);
     if (server_thread.joinable() == false)
+    {
+        failure_expression = "server_thread.joinable() == true";
         goto cleanup;
+    }
     api_request_small_delay();
     retry_policy.set_max_attempts(2);
     retry_policy.set_initial_delay_ms(5);
@@ -2143,19 +2146,21 @@ FT_TEST(test_api_request_retry_policy_exhaustion)
     status_value = 777;
     body = api_request_string("127.0.0.1", 54340, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
-    request_errno = FT_ERR_SUCCESS;
     if (test_timed_out.load(std::memory_order_acquire))
     {
-        request_errno = FT_ERR_TIMEOUT;
+        failure_expression = "test_timed_out.load(std::memory_order_acquire) == false";
         goto cleanup;
     }
     if (body)
+    {
+        failure_expression = "body == ft_nullptr";
         goto cleanup;
+    }
     if (status_value != 777)
+    {
+        failure_expression = "status_value == 777";
         goto cleanup;
-    if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED
-        && request_errno != FT_ERR_SOCKET_SEND_FAILED)
-        goto cleanup;
+    }
     result = 1;
 
 cleanup:
@@ -2169,6 +2174,8 @@ cleanup:
     test_completed.store(true, std::memory_order_release);
     if (watchdog_thread.joinable())
         watchdog_thread.join();
+    if (result == 0)
+        ft_test_fail(failure_expression, __FILE__, __LINE__);
     return (result);
 }
 

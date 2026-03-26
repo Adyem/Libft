@@ -5,6 +5,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_lock_tracking.hpp"
+#include "../SCMA/SCMA.hpp"
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -49,6 +50,26 @@ static void swap_test_cases(s_test_case *left, s_test_case *right)
     *right = temp;
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+static void report_allocator_leaks(void)
+{
+    cma_leak_summary cma_summary;
+    scma_leak_summary scma_summary;
+
+    if (cma_get_leak_summary(&cma_summary) == FT_ERR_SUCCESS)
+    {
+        if (cma_summary.live_block_count != 0 || cma_summary.ignored_block_count != 0)
+            (void)cma_report_leaks();
+    }
+    if (scma_get_leak_summary(&scma_summary) == FT_ERR_SUCCESS)
+    {
+        if (scma_summary.live_block_count != 0 || scma_summary.ignored_block_count != 0)
+            (void)scma_report_leaks();
+    }
+    return ;
+}
+#endif
 
 static void sort_tests(void)
 {
@@ -468,6 +489,9 @@ int32_t ft_run_registered_tests(void)
     }
     printf("%d/%d tests passed\n", passed, selected_tests);
     fflush(stdout);
+#ifdef LIBFT_TEST_BUILD
+    report_allocator_leaks();
+#endif
     if (passed != selected_tests)
         return (1);
     return (0);

@@ -290,8 +290,8 @@ int32_t ft_dom_node::set_name(const ft_string &name) noexcept
         return (lock_error);
     this->_name = name;
     (void)this->unlock_internal(lock_acquired);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (this->_name.get_error() != FT_ERR_SUCCESS)
+        return (this->_name.get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -303,8 +303,8 @@ int32_t ft_dom_node::set_name(const char *name) noexcept
     if (name == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     name_string = name;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (name_string.get_error() != FT_ERR_SUCCESS)
+        return (name_string.get_error());
     return (this->set_name(name_string));
 }
 
@@ -326,8 +326,8 @@ int32_t ft_dom_node::set_value(const ft_string &value) noexcept
         return (lock_error);
     this->_value = value;
     (void)this->unlock_internal(lock_acquired);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (this->_value.get_error() != FT_ERR_SUCCESS)
+        return (this->_value.get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -339,8 +339,8 @@ int32_t ft_dom_node::set_value(const char *value) noexcept
     if (value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     value_string = value;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (value_string.get_error() != FT_ERR_SUCCESS)
+        return (value_string.get_error());
     return (this->set_value(value_string));
 }
 
@@ -393,7 +393,7 @@ int32_t ft_dom_node::add_attribute(const ft_string &key, const ft_string &value)
         {
             this->_attribute_values[key_index] = value;
             (void)this->unlock_internal(lock_acquired);
-            return (ft_string::get_error());
+            return (this->_attribute_values[key_index].get_error());
         }
         key_index += 1;
     }
@@ -417,11 +417,11 @@ int32_t ft_dom_node::add_attribute(const char *key, const char *value) noexcept
     if (key == ft_nullptr || value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     key_string = key;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (key_string.get_error() != FT_ERR_SUCCESS)
+        return (key_string.get_error());
     value_string = value;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (value_string.get_error() != FT_ERR_SUCCESS)
+        return (value_string.get_error());
     return (this->add_attribute(key_string, value_string));
 }
 

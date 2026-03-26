@@ -359,8 +359,8 @@ FT_TEST(test_ft_compress_null_size_pointer_sets_errno)
     if (compressed_buffer != ft_nullptr)
     {
         cma_free(compressed_buffer);
+        ft_test_fail("compressed_buffer == ft_nullptr", __FILE__, __LINE__);
         return (0);
     }
-        return (0);
     return (1);
 }

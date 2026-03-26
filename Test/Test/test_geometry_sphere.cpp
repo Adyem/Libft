@@ -1581,69 +1581,97 @@ FT_TEST(test_sphere_move_bidirectional_high_load_with_thread_safety)
 
 FT_TEST(test_sphere_setters_getters_contention_high_load_two_threads)
 {
-    sphere shape;
-    std::atomic<bool> worker_failed(false);
-    std::thread writer_thread;
-    int iteration_index;
-    int iteration_limit;
-    double center_x;
-    double center_y;
-    double center_z;
-    double radius;
-    int set_error;
-
-    iteration_limit = 1024;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 0.0, 1.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    worker_failed.store(false);
-    std::chrono::steady_clock::time_point start_time;
-    start_time = std::chrono::steady_clock::now();
-    writer_thread = std::thread([&shape, &worker_failed, &iteration_limit]() {
-        int local_iteration_index;
-        int local_set_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < iteration_limit && worker_failed.load() == false)
-        {
-            if ((local_iteration_index % 2) == 0)
-                local_set_error = shape.set_center(2.0, -2.0, 2.0);
-            else
-                local_set_error = shape.set_center(-3.0, 3.0, -3.0);
-            if (local_set_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_set_error = shape.set_radius(5.0 + (local_iteration_index % 3));
-            if (local_set_error != FT_ERR_SUCCESS)
-            {
-                worker_failed.store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    iteration_index = 0;
-    while (iteration_index < iteration_limit && worker_failed.load() == false)
+    struct sphere_contention_test_context
     {
-        center_x = shape.get_center_x();
-        center_y = shape.get_center_y();
-        center_z = shape.get_center_z();
-        radius = shape.get_radius();
-        if ((std::isfinite(center_x) == false) || (std::isfinite(center_y) == false)
-            || (std::isfinite(center_z) == false) || (std::isfinite(radius) == false))
+        std::atomic<int> result;
+    };
+    sphere_contention_test_context context;
+    pthread_t test_thread;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
+
+    context.result.store(0);
+    FT_ASSERT_EQ(0, pt_thread_create(&test_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            worker_failed.store(true);
-            break;
-        }
-        iteration_index = iteration_index + 1;
-    }
-    writer_thread.join();
-    FT_ASSERT_EQ(false, worker_failed.load());
-    set_error = shape.set_center(0.0, 0.0, 0.0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, set_error);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
+            sphere_contention_test_context *context_pointer;
+            sphere shape;
+            std::atomic<bool> worker_failed(false);
+            std::thread writer_thread;
+            int iteration_index;
+            int iteration_limit;
+            double center_x;
+            double center_y;
+            double center_z;
+            double radius;
+            int set_error;
+
+            context_pointer = static_cast<sphere_contention_test_context *>(argument);
+            if (context_pointer == ft_nullptr)
+                return (ft_nullptr);
+            iteration_limit = 1024;
+            if (shape.initialize(0.0, 0.0, 0.0, 1.0) != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (shape.enable_thread_safety() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            worker_failed.store(false);
+            writer_thread = std::thread([&shape, &worker_failed, &iteration_limit]() {
+                int local_iteration_index;
+                int local_set_error;
+
+                local_iteration_index = 0;
+                while (local_iteration_index < iteration_limit && worker_failed.load() == false)
+                {
+                    if ((local_iteration_index % 2) == 0)
+                        local_set_error = shape.set_center(2.0, -2.0, 2.0);
+                    else
+                        local_set_error = shape.set_center(-3.0, 3.0, -3.0);
+                    if (local_set_error != FT_ERR_SUCCESS)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_set_error = shape.set_radius(5.0 + (local_iteration_index % 3));
+                    if (local_set_error != FT_ERR_SUCCESS)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_iteration_index = local_iteration_index + 1;
+                }
+                return ;
+            });
+            iteration_index = 0;
+            while (iteration_index < iteration_limit && worker_failed.load() == false)
+            {
+                center_x = shape.get_center_x();
+                center_y = shape.get_center_y();
+                center_z = shape.get_center_z();
+                radius = shape.get_radius();
+                if ((std::isfinite(center_x) == false) || (std::isfinite(center_y) == false)
+                    || (std::isfinite(center_z) == false) || (std::isfinite(radius) == false))
+                {
+                    worker_failed.store(true);
+                    break;
+                }
+                iteration_index = iteration_index + 1;
+            }
+            writer_thread.join();
+            if (worker_failed.load() != false)
+                return (ft_nullptr);
+            set_error = shape.set_center(0.0, 0.0, 0.0);
+            if (set_error != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (shape.destroy() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            context_pointer->result.store(1);
+            return (ft_nullptr);
+        }, &context));
+    join_result = pt_thread_timed_join(test_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(test_thread);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, context.result.load());
     return (1);
 }
 
@@ -2571,6 +2599,11 @@ FT_TEST(test_sphere_move_bidirectional_high_load_soak_rounds)
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first->destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second->destroy());
+    delete thread_two_arguments;
+    delete thread_one_arguments;
+    delete worker_failed;
+    delete second;
+    delete first;
     return (1);
 }
 
@@ -2788,5 +2821,10 @@ FT_TEST(test_intersect_sphere_high_load_mutating_overlap_soak_rounds)
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first->destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second->destroy());
+    delete reader_arguments;
+    delete writer_arguments;
+    delete worker_failed;
+    delete second;
+    delete first;
     return (1);
 }

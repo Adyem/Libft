@@ -194,7 +194,7 @@ bool pt_recursive_mutex::is_owned_by_thread(pthread_t thread_id) const
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id, &tracking_error);
     if (tracking_error != FT_ERR_SUCCESS)
         return (false);
-    const void *mutex_handle = static_cast<const void *>(this->_native_mutex);
+    const void *mutex_handle = static_cast<const void *>(this);
     index = 0;
     while (index < owned_mutexes.size)
     {

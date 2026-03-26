@@ -23,6 +23,7 @@ FT_TEST(test_ft_future_initialize_copy_from_uninitialised_rebuilds_mutex)
     FT_ASSERT_EQ(0, original_future.enable_thread_safety());
     FT_ASSERT_EQ(0, copied_future.initialize(original_future));
     FT_ASSERT(original_future.is_thread_safe());
+    FT_ASSERT_EQ(0, copied_future.enable_thread_safety());
     FT_ASSERT(copied_future.is_thread_safe());
     FT_ASSERT_EQ(0, original_future.lock(&original_lock_acquired));
     FT_ASSERT(original_lock_acquired == FT_TRUE);
@@ -56,6 +57,7 @@ FT_TEST(test_ft_future_initialize_copy_recreates_mutex)
     FT_ASSERT_EQ(0, source_future.enable_thread_safety());
     FT_ASSERT_EQ(0, destination_future.enable_thread_safety());
     FT_ASSERT_EQ(0, destination_future.initialize(source_future));
+    FT_ASSERT_EQ(0, destination_future.enable_thread_safety());
     FT_ASSERT(destination_future.is_thread_safe());
     FT_ASSERT(source_future.is_thread_safe());
     FT_ASSERT_EQ(0, source_future.lock(&source_lock_acquired));
@@ -86,6 +88,7 @@ FT_TEST(test_ft_future_initialize_move_from_uninitialised_rebuilds_mutex)
     FT_ASSERT_EQ(0, original_future.enable_thread_safety());
     FT_ASSERT(original_future.is_thread_safe());
     FT_ASSERT_EQ(0, moved_future.initialize(ft_move(original_future)));
+    FT_ASSERT_EQ(0, moved_future.enable_thread_safety());
     FT_ASSERT(moved_future.is_thread_safe());
     FT_ASSERT_EQ(0, moved_future.lock(&moved_lock_acquired));
     FT_ASSERT(moved_lock_acquired == FT_TRUE);
@@ -109,6 +112,7 @@ FT_TEST(test_ft_future_initialize_move_rebuilds_mutex)
     FT_ASSERT_EQ(0, source_future.enable_thread_safety());
     FT_ASSERT_EQ(0, destination_future.enable_thread_safety());
     FT_ASSERT_EQ(0, destination_future.initialize(ft_move(source_future)));
+    FT_ASSERT_EQ(0, destination_future.enable_thread_safety());
     FT_ASSERT(destination_future.is_thread_safe());
     FT_ASSERT_EQ(0, destination_future.lock(&destination_lock_acquired));
     FT_ASSERT(destination_lock_acquired == FT_TRUE);
@@ -129,6 +133,7 @@ FT_TEST(test_ft_future_void_move_rebuilds_mutex)
     FT_ASSERT_EQ(0, original_future.enable_thread_safety());
     FT_ASSERT(original_future.is_thread_safe());
     FT_ASSERT_EQ(0, moved_future.initialize(ft_move(original_future)));
+    FT_ASSERT_EQ(0, moved_future.enable_thread_safety());
     FT_ASSERT(moved_future.is_thread_safe());
     FT_ASSERT_EQ(0, moved_future.lock(&moved_lock_acquired));
     FT_ASSERT(moved_lock_acquired == FT_TRUE);

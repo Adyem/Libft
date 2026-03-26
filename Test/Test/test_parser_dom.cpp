@@ -114,12 +114,22 @@ FT_TEST(test_dom_schema_reports_missing_required_nodes)
     FT_ASSERT_EQ(0, schema.add_rule(child_rule, FT_DOM_NODE_ELEMENT, true));
     FT_ASSERT_EQ(0, schema.add_rule(missing_rule, FT_DOM_NODE_ELEMENT, true));
     FT_ASSERT_EQ(0, schema.validate(document, report));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_rule.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, missing_rule.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, schema.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, report.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_root()->get_name().get_error());
     FT_ASSERT_EQ(false, report.valid());
     const ft_vector<ft_dom_validation_error> &errors = report.errors();
     FT_ASSERT_EQ(static_cast<size_t>(1), errors.size());
     const ft_dom_validation_error &error_entry = errors[0];
     FT_ASSERT(std::string(error_entry.path.c_str()) == "missing");
     FT_ASSERT(std::string(error_entry.message.c_str()) == "Required node missing");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, missing_rule.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_rule.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, report.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, schema.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.destroy());
     return (1);
 }
 
@@ -146,6 +156,10 @@ FT_TEST(test_dom_schema_reports_type_mismatches)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, child_object_rule.initialize("child"));
     FT_ASSERT_EQ(0, schema.add_rule(child_object_rule, FT_DOM_NODE_OBJECT, true));
     FT_ASSERT_EQ(0, schema.validate(document, report));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_object_rule.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, schema.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, report.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_node->get_name().get_error());
     FT_ASSERT_EQ(false, report.valid());
     const ft_vector<ft_dom_validation_error> &errors = report.errors();
     FT_ASSERT_EQ(static_cast<size_t>(1), errors.size());
@@ -231,7 +245,10 @@ FT_TEST(test_json_dom_bridge_round_trip)
     FT_ASSERT(round_trip_count != ft_nullptr);
     FT_ASSERT(round_trip_count->is_big_number);
     FT_ASSERT(round_trip_count->big_number != ft_nullptr);
-    FT_ASSERT(std::string(round_trip_count->big_number->to_string_base(10).c_str()) == "12345678901234567890");
+    ft_string round_trip_count_string;
+    round_trip_count_string = round_trip_count->big_number->to_string_base(10);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_count_string.get_error());
+    FT_ASSERT(std::string(round_trip_count_string.c_str()) == "12345678901234567890");
     return (1);
 }
 
@@ -280,13 +297,17 @@ FT_TEST(test_xml_dom_bridge_round_trip)
     ft_string attribute_key;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_key.initialize("attr"));
     ft_string attribute_value = dom_root->get_attribute(attribute_key);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_value.get_error());
     FT_ASSERT(std::string(attribute_value.c_str()) == "value");
     const ft_vector<ft_dom_node*> &child_nodes = dom_root->get_children();
     FT_ASSERT_EQ(static_cast<size_t>(1), child_nodes.size());
     ft_dom_node *child_node = child_nodes[0];
     FT_ASSERT(child_node != ft_nullptr);
     FT_ASSERT(std::string(child_node->get_name().c_str()) == "child");
-    FT_ASSERT(std::string(child_node->get_value().c_str()) == "text");
+    ft_string child_value;
+    child_value = child_node->get_value();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_value.get_error());
+    FT_ASSERT(std::string(child_value.c_str()) == "text");
 
     FT_ASSERT_EQ(0, xml_document_from_dom(dom_document, round_trip_document));
     char *serialized = round_trip_document.write_to_string();

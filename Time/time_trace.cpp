@@ -211,7 +211,7 @@ ft_bool    time_trace_begin_session(const char *file_path)
     g_trace_session_start = std::chrono::steady_clock::now();
     g_trace_session_active = FT_TRUE;
     g_trace_first_event = FT_TRUE;
-    g_trace_stack.clear();
+    std::vector<t_time_trace_frame>().swap(g_trace_stack);
     (void)(FT_ERR_SUCCESS);
     return (FT_TRUE);
 }
@@ -251,7 +251,7 @@ ft_bool    time_trace_end_session(void)
     g_trace_file = ft_nullptr;
     g_trace_session_active = FT_FALSE;
     g_trace_first_event = FT_TRUE;
-    g_trace_stack.clear();
+    std::vector<t_time_trace_frame>().swap(g_trace_stack);
     (void)(FT_ERR_SUCCESS);
     return (FT_TRUE);
 }

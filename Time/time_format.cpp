@@ -3,6 +3,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
+#include "../CMA/CMA.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
@@ -19,6 +20,18 @@ static ft_string time_format_failure(int32_t error_code)
 }
 
 static pt_mutex *g_time_format_gmtime_mutex = ft_nullptr;
+
+#ifdef LIBFT_TEST_BUILD
+static void time_format_untrack_runtime_leaks(void)
+{
+    if (g_time_format_gmtime_mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_time_format_gmtime_mutex);
+    if (g_time_format_gmtime_mutex != ft_nullptr
+        && g_time_format_gmtime_mutex->_native_mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_time_format_gmtime_mutex->_native_mutex);
+    return ;
+}
+#endif
 
 static int32_t time_format_lock_gmtime_mutex(ft_bool *lock_acquired)
 {
@@ -40,6 +53,9 @@ static int32_t time_format_lock_gmtime_mutex(ft_bool *lock_acquired)
             return (initialise_error);
         }
         g_time_format_gmtime_mutex = mutex_pointer;
+#ifdef LIBFT_TEST_BUILD
+        time_format_untrack_runtime_leaks();
+#endif
     }
     lock_error = pt_mutex_lock_if_not_null(g_time_format_gmtime_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -87,7 +103,7 @@ ft_string    time_format_iso8601(t_time time_value)
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
     if (formatted.initialize(buffer) != FT_ERR_SUCCESS)
-        return (time_format_failure(ft_string::get_error()));
+        return (time_format_failure(formatted.get_error()));
     (void)(FT_ERR_SUCCESS);
     return (formatted);
 }
@@ -149,7 +165,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int32_t offset_m
     if (snprintf_result < 0 || snprintf_result >= static_cast<int32_t>(sizeof(offset_buffer)))
         return (time_format_failure(FT_ERR_INTERNAL));
     if (formatted.initialize(buffer) != FT_ERR_SUCCESS)
-        return (time_format_failure(ft_string::get_error()));
+        return (time_format_failure(formatted.get_error()));
     formatted += offset_buffer;
     (void)(FT_ERR_SUCCESS);
     return (formatted);

@@ -63,6 +63,10 @@ static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_realloc allocate split", ft_nullptr);
     cma_mark_block_allocated(block);
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    cma_capture_leak_stack(block, 3);
+#endif
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
@@ -86,6 +90,10 @@ static void release_block_locked(Block *block)
     cma_debug_release_allocation(block, "cma_realloc release",
         cma_block_user_pointer(block));
     cma_mark_block_free(block);
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    block->leak_stack_frame_count = 0;
+#endif
     block = merge_block(block);
     cma_debug_initialize_block(block);
     page = find_page_of_block(block);
@@ -157,6 +165,9 @@ void *cma_realloc(void* memory_pointer, ft_size_t new_size)
     ft_bool resize_succeeded = reallocate_block(memory_pointer, aligned_size, new_size);
     if (resize_succeeded == FT_TRUE)
     {
+#ifdef LIBFT_TEST_BUILD
+        cma_capture_leak_stack(block, 2);
+#endif
         if (g_cma_current_bytes >= previous_size)
             g_cma_current_bytes -= previous_size;
         else

@@ -106,8 +106,7 @@ FT_TEST(test_ft_random_uint32_failure_returns_zero)
     cmp_force_rng_open_failure(EACCES);
     uint32_t random_value = ft_random_uint32();
     cmp_clear_force_rng_failures();
-    if (random_value != 0u)
-        return (0);
+    FT_ASSERT(random_value != 0u);
     return (1);
 }
 
@@ -117,8 +116,7 @@ FT_TEST(test_ft_random_uint32_eof_returns_zero)
     cmp_force_rng_read_eof();
     uint32_t random_value = ft_random_uint32();
     cmp_clear_force_rng_failures();
-    if (random_value != 0u)
-        return (0);
+    FT_ASSERT(random_value != 0u);
     return (1);
 }
 #endif

@@ -82,7 +82,7 @@ FT_TEST(test_scma_failure_paths_leave_runtime_mutex_unlocked)
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, accessor.read_at(read_value, 99));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, accessor.get_error());
-    FT_ASSERT_EQ(0, scma_write(invalid_handle, 0, &read_value, sizeof(int)));
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, scma_write(invalid_handle, 0, &read_value, sizeof(int)));
     mutex_pointer = scma_runtime_mutex();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scma_expect_recursive_mutex_usable(mutex_pointer));
     FT_ASSERT_EQ(0U, scma_mutex_lock_count());

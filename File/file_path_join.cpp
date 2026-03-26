@@ -2,18 +2,18 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "file_utils.hpp"
 
-static int32_t file_string_error(void) noexcept
+static int32_t file_string_error(const ft_string &string_value) noexcept
 {
-    return (ft_string::get_error());
+    return (string_value.get_error());
 }
 
 ft_string file_path_join(const char *path_left, const char *path_right)
 {
     ft_string left = file_path_normalize(path_left);
-    if (file_string_error() != FT_ERR_SUCCESS)
+    if (file_string_error(left) != FT_ERR_SUCCESS)
         return (left);
     ft_string right = file_path_normalize(path_right);
-    if (file_string_error() != FT_ERR_SUCCESS)
+    if (file_string_error(right) != FT_ERR_SUCCESS)
         return (right);
     char path_sep = cmp_path_separator();
     const char *right_data = right.c_str();
@@ -29,7 +29,7 @@ ft_string file_path_join(const char *path_left, const char *path_right)
         }
     }
     ft_string result(left);
-    if (file_string_error() != FT_ERR_SUCCESS)
+    if (file_string_error(result) != FT_ERR_SUCCESS)
         return (result);
     if (result.size() != 0)
     {

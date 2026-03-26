@@ -8,6 +8,9 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static ft_string g_destroyed_source_append_value;
+static ft_string g_destroyed_source_append_source;
+
 FT_TEST(test_ft_string_operator_assign_char_initializes_uninitialised_destination)
 {
     ft_string destination;
@@ -87,15 +90,13 @@ FT_TEST(test_ft_string_operator_plus_equal_nullptr_sets_invalid_argument)
 
 static int string_call_plus_equal_destroyed_source(void)
 {
-    ft_string value;
-    if (value.initialize("abc") != FT_ERR_SUCCESS)
+    if (g_destroyed_source_append_value.initialize("abc") != FT_ERR_SUCCESS)
         return (0);
-    ft_string source;
-    if (source.initialize("xyz") != FT_ERR_SUCCESS)
+    if (g_destroyed_source_append_source.initialize("xyz") != FT_ERR_SUCCESS)
         return (0);
 
-    (void)source.destroy();
-    value += source;
+    (void)g_destroyed_source_append_source.destroy();
+    g_destroyed_source_append_value += g_destroyed_source_append_source;
     return (1);
 }
 
@@ -103,6 +104,8 @@ FT_TEST(test_ft_string_operator_plus_equal_destroyed_source_sets_invalid_state)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
             string_call_plus_equal_destroyed_source));
+    (void)g_destroyed_source_append_source.destroy();
+    (void)g_destroyed_source_append_value.destroy();
     return (1);
 }
 
@@ -147,6 +150,9 @@ FT_TEST(test_ft_string_operator_plus_char_left_and_right)
     right_result = center + ']';
     FT_ASSERT(left_result == "[core");
     FT_ASSERT(right_result == "core]");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, left_result.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, right_result.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, center.get_error());
     return (1);
 }
 

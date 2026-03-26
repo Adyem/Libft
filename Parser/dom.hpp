@@ -136,10 +136,12 @@ class ft_dom_validation_report
 #else
     private:
 #endif
+        static thread_local int32_t _last_error;
         ft_bool _valid;
         ft_vector<ft_dom_validation_error> _errors;
         pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
 
@@ -158,6 +160,8 @@ class ft_dom_validation_report
         ft_bool is_thread_safe() const noexcept;
         int32_t lock(ft_bool *lock_acquired) const noexcept;
         void unlock(ft_bool lock_acquired) const noexcept;
+        int32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         void mark_valid() noexcept;
         void mark_invalid() noexcept;
@@ -174,9 +178,11 @@ class ft_dom_schema
 #else
     private:
 #endif
+        static thread_local int32_t _last_error;
         ft_vector<ft_dom_schema_rule> _rules;
         pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
+        static int32_t set_error(int32_t error_code) noexcept;
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
         int32_t validate_rule(const ft_dom_schema_rule &rule, const ft_dom_node *node,
@@ -197,6 +203,8 @@ class ft_dom_schema
         ft_bool is_thread_safe() const noexcept;
         int32_t lock(ft_bool *lock_acquired) const noexcept;
         void unlock(ft_bool lock_acquired) const noexcept;
+        int32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         int32_t add_rule(const ft_string &path, ft_dom_node_type type, ft_bool required) noexcept;
         int32_t validate(const ft_dom_document &document, ft_dom_validation_report &report) const noexcept;

@@ -19,7 +19,11 @@
 template <typename Key, typename MappedType>
 class ft_map
 {
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
     private:
+#endif
         Pair<Key, MappedType>*      _data;
         ft_size_t                      _capacity;
         ft_size_t                      _size;

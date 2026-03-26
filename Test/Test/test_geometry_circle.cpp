@@ -1598,84 +1598,125 @@ FT_TEST(test_circle_setters_getters_contention_high_load_two_threads)
 
 FT_TEST(test_intersect_circle_high_load_with_mutating_overlap)
 {
-    circle *first;
-    circle *second;
-    std::atomic<bool> *worker_failed;
-    std::thread writer_thread;
-    std::thread reader_thread_one;
-    std::thread reader_thread_two;
+    struct s_circle_overlap_context
+    {
+        std::atomic<int> result;
 
-    first = new (std::nothrow) circle();
-    second = new (std::nothrow) circle();
-    worker_failed = new (std::nothrow) std::atomic<bool>();
-    FT_ASSERT(first != ft_nullptr);
-    FT_ASSERT(second != ft_nullptr);
-    FT_ASSERT(worker_failed != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->initialize(0.0, 0.0, 12.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->initialize(1.0, 1.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->enable_thread_safety());
-    worker_failed->store(false);
-    writer_thread = std::thread([second, worker_failed]() {
-        int local_iteration_index;
-        int local_set_error;
-
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed->load() == false)
+        s_circle_overlap_context() : result(0)
         {
-            if ((local_iteration_index % 2) == 0)
-                local_set_error = second->set_center(2.0, 2.0);
-            else
-                local_set_error = second->set_center(-1.0, 1.0);
-            if (local_set_error != FT_ERR_SUCCESS)
-            {
-                worker_failed->store(true);
-                break;
-            }
-            local_set_error = second->set_radius(4.0 + (local_iteration_index % 2));
-            if (local_set_error != FT_ERR_SUCCESS)
-            {
-                worker_failed->store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
+            return ;
         }
-        return ;
-    });
-    reader_thread_one = std::thread([first, second, worker_failed]() {
-        int local_iteration_index;
+    } context;
+    pthread_t test_thread;
+    int join_result;
+    long join_timeout_ms;
 
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed->load() == false)
+    context.result.store(0);
+    join_timeout_ms = 5000;
+    FT_ASSERT_EQ(0, pt_thread_create(&test_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            if (intersect_circle(*first, *second) == false)
-            {
-                worker_failed->store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    reader_thread_two = std::thread([first, second, worker_failed]() {
-        int local_iteration_index;
+            s_circle_overlap_context *context_pointer;
+            circle *first;
+            circle *second;
+            std::atomic<bool> worker_failed;
+            std::thread writer_thread;
+            std::thread reader_thread_one;
+            std::thread reader_thread_two;
+            int return_result;
 
-        local_iteration_index = 0;
-        while (local_iteration_index < 4096 && worker_failed->load() == false)
-        {
-            if (intersect_circle(*second, *first) == false)
-            {
-                worker_failed->store(true);
-                break;
-            }
-            local_iteration_index = local_iteration_index + 1;
-        }
-        return ;
-    });
-    writer_thread.detach();
-    reader_thread_one.detach();
-    reader_thread_two.detach();
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    return (0);
+            return_result = 0;
+            context_pointer = static_cast<s_circle_overlap_context *>(argument);
+            first = new (std::nothrow) circle();
+            second = new (std::nothrow) circle();
+            if (context_pointer == ft_nullptr || first == ft_nullptr || second == ft_nullptr)
+                goto circle_overlap_cleanup;
+            if (first->initialize(0.0, 0.0, 12.0) != FT_ERR_SUCCESS)
+                goto circle_overlap_cleanup;
+            if (second->initialize(1.0, 1.0, 4.0) != FT_ERR_SUCCESS)
+                goto circle_overlap_cleanup;
+            if (second->enable_thread_safety() != FT_ERR_SUCCESS)
+                goto circle_overlap_cleanup;
+            worker_failed.store(false);
+            writer_thread = std::thread([second, &worker_failed]() {
+                int local_iteration_index;
+                int local_set_error;
+
+                local_iteration_index = 0;
+                while (local_iteration_index < 4096 && worker_failed.load() == false)
+                {
+                    if ((local_iteration_index % 2) == 0)
+                        local_set_error = second->set_center(2.0, 2.0);
+                    else
+                        local_set_error = second->set_center(-1.0, 1.0);
+                    if (local_set_error != FT_ERR_SUCCESS)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_set_error = second->set_radius(4.0 + (local_iteration_index % 2));
+                    if (local_set_error != FT_ERR_SUCCESS)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_iteration_index = local_iteration_index + 1;
+                }
+                return ;
+            });
+            reader_thread_one = std::thread([first, second, &worker_failed]() {
+                int local_iteration_index;
+
+                local_iteration_index = 0;
+                while (local_iteration_index < 4096 && worker_failed.load() == false)
+                {
+                    if (intersect_circle(*first, *second) == false)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_iteration_index = local_iteration_index + 1;
+                }
+                return ;
+            });
+            reader_thread_two = std::thread([first, second, &worker_failed]() {
+                int local_iteration_index;
+
+                local_iteration_index = 0;
+                while (local_iteration_index < 4096 && worker_failed.load() == false)
+                {
+                    if (intersect_circle(*second, *first) == false)
+                    {
+                        worker_failed.store(true);
+                        break;
+                    }
+                    local_iteration_index = local_iteration_index + 1;
+                }
+                return ;
+            });
+            writer_thread.join();
+            reader_thread_one.join();
+            reader_thread_two.join();
+            if (worker_failed.load() != false)
+                goto circle_overlap_cleanup;
+            if (first->destroy() != FT_ERR_SUCCESS)
+                goto circle_overlap_cleanup;
+            if (second->destroy() != FT_ERR_SUCCESS)
+                goto circle_overlap_cleanup;
+            context_pointer->result.store(1);
+            return_result = 1;
+circle_overlap_cleanup:
+            delete second;
+            delete first;
+            (void)return_result;
+            return (ft_nullptr);
+        }, &context));
+    join_result = pt_thread_timed_join(test_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(test_thread);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, context.result.load());
+    return (1);
 }
 
 FT_TEST(test_circle_setters_getters_contention_high_load_four_threads)
@@ -2511,75 +2552,104 @@ FT_TEST(test_circle_setters_getters_contention_high_load_soak_rounds)
 
 FT_TEST(test_intersect_circle_high_load_mutating_overlap_soak_rounds)
 {
-    struct s_circle_soak_state
+    struct circle_overlap_soak_test_context
     {
-        circle *first;
-        circle *second;
-        std::atomic<bool> *worker_failed;
+        std::atomic<int> result;
+
+        circle_overlap_soak_test_context() : result(0)
+        {
+            return ;
+        }
     };
-    circle *first;
-    circle *second;
-    std::atomic<bool> *worker_failed;
-    s_circle_soak_state *writer_state;
-    s_circle_soak_state *reader_state;
-    std::thread writer_thread;
-    std::thread reader_thread;
+    circle_overlap_soak_test_context context;
+    pthread_t test_thread;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
 
-    first = new (std::nothrow) circle();
-    second = new (std::nothrow) circle();
-    worker_failed = new (std::nothrow) std::atomic<bool>();
-    writer_state = new (std::nothrow) s_circle_soak_state();
-    reader_state = new (std::nothrow) s_circle_soak_state();
-    FT_ASSERT(first != ft_nullptr);
-    FT_ASSERT(second != ft_nullptr);
-    FT_ASSERT(worker_failed != ft_nullptr);
-    FT_ASSERT(writer_state != ft_nullptr);
-    FT_ASSERT(reader_state != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->initialize(0.0, 0.0, 12.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->initialize(1.0, 1.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->enable_thread_safety());
-    worker_failed->store(false);
-    writer_state->first = first;
-    writer_state->second = second;
-    writer_state->worker_failed = worker_failed;
-    reader_state->first = first;
-    reader_state->second = second;
-    reader_state->worker_failed = worker_failed;
-    writer_thread = std::thread([writer_state]() {
-        int iteration_index;
-        int local_set_error;
-
-        iteration_index = 0;
-        while (iteration_index < 3072 && writer_state->worker_failed->load() == false)
+    context.result.store(0);
+    FT_ASSERT_EQ(0, pt_thread_create(&test_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            if ((iteration_index % 2) == 0)
-                local_set_error = writer_state->second->set_center(2.0, 2.0);
-            else
-                local_set_error = writer_state->second->set_center(-1.0, 1.0);
-            if (local_set_error != FT_ERR_SUCCESS)
-                writer_state->worker_failed->store(true);
-            local_set_error = writer_state->second->set_radius(4.0 + (iteration_index % 2));
-            if (local_set_error != FT_ERR_SUCCESS)
-                writer_state->worker_failed->store(true);
-            iteration_index = iteration_index + 1;
-        }
-        return ;
-    });
-    reader_thread = std::thread([reader_state]() {
-        int iteration_index;
+            circle_overlap_soak_test_context *context_pointer;
+            circle *first;
+            circle *second;
+            std::atomic<bool> worker_failed;
+            std::thread writer_thread;
+            std::thread reader_thread;
+            int round_index;
+            int return_result;
 
-        iteration_index = 0;
-        while (iteration_index < 3072 && reader_state->worker_failed->load() == false)
-        {
-            if (intersect_circle(*reader_state->first, *reader_state->second) == false
-                || intersect_circle(*reader_state->second, *reader_state->first) == false)
-                reader_state->worker_failed->store(true);
-            iteration_index = iteration_index + 1;
-        }
-        return ;
-    });
-    writer_thread.detach();
-    reader_thread.detach();
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    return (0);
+            return_result = 0;
+            context_pointer = static_cast<circle_overlap_soak_test_context *>(argument);
+            first = new (std::nothrow) circle();
+            second = new (std::nothrow) circle();
+            if (context_pointer == ft_nullptr || first == ft_nullptr || second == ft_nullptr)
+                goto circle_overlap_soak_cleanup;
+            if (first->initialize(0.0, 0.0, 12.0) != FT_ERR_SUCCESS)
+                goto circle_overlap_soak_cleanup;
+            if (second->initialize(1.0, 1.0, 4.0) != FT_ERR_SUCCESS)
+                goto circle_overlap_soak_cleanup;
+            if (second->enable_thread_safety() != FT_ERR_SUCCESS)
+                goto circle_overlap_soak_cleanup;
+            round_index = 0;
+            while (round_index < 3)
+            {
+                worker_failed.store(false);
+                writer_thread = std::thread([second, &worker_failed]() {
+                    int iteration_index;
+                    int local_set_error;
+
+                    iteration_index = 0;
+                    while (iteration_index < 3072 && worker_failed.load() == false)
+                    {
+                        if ((iteration_index % 2) == 0)
+                            local_set_error = second->set_center(2.0, 2.0);
+                        else
+                            local_set_error = second->set_center(-1.0, 1.0);
+                        if (local_set_error != FT_ERR_SUCCESS)
+                            worker_failed.store(true);
+                        local_set_error = second->set_radius(4.0 + (iteration_index % 2));
+                        if (local_set_error != FT_ERR_SUCCESS)
+                            worker_failed.store(true);
+                        iteration_index = iteration_index + 1;
+                    }
+                    return ;
+                });
+                reader_thread = std::thread([first, second, &worker_failed]() {
+                    int iteration_index;
+
+                    iteration_index = 0;
+                    while (iteration_index < 3072 && worker_failed.load() == false)
+                    {
+                        if (intersect_circle(*first, *second) == false
+                            || intersect_circle(*second, *first) == false)
+                            worker_failed.store(true);
+                        iteration_index = iteration_index + 1;
+                    }
+                    return ;
+                });
+                writer_thread.join();
+                reader_thread.join();
+                if (worker_failed.load() != false)
+                    goto circle_overlap_soak_cleanup;
+                round_index = round_index + 1;
+            }
+            if (first->destroy() != FT_ERR_SUCCESS)
+                goto circle_overlap_soak_cleanup;
+            if (second->destroy() != FT_ERR_SUCCESS)
+                goto circle_overlap_soak_cleanup;
+            context_pointer->result.store(1);
+            return_result = 1;
+circle_overlap_soak_cleanup:
+            delete second;
+            delete first;
+            (void)return_result;
+            return (ft_nullptr);
+        }, &context));
+    join_result = pt_thread_timed_join(test_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(test_thread);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, context.result.load());
+    return (1);
 }

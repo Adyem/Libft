@@ -28,6 +28,31 @@ static ft_bool map_has_new_error(ft_unordered_map<int32_t, char*> &map, int32_t 
 static ft_unordered_map<int32_t, char*> g_gnl_leftovers;
 static ft_unordered_map<int32_t, gnl_stream*> g_gnl_streams;
 
+#ifdef LIBFT_TEST_BUILD
+static void gnl_untrack_runtime_leaks(void)
+{
+    if (g_gnl_leftovers.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_gnl_leftovers._data != ft_nullptr)
+        (void)cma_untrack_leak(g_gnl_leftovers._data);
+    if (g_gnl_leftovers.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_gnl_leftovers._occupied != ft_nullptr)
+        (void)cma_untrack_leak(g_gnl_leftovers._occupied);
+    if (g_gnl_leftovers.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_gnl_leftovers._mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_gnl_leftovers._mutex);
+    if (g_gnl_streams.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_gnl_streams._data != ft_nullptr)
+        (void)cma_untrack_leak(g_gnl_streams._data);
+    if (g_gnl_streams.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_gnl_streams._occupied != ft_nullptr)
+        (void)cma_untrack_leak(g_gnl_streams._occupied);
+    if (g_gnl_streams.is_initialised() == FT_CLASS_STATE_INITIALISED
+        && g_gnl_streams._mutex != ft_nullptr)
+        (void)cma_untrack_leak(g_gnl_streams._mutex);
+    return ;
+}
+#endif
+
 static int32_t gnl_ensure_maps_initialised(void)
 {
     int32_t initialise_error;
@@ -37,12 +62,18 @@ static int32_t gnl_ensure_maps_initialised(void)
         initialise_error = g_gnl_leftovers.initialize();
         if (initialise_error != FT_ERR_SUCCESS)
             return (initialise_error);
+#ifdef LIBFT_TEST_BUILD
+        gnl_untrack_runtime_leaks();
+#endif
     }
     if (g_gnl_streams.is_initialised() != FT_CLASS_STATE_INITIALISED)
     {
         initialise_error = g_gnl_streams.initialize();
         if (initialise_error != FT_ERR_SUCCESS)
             return (initialise_error);
+#ifdef LIBFT_TEST_BUILD
+        gnl_untrack_runtime_leaks();
+#endif
     }
     return (FT_ERR_SUCCESS);
 }
@@ -131,6 +162,9 @@ static gnl_stream *gnl_acquire_stream(int32_t file_descriptor, int32_t *stream_e
             *stream_error = map_error_after;
         return (ft_nullptr);
     }
+#ifdef LIBFT_TEST_BUILD
+    gnl_untrack_runtime_leaks();
+#endif
     existing_stream = new_stream;
     if (stream_error)
         *stream_error = FT_ERR_SUCCESS;
@@ -442,19 +476,20 @@ int32_t gnl_clear_stream(int32_t file_descriptor)
     ft_unordered_map<int32_t, char*>::iterator map_iterator(g_gnl_leftovers.find(file_descriptor));
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         return (map_error_after);
-    if (map_iterator == g_gnl_leftovers.end())
-        return (FT_ERR_SUCCESS);
-    leftover = map_iterator->second;
-    map_error_before = g_gnl_leftovers.get_error();
-    g_gnl_leftovers.erase(file_descriptor);
-    if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
+    if (map_iterator != g_gnl_leftovers.end())
     {
+        leftover = map_iterator->second;
+        map_error_before = g_gnl_leftovers.get_error();
+        g_gnl_leftovers.erase(file_descriptor);
+        if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
+        {
+            if (leftover)
+                cma_free(leftover);
+            return (map_error_after);
+        }
         if (leftover)
             cma_free(leftover);
-        return (map_error_after);
     }
-    if (leftover)
-        cma_free(leftover);
     map_error_before = g_gnl_streams.get_error();
     ft_unordered_map<int32_t, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
@@ -563,6 +598,9 @@ char    *get_next_line(int32_t file_descriptor, ft_size_t buffer_size)
                 cma_free(leftover_string);
                 return (ft_nullptr);
             }
+#ifdef LIBFT_TEST_BUILD
+            gnl_untrack_runtime_leaks();
+#endif
         }
         error_code = line_error;
         if (error_code == FT_ERR_SUCCESS)
@@ -579,6 +617,9 @@ char    *get_next_line(int32_t file_descriptor, ft_size_t buffer_size)
             cma_free(line);
             return (ft_nullptr);
         }
+#ifdef LIBFT_TEST_BUILD
+        gnl_untrack_runtime_leaks();
+#endif
     }
     return (line);
 }

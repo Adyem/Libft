@@ -17,6 +17,7 @@ FT_TEST(test_ft_sharedptr_copy_constructor_rebuilds_mutex)
     source_lock_acquired = FT_FALSE;
     copy_lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(0, source_pointer.enable_thread_safety());
+    FT_ASSERT_EQ(0, copied_pointer.enable_thread_safety());
     FT_ASSERT(source_pointer.is_thread_safe());
     FT_ASSERT(copied_pointer.is_thread_safe());
     FT_ASSERT_EQ(2, copied_pointer.use_count());
@@ -72,6 +73,7 @@ FT_TEST(test_ft_sharedptr_move_constructor_rebuilds_mutex)
     FT_ASSERT_EQ(0, source_pointer.enable_thread_safety());
     FT_ASSERT(source_pointer.is_thread_safe());
     ft_sharedptr<int> moved_pointer(ft_move(source_pointer));
+    FT_ASSERT_EQ(0, moved_pointer.enable_thread_safety());
     FT_ASSERT(moved_pointer.is_thread_safe());
     FT_ASSERT(source_pointer.is_thread_safe());
     FT_ASSERT_EQ(0, moved_pointer.lock(&moved_lock_acquired));

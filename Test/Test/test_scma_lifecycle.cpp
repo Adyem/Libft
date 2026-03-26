@@ -65,7 +65,7 @@ FT_TEST(test_scma_free_invalid_handle_reports_error)
     handle.index = 0;
     handle.generation = 0;
     scma_test_reset();
-    FT_ASSERT_EQ(0, scma_free(handle));
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, scma_free(handle));
     return (1);
 }
 

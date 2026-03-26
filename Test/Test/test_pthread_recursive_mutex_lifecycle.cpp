@@ -8,17 +8,22 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static pt_recursive_mutex g_pt_recursive_mutex_abort_object;
+
 static int pt_recursive_mutex_expect_sigabrt(void (*operation)())
 {
-    return (test_expect_sigabrt_signal(operation));
+    int result;
+
+    result = test_expect_sigabrt_signal(operation);
+    (void)g_pt_recursive_mutex_abort_object.destroy();
+    return (result);
 }
 
 static void pt_recursive_mutex_initialize_twice_aborts_operation()
 {
-    pt_recursive_mutex mutex_object;
-
-    (void)mutex_object.initialize();
-    (void)mutex_object.initialize();
+    (void)g_pt_recursive_mutex_abort_object.destroy();
+    (void)g_pt_recursive_mutex_abort_object.initialize();
+    (void)g_pt_recursive_mutex_abort_object.initialize();
     return ;
 }
 

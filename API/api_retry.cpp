@@ -2,6 +2,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../PThread/mutex.hpp"
+#include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../Time/time.hpp"
 #include "../Errno/errno.hpp"
@@ -44,6 +45,11 @@ static pt_mutex *api_retry_circuit_get_mutex(void)
             su_abort();
         if (circuit_mutex->initialize() != FT_ERR_SUCCESS)
             su_abort();
+#ifdef LIBFT_TEST_BUILD
+        (void)cma_untrack_leak(circuit_mutex);
+        if (circuit_mutex->_native_mutex != ft_nullptr)
+            (void)cma_untrack_leak(circuit_mutex->_native_mutex);
+#endif
     }
 
     return (circuit_mutex);

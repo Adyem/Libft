@@ -45,6 +45,31 @@ int32_t     scma_get_stats(scma_stats *out_stats);
 
 void    scma_debug_dump(void);
 
+#ifdef LIBFT_TEST_BUILD
+struct scma_leak_entry
+{
+    scma_handle handle;
+    ft_size_t offset;
+    ft_size_t size;
+    ft_size_t generation;
+};
+
+struct scma_leak_summary
+{
+    ft_size_t live_block_count;
+    ft_size_t live_bytes;
+    ft_size_t ignored_block_count;
+    ft_size_t ignored_bytes;
+};
+
+int32_t scma_get_leak_summary(scma_leak_summary *out_summary);
+int32_t scma_get_leak_entries(scma_leak_entry *entries, ft_size_t capacity,
+    ft_size_t *entry_count);
+int32_t scma_report_leaks(void);
+int32_t scma_untrack_leak(scma_handle handle);
+int32_t scma_track_leak(scma_handle handle);
+#endif
+
 pt_recursive_mutex    *scma_runtime_mutex(void);
 int32_t     scma_enable_thread_safety(void);
 int32_t     scma_disable_thread_safety(void);

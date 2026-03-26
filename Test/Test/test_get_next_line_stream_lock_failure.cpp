@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../GetNextLine/gnl_stream.hpp"
+#include "../../CMA/CMA.hpp"
 #include "../../PThread/recursive_mutex.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include <atomic>
@@ -77,7 +78,13 @@ FT_TEST(test_gnl_stream_reset_lock_failure)
 FT_TEST(test_gnl_stream_destroy_lock_failure)
 {
     gnl_stream stream;
+
     GNL_STREAM_PREPARE(stream);
+#ifdef LIBFT_TEST_BUILD
+    (void)cma_untrack_leak(stream._mutex);
+    if (stream._mutex != ft_nullptr && stream._mutex->_native_mutex != ft_nullptr)
+        (void)cma_untrack_leak(stream._mutex->_native_mutex);
+#endif
     pt_recursive_mutex_lock_override_error_code.store(
         FT_ERR_SYS_MUTEX_LOCK_FAILED, std::memory_order_release);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream.destroy());

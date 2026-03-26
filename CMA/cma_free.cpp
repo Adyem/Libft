@@ -48,6 +48,10 @@ void cma_free(void* memory_pointer)
     freed_size = block->size;
     cma_debug_release_allocation(block, "cma_free", memory_pointer);
     cma_mark_block_free(block);
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    block->leak_stack_frame_count = 0;
+#endif
     block = merge_block(block);
     cma_debug_initialize_block(block);
     Page *page = find_page_of_block(block);

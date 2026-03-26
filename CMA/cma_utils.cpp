@@ -95,6 +95,20 @@ static void verify_backward_link(Block *block, Block *previous_block)
     return ;
 }
 
+static void verify_traversal_link(Block *current_block, Block *next_block,
+        const char *context)
+{
+    if (current_block == ft_nullptr || next_block == ft_nullptr)
+        return ;
+    if (current_block == next_block)
+        report_corrupted_block(current_block, context, ft_nullptr);
+    if (next_block->prev != current_block)
+        report_corrupted_block(next_block, context, ft_nullptr);
+    if (are_blocks_adjacent(current_block, next_block) == FT_FALSE)
+        report_corrupted_block(next_block, context, ft_nullptr);
+    return ;
+}
+
 void cma_validate_block(Block *block, const char *context, void *user_pointer)
 {
     const char    *location;
@@ -288,6 +302,8 @@ Block *find_free_block(ft_size_t size)
             cma_validate_block(cur_block, "find_free_block", ft_nullptr);
             if (cma_block_is_free(cur_block) && cur_block->size >= size)
                 return (cur_block);
+            verify_traversal_link(cur_block, cur_block->next,
+                "find_free_block corrupted traversal link");
             cur_block = cur_block->next;
         }
         cur_page = cur_page->next;
@@ -311,6 +327,8 @@ Block    *cma_find_block_for_pointer(const void *memory_pointer)
         {
             if (cma_block_user_pointer(current_block) == memory_pointer)
                 return (current_block);
+            verify_traversal_link(current_block, current_block->next,
+                "cma_find_block_for_pointer corrupted traversal link");
             current_block = current_block->next;
         }
         current_page = current_page->next;

@@ -129,46 +129,82 @@
 
 4. Error Query API Audit (Instance-Only `get_error` / `get_error_str`)
 - Goal: Ensure `get_error()` and `get_error_str()` are used only through object instances; remove/forbid static class-scope error queries (for example `ft_string::get_error()`).
+- Progress:
+- Parser module completed:
+  - `Parser/parser_dom_schema.cpp`
+  - `Parser/parser_dom_validation_report.cpp`
+  - `Parser/parser_dom_node.cpp`
+  - `Parser/parser_dom_find_path.cpp`
+  - `Parser/parser_document_backend.cpp`
+- CPP_class module completed:
+  - `CPP_class/class_data_buffer.hpp`
+  - `CPP_class/cpp_class_string_methods.cpp`
+- Tests updated:
+  - `Test/Test/test_parser_dom.cpp`
+  - `Test/Test/test_parser_document_backend.cpp`
+  - `Test/Test/test_cpp_class_lifecycle_methods.cpp`
+  - `Test/Test/test_cpp_class_string_operator_edges.cpp`
+- Template partial progress:
+  - `Template/vector.hpp`
+  - `Template/container_serialization.hpp`
+- Tests added:
+  - `Test/Test/test_template_vector_error_queries.cpp`
+  - `Test/Test/test_container_serialization.cpp`
+- Modules audited clean and removed from this item:
+  - `ReadLine`
+  - `GetNextLine`
+  - `File`
+  - `Compression`
+  - `Config`
+  - `CrossProcess`
+  - `HTML`
+  - `Observability`
+  - `SCMA`
+  - `Storage`
+  - `CPP_class`
+- File module completed:
+  - `File/file_path_join.cpp`
+  - `File/file_path_normalize.cpp`
+  - `File/file_check_directory.cpp`
+  - `File/file_watch.cpp`
+- Existing File tests updated:
+  - `Test/Test/test_file_utils.cpp`
+- XML module completed:
+  - `XML/xml_dom_bridge.cpp`
+- JSon module completed:
+  - `JSon/json_dom_bridge.cpp`
+- YAML module completed:
+  - `YAML/yaml_reader.cpp`
+- Time module completed:
+  - `Time/time_format.cpp`
+- Existing/new tests updated:
+  - `Test/Test/test_parser_dom.cpp`
+  - `Test/Test/test_yaml_reader.cpp`
+  - `Test/Test/test_time_timezone.cpp`
+  - `Test/Test/test_basic_extra_libft.cpp`
 - Modules to audit:
 - `API`
 - `Advanced`
 - `Basic`
 - `CMA`
-- `CPP_class`
-  - Classes found: `DataBuffer`, `ft_big_number`, `ft_bitset`, `ft_cancellation_source`, `ft_cancellation_state`, `ft_cancellation_token`, `ft_fd_istream`, `ft_file`, `ft_istringstream`, `ft_istream`, `ft_nullptr_t`, `ft_ofstream`, `ft_string`, `ft_stringbuf`, `ft_thread_pool`
 - `Compatebility`
-- `Compression`
-- `Config`
-- `CrossProcess`
 - `DUMB`
 - `Encryption`
 - `Errno`
-- `File`
 - `Game`
   - Classes found: `game_achievement`, `game_behavior_action`, `game_behavior_composite`, `game_behavior_context`, `game_behavior_node`, `game_behavior_profile`, `game_behavior_selector`, `game_behavior_sequence`, `game_behavior_table`, `game_behavior_tree`, `game_buff`, `game_character`, `game_crafting`, `game_currency_rate`, `game_data_catalog`, `game_debuff`, `game_dialogue_line`, `game_dialogue_script`, `game_dialogue_table`, `game_economy_table`, `game_equipment`, `game_event`, `game_event_scheduler`, `game_experience_table`, `game_goal`, `game_hooks`, `game_inventory`, `game_item`, `game_item_definition`, `game_item_modifier`, `game_loadout_blueprint`, `game_loadout_entry`, `game_map3d`, `game_path_step`, `game_path_step_test_helper`, `game_pathfinding`, `game_price_definition`, `game_progress_tracker`, `game_quest`, `game_rarity_band`, `game_recipe_blueprint`, `game_region_definition`, `game_reputation`, `game_resistance`, `game_script_bridge`, `game_script_context`, `game_server`, `game_skill`, `game_state`, `game_upgrade`, `game_vendor_profile`, `game_world`, `game_world_region`, `game_world_registry`, `game_world_replay_session`
 - `Geometry`
   - Classes found: `aabb`, `circle`, `sphere`
-- `GetNextLine`
-- `HTML`
-- `JSon`
 - `Logger`
 - `Math`
   - Classes found: `ft_cubic_spline`, `ft_dual_number`, `matrix2`, `matrix3`, `matrix4`, `quaternion`, `vector2`, `vector3`, `vector4`
 - `Networking`
-- `Observability`
 - `PThread`
-- `Parser`
 - `Printf`
 - `RNG`
-- `ReadLine`
-- `SCMA`
-- `Storage`
 - `System_utils`
 - `Template`
   - Classes found: `ft_circular_buffer`, `ft_deque`, `ft_event_emitter`, `ft_function`, `ft_future`, `ft_graph`, `ft_map`, `ft_matrix`, `ft_optional`, `ft_pool` (`Pool`), `ft_promise`, `ft_priority_queue`, `ft_queue`, `ft_set`, `ft_sharedptr`, `ft_stack`, `ft_string_view`, `ft_trie`, `ft_tuple`, `ft_uniqueptr`, `ft_unordered_map`, `ft_variant`, `ft_vector`, `Iterator`, `Pair`
-- `Time`
-- `XML`
-- `YAML`
 
 5. Thread-Safe Move Pattern Audit (`move(...)` lifecycle + mutex invariants)
 - Goal: Standardize `move(...)` for lifecycle/thread-safe classes so concurrent moves are safe.

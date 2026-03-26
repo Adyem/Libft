@@ -124,6 +124,9 @@ static ft_bool api_connection_pool_ensure_capacity(
         cma_free(storage.entries);
     storage.entries = new_entries;
     storage.entry_capacity = new_capacity;
+#ifdef LIBFT_TEST_BUILD
+    (void)cma_untrack_leak(storage.entries);
+#endif
     return (FT_TRUE);
 }
 
@@ -160,6 +163,11 @@ static pt_mutex &api_connection_pool_get_tls_mutex(void)
         initialize_error = tls_mutex->initialize();
         if (initialize_error != FT_ERR_SUCCESS)
             su_abort();
+#ifdef LIBFT_TEST_BUILD
+        (void)cma_untrack_leak(tls_mutex);
+        if (tls_mutex->_native_mutex != ft_nullptr)
+            (void)cma_untrack_leak(tls_mutex->_native_mutex);
+#endif
     }
 
     return (*tls_mutex);
@@ -300,6 +308,11 @@ static pt_mutex &api_connection_pool_get_mutex(void)
         initialize_error = connection_pool_mutex->initialize();
         if (initialize_error != FT_ERR_SUCCESS)
             su_abort();
+#ifdef LIBFT_TEST_BUILD
+        (void)cma_untrack_leak(connection_pool_mutex);
+        if (connection_pool_mutex->_native_mutex != ft_nullptr)
+            (void)cma_untrack_leak(connection_pool_mutex->_native_mutex);
+#endif
     }
 
     return (*connection_pool_mutex);

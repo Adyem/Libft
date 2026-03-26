@@ -3,6 +3,7 @@
 
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Compatebility/compatebility_stack_trace.hpp"
 #include <cstdint>
 #include <stdint.h>
 
@@ -47,6 +48,11 @@ struct Block
     uint32_t            magic;
     ft_size_t           size;
     ft_bool            free;
+#ifdef LIBFT_TEST_BUILD
+    ft_bool            leak_ignored;
+    ft_size_t           leak_stack_frame_count;
+    void                *leak_stack_frames[CMP_STACK_TRACE_MAX_FRAMES];
+#endif
     Block               *next;
     Block               *prev;
     unsigned char       *payload;
@@ -110,6 +116,10 @@ Block    *cma_metadata_allocate_block(void) __attribute__ ((warn_unused_result))
 void    cma_metadata_release_block(Block *block);
 void    cma_metadata_reset(void);
 
+#ifdef LIBFT_TEST_BUILD
+void    cma_capture_leak_stack(Block *block, ft_size_t skip_count);
+#endif
+
 #if DEBUG
 ft_size_t    cma_debug_allocation_size(ft_size_t requested_size);
 void    cma_debug_initialize_block(Block *block);
@@ -127,6 +137,13 @@ inline ft_size_t cma_debug_allocation_size(ft_size_t requested_size)
 
 inline void cma_debug_initialize_block(Block *block)
 {
+#ifdef LIBFT_TEST_BUILD
+    if (block != ft_nullptr)
+    {
+        block->leak_ignored = FT_FALSE;
+        block->leak_stack_frame_count = 0;
+    }
+#endif
     (void)block;
     return ;
 }

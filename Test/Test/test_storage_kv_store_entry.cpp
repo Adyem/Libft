@@ -107,7 +107,6 @@ FT_TEST(test_kv_store_entry_expiration_controls)
     expired = true;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, entry.is_expired(-5, expired));
     FT_ASSERT_EQ(false, expired);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, FT_ERR_SUCCESS);
 
     FT_ASSERT_EQ(0, entry.configure_expiration(false, 0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);

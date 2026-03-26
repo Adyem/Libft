@@ -147,6 +147,7 @@ void Pool<T>::release(ft_size_t index) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    T *pointer_to_release;
 
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -155,10 +156,16 @@ void Pool<T>::release(ft_size_t index) noexcept
         set_error(lock_error);
         return ;
     }
+    pointer_to_release = ft_nullptr;
     if (index < this->_slots.size())
+    {
+        pointer_to_release = this->_slots[index];
         this->_slots[index] = ft_nullptr;
+    }
     this->_free_indices.push_back(index);
     (void)this->unlock_internal(lock_acquired);
+    if (pointer_to_release != ft_nullptr)
+        cma_free(pointer_to_release);
     set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -442,6 +449,9 @@ int32_t Pool<T>::destroy()
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t slots_destroy_error;
+    int32_t free_indices_destroy_error;
+    int32_t first_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (set_error(FT_ERR_SUCCESS));
@@ -449,6 +459,7 @@ int32_t Pool<T>::destroy()
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (set_error(lock_error));
+    first_error = FT_ERR_SUCCESS;
     ft_size_t index;
 
     index = 0;
@@ -462,11 +473,16 @@ int32_t Pool<T>::destroy()
         }
         ++index;
     }
-    this->_slots.clear();
-    this->_free_indices.clear();
+    slots_destroy_error = this->_slots.destroy();
+    if (slots_destroy_error != FT_ERR_SUCCESS)
+        first_error = slots_destroy_error;
+    free_indices_destroy_error = this->_free_indices.destroy();
+    if (first_error == FT_ERR_SUCCESS
+        && free_indices_destroy_error != FT_ERR_SUCCESS)
+        first_error = free_indices_destroy_error;
     (void)this->unlock_internal(lock_acquired);
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (set_error(FT_ERR_SUCCESS));
+    return (set_error(first_error));
 }
 
 template<typename T>
