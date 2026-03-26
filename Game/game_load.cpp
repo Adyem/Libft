@@ -153,6 +153,8 @@ int32_t deserialize_inventory(game_inventory &inventory, json_group *group)
         }
         item_prefix += item_index_string;
         game_item item_temp;
+        if (item_temp.initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_GAME_GENERAL_ERROR);
         if (build_item_from_group(item_temp, group, item_prefix) != FT_ERR_SUCCESS)
         {
             loop_error = FT_ERR_GAME_GENERAL_ERROR;
@@ -188,6 +190,8 @@ int32_t deserialize_equipment(game_character &character, json_group *group)
         ft_string head_prefix;
         if (head_prefix.initialize("head") != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
+        if (item_temp.initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_GAME_GENERAL_ERROR);
         if (build_item_from_group(item_temp, group, head_prefix) != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
         ft_sharedptr<game_item> item(new game_item());
@@ -205,6 +209,8 @@ int32_t deserialize_equipment(game_character &character, json_group *group)
         ft_string chest_prefix;
         if (chest_prefix.initialize("chest") != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
+        if (item_temp.initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_GAME_GENERAL_ERROR);
         if (build_item_from_group(item_temp, group, chest_prefix) != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
         ft_sharedptr<game_item> item(new game_item());
@@ -221,6 +227,8 @@ int32_t deserialize_equipment(game_character &character, json_group *group)
         game_item item_temp;
         ft_string weapon_prefix;
         if (weapon_prefix.initialize("weapon") != FT_ERR_SUCCESS)
+            return (FT_ERR_GAME_GENERAL_ERROR);
+        if (item_temp.initialize() != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
         if (build_item_from_group(item_temp, group, weapon_prefix) != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
@@ -281,6 +289,8 @@ int32_t deserialize_quest(game_quest &quest, json_group *group)
                 return (FT_ERR_NO_MEMORY);
             prefix += index_string;
             game_item reward_temp;
+            if (reward_temp.initialize() != FT_ERR_SUCCESS)
+                return (FT_ERR_GAME_GENERAL_ERROR);
             if (build_item_from_group(reward_temp, group, prefix) != FT_ERR_SUCCESS)
                 return (FT_ERR_GAME_GENERAL_ERROR);
             ft_sharedptr<game_item> reward(new game_item());

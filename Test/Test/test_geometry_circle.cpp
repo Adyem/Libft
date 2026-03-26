@@ -2432,51 +2432,80 @@ FT_TEST(test_circle_move_bidirectional_high_load_soak_rounds)
 
 FT_TEST(test_circle_setters_getters_contention_high_load_soak_rounds)
 {
-    circle shape;
-    std::atomic<bool> worker_failed;
-    std::thread writer_thread;
-    int round_index;
-    int index;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 1.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    round_index = 0;
-    while (round_index < 3)
+    struct circle_soak_test_context
     {
-        worker_failed.store(false);
-        writer_thread = std::thread([&shape, &worker_failed]() {
-            int iteration_index;
-            int local_error_code;
+        std::atomic<int> result;
+    };
+    circle_soak_test_context context;
+    pthread_t test_thread;
+    int32_t join_result;
+    const long join_timeout_ms = 5000;
 
-            iteration_index = 0;
-            while (iteration_index < 3072 && worker_failed.load() == false)
-            {
-                local_error_code = shape.set_center(
-                        static_cast<double>((iteration_index % 7) - 3),
-                        static_cast<double>((iteration_index % 5) - 2));
-                if (local_error_code != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                local_error_code = shape.set_radius(4.0 + (iteration_index % 4));
-                if (local_error_code != FT_ERR_SUCCESS)
-                    worker_failed.store(true);
-                iteration_index = iteration_index + 1;
-            }
-            return ;
-        });
-        index = 0;
-        while (index < 3072 && worker_failed.load() == false)
+    context.result.store(0);
+    FT_ASSERT_EQ(0, pt_thread_create(&test_thread, ft_nullptr,
+        [](void *argument) -> void *
         {
-            if (std::isfinite(shape.get_center_x()) == false
-                || std::isfinite(shape.get_center_y()) == false
-                || std::isfinite(shape.get_radius()) == false)
-                worker_failed.store(true);
-            index = index + 1;
-        }
-        writer_thread.join();
-        FT_ASSERT_EQ(false, worker_failed.load());
-        round_index = round_index + 1;
-    }
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
+            circle_soak_test_context *context_pointer;
+            circle shape;
+            std::atomic<bool> worker_failed;
+            std::thread writer_thread;
+            int round_index;
+            int index;
+
+            context_pointer = static_cast<circle_soak_test_context *>(argument);
+            if (context_pointer == ft_nullptr)
+                return (ft_nullptr);
+            if (shape.initialize(0.0, 0.0, 1.0) != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            if (shape.enable_thread_safety() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            round_index = 0;
+            while (round_index < 3)
+            {
+                worker_failed.store(false);
+                writer_thread = std::thread([&shape, &worker_failed]() {
+                    int iteration_index;
+                    int local_error_code;
+
+                    iteration_index = 0;
+                    while (iteration_index < 3072 && worker_failed.load() == false)
+                    {
+                        local_error_code = shape.set_center(
+                                static_cast<double>((iteration_index % 7) - 3),
+                                static_cast<double>((iteration_index % 5) - 2));
+                        if (local_error_code != FT_ERR_SUCCESS)
+                            worker_failed.store(true);
+                        local_error_code = shape.set_radius(4.0 + (iteration_index % 4));
+                        if (local_error_code != FT_ERR_SUCCESS)
+                            worker_failed.store(true);
+                        iteration_index = iteration_index + 1;
+                    }
+                    return ;
+                });
+                index = 0;
+                while (index < 3072 && worker_failed.load() == false)
+                {
+                    if (std::isfinite(shape.get_center_x()) == false
+                        || std::isfinite(shape.get_center_y()) == false
+                        || std::isfinite(shape.get_radius()) == false)
+                        worker_failed.store(true);
+                    index = index + 1;
+                }
+                writer_thread.join();
+                if (worker_failed.load() != false)
+                    return (ft_nullptr);
+                round_index = round_index + 1;
+            }
+            if (shape.destroy() != FT_ERR_SUCCESS)
+                return (ft_nullptr);
+            context_pointer->result.store(1);
+            return (ft_nullptr);
+        }, &context));
+    join_result = pt_thread_timed_join(test_thread, ft_nullptr, join_timeout_ms);
+    if (join_result != 0)
+        (void)pt_thread_detach(test_thread);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, context.result.load());
     return (1);
 }
 

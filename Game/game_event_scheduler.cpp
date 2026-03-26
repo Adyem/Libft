@@ -508,9 +508,12 @@ void game_event_scheduler::update_events(ft_sharedptr<game_world> &world,
         current_event = ready_events[ready_event_index];
         if (current_event)
         {
+            game_world *world_pointer;
             const ft_function<void(game_world&, game_event&)> &callback = current_event->get_callback();
-            if (callback)
-                callback(*world, *current_event);
+
+            world_pointer = world.get();
+            if (callback && world_pointer != ft_nullptr)
+                callback(*world_pointer, *current_event);
         }
         ready_event_index++;
     }
@@ -860,7 +863,11 @@ int32_t deserialize_event_scheduler(ft_sharedptr<game_event_scheduler> &schedule
         duration_item = json_find_item(group, key_duration.c_str());
         if (!id_item || !duration_item)
             return (FT_ERR_GAME_GENERAL_ERROR);
-        event = ft_sharedptr<game_event>(new game_event());
+        event = ft_sharedptr<game_event>(new (std::nothrow) game_event());
+        if (!event)
+            return (FT_ERR_NO_MEMORY);
+        if (event->initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_GAME_GENERAL_ERROR);
         event->set_id(ft_atoi(id_item->value));
         event->set_duration(ft_atoi(duration_item->value));
         scheduler->schedule_event(event);
