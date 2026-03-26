@@ -592,7 +592,7 @@ void game_event_scheduler::dump_events(ft_vector<ft_sharedptr<game_event> > &out
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> queued_events;
+    ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> *queued_events;
     ft_sharedptr<game_event> current_event;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_event_scheduler::dump_events");
@@ -604,18 +604,25 @@ void game_event_scheduler::dump_events(ft_vector<ft_sharedptr<game_event> > &out
         return ;
     }
     out.clear();
-    queued_events = ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr>(this->_events);
-    if (queued_events.get_error() != FT_ERR_SUCCESS)
+    queued_events = new (std::nothrow) ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr>(this->_events);
+    if (queued_events == ft_nullptr)
     {
         this->unlock_internal(lock_acquired);
         return ;
     }
-    this->unlock_internal(lock_acquired);
-    while (!queued_events.empty())
+    if (queued_events->get_error() != FT_ERR_SUCCESS)
     {
-        current_event = queued_events.pop();
+        delete queued_events;
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
+    this->unlock_internal(lock_acquired);
+    while (!queued_events->empty())
+    {
+        current_event = queued_events->pop();
         out.push_back(current_event);
     }
+    delete queued_events;
     return ;
 }
 

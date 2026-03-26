@@ -177,6 +177,90 @@
 - Keep mutex lifetime tied to explicit `destroy()`/destructor (no mutex teardown in `move(...)`).
 - Lock both objects in stable address order, transfer/reset payload under lock, unlock in reverse order.
 - Avoid forcing source to `DESTROYED` in `move(...)` unless full teardown invariants are guaranteed safely.
+- Audit copy/move thread-safety propagation: if the source object is thread-safe, the destination must also end thread-safe after copy/move.
+- Modules to audit:
+- `API`
+- `Advanced`
+- `Basic`
+- `CMA`
+- `CPP_class`
+  - Classes found: `DataBuffer`, `ft_big_number`, `ft_bitset`, `ft_cancellation_source`, `ft_cancellation_state`, `ft_cancellation_token`, `ft_fd_istream`, `ft_file`, `ft_istringstream`, `ft_istream`, `ft_nullptr_t`, `ft_ofstream`, `ft_string`, `ft_stringbuf`, `ft_thread_pool`
+- `Compatebility`
+- `Compression`
+- `Config`
+- `CrossProcess`
+- `DUMB`
+  - Classes found: `ft_sound_device`, `ft_sound_clip`, `ft_render_window`
+- `Encryption`
+- `Errno`
+- `File`
+- `Game`
+  - Classes found: `game_achievement`, `game_behavior_action`, `game_behavior_composite`, `game_behavior_context`, `game_behavior_node`, `game_behavior_profile`, `game_behavior_selector`, `game_behavior_sequence`, `game_behavior_table`, `game_behavior_tree`, `game_buff`, `game_character`, `game_crafting`, `game_currency_rate`, `game_data_catalog`, `game_debuff`, `game_dialogue_line`, `game_dialogue_script`, `game_dialogue_table`, `game_economy_table`, `game_equipment`, `game_event`, `game_event_scheduler`, `game_experience_table`, `game_goal`, `game_hooks`, `game_inventory`, `game_item`, `game_item_definition`, `game_item_modifier`, `game_loadout_blueprint`, `game_loadout_entry`, `game_map3d`, `game_path_step`, `game_path_step_test_helper`, `game_pathfinding`, `game_price_definition`, `game_progress_tracker`, `game_quest`, `game_rarity_band`, `game_recipe_blueprint`, `game_region_definition`, `game_reputation`, `game_resistance`, `game_script_bridge`, `game_script_context`, `game_server`, `game_skill`, `game_state`, `game_upgrade`, `game_vendor_profile`, `game_world`, `game_world_region`, `game_world_registry`, `game_world_replay_session`
+- `Geometry`
+  - Classes found: `aabb`, `circle`, `sphere`
+- `GetNextLine`
+- `HTML`
+- `JSon`
+- `Logger`
+- `Math`
+  - Classes found: `ft_cubic_spline`, `ft_dual_number`, `matrix2`, `matrix3`, `matrix4`, `quaternion`, `vector2`, `vector3`, `vector4`
+- `Networking`
+- `Observability`
+- `PThread`
+- `Parser`
+- `Printf`
+- `RNG`
+- `ReadLine`
+- `SCMA`
+- `Storage`
+- `System_utils`
+- `Template`
+  - Classes found: `ft_circular_buffer`, `ft_deque`, `ft_event_emitter`, `ft_function`, `ft_future`, `ft_graph`, `ft_map`, `ft_matrix`, `ft_optional`, `ft_pool` (`Pool`), `ft_promise`, `ft_priority_queue`, `ft_queue`, `ft_set`, `ft_sharedptr`, `ft_stack`, `ft_string_view`, `ft_trie`, `ft_tuple`, `ft_uniqueptr`, `ft_unordered_map`, `ft_variant`, `ft_vector`, `Iterator`, `Pair`
+- `Time`
+- `XML`
+- `YAML`
+- For `move(...)`, prefer transferring the source mutex pointer directly to the destination and setting the source mutex pointer to `ft_nullptr` instead of rebuilding a fresh mutex on the destination.
+- Modules to audit:
+- `API`
+- `Advanced`
+- `Basic`
+- `CMA`
+- `CPP_class`
+  - Classes found: `DataBuffer`, `ft_big_number`, `ft_bitset`, `ft_cancellation_source`, `ft_cancellation_state`, `ft_cancellation_token`, `ft_fd_istream`, `ft_file`, `ft_istringstream`, `ft_istream`, `ft_nullptr_t`, `ft_ofstream`, `ft_string`, `ft_stringbuf`, `ft_thread_pool`
+- `Compatebility`
+- `Compression`
+- `Config`
+- `CrossProcess`
+- `DUMB`
+  - Classes found: `ft_sound_device`, `ft_sound_clip`, `ft_render_window`
+- `Encryption`
+- `Errno`
+- `File`
+- `Game`
+  - Classes found: `game_achievement`, `game_behavior_action`, `game_behavior_composite`, `game_behavior_context`, `game_behavior_node`, `game_behavior_profile`, `game_behavior_selector`, `game_behavior_sequence`, `game_behavior_table`, `game_behavior_tree`, `game_buff`, `game_character`, `game_crafting`, `game_currency_rate`, `game_data_catalog`, `game_debuff`, `game_dialogue_line`, `game_dialogue_script`, `game_dialogue_table`, `game_economy_table`, `game_equipment`, `game_event`, `game_event_scheduler`, `game_experience_table`, `game_goal`, `game_hooks`, `game_inventory`, `game_item`, `game_item_definition`, `game_item_modifier`, `game_loadout_blueprint`, `game_loadout_entry`, `game_map3d`, `game_path_step`, `game_path_step_test_helper`, `game_pathfinding`, `game_price_definition`, `game_progress_tracker`, `game_quest`, `game_rarity_band`, `game_recipe_blueprint`, `game_region_definition`, `game_reputation`, `game_resistance`, `game_script_bridge`, `game_script_context`, `game_server`, `game_skill`, `game_state`, `game_upgrade`, `game_vendor_profile`, `game_world`, `game_world_region`, `game_world_registry`, `game_world_replay_session`
+- `Geometry`
+  - Classes found: `aabb`, `circle`, `sphere`
+- `GetNextLine`
+- `HTML`
+- `JSon`
+- `Logger`
+- `Math`
+  - Classes found: `ft_cubic_spline`, `ft_dual_number`, `matrix2`, `matrix3`, `matrix4`, `quaternion`, `vector2`, `vector3`, `vector4`
+- `Networking`
+- `Observability`
+- `PThread`
+- `Parser`
+- `Printf`
+- `RNG`
+- `ReadLine`
+- `SCMA`
+- `Storage`
+- `System_utils`
+- `Template`
+  - Classes found: `ft_circular_buffer`, `ft_deque`, `ft_event_emitter`, `ft_function`, `ft_future`, `ft_graph`, `ft_map`, `ft_matrix`, `ft_optional`, `ft_pool` (`Pool`), `ft_promise`, `ft_priority_queue`, `ft_queue`, `ft_set`, `ft_sharedptr`, `ft_stack`, `ft_string_view`, `ft_trie`, `ft_tuple`, `ft_uniqueptr`, `ft_unordered_map`, `ft_variant`, `ft_vector`, `Iterator`, `Pair`
+- `Time`
+- `XML`
+- `YAML`
 - Modules to audit:
 - `API`
 - `Advanced`
