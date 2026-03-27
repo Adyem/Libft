@@ -2163,6 +2163,126 @@ FT_TEST(test_http2_stream_manager_priority_reassignment)
     return (1);
 }
 
+FT_TEST(test_http2_frame_copy_move_preserve_state)
+{
+    http2_frame source;
+    http2_frame moved;
+    ft_string copied_payload;
+    ft_string moved_payload;
+    uint8_t type_value;
+    uint8_t flags_value;
+    uint32_t stream_identifier;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_payload.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_payload.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT(source.set_type(0x5));
+    FT_ASSERT(source.set_flags(0x3));
+    FT_ASSERT(source.set_stream_identifier(11));
+    FT_ASSERT(source.set_payload_from_buffer("abc", 3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, source.set_error(FT_ERR_ALREADY_EXISTS));
+    {
+        http2_frame copied(source);
+
+        FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, copied._initialised_state);
+        FT_ASSERT_EQ(FT_TRUE, copied.is_thread_safe());
+        FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, copied.get_error());
+        FT_ASSERT(copied.get_type(type_value));
+        FT_ASSERT_EQ((uint8_t)0x5, type_value);
+        FT_ASSERT(copied.get_flags(flags_value));
+        FT_ASSERT_EQ((uint8_t)0x3, flags_value);
+        FT_ASSERT(copied.get_stream_identifier(stream_identifier));
+        FT_ASSERT_EQ((uint32_t)11, stream_identifier);
+        FT_ASSERT(copied.copy_payload(copied_payload));
+        FT_ASSERT(copied_payload == "abc");
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.initialize(static_cast<http2_frame &&>(source)));
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, moved._initialised_state);
+    FT_ASSERT_EQ(FT_TRUE, moved.is_thread_safe());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, moved.get_error());
+    FT_ASSERT(moved.copy_payload(moved_payload));
+    FT_ASSERT(moved_payload == "abc");
+    return (1);
+}
+
+FT_TEST(test_http2_frame_destroyed_source_propagates_copy_state)
+{
+    http2_frame source;
+    http2_frame copied;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, source.set_error(FT_ERR_INVALID_OPERATION));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.initialize(source));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, copied._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, copied.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(copied.get_error_str(),
+        ft_strerror(FT_ERR_INVALID_OPERATION)));
+    return (1);
+}
+
+FT_TEST(test_http2_stream_manager_copy_preserve_stream_state)
+{
+    http2_stream_manager source;
+    http2_stream_manager copied;
+    ft_string buffer;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT(source.open_stream(3));
+    FT_ASSERT(source.append_data(3, "Ping", 4));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, source.set_error(FT_ERR_ALREADY_EXISTS));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.initialize(source));
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, copied._initialised_state);
+    FT_ASSERT_EQ(FT_FALSE, copied.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, copied.get_error());
+    FT_ASSERT(copied.get_stream_buffer(3, buffer));
+    FT_ASSERT(buffer == "Ping");
+    return (1);
+}
+
+FT_TEST(test_http2_stream_manager_move_preserve_stream_state)
+{
+    http2_stream_manager source;
+    http2_stream_manager moved;
+    ft_string buffer;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT(source.open_stream(3));
+    FT_ASSERT(source.append_data(3, "Ping", 4));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, source.set_error(FT_ERR_ALREADY_EXISTS));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.initialize(
+        static_cast<http2_stream_manager &&>(source)));
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, moved._initialised_state);
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
+    FT_ASSERT_EQ(FT_FALSE, moved.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, moved.get_error());
+    FT_ASSERT(moved.get_stream_buffer(3, buffer));
+    FT_ASSERT(buffer == "Ping");
+    return (1);
+}
+
+FT_TEST(test_http2_stream_manager_destroyed_source_propagates_copy_state)
+{
+    http2_stream_manager source;
+    http2_stream_manager copied;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.set_error(FT_ERR_NOT_FOUND));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.destroy());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.initialize(source));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, copied._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copied.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(copied.get_error_str(),
+        ft_strerror(FT_ERR_NOT_FOUND)));
+    return (1);
+}
+
 FT_TEST(test_http2_settings_apply_remote_settings)
 {
     http2_stream_manager manager;

@@ -31,10 +31,14 @@ ft_ofstream::ft_ofstream(const ft_ofstream &other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    if (this->_file.initialize() != FT_ERR_SUCCESS)
     {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
+        ft_file copied_file(other._file);
+
+        if (this->_file.move(copied_file) != FT_ERR_SUCCESS)
+        {
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return ;
+        }
     }
     if (other._mutex != ft_nullptr && this->enable_thread_safety() != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -51,28 +55,8 @@ ft_ofstream::ft_ofstream(ft_ofstream &&other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
+    if (this->move(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->_file.initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._mutex != ft_nullptr)
-    {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)other.disable_thread_safety();
-    }
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -86,11 +70,19 @@ ft_ofstream::~ft_ofstream() noexcept
 
 int32_t ft_ofstream::initialize() noexcept
 {
+    int32_t file_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_ofstream::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    file_initialize_error = this->_file.initialize();
+    if (file_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (file_initialize_error);
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -99,6 +91,7 @@ int32_t ft_ofstream::initialize() noexcept
 int32_t ft_ofstream::destroy() noexcept
 {
     int32_t destroy_error;
+    int32_t file_destroy_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -106,9 +99,11 @@ int32_t ft_ofstream::destroy() noexcept
         return (FT_ERR_SUCCESS);
     }
     destroy_error = this->disable_thread_safety();
-    this->_file.close();
+    file_destroy_error = this->_file.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (destroy_error);
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    return (file_destroy_error);
 }
 
 int32_t ft_ofstream::move(ft_ofstream &other) noexcept

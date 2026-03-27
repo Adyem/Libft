@@ -5,6 +5,7 @@
   - `Networking/networking_http2_client.cpp`
 - Tests updated:
   - `Test/Test/test_api_request.cpp`
+    - `test_http2_stream_manager_error_queries_follow_lifecycle_contract`
 - Modules to audit:
 - `API`
 - `Advanced`
@@ -91,6 +92,29 @@
 
 3. Constructor Lifecycle Audit (No Constructor-Time Initialization)
 - Goal: Ensure classes are initialized only when `initialize(...)` is explicitly called by the user. Default constructors must never initialize lifecycle state/sub-objects.
+- Progress:
+- Networking partial progress:
+  - `Networking/networking_http2_client.cpp`
+    - `http2_frame` copy/move constructors now route through lifecycle `initialize(...)` paths and preserve destroyed-source lifecycle state/error behavior.
+    - `http2_stream_manager::initialize(const http2_stream_manager &)` now copies stream-table and identifier state instead of only window counters.
+    - `http2_stream_state` now manages its owned `ft_string` through lifecycle-aware constructor/destructor cleanup, and `http2_stream_manager::open_stream()` no longer double-initializes stream buffers.
+- CPP_class partial progress:
+  - `CPP_class/cpp_class_istringstream.cpp`
+    - `ft_istringstream` move construction now uses the class move path instead of rebuilding from `get_string()`, so source lifecycle state is transferred correctly.
+  - `CPP_class/cpp_class_ofstream.cpp`
+    - `ft_ofstream::initialize()` now initializes its owned `ft_file`, and move construction preserves the open file handle through the real move path.
+- Tests updated:
+  - `Test/Test/test_api_request.cpp`
+    - `test_http2_stream_manager_error_queries_follow_lifecycle_contract`
+    - `test_http2_frame_copy_move_preserve_state`
+    - `test_http2_frame_destroyed_source_propagates_copy_state`
+    - `test_http2_stream_manager_copy_preserve_stream_state`
+    - `test_http2_stream_manager_move_preserve_stream_state`
+    - `test_http2_stream_manager_destroyed_source_propagates_copy_state`
+  - `Test/Test/test_cpp_class_istringstream_lifecycle.cpp`
+    - `test_cpp_class_istringstream_move_constructor_transfers_buffer`
+  - `Test/Test/test_cpp_class_lifecycle_methods.cpp`
+    - `test_ft_ofstream_move_constructor_preserves_open_file`
 - Modules to audit:
 - `API`
 - `Advanced`

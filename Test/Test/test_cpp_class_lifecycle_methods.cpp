@@ -230,3 +230,36 @@ FT_TEST(test_ft_ofstream_initialize_twice_aborts)
         ofstream_initialize_twice_aborts));
     return (1);
 }
+
+FT_TEST(test_ft_ofstream_move_constructor_preserves_open_file)
+{
+    const char *file_path;
+    ft_ofstream source_stream;
+    FILE *file_pointer;
+    char read_buffer[32];
+    size_t bytes_read;
+
+    file_path = "/tmp/libft_ofstream_move_constructor.txt";
+    (void)unlink(file_path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.open(file_path));
+    FT_ASSERT_EQ((ssize_t)3, source_stream.write("one"));
+    {
+        ft_ofstream moved_stream(static_cast<ft_ofstream &&>(source_stream));
+
+        FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_stream._initialised_state);
+        FT_ASSERT_EQ((ssize_t)3, moved_stream.write("two"));
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.close());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.destroy());
+    }
+    file_pointer = std::fopen(file_path, "rb");
+    FT_ASSERT(file_pointer != ft_nullptr);
+    std::memset(read_buffer, 0, sizeof(read_buffer));
+    bytes_read = std::fread(read_buffer, 1, sizeof(read_buffer) - 1,
+        file_pointer);
+    std::fclose(file_pointer);
+    FT_ASSERT_EQ((size_t)6, bytes_read);
+    FT_ASSERT_EQ(0, std::strcmp(read_buffer, "onetwo"));
+    (void)unlink(file_path);
+    return (1);
+}

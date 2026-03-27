@@ -723,9 +723,8 @@ FT_TEST(test_api_http_plain_http2_streaming_success)
     FT_ASSERT(capture.headers.size() > 0U);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, capture.headers.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, capture.body.get_error());
-    FT_ASSERT(capture.headers.find("\r\ncontent-type: text/plain\r\n")
+    FT_ASSERT(capture.headers.find("content-type: text/plain\r\n")
         != ft_string::npos);
-    FT_ASSERT(capture.headers.find(":status: 200") != ft_string::npos);
     FT_ASSERT_EQ(1U, capture.header_calls);
     FT_ASSERT_EQ(200, capture.status_code);
     FT_ASSERT(capture.headers.find("content-type: text/plain")

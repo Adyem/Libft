@@ -24,10 +24,8 @@ ft_istringstream::ft_istringstream(ft_istringstream &&other) noexcept
 : ft_istream(), _buffer()
 {
     uint32_t initialize_error;
-    ft_string string_value;
 
-    string_value = other.get_string();
-    initialize_error = this->initialize(string_value);
+    initialize_error = this->move(other);
     if (initialize_error != FT_ERR_SUCCESS)
         (void)this->destroy();
     return ;

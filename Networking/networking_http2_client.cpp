@@ -447,10 +447,12 @@ int32_t http2_frame::destroy() noexcept
     int32_t disable_error;
     int32_t payload_error;
     int32_t first_error;
+    int32_t previous_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
         return (FT_ERR_SUCCESS);
+    previous_error = http2_frame::_last_error;
     first_error = FT_ERR_SUCCESS;
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
@@ -462,40 +464,33 @@ int32_t http2_frame::destroy() noexcept
     this->_flags = 0;
     this->_stream_identifier = 0;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    this->set_error(first_error);
-    return (first_error);
+    if (first_error != FT_ERR_SUCCESS)
+        return (this->set_error(first_error));
+    this->set_error(previous_error);
+    return (FT_ERR_SUCCESS);
 }
 
 http2_frame::http2_frame(const http2_frame &other) noexcept
-    : _type(0), _flags(0), _stream_identifier(0), _payload(), _mutex(ft_nullptr)
+    : http2_frame()
 {
-    ft_bool lock_acquired;
-
-    lock_acquired = FT_FALSE;
-    if (other.lock(&lock_acquired) != 0)
-        return ;
-    this->_type = other._type;
-    this->_flags = other._flags;
-    this->_stream_identifier = other._stream_identifier;
-    this->_payload = other._payload;
-    const_cast<http2_frame &>(other).unlock(lock_acquired);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "http2_frame::http2_frame(copy)",
+            "source is uninitialised");
+    if (this->initialize(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
 http2_frame::http2_frame(http2_frame &&other) noexcept
-    : _type(0), _flags(0), _stream_identifier(0), _payload(), _mutex(ft_nullptr)
+    : http2_frame()
 {
-    ft_bool lock_acquired;
-
-    lock_acquired = FT_FALSE;
-    if (other.lock(&lock_acquired) != 0)
-        return ;
-    this->_type = other._type;
-    this->_flags = other._flags;
-    this->_stream_identifier = other._stream_identifier;
-    this->_payload = other._payload;
-    other._payload.clear();
-    other.unlock(lock_acquired);
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "http2_frame::http2_frame(move)",
+            "source is uninitialised");
+    if (this->initialize(static_cast<http2_frame &&>(other)) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -507,6 +502,12 @@ int32_t http2_frame::move(http2_frame &other) noexcept
 int32_t http2_frame::initialize(const http2_frame &other) noexcept
 {
     ft_bool lock_acquired;
+    int32_t destroy_error;
+    int32_t initialize_error;
+    int32_t source_error;
+    int32_t lock_error;
+    int32_t enable_error;
+    int32_t payload_error;
 
     if (this == &other)
         return (FT_ERR_SUCCESS);
@@ -514,42 +515,74 @@ int32_t http2_frame::initialize(const http2_frame &other) noexcept
         errno_abort_lifecycle(other._initialised_state,
             "http2_frame::initialize(const http2_frame &)",
             "source is uninitialised");
+    source_error = http2_frame::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-        (void)this->destroy();
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (this->set_error(destroy_error));
+    }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
+        this->_type = 0;
+        this->_flags = 0;
+        this->_stream_identifier = 0;
+        this->_mutex = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(source_error);
         return (FT_ERR_SUCCESS);
     }
-    if (this->initialize() != FT_ERR_SUCCESS)
-        return (FT_ERR_INITIALIZATION_FAILED);
-    lock_acquired = FT_FALSE;
-    if (other.lock(&lock_acquired) != FT_ERR_SUCCESS)
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (FT_ERR_INVALID_OPERATION);
+        return (this->set_error(initialize_error));
+    }
+    lock_acquired = FT_FALSE;
+    lock_error = other.lock(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (this->set_error(lock_error));
     }
     this->_type = other._type;
     this->_flags = other._flags;
     this->_stream_identifier = other._stream_identifier;
     this->_payload = other._payload;
     const_cast<http2_frame &>(other).unlock(lock_acquired);
-    if (this->_payload.get_error() != FT_ERR_SUCCESS)
+    payload_error = this->_payload.get_error();
+    if (payload_error != FT_ERR_SUCCESS)
     {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (FT_ERR_INVALID_OPERATION);
+        (void)this->destroy();
+        return (this->set_error(payload_error));
     }
+    if (other.is_thread_safe() == FT_TRUE)
+    {
+        enable_error = this->enable_thread_safety();
+        if (enable_error != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (this->set_error(enable_error));
+        }
+    }
+    this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
 
 int32_t http2_frame::initialize(http2_frame &&other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
+    int32_t source_error;
 
     initialize_error = this->initialize(other);
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
-    (void)other.destroy();
+    source_error = http2_frame::_last_error;
+    destroy_error = other.destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (this->set_error(destroy_error));
+    this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -769,12 +802,14 @@ http2_stream_state::http2_stream_state() noexcept
     : buffer(), dependency_identifier(0), weight(16), exclusive_dependency(FT_FALSE),
       remote_window(65535), local_window(65535)
 {
+    if (this->buffer.initialize() != FT_ERR_SUCCESS)
+        (void)this->buffer.destroy();
     return ;
 }
 
 http2_stream_state::~http2_stream_state() noexcept
 {
-    this->buffer.clear();
+    (void)this->buffer.destroy();
     return ;
 }
 
@@ -852,36 +887,88 @@ int32_t http2_stream_manager::move(http2_stream_manager &other) noexcept
 
 int32_t http2_stream_manager::initialize(const http2_stream_manager &other) noexcept
 {
+    ft_bool lock_acquired;
+    int32_t destroy_error;
+    int32_t initialize_error;
+    int32_t source_error;
+    int32_t lock_error;
+    int32_t streams_error;
+    int32_t identifiers_error;
+
     if (this == &other)
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(other._initialised_state,
             "http2_stream_manager::initialize(const http2_stream_manager &)",
             "source is uninitialised");
+    source_error = http2_stream_manager::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-        (void)this->destroy();
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (this->set_error(destroy_error));
+    }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
+        this->_initial_remote_window = 65535;
+        this->_initial_local_window = 65535;
+        this->_connection_remote_window = 65535;
+        this->_connection_local_window = 65535;
+        this->_mutex = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (this->set_error(FT_ERR_SUCCESS));
+        this->set_error(source_error);
+        return (FT_ERR_SUCCESS);
     }
-    if (this->initialize() != FT_ERR_SUCCESS)
-        return (this->set_error(FT_ERR_INITIALIZATION_FAILED));
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(initialize_error));
+    }
+    lock_acquired = FT_FALSE;
+    lock_error = other.lock(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (this->set_error(lock_error));
+    }
     this->_initial_remote_window = other._initial_remote_window;
     this->_initial_local_window = other._initial_local_window;
     this->_connection_remote_window = other._connection_remote_window;
     this->_connection_local_window = other._connection_local_window;
-    return (this->set_error(FT_ERR_SUCCESS));
+    streams_error = this->_streams.copy_from(other._streams);
+    if (streams_error != FT_ERR_SUCCESS)
+    {
+        const_cast<http2_stream_manager &>(other).unlock(lock_acquired);
+        (void)this->destroy();
+        return (this->set_error(streams_error));
+    }
+    identifiers_error = this->_stream_identifiers.copy_from(
+            other._stream_identifiers);
+    const_cast<http2_stream_manager &>(other).unlock(lock_acquired);
+    if (identifiers_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (this->set_error(identifiers_error));
+    }
+    this->set_error(source_error);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t http2_stream_manager::initialize(http2_stream_manager &&other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
+    int32_t source_error;
 
     initialize_error = this->initialize(other);
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
-    (void)other.destroy();
+    source_error = http2_stream_manager::_last_error;
+    destroy_error = other.destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (this->set_error(destroy_error));
+    this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -891,10 +978,12 @@ int32_t http2_stream_manager::destroy() noexcept
     int32_t disable_error;
     int32_t stream_error;
     int32_t identifiers_error;
+    int32_t previous_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
         return (FT_ERR_SUCCESS);
+    previous_error = http2_stream_manager::_last_error;
     first_error = FT_ERR_SUCCESS;
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
@@ -910,7 +999,10 @@ int32_t http2_stream_manager::destroy() noexcept
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (this->set_error(first_error));
+    if (first_error != FT_ERR_SUCCESS)
+        return (this->set_error(first_error));
+    this->set_error(previous_error);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t http2_stream_manager::enable_thread_safety() noexcept
@@ -1120,15 +1212,7 @@ ft_bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
     {
         new_state.remote_window = this->_initial_remote_window;
         new_state.local_window = this->_initial_local_window;
-        if (new_state.buffer.initialize() != FT_ERR_SUCCESS)
-        {
-            this->unlock(lock_acquired);
-            this->set_error(new_state.buffer.get_error());
-            success_state = FT_FALSE;
-            return (FT_FALSE);
-        }
-        else
-            this->_streams.insert(stream_identifier, new_state);
+        this->_streams.insert(stream_identifier, new_state);
     }
     if (success_state)
     {
