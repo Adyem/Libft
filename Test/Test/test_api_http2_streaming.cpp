@@ -694,24 +694,17 @@ FT_TEST(test_api_http_plain_http2_streaming_success)
     if (!ready_result)
     {
         server_thread.join();
-        return (0);
+        FT_ASSERT_EQ(true, ready_result);
     }
     start_error = server_state.start_error.load(std::memory_order_acquire);
     if (start_error != FT_ERR_SUCCESS)
     {
         server_thread.join();
-        return (0);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, start_error);
     }
-    if (!http2_test_capture_reset(capture))
-        return (0);
-    if (connection_handle.initialize() != FT_ERR_SUCCESS)
-    {
-        return (0);
-    }
-    if (streaming_handler.initialize() != FT_ERR_SUCCESS)
-    {
-        return (0);
-    }
+    FT_ASSERT_EQ(true, http2_test_capture_reset(capture));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, connection_handle.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, streaming_handler.initialize());
     streaming_handler.reset();
     streaming_handler.set_headers_callback(http2_test_headers_callback);
     streaming_handler.set_body_callback(http2_test_body_callback);
@@ -724,36 +717,25 @@ FT_TEST(test_api_http_plain_http2_streaming_success)
         g_http2_test_server_port, ft_nullptr, &streaming_handler,
         used_http2, error_code);
     server_thread.join();
-    if (!request_result)
-        return (0);
-    if (!used_http2)
-    {
-        fprintf(stderr, "used_http2 false\n");
-        fflush(stderr);
-        return (0);
-    }
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        fprintf(stderr, "error_code=%d\n", error_code);
-        fflush(stderr);
-        return (0);
-    }
-    if (capture.header_calls != 1U || capture.status_code != 200
-        || capture.headers.find("content-type: text/plain") == ft_string::npos
-        || capture.body_calls != 2U || !capture.final_chunk_seen
-        || ft_strcmp(capture.body.c_str(), "hello world") != 0
-        || server_state.result.load(std::memory_order_acquire) != FT_ERR_SUCCESS)
-    {
-        fprintf(stderr,
-            "diag: header_calls=%u status=%d body_calls=%u final=%d body=%s server_result=%d\n",
-            capture.header_calls, capture.status_code, capture.body_calls,
-            capture.final_chunk_seen ? 1 : 0, capture.body.c_str(),
-            server_state.result.load(std::memory_order_acquire));
-        fflush(stderr);
-        return (0);
-    }
-    if (connection_handle.destroy() != FT_ERR_SUCCESS)
-        return (0);
+    FT_ASSERT_EQ(FT_TRUE, request_result);
+    FT_ASSERT_EQ(FT_TRUE, used_http2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
+    FT_ASSERT(capture.headers.size() > 0U);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, capture.headers.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, capture.body.get_error());
+    FT_ASSERT(capture.headers.find("\r\ncontent-type: text/plain\r\n")
+        != ft_string::npos);
+    FT_ASSERT(capture.headers.find(":status: 200") != ft_string::npos);
+    FT_ASSERT_EQ(1U, capture.header_calls);
+    FT_ASSERT_EQ(200, capture.status_code);
+    FT_ASSERT(capture.headers.find("content-type: text/plain")
+        != ft_string::npos);
+    FT_ASSERT_EQ(2U, capture.body_calls);
+    FT_ASSERT(capture.final_chunk_seen);
+    FT_ASSERT_EQ(0, ft_strcmp(capture.body.c_str(), "hello world"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        server_state.result.load(std::memory_order_acquire));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, connection_handle.destroy());
     return (1);
 }
 

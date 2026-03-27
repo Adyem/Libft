@@ -158,6 +158,56 @@ static ft_bool api_request_test_stream_http1_hook(const char *ip, uint16_t port,
     return (true);
 }
 
+static int api_request_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_http2_frame_get_error_returned = FT_FALSE;
+static int32_t g_http2_frame_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_http2_frame_get_error_str_returned = FT_FALSE;
+static const char *g_http2_frame_get_error_str_result = ft_nullptr;
+static ft_bool g_http2_stream_manager_get_error_returned = FT_FALSE;
+static int32_t g_http2_stream_manager_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_http2_stream_manager_get_error_str_returned = FT_FALSE;
+static const char *g_http2_stream_manager_get_error_str_result = ft_nullptr;
+
+static void http2_frame_get_error_uninitialised_operation(void)
+{
+    http2_frame frame;
+
+    g_http2_frame_get_error_result = frame.get_error();
+    g_http2_frame_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void http2_frame_get_error_str_uninitialised_operation(void)
+{
+    http2_frame frame;
+
+    g_http2_frame_get_error_str_result = frame.get_error_str();
+    g_http2_frame_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
+static void http2_stream_manager_get_error_uninitialised_operation(void)
+{
+    http2_stream_manager manager;
+
+    g_http2_stream_manager_get_error_result = manager.get_error();
+    g_http2_stream_manager_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void http2_stream_manager_get_error_str_uninitialised_operation(void)
+{
+    http2_stream_manager manager;
+
+    g_http2_stream_manager_get_error_str_result = manager.get_error_str();
+    g_http2_stream_manager_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
 FT_TEST(test_api_request_prefers_http2_streaming)
 {
     api_transport_hooks hooks;
@@ -1996,6 +2046,56 @@ FT_TEST(test_http2_stream_manager_concurrent_streams)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
     FT_ASSERT(manager.close_stream(3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
+    return (1);
+}
+
+FT_TEST(test_http2_frame_error_queries_follow_lifecycle_contract)
+{
+    http2_frame frame;
+
+    g_http2_frame_get_error_returned = FT_FALSE;
+    g_http2_frame_get_error_result = FT_ERR_SUCCESS;
+    FT_ASSERT_EQ(1, api_request_expect_sigabrt(
+        http2_frame_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_http2_frame_get_error_returned);
+    g_http2_frame_get_error_str_returned = FT_FALSE;
+    g_http2_frame_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, api_request_expect_sigabrt(
+        http2_frame_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_http2_frame_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, frame.initialize());
+    FT_ASSERT(frame.set_type(0x1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, frame.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, frame.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, frame.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(frame.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
+    return (1);
+}
+
+FT_TEST(test_http2_stream_manager_error_queries_follow_lifecycle_contract)
+{
+    http2_stream_manager manager;
+
+    g_http2_stream_manager_get_error_returned = FT_FALSE;
+    g_http2_stream_manager_get_error_result = FT_ERR_SUCCESS;
+    FT_ASSERT_EQ(1, api_request_expect_sigabrt(
+        http2_stream_manager_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_http2_stream_manager_get_error_returned);
+    g_http2_stream_manager_get_error_str_returned = FT_FALSE;
+    g_http2_stream_manager_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, api_request_expect_sigabrt(
+        http2_stream_manager_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_http2_stream_manager_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.initialize());
+    FT_ASSERT(manager.open_stream(1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
+    FT_ASSERT(!manager.open_stream(1));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, manager.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.destroy());
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, manager.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(manager.get_error_str(),
+        ft_strerror(FT_ERR_ALREADY_EXISTS)));
     return (1);
 }
 

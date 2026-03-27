@@ -1721,10 +1721,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         return (FT_FALSE);
     }
     handshake_buffer.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (handshake_buffer.get_error() != FT_ERR_SUCCESS)
     {
         api_connection_pool_disable_store(connection_handle);
-        error_code = ft_string::get_error();
+        error_code = handshake_buffer.get_error();
         api_connection_pool_evict(connection_handle);
         return (FT_FALSE);
     }
@@ -1752,10 +1752,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             return (FT_FALSE);
         }
         handshake_buffer.append(receive_buffer, static_cast<ft_size_t>(received_bytes));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (handshake_buffer.get_error() != FT_ERR_SUCCESS)
         {
             api_connection_pool_disable_store(connection_handle);
-            error_code = ft_string::get_error();
+            error_code = handshake_buffer.get_error();
             api_connection_pool_evict(connection_handle);
             return (FT_FALSE);
         }
@@ -1906,10 +1906,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         if (parse_offset > 0)
         {
             handshake_buffer.erase(0, parse_offset);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (handshake_buffer.get_error() != FT_ERR_SUCCESS)
             {
                 api_connection_pool_disable_store(connection_handle);
-                error_code = ft_string::get_error();
+                error_code = handshake_buffer.get_error();
                 api_connection_pool_evict(connection_handle);
                 return (FT_FALSE);
             }
@@ -2038,9 +2038,9 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                 && header_cursor[index] != '\r')
             {
                 header_name.append(header_cursor[index]);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                if (header_name.get_error() != FT_ERR_SUCCESS)
                 {
-                    error_code = ft_string::get_error();
+                    error_code = header_name.get_error();
                     return (FT_FALSE);
                 }
                 index++;
@@ -2051,9 +2051,9 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                 && header_cursor[index] != '\n')
             {
                 header_value.append(header_cursor[index]);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                if (header_value.get_error() != FT_ERR_SUCCESS)
                 {
-                    error_code = ft_string::get_error();
+                    error_code = header_value.get_error();
                     return (FT_FALSE);
                 }
                 index++;
@@ -2155,10 +2155,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         return (FT_FALSE);
     }
     response_buffer = handshake_buffer;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (response_buffer.get_error() != FT_ERR_SUCCESS)
     {
         api_connection_pool_disable_store(connection_handle);
-        error_code = ft_string::get_error();
+        error_code = response_buffer.get_error();
         api_connection_pool_evict(connection_handle);
         return (FT_FALSE);
     }
@@ -2407,10 +2407,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             if (incoming_type == 0x1 || incoming_type == 0x9)
             {
                 header_block.append(payload_copy.c_str(), payload_copy.size());
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                if (header_block.get_error() != FT_ERR_SUCCESS)
                 {
                     api_connection_pool_disable_store(connection_handle);
-                    error_code = ft_string::get_error();
+                    error_code = header_block.get_error();
                     api_connection_pool_evict(connection_handle);
                     return (FT_FALSE);
                 }
@@ -2428,10 +2428,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                         return (FT_FALSE);
                     }
                     header_lines.clear();
-                    if (ft_string::get_error() != FT_ERR_SUCCESS)
+                    if (header_lines.get_error() != FT_ERR_SUCCESS)
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        error_code = ft_string::get_error();
+                        error_code = header_lines.get_error();
                         api_connection_pool_evict(connection_handle);
                         return (FT_FALSE);
                     }
@@ -2477,18 +2477,18 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                             return (FT_FALSE);
                         }
                         name_cstr = name_copy.c_str();
-                        if (ft_string::get_error() != FT_ERR_SUCCESS)
+                        if (name_copy.get_error() != FT_ERR_SUCCESS)
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            error_code = ft_string::get_error();
+                            error_code = name_copy.get_error();
                             api_connection_pool_evict(connection_handle);
                             return (FT_FALSE);
                         }
                         value_cstr = value_copy.c_str();
-                        if (ft_string::get_error() != FT_ERR_SUCCESS)
+                        if (value_copy.get_error() != FT_ERR_SUCCESS)
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            error_code = ft_string::get_error();
+                            error_code = value_copy.get_error();
                             api_connection_pool_evict(connection_handle);
                             return (FT_FALSE);
                         }
@@ -2505,20 +2505,20 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                             while (name_cstr && name_cstr[append_index])
                             {
                                 header_lines.append(name_cstr[append_index]);
-                                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                                if (header_lines.get_error() != FT_ERR_SUCCESS)
                                 {
                                     api_connection_pool_disable_store(connection_handle);
-                                    error_code = ft_string::get_error();
+                                    error_code = header_lines.get_error();
                                     api_connection_pool_evict(connection_handle);
                                     return (FT_FALSE);
                                 }
                                 append_index++;
                             }
                             header_lines += ": ";
-                            if (ft_string::get_error() != FT_ERR_SUCCESS)
+                            if (header_lines.get_error() != FT_ERR_SUCCESS)
                             {
                                 api_connection_pool_disable_store(connection_handle);
-                                error_code = ft_string::get_error();
+                                error_code = header_lines.get_error();
                                 api_connection_pool_evict(connection_handle);
                                 return (FT_FALSE);
                             }
@@ -2526,20 +2526,20 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                             while (value_cstr && value_cstr[append_index])
                             {
                                 header_lines.append(value_cstr[append_index]);
-                                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                                if (header_lines.get_error() != FT_ERR_SUCCESS)
                                 {
                                     api_connection_pool_disable_store(connection_handle);
-                                    error_code = ft_string::get_error();
+                                    error_code = header_lines.get_error();
                                     api_connection_pool_evict(connection_handle);
                                     return (FT_FALSE);
                                 }
                                 append_index++;
                             }
                             header_lines += "\r\n";
-                            if (ft_string::get_error() != FT_ERR_SUCCESS)
+                            if (header_lines.get_error() != FT_ERR_SUCCESS)
                             {
                                 api_connection_pool_disable_store(connection_handle);
-                                error_code = ft_string::get_error();
+                                error_code = header_lines.get_error();
                                 api_connection_pool_evict(connection_handle);
                                 return (FT_FALSE);
                             }
@@ -2549,10 +2549,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                     const char *header_text;
 
                     header_text = header_lines.c_str();
-                    if (ft_string::get_error() != FT_ERR_SUCCESS)
+                    if (header_lines.get_error() != FT_ERR_SUCCESS)
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        error_code = ft_string::get_error();
+                        error_code = header_lines.get_error();
                         api_connection_pool_evict(connection_handle);
                         return (FT_FALSE);
                     }
@@ -2560,10 +2560,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                         header_text);
                     headers_dispatched = FT_TRUE;
                     header_block.clear();
-                    if (ft_string::get_error() != FT_ERR_SUCCESS)
+                    if (header_block.get_error() != FT_ERR_SUCCESS)
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        error_code = ft_string::get_error();
+                        error_code = header_block.get_error();
                         api_connection_pool_evict(connection_handle);
                         return (FT_FALSE);
                     }
@@ -2592,18 +2592,18 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                 ft_bool final_flag;
 
                 data_length = payload_copy.size();
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                if (payload_copy.get_error() != FT_ERR_SUCCESS)
                 {
                     api_connection_pool_disable_store(connection_handle);
-                    error_code = ft_string::get_error();
+                    error_code = payload_copy.get_error();
                     api_connection_pool_evict(connection_handle);
                     return (FT_FALSE);
                 }
                 data_pointer = payload_copy.c_str();
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                if (payload_copy.get_error() != FT_ERR_SUCCESS)
                 {
                     api_connection_pool_disable_store(connection_handle);
-                    error_code = ft_string::get_error();
+                    error_code = payload_copy.get_error();
                     api_connection_pool_evict(connection_handle);
                     return (FT_FALSE);
                 }
@@ -2630,10 +2630,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         if (parse_offset > 0)
         {
             response_buffer.erase(0, parse_offset);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (response_buffer.get_error() != FT_ERR_SUCCESS)
             {
                 api_connection_pool_disable_store(connection_handle);
-                error_code = ft_string::get_error();
+                error_code = response_buffer.get_error();
                 api_connection_pool_evict(connection_handle);
                 return (FT_FALSE);
             }
@@ -2661,10 +2661,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             }
             response_buffer.append(receive_buffer,
                 static_cast<ft_size_t>(received_bytes));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (response_buffer.get_error() != FT_ERR_SUCCESS)
             {
                 api_connection_pool_disable_store(connection_handle);
-                error_code = ft_string::get_error();
+                error_code = response_buffer.get_error();
                 api_connection_pool_evict(connection_handle);
                 return (FT_FALSE);
             }
@@ -3138,10 +3138,10 @@ static char *api_http_execute_plain_http2_once(
         return (ft_nullptr);
     }
     handshake_buffer.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (handshake_buffer.get_error() != FT_ERR_SUCCESS)
     {
         api_connection_pool_disable_store(connection_handle);
-        error_code = ft_string::get_error();
+        error_code = handshake_buffer.get_error();
         api_connection_pool_evict(connection_handle);
         return (ft_nullptr);
     }
@@ -3169,10 +3169,10 @@ static char *api_http_execute_plain_http2_once(
             return (ft_nullptr);
         }
         handshake_buffer.append(receive_buffer, static_cast<ft_size_t>(received_bytes));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (handshake_buffer.get_error() != FT_ERR_SUCCESS)
         {
             api_connection_pool_disable_store(connection_handle);
-            error_code = ft_string::get_error();
+            error_code = handshake_buffer.get_error();
             api_connection_pool_evict(connection_handle);
             return (ft_nullptr);
         }
@@ -3449,10 +3449,10 @@ static char *api_http_execute_plain_http2_once(
                 break ;
             }
             handshake_buffer.append(receive_buffer, static_cast<ft_size_t>(received_bytes));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (handshake_buffer.get_error() != FT_ERR_SUCCESS)
             {
                 api_connection_pool_disable_store(connection_handle);
-                error_code = ft_string::get_error();
+                error_code = handshake_buffer.get_error();
                 api_connection_pool_evict(connection_handle);
                 return (ft_nullptr);
             }

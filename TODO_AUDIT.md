@@ -1,5 +1,10 @@
 1. Lifecycle Error Query Audit (`get_error()` / `get_error_str()`)
 - Goal: In every lifecycle class, `get_error()`/`get_error_str()` must abort for `UNINITIALISED` and must not abort for `DESTROYED`.
+- Progress:
+- API partial progress:
+  - `Networking/networking_http2_client.cpp`
+- Tests updated:
+  - `Test/Test/test_api_request.cpp`
 - Modules to audit:
 - `API`
 - `Advanced`
@@ -163,18 +168,6 @@
 - Networking module completed:
   - `Networking/networking_http2_client.cpp`
   - `Networking/networking_setup_server.cpp`
-- API partial progress:
-  - `API/api_content_length.cpp`
-  - `API/api_request_metrics.cpp`
-  - `API/api_request_signing.cpp`
-  - `API/api_request.cpp`
-  - `API/api_request_async.cpp`
-  - `API/api_http_common.cpp`
-  - `API/api_connection_pool.cpp`
-  - `API/api_tls_client.cpp`
-  - `API/api_http_plain.cpp`
-- API files completed:
-  - `API/api_http_tls.cpp`
 - Tests added:
   - `Test/Test/test_template_vector_error_queries.cpp`
   - `Test/Test/test_container_serialization.cpp`
@@ -184,12 +177,14 @@
   - `Test/Test/test_logger_file.cpp`
   - `Test/Test/test_logger_network.cpp`
   - `Test/Test/test_api_request.cpp`
+  - `Test/Test/test_api_http2_streaming.cpp`
   - `Test/Test/test_api_content_length.cpp`
   - `Test/Test/test_api_connection_pool.cpp`
   - `Test/Test/test_api_tls_diagnostics.cpp`
 - Tests added:
   - `Test/Test/test_api_request_metrics.cpp`
 - Modules audited clean and removed from this item:
+  - `API`
   - `ReadLine`
   - `GetNextLine`
   - `File`
@@ -238,8 +233,6 @@
   - `Test/Test/test_yaml_reader.cpp`
   - `Test/Test/test_time_timezone.cpp`
   - `Test/Test/test_basic_extra_libft.cpp`
-- Modules to audit:
-- `API`
 
 5. Thread-Safe Move Pattern Audit (`move(...)` lifecycle + mutex invariants)
 - Goal: Standardize `move(...)` for lifecycle/thread-safe classes so concurrent moves are safe.
