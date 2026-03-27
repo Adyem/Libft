@@ -454,7 +454,7 @@ ft_bool api_http_decode_chunked(const char *body_start, ft_size_t body_size,
         while (index < chunk_size_t)
         {
             decoded_body.append(body_start[offset + index]);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (decoded_body.get_error() != FT_ERR_SUCCESS)
             {
                 return (FT_FALSE);
             }

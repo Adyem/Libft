@@ -827,11 +827,11 @@ int32_t game_world::save_to_buffer(ft_string &out_buffer, const game_character &
         return (this->get_error());
     }
     out_buffer = serialized_state;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (out_buffer.get_error() != FT_ERR_SUCCESS)
     {
         int32_t assign_error;
 
-        assign_error = ft_string::get_error();
+        assign_error = out_buffer.get_error();
         cma_free(serialized_state);
         this->set_error(assign_error);
         return (this->get_error());

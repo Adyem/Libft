@@ -27,6 +27,36 @@ static void task_scheduler_trace_clear_events(void)
     return ;
 }
 
+struct task_scheduler_trace_test_guard
+{
+    ft_bool _cleaned;
+
+    task_scheduler_trace_test_guard() : _cleaned(FT_FALSE)
+    {
+        return ;
+    }
+
+    int32_t cleanup(void)
+    {
+        int32_t unregister_result;
+
+        if (this->_cleaned == FT_TRUE)
+            return (FT_ERR_SUCCESS);
+        unregister_result = task_scheduler_unregister_trace_sink(
+            &task_scheduler_trace_test_sink);
+        task_scheduler_trace_clear_events();
+        this->_cleaned = FT_TRUE;
+        return (unregister_result);
+    }
+
+    ~task_scheduler_trace_test_guard()
+    {
+        if (this->_cleaned == FT_FALSE)
+            (void)this->cleanup();
+        return ;
+    }
+};
+
 static std::vector<ft_task_trace_event> task_scheduler_trace_snapshot(void)
 {
     std::vector<ft_task_trace_event> snapshot;
@@ -58,6 +88,7 @@ FT_TEST(test_task_scheduler_tracing_submit)
 {
     task_scheduler_trace_clear_events();
     FT_ASSERT_EQ(0, task_scheduler_register_trace_sink(&task_scheduler_trace_test_sink));
+    task_scheduler_trace_test_guard cleanup_guard;
     ft_task_scheduler scheduler_instance(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
@@ -104,8 +135,7 @@ FT_TEST(test_task_scheduler_tracing_submit)
     FT_ASSERT_EQ(FT_TASK_TRACE_PHASE_DEQUEUED, phases[2]);
     FT_ASSERT_EQ(FT_TASK_TRACE_PHASE_STARTED, phases[3]);
     FT_ASSERT_EQ(FT_TASK_TRACE_PHASE_FINISHED, phases[4]);
-    FT_ASSERT_EQ(0, task_scheduler_unregister_trace_sink(&task_scheduler_trace_test_sink));
-    task_scheduler_trace_clear_events();
+    FT_ASSERT_EQ(0, cleanup_guard.cleanup());
     return (1);
 }
 
@@ -113,6 +143,7 @@ FT_TEST(test_task_scheduler_tracing_schedule_after)
 {
     task_scheduler_trace_clear_events();
     FT_ASSERT_EQ(0, task_scheduler_register_trace_sink(&task_scheduler_trace_test_sink));
+    task_scheduler_trace_test_guard cleanup_guard;
     ft_task_scheduler scheduler_instance(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
@@ -180,7 +211,6 @@ FT_TEST(test_task_scheduler_tracing_schedule_after)
             FT_ASSERT(!timer_flags[index]);
         index += 1;
     }
-    FT_ASSERT_EQ(0, task_scheduler_unregister_trace_sink(&task_scheduler_trace_test_sink));
-    task_scheduler_trace_clear_events();
+    FT_ASSERT_EQ(0, cleanup_guard.cleanup());
     return (1);
 }

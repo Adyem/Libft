@@ -88,6 +88,26 @@ static void networking_socket_set_receive_timeout(int file_descriptor, int milli
     return ;
 }
 
+static ft_bool networking_socket_receive_timed_out(void)
+{
+#ifdef _WIN32
+    int last_error_code;
+
+    last_error_code = WSAGetLastError();
+    if (last_error_code == WSAETIMEDOUT)
+        return (FT_TRUE);
+    if (last_error_code == WSAEWOULDBLOCK)
+        return (FT_TRUE);
+    return (FT_FALSE);
+#else
+    if (errno == EAGAIN)
+        return (FT_TRUE);
+    if (errno == EWOULDBLOCK)
+        return (FT_TRUE);
+    return (FT_FALSE);
+#endif
+}
+
 FT_TEST(test_networking_socket_send_all_thread_safety)
 {
     uint16_t server_port;
@@ -133,11 +153,14 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
     received_total.store(0);
     thread_failed.store(false);
     send_completed.store(false);
-    reader_thread = std::thread([accepted_fd, expected_total, &received_total]() {
+    reader_thread = std::thread([accepted_fd, expected_total, &received_total,
+        &send_completed, &thread_failed]() {
         char buffer[128];
         int local_total;
+        int idle_iterations;
 
         local_total = 0;
+        idle_iterations = 0;
         while (local_total < expected_total)
         {
             ssize_t bytes_read;
@@ -146,8 +169,21 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
             if (bytes_read > 0)
             {
                 local_total += static_cast<int>(bytes_read);
+                idle_iterations = 0;
                 continue ;
             }
+            if (bytes_read == 0)
+                break ;
+            if (networking_socket_receive_timed_out() == FT_TRUE)
+            {
+                if (send_completed.load() == false)
+                    continue ;
+                idle_iterations++;
+                if (idle_iterations < 5)
+                    continue ;
+                break ;
+            }
+            thread_failed.store(true);
             break ;
         }
         received_total.store(local_total);

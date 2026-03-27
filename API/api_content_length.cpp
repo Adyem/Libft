@@ -36,13 +36,13 @@ ft_bool api_append_content_length_header(ft_string &request, ft_size_t content_l
     }
     content_length_buffer[reversed_length] = '\0';
     request += "\r\nContent-Length: ";
-    request_error = ft_string::get_error();
+    request_error = request.get_error();
     if (request_error != FT_ERR_SUCCESS)
     {
         return (FT_FALSE);
     }
     request += content_length_buffer;
-    request_error = ft_string::get_error();
+    request_error = request.get_error();
     if (request_error != FT_ERR_SUCCESS)
     {
         return (FT_FALSE);

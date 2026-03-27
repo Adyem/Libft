@@ -115,9 +115,11 @@ struct tls_test_server_context
 {
     ft_string certificate_path;
     ft_string key_path;
+    ft_string request_data;
     std::atomic<bool> ready;
     std::atomic<bool> handshake_complete;
     std::atomic<bool> stop;
+    const char *response_text;
     int listen_fd;
     int client_fd;
     unsigned short port;
@@ -181,7 +183,7 @@ static bool tls_write_temp_file(const char *prefix, const char *contents, ft_str
         return (false);
     }
     path = template_path;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (path.get_error() != FT_ERR_SUCCESS)
     {
         TLS_TEST_UNLINK(template_path);
         return (false);
@@ -320,6 +322,52 @@ static void tls_test_server_run(tls_test_server_context *context)
         return ;
     }
     context->handshake_complete.store(true);
+    if (context->response_text != ft_nullptr)
+    {
+        char request_buffer[2048];
+        int32_t request_length;
+        int32_t bytes_sent;
+        int32_t response_length;
+
+        request_length = SSL_read(ssl_session, request_buffer,
+            sizeof(request_buffer) - 1);
+        if (request_length <= 0)
+        {
+            SSL_free(ssl_session);
+            nw_close(context->client_fd);
+            context->client_fd = -1;
+            nw_close(context->listen_fd);
+            context->listen_fd = -1;
+            SSL_CTX_free(ssl_context);
+            return ;
+        }
+        request_buffer[request_length] = '\0';
+        context->request_data = request_buffer;
+        if (context->request_data.get_error() != FT_ERR_SUCCESS)
+        {
+            SSL_free(ssl_session);
+            nw_close(context->client_fd);
+            context->client_fd = -1;
+            nw_close(context->listen_fd);
+            context->listen_fd = -1;
+            SSL_CTX_free(ssl_context);
+            return ;
+        }
+        response_length = static_cast<int32_t>(ft_strlen(context->response_text));
+        bytes_sent = SSL_write(ssl_session, context->response_text,
+            response_length);
+        if (bytes_sent != response_length)
+        {
+            SSL_free(ssl_session);
+            nw_close(context->client_fd);
+            context->client_fd = -1;
+            nw_close(context->listen_fd);
+            context->listen_fd = -1;
+            SSL_CTX_free(ssl_context);
+            return ;
+        }
+        context->stop.store(true);
+    }
     while (!context->stop.load())
         time_sleep_ms(5);
     SSL_shutdown(ssl_session);
@@ -349,7 +397,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
     char byte_buffer[3];
 
     fingerprint.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (fingerprint.get_error() != FT_ERR_SUCCESS)
         return (false);
     memory = BIO_new_mem_buf(g_tls_test_server_certificate, -1);
     if (!memory)
@@ -372,7 +420,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
             return (false);
         }
         fingerprint.append(byte_buffer, 2);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (fingerprint.get_error() != FT_ERR_SUCCESS)
         {
             X509_free(certificate);
             return (false);
@@ -380,7 +428,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
         if (index + 1 < digest_length)
         {
             fingerprint.append(':');
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (fingerprint.get_error() != FT_ERR_SUCCESS)
             {
                 X509_free(certificate);
                 return (false);
@@ -423,7 +471,7 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics)
     if (has_original_cert_file)
     {
         original_cert_file_copy = original_cert_file;
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (original_cert_file_copy.get_error() != FT_ERR_SUCCESS)
         {
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
@@ -443,6 +491,7 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics)
     server_context.ready.store(false);
     server_context.handshake_complete.store(false);
     server_context.stop.store(false);
+    server_context.response_text = ft_nullptr;
     server_context.listen_fd = -1;
     server_context.client_fd = -1;
     server_thread = ft_thread(tls_test_server_run, &server_context);
@@ -508,6 +557,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics)
         }
         const api_tls_handshake_diagnostics &diagnostics = client.get_handshake_diagnostics();
 
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, diagnostics.protocol.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, diagnostics.cipher.get_error());
+
         if (diagnostics.protocol.size() == 0)
         {
             tls_signal_server_stop(server_context);
@@ -548,6 +600,11 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics)
             return (0);
         }
         const api_tls_certificate_diagnostics &leaf = diagnostics.certificates[0];
+
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, leaf.subject.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, leaf.issuer.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, leaf.serial_number.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, leaf.fingerprint_sha256.get_error());
 
         if (!(leaf.subject == "CN=localhost"))
         {
@@ -627,6 +684,102 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics)
     TLS_TEST_UNLINK(cert_path.c_str());
     TLS_TEST_UNLINK(key_path.c_str());
     return (test_result);
+}
+
+FT_TEST(test_api_request_string_tls_success)
+{
+    ft_string ca_path;
+    ft_string cert_path;
+    ft_string key_path;
+    tls_test_server_context server_context;
+    ft_thread server_thread;
+    const char *original_cert_file;
+    ft_string original_cert_file_copy;
+    ft_bool has_original_cert_file;
+    char *response_body;
+    int32_t status_code;
+    const char *request_headers;
+    static const char tls_http_response[] =
+        "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK";
+
+    if (!tls_write_temp_file("/tmp/libft_tls_root", g_tls_test_root_certificate, ca_path))
+        return (0);
+    if (!tls_write_temp_file("/tmp/libft_tls_cert", g_tls_test_server_certificate, cert_path))
+    {
+        TLS_TEST_UNLINK(ca_path.c_str());
+        return (0);
+    }
+    if (!tls_write_temp_file("/tmp/libft_tls_key", g_tls_test_server_key, key_path))
+    {
+        TLS_TEST_UNLINK(ca_path.c_str());
+        TLS_TEST_UNLINK(cert_path.c_str());
+        return (0);
+    }
+    original_cert_file = getenv("SSL_CERT_FILE");
+    has_original_cert_file = (original_cert_file != ft_nullptr);
+    if (has_original_cert_file)
+    {
+        original_cert_file_copy = original_cert_file;
+        if (original_cert_file_copy.get_error() != FT_ERR_SUCCESS)
+        {
+            TLS_TEST_UNLINK(ca_path.c_str());
+            TLS_TEST_UNLINK(cert_path.c_str());
+            TLS_TEST_UNLINK(key_path.c_str());
+            return (0);
+        }
+    }
+    if (setenv("SSL_CERT_FILE", ca_path.c_str(), 1) != 0)
+    {
+        TLS_TEST_UNLINK(ca_path.c_str());
+        TLS_TEST_UNLINK(cert_path.c_str());
+        TLS_TEST_UNLINK(key_path.c_str());
+        return (0);
+    }
+    server_context.certificate_path = cert_path;
+    server_context.key_path = key_path;
+    server_context.ready.store(false);
+    server_context.handshake_complete.store(false);
+    server_context.stop.store(false);
+    server_context.response_text = tls_http_response;
+    server_context.listen_fd = -1;
+    server_context.client_fd = -1;
+    server_thread = ft_thread(tls_test_server_run, &server_context);
+    if (server_thread.joinable() == false)
+    {
+        if (has_original_cert_file)
+            setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+        else
+            unsetenv("SSL_CERT_FILE");
+        TLS_TEST_UNLINK(ca_path.c_str());
+        TLS_TEST_UNLINK(cert_path.c_str());
+        TLS_TEST_UNLINK(key_path.c_str());
+        return (0);
+    }
+    while (!server_context.ready.load())
+        time_sleep_ms(5);
+    status_code = 0;
+    request_headers = "X-Test: value\r\n";
+    response_body = api_request_string_tls("localhost", server_context.port,
+        "GET", "/health", ft_nullptr, request_headers, &status_code, 2000);
+    server_thread.join();
+    FT_ASSERT_EQ(200, status_code);
+    FT_ASSERT(response_body != ft_nullptr);
+    FT_ASSERT(ft_strcmp(response_body, "OK") == 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server_context.request_data.get_error());
+    FT_ASSERT(ft_strstr(server_context.request_data.c_str(),
+        "GET /health HTTP/1.1\r\nHost: localhost")
+        == server_context.request_data.c_str());
+    FT_ASSERT(ft_strstr(server_context.request_data.c_str(),
+        "\r\nX-Test: value\r\n") != ft_nullptr);
+    cma_free(response_body);
+    if (has_original_cert_file)
+        setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+    else
+        unsetenv("SSL_CERT_FILE");
+    TLS_TEST_UNLINK(ca_path.c_str());
+    TLS_TEST_UNLINK(cert_path.c_str());
+    TLS_TEST_UNLINK(key_path.c_str());
+    return (1);
 }
 
 #endif

@@ -605,7 +605,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         return ;
     }
     entry->key = handle.key;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (entry->key.get_error() != FT_ERR_SUCCESS)
     {
         delete entry;
         handle.unlock(handle_lock_acquired);

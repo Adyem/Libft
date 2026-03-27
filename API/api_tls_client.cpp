@@ -237,7 +237,7 @@ static ft_bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
     int64_t memory_length;
 
     output.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (output.get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     if (memory == ft_nullptr)
     {
@@ -253,7 +253,7 @@ static ft_bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
                 return (FT_TRUE);
     }
     output.append(memory_data, static_cast<ft_size_t>(memory_length));
-    int32_t string_error = ft_string::get_error();
+    int32_t string_error = output.get_error();
     if (string_error != FT_ERR_SUCCESS)
     {
                 return (FT_FALSE);
@@ -269,7 +269,7 @@ static ft_bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
     if (name == ft_nullptr)
     {
         output.clear();
-        int32_t string_error = ft_string::get_error();
+        int32_t string_error = output.get_error();
                 return (string_error == FT_ERR_SUCCESS);
     }
     memory = BIO_new(BIO_s_mem());
@@ -301,7 +301,7 @@ static ft_bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &out
     if (time_value == ft_nullptr)
     {
         output.clear();
-        int32_t string_error = ft_string::get_error();
+        int32_t string_error = output.get_error();
                 return (string_error == FT_ERR_SUCCESS);
     }
     memory = BIO_new(BIO_s_mem());
@@ -334,7 +334,7 @@ static ft_bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
     if (serial_value == ft_nullptr)
     {
         output.clear();
-        int32_t string_error = ft_string::get_error();
+        int32_t string_error = output.get_error();
                 return (string_error == FT_ERR_SUCCESS);
     }
     memory = BIO_new(BIO_s_mem());
@@ -367,7 +367,7 @@ static ft_bool tls_compute_certificate_fingerprint(X509 *certificate,
     char byte_buffer[3];
 
     output.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (output.get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     if (certificate == ft_nullptr)
     {
@@ -386,7 +386,7 @@ static ft_bool tls_compute_certificate_fingerprint(X509 *certificate,
                         return (FT_FALSE);
         }
         output.append(byte_buffer, 2);
-        int32_t string_error = ft_string::get_error();
+        int32_t string_error = output.get_error();
         if (string_error != FT_ERR_SUCCESS)
         {
                         return (FT_FALSE);
@@ -394,7 +394,7 @@ static ft_bool tls_compute_certificate_fingerprint(X509 *certificate,
         if (index + 1 < digest_length)
         {
             output.append(':');
-            int32_t separator_error = ft_string::get_error();
+            int32_t separator_error = output.get_error();
             if (separator_error != FT_ERR_SUCCESS)
             {
                                 return (FT_FALSE);
@@ -642,7 +642,7 @@ int32_t api_tls_client::initialize(const char *host, uint16_t port,
     if (this->_host.initialize(host) != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (ft_string::get_error());
+        return (this->_host.get_error());
     }
     return (this->initialize());
 }
@@ -1129,13 +1129,13 @@ ft_bool api_tls_client::populate_handshake_diagnostics()
         return (FT_FALSE);
     }
     this->_handshake_diagnostics.protocol.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (this->_handshake_diagnostics.protocol.get_error() != FT_ERR_SUCCESS)
     {
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_FALSE);
     }
     this->_handshake_diagnostics.cipher.clear();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (this->_handshake_diagnostics.cipher.get_error() != FT_ERR_SUCCESS)
     {
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_FALSE);
@@ -1150,7 +1150,7 @@ ft_bool api_tls_client::populate_handshake_diagnostics()
     if (protocol_name != ft_nullptr)
     {
         this->_handshake_diagnostics.protocol.append(protocol_name);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (this->_handshake_diagnostics.protocol.get_error() != FT_ERR_SUCCESS)
         {
             (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (FT_FALSE);
@@ -1163,7 +1163,7 @@ ft_bool api_tls_client::populate_handshake_diagnostics()
         if (cipher_name != ft_nullptr)
         {
             this->_handshake_diagnostics.cipher.append(cipher_name);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (this->_handshake_diagnostics.cipher.get_error() != FT_ERR_SUCCESS)
             {
                 (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
                 return (FT_FALSE);

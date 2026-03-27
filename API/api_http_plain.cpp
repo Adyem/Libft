@@ -547,55 +547,55 @@ static ft_bool api_http_prepare_request(const char *method, const char *path,
         return (FT_FALSE);
     }
     request = method;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (request.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = request.get_error();
         return (FT_FALSE);
     }
     request += " ";
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (request.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = request.get_error();
         return (FT_FALSE);
     }
     request += path;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (request.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = request.get_error();
         return (FT_FALSE);
     }
     request += " HTTP/1.1\r\n";
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (request.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = request.get_error();
         return (FT_FALSE);
     }
     if (!host_header)
         host_header = "";
     request += "Host: ";
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (request.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = request.get_error();
         return (FT_FALSE);
     }
     request += host_header;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (request.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = request.get_error();
         return (FT_FALSE);
     }
     if (headers && headers[0])
     {
         request += "\r\n";
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (request.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = request.get_error();
             return (FT_FALSE);
         }
         request += headers;
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (request.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = request.get_error();
             return (FT_FALSE);
         }
     }
@@ -610,9 +610,9 @@ static ft_bool api_http_prepare_request(const char *method, const char *path,
             return (FT_FALSE);
         }
         request += "\r\nContent-Type: application/json";
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (request.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = request.get_error();
             return (FT_FALSE);
         }
         if (!api_append_content_length_header(request, payload_length))
@@ -625,9 +625,9 @@ static ft_bool api_http_prepare_request(const char *method, const char *path,
         }
     }
     request += "\r\nConnection: keep-alive\r\n\r\n";
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (request.get_error() != FT_ERR_SUCCESS)
     {
-        error_code = ft_string::get_error();
+        error_code = request.get_error();
         return (FT_FALSE);
     }
     return (FT_TRUE);
@@ -1034,9 +1034,9 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
         {
             buffer[received] = '\0';
             response.append(buffer, static_cast<ft_size_t>(received));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (response.get_error() != FT_ERR_SUCCESS)
             {
-                error_code = ft_string::get_error();
+                error_code = response.get_error();
                 return (FT_FALSE);
             }
             if (response.size() >= 14)
@@ -1069,9 +1069,9 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             if (!chunked_encoding && !has_length)
                 connection_close = FT_TRUE;
             header_storage.assign(response.c_str(), header_length);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (header_storage.get_error() != FT_ERR_SUCCESS)
             {
-                error_code = ft_string::get_error();
+                error_code = header_storage.get_error();
                 return (FT_FALSE);
             }
             if (streaming_enabled)
@@ -1089,9 +1089,9 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
                 {
                     streaming_body_buffer.append(
                         response.c_str() + header_length, body_length);
-                    if (ft_string::get_error() != FT_ERR_SUCCESS)
+                    if (streaming_body_buffer.get_error() != FT_ERR_SUCCESS)
                     {
-                        error_code = ft_string::get_error();
+                        error_code = streaming_body_buffer.get_error();
                         return (FT_FALSE);
                     }
                     if (!api_http_streaming_flush_buffer(
@@ -1141,9 +1141,9 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
         {
             buffer[received] = '\0';
             response.append(buffer, static_cast<ft_size_t>(received));
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (response.get_error() != FT_ERR_SUCCESS)
             {
-                error_code = ft_string::get_error();
+                error_code = response.get_error();
                 return (FT_FALSE);
             }
             if (chunked_encoding)
@@ -1171,9 +1171,9 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             continue ;
         }
         streaming_body_buffer.append(buffer, static_cast<ft_size_t>(received));
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (streaming_body_buffer.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = streaming_body_buffer.get_error();
             return (FT_FALSE);
         }
         if (!api_http_streaming_flush_buffer(streaming_body_buffer, has_length,
@@ -1327,6 +1327,7 @@ static char *api_http_execute_plain_once(
                 consumed_length))
         {
             error_code = FT_ERR_IO;
+            (void)decoded_body.destroy();
             return (ft_nullptr);
         }
         result_source = decoded_body.c_str();
@@ -1341,6 +1342,7 @@ static char *api_http_execute_plain_once(
         if (body_length < expected_length)
         {
             error_code = FT_ERR_IO;
+            (void)decoded_body.destroy();
             return (ft_nullptr);
         }
         decoded_body.clear();
@@ -1348,9 +1350,10 @@ static char *api_http_execute_plain_once(
         while (index < expected_length)
         {
             decoded_body.append(body_start[index]);
-            if (ft_string::get_error() != FT_ERR_SUCCESS)
+            if (decoded_body.get_error() != FT_ERR_SUCCESS)
             {
-                error_code = ft_string::get_error();
+                error_code = decoded_body.get_error();
+                (void)decoded_body.destroy();
                 return (ft_nullptr);
             }
             index++;
@@ -1362,9 +1365,10 @@ static char *api_http_execute_plain_once(
     {
         decoded_body.clear();
         decoded_body.append(body_start);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (decoded_body.get_error() != FT_ERR_SUCCESS)
         {
-            error_code = ft_string::get_error();
+            error_code = decoded_body.get_error();
+            (void)decoded_body.destroy();
             return (ft_nullptr);
         }
         result_source = decoded_body.c_str();
@@ -1381,11 +1385,13 @@ static char *api_http_execute_plain_once(
             error_code = FT_ERR_NO_MEMORY;
         else
             error_code = FT_ERR_SUCCESS;
+        (void)decoded_body.destroy();
         return (ft_nullptr);
     }
     if (result_length > 0)
         ft_memcpy(result_body, result_source, result_length);
     result_body[result_length] = '\0';
+    (void)decoded_body.destroy();
     error_code = FT_ERR_SUCCESS;
     return (result_body);
 }

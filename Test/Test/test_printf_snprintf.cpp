@@ -239,3 +239,18 @@ FT_TEST(test_pf_vsnprintf_matches_standard_truncation)
     FT_ASSERT_EQ(0, std::strcmp(standard_buffer, pf_buffer));
     return (1);
 }
+
+FT_TEST(test_pf_vsnprintf_matches_standard_float_general_format)
+{
+    char pf_buffer[64];
+    char standard_buffer[64];
+
+    std::memset(pf_buffer, 0, sizeof(pf_buffer));
+    std::memset(standard_buffer, 0, sizeof(standard_buffer));
+
+    int pf_result = pf_vsnprintf_wrapper(pf_buffer, sizeof(pf_buffer), "%.3g", 3.14159);
+    int standard_result = std_vsnprintf_wrapper(standard_buffer, sizeof(standard_buffer), "%.3g", 3.14159);
+    FT_ASSERT_EQ(standard_result, pf_result);
+    FT_ASSERT_EQ(0, std::strcmp(standard_buffer, pf_buffer));
+    return (1);
+}

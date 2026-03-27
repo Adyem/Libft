@@ -27,6 +27,7 @@ FT_TEST(test_api_append_content_length_successful_append)
 
     append_result = api_append_content_length_header(request, 7);
     FT_ASSERT_EQ(true, append_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, request.get_error());
     FT_ASSERT(request.find("Content-Length: 7") != ft_string::npos);
     return (1);
 }

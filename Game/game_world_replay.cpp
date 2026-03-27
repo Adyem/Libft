@@ -208,8 +208,8 @@ int32_t game_world_replay_session::move(game_world_replay_session &other) noexce
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
     this->_snapshot_payload = other._snapshot_payload;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (this->_snapshot_payload.get_error() != FT_ERR_SUCCESS)
+        return (this->_snapshot_payload.get_error());
     this->_event_callbacks.clear();
     ft_size_t callback_index;
     ft_size_t callback_count;
@@ -269,8 +269,8 @@ int32_t game_world_replay_session::capture_snapshot(game_world &world,
     if (callback_result != FT_ERR_SUCCESS)
         return (callback_result);
     this->_snapshot_payload = snapshot_buffer;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (this->_snapshot_payload.get_error() != FT_ERR_SUCCESS)
+        return (this->_snapshot_payload.get_error());
     this->_event_callbacks.clear();
     callback_index = 0;
     callback_count = callback_snapshot.size();
@@ -338,8 +338,8 @@ int32_t game_world_replay_session::import_snapshot(const ft_string &snapshot_pay
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_replay_session::import_snapshot");
     this->_snapshot_payload = snapshot_payload;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (this->_snapshot_payload.get_error() != FT_ERR_SUCCESS)
+        return (this->_snapshot_payload.get_error());
     this->_event_callbacks.clear();
     return (FT_ERR_SUCCESS);
 }
@@ -349,8 +349,8 @@ int32_t game_world_replay_session::export_snapshot(ft_string &out_snapshot) cons
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world_replay_session::export_snapshot");
     out_snapshot = this->_snapshot_payload;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
-        return (ft_string::get_error());
+    if (out_snapshot.get_error() != FT_ERR_SUCCESS)
+        return (out_snapshot.get_error());
     return (FT_ERR_SUCCESS);
 }
 

@@ -57,6 +57,9 @@ FT_TEST(test_task_scheduler_schedule_every)
     ft_task_scheduler scheduler_instance(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     std::atomic<int> call_counter;
+    int count_value;
+    int32_t wait_iterations;
+
     call_counter.store(0);
     ft_scheduled_task_handle periodic_handle = scheduler_instance.schedule_every(std::chrono::milliseconds(10), [&call_counter]()
     {
@@ -64,8 +67,14 @@ FT_TEST(test_task_scheduler_schedule_every)
         return ;
     });
     FT_ASSERT(periodic_handle.valid());
-    usleep(50000);
-    int count_value = call_counter.load();
+    wait_iterations = 0;
+    count_value = call_counter.load();
+    while (wait_iterations < 200 && count_value <= 1)
+    {
+        usleep(1000);
+        wait_iterations += 1;
+        count_value = call_counter.load();
+    }
     FT_ASSERT(count_value > 1);
     return (1);
 }

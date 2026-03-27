@@ -56,7 +56,7 @@ int32_t ft_log_set_remote_sink(const char *host, uint16_t port, ft_bool use_tcp)
     sink->port = port;
     sink->use_tcp = use_tcp;
     sink->host = host;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (sink->host.get_error() != FT_ERR_SUCCESS)
     {
         su_close(socket_fd);
         delete sink;

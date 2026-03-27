@@ -237,6 +237,7 @@ FT_TEST(test_logger_remote_health_probe_records_success)
     sink->socket_fd = 777;
     sink->send_function = mock_partial_send;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.initialize("127.0.0.1"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.get_error());
     sink->port = 5555;
     sink->use_tcp = true;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
@@ -339,6 +340,7 @@ FT_TEST(test_logger_remote_health_probe_keeps_other_sinks_intact)
     healthy_sink->socket_fd = 2222;
     healthy_sink->send_function = mock_successful_send;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, healthy_sink->host.initialize("healthy.example.com"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, healthy_sink->host.get_error());
     healthy_sink->port = 8888;
     healthy_sink->use_tcp = false;
     g_sink_to_remove = removed_sink;

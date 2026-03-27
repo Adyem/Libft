@@ -1349,15 +1349,45 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
     const char *colon;
     const char *slash;
     const char *host_start;
+    int32_t initialize_result;
 
     if (!url)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
         return (FT_FALSE);
     }
+    (void)host.destroy();
+    initialize_result = host.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+    {
+        error_code = initialize_result;
+        return (FT_FALSE);
+    }
+    (void)path.destroy();
+    initialize_result = path.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+    {
+        error_code = initialize_result;
+        return (FT_FALSE);
+    }
+    initialize_result = scheme.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+    {
+        error_code = initialize_result;
+        return (FT_FALSE);
+    }
+    initialize_result = hostport.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+    {
+        (void)scheme.destroy();
+        error_code = initialize_result;
+        return (FT_FALSE);
+    }
     scheme_end = ft_strstr(url, "://");
     if (!scheme_end)
     {
+        (void)hostport.destroy();
+        (void)scheme.destroy();
         error_code = FT_ERR_INVALID_ARGUMENT;
         return (FT_FALSE);
     }
@@ -1365,9 +1395,11 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
     while (walker < scheme_end)
     {
         scheme.append(*walker);
-        int32_t scheme_error = ft_string::get_error();
+        int32_t scheme_error = scheme.get_error();
         if (scheme_error != FT_ERR_SUCCESS)
         {
+            (void)hostport.destroy();
+            (void)scheme.destroy();
             error_code = scheme_error;
             return (FT_FALSE);
         }
@@ -1380,9 +1412,11 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
     if (path_start)
     {
         path.append(path_start);
-        int32_t path_error = ft_string::get_error();
+        int32_t path_error = path.get_error();
         if (path_error != FT_ERR_SUCCESS)
         {
+            (void)hostport.destroy();
+            (void)scheme.destroy();
             error_code = path_error;
             return (FT_FALSE);
         }
@@ -1391,9 +1425,11 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
     {
         slash = "/";
         path = slash;
-        int32_t path_error = ft_string::get_error();
+        int32_t path_error = path.get_error();
         if (path_error != FT_ERR_SUCCESS)
         {
+            (void)hostport.destroy();
+            (void)scheme.destroy();
             error_code = path_error;
             return (FT_FALSE);
         }
@@ -1405,9 +1441,11 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
         while (walker < path_start)
         {
             hostport.append(*walker);
-            int32_t hostport_error = ft_string::get_error();
+            int32_t hostport_error = hostport.get_error();
             if (hostport_error != FT_ERR_SUCCESS)
             {
+                (void)hostport.destroy();
+                (void)scheme.destroy();
                 error_code = hostport_error;
                 return (FT_FALSE);
             }
@@ -1418,9 +1456,11 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
     {
         hostport.clear();
         hostport.append(host_start);
-        int32_t hostport_error = ft_string::get_error();
+        int32_t hostport_error = hostport.get_error();
         if (hostport_error != FT_ERR_SUCCESS)
         {
+            (void)hostport.destroy();
+            (void)scheme.destroy();
             error_code = hostport_error;
             return (FT_FALSE);
         }
@@ -1433,9 +1473,11 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
         while (walker < colon)
         {
             host.append(*walker);
-            int32_t host_error = ft_string::get_error();
+            int32_t host_error = host.get_error();
             if (host_error != FT_ERR_SUCCESS)
             {
+                (void)hostport.destroy();
+                (void)scheme.destroy();
                 error_code = host_error;
                 return (FT_FALSE);
             }
@@ -1446,9 +1488,11 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
     else
     {
         host = hostport;
-        int32_t host_error = ft_string::get_error();
+        int32_t host_error = host.get_error();
         if (host_error != FT_ERR_SUCCESS)
         {
+            (void)hostport.destroy();
+            (void)scheme.destroy();
             error_code = host_error;
             return (FT_FALSE);
         }
@@ -1457,6 +1501,8 @@ static ft_bool parse_url(const char *url, ft_bool &tls, ft_string &host,
         else
             port = 80;
     }
+    (void)hostport.destroy();
+    (void)scheme.destroy();
     error_code = FT_ERR_SUCCESS;
     return (FT_TRUE);
 }

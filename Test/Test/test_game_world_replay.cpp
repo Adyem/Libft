@@ -140,13 +140,16 @@ FT_TEST(test_game_world_replay_import_export_clear)
 
     FT_ASSERT_EQ(session.export_snapshot(exported_snapshot), FT_ERR_SUCCESS);
     FT_ASSERT(exported_snapshot.empty() == false);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, exported_snapshot.get_error());
 
     session.clear_snapshot();
 
     FT_ASSERT_EQ(session.export_snapshot(cleared_snapshot), FT_ERR_SUCCESS);
     FT_ASSERT(cleared_snapshot.empty());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cleared_snapshot.get_error());
 
     FT_ASSERT_EQ(imported_session.import_snapshot(exported_snapshot), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, exported_snapshot.get_error());
 
     hero_character.set_hit_points(10);
 

@@ -301,7 +301,7 @@ void ft_log_enqueue(t_log_level level, const char *format_string, va_list argume
     }
     if (logger_context_format_flat(context_fragment) != 0)
         return ;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (context_fragment.get_error() != FT_ERR_SUCCESS)
     {
         return ;
     }
@@ -312,7 +312,7 @@ void ft_log_enqueue(t_log_level level, const char *format_string, va_list argume
     }
     if (logger_build_standard_message(level, message_text, context_fragment, final_message) != 0)
         return ;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (final_message.get_error() != FT_ERR_SUCCESS)
     {
         return ;
     }

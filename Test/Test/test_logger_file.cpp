@@ -200,7 +200,9 @@ FT_TEST(test_logger_rotate_success_clears_errno)
     ft_log_rotate(&sink);
     FT_ASSERT(sink.file_descriptor >= 0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_path.initialize(sink.path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_path.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_path.append(".1"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_path.get_error());
     FT_ASSERT_EQ(0, access(rotated_path.c_str(), F_OK));
     close(sink.file_descriptor);
     unlink(template_path);
@@ -342,10 +344,13 @@ FT_TEST(test_logger_rotation_retention_limit)
     ft_log_close();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_one_path.initialize(template_path));
     rotated_one_path += ".1";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_one_path.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_two_path.initialize(template_path));
     rotated_two_path += ".2";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_two_path.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_three_path.initialize(template_path));
     rotated_three_path += ".3";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_three_path.get_error());
     fd = open(rotated_one_path.c_str(), O_RDONLY);
     FT_ASSERT(fd >= 0);
     read_count = read(fd, buffer, sizeof(buffer) - 1);

@@ -152,9 +152,11 @@ class http2_stream_manager
         uint32_t                                _connection_remote_window;
         uint32_t                                _connection_local_window;
         mutable pt_recursive_mutex   *_mutex;
+        static thread_local int32_t             _last_error;
 
         int32_t         lock(ft_bool *lock_acquired) const noexcept;
         void        unlock(ft_bool lock_acquired) const noexcept;
+        int32_t         set_error(int32_t error_code) const noexcept;
 
     public:
         http2_stream_manager() noexcept;
@@ -173,6 +175,8 @@ class http2_stream_manager
         int32_t         enable_thread_safety() noexcept;
         int32_t         disable_thread_safety() noexcept;
         ft_bool        is_thread_safe() const noexcept;
+        int32_t         get_error(void) const noexcept;
+        const char      *get_error_str(void) const noexcept;
 
         ft_bool        open_stream(uint32_t stream_identifier) noexcept;
         ft_bool        append_data(uint32_t stream_identifier, const char *data,

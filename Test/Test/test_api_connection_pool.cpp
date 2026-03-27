@@ -272,3 +272,15 @@ FT_TEST(test_api_connection_pool_disable_store_resets_http2_flag)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, handle.destroy());
     return (1);
 }
+
+FT_TEST(test_api_connection_pool_handle_key_assignment_keeps_instance_error_clean)
+{
+    api_connection_pool_handle handle;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handle.initialize());
+    handle.key = "127.0.0.1:8080:http";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handle.key.get_error());
+    FT_ASSERT(handle.key == "127.0.0.1:8080:http");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handle.destroy());
+    return (1);
+}

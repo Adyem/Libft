@@ -95,23 +95,23 @@ int32_t api_request_metrics_guard::initialize(const char *host, uint16_t port,
     {
         this->_enabled = FT_FALSE;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (ft_string::get_error());
+        return (this->_endpoint.get_error());
     }
     if (this->_endpoint.clear() != FT_ERR_SUCCESS)
     {
         this->_enabled = FT_FALSE;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (ft_string::get_error());
+        return (this->_endpoint.get_error());
     }
     if (host)
         this->_endpoint = host;
     else
         this->_endpoint = "(null)";
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (this->_endpoint.get_error() != FT_ERR_SUCCESS)
     {
         this->_enabled = FT_FALSE;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (ft_string::get_error());
+        return (this->_endpoint.get_error());
     }
     if (port != 0)
     {
@@ -127,18 +127,18 @@ int32_t api_request_metrics_guard::initialize(const char *host, uint16_t port,
             return (FT_ERR_IO);
         }
         this->_endpoint.append(':');
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (this->_endpoint.get_error() != FT_ERR_SUCCESS)
         {
             this->_enabled = FT_FALSE;
             this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return (ft_string::get_error());
+            return (this->_endpoint.get_error());
         }
         this->_endpoint.append(port_string);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (this->_endpoint.get_error() != FT_ERR_SUCCESS)
         {
             this->_enabled = FT_FALSE;
             this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return (ft_string::get_error());
+            return (this->_endpoint.get_error());
         }
     }
     return (FT_ERR_SUCCESS);
@@ -176,7 +176,7 @@ int32_t api_request_metrics_guard::initialize(
     if (this->_endpoint.initialize(other._endpoint.c_str()) != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (ft_string::get_error());
+        return (this->_endpoint.get_error());
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);

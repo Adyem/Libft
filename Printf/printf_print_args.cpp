@@ -383,19 +383,19 @@ static int32_t format_double_output(char specifier, int32_t precision, double nu
         if (required_length < 0) \
             return (FT_ERR_IO); \
         output.clear(); \
-        if (ft_string::get_error() != FT_ERR_SUCCESS) \
+        if (output.get_error() != FT_ERR_SUCCESS) \
             return (FT_ERR_INTERNAL); \
         output.resize_length(static_cast<ft_size_t>(required_length)); \
-        if (ft_string::get_error() != FT_ERR_SUCCESS) \
+        if (output.get_error() != FT_ERR_SUCCESS) \
             return (FT_ERR_INTERNAL); \
         output_buffer = output.print(); \
-        if (ft_string::get_error() != FT_ERR_SUCCESS || output_buffer == ft_nullptr) \
+        if (output.get_error() != FT_ERR_SUCCESS || output_buffer == ft_nullptr) \
             return (FT_ERR_INTERNAL); \
         int32_t written_length = std::snprintf(output_buffer, static_cast<ft_size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
             return (FT_ERR_IO); \
         output.resize_length(static_cast<ft_size_t>(written_length)); \
-        if (ft_string::get_error() != FT_ERR_SUCCESS) \
+        if (output.get_error() != FT_ERR_SUCCESS) \
             return (FT_ERR_INTERNAL); \
         return (FT_ERR_SUCCESS); \
     }
@@ -561,19 +561,19 @@ void pf_write_ft_string_fd(const ft_string &output, int32_t file_descriptor, ft_
 
     if (count_has_error(count))
         return ;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (output.get_error() != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;
     }
     buffer = output.c_str();
-    if (ft_string::get_error() != FT_ERR_SUCCESS || buffer == ft_nullptr)
+    if (output.get_error() != FT_ERR_SUCCESS || buffer == ft_nullptr)
     {
         mark_count_error(count);
         return ;
     }
     length = output.size();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (output.get_error() != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;

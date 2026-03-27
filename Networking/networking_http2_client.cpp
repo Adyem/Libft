@@ -105,7 +105,8 @@ int32_t http2_header_field::initialize(const http2_header_field &other) noexcept
     this->_name = other._name;
     this->_value = other._value;
     const_cast<http2_header_field &>(other).unlock(lock_acquired);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (this->_name.get_error() != FT_ERR_SUCCESS
+        || this->_value.get_error() != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_INVALID_OPERATION);
@@ -230,7 +231,7 @@ ft_bool http2_header_field::set_name(const ft_string &name_value) noexcept
         return (FT_FALSE);
     this->_name = name_value;
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (this->_name.get_error() == FT_ERR_SUCCESS);
 }
 
 ft_bool http2_header_field::set_name_from_cstr(const char *name_value) noexcept
@@ -242,7 +243,7 @@ ft_bool http2_header_field::set_name_from_cstr(const char *name_value) noexcept
     if (temporary_name.initialize() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     temporary_name = name_value;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (temporary_name.get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     return (this->set_name(temporary_name));
 }
@@ -258,7 +259,7 @@ ft_bool http2_header_field::set_name_from_buffer(const char *buffer, ft_size_t l
         return (FT_FALSE);
     this->_name.assign(buffer, length);
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (this->_name.get_error() == FT_ERR_SUCCESS);
 }
 
 ft_bool http2_header_field::set_value(const ft_string &value_value) noexcept
@@ -270,7 +271,7 @@ ft_bool http2_header_field::set_value(const ft_string &value_value) noexcept
         return (FT_FALSE);
     this->_value = value_value;
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (this->_value.get_error() == FT_ERR_SUCCESS);
 }
 
 ft_bool http2_header_field::set_value_from_cstr(const char *value_value) noexcept
@@ -282,7 +283,7 @@ ft_bool http2_header_field::set_value_from_cstr(const char *value_value) noexcep
     if (temporary_value.initialize() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     temporary_value = value_value;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (temporary_value.get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     return (this->set_value(temporary_value));
 }
@@ -298,7 +299,7 @@ ft_bool http2_header_field::set_value_from_buffer(const char *buffer, ft_size_t 
         return (FT_FALSE);
     this->_value.assign(buffer, length);
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (this->_value.get_error() == FT_ERR_SUCCESS);
 }
 
 ft_bool http2_header_field::assign(const ft_string &name_value, const ft_string &value_value) noexcept
@@ -311,12 +312,12 @@ ft_bool http2_header_field::assign(const ft_string &name_value, const ft_string 
     if (this->lock(&lock_acquired) != 0)
         return (FT_FALSE);
     this->_name = name_value;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (this->_name.get_error() != FT_ERR_SUCCESS)
         success_state = FT_FALSE;
     if (success_state)
     {
         this->_value = value_value;
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (this->_value.get_error() != FT_ERR_SUCCESS)
             success_state = FT_FALSE;
     }
     this->unlock(lock_acquired);
@@ -338,10 +339,10 @@ ft_bool http2_header_field::assign_from_cstr(const char *name_value, const char 
     if (initialize_error != FT_ERR_SUCCESS)
         return (FT_FALSE);
     name_string = name_value;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (name_string.get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     value_string = value_value;
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (value_string.get_error() != FT_ERR_SUCCESS)
         return (FT_FALSE);
     return (this->assign(name_string, value_string));
 }
@@ -359,12 +360,12 @@ ft_bool http2_header_field::assign_from_buffers(const char *name_buffer, ft_size
     if (this->lock(&lock_acquired) != 0)
         return (FT_FALSE);
     this->_name.assign(name_buffer, name_length);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (this->_name.get_error() != FT_ERR_SUCCESS)
         success_state = FT_FALSE;
     if (success_state)
     {
         this->_value.assign(value_buffer, value_length);
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (this->_value.get_error() != FT_ERR_SUCCESS)
             success_state = FT_FALSE;
     }
     this->unlock(lock_acquired);
@@ -380,7 +381,7 @@ ft_bool http2_header_field::copy_name(ft_string &out_name) const noexcept
         return (FT_FALSE);
     out_name = this->_name;
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (out_name.get_error() == FT_ERR_SUCCESS);
 }
 
 ft_bool http2_header_field::copy_value(ft_string &out_value) const noexcept
@@ -392,7 +393,7 @@ ft_bool http2_header_field::copy_value(ft_string &out_value) const noexcept
         return (FT_FALSE);
     out_value = this->_value;
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (out_value.get_error() == FT_ERR_SUCCESS);
 }
 
 void http2_header_field::clear() noexcept
@@ -533,7 +534,7 @@ int32_t http2_frame::initialize(const http2_frame &other) noexcept
     this->_stream_identifier = other._stream_identifier;
     this->_payload = other._payload;
     const_cast<http2_frame &>(other).unlock(lock_acquired);
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (this->_payload.get_error() != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_INVALID_OPERATION);
@@ -703,7 +704,7 @@ ft_bool http2_frame::set_payload(const ft_string &payload_value) noexcept
         return (FT_FALSE);
     this->_payload = payload_value;
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (this->_payload.get_error() == FT_ERR_SUCCESS);
 }
 
 ft_bool http2_frame::set_payload_from_buffer(const char *buffer, ft_size_t length) noexcept
@@ -717,7 +718,7 @@ ft_bool http2_frame::set_payload_from_buffer(const char *buffer, ft_size_t lengt
         return (FT_FALSE);
     this->_payload.assign(buffer, length);
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (this->_payload.get_error() == FT_ERR_SUCCESS);
 }
 
 ft_bool http2_frame::copy_payload(ft_string &out_payload) const noexcept
@@ -729,7 +730,7 @@ ft_bool http2_frame::copy_payload(ft_string &out_payload) const noexcept
         return (FT_FALSE);
     out_payload = this->_payload;
     this->unlock(lock_acquired);
-    return (ft_string::get_error() == FT_ERR_SUCCESS);
+    return (out_payload.get_error() == FT_ERR_SUCCESS);
 }
 
 int32_t http2_frame::set_error(int32_t error_code) const noexcept
@@ -786,6 +787,8 @@ http2_stream_manager::http2_stream_manager() noexcept
     return ;
 }
 
+thread_local int32_t http2_stream_manager::_last_error = FT_ERR_SUCCESS;
+
 http2_stream_manager::http2_stream_manager(const http2_stream_manager &other) noexcept
     : http2_stream_manager()
 {
@@ -825,21 +828,21 @@ int32_t http2_stream_manager::initialize() noexcept
     if (streams_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-        return (streams_error);
+        return (this->set_error(streams_error));
     }
     int32_t identifiers_error = this->_stream_identifiers.initialize();
     if (identifiers_error != FT_ERR_SUCCESS)
     {
         this->_streams.destroy();
         this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-        return (identifiers_error);
+        return (this->set_error(identifiers_error));
     }
     this->_initial_remote_window = 65535;
     this->_initial_local_window = 65535;
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    return (FT_ERR_SUCCESS);
+    return (this->set_error(FT_ERR_SUCCESS));
 }
 
 int32_t http2_stream_manager::move(http2_stream_manager &other) noexcept
@@ -860,15 +863,15 @@ int32_t http2_stream_manager::initialize(const http2_stream_manager &other) noex
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (FT_ERR_SUCCESS);
+        return (this->set_error(FT_ERR_SUCCESS));
     }
     if (this->initialize() != FT_ERR_SUCCESS)
-        return (FT_ERR_INITIALIZATION_FAILED);
+        return (this->set_error(FT_ERR_INITIALIZATION_FAILED));
     this->_initial_remote_window = other._initial_remote_window;
     this->_initial_local_window = other._initial_local_window;
     this->_connection_remote_window = other._connection_remote_window;
     this->_connection_local_window = other._connection_local_window;
-    return (FT_ERR_SUCCESS);
+    return (this->set_error(FT_ERR_SUCCESS));
 }
 
 int32_t http2_stream_manager::initialize(http2_stream_manager &&other) noexcept
@@ -907,7 +910,7 @@ int32_t http2_stream_manager::destroy() noexcept
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (first_error);
+    return (this->set_error(first_error));
 }
 
 int32_t http2_stream_manager::enable_thread_safety() noexcept
@@ -919,12 +922,12 @@ int32_t http2_stream_manager::enable_thread_safety() noexcept
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        return (FT_ERR_SUCCESS);
+        return (this->set_error(FT_ERR_SUCCESS));
     }
     memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
     if (!memory_pointer)
     {
-        return (FT_ERR_NO_MEMORY);
+        return (this->set_error(FT_ERR_NO_MEMORY));
     }
     mutex_pointer = new(memory_pointer) pt_recursive_mutex();
     mutex_error = mutex_pointer->initialize();
@@ -932,10 +935,10 @@ int32_t http2_stream_manager::enable_thread_safety() noexcept
     {
         mutex_pointer->~pt_recursive_mutex();
         std::free(memory_pointer);
-        return (mutex_error);
+        return (this->set_error(mutex_error));
     }
     this->_mutex = mutex_pointer;
-    return (FT_ERR_SUCCESS);
+    return (this->set_error(FT_ERR_SUCCESS));
 }
 
 int32_t http2_stream_manager::lock(ft_bool *lock_acquired) const noexcept
@@ -974,17 +977,37 @@ int32_t http2_stream_manager::disable_thread_safety() noexcept
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
+        return (this->set_error(FT_ERR_SUCCESS));
     destroy_error = this->_mutex->destroy();
     this->_mutex->~pt_recursive_mutex();
     std::free(this->_mutex);
     this->_mutex = ft_nullptr;
-    return (destroy_error);
+    return (this->set_error(destroy_error));
 }
 
 ft_bool http2_stream_manager::is_thread_safe() const noexcept
 {
     return (this->_mutex != ft_nullptr);
+}
+
+int32_t http2_stream_manager::set_error(int32_t error_code) const noexcept
+{
+    http2_stream_manager::_last_error = error_code;
+    return (error_code);
+}
+
+int32_t http2_stream_manager::get_error(void) const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::get_error");
+    return (http2_stream_manager::_last_error);
+}
+
+const char *http2_stream_manager::get_error_str(void) const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::get_error_str");
+    return (ft_strerror(http2_stream_manager::_last_error));
 }
 
 ft_bool http2_stream_manager::validate_receive_window(uint32_t stream_identifier,
@@ -1088,23 +1111,37 @@ ft_bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
     existing_entry = this->_streams.find(stream_identifier);
     if (existing_entry != this->_streams.end())
     {
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_ALREADY_EXISTS);
         success_state = FT_FALSE;
+        return (FT_FALSE);
     }
     if (success_state)
     {
         new_state.remote_window = this->_initial_remote_window;
         new_state.local_window = this->_initial_local_window;
         if (new_state.buffer.initialize() != FT_ERR_SUCCESS)
+        {
+            this->unlock(lock_acquired);
+            this->set_error(new_state.buffer.get_error());
             success_state = FT_FALSE;
+            return (FT_FALSE);
+        }
         else
             this->_streams.insert(stream_identifier, new_state);
     }
     if (success_state)
     {
         this->_stream_identifiers.push_back(stream_identifier);
+        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESS)
+        {
+            this->unlock(lock_acquired);
+            this->set_error(this->_stream_identifiers.get_error());
+            return (FT_FALSE);
+        }
     }
-    if (success_state)
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1120,10 +1157,16 @@ ft_bool http2_stream_manager::append_data(uint32_t stream_identifier, const char
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     if (!data && length > 0)
     {
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         success_state = FT_FALSE;
+        return (FT_FALSE);
     }
     stream_entry = ft_nullptr;
     if (success_state)
@@ -1131,40 +1174,58 @@ ft_bool http2_stream_manager::append_data(uint32_t stream_identifier, const char
         stream_entry = this->_streams.find(stream_identifier);
         if (stream_entry == this->_streams.end())
         {
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_NOT_FOUND);
             success_state = FT_FALSE;
+            return (FT_FALSE);
         }
     }
     if (success_state && length > 0xFFFFFFFFu)
     {
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         success_state = FT_FALSE;
+        return (FT_FALSE);
     }
     if (success_state)
     {
         length_32 = static_cast<uint32_t>(length);
         if (!this->validate_receive_window(stream_identifier, length_32))
+        {
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_INVALID_OPERATION);
             success_state = FT_FALSE;
+            return (FT_FALSE);
+        }
         if (success_state)
         {
             index = 0;
             while (index < length)
             {
                 stream_entry->value.buffer.append(data[index]);
-                if (ft_string::get_error() != FT_ERR_SUCCESS)
+                if (stream_entry->value.buffer.get_error() != FT_ERR_SUCCESS)
                 {
+                    this->unlock(lock_acquired);
+                    this->set_error(stream_entry->value.buffer.get_error());
                     success_state = FT_FALSE;
-                    break ;
+                    return (FT_FALSE);
                 }
                 index++;
             }
             if (success_state)
             {
                 if (!this->record_received_data(stream_identifier, length_32))
+                {
+                    this->unlock(lock_acquired);
+                    this->set_error(FT_ERR_INVALID_OPERATION);
                     success_state = FT_FALSE;
+                    return (FT_FALSE);
+                }
             }
         }
     }
-    if (success_state)
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1177,20 +1238,25 @@ ft_bool http2_stream_manager::close_stream(uint32_t stream_identifier) noexcept
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == this->_streams.end())
     {
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_NOT_FOUND);
         success_state = FT_FALSE;
+        return (FT_FALSE);
     }
     if (success_state)
     {
         this->_streams.remove(stream_identifier);
-            }
-    if (success_state)
         this->remove_stream_identifier(stream_identifier);
-    if (success_state)
+    }
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1204,22 +1270,31 @@ ft_bool http2_stream_manager::get_stream_buffer(uint32_t stream_identifier,
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == this->_streams.end())
     {
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_NOT_FOUND);
         success_state = FT_FALSE;
+        return (FT_FALSE);
     }
     if (success_state)
     {
         out_buffer = stream_entry->value.buffer;
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (out_buffer.get_error() != FT_ERR_SUCCESS)
         {
+            this->unlock(lock_acquired);
+            this->set_error(out_buffer.get_error());
             success_state = FT_FALSE;
+            return (FT_FALSE);
         }
     }
-    if (success_state)
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1324,11 +1399,16 @@ ft_bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) 
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     previous_window = this->_initial_remote_window;
     if (new_window > 0x7FFFFFFFu)
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
+        return (FT_FALSE);
     }
     if (success_state)
     {
@@ -1344,7 +1424,9 @@ ft_bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) 
             stream_entry = this->_streams.find(identifier_value);
             if (stream_entry == this->_streams.end())
             {
-                success_state = FT_FALSE;
+                this->unlock(lock_acquired);
+                this->set_error(FT_ERR_NOT_FOUND);
+                return (FT_FALSE);
             }
             else if (new_window >= previous_window)
             {
@@ -1373,6 +1455,7 @@ ft_bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) 
         }
     }
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1387,11 +1470,16 @@ ft_bool http2_stream_manager::update_local_initial_window(uint32_t new_window) n
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     previous_window = this->_initial_local_window;
     if (new_window > 0x7FFFFFFFu)
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
+        return (FT_FALSE);
     }
     if (success_state)
     {
@@ -1407,7 +1495,9 @@ ft_bool http2_stream_manager::update_local_initial_window(uint32_t new_window) n
             stream_entry = this->_streams.find(identifier_value);
             if (stream_entry == this->_streams.end())
             {
-                success_state = FT_FALSE;
+                this->unlock(lock_acquired);
+                this->set_error(FT_ERR_NOT_FOUND);
+                return (FT_FALSE);
             }
             else if (new_window >= previous_window)
             {
@@ -1436,6 +1526,7 @@ ft_bool http2_stream_manager::update_local_initial_window(uint32_t new_window) n
         }
     }
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1450,19 +1541,23 @@ uint32_t http2_stream_manager::get_local_window(uint32_t stream_identifier) cons
     success_state = FT_TRUE;
     window_value = 0;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (0);
+    }
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == this->_streams.end())
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_NOT_FOUND);
+        return (0);
     }
     if (success_state)
     {
         window_value = stream_entry->value.local_window;
     }
     this->unlock(lock_acquired);
-    if (!success_state)
-        return (0);
+    this->set_error(FT_ERR_SUCCESS);
     return (window_value);
 }
 
@@ -1477,19 +1572,23 @@ uint32_t http2_stream_manager::get_remote_window(uint32_t stream_identifier) con
     success_state = FT_TRUE;
     window_value = 0;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (0);
+    }
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == this->_streams.end())
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_NOT_FOUND);
+        return (0);
     }
     if (success_state)
     {
         window_value = stream_entry->value.remote_window;
     }
     this->unlock(lock_acquired);
-    if (!success_state)
-        return (0);
+    this->set_error(FT_ERR_SUCCESS);
     return (window_value);
 }
 
@@ -1505,17 +1604,24 @@ ft_bool http2_stream_manager::increase_local_window(uint32_t stream_identifier,
     success_state = FT_TRUE;
     stream_entry = ft_nullptr;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     if (increment > 0x7FFFFFFFu)
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
+        return (FT_FALSE);
     }
     if (success_state)
     {
         stream_entry = this->_streams.find(stream_identifier);
         if (stream_entry == this->_streams.end())
         {
-            success_state = FT_FALSE;
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_NOT_FOUND);
+            return (FT_FALSE);
         }
     }
     if (success_state)
@@ -1524,7 +1630,9 @@ ft_bool http2_stream_manager::increase_local_window(uint32_t stream_identifier,
             + increment;
         if (updated_window > 0x7FFFFFFFul)
         {
-            success_state = FT_FALSE;
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            return (FT_FALSE);
         }
         else
         {
@@ -1532,6 +1640,7 @@ ft_bool http2_stream_manager::increase_local_window(uint32_t stream_identifier,
         }
     }
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1547,17 +1656,24 @@ ft_bool http2_stream_manager::increase_remote_window(uint32_t stream_identifier,
     success_state = FT_TRUE;
     stream_entry = ft_nullptr;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     if (increment > 0x7FFFFFFFu)
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
+        return (FT_FALSE);
     }
     if (success_state)
     {
         stream_entry = this->_streams.find(stream_identifier);
         if (stream_entry == this->_streams.end())
         {
-            success_state = FT_FALSE;
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_NOT_FOUND);
+            return (FT_FALSE);
         }
     }
     if (success_state)
@@ -1566,7 +1682,9 @@ ft_bool http2_stream_manager::increase_remote_window(uint32_t stream_identifier,
             + increment;
         if (updated_window > 0x7FFFFFFFul)
         {
-            success_state = FT_FALSE;
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            return (FT_FALSE);
         }
         else
         {
@@ -1574,6 +1692,7 @@ ft_bool http2_stream_manager::increase_remote_window(uint32_t stream_identifier,
         }
     }
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1587,29 +1706,44 @@ ft_bool http2_stream_manager::reserve_send_window(uint32_t stream_identifier,
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == this->_streams.end())
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_NOT_FOUND);
+        return (FT_FALSE);
     }
     if (success_state)
     {
         if (!this->reserve_remote_connection_window(length))
-            success_state = FT_FALSE;
+        {
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_INVALID_OPERATION);
+            return (FT_FALSE);
+        }
     }
     if (success_state && stream_entry->value.remote_window < length)
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
+        return (FT_FALSE);
     }
     if (success_state)
     {
         stream_entry->value.remote_window -= length;
         if (!this->record_connection_send(length))
-            success_state = FT_FALSE;
+        {
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_INVALID_OPERATION);
+            return (FT_FALSE);
+        }
     }
-    if (success_state)
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1622,10 +1756,15 @@ ft_bool http2_stream_manager::update_connection_local_window(uint32_t increment)
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     if (increment > 0x7FFFFFFFu)
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
+        return (FT_FALSE);
     }
     if (success_state)
     {
@@ -1633,7 +1772,9 @@ ft_bool http2_stream_manager::update_connection_local_window(uint32_t increment)
             + increment;
         if (updated_window > 0x7FFFFFFFul)
         {
-            success_state = FT_FALSE;
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            return (FT_FALSE);
         }
         else
         {
@@ -1641,6 +1782,7 @@ ft_bool http2_stream_manager::update_connection_local_window(uint32_t increment)
         }
     }
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1653,10 +1795,15 @@ ft_bool http2_stream_manager::update_connection_remote_window(uint32_t increment
     lock_acquired = FT_FALSE;
     success_state = FT_TRUE;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (FT_FALSE);
+    }
     if (increment > 0x7FFFFFFFu)
     {
-        success_state = FT_FALSE;
+        this->unlock(lock_acquired);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
+        return (FT_FALSE);
     }
     if (success_state)
     {
@@ -1664,7 +1811,9 @@ ft_bool http2_stream_manager::update_connection_remote_window(uint32_t increment
             + increment;
         if (updated_window > 0x7FFFFFFFul)
         {
-            success_state = FT_FALSE;
+            this->unlock(lock_acquired);
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            return (FT_FALSE);
         }
         else
         {
@@ -1672,6 +1821,7 @@ ft_bool http2_stream_manager::update_connection_remote_window(uint32_t increment
         }
     }
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (success_state);
 }
 
@@ -1683,9 +1833,13 @@ uint32_t http2_stream_manager::get_connection_local_window() const noexcept
     lock_acquired = FT_FALSE;
     window_value = 0;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (0);
+    }
     window_value = this->_connection_local_window;
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (window_value);
 }
 
@@ -1697,9 +1851,13 @@ uint32_t http2_stream_manager::get_connection_remote_window() const noexcept
     lock_acquired = FT_FALSE;
     window_value = 0;
     if (this->lock(&lock_acquired) != 0)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (0);
+    }
     window_value = this->_connection_remote_window;
     this->unlock(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (window_value);
 }
 
@@ -1885,7 +2043,7 @@ ft_bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
         return (FT_FALSE);
     }
     payload_length = payload_copy.size();
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (payload_copy.get_error() != FT_ERR_SUCCESS)
     {
         return (FT_FALSE);
     }
@@ -1906,7 +2064,7 @@ ft_bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
         return (FT_FALSE);
     }
     payload_bytes = reinterpret_cast<const unsigned char*>(payload_copy.c_str());
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (payload_copy.get_error() != FT_ERR_SUCCESS)
     {
         return (FT_FALSE);
     }
