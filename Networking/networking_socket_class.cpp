@@ -343,7 +343,7 @@ int32_t ft_socket::initialize(ft_socket &&other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (connected_error);
     }
-    connected_error = this->_connected.initialize(ft_move(other._connected));
+    connected_error = this->_connected.move(other._connected);
     if (connected_error != FT_ERR_SUCCESS)
     {
         this->_socket_file_descriptor = -1;

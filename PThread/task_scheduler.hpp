@@ -717,7 +717,7 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
 
         if (promise_future.initialize() != FT_ERR_SUCCESS)
             return (ft_future<return_type>());
-        if (future_value.initialize(ft_move(promise_future)) != FT_ERR_SUCCESS)
+        if (future_value.move(promise_future) != FT_ERR_SUCCESS)
             return (ft_future<return_type>());
         return (future_value);
     };
@@ -822,7 +822,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         return (result_pair);
     }
-    int future_initialize_error = future_value.initialize(ft_move(promise_future));
+    int future_initialize_error = future_value.move(promise_future);
 
     if (future_initialize_error != FT_ERR_SUCCESS)
     {
@@ -928,7 +928,10 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED, trace_id, parent_span,
             g_ft_task_trace_label_schedule_once, false);
-    return (Pair<ft_future<return_type>, ft_scheduled_task_handle>(future_value, handle_instance));
+    if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
+        return (result_pair);
+    result_pair.value = handle_instance;
+    return (result_pair);
 }
 
 template <typename Rep, typename Period, typename FunctionType, typename... Args>

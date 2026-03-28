@@ -116,8 +116,6 @@ ft_file::ft_file(ft_file&& other) noexcept
     : _file_descriptor(-1), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    int32_t lock_error;
-
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state, "ft_file::ft_file move source",
@@ -130,33 +128,8 @@ ft_file::ft_file(ft_file&& other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
+    if (this->move(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_file_descriptor = other._file_descriptor;
-    other._file_descriptor = -1;
-    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (other._mutex != ft_nullptr)
-    {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
-        {
-            if (this->_file_descriptor >= 0)
-                (void)su_close(this->_file_descriptor);
-            this->_file_descriptor = -1;
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return ;
-        }
-        (void)other.disable_thread_safety();
-    }
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

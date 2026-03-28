@@ -54,20 +54,11 @@ ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    if (this->initialize(other._storage) != FT_ERR_SUCCESS)
+    if (this->move(other) != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    this->_position = other._position;
-    if (other._mutex != ft_nullptr)
-    {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)other.disable_thread_safety();
-    }
-    other._position = 0;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

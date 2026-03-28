@@ -1,4 +1,5 @@
 #include "cancellation.hpp"
+#include "../Template/move.hpp"
 
 int32_t ft_cancellation_state::set_error(int32_t error_code) noexcept
 {
@@ -143,6 +144,7 @@ int32_t ft_cancellation_state::destroy() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t disable_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (set_error(FT_ERR_SUCCESS));
@@ -153,13 +155,17 @@ int32_t ft_cancellation_state::destroy() noexcept
     this->_callbacks.clear();
     this->_cancelled.store(FT_FALSE, std::memory_order_release);
     (void)this->unlock_internal(lock_acquired);
+    disable_error = this->disable_thread_safety();
     (void)this->_callbacks.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    if (disable_error != FT_ERR_SUCCESS)
+        return (set_error(disable_error));
     return (set_error(FT_ERR_SUCCESS));
 }
 
 int32_t ft_cancellation_state::move(ft_cancellation_state &other) noexcept
 {
+    int32_t callbacks_move_result;
     int32_t destroy_result;
 
     if (this == &other)
@@ -183,13 +189,19 @@ int32_t ft_cancellation_state::move(ft_cancellation_state &other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(FT_ERR_SUCCESS));
     }
+    callbacks_move_result = this->_callbacks.move(other._callbacks);
+    if (callbacks_move_result != FT_ERR_SUCCESS)
+    {
+        this->_cancelled.store(FT_FALSE, std::memory_order_release);
+        this->_mutex = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(callbacks_move_result));
+    }
     this->_cancelled.store(other._cancelled.load(std::memory_order_acquire),
         std::memory_order_release);
-    this->_callbacks.clear();
     this->_mutex = other._mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._cancelled.store(FT_FALSE, std::memory_order_release);
-    other._callbacks.clear();
     other._mutex = ft_nullptr;
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return (set_error(FT_ERR_SUCCESS));
@@ -423,7 +435,8 @@ ft_cancellation_source::ft_cancellation_source(
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    (void)this->move(other);
+    if (this->move(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

@@ -127,3 +127,25 @@ FT_TEST(test_cancellation_token_callbacks_trigger)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, cancellation_source.destroy());
     return (1);
 }
+
+FT_TEST(test_thread_pool_move_constructor_preserves_execution)
+{
+    ft_thread_pool source_pool(1, 0);
+    std::atomic<int> execution_count;
+
+    execution_count.store(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.enable_thread_safety());
+
+    ft_thread_pool moved_pool(static_cast<ft_thread_pool &&>(source_pool));
+
+    moved_pool.submit([&execution_count]()
+    {
+        execution_count.fetch_add(1);
+        return ;
+    });
+    moved_pool.wait();
+    FT_ASSERT_EQ(1, execution_count.load());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pool.destroy());
+    return (1);
+}

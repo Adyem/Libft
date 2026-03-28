@@ -95,7 +95,7 @@ class ft_vector
 
         int32_t     initialize() noexcept;
         int32_t     initialize(const ft_vector<ElementType> &other);
-        int32_t     initialize(ft_vector<ElementType> &&other);
+        int32_t     move(ft_vector<ElementType> &other);
         int32_t     destroy() noexcept;
 
         int32_t     enable_thread_safety();
@@ -265,7 +265,7 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType> &&other)
         (void)ft_vector<ElementType>::set_error(previous_error);
         return ;
     }
-    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
+    if (this->move(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     (void)ft_vector<ElementType>::set_error(previous_error);
     return ;
@@ -333,17 +333,37 @@ int32_t ft_vector<ElementType>::initialize(const ft_vector<ElementType> &other)
 }
 
 template <typename ElementType>
-int32_t ft_vector<ElementType>::initialize(ft_vector<ElementType> &&other)
+int32_t ft_vector<ElementType>::move(ft_vector<ElementType> &other)
 {
     if (this == &other)
         return (ft_vector<ElementType>::set_error(FT_ERR_SUCCESS));
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_vector::move",
+            "source object is uninitialised");
+        return (ft_vector<ElementType>::set_error(FT_ERR_INVALID_STATE));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        int32_t destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (ft_vector<ElementType>::set_error(destroy_error));
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (ft_vector<ElementType>::set_error(FT_ERR_SUCCESS));
+    }
     int32_t initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (ft_vector<ElementType>::set_error(initialization_error));
     ft_bool other_lock_acquired = FT_FALSE;
     int32_t other_lock_error = other.lock_internal(&other_lock_acquired);
     if (other_lock_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (ft_vector<ElementType>::set_error(other_lock_error));
+    }
     if (other.using_small_buffer())
     {
         ft_size_t index = 0;
@@ -358,12 +378,15 @@ int32_t ft_vector<ElementType>::initialize(ft_vector<ElementType> &&other)
                     ::destroy_at(&this->_data[index]);
                 }
                 this->_size = 0;
+                this->_initialised_state = FT_CLASS_STATE_DESTROYED;
                 other.unlock_internal(other_lock_acquired);
                 return (this->get_error());
             }
             ++index;
         }
         this->_size = other._size;
+        other.destroy_elements_unlocked(0, other._size);
+        other._size = 0;
     }
     else
     {
@@ -380,6 +403,7 @@ int32_t ft_vector<ElementType>::initialize(ft_vector<ElementType> &&other)
     pt_recursive_mutex *moved_mutex = other._mutex;
     other._mutex = ft_nullptr;
     this->_mutex = moved_mutex;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return (ft_vector<ElementType>::set_error(FT_ERR_SUCCESS));
 }
 

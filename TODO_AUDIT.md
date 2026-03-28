@@ -99,10 +99,25 @@
     - `http2_stream_manager::initialize(const http2_stream_manager &)` now copies stream-table and identifier state instead of only window counters.
     - `http2_stream_state` now manages its owned `ft_string` through lifecycle-aware constructor/destructor cleanup, and `http2_stream_manager::open_stream()` no longer double-initializes stream buffers.
 - CPP_class partial progress:
+  - `CPP_class/cpp_class_cancellation.cpp`
+    - `ft_cancellation_state::move(...)` now transfers registered callbacks through the vector move-initialize path instead of dropping them, and `destroy()` now releases thread-safety state before leaving the object destroyed.
+  - `CPP_class/cpp_class_fd_istream.cpp`
+    - `ft_fd_istream` copy/move constructors now initialize the base `ft_istream` subobject from the source, and `move(...)` now transfers base stream lifecycle/read state before moving the descriptor handle.
+  - `CPP_class/cpp_class_file.cpp`
+    - `ft_file` move construction now routes through `move(...)`, so descriptor ownership and thread-safety transfer follow the class move path instead of a duplicated constructor-only implementation.
   - `CPP_class/cpp_class_istringstream.cpp`
     - `ft_istringstream` move construction now uses the class move path instead of rebuilding from `get_string()`, so source lifecycle state is transferred correctly.
+  - `CPP_class/cpp_class_istream.cpp`
+    - `ft_istream` move construction now routes through `move(...)`, so gcount, validity, and thread-safety state transfer through the shared lifecycle path.
   - `CPP_class/cpp_class_ofstream.cpp`
     - `ft_ofstream::initialize()` now initializes its owned `ft_file`, and move construction preserves the open file handle through the real move path.
+  - `CPP_class/cpp_class_stringbuf.cpp`
+    - `ft_stringbuf` move construction now routes through `move(...)`, so unread buffer position and thread-safety state transfer instead of falling back to copy-style reconstruction.
+  - `CPP_class/cpp_class_thread_pool.cpp`
+    - `ft_thread_pool` move construction now routes through `move(...)`, and `move(...)` can rebuild an equivalent initialized pool instead of failing for live sources.
+- Template partial progress:
+  - `Template/vector.hpp`
+    - `ft_vector` now exposes an explicit `move(...)` helper instead of the rvalue `initialize(...)` overload, and move transfer now cleans up small-buffer source elements before marking the source destroyed.
 - Tests updated:
   - `Test/Test/test_api_request.cpp`
     - `test_http2_stream_manager_error_queries_follow_lifecycle_contract`
@@ -113,8 +128,26 @@
     - `test_http2_stream_manager_destroyed_source_propagates_copy_state`
   - `Test/Test/test_cpp_class_istringstream_lifecycle.cpp`
     - `test_cpp_class_istringstream_move_constructor_transfers_buffer`
+  - `Test/Test/test_cpp_class_fd_istream_lifecycle.cpp`
+    - `test_cpp_class_fd_istream_copy_constructor_preserves_readability`
+    - `test_cpp_class_fd_istream_move_constructor_preserves_readability`
+  - `Test/Test/test_cpp_class_file_copy_move.cpp`
+    - `test_cpp_class_file_copy_constructor_preserves_open_handle`
+    - `test_cpp_class_file_move_constructor_preserves_open_handle`
+  - `Test/Test/test_cpp_class_istream_copy_move.cpp`
+    - `test_cpp_class_istream_copy_constructor_preserves_read_state`
+    - `test_cpp_class_istream_move_constructor_preserves_read_state`
   - `Test/Test/test_cpp_class_lifecycle_methods.cpp`
     - `test_ft_ofstream_move_constructor_preserves_open_file`
+  - `Test/Test/test_cpp_class_stringbuf_copy_move.cpp`
+    - `test_cpp_class_stringbuf_move_constructor_transfers_state`
+  - `Test/Test/test_thread_pool.cpp`
+    - `test_thread_pool_move_constructor_preserves_execution`
+  - `Test/Test/test_template_cancellation_callbacks.cpp`
+    - `test_ft_cancellation_token_callbacks_after_request`
+    - `test_ft_cancellation_source_request_affects_future_tokens`
+  - `Test/Test/test_template_vector.cpp`
+    - `test_ft_vector_move_method_transfers_elements_and_thread_safety`
 - Modules to audit:
 - `API`
 - `Advanced`

@@ -226,6 +226,42 @@ void pt_condition_variable::unlock_state(bool lock_acquired) const
     return ;
 }
 
+int pt_condition_variable::wait(pt_mutex &mutex)
+{
+    int initialize_error;
+
+    initialize_error = this->ensure_native_sync_objects();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    if (!mutex.lockState())
+        return (FT_ERR_MUTEX_NOT_OWNER);
+
+    int native_lock_error = pthread_mutex_lock(&this->_mutex);
+    if (native_lock_error != 0)
+        return (cmp_map_system_error_to_ft(native_lock_error));
+    int unlock_error = mutex.unlock();
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        pthread_mutex_unlock(&this->_mutex);
+        return (unlock_error);
+    }
+
+    int wait_result = pt_cond_wait(&this->_condition, &this->_mutex);
+    int native_unlock_error = pthread_mutex_unlock(&this->_mutex);
+    int relock_error = mutex.lock();
+    if (native_unlock_error != 0)
+    {
+        if (relock_error != FT_ERR_SUCCESS)
+            return (relock_error);
+        return (cmp_map_system_error_to_ft(native_unlock_error));
+    }
+    if (relock_error != FT_ERR_SUCCESS)
+        return (relock_error);
+    if (wait_result == 0)
+        return (FT_ERR_SUCCESS);
+    return (cmp_map_system_error_to_ft(wait_result));
+}
+
 int pt_condition_variable::wait_for(pt_mutex &mutex, const struct timespec &relative_time)
 {
     struct timespec absolute_time;

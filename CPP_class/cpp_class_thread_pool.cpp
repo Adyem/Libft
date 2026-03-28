@@ -132,12 +132,8 @@ ft_thread_pool::ft_thread_pool(ft_thread_pool &&other)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return ;
     }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
+    if (this->move(other) != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    (void)other.destroy();
     return ;
 }
 
@@ -276,7 +272,10 @@ int32_t ft_thread_pool::destroy()
 
 int32_t ft_thread_pool::move(ft_thread_pool &other) noexcept
 {
+    int32_t destroy_other_result;
     int32_t destroy_result;
+    int32_t enable_result;
+    int32_t initialize_result;
 
     if (this == &other)
         return (set_error(FT_ERR_SUCCESS));
@@ -303,7 +302,25 @@ int32_t ft_thread_pool::move(ft_thread_pool &other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(FT_ERR_SUCCESS));
     }
-    return (set_error(FT_ERR_INVALID_OPERATION));
+    initialize_result = this->initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+        return (set_error(initialize_result));
+    if (other._thread_safe_mutex != ft_nullptr)
+    {
+        enable_result = this->enable_thread_safety();
+        if (enable_result != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (set_error(enable_result));
+        }
+    }
+    destroy_other_result = other.destroy();
+    if (destroy_other_result != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (set_error(destroy_other_result));
+    }
+    return (set_error(FT_ERR_SUCCESS));
 }
 
 void ft_thread_pool::wait()

@@ -92,3 +92,22 @@ FT_TEST(test_ft_vector_small_buffer_inline_capacity)
     FT_ASSERT_EQ(free_count_before, free_count_after);
     return (1);
 }
+
+FT_TEST(test_ft_vector_move_method_transfers_elements_and_thread_safety)
+{
+    ft_vector<int> source_vector;
+    ft_vector<int> destination_vector;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_vector.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_vector.push_back(10));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_vector.push_back(20));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_vector.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_vector.move(source_vector));
+    FT_ASSERT_EQ(2U, destination_vector.size());
+    FT_ASSERT_EQ(10, destination_vector[0]);
+    FT_ASSERT_EQ(20, destination_vector[1]);
+    FT_ASSERT_EQ(FT_TRUE, destination_vector.is_thread_safe());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_vector.is_initialised());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_vector.destroy());
+    return (1);
+}

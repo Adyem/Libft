@@ -53,16 +53,9 @@ ft_fd_istream::ft_fd_istream() noexcept
 }
 
 ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
-    : ft_istream(), _file_descriptor(-1), _mutex(ft_nullptr),
+    : ft_istream(other), _file_descriptor(-1), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_fd_istream::ft_fd_istream copy source",
-            "called with uninitialised source object");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -76,16 +69,9 @@ ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
 }
 
 ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
-    : ft_istream(), _file_descriptor(-1), _mutex(ft_nullptr),
+    : ft_istream(static_cast<ft_istream &&>(other)), _file_descriptor(-1), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_fd_istream::ft_fd_istream move source",
-            "called with uninitialised source object");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -158,6 +144,8 @@ int32_t ft_fd_istream::destroy() noexcept
 
 int32_t ft_fd_istream::move(ft_fd_istream &other) noexcept
 {
+    int32_t base_move_error;
+
     if (&other == this)
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
@@ -178,9 +166,12 @@ int32_t ft_fd_istream::move(ft_fd_istream &other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
     }
-    uint32_t initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-        return (initialize_error);
+    base_move_error = ft_istream::move(other);
+    if (base_move_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (base_move_error);
+    }
     this->_file_descriptor = other._file_descriptor;
     other._file_descriptor = -1;
     if (other._mutex != ft_nullptr)
