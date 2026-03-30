@@ -1152,14 +1152,14 @@ int32_t ft_map<Key, MappedType>::set_error(int32_t error_code) const noexcept
 template <typename Key, typename MappedType>
 int32_t ft_map<Key, MappedType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_map::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::get_error");
     return (ft_map<Key, MappedType>::_last_error);
 }
 
 template <typename Key, typename MappedType>
 const char *ft_map<Key, MappedType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_map::get_error_str");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_map::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 

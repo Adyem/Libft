@@ -111,6 +111,7 @@ int32_t game_state::initialize() noexcept
     int32_t worlds_error;
     int32_t characters_error;
     int32_t variables_error;
+    int32_t hooks_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -143,9 +144,20 @@ int32_t game_state::initialize() noexcept
         this->set_error(variables_error);
         return (variables_error);
     }
+    hooks_error = this->_hooks.initialize();
+    if (hooks_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_variables.destroy();
+        (void)this->_worlds.destroy();
+        (void)this->_characters.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(hooks_error);
+        return (hooks_error);
+    }
     world = ft_sharedptr<game_world>(new (std::nothrow) game_world());
     if (!world)
     {
+        (void)this->_hooks.destroy();
         (void)this->_worlds.destroy();
         (void)this->_characters.destroy();
         (void)this->_variables.destroy();
@@ -155,6 +167,7 @@ int32_t game_state::initialize() noexcept
     }
     if (world->initialize() != FT_ERR_SUCCESS)
     {
+        (void)this->_hooks.destroy();
         (void)this->_worlds.destroy();
         (void)this->_characters.destroy();
         (void)this->_variables.destroy();
@@ -163,7 +176,6 @@ int32_t game_state::initialize() noexcept
         return (world->get_error());
     }
     this->_worlds.push_back(world);
-    this->_hooks = ft_sharedptr<game_hooks>();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -173,6 +185,8 @@ int32_t game_state::move(game_state &other) noexcept
 {
     int32_t initialize_error;
     int32_t destroy_error;
+    int32_t source_destroy_error;
+    int32_t source_error;
     ft_size_t index;
     ft_size_t count;
 
@@ -241,12 +255,26 @@ int32_t game_state::move(game_state &other) noexcept
         }
         index++;
     }
+    this->_variables = other._variables;
+    if (this->_variables.get_error() != FT_ERR_SUCCESS)
+    {
+        this->set_error(this->_variables.get_error());
+        return (this->_variables.get_error());
+    }
     this->_hooks = other._hooks;
-    other._worlds.clear();
-    other._characters.clear();
-    other._hooks = ft_sharedptr<game_hooks>();
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    this->set_error(FT_ERR_SUCCESS);
+    if (this->_hooks.get_error() != FT_ERR_SUCCESS)
+    {
+        this->set_error(this->_hooks.get_error());
+        return (this->_hooks.get_error());
+    }
+    source_error = other.get_error();
+    source_destroy_error = other.destroy();
+    if (source_destroy_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(source_destroy_error);
+        return (source_destroy_error);
+    }
+    this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -255,6 +283,7 @@ int32_t game_state::destroy() noexcept
     int32_t worlds_error;
     int32_t characters_error;
     int32_t variables_error;
+    int32_t hooks_error;
     int32_t disable_error;
     int32_t final_error;
 
@@ -263,19 +292,21 @@ int32_t game_state::destroy() noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    disable_error = this->disable_thread_safety();
     worlds_error = this->_worlds.destroy();
     characters_error = this->_characters.destroy();
     variables_error = this->_variables.destroy();
-    this->_hooks = ft_sharedptr<game_hooks>();
-    disable_error = this->disable_thread_safety();
+    hooks_error = this->_hooks.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    final_error = worlds_error;
+    final_error = disable_error;
+    if (final_error == FT_ERR_SUCCESS && worlds_error != FT_ERR_SUCCESS)
+        final_error = worlds_error;
     if (final_error == FT_ERR_SUCCESS && characters_error != FT_ERR_SUCCESS)
         final_error = characters_error;
     if (final_error == FT_ERR_SUCCESS && variables_error != FT_ERR_SUCCESS)
         final_error = variables_error;
-    if (final_error == FT_ERR_SUCCESS && disable_error != FT_ERR_SUCCESS)
-        final_error = disable_error;
+    if (final_error == FT_ERR_SUCCESS && hooks_error != FT_ERR_SUCCESS)
+        final_error = hooks_error;
     this->set_error(final_error);
     return (final_error);
 }
@@ -504,9 +535,15 @@ ft_sharedptr<game_hooks> game_state::get_hooks() const noexcept
     ft_sharedptr<game_hooks> hooks_copy;
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t hooks_initialize_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_state::get_hooks");
-    hooks_copy = ft_sharedptr<game_hooks>();
+    hooks_initialize_error = hooks_copy.initialize();
+    if (hooks_initialize_error != FT_ERR_SUCCESS)
+    {
+        const_cast<game_state *>(this)->set_error(hooks_initialize_error);
+        return (hooks_copy);
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -525,9 +562,15 @@ void game_state::reset_hooks() noexcept
     ft_sharedptr<game_hooks> hooks_copy;
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t hooks_initialize_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_state::reset_hooks");
-    hooks_copy = ft_sharedptr<game_hooks>();
+    hooks_initialize_error = hooks_copy.initialize();
+    if (hooks_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(hooks_initialize_error);
+        return ;
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -548,9 +591,15 @@ void game_state::dispatch_item_crafted(game_character &character, game_item &ite
     ft_sharedptr<game_hooks> hooks_copy;
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t hooks_initialize_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_state::dispatch_item_crafted");
-    hooks_copy = ft_sharedptr<game_hooks>();
+    hooks_initialize_error = hooks_copy.initialize();
+    if (hooks_initialize_error != FT_ERR_SUCCESS)
+    {
+        const_cast<game_state *>(this)->set_error(hooks_initialize_error);
+        return ;
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -571,9 +620,15 @@ void game_state::dispatch_character_damaged(game_character &character, int32_t d
     ft_sharedptr<game_hooks> hooks_copy;
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t hooks_initialize_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_state::dispatch_character_damaged");
-    hooks_copy = ft_sharedptr<game_hooks>();
+    hooks_initialize_error = hooks_copy.initialize();
+    if (hooks_initialize_error != FT_ERR_SUCCESS)
+    {
+        const_cast<game_state *>(this)->set_error(hooks_initialize_error);
+        return ;
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -594,9 +649,15 @@ void game_state::dispatch_event_triggered(game_world &world, game_event &event) 
     ft_sharedptr<game_hooks> hooks_copy;
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t hooks_initialize_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_state::dispatch_event_triggered");
-    hooks_copy = ft_sharedptr<game_hooks>();
+    hooks_initialize_error = hooks_copy.initialize();
+    if (hooks_initialize_error != FT_ERR_SUCCESS)
+    {
+        const_cast<game_state *>(this)->set_error(hooks_initialize_error);
+        return ;
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

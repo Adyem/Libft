@@ -99,21 +99,31 @@ game_script_context::~game_script_context() noexcept
 
 int32_t game_script_context::initialize() noexcept
 {
+    int32_t variable_error;
+    int32_t world_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "game_script_context::initialize", "already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    int32_t variable_error = this->_variables.initialize();
+    variable_error = this->_variables.initialize();
     if (variable_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(variable_error);
         return (variable_error);
     }
+    world_error = this->_world.initialize();
+    if (world_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_variables.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(world_error);
+        return (world_error);
+    }
     this->_state = ft_nullptr;
-    this->_world = ft_sharedptr<game_world>();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -122,18 +132,29 @@ int32_t game_script_context::initialize() noexcept
 int32_t game_script_context::initialize(game_state *state,
     const ft_sharedptr<game_world> &world) noexcept
 {
+    int32_t variable_error;
+    int32_t world_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "game_script_context::initialize", "already initialised");
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    int32_t variable_error = this->_variables.initialize();
+    variable_error = this->_variables.initialize();
     if (variable_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(variable_error);
         return (variable_error);
+    }
+    world_error = this->_world.initialize();
+    if (world_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_variables.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(world_error);
+        return (world_error);
     }
     this->_state = state;
     this->_world = world;
@@ -145,6 +166,9 @@ int32_t game_script_context::initialize(game_state *state,
 int32_t game_script_context::initialize(const game_script_context &other) noexcept
 {
     int32_t destroy_error;
+    int32_t variable_error;
+    int32_t world_error;
+    int32_t copy_error;
 
     if (this == &other)
         return (FT_ERR_SUCCESS);
@@ -176,16 +200,25 @@ int32_t game_script_context::initialize(const game_script_context &other) noexce
             return (destroy_error);
         }
     }
-    int32_t variable_error = this->_variables.initialize();
+    variable_error = this->_variables.initialize();
     if (variable_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(variable_error);
         return (variable_error);
     }
-    int32_t copy_error = this->_variables.copy_from(other._variables);
+    world_error = this->_world.initialize();
+    if (world_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_variables.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(world_error);
+        return (world_error);
+    }
+    copy_error = this->_variables.copy_from(other._variables);
     if (copy_error != FT_ERR_SUCCESS)
     {
+        (void)this->_world.destroy();
         (void)this->_variables.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(copy_error);
@@ -221,15 +254,23 @@ int32_t game_script_context::move(game_script_context &other) noexcept
 
 int32_t game_script_context::destroy() noexcept
 {
+    int32_t destroy_error;
+    int32_t world_destroy_error;
+
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
     this->_state = ft_nullptr;
-    this->_world = ft_sharedptr<game_world>();
-    int32_t destroy_error = this->_variables.destroy();
+    world_destroy_error = this->_world.destroy();
+    destroy_error = this->_variables.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    if (world_destroy_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(world_destroy_error);
+        return (world_destroy_error);
+    }
     this->set_error(destroy_error);
     return (destroy_error);
 }
@@ -429,13 +470,24 @@ game_script_bridge::game_script_bridge(game_script_bridge &&other) noexcept
 
 int32_t game_script_bridge::initialize() noexcept
 {
-    return (this->initialize(ft_sharedptr<game_world>(), "lua"));
+    ft_sharedptr<game_world> world;
+    int32_t world_error;
+
+    world_error = world.initialize();
+    if (world_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(world_error);
+        return (world_error);
+    }
+    return (this->initialize(world, "lua"));
 }
 
 int32_t game_script_bridge::initialize(const ft_sharedptr<game_world> &world,
     const char *language) noexcept
 {
     int32_t map_error;
+    int32_t world_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -452,6 +504,14 @@ int32_t game_script_bridge::initialize(const ft_sharedptr<game_world> &world,
         this->set_error(map_error);
         return (map_error);
     }
+    world_error = this->_world.initialize();
+    if (world_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_callbacks.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(world_error);
+        return (world_error);
+    }
     this->_world = world;
     if (language)
         this->_language = language;
@@ -459,6 +519,8 @@ int32_t game_script_bridge::initialize(const ft_sharedptr<game_world> &world,
         this->_language = "lua";
     if (game_script_bridge::is_supported_language(this->_language) == FT_FALSE)
     {
+        (void)this->_world.destroy();
+        (void)this->_callbacks.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
@@ -491,7 +553,9 @@ int32_t game_script_bridge::destroy() noexcept
     current_error = this->_callbacks.destroy();
     if (first_error == FT_ERR_SUCCESS && current_error != FT_ERR_SUCCESS)
         first_error = current_error;
-    this->_world = ft_sharedptr<game_world>();
+    current_error = this->_world.destroy();
+    if (first_error == FT_ERR_SUCCESS && current_error != FT_ERR_SUCCESS)
+        first_error = current_error;
     this->_language.clear();
     this->_max_operations = 32;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;

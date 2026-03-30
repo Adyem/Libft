@@ -8,10 +8,38 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int variant_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_variant_get_error_returned = FT_FALSE;
+static int32_t g_variant_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_variant_get_error_str_returned = FT_FALSE;
+static const char *g_variant_get_error_str_result = ft_nullptr;
+
 template<typename T, typename... Types>
 static T variant_instance_get(const ft_variant<Types...> &variant_instance)
 {
     return (variant_instance.template get<T>());
+}
+
+static void variant_get_error_uninitialised_operation(void)
+{
+    ft_variant<int, std::string> variant_value;
+
+    g_variant_get_error_result = variant_value.get_error();
+    g_variant_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void variant_get_error_str_uninitialised_operation(void)
+{
+    ft_variant<int, std::string> variant_value;
+
+    g_variant_get_error_str_result = variant_value.get_error_str();
+    g_variant_get_error_str_returned = FT_TRUE;
+    return ;
 }
 
 FT_TEST(test_variant_move_constructor_rebuilds_mutex)
@@ -82,5 +110,28 @@ FT_TEST(test_variant_move_preserves_disabled_thread_safety)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_variant_pointer->destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.destroy());
     delete moved_variant_pointer;
+    return (1);
+}
+
+FT_TEST(test_variant_error_queries_follow_lifecycle_contract)
+{
+    ft_variant<int, std::string> variant_value;
+
+    g_variant_get_error_returned = FT_FALSE;
+    g_variant_get_error_result = FT_ERR_SUCCESS;
+    g_variant_get_error_str_returned = FT_FALSE;
+    g_variant_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, variant_expect_sigabrt(
+        variant_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_variant_get_error_returned);
+    FT_ASSERT_EQ(1, variant_expect_sigabrt(
+        variant_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_variant_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(variant_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
     return (1);
 }

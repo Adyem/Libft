@@ -173,11 +173,19 @@ const char *ft_future<ValueType>::get_error_str() const
 template <typename ValueType>
 int32_t ft_future<ValueType>::initialize()
 {
+    int32_t shared_promise_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_future::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    shared_promise_error = this->_shared_promise.initialize();
+    if (shared_promise_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (shared_promise_error);
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -186,11 +194,19 @@ int32_t ft_future<ValueType>::initialize()
 template <typename ValueType>
 int32_t ft_future<ValueType>::initialize(ft_sharedptr<ft_promise<ValueType> > promise_pointer)
 {
+    int32_t shared_promise_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_future::initialize(promise)",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    shared_promise_error = this->_shared_promise.initialize();
+    if (shared_promise_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (shared_promise_error);
     }
     this->_shared_promise = promise_pointer;
     this->_promise = promise_pointer.get();
@@ -202,20 +218,23 @@ template <typename ValueType>
 int32_t ft_future<ValueType>::destroy()
 {
     int32_t disable_error;
+    int32_t shared_promise_destroy_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->_promise = ft_nullptr;
-        this->_shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+        (void)this->_shared_promise.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_promise = ft_nullptr;
-    this->_shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+    shared_promise_destroy_error = this->_shared_promise.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
+    if (shared_promise_destroy_error != FT_ERR_SUCCESS)
+        return (shared_promise_destroy_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -280,6 +299,7 @@ int32_t ft_future<ValueType>::initialize(const ft_future<ValueType> &other)
     ft_promise<ValueType> *other_promise;
     pt_recursive_mutex *new_mutex;
     int32_t mutex_error;
+    int32_t initialize_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -299,9 +319,15 @@ int32_t ft_future<ValueType>::initialize(const ft_future<ValueType> &other)
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_promise = ft_nullptr;
-        this->_shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+        (void)this->_shared_promise.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
     }
     this_lock_acquired = FT_FALSE;
     other_lock_acquired = FT_FALSE;
@@ -353,7 +379,7 @@ int32_t ft_future<ValueType>::initialize(const ft_future<ValueType> &other)
             else
                 other.unlock_internal(other_lock_acquired);
             this->_promise = ft_nullptr;
-            this->_shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+            (void)this->_shared_promise.destroy();
             this->_initialised_state = FT_CLASS_STATE_DESTROYED;
             return (FT_ERR_NO_MEMORY);
         }
@@ -370,7 +396,7 @@ int32_t ft_future<ValueType>::initialize(const ft_future<ValueType> &other)
             else
                 other.unlock_internal(other_lock_acquired);
             this->_promise = ft_nullptr;
-            this->_shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+            (void)this->_shared_promise.destroy();
             this->_initialised_state = FT_CLASS_STATE_DESTROYED;
             return (mutex_error);
         }
@@ -405,6 +431,7 @@ int32_t ft_future<ValueType>::move(ft_future<ValueType> &other)
     int32_t second_lock_result;
     ft_promise<ValueType> *transferred_promise;
     pt_recursive_mutex *transferred_mutex;
+    int32_t initialize_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -424,9 +451,15 @@ int32_t ft_future<ValueType>::move(ft_future<ValueType> &other)
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_promise = ft_nullptr;
-        this->_shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+        (void)this->_shared_promise.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
     }
     this_lock_acquired = FT_FALSE;
     other_lock_acquired = FT_FALSE;
@@ -466,7 +499,7 @@ int32_t ft_future<ValueType>::move(ft_future<ValueType> &other)
     transferred_mutex = other._mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._promise = ft_nullptr;
-    other._shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+    (void)other._shared_promise.destroy();
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
     if (second_lock_target == this)
         this->unlock_internal(this_lock_acquired);
@@ -674,11 +707,19 @@ inline const char *ft_future<void>::get_error_str() const
 
 inline int32_t ft_future<void>::initialize()
 {
+    int32_t shared_promise_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_future<void>::initialize",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    shared_promise_error = this->_shared_promise.initialize();
+    if (shared_promise_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (shared_promise_error);
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
@@ -686,11 +727,19 @@ inline int32_t ft_future<void>::initialize()
 
 inline int32_t ft_future<void>::initialize(ft_sharedptr<ft_promise<void> > promise_pointer)
 {
+    int32_t shared_promise_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_future<void>::initialize(promise)",
             "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
+    }
+    shared_promise_error = this->_shared_promise.initialize();
+    if (shared_promise_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (shared_promise_error);
     }
     this->_shared_promise = promise_pointer;
     this->_promise = promise_pointer.get();
@@ -701,20 +750,23 @@ inline int32_t ft_future<void>::initialize(ft_sharedptr<ft_promise<void> > promi
 inline int32_t ft_future<void>::destroy()
 {
     int32_t disable_error;
+    int32_t shared_promise_destroy_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->_promise = ft_nullptr;
-        this->_shared_promise = ft_sharedptr<ft_promise<void> >();
+        (void)this->_shared_promise.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_promise = ft_nullptr;
-    this->_shared_promise = ft_sharedptr<ft_promise<void> >();
+    shared_promise_destroy_error = this->_shared_promise.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
+    if (shared_promise_destroy_error != FT_ERR_SUCCESS)
+        return (shared_promise_destroy_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -772,6 +824,7 @@ inline int32_t ft_future<void>::initialize(const ft_future<void> &other)
     int32_t second_lock_result;
     ft_promise<void> *other_promise;
     pt_recursive_mutex *other_mutex;
+    int32_t initialize_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -791,9 +844,15 @@ inline int32_t ft_future<void>::initialize(const ft_future<void> &other)
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_promise = ft_nullptr;
-        this->_shared_promise = ft_sharedptr<ft_promise<void> >();
+        (void)this->_shared_promise.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
     }
     this_lock_acquired = FT_FALSE;
     other_lock_acquired = FT_FALSE;
@@ -859,6 +918,7 @@ inline int32_t ft_future<void>::move(ft_future<void> &other)
     int32_t first_lock_result;
     int32_t second_lock_result;
     ft_promise<void> *transferred_promise;
+    int32_t initialize_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -878,9 +938,15 @@ inline int32_t ft_future<void>::move(ft_future<void> &other)
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_promise = ft_nullptr;
-        this->_shared_promise = ft_sharedptr<ft_promise<void> >();
+        (void)this->_shared_promise.destroy();
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
     }
     this_lock_acquired = FT_FALSE;
     other_lock_acquired = FT_FALSE;
@@ -919,7 +985,7 @@ inline int32_t ft_future<void>::move(ft_future<void> &other)
     this->_promise = transferred_promise;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._promise = ft_nullptr;
-    other._shared_promise = ft_sharedptr<ft_promise<void> >();
+    (void)other._shared_promise.destroy();
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
     if (second_lock_target == this)
         this->unlock_internal(this_lock_acquired);

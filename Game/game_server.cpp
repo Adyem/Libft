@@ -102,7 +102,17 @@ game_server::game_server(game_server &&other) noexcept
 
 int32_t game_server::initialize() noexcept
 {
-    return (this->initialize(ft_sharedptr<game_world>(), ft_nullptr));
+    ft_sharedptr<game_world> world;
+    int32_t world_error;
+
+    world_error = world.initialize();
+    if (world_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(world_error);
+        return (world_error);
+    }
+    return (this->initialize(world, ft_nullptr));
 }
 
 int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
@@ -110,6 +120,8 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
 {
     ft_websocket_server *server_instance;
     int32_t server_initialize_error;
+    int32_t world_error;
+    int32_t clients_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -117,16 +129,27 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
+    world_error = this->_world.initialize();
+    if (world_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(world_error);
+        return (world_error);
+    }
     this->_world = world;
     if (this->_auth_token.initialize() != FT_ERR_SUCCESS)
     {
+        (void)this->_world.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(this->_auth_token.get_error());
         return (this->get_error());
     }
-    int32_t clients_error = this->_clients.initialize();
+    clients_error = this->_clients.initialize();
     if (clients_error != FT_ERR_SUCCESS)
     {
+        (void)this->_world.destroy();
         (void)this->_auth_token.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(clients_error);
         return (this->get_error());
     }
@@ -142,6 +165,10 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
     server_instance = new (std::nothrow) ft_websocket_server();
     if (server_instance == ft_nullptr)
     {
+        (void)this->_clients.destroy();
+        (void)this->_auth_token.destroy();
+        (void)this->_world.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
     }
@@ -151,6 +178,8 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
         delete server_instance;
         (void)this->_clients.destroy();
         (void)this->_auth_token.destroy();
+        (void)this->_world.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(server_initialize_error);
         return (server_initialize_error);
     }
@@ -165,6 +194,7 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
 int32_t game_server::destroy() noexcept
 {
     int32_t disable_error;
+    int32_t world_destroy_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
@@ -177,12 +207,14 @@ int32_t game_server::destroy() noexcept
         delete this->_server;
         this->_server = ft_nullptr;
     }
-    this->_world = ft_sharedptr<game_world>();
+    world_destroy_error = this->_world.destroy();
     this->_clients.clear();
     this->_auth_token.clear();
     this->_on_join = ft_nullptr;
     this->_on_leave = ft_nullptr;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    if (disable_error == FT_ERR_SUCCESS && world_destroy_error != FT_ERR_SUCCESS)
+        disable_error = world_destroy_error;
     this->set_error(disable_error);
     return (disable_error);
 }
@@ -190,6 +222,8 @@ int32_t game_server::destroy() noexcept
 int32_t game_server::move(game_server &other) noexcept
 {
     int32_t destroy_error;
+    int32_t source_error;
+    int32_t source_destroy_error;
 
     if (&other == this)
         return (FT_ERR_SUCCESS);
@@ -219,15 +253,14 @@ int32_t game_server::move(game_server &other) noexcept
     this->_on_leave = other._on_leave;
     this->_mutex = other._mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    other._server = ft_nullptr;
-    other._world = ft_sharedptr<game_world>();
-    other._clients.clear();
-    other._auth_token.clear();
-    other._on_join = ft_nullptr;
-    other._on_leave = ft_nullptr;
-    other._mutex = ft_nullptr;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    this->set_error(other.get_error());
+    source_error = other.get_error();
+    source_destroy_error = other.destroy();
+    if (source_destroy_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(source_destroy_error);
+        return (source_destroy_error);
+    }
+    this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
 

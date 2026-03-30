@@ -7,6 +7,34 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int map_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_map_get_error_returned = FT_FALSE;
+static int32_t g_map_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_map_get_error_str_returned = FT_FALSE;
+static const char *g_map_get_error_str_result = ft_nullptr;
+
+static void map_get_error_uninitialised_operation(void)
+{
+    ft_map<int, int> map_value;
+
+    g_map_get_error_result = map_value.get_error();
+    g_map_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void map_get_error_str_uninitialised_operation(void)
+{
+    ft_map<int, int> map_value;
+
+    g_map_get_error_str_result = map_value.get_error_str();
+    g_map_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
 FT_TEST(test_map_thread_safety_toggles_mutex)
 {
     ft_map<int, int> map_instance;
@@ -67,5 +95,28 @@ FT_TEST(test_map_copy_retains_thread_safety)
     FT_ASSERT(copied_entry != ft_nullptr);
     FT_ASSERT_EQ(49, copied_entry->value);
 
+    return (1);
+}
+
+FT_TEST(test_map_error_queries_follow_lifecycle_contract)
+{
+    ft_map<int, int> map_value;
+
+    g_map_get_error_returned = FT_FALSE;
+    g_map_get_error_result = FT_ERR_SUCCESS;
+    g_map_get_error_str_returned = FT_FALSE;
+    g_map_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, map_expect_sigabrt(
+        map_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_map_get_error_returned);
+    FT_ASSERT_EQ(1, map_expect_sigabrt(
+        map_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_map_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(map_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
     return (1);
 }

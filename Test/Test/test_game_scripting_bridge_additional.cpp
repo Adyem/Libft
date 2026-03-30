@@ -40,6 +40,8 @@ FT_TEST(test_game_script_bridge_defaults_to_lua_language)
     FT_ASSERT_STR_EQ("lua", bridge.get_language().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(32, bridge.get_max_operations());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     return (1);
 }
 

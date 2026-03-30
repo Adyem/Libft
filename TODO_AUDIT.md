@@ -25,10 +25,18 @@
     - `ft_deque` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
   - `Template/graph.hpp`
     - `ft_graph` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/iterator.hpp`
+    - `Iterator` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/map.hpp`
+    - `ft_map` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/stack.hpp`
+    - `ft_stack` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
   - `Template/trie.hpp`
     - `ft_trie` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
   - `Template/tuple.hpp`
     - `ft_tuple` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/variant.hpp`
+    - `ft_variant` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
   - `Template/vector.hpp`
     - `ft_vector` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
   - `Template/queue.hpp`
@@ -71,6 +79,14 @@
     - `test_ft_graph_error_queries_follow_lifecycle_contract`
   - `Test/Test/test_template_tuple.cpp`
     - `test_ft_tuple_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_map_thread_safety.cpp`
+    - `test_map_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_variant_move.cpp`
+    - `test_variant_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_iterator_copy_move.cpp`
+    - `test_iterator_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_stack_move.cpp`
+    - `test_ft_stack_error_queries_follow_lifecycle_contract`
 - Modules to audit:
 - `API`
 - `Advanced`

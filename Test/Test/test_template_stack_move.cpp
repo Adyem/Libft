@@ -8,6 +8,34 @@
 
 using stack_type = ft_stack<int>;
 
+static int stack_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_stack_get_error_returned = FT_FALSE;
+static int32_t g_stack_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_stack_get_error_str_returned = FT_FALSE;
+static const char *g_stack_get_error_str_result = ft_nullptr;
+
+static void stack_get_error_uninitialised_operation(void)
+{
+    stack_type stack_value;
+
+    g_stack_get_error_result = stack_value.get_error();
+    g_stack_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void stack_get_error_str_uninitialised_operation(void)
+{
+    stack_type stack_value;
+
+    g_stack_get_error_str_result = stack_value.get_error_str();
+    g_stack_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
 static void push_values(stack_type &stack_instance, const std::vector<int> &values)
 {
     ft_size_t index;
@@ -118,5 +146,28 @@ FT_TEST(test_ft_stack_move_allows_reinitializing_source_mutex)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.destroy());
+    return (1);
+}
+
+FT_TEST(test_ft_stack_error_queries_follow_lifecycle_contract)
+{
+    stack_type stack_value;
+
+    g_stack_get_error_returned = FT_FALSE;
+    g_stack_get_error_result = FT_ERR_SUCCESS;
+    g_stack_get_error_str_returned = FT_FALSE;
+    g_stack_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, stack_expect_sigabrt(
+        stack_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_stack_get_error_returned);
+    FT_ASSERT_EQ(1, stack_expect_sigabrt(
+        stack_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_stack_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(stack_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
     return (1);
 }

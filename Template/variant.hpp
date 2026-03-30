@@ -735,14 +735,14 @@ void ft_variant<Types...>::unlock(ft_bool lock_acquired) const
 template <typename... Types>
 int32_t ft_variant<Types...>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_variant::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_variant::get_error");
     return (_last_error);
 }
 
 template <typename... Types>
 const char *ft_variant<Types...>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_variant::get_error_str");
     return (ft_strerror(_last_error));
 }

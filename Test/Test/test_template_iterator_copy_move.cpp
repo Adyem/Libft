@@ -6,6 +6,34 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int iterator_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_iterator_get_error_returned = FT_FALSE;
+static int32_t g_iterator_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_iterator_get_error_str_returned = FT_FALSE;
+static const char *g_iterator_get_error_str_result = ft_nullptr;
+
+static void iterator_get_error_uninitialised_operation(void)
+{
+    Iterator<int> iterator_value;
+
+    g_iterator_get_error_result = iterator_value.get_error();
+    g_iterator_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void iterator_get_error_str_uninitialised_operation(void)
+{
+    Iterator<int> iterator_value;
+
+    g_iterator_get_error_str_result = iterator_value.get_error_str();
+    g_iterator_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
 FT_TEST(test_iterator_manual_copy_recreates_mutex)
 {
     int values[2] = {5, 8};
@@ -84,5 +112,28 @@ FT_TEST(test_iterator_move_into_initialized_destination_preserves_source_thread_
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_iterator.get_error());
     FT_ASSERT_EQ(values_one[0], *source_iterator);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_iterator.get_error());
+    return (1);
+}
+
+FT_TEST(test_iterator_error_queries_follow_lifecycle_contract)
+{
+    int values[1] = {4};
+    Iterator<int> iterator_value(values);
+
+    g_iterator_get_error_returned = FT_FALSE;
+    g_iterator_get_error_result = FT_ERR_SUCCESS;
+    g_iterator_get_error_str_returned = FT_FALSE;
+    g_iterator_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, iterator_expect_sigabrt(
+        iterator_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_iterator_get_error_returned);
+    FT_ASSERT_EQ(1, iterator_expect_sigabrt(
+        iterator_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_iterator_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_value.get_error());
+    FT_ASSERT_EQ(0, iterator_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(iterator_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
     return (1);
 }

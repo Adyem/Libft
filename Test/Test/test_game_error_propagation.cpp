@@ -82,7 +82,7 @@ FT_TEST(test_game_equipment_invalid_item_sets_errno)
     int result;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.initialize());
-    item = ft_sharedptr<game_item>();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.initialize());
     result = equipment.equip(EQUIP_HEAD, item);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(result, equipment.get_error());

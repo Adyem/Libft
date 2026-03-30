@@ -572,14 +572,14 @@ void ft_stack<ElementType>::clear()
 template <typename ElementType>
 int32_t ft_stack<ElementType>::get_error() const
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_stack::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_stack::get_error");
     return (_last_error);
 }
 
 template <typename ElementType>
 const char *ft_stack<ElementType>::get_error_str() const
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_stack::get_error_str");
     return (ft_strerror(_last_error));
 }
