@@ -400,7 +400,11 @@ int32_t ft_optional<ElementType>::destroy()
 template <typename ElementType>
 int32_t ft_optional<ElementType>::move(ft_optional<ElementType> &other)
 {
-    int32_t init_result;
+    int32_t destroy_result;
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    ElementType *moved_value;
+    pt_recursive_mutex *moved_mutex;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -411,28 +415,31 @@ int32_t ft_optional<ElementType>::move(ft_optional<ElementType> &other)
         return (set_error(FT_ERR_SUCCESS));
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        init_result = this->destroy();
-        if (init_result != FT_ERR_SUCCESS)
-            return (set_error(init_result));
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (set_error(destroy_result));
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(other._last_error));
     }
-    if (other._value == ft_nullptr)
+    lock_acquired = FT_FALSE;
+    lock_error = other.lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        init_result = this->initialize();
-        if (init_result != FT_ERR_SUCCESS)
-            return (set_error(init_result));
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(lock_error));
     }
-    else
-    {
-        init_result = this->initialize(ft_move(*other._value));
-        if (init_result != FT_ERR_SUCCESS)
-            return (set_error(init_result));
-    }
-    (void)other.destroy();
+    moved_value = other._value;
+    moved_mutex = other._mutex;
+    other._value = ft_nullptr;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    (void)pt_recursive_mutex_unlock_if_not_null(moved_mutex);
+    this->_value = moved_value;
+    this->_mutex = moved_mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (set_error(other._last_error));
 }
 

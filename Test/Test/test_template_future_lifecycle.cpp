@@ -160,3 +160,30 @@ FT_TEST(test_ft_future_void_move_method_and_thread_safety)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_future.destroy());
     return (1);
 }
+
+FT_TEST(test_ft_future_void_move_constructor_and_thread_safety)
+{
+    ft_promise<void> promise_value;
+    ft_future<void> source_future(promise_value);
+    ft_bool lock_acquired;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_future.initialize());
+    FT_ASSERT_EQ(0, source_future.enable_thread_safety());
+
+    ft_future<void> moved_future(static_cast<ft_future<void> &&>(source_future));
+
+    lock_acquired = FT_FALSE;
+    FT_ASSERT_EQ(true, moved_future.valid());
+    FT_ASSERT_EQ(false, source_future.valid());
+    FT_ASSERT_EQ(true, moved_future.is_thread_safe());
+    FT_ASSERT_EQ(0, moved_future.lock(&lock_acquired));
+    FT_ASSERT_EQ(true, lock_acquired);
+    moved_future.unlock(lock_acquired);
+    promise_value.set_value();
+    moved_future.get();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_future.disable_thread_safety());
+    FT_ASSERT_EQ(FT_FALSE, moved_future.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_future.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_future.destroy());
+    return (1);
+}

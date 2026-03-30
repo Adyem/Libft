@@ -103,15 +103,14 @@ FT_TEST(test_ft_optional_non_default_constructible)
     FT_ASSERT_EQ(42, value_optional.value().get_value());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.get_error());
 
-    ft_optional<no_default_optional_value> moved_optional;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.initialize(no_default_optional_value(64)));
+    ft_optional<no_default_optional_value> moved_optional(
+        no_default_optional_value(64));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.destroy());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.initialize(moved_optional.value()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.move(moved_optional));
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(64, value_optional.value().get_value());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value_optional.get_error());
-    FT_ASSERT(moved_optional.has_value() == true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.destroy());
 
     value_optional.reset();
     FT_ASSERT(value_optional.has_value() == false);

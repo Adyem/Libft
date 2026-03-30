@@ -247,21 +247,34 @@ ft_matrix<ElementType>::~ft_matrix()
 
 template <typename ElementType>
 ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
-    : _data(other._data)
+    : _data(ft_nullptr)
     , _configured_rows(other._configured_rows)
     , _configured_cols(other._configured_cols)
-    , _rows(other._rows)
-    , _cols(other._cols)
-    , _mutex(other._mutex)
-    , _initialised_state(other._initialised_state)
+    , _rows(0)
+    , _cols(0)
+    , _mutex(ft_nullptr)
+    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    other._data = ft_nullptr;
-    other._configured_rows = 0;
-    other._configured_cols = 0;
-    other._rows = 0;
-    other._cols = 0;
-    other._mutex = ft_nullptr;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    uint32_t previous_error;
+
+    previous_error = ft_matrix<ElementType>::_last_error;
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state, "ft_matrix::ft_matrix(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (this->move(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    (void)set_error(previous_error);
     return ;
 }
 

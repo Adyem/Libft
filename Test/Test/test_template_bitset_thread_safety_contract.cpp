@@ -34,3 +34,45 @@ FT_TEST(test_template_bitset_thread_safety_contract_out_of_range_sets_error)
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, bitset_value.get_error());
     return (1);
 }
+
+FT_TEST(test_template_bitset_move_constructor_preserves_thread_safety)
+{
+    ft_bitset source_value(12);
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.enable_thread_safety());
+    source_value.set(3);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
+    source_value.set(9);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
+
+    ft_bitset moved_value(static_cast<ft_bitset &&>(source_value));
+
+    FT_ASSERT_EQ(FT_TRUE, moved_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_TRUE, moved_value.test(3));
+    FT_ASSERT_EQ(FT_TRUE, moved_value.test(9));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_template_bitset_move_method_preserves_thread_safety)
+{
+    ft_bitset source_value(12);
+    ft_bitset destination_value(0);
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.enable_thread_safety());
+    source_value.set(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
+    source_value.set(8);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.move(source_value));
+    FT_ASSERT_EQ(FT_TRUE, destination_value.is_thread_safe());
+    FT_ASSERT_EQ(FT_TRUE, destination_value.test(1));
+    FT_ASSERT_EQ(FT_TRUE, destination_value.test(8));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.destroy());
+    return (1);
+}

@@ -207,17 +207,23 @@ int32_t Iterator<ValueType>::destroy() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t first_error;
+    int32_t disable_result;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (set_error(FT_ERR_SUCCESS));
+    first_error = FT_ERR_SUCCESS;
+    disable_result = this->disable_thread_safety();
+    if (disable_result != FT_ERR_SUCCESS)
+        first_error = disable_result;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (set_error(lock_error));
+    if (lock_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = lock_error;
     this->_ptr = ft_nullptr;
     (void)this->unlock_internal(lock_acquired);
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (set_error(FT_ERR_SUCCESS));
+    return (set_error(first_error));
 }
 
 template <typename ValueType>

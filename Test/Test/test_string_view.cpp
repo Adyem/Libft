@@ -137,3 +137,60 @@ FT_TEST(test_string_view_thread_safety)
     source.disable_thread_safety();
     return (1);
 }
+
+FT_TEST(test_string_view_move_constructor_preserves_thread_safety_and_data)
+{
+    ft_string_view<char> source_view("moved");
+    ft_string_view<char> *moved_view_pointer;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.get_error());
+
+    moved_view_pointer = new ft_string_view<char>(ft_move(source_view));
+    FT_ASSERT(moved_view_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, moved_view_pointer->is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_view_pointer->get_error());
+    FT_ASSERT_EQ(5u, moved_view_pointer->size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_view_pointer->get_error());
+    FT_ASSERT_EQ('m', moved_view_pointer->data()[0]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_view_pointer->get_error());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.initialize("reset"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.get_error());
+    FT_ASSERT_EQ(5u, source_view.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.get_error());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_view_pointer->destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.destroy());
+    delete moved_view_pointer;
+    return (1);
+}
+
+FT_TEST(test_string_view_move_into_initialized_destination_preserves_source_thread_safety)
+{
+    ft_string_view<char> destination_view("old");
+    ft_string_view<char> source_view("next");
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.get_error());
+    FT_ASSERT_EQ(FT_FALSE, source_view.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.get_error());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.move(source_view));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.get_error());
+    FT_ASSERT_EQ(FT_FALSE, destination_view.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.get_error());
+    FT_ASSERT_EQ(4u, destination_view.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.get_error());
+    FT_ASSERT_EQ('n', destination_view.data()[0]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.get_error());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.initialize("done"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.get_error());
+    FT_ASSERT_EQ(4u, source_view.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.get_error());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_view.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.destroy());
+    return (1);
+}

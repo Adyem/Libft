@@ -489,14 +489,14 @@ void ft_tuple<Types...>::unlock(ft_bool lock_acquired) const
 template <typename... Types>
 int32_t ft_tuple<Types...>::get_error() const
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_tuple::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_tuple::get_error");
     return (_last_error);
 }
 
 template <typename... Types>
 const char *ft_tuple<Types...>::get_error_str() const
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_tuple::get_error_str");
     return (ft_strerror(_last_error));
 }

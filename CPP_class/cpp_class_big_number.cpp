@@ -337,7 +337,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _operation_error(FT_ERR_SUCCESS)
 {
-    (void)this->initialize(ft_move(other));
+    (void)this->move(other);
     ft_big_number::_last_initialised_state = this->_initialised_state;
     return ;
 }
@@ -594,10 +594,15 @@ int32_t ft_big_number::move(ft_big_number& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
+    this->_operation_error = other._operation_error;
+    this->_mutex = other._mutex;
     other._digits = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
     other._is_negative = FT_FALSE;
+    other._operation_error = FT_ERR_SUCCESS;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     (void)ft_big_number::unlock_pair(lower, upper);
     ft_big_number::set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);

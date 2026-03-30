@@ -40,14 +40,29 @@ FT_TEST(test_ft_optional_move_transfers_state)
     ft_optional<int> source_optional(99);
     ft_optional<int> destination_optional;
 
-    int stored_value = source_optional.value();
-    source_optional.reset();
-    FT_ASSERT_EQ(false, source_optional.has_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_optional.get_error());
-    FT_ASSERT_EQ(0, destination_optional.initialize(stored_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_optional.enable_thread_safety());
+    FT_ASSERT_EQ(0, destination_optional.move(source_optional));
     FT_ASSERT(destination_optional.has_value());
     FT_ASSERT_EQ(99, destination_optional.value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_optional.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_optional.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_optional.get_error());
+    return (1);
+}
+
+FT_TEST(test_ft_optional_move_constructor_preserves_thread_safety)
+{
+    ft_optional<int> source_optional(123);
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_optional.enable_thread_safety());
+
+    ft_optional<int> moved_optional(static_cast<ft_optional<int> &&>(source_optional));
+
+    FT_ASSERT(moved_optional.has_value());
+    FT_ASSERT_EQ(123, moved_optional.value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_optional.destroy());
     return (1);
 }
 

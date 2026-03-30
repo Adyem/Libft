@@ -144,14 +144,14 @@ int32_t ft_vector<ElementType>::set_error(int32_t error_code) noexcept
 template <typename ElementType>
 int32_t ft_vector<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::get_error");
     return (ft_vector<ElementType>::_last_error);
 }
 
 template <typename ElementType>
 const char *ft_vector<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_vector::get_error_str");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_vector::get_error_str");
     return (ft_strerror(this->get_error()));
 }
 

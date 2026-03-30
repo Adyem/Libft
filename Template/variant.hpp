@@ -437,7 +437,7 @@ int32_t ft_variant<Types...>::destroy()
 template <typename... Types>
 int32_t ft_variant<Types...>::move(ft_variant<Types...> &other)
 {
-    int32_t init_result;
+    int32_t source_error;
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
@@ -448,35 +448,30 @@ int32_t ft_variant<Types...>::move(ft_variant<Types...> &other)
         return (set_error(FT_ERR_SUCCESS));
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
-        init_result = this->destroy();
-        if (init_result != FT_ERR_SUCCESS)
-            return (set_error(init_result));
+        int32_t destroy_result;
+
+        destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (set_error(destroy_result));
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
+        this->_data = ft_nullptr;
+        this->_index = npos;
+        this->_mutex = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(other._last_error));
     }
-    init_result = this->initialize();
-    if (init_result != FT_ERR_SUCCESS)
-        return (set_error(init_result));
-    if (other._index != npos)
-    {
-        other.visit([this](auto &stored_value)
-        {
-            using value_type = std::decay_t<decltype(stored_value)>;
-            this->emplace<value_type>(ft_move(stored_value));
-            return ;
-        });
-        if (this->get_error() != FT_ERR_SUCCESS)
-        {
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return (set_error(this->get_error()));
-        }
-    }
-    (void)other.destroy();
-    return (set_error(other._last_error));
+    source_error = other._last_error;
+    this->_data = other._data;
+    this->_index = other._index;
+    this->_mutex = other._mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._data = ft_nullptr;
+    other._index = npos;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (set_error(source_error));
 }
 
 template <typename... Types>

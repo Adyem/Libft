@@ -80,23 +80,23 @@ FT_TEST(test_ft_unordered_map_copy_assignment_rebuilds_mutex)
 FT_TEST(test_ft_unordered_map_move_constructor_resets_source_mutex)
 {
     ft_unordered_map<int, int> source_map;
-    ft_unordered_map<int, int> moved_map;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.initialize());
     source_map.insert(6, 60);
     source_map.insert(8, 80);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.enable_thread_safety());
     FT_ASSERT(source_map.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.destroy());
+
+    ft_unordered_map<int, int> moved_map(ft_move(source_map));
+
+    FT_ASSERT(moved_map.is_thread_safe());
+    FT_ASSERT_EQ(2UL, moved_map.size());
+    FT_ASSERT_EQ(60, (*moved_map.find(6)).second);
+    FT_ASSERT_EQ(80, (*moved_map.find(8)).second);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.enable_thread_safety());
     FT_ASSERT(source_map.is_thread_safe());
-    source_map.insert(6, 60);
-    source_map.insert(8, 80);
-    FT_ASSERT_EQ(60, (*source_map.find(6)).second);
-    FT_ASSERT_EQ(80, (*source_map.find(8)).second);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_map.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.destroy());
     return (1);
 }
 
@@ -116,14 +116,14 @@ FT_TEST(test_ft_unordered_map_move_assignment_reinitializes_mutex)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.enable_thread_safety());
     FT_ASSERT(source_map.is_thread_safe());
 
-    destination_map.clear();
-    destination_map.insert(13, 130);
-    destination_map.insert(17, 170);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_map.enable_thread_safety());
+    destination_map = ft_move(source_map);
+
     FT_ASSERT(destination_map.is_thread_safe());
     FT_ASSERT_EQ(2UL, destination_map.size());
     FT_ASSERT_EQ(130, (*destination_map.find(13)).second);
     FT_ASSERT_EQ(170, (*destination_map.find(17)).second);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.initialize());
+    FT_ASSERT(source_map.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_map.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.destroy());
     return (1);

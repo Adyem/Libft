@@ -92,7 +92,7 @@ ft_bitset::ft_bitset(ft_bitset &&other)
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(other._initialised_state, "ft_bitset::ft_bitset(move)",
             "source object is not initialised");
-    initialize_result = this->initialize(ft_move(other));
+    initialize_result = this->move(other);
     if (initialize_result != FT_ERR_SUCCESS)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
@@ -182,9 +182,14 @@ int32_t ft_bitset::initialize(const ft_bitset &other)
 
 int32_t ft_bitset::initialize(ft_bitset &&other)
 {
+    return (this->move(other));
+}
+
+int32_t ft_bitset::move(ft_bitset &other)
+{
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(other._initialised_state,
-            "ft_bitset::initialize(move)", "source object is not initialised");
+            "ft_bitset::move", "source object is not initialised");
     if (this == &other)
         return (set_error(FT_ERR_SUCCESS));
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -198,12 +203,13 @@ int32_t ft_bitset::initialize(ft_bitset &&other)
     this->_configured_bits = other._configured_bits;
     this->_block_count = other._block_count;
     this->_data = other._data;
-    this->_mutex = ft_nullptr;
+    this->_mutex = other._mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._size = 0;
     other._configured_bits = 0;
     other._block_count = 0;
     other._data = ft_nullptr;
+    other._mutex = ft_nullptr;
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return (set_error(other._last_error));
 }
@@ -227,11 +233,6 @@ int32_t ft_bitset::destroy()
     if (disable_result != FT_ERR_SUCCESS)
         return (set_error(disable_result));
     return (set_error(FT_ERR_SUCCESS));
-}
-
-int32_t ft_bitset::move(ft_bitset &other)
-{
-    return (this->initialize(ft_move(other)));
 }
 
 void ft_bitset::set(ft_size_t position)
@@ -426,13 +427,13 @@ void ft_bitset::unlock(ft_bool lock_acquired) const
 
 int32_t ft_bitset::get_error() const
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::get_error");
     return (_last_error);
 }
 
 const char *ft_bitset::get_error_str() const
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_bitset::get_error_str");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_bitset::get_error_str");
     return (ft_strerror(_last_error));
 }
 

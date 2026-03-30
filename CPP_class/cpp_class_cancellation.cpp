@@ -1,7 +1,12 @@
 #include "cancellation.hpp"
-#include "../Template/move.hpp"
 
 int32_t ft_cancellation_state::set_error(int32_t error_code) noexcept
+{
+    _last_error = error_code;
+    return (error_code);
+}
+
+int32_t ft_cancellation_source::set_error(int32_t error_code) noexcept
 {
     _last_error = error_code;
     return (error_code);
@@ -323,16 +328,16 @@ int32_t ft_cancellation_state::disable_thread_safety() noexcept
 
 int32_t ft_cancellation_state::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_cancellation_state::get_error");
-    return (_last_error);
+    return (this->_last_error);
 }
 
 const char *ft_cancellation_state::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_cancellation_state::get_error_str");
-    return (ft_strerror(_last_error));
+    return (ft_strerror(this->_last_error));
 }
 
 ft_cancellation_token::ft_cancellation_token(
@@ -452,36 +457,36 @@ int32_t ft_cancellation_source::initialize() noexcept
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_cancellation_source::initialize", "called while object is already initialised");
-        return (FT_ERR_INVALID_STATE);
+        return (set_error(FT_ERR_INVALID_STATE));
     }
     this->_state = new (std::nothrow) ft_cancellation_state();
     if (this->_state == ft_nullptr)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (FT_ERR_NO_MEMORY);
+        return (set_error(FT_ERR_NO_MEMORY));
     }
     if (this->_state->initialize() != FT_ERR_SUCCESS)
     {
         delete this->_state;
         this->_state = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (FT_ERR_INVALID_STATE);
+        return (set_error(FT_ERR_INVALID_STATE));
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    return (FT_ERR_SUCCESS);
+    return (set_error(FT_ERR_SUCCESS));
 }
 
 int32_t ft_cancellation_source::destroy() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
-        return (FT_ERR_SUCCESS);
+        return (set_error(FT_ERR_SUCCESS));
     if (this->_state != ft_nullptr)
     {
         delete this->_state;
         this->_state = ft_nullptr;
     }
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (FT_ERR_SUCCESS);
+    return (set_error(FT_ERR_SUCCESS));
 }
 
 int32_t ft_cancellation_source::move(ft_cancellation_source &other) noexcept
@@ -489,30 +494,30 @@ int32_t ft_cancellation_source::move(ft_cancellation_source &other) noexcept
     int32_t destroy_result;
 
     if (this == &other)
-        return (FT_ERR_SUCCESS);
+        return (set_error(FT_ERR_SUCCESS));
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
         errno_abort_lifecycle(other._initialised_state,
             "ft_cancellation_source::move", "source object is uninitialised");
-        return (FT_ERR_INVALID_STATE);
+        return (set_error(FT_ERR_INVALID_STATE));
     }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         destroy_result = this->destroy();
         if (destroy_result != FT_ERR_SUCCESS)
-            return (static_cast<uint32_t>(destroy_result));
+            return (set_error(destroy_result));
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
         this->_state = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return (FT_ERR_SUCCESS);
+        return (set_error(FT_ERR_SUCCESS));
     }
     this->_state = other._state;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._state = ft_nullptr;
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (FT_ERR_SUCCESS);
+    return (set_error(FT_ERR_SUCCESS));
 }
 
 ft_cancellation_token ft_cancellation_source::get_token() const noexcept
@@ -525,16 +530,40 @@ int32_t ft_cancellation_source::request_cancel() noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_source::request_cancel");
     if (this->_state == ft_nullptr)
-        return (FT_ERR_INVALID_STATE);
-    return (this->_state->request_cancel());
+        return (set_error(FT_ERR_INVALID_STATE));
+    return (set_error(this->_state->request_cancel()));
 }
 
 ft_bool ft_cancellation_source::is_cancellation_requested() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_source::is_cancellation_requested");
     if (this->_state == ft_nullptr)
+    {
+        (void)set_error(FT_ERR_INVALID_STATE);
         return (FT_TRUE);
-    return (this->_state->is_cancelled());
+    }
+    if (this->_state->is_cancelled() == FT_TRUE)
+    {
+        (void)set_error(FT_ERR_SUCCESS);
+        return (FT_TRUE);
+    }
+    (void)set_error(FT_ERR_SUCCESS);
+    return (FT_FALSE);
+}
+
+int32_t ft_cancellation_source::get_error() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_cancellation_source::get_error");
+    return (_last_error);
+}
+
+const char *ft_cancellation_source::get_error_str() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_cancellation_source::get_error_str");
+    return (ft_strerror(_last_error));
 }
 
 thread_local int32_t ft_cancellation_state::_last_error = FT_ERR_SUCCESS;
+thread_local int32_t ft_cancellation_source::_last_error = FT_ERR_SUCCESS;

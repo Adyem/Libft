@@ -387,17 +387,7 @@ ft_uniqueptr<ManagedType> &ft_uniqueptr<ManagedType>::operator=(
 {
     if (this == &other)
         return (*this);
-    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
-        (void)this->destroy();
-    this->_managed_pointer = other._managed_pointer;
-    this->_array_size = other._array_size;
-    this->_is_array_type = other._is_array_type;
-    this->_initialised_state = other._initialised_state;
-    other._managed_pointer = ft_nullptr;
-    other._array_size = 0;
-    other._is_array_type = FT_FALSE;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    set_error(FT_ERR_SUCCESS);
+    (void)this->move(other);
     return (*this);
 }
 
@@ -483,19 +473,25 @@ int32_t ft_uniqueptr<ManagedType>::initialize_value(Args&&... args) noexcept
 template <typename ManagedType>
 int32_t ft_uniqueptr<ManagedType>::destroy() noexcept
 {
+    int32_t first_error;
+    int32_t disable_result;
     ft_bool lock_acquired;
     int32_t lock_result;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (set_error(FT_ERR_SUCCESS));
+    first_error = FT_ERR_SUCCESS;
+    disable_result = this->disable_thread_safety();
+    if (disable_result != FT_ERR_SUCCESS)
+        first_error = disable_result;
     lock_acquired = FT_FALSE;
     lock_result = this->lock_internal(&lock_acquired);
     if (lock_result != FT_ERR_SUCCESS)
-        return (lock_result);
+        return (set_error(lock_result));
     this->destroy_storage();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->unlock_internal(lock_acquired);
-    return (set_error(FT_ERR_SUCCESS));
+    return (set_error(first_error));
 }
 
 template <typename ManagedType>

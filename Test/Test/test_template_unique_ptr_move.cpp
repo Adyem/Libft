@@ -23,6 +23,7 @@ FT_TEST(test_ft_uniqueptr_move_constructor_rebuilds_mutex)
     moved_pointer.unlock(moved_lock_acquired);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pointer.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pointer.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pointer.destroy());
     return (1);
 }
 
@@ -43,17 +44,17 @@ FT_TEST(test_ft_uniqueptr_move_assignment_rebuilds_mutex)
     FT_ASSERT(destination_lock_acquired);
     destination_pointer.unlock(destination_lock_acquired);
 
-    destination_pointer.reset(source_pointer.release());
-    FT_ASSERT_EQ(0, destination_pointer.enable_thread_safety());
+    destination_pointer = ft_move(source_pointer);
 
     FT_ASSERT(destination_pointer.is_thread_safe());
-    FT_ASSERT_EQ(FT_TRUE, source_pointer.is_thread_safe());
     FT_ASSERT_EQ(9, *destination_pointer);
     destination_lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(0, destination_pointer.lock(&destination_lock_acquired));
     FT_ASSERT(destination_lock_acquired);
     FT_ASSERT_EQ(9, *destination_pointer);
     destination_pointer.unlock(destination_lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pointer.initialize());
+    FT_ASSERT_EQ(false, source_pointer.is_thread_safe());
     FT_ASSERT_EQ(0, source_pointer.enable_thread_safety());
     FT_ASSERT(source_pointer.is_thread_safe());
     source_pointer.reset(new int(5));
@@ -62,5 +63,7 @@ FT_TEST(test_ft_uniqueptr_move_assignment_rebuilds_mutex)
     FT_ASSERT(source_lock_acquired);
     FT_ASSERT_EQ(5, *source_pointer);
     source_pointer.unlock(source_lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_pointer.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pointer.destroy());
     return (1);
 }

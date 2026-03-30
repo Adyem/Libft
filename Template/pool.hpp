@@ -452,14 +452,18 @@ int32_t Pool<T>::destroy()
     int32_t slots_destroy_error;
     int32_t free_indices_destroy_error;
     int32_t first_error;
+    int32_t disable_result;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (set_error(FT_ERR_SUCCESS));
+    first_error = FT_ERR_SUCCESS;
+    disable_result = this->disable_thread_safety();
+    if (disable_result != FT_ERR_SUCCESS)
+        first_error = disable_result;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (set_error(lock_error));
-    first_error = FT_ERR_SUCCESS;
+    if (lock_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = lock_error;
     ft_size_t index;
 
     index = 0;
@@ -489,6 +493,8 @@ template<typename T>
 int32_t Pool<T>::move(Pool<T> &other)
 {
     int32_t destroy_result;
+    int32_t slots_move_result;
+    int32_t free_indices_move_result;
 
     if (this == &other)
         return (set_error(FT_ERR_SUCCESS));
@@ -506,13 +512,30 @@ int32_t Pool<T>::move(Pool<T> &other)
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
-        this->_slots.clear();
-        this->_free_indices.clear();
+        (void)this->_slots.move(other._slots);
+        (void)this->_free_indices.move(other._free_indices);
         this->_mutex = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(FT_ERR_SUCCESS));
     }
-    return (set_error(FT_ERR_INVALID_OPERATION));
+    slots_move_result = this->_slots.move(other._slots);
+    if (slots_move_result != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(slots_move_result));
+    }
+    free_indices_move_result = this->_free_indices.move(other._free_indices);
+    if (free_indices_move_result != FT_ERR_SUCCESS)
+    {
+        (void)this->_slots.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (set_error(free_indices_move_result));
+    }
+    this->_mutex = other._mutex;
+    other._mutex = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (set_error(FT_ERR_SUCCESS));
 }
 
 template<typename T>

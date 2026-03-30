@@ -1,6 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Template/pair.hpp"
 #include "../../Template/move.hpp"
+#include "../../CPP_class/class_data_buffer.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -41,5 +42,32 @@ FT_TEST(test_template_pair_move_assignment_updates_values)
     FT_ASSERT_EQ(14, destination_pair.value);
     FT_ASSERT_EQ(12, destination_pair.get_key());
     FT_ASSERT_EQ(14, destination_pair.get_value());
+    return (1);
+}
+
+FT_TEST(test_template_pair_move_uses_member_move_for_lifecycle_values)
+{
+    DataBuffer source_buffer;
+    Pair<int32_t, DataBuffer> source_pair;
+    Pair<int32_t, DataBuffer> moved_pair;
+    int32_t read_value;
+
+    read_value = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, (source_buffer << 55).get_error());
+    source_pair.key = 42;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pair.value.move(source_buffer));
+
+    Pair<int32_t, DataBuffer> local_pair(ft_move(source_pair));
+    moved_pair = ft_move(local_pair);
+
+    FT_ASSERT_EQ(42, moved_pair.key);
+    FT_ASSERT_EQ(FT_TRUE, moved_pair.value.is_thread_safe());
+    moved_pair.value >> read_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pair.value.get_operation_error());
+    FT_ASSERT_EQ(55, read_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pair.value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.destroy());
     return (1);
 }

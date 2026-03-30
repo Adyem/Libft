@@ -646,9 +646,41 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
 {
     if (this == &other)
         return (*this);
-    *this = static_cast<const ft_unordered_map<Key, MappedType>&>(other);
-    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
-        other.clear();
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_unordered_map::operator=(move)",
+            "source object is uninitialised");
+        return (*this);
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        (void)this->destroy();
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_data = ft_nullptr;
+        this->_occupied = ft_nullptr;
+        this->_capacity = 0;
+        this->_size = 0;
+        this->_requested_capacity = other._requested_capacity;
+        this->_mutex = ft_nullptr;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
+        return (*this);
+    }
+    this->_data = other._data;
+    this->_occupied = other._occupied;
+    this->_capacity = other._capacity;
+    this->_size = other._size;
+    this->_requested_capacity = other._requested_capacity;
+    this->_mutex = other._mutex;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._data = ft_nullptr;
+    other._occupied = ft_nullptr;
+    other._capacity = 0;
+    other._size = 0;
+    other._mutex = ft_nullptr;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    ft_unordered_map<Key, MappedType>::set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 

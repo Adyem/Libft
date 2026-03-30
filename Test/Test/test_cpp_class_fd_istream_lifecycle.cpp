@@ -7,6 +7,16 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int fd_istream_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_fd_istream_get_error_returned = FT_FALSE;
+static int32_t g_fd_istream_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_fd_istream_get_error_str_returned = FT_FALSE;
+static const char *g_fd_istream_get_error_str_result = ft_nullptr;
+
 static int32_t create_pipe_descriptors(int &read_descriptor, int &write_descriptor)
 {
     int descriptors[2];
@@ -16,6 +26,24 @@ static int32_t create_pipe_descriptors(int &read_descriptor, int &write_descript
     read_descriptor = descriptors[0];
     write_descriptor = descriptors[1];
     return (FT_ERR_SUCCESS);
+}
+
+static void fd_istream_get_error_uninitialised_operation(void)
+{
+    ft_fd_istream stream_value;
+
+    g_fd_istream_get_error_result = stream_value.get_error();
+    g_fd_istream_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void fd_istream_get_error_str_uninitialised_operation(void)
+{
+    ft_fd_istream stream_value;
+
+    g_fd_istream_get_error_str_result = stream_value.get_error_str();
+    g_fd_istream_get_error_str_returned = FT_TRUE;
+    return ;
 }
 
 FT_TEST(test_cpp_class_fd_istream_lifecycle_read_destroy_reinitialize)
@@ -81,6 +109,37 @@ FT_TEST(test_cpp_class_fd_istream_destroy_is_no_op_for_destroyed_state)
     return (1);
 }
 
+FT_TEST(test_cpp_class_fd_istream_error_queries_follow_lifecycle_contract)
+{
+    int read_descriptor;
+    int write_descriptor;
+    ft_fd_istream stream_value;
+
+    read_descriptor = -1;
+    write_descriptor = -1;
+    g_fd_istream_get_error_returned = FT_FALSE;
+    g_fd_istream_get_error_result = FT_ERR_SUCCESS;
+    g_fd_istream_get_error_str_returned = FT_FALSE;
+    g_fd_istream_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, fd_istream_expect_sigabrt(
+        fd_istream_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_fd_istream_get_error_returned);
+    FT_ASSERT_EQ(1, fd_istream_expect_sigabrt(
+        fd_istream_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_fd_istream_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe_descriptors(read_descriptor, write_descriptor));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
+    stream_value.set_file_descriptor(read_descriptor);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(stream_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
+    close(read_descriptor);
+    close(write_descriptor);
+    return (1);
+}
+
 FT_TEST(test_cpp_class_fd_istream_copy_constructor_preserves_readability)
 {
     int read_descriptor;
@@ -106,6 +165,7 @@ FT_TEST(test_cpp_class_fd_istream_copy_constructor_preserves_readability)
     FT_ASSERT_EQ(1, static_cast<int>(copied_stream.read(buffer, 1)));
     FT_ASSERT_EQ('c', buffer[0]);
     FT_ASSERT_EQ(1U, copied_stream.gcount());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_stream.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_stream.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.destroy());
     close(read_descriptor);
@@ -139,6 +199,7 @@ FT_TEST(test_cpp_class_fd_istream_move_constructor_preserves_readability)
     FT_ASSERT_EQ(1, static_cast<int>(moved_stream.read(buffer, 1)));
     FT_ASSERT_EQ('m', buffer[0]);
     FT_ASSERT_EQ(1U, moved_stream.gcount());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.destroy());
     close(read_descriptor);
     close(write_descriptor);

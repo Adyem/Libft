@@ -8,6 +8,54 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int stringbuf_copy_move_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_stringbuf_get_error_returned = FT_FALSE;
+static ft_bool g_stringbuf_get_error_str_returned = FT_FALSE;
+
+static void stringbuf_get_error_uninitialised_operation(void)
+{
+    ft_stringbuf buffer;
+
+    (void)buffer.get_error();
+    g_stringbuf_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void stringbuf_get_error_str_uninitialised_operation(void)
+{
+    ft_stringbuf buffer;
+
+    (void)buffer.get_error_str();
+    g_stringbuf_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
+FT_TEST(test_cpp_class_stringbuf_error_queries_follow_lifecycle_contract)
+{
+    ft_string source_string;
+    ft_stringbuf buffer;
+
+    g_stringbuf_get_error_returned = FT_FALSE;
+    g_stringbuf_get_error_str_returned = FT_FALSE;
+    FT_ASSERT_EQ(1, stringbuf_copy_move_expect_sigabrt(
+        stringbuf_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_stringbuf_get_error_returned);
+    FT_ASSERT_EQ(1, stringbuf_copy_move_expect_sigabrt(
+        stringbuf_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_stringbuf_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_string.initialize("abcdef"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source_string));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(buffer.get_error_str(), ft_strerror(FT_ERR_SUCCESS)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_string.destroy());
+    return (1);
+}
+
 FT_TEST(test_cpp_class_stringbuf_move_constructor_transfers_state)
 {
     ft_string source_string;
@@ -31,6 +79,7 @@ FT_TEST(test_cpp_class_stringbuf_move_constructor_transfers_state)
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, moved_buffer._initialised_state);
     FT_ASSERT_EQ(2U, moved_buffer._position);
     FT_ASSERT_EQ(FT_TRUE, moved_buffer.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_string(remaining_string));
     FT_ASSERT_EQ(0, ft_strcmp(remaining_string.c_str(), "cdef"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.destroy());

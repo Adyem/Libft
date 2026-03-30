@@ -18,6 +18,8 @@ class ft_stringbuf
         ft_size_t _position;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
+        static thread_local int32_t _last_error;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         ft_stringbuf() noexcept;
@@ -37,6 +39,8 @@ class ft_stringbuf
         int32_t enable_thread_safety(void) noexcept;
         int32_t disable_thread_safety(void) noexcept;
         ft_bool is_thread_safe(void) const noexcept;
+        int32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

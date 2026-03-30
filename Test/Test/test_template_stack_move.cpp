@@ -38,19 +38,17 @@ static std::vector<int> drain_stack(stack_type &stack_instance)
 FT_TEST(test_ft_stack_move_constructor_rebuilds_mutex)
 {
     stack_type source_stack;
-    stack_type destination_stack;
     std::vector<int> values = {7, 11};
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.initialize());
     push_values(source_stack, values);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.enable_thread_safety());
-    while (!source_stack.empty())
-        destination_stack.push(source_stack.pop());
+    stack_type destination_stack(ft_move(source_stack));
 
     std::vector<int> drained = drain_stack(destination_stack);
     FT_ASSERT_EQ(values.size(), drained.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
+    FT_ASSERT_EQ(false, source_stack.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.destroy());
     return (1);
@@ -70,12 +68,13 @@ FT_TEST(test_ft_stack_move_assignment_rebuilds_mutex)
     push_values(source_stack, source_values);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.enable_thread_safety());
 
-    destination_stack.clear();
-    while (!source_stack.empty())
-        destination_stack.push(source_stack.pop());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.move(source_stack));
 
     std::vector<int> drained = drain_stack(destination_stack);
     FT_ASSERT_EQ(source_values.size(), drained.size());
+    FT_ASSERT(destination_stack.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
+    FT_ASSERT_EQ(false, source_stack.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.destroy());
     return (1);
@@ -84,14 +83,20 @@ FT_TEST(test_ft_stack_move_assignment_rebuilds_mutex)
 FT_TEST(test_ft_stack_move_preserves_disabled_thread_safety)
 {
     stack_type source_stack;
+    stack_type destination_stack;
     std::vector<int> values = {5, 9};
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
     push_values(source_stack, values);
     FT_ASSERT_EQ(false, source_stack.is_thread_safe());
 
-    std::vector<int> drained = drain_stack(source_stack);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.move(source_stack));
+    FT_ASSERT_EQ(false, destination_stack.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
+    FT_ASSERT_EQ(false, source_stack.is_thread_safe());
+    std::vector<int> drained = drain_stack(destination_stack);
     FT_ASSERT_EQ(values.size(), drained.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.destroy());
     return (1);
 }
@@ -99,15 +104,19 @@ FT_TEST(test_ft_stack_move_preserves_disabled_thread_safety)
 FT_TEST(test_ft_stack_move_allows_reinitializing_source_mutex)
 {
     stack_type source_stack;
+    stack_type destination_stack;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
     push_values(source_stack, {8, 12});
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.enable_thread_safety());
-    source_stack.clear();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.move(source_stack));
+    destination_stack.clear();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.enable_thread_safety());
     source_stack.push(1);
     FT_ASSERT_EQ(1, source_stack.pop());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.destroy());
     return (1);
 }

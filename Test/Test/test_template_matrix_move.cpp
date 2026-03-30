@@ -36,6 +36,36 @@ FT_TEST(test_ft_matrix_move_constructor_recreates_mutex)
     return (1);
 }
 
+FT_TEST(test_ft_matrix_move_method_preserves_matrix_contents)
+{
+    ft_matrix<int> destination_matrix(1, 1);
+    ft_matrix<int> source_matrix(2, 2);
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_matrix.initialize());
+    destination_matrix.at(0, 0) = 5;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_matrix.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_matrix.enable_thread_safety());
+    source_matrix.at(0, 0) = 11;
+    source_matrix.at(0, 1) = 12;
+    source_matrix.at(1, 0) = 13;
+    source_matrix.at(1, 1) = 14;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_matrix.move(source_matrix));
+
+    FT_ASSERT(destination_matrix.is_thread_safe());
+    FT_ASSERT_EQ(2UL, destination_matrix.rows());
+    FT_ASSERT_EQ(2UL, destination_matrix.cols());
+    FT_ASSERT_EQ(11, destination_matrix.at(0, 0));
+    FT_ASSERT_EQ(12, destination_matrix.at(0, 1));
+    FT_ASSERT_EQ(13, destination_matrix.at(1, 0));
+    FT_ASSERT_EQ(14, destination_matrix.at(1, 1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_matrix.initialize());
+    FT_ASSERT_EQ(false, source_matrix.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_matrix.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_matrix.destroy());
+    return (1);
+}
+
 FT_TEST(test_ft_matrix_move_assignment_allows_reenabling_source)
 {
     ft_matrix<int> destination_matrix(1, 1);

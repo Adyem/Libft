@@ -8,6 +8,34 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int vector_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_vector_get_error_returned = FT_FALSE;
+static int32_t g_vector_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_vector_get_error_str_returned = FT_FALSE;
+static const char *g_vector_get_error_str_result = ft_nullptr;
+
+static void vector_get_error_uninitialised_operation(void)
+{
+    ft_vector<int> vector_value;
+
+    g_vector_get_error_result = vector_value.get_error();
+    g_vector_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void vector_get_error_str_uninitialised_operation(void)
+{
+    ft_vector<int> vector_value;
+
+    g_vector_get_error_str_result = vector_value.get_error_str();
+    g_vector_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
 FT_TEST(test_ft_vector_ft_string_growth)
 {
     ft_size_t allocation_count_before = 0;
@@ -109,5 +137,28 @@ FT_TEST(test_ft_vector_move_method_transfers_elements_and_thread_safety)
     FT_ASSERT_EQ(FT_TRUE, destination_vector.is_thread_safe());
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_vector.is_initialised());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_vector.destroy());
+    return (1);
+}
+
+FT_TEST(test_ft_vector_error_queries_follow_lifecycle_contract)
+{
+    ft_vector<int> vector_value;
+
+    g_vector_get_error_returned = FT_FALSE;
+    g_vector_get_error_result = FT_ERR_SUCCESS;
+    g_vector_get_error_str_returned = FT_FALSE;
+    g_vector_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, vector_expect_sigabrt(
+        vector_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_vector_get_error_returned);
+    FT_ASSERT_EQ(1, vector_expect_sigabrt(
+        vector_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_vector_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(vector_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
     return (1);
 }

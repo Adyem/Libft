@@ -32,6 +32,17 @@ struct pair_has_initialize_move<Type,
 {
 };
 
+template <typename Type, typename = void>
+struct pair_has_move_method : std::false_type
+{
+};
+
+template <typename Type>
+struct pair_has_move_method<Type,
+    std::void_t<decltype(std::declval<Type &>().move(std::declval<Type &>()))> > : std::true_type
+{
+};
+
 template <typename Type>
 typename std::enable_if<pair_has_initialize_copy<Type>::value, void>::type
 pair_assign_copy(Type &destination, const Type &source)
@@ -58,7 +69,16 @@ void pair_assign_copy(ft_sharedptr<ManagedType> &destination,
 }
 
 template <typename Type>
-typename std::enable_if<pair_has_initialize_move<Type>::value, void>::type
+typename std::enable_if<pair_has_move_method<Type>::value, void>::type
+pair_assign_move(Type &destination, Type &source)
+{
+    (void)destination.move(source);
+    return ;
+}
+
+template <typename Type>
+typename std::enable_if<!pair_has_move_method<Type>::value
+    && pair_has_initialize_move<Type>::value, void>::type
 pair_assign_move(Type &destination, Type &source)
 {
     (void)destination.initialize(ft_move(source));
@@ -66,7 +86,8 @@ pair_assign_move(Type &destination, Type &source)
 }
 
 template <typename Type>
-typename std::enable_if<!pair_has_initialize_move<Type>::value, void>::type
+typename std::enable_if<!pair_has_move_method<Type>::value
+    && !pair_has_initialize_move<Type>::value, void>::type
 pair_assign_move(Type &destination, Type &source)
 {
     destination = ft_move(source);

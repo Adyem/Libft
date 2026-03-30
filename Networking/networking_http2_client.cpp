@@ -775,14 +775,14 @@ int32_t http2_frame::set_error(int32_t error_code) const noexcept
 int32_t http2_frame::get_error(void) const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_frame::get_error");
+        errno_abort_if_uninitialised(this->_initialised_state, "http2_frame::get_error");
     return (http2_frame::_last_error);
 }
 
 const char *http2_frame::get_error_str(void) const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_frame::get_error_str");
+        errno_abort_if_uninitialised(this->_initialised_state, "http2_frame::get_error_str");
     return (ft_strerror(http2_frame::_last_error));
 }
 
@@ -1091,14 +1091,14 @@ int32_t http2_stream_manager::set_error(int32_t error_code) const noexcept
 int32_t http2_stream_manager::get_error(void) const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::get_error");
+        errno_abort_if_uninitialised(this->_initialised_state, "http2_stream_manager::get_error");
     return (http2_stream_manager::_last_error);
 }
 
 const char *http2_stream_manager::get_error_str(void) const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "http2_stream_manager::get_error_str");
+        errno_abort_if_uninitialised(this->_initialised_state, "http2_stream_manager::get_error_str");
     return (ft_strerror(http2_stream_manager::_last_error));
 }
 

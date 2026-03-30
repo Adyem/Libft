@@ -249,7 +249,7 @@ ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
     : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    (void)this->initialize(ft_move(other));
+    (void)this->move(other);
     return ;
 }
 
@@ -391,6 +391,12 @@ int32_t ft_future<ValueType>::initialize(const ft_future<ValueType> &other)
 template <typename ValueType>
 int32_t ft_future<ValueType>::initialize(ft_future<ValueType> &&other)
 {
+    return (this->move(other));
+}
+
+template <typename ValueType>
+int32_t ft_future<ValueType>::move(ft_future<ValueType> &other)
+{
     ft_bool this_lock_acquired;
     ft_bool other_lock_acquired;
     ft_future<ValueType> *first_lock_target;
@@ -402,7 +408,7 @@ int32_t ft_future<ValueType>::initialize(ft_future<ValueType> &&other)
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_future::initialize(move)",
+        errno_abort_lifecycle(other._initialised_state, "ft_future::move",
             "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -473,12 +479,6 @@ int32_t ft_future<ValueType>::initialize(ft_future<ValueType> &&other)
     this->_mutex = transferred_mutex;
     other._mutex = ft_nullptr;
     return (FT_ERR_SUCCESS);
-}
-
-template <typename ValueType>
-int32_t ft_future<ValueType>::move(ft_future<ValueType> &other)
-{
-    return (this->initialize(ft_move(other)));
 }
 
 template <typename ValueType>
@@ -745,7 +745,7 @@ inline ft_future<void>::ft_future(ft_future<void> &&other)
     : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    (void)this->initialize(ft_move(other));
+    (void)this->move(other);
     return ;
 }
 
@@ -847,6 +847,11 @@ inline int32_t ft_future<void>::initialize(const ft_future<void> &other)
 
 inline int32_t ft_future<void>::initialize(ft_future<void> &&other)
 {
+    return (this->move(other));
+}
+
+inline int32_t ft_future<void>::move(ft_future<void> &other)
+{
     ft_bool this_lock_acquired;
     ft_bool other_lock_acquired;
     ft_future<void> *first_lock_target;
@@ -857,7 +862,7 @@ inline int32_t ft_future<void>::initialize(ft_future<void> &&other)
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_future<void>::initialize(move)",
+        errno_abort_lifecycle(other._initialised_state, "ft_future<void>::move",
             "source object is uninitialised");
         return (FT_ERR_INVALID_STATE);
     }
@@ -927,11 +932,6 @@ inline int32_t ft_future<void>::initialize(ft_future<void> &&other)
     this->_mutex = other._mutex;
     other._mutex = ft_nullptr;
     return (FT_ERR_SUCCESS);
-}
-
-inline int32_t ft_future<void>::move(ft_future<void> &other)
-{
-    return (this->initialize(ft_move(other)));
 }
 
 inline int32_t ft_future<void>::wait_ready() const

@@ -684,14 +684,14 @@ void ft_set<ElementType>::clear()
 template <typename ElementType>
 int32_t ft_set<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::get_error");
     return (_last_error);
 }
 
 template <typename ElementType>
 const char *ft_set<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_set::get_error_str");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_set::get_error_str");
     return (ft_strerror(_last_error));
 }
 

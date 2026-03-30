@@ -365,7 +365,7 @@ int32_t ft_queue<ElementType>::move(ft_queue<ElementType> &other)
     this->_front = other._front;
     this->_rear = other._rear;
     this->_size = other._size;
-    this->_mutex = ft_nullptr;
+    this->_mutex = other._mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._front = ft_nullptr;
     other._rear = ft_nullptr;
@@ -749,14 +749,14 @@ void ft_queue<ElementType>::clear()
 template <typename ElementType>
 int32_t ft_queue<ElementType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_queue::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_queue::get_error");
     return (ft_queue<ElementType>::_last_error);
 }
 
 template <typename ElementType>
 const char *ft_queue<ElementType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_queue::get_error_str");
     return (ft_strerror(this->get_error()));
 }

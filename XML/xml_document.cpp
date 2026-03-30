@@ -784,13 +784,22 @@ int32_t xml_document::move(xml_document &other) noexcept
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
         errno_abort_lifecycle(other._initialised_state, "xml_document::move", "source is uninitialised");
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        if (this->destroy() != FT_ERR_SUCCESS)
+            return (FT_ERR_INTERNAL);
+    }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
+        this->_root = ft_nullptr;
+        this->_mutex = ft_nullptr;
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
     }
     this->_root = other._root;
+    this->_mutex = other._mutex;
     other._root = ft_nullptr;
+    other._mutex = ft_nullptr;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
@@ -803,7 +812,7 @@ int32_t xml_document::destroy() noexcept
     ft_bool lock_acquired;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
-        return (FT_ERR_INVALID_STATE);
+        return (FT_ERR_SUCCESS);
     lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error == FT_ERR_SUCCESS && this->_root != ft_nullptr)
@@ -1246,7 +1255,9 @@ int32_t xml_document::get_error() const noexcept
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "xml_document::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::get_error");
+    if (this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (xml_document::_last_error);
     lock_acquired = FT_FALSE;
     lock_error = this->lock(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -1257,7 +1268,7 @@ int32_t xml_document::get_error() const noexcept
 
 const char *xml_document::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "xml_document::get_error_str");
+    errno_abort_if_uninitialised(this->_initialised_state, "xml_document::get_error_str");
     int32_t error_code = this->get_error();
     const char *message = ft_strerror(error_code);
 

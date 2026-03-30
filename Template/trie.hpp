@@ -327,13 +327,19 @@ int32_t ft_trie<ValueType>::destroy()
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t first_error;
+    int32_t disable_result;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (set_error(FT_ERR_SUCCESS));
+    first_error = FT_ERR_SUCCESS;
+    disable_result = this->disable_thread_safety();
+    if (disable_result != FT_ERR_SUCCESS)
+        first_error = disable_result;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (set_error(lock_error));
+    if (lock_error != FT_ERR_SUCCESS && first_error == FT_ERR_SUCCESS)
+        first_error = lock_error;
     this->destroy_children_unlocked();
     if (this->_data != ft_nullptr)
     {
@@ -343,7 +349,7 @@ int32_t ft_trie<ValueType>::destroy()
     (void)this->unlock_internal(lock_acquired);
     (void)this->_children.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (set_error(FT_ERR_SUCCESS));
+    return (set_error(first_error));
 }
 
 template <typename ValueType>
@@ -533,14 +539,14 @@ void ft_trie<ValueType>::unlock(ft_bool lock_acquired) const
 template <typename ValueType>
 int32_t ft_trie<ValueType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_trie::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_trie::get_error");
     return (_last_error);
 }
 
 template <typename ValueType>
 const char *ft_trie<ValueType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_trie::get_error_str");
     return (ft_strerror(_last_error));
 }

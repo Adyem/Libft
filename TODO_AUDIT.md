@@ -3,9 +3,74 @@
 - Progress:
 - API partial progress:
   - `Networking/networking_http2_client.cpp`
+- XML partial progress:
+  - `XML/xml_document.cpp`
+    - `xml_document` error queries now abort only for `UNINITIALISED`, and `get_error()` bypasses locking in destroyed state so `get_error()` / `get_error_str()` remain valid after `destroy()`.
+- CPP_class partial progress:
+  - `CPP_class/cpp_class_file.cpp`
+    - `ft_file` now exposes instance `get_error()` / `get_error_str()`, records `_last_error` across its lifecycle/file operations, and its error queries now abort only for `UNINITIALISED` while remaining valid after `destroy()`.
+  - `CPP_class/cpp_class_istream.cpp`
+    - `ft_istream` now exposes instance `get_error()` / `get_error_str()`, records `_last_error` across lifecycle/read-state operations, and its error queries now abort only for `UNINITIALISED` while remaining valid after `destroy()`.
+  - `CPP_class/cpp_class_ofstream.cpp`
+    - `ft_ofstream` now exposes instance `get_error()` / `get_error_str()`, records `_last_error` across lifecycle/output operations, and its error queries now abort only for `UNINITIALISED` while remaining valid after `destroy()`.
+  - `CPP_class/cpp_class_cancellation.cpp`
+    - `ft_cancellation_source` now exposes instance `get_error()` / `get_error_str()`, records `_last_error` across lifecycle/cancellation operations, and its error queries now abort only for `UNINITIALISED` while remaining valid after `destroy()`.
+    - `ft_cancellation_state` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `CPP_class/cpp_class_bitset.cpp`
+    - `ft_bitset` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `CPP_class/cpp_class_stringbuf.cpp`
+    - `ft_stringbuf` now exposes instance `get_error()` / `get_error_str()`, records `_last_error` across lifecycle/buffer operations, and its error queries now abort only for `UNINITIALISED` while remaining valid after `destroy()`.
+- Template partial progress:
+  - `Template/deque.hpp`
+    - `ft_deque` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/graph.hpp`
+    - `ft_graph` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/trie.hpp`
+    - `ft_trie` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/tuple.hpp`
+    - `ft_tuple` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/vector.hpp`
+    - `ft_vector` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/queue.hpp`
+    - `ft_queue` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
+  - `Template/set.hpp`
+    - `ft_set` error queries now abort only for `UNINITIALISED` and remain valid after `destroy()`, matching the lifecycle error-query contract.
 - Tests updated:
   - `Test/Test/test_api_request.cpp`
     - `test_http2_stream_manager_error_queries_follow_lifecycle_contract`
+    - `test_http2_frame_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_cpp_class_file_copy_move.cpp`
+    - `test_cpp_class_file_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_cpp_class_fd_istream_lifecycle.cpp`
+    - `test_cpp_class_fd_istream_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_cpp_class_istringstream_lifecycle.cpp`
+    - `test_cpp_class_istringstream_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_cpp_class_lifecycle_methods.cpp`
+    - `test_ft_ofstream_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_cpp_class_stringbuf_copy_move.cpp`
+    - `test_cpp_class_stringbuf_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_cancellation_callbacks.cpp`
+    - `test_ft_cancellation_source_error_queries_follow_lifecycle_contract`
+    - `test_ft_cancellation_state_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_bitset.cpp`
+    - `test_ft_bitset_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_xml_copy_move_deleted.cpp`
+    - `test_xml_document_copy_move_deleted`
+    - `test_xml_document_move_into_initialized_destination_preserves_source_thread_safety`
+  - `Test/Test/test_template_vector.cpp`
+    - `test_ft_vector_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_queue_thread_safety.cpp`
+    - `test_ft_queue_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_set_move.cpp`
+    - `test_ft_set_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_deque_move.cpp`
+    - `test_ft_deque_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_trie_copy_move_deleted.cpp`
+    - `test_ft_trie_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_graph_move.cpp`
+    - `test_ft_graph_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_tuple.cpp`
+    - `test_ft_tuple_error_queries_follow_lifecycle_contract`
 - Modules to audit:
 - `API`
 - `Advanced`
@@ -99,6 +164,12 @@
     - `http2_stream_manager::initialize(const http2_stream_manager &)` now copies stream-table and identifier state instead of only window counters.
     - `http2_stream_state` now manages its owned `ft_string` through lifecycle-aware constructor/destructor cleanup, and `http2_stream_manager::open_stream()` no longer double-initializes stream buffers.
 - CPP_class partial progress:
+  - `CPP_class/cpp_class_data_buffer.cpp`
+    - `DataBuffer::move(...)` now transfers the owned vector through its explicit lifecycle move path, preserves outer thread-safety/read state, and leaves the source explicitly destroyed instead of performing a copy-style element transfer.
+  - `CPP_class/cpp_class_big_number.cpp`
+    - `ft_big_number::move(...)` now transfers operation-error and thread-safety state with the digit buffer and leaves the source explicitly destroyed after a successful move, and move construction now routes through the explicit `move(...)` helper.
+  - `CPP_class/cpp_class_bitset.cpp`
+    - `ft_bitset` move transfer now carries the thread-safety mutex with the bit storage instead of dropping thread-safe state and leaving the source mutex behind, and move construction now routes through the explicit `move(...)` helper.
   - `CPP_class/cpp_class_cancellation.cpp`
     - `ft_cancellation_state::move(...)` now transfers registered callbacks through the vector move-initialize path instead of dropping them, and `destroy()` now releases thread-safety state before leaving the object destroyed.
   - `CPP_class/cpp_class_fd_istream.cpp`
@@ -116,6 +187,28 @@
   - `CPP_class/cpp_class_thread_pool.cpp`
     - `ft_thread_pool` move construction now routes through `move(...)`, and `move(...)` can rebuild an equivalent initialized pool instead of failing for live sources.
 - Template partial progress:
+  - `Template/optional.hpp`
+    - `ft_optional::move(...)` now transfers the owned value pointer and thread-safety mutex directly, leaving the source destroyed instead of rebuilding from the contained value and dropping thread-safety state.
+  - `Template/pair.hpp`
+    - `Pair` move assignment/construction helpers now prefer an explicit member `move(...)` when the stored type exposes one, instead of falling back to `initialize(ft_move(...))` for lifecycle-aware values.
+  - `Template/template_optional.cpp`
+    - The local optional usage helper now exercises `ft_optional::move(...)` directly instead of manually extracting the contained value and reinitializing another optional.
+  - `Template/future.hpp`
+    - `ft_future` move construction now routes through the explicit `move(...)` helper in both typed and `void` specializations, and the helper owns the transfer path instead of bouncing back through `initialize(ft_move(...))`.
+  - `Template/matrix.hpp`
+    - `ft_matrix` move construction now routes through the explicit `move(...)` helper instead of keeping a separate constructor-only transfer path.
+  - `Template/queue.hpp`
+    - `ft_queue::move(...)` now transfers the queue mutex with the node chain instead of dropping thread-safety state on the destination.
+  - `Template/shared_ptr.hpp`
+    - `ft_sharedptr` move construction now routes through the explicit `move(...)` helper, and move transfer now carries the owned mutex instead of rebuilding and then discarding thread-safety state.
+  - `Template/stack.hpp`
+    - `ft_stack::move(...)` now transfers the stack mutex with the node chain instead of dropping thread-safety state on the destination.
+  - `Template/unordered_map.hpp`
+    - `ft_unordered_map` move assignment now performs a real ownership transfer, and the move constructor therefore preserves table storage and thread-safety state instead of falling back to copy-and-clear behavior.
+  - `Template/unique_ptr.hpp`
+    - `ft_uniqueptr` move assignment now routes through the explicit `move(...)` helper so the assignment path preserves mutex/thread-safety transfer instead of using a separate stale implementation, and `destroy()` now releases thread-safety state before leaving the object destroyed.
+  - `Template/variant.hpp`
+    - `ft_variant::move(...)` now transfers the owned storage pointer, active index, and thread-safety mutex directly instead of rebuilding the destination value and destroying the source mutex during move.
   - `Template/vector.hpp`
     - `ft_vector` now exposes an explicit `move(...)` helper instead of the rvalue `initialize(...)` overload, and move transfer now cleans up small-buffer source elements before marking the source destroyed.
 - Tests updated:
@@ -126,27 +219,103 @@
     - `test_http2_stream_manager_copy_preserve_stream_state`
     - `test_http2_stream_manager_move_preserve_stream_state`
     - `test_http2_stream_manager_destroyed_source_propagates_copy_state`
+  - `Test/Test/test_big_number_mutex.cpp`
+    - `test_big_number_move_constructor_preserves_thread_safety_and_value`
+    - `test_big_number_move_method_preserves_thread_safety_and_value`
   - `Test/Test/test_cpp_class_istringstream_lifecycle.cpp`
+    - `test_cpp_class_istringstream_error_queries_follow_lifecycle_contract`
     - `test_cpp_class_istringstream_move_constructor_transfers_buffer`
   - `Test/Test/test_cpp_class_fd_istream_lifecycle.cpp`
+    - `test_cpp_class_fd_istream_error_queries_follow_lifecycle_contract`
     - `test_cpp_class_fd_istream_copy_constructor_preserves_readability`
     - `test_cpp_class_fd_istream_move_constructor_preserves_readability`
   - `Test/Test/test_cpp_class_file_copy_move.cpp`
     - `test_cpp_class_file_copy_constructor_preserves_open_handle`
     - `test_cpp_class_file_move_constructor_preserves_open_handle`
+    - `test_cpp_class_file_error_queries_follow_lifecycle_contract`
   - `Test/Test/test_cpp_class_istream_copy_move.cpp`
     - `test_cpp_class_istream_copy_constructor_preserves_read_state`
     - `test_cpp_class_istream_move_constructor_preserves_read_state`
   - `Test/Test/test_cpp_class_lifecycle_methods.cpp`
+    - `test_data_buffer_move_into_uninitialised_destination`
+    - `test_data_buffer_move_into_destroyed_destination`
+    - `test_data_buffer_move_self_is_noop_success`
+    - `test_data_buffer_move_uninitialised_source_aborts`
+    - `test_data_buffer_move_constructor_preserves_state_and_thread_safety`
+    - `test_ft_ofstream_error_queries_follow_lifecycle_contract`
     - `test_ft_ofstream_move_constructor_preserves_open_file`
   - `Test/Test/test_cpp_class_stringbuf_copy_move.cpp`
+    - `test_cpp_class_stringbuf_error_queries_follow_lifecycle_contract`
     - `test_cpp_class_stringbuf_move_constructor_transfers_state`
   - `Test/Test/test_thread_pool.cpp`
     - `test_thread_pool_move_constructor_preserves_execution`
+  - `Test/Test/test_template_bitset_thread_safety_contract.cpp`
+    - `test_template_bitset_move_constructor_preserves_thread_safety`
+    - `test_template_bitset_move_method_preserves_thread_safety`
+  - `Test/Test/test_template_bitset.cpp`
+    - `test_ft_bitset_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_future_lifecycle.cpp`
+    - `test_ft_future_void_move_constructor_and_thread_safety`
+  - `Test/Test/test_template_future_thread_safety.cpp`
+    - `test_future_move_transfers_thread_safety`
+    - `test_future_move_constructor_transfers_thread_safety`
+  - `Test/Test/test_template_graph_move.cpp`
+    - `test_ft_graph_move_constructor_recreates_mutex`
+    - `test_ft_graph_move_assignment_resets_source_mutex`
+    - `test_ft_graph_move_allows_reuse_after_transfer`
+  - `Test/Test/test_template_matrix_move.cpp`
+    - `test_ft_matrix_move_constructor_recreates_mutex`
+    - `test_ft_matrix_move_method_preserves_matrix_contents`
+  - `Test/Test/test_template_deque_move.cpp`
+    - `test_ft_deque_move_constructor_recreates_mutex`
+    - `test_ft_deque_move_assignment_resets_source_mutex`
+  - `Test/Test/test_template_priority_queue_move.cpp`
+    - `test_ft_priority_queue_move_constructor_rebuilds_mutex`
+    - `test_ft_priority_queue_move_assignment_allows_reenable`
+  - `Test/Test/test_template_optional.cpp`
+    - `test_ft_optional_non_default_constructible`
+  - `Test/Test/test_template_optional_variant.cpp`
+    - `test_ft_optional_move_transfers_state`
+    - `test_ft_optional_move_constructor_preserves_thread_safety`
+  - `Test/Test/test_template_pair_move.cpp`
+    - `test_template_pair_move_uses_member_move_for_lifecycle_values`
+  - `Test/Test/test_template_queue_thread_safety.cpp`
+    - `test_ft_queue_error_queries_follow_lifecycle_contract`
+  - `Test/Test/test_template_queue_move.cpp`
+    - `test_ft_queue_move_constructor_rebuilds_mutex`
+    - `test_ft_queue_move_assignment_rebuilds_mutex`
+    - `test_ft_queue_move_preserves_disabled_thread_safety`
+    - `test_ft_queue_move_allows_reusing_source_after_transfer`
+  - `Test/Test/test_template_shared_ptr_copy_move.cpp`
+    - `test_ft_sharedptr_move_constructor_rebuilds_mutex`
+    - `test_ft_sharedptr_move_assignment_rebuilds_mutex`
+  - `Test/Test/test_template_unordered_map_copy_move.cpp`
+    - `test_ft_unordered_map_move_constructor_resets_source_mutex`
+    - `test_ft_unordered_map_move_assignment_reinitializes_mutex`
+  - `Test/Test/test_template_unique_ptr_move.cpp`
+    - `test_ft_uniqueptr_move_assignment_rebuilds_mutex`
+  - `Test/Test/test_template_variant_move.cpp`
+    - `test_variant_move_constructor_rebuilds_mutex`
+    - `test_variant_move_assignment_rebuilds_mutex`
+    - `test_variant_move_preserves_disabled_thread_safety`
+  - `Test/Test/test_template_set_move.cpp`
+    - `test_ft_set_error_queries_follow_lifecycle_contract`
+    - `test_ft_set_move_constructor_rebuilds_mutex`
+    - `test_ft_set_move_assignment_rebuilds_mutex`
+    - `test_ft_set_move_preserves_disabled_thread_safety`
+    - `test_ft_set_move_allows_reinitializing_source_mutex`
+  - `Test/Test/test_template_stack_move.cpp`
+    - `test_ft_stack_move_constructor_rebuilds_mutex`
+    - `test_ft_stack_move_assignment_rebuilds_mutex`
+    - `test_ft_stack_move_preserves_disabled_thread_safety`
+    - `test_ft_stack_move_allows_reinitializing_source_mutex`
   - `Test/Test/test_template_cancellation_callbacks.cpp`
     - `test_ft_cancellation_token_callbacks_after_request`
     - `test_ft_cancellation_source_request_affects_future_tokens`
+    - `test_ft_cancellation_source_error_queries_follow_lifecycle_contract`
+    - `test_ft_cancellation_state_error_queries_follow_lifecycle_contract`
   - `Test/Test/test_template_vector.cpp`
+    - `test_ft_vector_error_queries_follow_lifecycle_contract`
     - `test_ft_vector_move_method_transfers_elements_and_thread_safety`
 - Modules to audit:
 - `API`
@@ -299,6 +468,41 @@
 - Lock both objects in stable address order, transfer/reset payload under lock, unlock in reverse order.
 - Avoid forcing source to `DESTROYED` in `move(...)` unless full teardown invariants are guaranteed safely.
 - Audit copy/move thread-safety propagation: if the source object is thread-safe, the destination must also end thread-safe after copy/move.
+- Progress:
+- Template partial progress:
+  - `Template/iterator.hpp`
+    - `Iterator::destroy()` now releases thread-safety state before leaving the object destroyed, so moving into an already-initialized destination no longer leaks the destination mutex.
+  - `Template/pool.hpp`
+    - `Pool<T>::move(...)` now transfers the owned slot/free-index vectors through their lifecycle move paths, carries the pool mutex with the moved state, and `destroy()` now releases thread-safety state before cleanup so initialized destinations do not leak their old mutex.
+  - `Template/string_view.hpp`
+    - `ft_string_view::destroy()` now releases thread-safety state before leaving the object destroyed, so moving into an initialized destination no longer leaks the destination mutex.
+  - `Template/trie.hpp`
+    - `ft_trie::destroy()` now releases thread-safety state before leaving the object destroyed, so move paths that replace an initialized destination do not leak the destination mutex.
+- XML partial progress:
+  - `XML/xml_document.cpp`
+    - `xml_document::move(...)` now destroys an initialized destination before transfer, carries the source mutex with the root pointer, and `destroy()` now treats uninitialized/destroyed states as no-op success.
+- Tests updated:
+  - `Test/Test/test_template_circular_buffer_move.cpp`
+    - `test_ft_circular_buffer_move_constructor_preserves_state`
+    - `test_ft_circular_buffer_move_method_preserves_disabled_thread_safety`
+  - `Test/Test/test_template_iterator_copy_move.cpp`
+    - `test_iterator_manual_move_rebuilds_mutex`
+    - `test_iterator_move_into_initialized_destination_preserves_source_thread_safety`
+  - `Test/Test/test_template_pool_move.cpp`
+    - `test_pool_move_preserves_thread_safety_and_objects`
+    - `test_pool_move_into_initialized_destination_preserves_source_thread_safety`
+  - `Test/Test/test_string_view.cpp`
+    - `test_string_view_move_constructor_preserves_thread_safety_and_data`
+    - `test_string_view_move_into_initialized_destination_preserves_source_thread_safety`
+  - `Test/Test/test_template_trie_copy_move_deleted.cpp`
+    - `test_ft_trie_move_constructor_preserves_entries_and_thread_safety`
+    - `test_ft_trie_move_method_preserves_entries_and_disabled_thread_safety`
+  - `Test/Test/test_template_tuple.cpp`
+    - `test_ft_tuple_move_constructor_preserves_values`
+    - `test_ft_tuple_move_into_initialized_destination_preserves_source_thread_safety`
+  - `Test/Test/test_xml_copy_move_deleted.cpp`
+    - `test_xml_document_copy_move_deleted`
+    - `test_xml_document_move_into_initialized_destination_preserves_source_thread_safety`
 - Modules to audit:
 - `API`
 - `Advanced`

@@ -300,7 +300,7 @@ int32_t ft_stack<ElementType>::move(ft_stack<ElementType> &other)
     }
     this->_top = other._top;
     this->_size = other._size;
-    this->_mutex = ft_nullptr;
+    this->_mutex = other._mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._top = ft_nullptr;
     other._size = 0;

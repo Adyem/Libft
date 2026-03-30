@@ -16,57 +16,71 @@ static T variant_instance_get(const ft_variant<Types...> &variant_instance)
 
 FT_TEST(test_variant_move_constructor_rebuilds_mutex)
 {
-    ft_variant<int, std::string> tuple_variant;
+    ft_variant<int, std::string> source_variant;
+    ft_variant<int, std::string> *moved_variant_pointer;
 
-    FT_ASSERT_EQ(0, tuple_variant.initialize());
-    FT_ASSERT_EQ(0, tuple_variant.enable_thread_safety());
-    FT_ASSERT(tuple_variant.is_thread_safe());
-    tuple_variant.emplace<int>(42);
+    FT_ASSERT_EQ(0, source_variant.initialize());
+    FT_ASSERT_EQ(0, source_variant.enable_thread_safety());
+    source_variant.emplace<std::string>("reset");
+    FT_ASSERT(source_variant.is_thread_safe());
 
-    FT_ASSERT(tuple_variant.is_thread_safe());
-    FT_ASSERT(tuple_variant.holds_alternative<int>());
-    FT_ASSERT_EQ(42, variant_instance_get<int>(tuple_variant));
-
-    FT_ASSERT_EQ(0, tuple_variant.enable_thread_safety());
-    tuple_variant.emplace<std::string>("reset");
-    FT_ASSERT(tuple_variant.holds_alternative<std::string>());
-    FT_ASSERT_EQ(std::string("reset"), variant_instance_get<std::string>(tuple_variant));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_variant.destroy());
+    moved_variant_pointer = new ft_variant<int, std::string>(ft_move(source_variant));
+    FT_ASSERT(moved_variant_pointer != ft_nullptr);
+    FT_ASSERT(moved_variant_pointer->is_thread_safe());
+    FT_ASSERT(moved_variant_pointer->holds_alternative<std::string>());
+    FT_ASSERT_EQ(std::string("reset"), variant_instance_get<std::string>(*moved_variant_pointer));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.initialize());
+    source_variant.emplace<int>(7);
+    FT_ASSERT_EQ(7, variant_instance_get<int>(source_variant));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_variant_pointer->destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.destroy());
+    delete moved_variant_pointer;
     return (1);
 }
 
 FT_TEST(test_variant_move_assignment_rebuilds_mutex)
 {
-    ft_variant<int, std::string> variant_instance;
+    ft_variant<int, std::string> source_variant;
+    ft_variant<int, std::string> destination_variant;
 
-    FT_ASSERT_EQ(0, variant_instance.initialize());
-    variant_instance.emplace<int>(8);
-    FT_ASSERT_EQ(0, variant_instance.enable_thread_safety());
-    FT_ASSERT(variant_instance.is_thread_safe());
+    FT_ASSERT_EQ(0, source_variant.initialize());
+    FT_ASSERT_EQ(0, source_variant.enable_thread_safety());
+    source_variant.emplace<int>(15);
+    FT_ASSERT(source_variant.is_thread_safe());
 
-    variant_instance.emplace<std::string>("text");
+    FT_ASSERT_EQ(0, destination_variant.initialize());
+    destination_variant.emplace<std::string>("text");
+    FT_ASSERT_EQ(0, destination_variant.move(source_variant));
+    FT_ASSERT(destination_variant.is_thread_safe());
+    FT_ASSERT_EQ(FT_TRUE, destination_variant.holds_alternative<int>());
+    FT_ASSERT_EQ(15, variant_instance_get<int>(destination_variant));
 
-    std::string stored_string = variant_instance_get<std::string>(variant_instance);
-    FT_ASSERT(variant_instance.is_thread_safe());
-    FT_ASSERT(variant_instance.holds_alternative<std::string>());
-    FT_ASSERT_EQ(std::string("text"), stored_string);
+    FT_ASSERT_EQ(0, source_variant.initialize());
+    source_variant.emplace<std::string>("reused");
+    FT_ASSERT_EQ(FT_TRUE, source_variant.holds_alternative<std::string>());
+    FT_ASSERT_EQ(std::string("reused"), variant_instance_get<std::string>(source_variant));
 
-    FT_ASSERT_EQ(0, variant_instance.enable_thread_safety());
-    variant_instance.emplace<int>(15);
-    FT_ASSERT_EQ(FT_TRUE, variant_instance.holds_alternative<int>());
-    FT_ASSERT_EQ(15, variant_instance_get<int>(variant_instance));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, variant_instance.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_variant.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.destroy());
     return (1);
 }
 
 FT_TEST(test_variant_move_preserves_disabled_thread_safety)
 {
     ft_variant<int, std::string> source_variant;
+    ft_variant<int, std::string> *moved_variant_pointer;
 
     FT_ASSERT_EQ(0, source_variant.initialize());
     source_variant.emplace<int>(5);
-    FT_ASSERT_EQ(FT_FALSE, source_variant.is_thread_safe());
-    FT_ASSERT_EQ(5, variant_instance_get<int>(source_variant));
+    moved_variant_pointer = new ft_variant<int, std::string>(ft_move(source_variant));
+    FT_ASSERT(moved_variant_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_FALSE, moved_variant_pointer->is_thread_safe());
+    FT_ASSERT_EQ(5, variant_instance_get<int>(*moved_variant_pointer));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.initialize());
+    source_variant.emplace<std::string>("reused");
+    FT_ASSERT_EQ(std::string("reused"), variant_instance_get<std::string>(source_variant));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_variant_pointer->destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.destroy());
+    delete moved_variant_pointer;
     return (1);
 }

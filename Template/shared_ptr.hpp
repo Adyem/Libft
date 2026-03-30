@@ -316,19 +316,23 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr &&other) noexcept
     uint32_t previous_error;
 
     previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        this->_managed_pointer = other._managed_pointer;
-        this->_reference_count = other._reference_count;
-        this->_array_size = other._array_size;
-        this->_is_array_type = other._is_array_type;
-        this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-        other._managed_pointer = ft_nullptr;
-        other._reference_count = ft_nullptr;
-        other._array_size = 0;
-        other._is_array_type = FT_FALSE;
-        other._initialised_state = FT_CLASS_STATE_DESTROYED;
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_sharedptr::ft_sharedptr(move)",
+            "source object is uninitialised");
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
     }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        (void)set_error(previous_error);
+        return ;
+    }
+    if (this->move(other) != FT_ERR_SUCCESS)
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     (void)set_error(previous_error);
     return ;
 }
@@ -360,18 +364,7 @@ ft_sharedptr<ManagedType> &ft_sharedptr<ManagedType>::operator=(
 {
     if (this == &other)
         return (*this);
-    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
-        (void)this->initialize();
-    this->destroy_storage();
-    this->_managed_pointer = other._managed_pointer;
-    this->_reference_count = other._reference_count;
-    this->_array_size = other._array_size;
-    this->_is_array_type = other._is_array_type;
-    other._managed_pointer = ft_nullptr;
-    other._reference_count = ft_nullptr;
-    other._array_size = 0;
-    other._is_array_type = FT_FALSE;
-    set_error(FT_ERR_SUCCESS);
+    (void)this->move(other);
     return (*this);
 }
 
@@ -550,9 +543,6 @@ template <typename ManagedType>
 int32_t ft_sharedptr<ManagedType>::move(ft_sharedptr<ManagedType> &other) noexcept
 {
     int32_t destroy_result;
-    pt_recursive_mutex *new_mutex;
-    pt_recursive_mutex *old_mutex;
-    int32_t initialize_result;
 
     if (this == &other)
         return (set_error(FT_ERR_SUCCESS));
@@ -578,25 +568,11 @@ int32_t ft_sharedptr<ManagedType>::move(ft_sharedptr<ManagedType> &other) noexce
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (set_error(FT_ERR_SUCCESS));
     }
-    new_mutex = ft_nullptr;
-    if (other._mutex != ft_nullptr)
-    {
-        new_mutex = new (std::nothrow) pt_recursive_mutex();
-        if (new_mutex == ft_nullptr)
-            return (set_error(FT_ERR_NO_MEMORY));
-        initialize_result = new_mutex->initialize();
-        if (initialize_result != FT_ERR_SUCCESS)
-        {
-            delete new_mutex;
-            return (set_error(initialize_result));
-        }
-    }
-    old_mutex = other._mutex;
     this->_managed_pointer = other._managed_pointer;
     this->_reference_count = other._reference_count;
     this->_array_size = other._array_size;
     this->_is_array_type = other._is_array_type;
-    this->_mutex = new_mutex;
+    this->_mutex = other._mutex;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     other._managed_pointer = ft_nullptr;
     other._reference_count = ft_nullptr;
@@ -604,11 +580,6 @@ int32_t ft_sharedptr<ManagedType>::move(ft_sharedptr<ManagedType> &other) noexce
     other._is_array_type = FT_FALSE;
     other._mutex = ft_nullptr;
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    if (old_mutex != ft_nullptr)
-    {
-        (void)old_mutex->destroy();
-        delete old_mutex;
-    }
     return (set_error(FT_ERR_SUCCESS));
 }
 

@@ -921,14 +921,14 @@ void ft_graph<VertexType>::unlock(ft_bool lock_acquired) const
 template <typename VertexType>
 int32_t ft_graph<VertexType>::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_graph::get_error");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_graph::get_error");
     return (_last_error);
 }
 
 template <typename VertexType>
 const char *ft_graph<VertexType>::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_graph::get_error_str");
     return (ft_strerror(_last_error));
 }

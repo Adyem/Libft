@@ -5,8 +5,7 @@ static int32_t check_optional_usage()
 {
     ft_optional<int32_t> initial_value(21);
     ft_optional<int32_t> moved_value;
-    (void)moved_value.initialize(ft_move(initial_value.value()));
-    initial_value.reset();
+    (void)moved_value.move(initial_value);
 
     if (moved_value.has_value())
     {

@@ -38,17 +38,36 @@ FT_TEST(test_future_move_transfers_thread_safety)
     FT_ASSERT_EQ(0, original.enable_thread_safety());
     FT_ASSERT_EQ(true, original.is_thread_safe());
 
-    FT_ASSERT_EQ(0, moved.initialize(ft_move(original)));
+    FT_ASSERT_EQ(0, moved.move(original));
     FT_ASSERT_EQ(true, moved.is_thread_safe());
 
     ft_promise<int> extra_promise;
     ft_future<int> assigned(extra_promise);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.initialize());
     FT_ASSERT_EQ(0, assigned.enable_thread_safety());
-    FT_ASSERT_EQ(0, assigned.initialize(ft_move(moved)));
+    FT_ASSERT_EQ(0, assigned.move(moved));
     FT_ASSERT_EQ(true, assigned.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.destroy());
+    return (1);
+}
+
+FT_TEST(test_future_move_constructor_transfers_thread_safety)
+{
+    ft_promise<int> promise;
+    ft_future<int> original(promise);
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
+    FT_ASSERT_EQ(0, original.enable_thread_safety());
+    FT_ASSERT_EQ(true, original.is_thread_safe());
+
+    ft_future<int> moved(static_cast<ft_future<int> &&>(original));
+
+    FT_ASSERT_EQ(false, original.valid());
+    FT_ASSERT_EQ(true, moved.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.disable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.destroy());
     return (1);

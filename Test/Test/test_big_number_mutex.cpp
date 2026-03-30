@@ -51,3 +51,45 @@ FT_TEST(test_big_number_mutex_destroy_disables_thread_safety)
     FT_ASSERT_EQ(ft_nullptr, number._mutex);
     return (1);
 }
+
+FT_TEST(test_big_number_move_constructor_preserves_thread_safety_and_value)
+{
+    ft_big_number source_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize());
+    source_value.assign("123456");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.enable_thread_safety());
+
+    ft_big_number moved_value(static_cast<ft_big_number &&>(source_value));
+
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_value._initialised_state);
+    FT_ASSERT_EQ(ft_nullptr, source_value._mutex);
+    FT_ASSERT_EQ(FT_TRUE, moved_value.is_thread_safe());
+    FT_ASSERT(moved_value._mutex != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(moved_value.c_str(), "123456"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_big_number_move_method_preserves_thread_safety_and_value)
+{
+    ft_big_number source_value;
+    ft_big_number destination_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize());
+    source_value.assign("789012");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.move(source_value));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_value._initialised_state);
+    FT_ASSERT_EQ(ft_nullptr, source_value._mutex);
+    FT_ASSERT_EQ(FT_TRUE, destination_value.is_thread_safe());
+    FT_ASSERT(destination_value._mutex != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(destination_value.c_str(), "789012"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.destroy());
+    return (1);
+}

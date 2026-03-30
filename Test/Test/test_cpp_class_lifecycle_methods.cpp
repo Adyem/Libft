@@ -3,6 +3,8 @@
 #include "../../CPP_class/class_ofstream.hpp"
 #include "../../CPP_class/class_stringbuf.hpp"
 #include "../../CPP_class/class_string.hpp"
+#include "../../Basic/basic.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include <csetjmp>
 #include <sys/wait.h>
@@ -16,6 +18,8 @@
 static sigjmp_buf g_lifecycle_abort_jump;
 static ft_string g_stringbuf_abort_source_value;
 static ft_stringbuf g_stringbuf_abort_buffer_value;
+static ft_bool g_ofstream_get_error_returned = FT_FALSE;
+static ft_bool g_ofstream_get_error_str_returned = FT_FALSE;
 
 static void lifecycle_abort_handler(int /*signal_number*/)
 {
@@ -55,12 +59,12 @@ static void data_buffer_initialize_copy_uninitialised_source_aborts(void)
     return ;
 }
 
-static void data_buffer_initialize_move_uninitialised_source_aborts(void)
+static void data_buffer_move_uninitialised_source_aborts(void)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
 
-    (void)destination_buffer.initialize(ft_move(source_buffer));
+    (void)destination_buffer.move(source_buffer);
     return ;
 }
 
@@ -82,6 +86,24 @@ static void ofstream_initialize_twice_aborts(void)
     if (stream_value.initialize() != FT_ERR_SUCCESS)
         return ;
     (void)stream_value.initialize();
+    return ;
+}
+
+static void ofstream_get_error_uninitialised_operation(void)
+{
+    ft_ofstream stream_value;
+
+    (void)stream_value.get_error();
+    g_ofstream_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void ofstream_get_error_str_uninitialised_operation(void)
+{
+    ft_ofstream stream_value;
+
+    (void)stream_value.get_error_str();
+    g_ofstream_get_error_str_returned = FT_TRUE;
     return ;
 }
 
@@ -113,20 +135,21 @@ FT_TEST(test_data_buffer_initialize_copy_into_destroyed_destination)
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_into_uninitialised_destination)
+FT_TEST(test_data_buffer_move_into_uninitialised_destination)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, (source_buffer << 99).get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize(ft_move(source_buffer)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.move(source_buffer));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_buffer._initialised_state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.destroy());
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_into_destroyed_destination)
+FT_TEST(test_data_buffer_move_into_destroyed_destination)
 {
     DataBuffer source_buffer;
     DataBuffer destination_buffer;
@@ -135,18 +158,19 @@ FT_TEST(test_data_buffer_initialize_move_into_destroyed_destination)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, (source_buffer << 123).get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.destroy());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize(ft_move(source_buffer)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.move(source_buffer));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_buffer._initialised_state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.destroy());
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_self_is_noop_success)
+FT_TEST(test_data_buffer_move_self_is_noop_success)
 {
     DataBuffer buffer_value;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize(ft_move(buffer_value)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.move(buffer_value));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
     return (1);
 }
@@ -158,10 +182,10 @@ FT_TEST(test_data_buffer_initialize_copy_uninitialised_source_aborts)
     return (1);
 }
 
-FT_TEST(test_data_buffer_initialize_move_uninitialised_source_aborts)
+FT_TEST(test_data_buffer_move_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
-        data_buffer_initialize_move_uninitialised_source_aborts));
+        data_buffer_move_uninitialised_source_aborts));
     return (1);
 }
 
@@ -190,6 +214,37 @@ FT_TEST(test_data_buffer_string_round_trip_preserves_instance_error_success)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, read_value.get_error());
     FT_ASSERT(read_value == "payload");
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_data_buffer_move_constructor_preserves_state_and_thread_safety)
+{
+    DataBuffer source_buffer;
+    ft_string write_value;
+    ft_string read_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, write_value.initialize("payload"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, (source_buffer << write_value).get_error());
+    FT_ASSERT_EQ(FT_FALSE, source_buffer.seek(source_buffer.size() + 1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, source_buffer.get_operation_error());
+    FT_ASSERT_EQ(FT_TRUE, source_buffer.seek(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.get_operation_error());
+    {
+        DataBuffer moved_buffer(static_cast<DataBuffer &&>(source_buffer));
+
+        FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_buffer._initialised_state);
+        FT_ASSERT_EQ(FT_TRUE, moved_buffer.is_thread_safe());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_operation_error());
+        FT_ASSERT_EQ((ft_size_t)0, moved_buffer.tell());
+        moved_buffer >> read_value;
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_operation_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, read_value.get_error());
+        FT_ASSERT(read_value == "payload");
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.destroy());
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, write_value.destroy());
     return (1);
 }
 
@@ -228,6 +283,26 @@ FT_TEST(test_ft_ofstream_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         ofstream_initialize_twice_aborts));
+    return (1);
+}
+
+FT_TEST(test_ft_ofstream_error_queries_follow_lifecycle_contract)
+{
+    ft_ofstream stream_value;
+
+    g_ofstream_get_error_returned = FT_FALSE;
+    g_ofstream_get_error_str_returned = FT_FALSE;
+    FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
+        ofstream_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_ofstream_get_error_returned);
+    FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
+        ofstream_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_ofstream_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(stream_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
     return (1);
 }
 

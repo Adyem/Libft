@@ -17,6 +17,8 @@ class ft_ofstream
         ft_file _file;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialised_state;
+        static thread_local int32_t _last_error;
+        static int32_t set_error(int32_t error_code) noexcept;
 
     public:
         ft_ofstream() noexcept;
@@ -33,6 +35,8 @@ class ft_ofstream
         int32_t enable_thread_safety(void) noexcept;
         int32_t disable_thread_safety(void) noexcept;
         ft_bool is_thread_safe(void) const noexcept;
+        int32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         int32_t open(const char *filename) noexcept;
         ssize_t write(const char *string) noexcept;

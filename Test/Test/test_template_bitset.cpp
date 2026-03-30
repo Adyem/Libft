@@ -5,6 +5,34 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int bitset_expect_sigabrt(void (*operation)(void))
+{
+    return (test_expect_sigabrt_signal(operation));
+}
+
+static ft_bool g_bitset_get_error_returned = FT_FALSE;
+static int32_t g_bitset_get_error_result = FT_ERR_SUCCESS;
+static ft_bool g_bitset_get_error_str_returned = FT_FALSE;
+static const char *g_bitset_get_error_str_result = ft_nullptr;
+
+static void bitset_get_error_uninitialised_operation(void)
+{
+    ft_bitset bitset_value(8);
+
+    g_bitset_get_error_result = bitset_value.get_error();
+    g_bitset_get_error_returned = FT_TRUE;
+    return ;
+}
+
+static void bitset_get_error_str_uninitialised_operation(void)
+{
+    ft_bitset bitset_value(8);
+
+    g_bitset_get_error_str_result = bitset_value.get_error_str();
+    g_bitset_get_error_str_returned = FT_TRUE;
+    return ;
+}
+
 FT_TEST(test_ft_bitset_basic_operations)
 {
     ft_bitset bitset_value(16);
@@ -75,5 +103,28 @@ FT_TEST(test_ft_bitset_clear_and_set)
     bitset_value.set(5);
     FT_ASSERT(bitset_value.test(5));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.get_error());
+    return (1);
+}
+
+FT_TEST(test_ft_bitset_error_queries_follow_lifecycle_contract)
+{
+    ft_bitset bitset_value(8);
+
+    g_bitset_get_error_returned = FT_FALSE;
+    g_bitset_get_error_result = FT_ERR_SUCCESS;
+    g_bitset_get_error_str_returned = FT_FALSE;
+    g_bitset_get_error_str_result = ft_nullptr;
+    FT_ASSERT_EQ(1, bitset_expect_sigabrt(
+        bitset_get_error_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_bitset_get_error_returned);
+    FT_ASSERT_EQ(1, bitset_expect_sigabrt(
+        bitset_get_error_str_uninitialised_operation));
+    FT_ASSERT_EQ(FT_FALSE, g_bitset_get_error_str_returned);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bitset_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(bitset_value.get_error_str(),
+        ft_strerror(FT_ERR_SUCCESS)));
     return (1);
 }
