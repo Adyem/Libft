@@ -10,7 +10,11 @@ else
 endif
 
 CXX := g++
-SRCS := demo_dumb_game.cpp
+SRCS := demo_main.cpp \
+    demo_runtime.cpp \
+    demo_render.cpp \
+    demo_levels.cpp \
+    demo_leaderboard.cpp
 
 UNAME_S := $(shell uname -s)
 LINK_FLAGS :=
@@ -20,14 +24,14 @@ ifeq ($(OS),Windows_NT)
 else ifeq ($(UNAME_S),Darwin)
     LINK_FLAGS += -framework Cocoa -framework CoreGraphics -lobjc -lpthread
 else
-    LINK_FLAGS += -lX11 -lpthread
+    LINK_FLAGS += -lX11 -lXext -lGL -lpthread
 endif
 
 all: ../Full_Libft.a $(TARGET)
 
 $(TARGET): $(SRCS)
 	@printf '        [%s] Linking %s\n' "$(MODULE_NAME)" "$(TARGET)"
-	@$(CXX) $(COMPILE_FLAGS) $< -o $@ ../Full_Libft.a $(LINK_FLAGS)
+	@$(CXX) $(COMPILE_FLAGS) $(SRCS) -o $@ ../Full_Libft.a $(LINK_FLAGS)
 
 ../Full_Libft.a:
 	@$(MAKE) -C .. ../Full_Libft.a
