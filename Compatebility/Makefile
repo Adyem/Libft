@@ -18,15 +18,18 @@ endif
 
 ifeq ($(OS),Windows_NT)
 SRCS += Compatebility_dumb_render_win32.cpp
+SRCS += Compatebility_dumb_controls_win32.cpp
 SRCS += Compatebility_dumb_sound_win32.cpp
 else
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 MM_SRCS += Compatebility_dumb_render_platform_macos.mm
+MM_SRCS += Compatebility_dumb_controls_platform_macos.mm
 MMFLAGS += -x objective-c++
 SRCS += Compatebility_dumb_sound_macos_coreaudio.cpp
 else
 SRCS += Compatebility_dumb_render_linux_x11.cpp
+SRCS += Compatebility_dumb_controls_linux_x11.cpp
 SRCS += Compatebility_dumb_sound_linux_alsa.cpp
 endif
 endif

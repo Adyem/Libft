@@ -1,4 +1,3 @@
-#include <cstddef>
 #include "basic.hpp"
 
 ft_size_t ft_wstrlen(const wchar_t *string)

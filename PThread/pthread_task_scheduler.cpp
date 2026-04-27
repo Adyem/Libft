@@ -325,12 +325,19 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(ft_task_scheduler *scheduler,
         const ft_sharedptr<ft_scheduled_task_state> &state)
     : _state(), _scheduler(scheduler), _state_mutex(ft_nullptr)
 {
+    int state_initialize_error;
+
     if (!scheduler || !state)
     {
         this->_scheduler = ft_nullptr;
         return ;
     }
-    this->_state = state;
+    state_initialize_error = this->_state.initialize(state);
+    if (state_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_scheduler = ft_nullptr;
+        return ;
+    }
     {
         int state_error = this->_state.get_error();
 
@@ -347,12 +354,18 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(const ft_scheduled_task_handl
     : _state(), _scheduler(ft_nullptr), _state_mutex(ft_nullptr)
 {
     bool lock_acquired;
+    int state_initialize_error;
 
     lock_acquired = false;
     int lock_error = other.lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
-    this->_state = other._state;
+    state_initialize_error = this->_state.initialize(other._state);
+    if (state_initialize_error != FT_ERR_SUCCESS)
+    {
+        other.unlock_internal(lock_acquired);
+        return ;
+    }
     this->_scheduler = other._scheduler;
     {
         int state_error = this->_state.get_error();
@@ -382,6 +395,7 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
         return (*this);
     bool this_lock_acquired;
     bool other_lock_acquired;
+    int state_initialize_error;
 
     this_lock_acquired = false;
     int this_lock_error = this->lock_internal(&this_lock_acquired);
@@ -394,7 +408,13 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
         this->unlock_internal(this_lock_acquired);
         return (*this);
     }
-    this->_state = other._state;
+    state_initialize_error = this->_state.initialize(other._state);
+    if (state_initialize_error != FT_ERR_SUCCESS)
+    {
+        other.unlock_internal(other_lock_acquired);
+        this->unlock_internal(this_lock_acquired);
+        return (*this);
+    }
     this->_scheduler = other._scheduler;
     {
         int state_error = this->_state.get_error();

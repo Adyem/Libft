@@ -109,6 +109,10 @@ debug: $(DEBUG_TARGET)
 
 both: all debug
 
+demo: $(TARGET)
+	@printf '\033[1;35m[LIBFT BUILD] Building Demo module\033[0m\n'
+	@$(MAKE) -C Demo all $(SUBMAKE_OVERRIDES)
+
 template: $(CPP_CLASS_LIB)
 	@printf '\033[1;35m[LIBFT BUILD] Running Template verification\033[0m\n'
 	@$(MAKE) -C Template all $(SUBMAKE_OVERRIDES)
@@ -297,6 +301,9 @@ clean:
 			status=1; \
 		fi; \
 	done; \
+	if ! $(MAKE) -C Demo clean $(SUBMAKE_OVERRIDES); then \
+		status=1; \
+	fi; \
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET); then \
 		status=1; \
 	fi; \
@@ -314,6 +321,9 @@ fclean:
 			status=1; \
 		fi; \
 	done; \
+	if ! $(MAKE) -C Demo fclean $(SUBMAKE_OVERRIDES); then \
+		status=1; \
+	fi; \
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET); then \
 		status=1; \
 	fi; \
@@ -324,7 +334,7 @@ fclean:
 		exit 1; \
 	fi
 
-.PHONY: all debug both template re clean fclean tests format sanitize-clean \
+.PHONY: all debug both template demo re clean fclean tests format sanitize-clean \
         asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests FORCE
 
 FORCE:

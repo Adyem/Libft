@@ -797,10 +797,13 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     ft_future<return_type> future_value;
     ft_scheduled_task_state *state_raw;
     ft_sharedptr<ft_scheduled_task_state> state_shared;
-    ft_scheduled_task_handle handle_instance;
     int shared_initialize_error;
     int state_shared_initialize_error;
+    int result_future_initialize_error;
 
+    result_future_initialize_error = result_pair.key.initialize();
+    if (result_future_initialize_error != FT_ERR_SUCCESS)
+        return (result_pair);
     shared_initialize_error = promise_shared.initialize();
     if (shared_initialize_error != FT_ERR_SUCCESS)
         return (result_pair);
@@ -850,8 +853,9 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         return (result_pair);
     }
-    handle_instance = ft_scheduled_task_handle(this, state_shared);
-    if (!handle_instance.valid())
+    destroy_at(&result_pair.value);
+    construct_at(&result_pair.value, this, state_shared);
+    if (!result_pair.value.valid())
     {
         return (result_pair);
     }
@@ -930,7 +934,6 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
             g_ft_task_trace_label_schedule_once, false);
     if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
         return (result_pair);
-    result_pair.value = handle_instance;
     return (result_pair);
 }
 

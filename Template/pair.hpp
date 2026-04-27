@@ -210,7 +210,10 @@ KeyType Pair<KeyType, ValueType>::get_key() const
 template <typename KeyType, typename ValueType>
 ValueType Pair<KeyType, ValueType>::get_value() const
 {
-    return (this->value);
+    ValueType copy;
+
+    pair_assign_copy(copy, this->value);
+    return (copy);
 }
 
 template <typename KeyType, typename ValueType>
