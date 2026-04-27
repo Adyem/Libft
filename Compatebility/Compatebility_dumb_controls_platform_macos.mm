@@ -24,29 +24,17 @@ static ft_bool dumb_controls_macos_key_is_down(CGKeyCode key_code_primary,
 ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
 {
     if (control == FT_DUMB_CONTROL_UP)
-    {
         return (dumb_controls_macos_key_is_down(13U, 126U, FT_TRUE));
-    }
     if (control == FT_DUMB_CONTROL_DOWN)
-    {
         return (dumb_controls_macos_key_is_down(1U, 125U, FT_TRUE));
-    }
     if (control == FT_DUMB_CONTROL_LEFT)
-    {
         return (dumb_controls_macos_key_is_down(0U, 123U, FT_TRUE));
-    }
     if (control == FT_DUMB_CONTROL_RIGHT)
-    {
         return (dumb_controls_macos_key_is_down(2U, 124U, FT_TRUE));
-    }
     if (control == FT_DUMB_CONTROL_CONFIRM)
-    {
         return (dumb_controls_macos_key_is_down(36U, 49U, FT_TRUE));
-    }
     if (control == FT_DUMB_CONTROL_BACK)
-    {
         return (dumb_controls_macos_key_is_down(53U, 0U, FT_FALSE));
-    }
     return (FT_FALSE);
 }
 
