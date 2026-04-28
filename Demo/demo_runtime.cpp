@@ -5,6 +5,10 @@
 #include <thread>
 
 static const int64_t DEMO_TARGET_FRAME_MICROSECONDS = 16667;
+static const int64_t DEMO_FPS_SAMPLE_MILLISECONDS = 250;
+static const int64_t DEMO_FPS_AVERAGE_MILLISECONDS = 10000;
+static const double  DEMO_NOMINAL_FRAME_SECONDS = 1.0 / 60.0;
+static const double  DEMO_MAX_FRAME_SECONDS = 0.05;
 
 static void demo_reset_name_entry(demo_game_state *game_state)
 {
@@ -37,7 +41,13 @@ static void demo_reset_run(demo_game_state *game_state)
     game_state->selected_menu_index = 0;
     game_state->pending_level_index = 0;
     game_state->total_elapsed_milliseconds = 0U;
+    game_state->displayed_fps = 0U;
+    game_state->average_fps_10_seconds = 0U;
+    game_state->fps_frame_counter = 0U;
+    game_state->fps_history_write_index = 0U;
+    game_state->fps_history_count = 0U;
     game_state->run_start_time = std::chrono::steady_clock::now();
+    game_state->fps_sample_start_time = game_state->run_start_time;
     demo_reset_name_entry(game_state);
     demo_prepare_level(game_state, 0);
     return ;
@@ -57,8 +67,107 @@ void demo_init_game_state(demo_game_state *game_state)
     game_state->camera_plane_y = 0.66;
     game_state->should_quit = FT_FALSE;
     game_state->total_elapsed_milliseconds = 0U;
+    game_state->displayed_fps = 0U;
+    game_state->average_fps_10_seconds = 0U;
+    game_state->fps_frame_counter = 0U;
+    game_state->fps_history_write_index = 0U;
+    game_state->fps_history_count = 0U;
     game_state->run_start_time = std::chrono::steady_clock::now();
+    game_state->fps_sample_start_time = game_state->run_start_time;
     demo_reset_name_entry(game_state);
+    return ;
+}
+
+static void demo_update_fps_counter(demo_game_state *game_state)
+{
+    std::chrono::steady_clock::time_point current_time;
+    int64_t elapsed_milliseconds;
+    int64_t history_age_milliseconds;
+    uint32_t calculated_fps;
+    uint32_t current_run_milliseconds;
+    uint32_t cutoff_run_milliseconds;
+    uint32_t oldest_index;
+
+    current_time = std::chrono::steady_clock::now();
+    game_state->fps_frame_counter = game_state->fps_frame_counter + 1U;
+    elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        current_time - game_state->run_start_time).count();
+    if (elapsed_milliseconds < 0)
+    {
+        elapsed_milliseconds = 0;
+    }
+    current_run_milliseconds = static_cast<uint32_t>(elapsed_milliseconds);
+    game_state->fps_history_milliseconds[game_state->fps_history_write_index]
+        = current_run_milliseconds;
+    game_state->fps_history_write_index
+        = (game_state->fps_history_write_index + 1U)
+        % demo_game_state::FPS_HISTORY_CAPACITY;
+    if (game_state->fps_history_count < demo_game_state::FPS_HISTORY_CAPACITY)
+    {
+        game_state->fps_history_count = game_state->fps_history_count + 1U;
+    }
+    if (current_run_milliseconds > static_cast<uint32_t>(DEMO_FPS_AVERAGE_MILLISECONDS))
+    {
+        cutoff_run_milliseconds = current_run_milliseconds
+            - static_cast<uint32_t>(DEMO_FPS_AVERAGE_MILLISECONDS);
+    }
+    else
+    {
+        cutoff_run_milliseconds = 0U;
+    }
+    while (game_state->fps_history_count > 0U)
+    {
+        oldest_index = (game_state->fps_history_write_index
+            + demo_game_state::FPS_HISTORY_CAPACITY
+            - game_state->fps_history_count)
+            % demo_game_state::FPS_HISTORY_CAPACITY;
+        if (game_state->fps_history_milliseconds[oldest_index]
+            >= cutoff_run_milliseconds)
+        {
+            break ;
+        }
+        game_state->fps_history_count = game_state->fps_history_count - 1U;
+    }
+    if (game_state->fps_history_count == 0U)
+    {
+        game_state->average_fps_10_seconds = 0U;
+    }
+    else
+    {
+        oldest_index = (game_state->fps_history_write_index
+            + demo_game_state::FPS_HISTORY_CAPACITY
+            - game_state->fps_history_count)
+            % demo_game_state::FPS_HISTORY_CAPACITY;
+        history_age_milliseconds = static_cast<int64_t>(current_run_milliseconds)
+            - static_cast<int64_t>(
+                game_state->fps_history_milliseconds[oldest_index]);
+        if (history_age_milliseconds <= 0)
+        {
+            game_state->average_fps_10_seconds = game_state->displayed_fps;
+        }
+        else
+        {
+            game_state->average_fps_10_seconds = static_cast<uint32_t>(
+                (static_cast<uint64_t>(game_state->fps_history_count) * 1000U)
+                / static_cast<uint64_t>(history_age_milliseconds));
+        }
+    }
+    elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        current_time - game_state->fps_sample_start_time).count();
+    if (elapsed_milliseconds < DEMO_FPS_SAMPLE_MILLISECONDS)
+    {
+        return ;
+    }
+    if (elapsed_milliseconds <= 0)
+    {
+        elapsed_milliseconds = 1;
+    }
+    calculated_fps = static_cast<uint32_t>(
+        (static_cast<uint64_t>(game_state->fps_frame_counter) * 1000U)
+        / static_cast<uint64_t>(elapsed_milliseconds));
+    game_state->displayed_fps = calculated_fps;
+    game_state->fps_frame_counter = 0U;
+    game_state->fps_sample_start_time = current_time;
     return ;
 }
 
@@ -187,34 +296,38 @@ static void demo_try_move_player(demo_game_state *game_state, double delta_x,
 }
 
 static void demo_handle_playing(demo_game_state *game_state,
-    const demo_input_state *input_state)
+    const demo_input_state *input_state, double frame_delta_seconds)
 {
     double move_speed;
     double turn_speed;
+    double move_distance;
+    double turn_angle;
     const demo_level *level;
     char current_tile;
 
-    move_speed = 0.09;
-    turn_speed = 0.06;
+    move_speed = 5.4;
+    turn_speed = 3.6;
+    move_distance = move_speed * frame_delta_seconds;
+    turn_angle = turn_speed * frame_delta_seconds;
     if (input_state->turn_left_down == FT_TRUE)
     {
-        demo_rotate_player(game_state, -turn_speed);
+        demo_rotate_player(game_state, -turn_angle);
     }
     if (input_state->turn_right_down == FT_TRUE)
     {
-        demo_rotate_player(game_state, turn_speed);
+        demo_rotate_player(game_state, turn_angle);
     }
     if (input_state->move_forward_down == FT_TRUE)
     {
         demo_try_move_player(game_state,
-            game_state->player_direction_x * move_speed,
-            game_state->player_direction_y * move_speed);
+            game_state->player_direction_x * move_distance,
+            game_state->player_direction_y * move_distance);
     }
     if (input_state->move_backward_down == FT_TRUE)
     {
         demo_try_move_player(game_state,
-            -game_state->player_direction_x * move_speed,
-            -game_state->player_direction_y * move_speed);
+            -game_state->player_direction_x * move_distance,
+            -game_state->player_direction_y * move_distance);
     }
     if (input_state->back_pressed == FT_TRUE)
     {
@@ -318,7 +431,7 @@ static void demo_handle_name_entry(demo_game_state *game_state,
 }
 
 void demo_update(demo_game_state *game_state, const demo_input_state *input_state,
-    demo_leaderboard *leaderboard)
+    demo_leaderboard *leaderboard, double frame_delta_seconds)
 {
     if (game_state->mode == DEMO_MODE_MENU)
     {
@@ -327,7 +440,7 @@ void demo_update(demo_game_state *game_state, const demo_input_state *input_stat
     }
     if (game_state->mode == DEMO_MODE_PLAYING)
     {
-        demo_handle_playing(game_state, input_state);
+        demo_handle_playing(game_state, input_state, frame_delta_seconds);
         return ;
     }
     if (game_state->mode == DEMO_MODE_LEVEL_CLEAR)
@@ -356,6 +469,10 @@ int32_t demo_run(void)
     demo_input_state                      input_state;
     demo_leaderboard                      leaderboard;
     std::chrono::steady_clock::time_point next_frame_time;
+    std::chrono::steady_clock::time_point previous_frame_time;
+    std::chrono::steady_clock::time_point current_frame_time;
+    int64_t                               frame_delta_microseconds;
+    double                                frame_delta_seconds;
     int32_t                               error_code;
 
     std::memset(&input_state, 0, sizeof(input_state));
@@ -378,29 +495,50 @@ int32_t demo_run(void)
         (void)render_window.destroy();
         return (error_code);
     }
-    next_frame_time = std::chrono::steady_clock::now();
+    previous_frame_time = std::chrono::steady_clock::now();
+    next_frame_time = previous_frame_time;
     while (render_window.should_close() == FT_FALSE
         && game_state.should_quit == FT_FALSE)
     {
         std::this_thread::sleep_until(next_frame_time);
+        current_frame_time = std::chrono::steady_clock::now();
+        frame_delta_microseconds = std::chrono::duration_cast<
+            std::chrono::microseconds>(current_frame_time - previous_frame_time).count();
+        previous_frame_time = current_frame_time;
+        if (frame_delta_microseconds < 0)
+        {
+            frame_delta_microseconds = 0;
+        }
+        frame_delta_seconds = static_cast<double>(frame_delta_microseconds)
+            / 1000000.0;
+        if (frame_delta_seconds <= 0.0)
+        {
+            frame_delta_seconds = DEMO_NOMINAL_FRAME_SECONDS;
+        }
+        if (frame_delta_seconds > DEMO_MAX_FRAME_SECONDS)
+        {
+            frame_delta_seconds = DEMO_MAX_FRAME_SECONDS;
+        }
         error_code = render_window.poll_events();
         if (error_code != FT_ERR_SUCCESS)
         {
             break ;
         }
         demo_poll_input(&input_state);
-        demo_update(&game_state, &input_state, &leaderboard);
+        demo_update(&game_state, &input_state, &leaderboard,
+            frame_delta_seconds);
+        demo_update_fps_counter(&game_state);
         demo_draw_frame(render_window, game_state, leaderboard);
         error_code = render_window.present();
         if (error_code != FT_ERR_SUCCESS)
         {
             break ;
         }
-        next_frame_time = next_frame_time
-            + std::chrono::microseconds(DEMO_TARGET_FRAME_MICROSECONDS);
-        if (std::chrono::steady_clock::now() > next_frame_time)
+        next_frame_time = next_frame_time + std::chrono::microseconds(
+            DEMO_TARGET_FRAME_MICROSECONDS);
+        if (current_frame_time > next_frame_time)
         {
-            next_frame_time = std::chrono::steady_clock::now();
+            next_frame_time = current_frame_time;
         }
     }
     if (error_code == FT_ERR_SUCCESS)

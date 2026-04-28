@@ -8,19 +8,18 @@
 
 struct demo_image
 {
-    int32_t                width;
-    int32_t                height;
-    std::vector<uint32_t>  pixels;
+    int32_t     width;
+    int32_t     height;
+    uint32_t    *pixels;
 };
 
-static const int32_t DEMO_RAYCAST_COLUMN_STEP = 2;
+static const int32_t DEMO_RAYCAST_COLUMN_STEP = 3;
 
 static int32_t                g_demo_cached_background_width = 0;
 static int32_t                g_demo_cached_background_height = 0;
 static std::vector<uint32_t>  g_demo_cached_background_pixels;
 static int32_t                g_demo_cached_minimap_level_index = -1;
 static std::vector<uint32_t>  g_demo_cached_minimap_pixels;
-static demo_image             g_demo_frame_image;
 
 static uint32_t demo_make_color(uint32_t red, uint32_t green, uint32_t blue)
 {
@@ -67,24 +66,14 @@ static uint32_t demo_shade_color(uint32_t color, uint32_t numerator,
     return (demo_make_color(red, green, blue));
 }
 
-static demo_image &demo_prepare_frame_image(const ft_render_framebuffer &framebuffer)
+static demo_image demo_prepare_frame_image(ft_render_framebuffer &framebuffer)
 {
-    g_demo_frame_image.width = framebuffer.width;
-    g_demo_frame_image.height = framebuffer.height;
-    g_demo_frame_image.pixels.resize(static_cast<ft_size_t>(
-        framebuffer.width * framebuffer.height), 0U);
-    return (g_demo_frame_image);
-}
+    demo_image image;
 
-static void demo_present_frame_image(const demo_image &image,
-    ft_render_framebuffer &framebuffer)
-{
-    ft_size_t copied_size;
-
-    copied_size = static_cast<ft_size_t>(image.width * image.height)
-        * sizeof(uint32_t);
-    std::memcpy(framebuffer.pixels, image.pixels.data(), copied_size);
-    return ;
+    image.width = framebuffer.width;
+    image.height = framebuffer.height;
+    image.pixels = framebuffer.pixels;
+    return (image);
 }
 
 static const char *demo_get_glyph_pattern(char character)
@@ -326,7 +315,7 @@ static void demo_draw_background_gradient(demo_image &image)
     }
     copied_size = static_cast<ft_size_t>(image.width * image.height)
         * sizeof(uint32_t);
-    std::memcpy(image.pixels.data(), g_demo_cached_background_pixels.data(), copied_size);
+    std::memcpy(image.pixels, g_demo_cached_background_pixels.data(), copied_size);
     return ;
 }
 
@@ -659,6 +648,8 @@ static void demo_draw_playing_hud(demo_image &image, const demo_game_state &game
 {
     char time_buffer[32];
     char level_buffer[64];
+    char fps_buffer[32];
+    char average_fps_buffer[32];
     int64_t elapsed_milliseconds;
 
     elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -672,9 +663,17 @@ static void demo_draw_playing_hud(demo_image &image, const demo_game_state &game
     std::snprintf(level_buffer, sizeof(level_buffer), "LEVEL %d  %s",
         game_state.current_level_index + 1,
         g_demo_levels[game_state.current_level_index].name);
+    std::snprintf(fps_buffer, sizeof(fps_buffer), "FPS %u",
+        game_state.displayed_fps);
+    std::snprintf(average_fps_buffer, sizeof(average_fps_buffer), "AVG10 %u",
+        game_state.average_fps_10_seconds);
     demo_draw_text(image, 12, image.height - 50, level_buffer, 2,
         demo_make_color(255U, 232U, 180U));
     demo_draw_text(image, 12, image.height - 28, time_buffer, 2,
+        demo_make_color(210U, 230U, 255U));
+    demo_draw_text(image, image.width - 110, 14, fps_buffer, 2,
+        demo_make_color(255U, 236U, 166U));
+    demo_draw_text(image, image.width - 146, 36, average_fps_buffer, 2,
         demo_make_color(210U, 230U, 255U));
     demo_draw_text(image, image.width - 170, image.height - 28,
         "W S MOVE", 2, demo_make_color(220U, 220U, 220U));
@@ -812,7 +811,9 @@ void demo_draw_frame(ft_render_window &render_window,
     const demo_game_state &game_state, const demo_leaderboard &leaderboard)
 {
     ft_render_framebuffer &framebuffer = render_window.framebuffer();
-    demo_image            &frame_image = demo_prepare_frame_image(framebuffer);
+    demo_image            frame_image;
+
+    frame_image = demo_prepare_frame_image(framebuffer);
 
     if (game_state.mode == DEMO_MODE_MENU)
     {
@@ -840,7 +841,6 @@ void demo_draw_frame(ft_render_window &render_window,
     {
         demo_draw_background_gradient(frame_image);
     }
-    demo_present_frame_image(frame_image, framebuffer);
     return ;
 }
 

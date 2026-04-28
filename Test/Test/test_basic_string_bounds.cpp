@@ -79,3 +79,170 @@ FT_TEST(test_strncat_s_respects_append_length_limit)
         return (0);
     return (1);
 }
+
+FT_TEST(test_strncpy_s_null_source_zeroes_destination)
+{
+    char destination[5];
+
+    destination[0] = 'h';
+    destination[1] = 'e';
+    destination[2] = 'l';
+    destination[3] = 'l';
+    destination[4] = 'o';
+    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_strncpy_s(destination,
+            sizeof(destination), ft_nullptr, 3));
+    if (!assert_buffer_zeroed(destination, sizeof(destination)))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_strncpy_s_zero_destination_size_preserves_buffer)
+{
+    char destination[4];
+
+    destination[0] = 'a';
+    destination[1] = 'b';
+    destination[2] = 'c';
+    destination[3] = '\0';
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_strncpy_s(destination, 0, "x", 1));
+    FT_ASSERT_EQ('a', destination[0]);
+    FT_ASSERT_EQ('b', destination[1]);
+    FT_ASSERT_EQ('c', destination[2]);
+    FT_ASSERT_EQ('\0', destination[3]);
+    return (1);
+}
+
+FT_TEST(test_strncpy_s_empty_source_writes_terminator)
+{
+    char destination[3];
+
+    destination[0] = 'x';
+    destination[1] = 'y';
+    destination[2] = 'z';
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strncpy_s(destination, sizeof(destination),
+            "", 0));
+    FT_ASSERT_EQ('\0', destination[0]);
+    FT_ASSERT_EQ('y', destination[1]);
+    FT_ASSERT_EQ('z', destination[2]);
+    return (1);
+}
+
+FT_TEST(test_strncpy_s_exact_fit_succeeds)
+{
+    char destination[4];
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strncpy_s(destination, sizeof(destination),
+            "cat", 3));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "cat"));
+    return (1);
+}
+
+FT_TEST(test_strncpy_s_destination_too_small_for_terminator_zeroes_buffer)
+{
+    char destination[3];
+
+    destination[0] = 'x';
+    destination[1] = 'y';
+    destination[2] = 'z';
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_strncpy_s(destination,
+            sizeof(destination), "abc", 3));
+    if (!assert_buffer_zeroed(destination, sizeof(destination)))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_strncpy_s_maximum_equal_source_length_succeeds)
+{
+    char destination[6];
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strncpy_s(destination, sizeof(destination),
+            "hello", 5));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "hello"));
+    return (1);
+}
+
+FT_TEST(test_strncat_s_empty_source_succeeds)
+{
+    char destination[8];
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strcpy_s(destination, sizeof(destination), "abc"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strncat_s(destination, sizeof(destination), "", 0));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "abc"));
+    return (1);
+}
+
+FT_TEST(test_strncat_s_zero_destination_size_returns_invalid_argument)
+{
+    char destination[8];
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strcpy_s(destination, sizeof(destination), "base"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_strncat_s(destination,
+            0, "x", 1));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "base"));
+    return (1);
+}
+
+FT_TEST(test_strncat_s_maximum_equal_source_length_succeeds)
+{
+    char destination[8];
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strcpy_s(destination, sizeof(destination), "a"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strncat_s(destination, sizeof(destination), "bc", 2));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "abc"));
+    return (1);
+}
+
+FT_TEST(test_strncat_s_invalid_existing_length_preserves_buffer)
+{
+    char destination[4];
+
+    destination[0] = 'a';
+    destination[1] = 'b';
+    destination[2] = 'c';
+    destination[3] = 'd';
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_strncat_s(destination,
+            sizeof(destination), "z", 1));
+    FT_ASSERT_EQ('a', destination[0]);
+    FT_ASSERT_EQ('b', destination[1]);
+    FT_ASSERT_EQ('c', destination[2]);
+    FT_ASSERT_EQ('d', destination[3]);
+    return (1);
+}
+
+FT_TEST(test_strncat_s_null_source_zeroes_destination)
+{
+    char destination[5];
+
+    destination[0] = 't';
+    destination[1] = 'e';
+    destination[2] = 's';
+    destination[3] = 't';
+    destination[4] = '\0';
+    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_strncat_s(destination,
+            sizeof(destination), ft_nullptr, 1));
+    if (!assert_buffer_zeroed(destination, sizeof(destination)))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_strncat_s_exact_fit_succeeds)
+{
+    char destination[6];
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strcpy_s(destination, sizeof(destination), "ab"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strncat_s(destination, sizeof(destination), "cde", 3));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "abcde"));
+    return (1);
+}
+
+FT_TEST(test_strncat_s_destination_too_small_for_terminator_zeroes_buffer)
+{
+    char destination[5];
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_strcpy_s(destination, sizeof(destination), "abc"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_strncat_s(destination,
+            sizeof(destination), "de", 2));
+    if (!assert_buffer_zeroed(destination, sizeof(destination)))
+        return (0);
+    return (1);
+}

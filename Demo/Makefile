@@ -1,3 +1,6 @@
+DEMO_OPT_LEVEL ?= 3
+OPT_LEVEL ?= $(DEMO_OPT_LEVEL)
+
 include ../compiler_flags.mk
 
 TARGET := demo_dumb_game
@@ -34,7 +37,7 @@ $(TARGET): $(SRCS)
 	@$(CXX) $(COMPILE_FLAGS) $(SRCS) -o $@ ../Full_Libft.a $(LINK_FLAGS)
 
 ../Full_Libft.a:
-	@$(MAKE) -C .. ../Full_Libft.a
+	@$(MAKE) -C .. Full_Libft.a -B OPT_LEVEL=$(OPT_LEVEL)
 
 clean:
 	@if $(RM) $(TARGET); then \

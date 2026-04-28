@@ -1,5 +1,7 @@
 include compiler_flags.mk
 
+DEMO_OPT_LEVEL ?= 3
+
 CXX             := g++
 AR              := ar
 ARFLAGS         := rcs
@@ -109,9 +111,9 @@ debug: $(DEBUG_TARGET)
 
 both: all debug
 
-demo: $(TARGET)
+demo:
 	@printf '\033[1;35m[LIBFT BUILD] Building Demo module\033[0m\n'
-	@$(MAKE) -C Demo all $(SUBMAKE_OVERRIDES)
+	@$(MAKE) -C Demo all -B $(SUBMAKE_OVERRIDES) OPT_LEVEL=$(DEMO_OPT_LEVEL)
 
 template: $(CPP_CLASS_LIB)
 	@printf '\033[1;35m[LIBFT BUILD] Running Template verification\033[0m\n'

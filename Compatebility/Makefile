@@ -94,14 +94,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs/*.o) \
-	$(wildcard objs/*.d) \
-	$(wildcard objs_test/*.o) \
-	$(wildcard objs_test/*.d) \
-	$(wildcard objs_debug/*.o) \
-	$(wildcard objs_debug/*.d) \
-	$(wildcard objs_debug_test/*.o) \
-	$(wildcard objs_debug_test/*.d)
+CLEAN_OBJS := $(wildcard objs*/*.o) \
+	$(wildcard objs*/*.d)
 TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
 
 MODULE_NAME := $(notdir $(CURDIR))

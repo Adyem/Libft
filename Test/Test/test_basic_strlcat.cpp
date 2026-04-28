@@ -140,3 +140,37 @@ FT_TEST(test_basic_strlcat_recovers_after_null_source)
     return (1);
 }
 
+FT_TEST(test_basic_strlcat_empty_source_returns_existing_length)
+{
+    char destination[6];
+
+    destination[0] = 'h';
+    destination[1] = 'e';
+    destination[2] = 'y';
+    destination[3] = '\0';
+    destination[4] = 'x';
+    destination[5] = 'x';
+    FT_ASSERT_EQ(3u, ft_strlcat(destination, "", sizeof(destination)));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "hey"));
+    return (1);
+}
+
+FT_TEST(test_basic_strlcat_size_one_with_empty_destination)
+{
+    char destination[1];
+
+    destination[0] = '\0';
+    FT_ASSERT_EQ(3u, ft_strlcat(destination, "abc", sizeof(destination)));
+    FT_ASSERT_EQ('\0', destination[0]);
+    return (1);
+}
+
+FT_TEST(test_basic_strlcat_size_one_with_non_empty_buffer)
+{
+    char destination[1];
+
+    destination[0] = 'x';
+    FT_ASSERT_EQ(4u, ft_strlcat(destination, "abc", sizeof(destination)));
+    FT_ASSERT_EQ('x', destination[0]);
+    return (1);
+}

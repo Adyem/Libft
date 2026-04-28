@@ -149,9 +149,9 @@ endif
 LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(ASOUND_LIBS)
 export COMPILE_FLAGS
 
-BUILD_OBJ_SUFFIX :=
+BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
 ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test
+    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
 endif
 
 OBJDIR       := objs$(BUILD_OBJ_SUFFIX)
@@ -314,7 +314,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 
 ../$(LIBFT_ARCHIVE): FORCE
 	@need_build=0; \
-	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
+	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+		OPT_LEVEL=$(OPT_LEVEL); then \
 		:; \
 	else \
 		status=$$?; \
@@ -326,12 +327,14 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
 	        echo "Building $(LIBFT_ARCHIVE)"; \
-	        $(MAKE) -C .. $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
+	        $(MAKE) -C .. $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
 ../$(LIBFT_DEBUG_ARCHIVE): FORCE
 	@need_build=0; \
-	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
+	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+		OPT_LEVEL=$(OPT_LEVEL); then \
 		:; \
 	else \
 		status=$$?; \
@@ -343,7 +346,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
 	        echo "Building $(LIBFT_DEBUG_ARCHIVE)"; \
-	        $(MAKE) -C .. $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
+	        $(MAKE) -C .. $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
 CLEAN_OBJS := $(shell find . -type f \( -name '*.o' -o -name '*.d' \) 2>/dev/null)

@@ -30,9 +30,9 @@ CXX       := g++
 AR        := ar
 ARFLAGS   := rcs
 
-BUILD_OBJ_SUFFIX :=
+BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
 ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test
+    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
 endif
 
 OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
@@ -71,14 +71,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs/*.o) \
-	$(wildcard objs/*.d) \
-	$(wildcard objs_test/*.o) \
-	$(wildcard objs_test/*.d) \
-	$(wildcard objs_debug/*.o) \
-	$(wildcard objs_debug/*.d) \
-	$(wildcard objs_debug_test/*.o) \
-	$(wildcard objs_debug_test/*.d)
+CLEAN_OBJS := $(wildcard objs*/*.o) \
+	$(wildcard objs*/*.d)
 TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
 
 ifeq ($(OS),Windows_NT)

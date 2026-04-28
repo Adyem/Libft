@@ -34,9 +34,9 @@ SRCS := template_basic_types.cpp \
         template_compile_vector.cpp
 TOTAL_SRCS := $(words $(SRCS))
 TARGET := template_basic_types.a
-BUILD_OBJ_SUFFIX :=
+BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
 ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test
+    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
 endif
 
 OBJDIR := objs$(BUILD_OBJ_SUFFIX)

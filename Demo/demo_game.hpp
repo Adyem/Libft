@@ -44,6 +44,8 @@ struct demo_level
 
 struct demo_game_state
 {
+    static const uint32_t FPS_HISTORY_CAPACITY = 4096U;
+
     int32_t     mode;
     int32_t     selected_menu_index;
     int32_t     current_level_index;
@@ -57,8 +59,15 @@ struct demo_game_state
     char        pending_name[4];
     uint32_t    pending_name_index;
     uint32_t    total_elapsed_milliseconds;
+    uint32_t    displayed_fps;
+    uint32_t    average_fps_10_seconds;
+    uint32_t    fps_frame_counter;
+    uint32_t    fps_history_write_index;
+    uint32_t    fps_history_count;
     ft_bool     should_quit;
     std::chrono::steady_clock::time_point run_start_time;
+    std::chrono::steady_clock::time_point fps_sample_start_time;
+    uint32_t    fps_history_milliseconds[FPS_HISTORY_CAPACITY];
 };
 
 enum demo_mode
@@ -86,7 +95,7 @@ void    demo_leaderboard_load(demo_leaderboard *leaderboard);
 void    demo_init_game_state(demo_game_state *game_state);
 void    demo_poll_input(demo_input_state *input_state);
 void    demo_update(demo_game_state *game_state, const demo_input_state *input_state,
-            demo_leaderboard *leaderboard);
+            demo_leaderboard *leaderboard, double frame_delta_seconds);
 
 void    demo_draw_frame(ft_render_window &render_window,
             const demo_game_state &game_state,
