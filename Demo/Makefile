@@ -32,15 +32,15 @@ else
     LINK_FLAGS += -lX11 -lXext -lGL -lpthread
 endif
 
-all: ../Full_Libft.a $(TARGET)
+all: FORCE $(TARGET)
 
-$(TARGET): $(SRCS)
+$(TARGET): FORCE ../Full_Libft.a $(SRCS)
 	@printf '        [%s] Linking %s\n' "$(MODULE_NAME)" "$(TARGET)"
 	@mkdir -p $(TARGET_DIR)
 	@$(CXX) $(COMPILE_FLAGS) $(SRCS) -o $@ ../Full_Libft.a $(LINK_FLAGS)
 
-../Full_Libft.a:
-	@$(MAKE) -C .. Full_Libft.a -B OPT_LEVEL=$(OPT_LEVEL)
+../Full_Libft.a: FORCE
+	@$(MAKE) -C .. Full_Libft.a OPT_LEVEL=$(OPT_LEVEL)
 
 clean:
 	@if $(RM) $(TARGET); then \
@@ -55,4 +55,7 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re FORCE
+
+FORCE:
+	@true
