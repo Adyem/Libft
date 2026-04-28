@@ -3,7 +3,9 @@ OPT_LEVEL ?= $(DEMO_OPT_LEVEL)
 
 include ../compiler_flags.mk
 
-TARGET := demo_dumb_game
+TARGET_DIR := build
+TARGET_NAME := demo_dumb_game
+TARGET := $(TARGET_DIR)/$(TARGET_NAME)
 MODULE_NAME := $(notdir $(CURDIR))
 
 ifeq ($(OS),Windows_NT)
@@ -34,6 +36,7 @@ all: ../Full_Libft.a $(TARGET)
 
 $(TARGET): $(SRCS)
 	@printf '        [%s] Linking %s\n' "$(MODULE_NAME)" "$(TARGET)"
+	@mkdir -p $(TARGET_DIR)
 	@$(CXX) $(COMPILE_FLAGS) $(SRCS) -o $@ ../Full_Libft.a $(LINK_FLAGS)
 
 ../Full_Libft.a:

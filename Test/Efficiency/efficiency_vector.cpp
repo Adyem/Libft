@@ -9,12 +9,26 @@
 #include <vector>
 #include <utility>
 
+static int32_t swap_ft_vector(ft_vector<int> &left_vector,
+    ft_vector<int> &right_vector)
+{
+    ft_vector<int> temporary_vector(std::move(left_vector));
+
+    if (left_vector.move(right_vector) != FT_ERR_SUCCESS)
+        return (0);
+    if (right_vector.move(temporary_vector) != FT_ERR_SUCCESS)
+        return (0);
+    return (1);
+}
+
 int test_efficiency_vector_push_back(void)
 {
     const size_t iterations = 20000;
     std::vector<int> stdv;
     ft_vector<int> ftv;
     stdv.reserve(iterations);
+    if (ftv.initialize() != FT_ERR_SUCCESS)
+        return (0);
     ftv.reserve(iterations);
     volatile long long sum = 0;
 
@@ -53,6 +67,8 @@ int test_efficiency_vector_insert_erase(void)
     const size_t iterations = 5000;
     std::vector<int> stdv(base, 1);
     ft_vector<int> ftv;
+    if (ftv.initialize() != FT_ERR_SUCCESS)
+        return (0);
     ftv.resize(base, 1);
 
     auto start_std = clock_type::now();
@@ -90,6 +106,8 @@ int test_efficiency_vector_reserve_resize(void)
     const size_t iterations = 5000;
     std::vector<int> stdv;
     ft_vector<int> ftv;
+    if (ftv.initialize() != FT_ERR_SUCCESS)
+        return (0);
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
@@ -124,6 +142,8 @@ int test_efficiency_vector_clear(void)
     const size_t elements = 50000;
     std::vector<int> stdv(elements, 1);
     ft_vector<int> ftv;
+    if (ftv.initialize() != FT_ERR_SUCCESS)
+        return (0);
     ftv.resize(elements, 1);
     volatile long long sum = 0;
 
@@ -153,6 +173,8 @@ int test_efficiency_vector_iterate(void)
     const size_t iterations = 50000;
     std::vector<int> stdv(iterations, 1);
     ft_vector<int> ftv;
+    if (ftv.initialize() != FT_ERR_SUCCESS)
+        return (0);
     ftv.resize(iterations, 1);
     volatile long long sum = 0;
 
@@ -179,6 +201,8 @@ int test_efficiency_vector_move(void)
     const size_t elements = 50000;
     std::vector<int> std_src(elements, 1);
     ft_vector<int> ft_src;
+    if (ft_src.initialize() != FT_ERR_SUCCESS)
+        return (0);
     ft_src.resize(elements, 1);
     volatile long long sum = 0;
 
@@ -209,6 +233,10 @@ int test_efficiency_vector_swap(void)
     const size_t iterations = 1000;
     std::vector<int> std_a(elements, 1), std_b(elements, 2);
     ft_vector<int> ft_a, ft_b;
+    if (ft_a.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (ft_b.initialize() != FT_ERR_SUCCESS)
+        return (0);
     ft_a.resize(elements, 1);
     ft_b.resize(elements, 2);
     volatile long long sum = 0;
@@ -227,7 +255,8 @@ int test_efficiency_vector_swap(void)
     {
         prevent_optimization((void*)&ft_a);
         prevent_optimization((void*)&ft_b);
-        ft_swap(ft_a, ft_b);
+        if (swap_ft_vector(ft_a, ft_b) == 0)
+            return (0);
     }
     auto end_ft = clock_type::now();
 
@@ -241,4 +270,3 @@ int test_efficiency_vector_swap(void)
         return (1);
     return (0);
 }
-

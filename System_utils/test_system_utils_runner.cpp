@@ -142,9 +142,13 @@ static int32_t test_is_selected(const s_test_case *test)
 
 static void write_literal_to_stderr(const char *message)
 {
+    ssize_t    write_result;
+
     if (message == NULL)
         return ;
-    (void)write(STDERR_FILENO, message, std::strlen(message));
+    write_result = write(STDERR_FILENO, message, std::strlen(message));
+    if (write_result < 0)
+        return ;
     return ;
 }
 

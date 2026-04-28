@@ -19,18 +19,18 @@ int test_efficiency_strrchr(void)
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
     {
-        prevent_optimization(const_cast<char*>(s.data()));
+        prevent_optimization(s.data());
         result = std_strrchr(s.c_str(), 'b');
-        prevent_optimization(const_cast<char*>(result));
+        prevent_optimization(result);
     }
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
     {
-        prevent_optimization(const_cast<char*>(s.data()));
+        prevent_optimization(s.data());
         result = ft_strrchr(s.c_str(), 'b');
-        prevent_optimization(const_cast<char*>(result));
+        prevent_optimization(result);
     }
     auto end_ft = clock_type::now();
 
@@ -38,4 +38,3 @@ int test_efficiency_strrchr(void)
                      elapsed_us(start_ft, end_ft));
     return (1);
 }
-

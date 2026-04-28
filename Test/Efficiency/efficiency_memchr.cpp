@@ -21,7 +21,7 @@ int test_efficiency_memchr(void)
     {
         prevent_optimization(buf.data());
         result = std_memchr(buf.data(), 'b', buf.size());
-        prevent_optimization(const_cast<void*>(result));
+        prevent_optimization(result);
     }
     auto end_std = clock_type::now();
 
@@ -30,11 +30,10 @@ int test_efficiency_memchr(void)
     {
         prevent_optimization(buf.data());
         result = ft_memchr(buf.data(), 'b', buf.size());
-        prevent_optimization(const_cast<void*>(result));
+        prevent_optimization(result);
     }
     auto end_ft = clock_type::now();
     print_comparison("memchr", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
 }
-

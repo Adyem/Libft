@@ -4,10 +4,10 @@
 #include <cstring>
 #include <thread>
 
-static const int64_t DEMO_TARGET_FRAME_MICROSECONDS = 16667;
+static const int64_t DEMO_TARGET_FRAME_MICROSECONDS = 1111;
 static const int64_t DEMO_FPS_SAMPLE_MILLISECONDS = 250;
 static const int64_t DEMO_FPS_AVERAGE_MILLISECONDS = 10000;
-static const double  DEMO_NOMINAL_FRAME_SECONDS = 1.0 / 60.0;
+static const double  DEMO_NOMINAL_FRAME_SECONDS = 1.0 / 900.0;
 static const double  DEMO_MAX_FRAME_SECONDS = 0.05;
 
 static void demo_reset_name_entry(demo_game_state *game_state)

@@ -1,11 +1,25 @@
 #include "../test_internal.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Basic/basic.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
 #include <cstdlib>
+
+static void *test_efficiency_cma_calloc_allocate(size_t count, size_t size)
+{
+    void    *allocation_pointer;
+    size_t   total_size;
+
+    total_size = count * size;
+    allocation_pointer = cma_malloc(total_size);
+    if (allocation_pointer == NULL)
+        return (NULL);
+    ft_memset(allocation_pointer, 0, total_size);
+    return (allocation_pointer);
+}
 
 int test_efficiency_cma_calloc(void)
 {
@@ -27,7 +41,7 @@ int test_efficiency_cma_calloc(void)
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
     {
-        p = cma_calloc(count, size);
+        p = test_efficiency_cma_calloc_allocate(count, size);
         ((volatile char*)p)[0] = 0;
         prevent_optimization(p);
         cma_free(p);
@@ -38,4 +52,3 @@ int test_efficiency_cma_calloc(void)
                      elapsed_us(start_ft, end_ft));
     return (1);
 }
-

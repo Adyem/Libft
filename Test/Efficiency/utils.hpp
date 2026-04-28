@@ -14,6 +14,25 @@ inline void prevent_optimization(void* p)
 #endif
 }
 
+inline void prevent_optimization(const void *p)
+{
+#if defined(__GNUG__)
+    asm volatile("" : : "g"(p) : "memory");
+#else
+    g_efficiency_sink = const_cast<void *>(p);
+#endif
+}
+
+inline void prevent_optimization(const volatile void *p)
+{
+#if defined(__GNUG__)
+    asm volatile("" : : "g"(p) : "memory");
+#else
+    g_efficiency_sink = const_cast<void *>(
+        const_cast<const void *>(p));
+#endif
+}
+
 using clock_type = std::chrono::high_resolution_clock;
 
 inline long long elapsed_us(clock_type::time_point start, clock_type::time_point end)
@@ -31,4 +50,3 @@ inline void print_comparison(const char *name, long long std_time, long long ft_
     printf("%s std: %lld us (100%%)\n", name, std_time);
     printf("%s ft : %lld us (%.2f%%)\n", name, ft_time, percent);
 }
-

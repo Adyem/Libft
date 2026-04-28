@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Basic/basic.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -8,6 +9,19 @@
 #include <cstring>
 #include <cstdlib>
 #include <string>
+
+static char *test_efficiency_cma_strdup_allocate(const char *source_string)
+{
+    char    *allocation_pointer;
+    size_t   length;
+
+    length = std::strlen(source_string) + 1;
+    allocation_pointer = static_cast<char *>(cma_malloc(length));
+    if (allocation_pointer == NULL)
+        return (NULL);
+    ft_memcpy(allocation_pointer, source_string, length);
+    return (allocation_pointer);
+}
 
 int test_efficiency_cma_strdup(void)
 {
@@ -27,7 +41,7 @@ int test_efficiency_cma_strdup(void)
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
     {
-        p = cma_strdup(s.c_str());
+        p = test_efficiency_cma_strdup_allocate(s.c_str());
         prevent_optimization(p);
         cma_free(p);
     }
@@ -37,4 +51,3 @@ int test_efficiency_cma_strdup(void)
                      elapsed_us(start_ft, end_ft));
     return (1);
 }
-

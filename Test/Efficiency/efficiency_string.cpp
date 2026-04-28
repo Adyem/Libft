@@ -26,7 +26,10 @@ int test_efficiency_string_create(void)
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
     {
-        ft_string s(cstr);
+        ft_string s;
+
+        if (s.initialize(cstr) != FT_ERR_SUCCESS)
+            return (0);
         prevent_optimization((void*)s.c_str());
         sum += s.size();
     }
@@ -58,7 +61,10 @@ int test_efficiency_string_copy(void)
 
     auto start_ft = clock_type::now();
     {
-        ft_string base(cstr);
+        ft_string base;
+
+        if (base.initialize(cstr) != FT_ERR_SUCCESS)
+            return (0);
         for (size_t i = 0; i < iterations; ++i)
         {
             ft_string copy(base);
@@ -94,7 +100,10 @@ int test_efficiency_string_move(void)
 
     auto start_ft = clock_type::now();
     {
-        ft_string s("benchmark");
+        ft_string s;
+
+        if (s.initialize("benchmark") != FT_ERR_SUCCESS)
+            return (0);
         for (size_t i = 0; i < iterations; ++i)
         {
             ft_string mv = std::move(s);
@@ -129,6 +138,9 @@ int test_efficiency_string_append(void)
     auto start_ft = clock_type::now();
     {
         ft_string s;
+
+        if (s.initialize() != FT_ERR_SUCCESS)
+            return (0);
         for (size_t i = 0; i < iterations; ++i)
             s.append('a');
         sum += s.size();
@@ -141,4 +153,3 @@ int test_efficiency_string_append(void)
                      elapsed_us(start_ft, end_ft));
     return (1);
 }
-

@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -26,7 +27,7 @@ int test_efficiency_atol(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         prevent_optimization((void*)s);
-        result += ft_atol(s, ft_nullptr);
+        result += ft_atol(s);
         prevent_optimization((void*)&result);
     }
     auto end_ft = clock_type::now();
@@ -37,4 +38,3 @@ int test_efficiency_atol(void)
         return (1);
     return (0);
 }
-

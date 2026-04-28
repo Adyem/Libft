@@ -149,6 +149,8 @@ int test_efficiency_map_copy(void)
 
     auto start_ft = clock_type::now();
     ft_map<int, int> ft_copy;
+    if (ft_copy.initialize() != FT_ERR_SUCCESS)
+        return (0);
     if (ft_copy.copy_from(ft_src) != FT_ERR_SUCCESS)
         return (0);
     auto end_ft = clock_type::now();
@@ -187,6 +189,8 @@ int test_efficiency_map_move(void)
 
     auto start_ft = clock_type::now();
     ft_map<int, int> ft_moved;
+    if (ft_moved.initialize() != FT_ERR_SUCCESS)
+        return (0);
     if (ft_moved.move_from(ft_src) != FT_ERR_SUCCESS)
         return (0);
     auto end_ft = clock_type::now();
@@ -239,6 +243,8 @@ int test_efficiency_map_swap(void)
         prevent_optimization((void*)&ft_a);
         prevent_optimization((void*)&ft_b);
         ft_map<int, int> temp;
+        if (temp.initialize() != FT_ERR_SUCCESS)
+            return (0);
         if (temp.move_from(ft_a) != FT_ERR_SUCCESS)
             return (0);
         if (ft_a.move_from(ft_b) != FT_ERR_SUCCESS)

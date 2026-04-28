@@ -1,10 +1,14 @@
 include ../compiler_flags.mk
 TARGET := libft_tests
 DEBUG_TARGET := libft_tests_debug
+EFFICIENCY_TARGET := libft_efficiency_tests
+EFFICIENCY_OPT_LEVEL ?= 3
 LIBFT_ARCHIVE := Full_Libft_test.a
 LIBFT_DEBUG_ARCHIVE := Full_Libft_test_debug.a
+EFFICIENCY_LIBFT_ARCHIVE := Full_Libft.a
 
 EFF_SRCS := $(wildcard Efficiency/*.cpp)
+EFF_TOTAL_SRCS := $(words $(EFF_SRCS))
 
 ifneq ($(strip $(FILES)),)
 SRCS := main.cpp $(FILES)
@@ -134,6 +138,8 @@ endif
 
 COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations -DLIBFT_TEST_BUILD
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
+EFFICIENCY_COMPILE_FLAGS := $(filter-out -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)) -DFT_EFFICIENCY_BUILD
+EFFICIENCY_CFLAGS := $(EFFICIENCY_COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
 HAS_X11_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libX11.so" && echo 1 || echo 0)
 HAS_ASOUND_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libasound.so" && echo 1 || echo 0)
 ifeq ($(HAS_X11_LIB),1)
@@ -156,11 +162,15 @@ endif
 
 OBJDIR       := objs$(BUILD_OBJ_SUFFIX)
 DEBUG_OBJDIR := objs_debug$(BUILD_OBJ_SUFFIX)
+EFFICIENCY_BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
+EFFICIENCY_OBJDIR := objs_efficiency$(EFFICIENCY_BUILD_OBJ_SUFFIX)
 
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
+EFFICIENCY_OBJS := $(patsubst %.cpp,$(EFFICIENCY_OBJDIR)/%.o,$(EFF_SRCS))
 DEPS       := $(OBJS:.o=.d)
 DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
+EFFICIENCY_DEPS := $(EFFICIENCY_OBJS:.o=.d)
 
 all: $(TARGET)
 
@@ -179,6 +189,15 @@ Basic:
 CMA:
 	@echo "Building CMA test executable ($(TARGET))"
 	@$(MAKE) FILES="$(CMA_TEST_FILES)" all
+
+Efficiency:
+	@echo "Building efficiency test executable ($(EFFICIENCY_TARGET)) with OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL)"
+	@$(MAKE) $(EFFICIENCY_TARGET) OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL)
+	@echo "Efficiency executable ready; run ./$(EFFICIENCY_TARGET) manually if desired."
+
+run_Efficiency:
+	@$(MAKE) $(EFFICIENCY_TARGET) OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL)
+	@./$(EFFICIENCY_TARGET)
 
 get_next_line:
 	@echo "Building get_next_line test executable ($(TARGET))"
@@ -312,6 +331,42 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	echo "Compiling test file $$current/$$total";
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
+$(EFFICIENCY_TARGET): FORCE $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
+	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
+	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS)
+
+$(EFFICIENCY_OBJDIR)/%.o: %.cpp
+	@$(MKDIR) $(dir $@)
+	@total=$(EFF_TOTAL_SRCS); \
+	current=1; \
+	for src in $(EFF_SRCS); do \
+	        if [ "$$src" = "$<" ]; then \
+	                break; \
+	        fi; \
+	        current=$$((current + 1)); \
+	done; \
+	echo "Compiling efficiency file $$current/$$total";
+	@$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
+
+../$(EFFICIENCY_LIBFT_ARCHIVE): FORCE
+	@need_build=0; \
+	if $(MAKE) -C .. -q $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
+		OPT_LEVEL=$(OPT_LEVEL); then \
+		:; \
+	else \
+		status=$$?; \
+		if [ $$status -eq 1 ]; then \
+			need_build=1; \
+		else \
+			exit $$status; \
+		fi; \
+	fi; \
+	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+	        echo "Building $(EFFICIENCY_LIBFT_ARCHIVE)"; \
+	        $(MAKE) -C .. $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
+			OPT_LEVEL=$(OPT_LEVEL); \
+	fi
+
 ../$(LIBFT_ARCHIVE): FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
@@ -382,6 +437,9 @@ fclean:
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
 	        status=1; \
 	fi; \
+	if ! $(RM) $(EFFICIENCY_TARGET); then \
+	        status=1; \
+	fi; \
 	if ! $(MAKE) -s -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
 	        status=1; \
 	fi; \
@@ -395,8 +453,8 @@ re: fclean all
 
 both: all debug
 
--include $(DEPS) $(DEBUG_DEPS)
+-include $(DEPS) $(DEBUG_DEPS) $(EFFICIENCY_DEPS)
 
-.PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA get_next_line re_get_next_line FORCE
+.PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA Efficiency run_Efficiency get_next_line re_get_next_line FORCE
 
 FORCE:

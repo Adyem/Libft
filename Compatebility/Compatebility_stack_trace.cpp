@@ -69,7 +69,7 @@ static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
         info.dli_fname);
     std::snprintf(command, sizeof(command),
         "addr2line -f -C -e \"%s\" %zx 2>/dev/null",
-        escaped_path, static_cast<ft_size_t>(relative_address));
+        escaped_path, relative_address);
     pipe_file = popen(command, "r");
     if (pipe_file == NULL)
     {

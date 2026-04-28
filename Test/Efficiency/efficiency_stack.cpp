@@ -9,6 +9,18 @@
 #include <stack>
 #include <utility>
 
+static int32_t swap_ft_stack(ft_stack<int> &left_stack,
+    ft_stack<int> &right_stack)
+{
+    ft_stack<int> temporary_stack(std::move(left_stack));
+
+    if (left_stack.move(right_stack) != FT_ERR_SUCCESS)
+        return (0);
+    if (right_stack.move(temporary_stack) != FT_ERR_SUCCESS)
+        return (0);
+    return (1);
+}
+
 int test_efficiency_stack_push_pop(void)
 {
     const size_t iterations = 100000;
@@ -30,6 +42,8 @@ int test_efficiency_stack_push_pop(void)
     auto start_ft = clock_type::now();
     {
         ft_stack<int> st;
+        if (st.initialize() != FT_ERR_SUCCESS)
+            return (0);
         for (size_t i = 0; i < iterations; ++i)
             st.push(static_cast<int>(i));
         while (st.size() > 0)
@@ -66,6 +80,8 @@ int test_efficiency_stack_interleaved(void)
     auto start_ft = clock_type::now();
     {
         ft_stack<int> st;
+        if (st.initialize() != FT_ERR_SUCCESS)
+            return (0);
         for (size_t i = 0; i < iterations; ++i)
         {
             st.push(static_cast<int>(i));
@@ -86,6 +102,8 @@ int test_efficiency_stack_move(void)
     const size_t elements = 100000;
     std::stack<int> std_src;
     ft_stack<int> ft_src;
+    if (ft_src.initialize() != FT_ERR_SUCCESS)
+        return (0);
     for (size_t i = 0; i < elements; ++i)
     {
         std_src.push(static_cast<int>(i));
@@ -125,6 +143,10 @@ int test_efficiency_stack_swap(void)
     std::stack<int> std_a, std_b;
     ft_stack<int> ft_a, ft_b;
 
+    if (ft_a.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (ft_b.initialize() != FT_ERR_SUCCESS)
+        return (0);
     for (size_t i = 0; i < elements; ++i)
     {
         std_a.push(static_cast<int>(i));
@@ -148,7 +170,8 @@ int test_efficiency_stack_swap(void)
     {
         prevent_optimization((void*)&ft_a);
         prevent_optimization((void*)&ft_b);
-        ft_swap(ft_a, ft_b);
+        if (swap_ft_stack(ft_a, ft_b) == 0)
+            return (0);
     }
     auto end_ft = clock_type::now();
 
@@ -164,4 +187,3 @@ int test_efficiency_stack_swap(void)
         return (1);
     return (0);
 }
-

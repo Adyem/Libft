@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include "../../PThread/pthread.hpp"
 #include "utils.hpp"
 

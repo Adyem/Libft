@@ -2,7 +2,9 @@
 #define TEST_INTERNAL_HPP
 
 #ifndef LIBFT_TEST_BUILD
-#define LIBFT_TEST_BUILD
+# ifndef FT_EFFICIENCY_BUILD
+#  define LIBFT_TEST_BUILD
+# endif
 #endif
 
 #include <csetjmp>

@@ -19,22 +19,21 @@ int test_efficiency_strchr(void)
     auto start_std = clock_type::now();
     for (size_t index = 0; index < iterations; ++index)
     {
-        prevent_optimization(const_cast<char*>(string.data()));
+        prevent_optimization(string.data());
         result = standard_strchr(string.c_str(), 'b');
-        prevent_optimization(const_cast<char*>(result));
+        prevent_optimization(result);
     }
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t index = 0; index < iterations; ++index)
     {
-        prevent_optimization(const_cast<char*>(string.data()));
+        prevent_optimization(string.data());
         result = ft_strchr(string.c_str(), 'b');
-        prevent_optimization(const_cast<char*>(result));
+        prevent_optimization(result);
     }
     auto end_ft = clock_type::now();
     print_comparison("strchr", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
 }
-

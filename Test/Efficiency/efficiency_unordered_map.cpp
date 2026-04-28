@@ -47,6 +47,8 @@ int test_efficiency_unordered_map_insert_find(void)
     int index;
 
     sum = 0;
+    if (ft_map.initialize() != FT_ERR_SUCCESS)
+        return (0);
     populate_std_map(std_map, iterations);
     index = 0;
     while (index < iterations)
@@ -85,6 +87,8 @@ int test_efficiency_unordered_map_insert_erase(void)
     ft_unordered_map<int, int> ft_map;
     int index;
 
+    if (ft_map.initialize() != FT_ERR_SUCCESS)
+        return (0);
     auto start_std = clock_type::now();
     populate_std_map(std_map, iterations);
     index = 0;
@@ -125,6 +129,8 @@ int test_efficiency_unordered_map_iterate(void)
     long long sum;
 
     sum = 0;
+    if (ft_map.initialize() != FT_ERR_SUCCESS)
+        return (0);
     populate_std_map(std_map, iterations);
     populate_ft_map(ft_map, iterations);
 
@@ -162,6 +168,8 @@ int test_efficiency_unordered_map_copy(void)
     long long sum;
 
     sum = 0;
+    if (ft_source.initialize() != FT_ERR_SUCCESS)
+        return (0);
     populate_std_map(std_source, iterations);
     populate_ft_map(ft_source, iterations);
 
@@ -202,6 +210,8 @@ int test_efficiency_unordered_map_move(void)
     long long sum;
 
     sum = 0;
+    if (ft_source.initialize() != FT_ERR_SUCCESS)
+        return (0);
     populate_std_map(std_source, iterations);
     populate_ft_map(ft_source, iterations);
 
@@ -241,6 +251,8 @@ int test_efficiency_unordered_map_clear(void)
     ft_unordered_map<int, int> ft_map;
     int index;
 
+    if (ft_map.initialize() != FT_ERR_SUCCESS)
+        return (0);
     index = 0;
     while (index < elements)
     {
@@ -279,6 +291,10 @@ int test_efficiency_unordered_map_swap(void)
     ft_unordered_map<int, int> ft_b;
     int index;
 
+    if (ft_a.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (ft_b.initialize() != FT_ERR_SUCCESS)
+        return (0);
     index = 0;
     while (index < elements)
     {

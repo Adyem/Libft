@@ -89,6 +89,7 @@ int64_t su_write(int32_t file_descriptor, const void *buffer, ft_size_t count)
         int64_t write_result;
         int32_t error_code;
 
+        error_code = FT_ERR_SUCCESS;
         if (write_function == su_default_write_syscall)
         {
             bytes_written_value = 0;

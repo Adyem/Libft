@@ -14,6 +14,8 @@ int test_efficiency_pool_acquire_release(void)
     volatile long long sum = 0;
 
     ft_vector<int*> std_ptrs;
+    if (std_ptrs.initialize() != FT_ERR_SUCCESS)
+        return (0);
     std_ptrs.reserve(iterations);
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
@@ -31,8 +33,12 @@ int test_efficiency_pool_acquire_release(void)
     auto end_std = clock_type::now();
 
     Pool<int> pool;
+    if (pool.initialize() != FT_ERR_SUCCESS)
+        return (0);
     pool.resize(iterations);
     ft_vector<typename Pool<int>::Object> objs;
+    if (objs.initialize() != FT_ERR_SUCCESS)
+        return (0);
     objs.reserve(iterations);
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
@@ -50,4 +56,3 @@ int test_efficiency_pool_acquire_release(void)
                      elapsed_us(start_ft, end_ft));
     return (1);
 }
-

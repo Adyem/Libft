@@ -118,18 +118,14 @@ int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *c
 
 int32_t cmp_readline_terminal_width(int32_t *width_out)
 {
-    unsigned short rows;
-    unsigned short cols;
-    int32_t error_code;
+    struct winsize window_size;
 
     if (width_out == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *width_out = 0;
-    error_code = cmp_readline_terminal_dimensions(&rows, &cols, ft_nullptr,
-            ft_nullptr);
-    if (error_code != FT_ERR_SUCCESS)
-        return (error_code);
-    *width_out = static_cast<int32_t>(cols);
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window_size) == -1)
+        return (cmp_map_errno_to_ft_error());
+    *width_out = static_cast<int32_t>(window_size.ws_col);
     return (FT_ERR_SUCCESS);
 }
 #else
@@ -202,18 +198,14 @@ int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *c
 
 int32_t cmp_readline_terminal_width(int32_t *width_out)
 {
-    unsigned short rows;
-    unsigned short cols;
-    int32_t error_code;
+    struct winsize window_size;
 
     if (width_out == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *width_out = 0;
-    error_code = cmp_readline_terminal_dimensions(&rows, &cols, ft_nullptr,
-            ft_nullptr);
-    if (error_code != FT_ERR_SUCCESS)
-        return (error_code);
-    *width_out = static_cast<int32_t>(cols);
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window_size) == -1)
+        return (cmp_map_errno_to_ft_error());
+    *width_out = static_cast<int32_t>(window_size.ws_col);
     return (FT_ERR_SUCCESS);
 }
 #endif

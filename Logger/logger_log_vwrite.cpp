@@ -183,6 +183,8 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
         return ;
     if (sink_count == 0)
     {
+        ssize_t    write_result;
+
         if (use_color)
         {
             const char *color_code;
@@ -194,12 +196,20 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
                 color_code = "\x1b[32m";
             else if (level == LOG_LEVEL_WARN)
                 color_code = "\x1b[33m";
-            (void)write(1, color_code, ft_strlen(color_code));
-            (void)write(1, final_message.c_str(), final_message.size());
-            (void)write(1, "\x1b[0m", 4);
+            write_result = write(1, color_code, ft_strlen(color_code));
+            if (write_result < 0)
+                return ;
+            write_result = write(1, final_message.c_str(), final_message.size());
+            if (write_result < 0)
+                return ;
+            write_result = write(1, "\x1b[0m", 4);
+            if (write_result < 0)
+                return ;
             return ;
         }
-        (void)write(1, final_message.c_str(), final_message.size());
+        write_result = write(1, final_message.c_str(), final_message.size());
+        if (write_result < 0)
+            return ;
         return ;
     }
     entry_index = 0;

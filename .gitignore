@@ -7,8 +7,20 @@
 **/objs_test/**/*.d
 **/objs_debug_test/**/*.o
 **/objs_debug_test/**/*.d
+**/objs_opt3/**/*.o
+**/objs_opt3/**/*.d
+**/objs_test_opt3/**/*.o
+**/objs_test_opt3/**/*.d
+Test/objs_efficiency_opt3/
+Test/objs_efficiency_test_opt0/
+Test/objs_efficiency_test_opt3/
 **/*.a
 Test/libft_tests
+Test/libft_efficiency_tests
+Demo/build/
+Demo/demo_dumb_game
+.codex
+**/.codex
 test_*.txt
 
 test_failures.log
