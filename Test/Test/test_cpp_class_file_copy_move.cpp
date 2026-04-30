@@ -181,3 +181,112 @@ FT_TEST(test_cpp_class_file_move_into_initialized_destination_preserves_source_t
     unlink(path_buffer);
     return (1);
 }
+
+FT_TEST(test_cpp_class_file_copy_constructor_from_destroyed_source_produces_destroyed_destination)
+{
+    ft_file source_file;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.destroy());
+
+    ft_file copied_file(source_file);
+
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, copied_file._initialised_state);
+    FT_ASSERT_EQ(-1, copied_file._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, copied_file._mutex);
+    return (1);
+}
+
+FT_TEST(test_cpp_class_file_move_constructor_from_destroyed_source_produces_destroyed_destination)
+{
+    ft_file source_file;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.destroy());
+
+    ft_file moved_file(static_cast<ft_file &&>(source_file));
+
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, moved_file._initialised_state);
+    FT_ASSERT_EQ(-1, moved_file._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, moved_file._mutex);
+    return (1);
+}
+
+FT_TEST(test_cpp_class_file_move_into_uninitialised_destination_preserves_thread_safety)
+{
+    char path_buffer[64];
+    char read_buffer[4];
+    int32_t template_descriptor;
+    ft_file source_file;
+    ft_file destination_file;
+
+    file_copy_move_make_template(path_buffer);
+    template_descriptor = mkstemp(path_buffer);
+    FT_ASSERT(template_descriptor >= 0);
+    close(template_descriptor);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.open(path_buffer, O_RDWR | O_TRUNC));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.enable_thread_safety());
+    FT_ASSERT_EQ(3, static_cast<int>(source_file.write_buffer("uvw", 3)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.move(source_file));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_file._initialised_state);
+    FT_ASSERT_EQ(FT_TRUE, destination_file.is_thread_safe());
+    FT_ASSERT_EQ(0, destination_file.seek(0, SEEK_SET));
+    read_buffer[0] = '\0';
+    read_buffer[1] = '\0';
+    read_buffer[2] = '\0';
+    read_buffer[3] = '\0';
+    FT_ASSERT_EQ(3, static_cast<int>(destination_file.read(read_buffer, 3)));
+    FT_ASSERT_EQ(0, ft_strcmp(read_buffer, "uvw"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.destroy());
+    unlink(path_buffer);
+    return (1);
+}
+
+FT_TEST(test_cpp_class_file_move_into_destroyed_destination_preserves_thread_safety)
+{
+    char path_buffer[64];
+    char read_buffer[4];
+    int32_t template_descriptor;
+    ft_file source_file;
+    ft_file destination_file;
+
+    file_copy_move_make_template(path_buffer);
+    template_descriptor = mkstemp(path_buffer);
+    FT_ASSERT(template_descriptor >= 0);
+    close(template_descriptor);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.open(path_buffer, O_RDWR | O_TRUNC));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.enable_thread_safety());
+    FT_ASSERT_EQ(3, static_cast<int>(source_file.write_buffer("rst", 3)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.move(source_file));
+    FT_ASSERT_EQ(FT_TRUE, destination_file.is_thread_safe());
+    FT_ASSERT_EQ(0, destination_file.seek(0, SEEK_SET));
+    read_buffer[0] = '\0';
+    read_buffer[1] = '\0';
+    read_buffer[2] = '\0';
+    read_buffer[3] = '\0';
+    FT_ASSERT_EQ(3, static_cast<int>(destination_file.read(read_buffer, 3)));
+    FT_ASSERT_EQ(0, ft_strcmp(read_buffer, "rst"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.destroy());
+    unlink(path_buffer);
+    return (1);
+}
+
+FT_TEST(test_cpp_class_file_move_from_destroyed_source_marks_destination_destroyed)
+{
+    ft_file source_file;
+    ft_file destination_file;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_file.move(source_file));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, destination_file._initialised_state);
+    FT_ASSERT_EQ(-1, destination_file._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, destination_file._mutex);
+    return (1);
+}

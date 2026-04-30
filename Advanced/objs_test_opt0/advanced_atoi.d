@@ -1,0 +1,12 @@
+objs_test_opt0/advanced_atoi.o: advanced_atoi.cpp advanced.hpp \
+ ../Basic/basic.hpp ../Basic/limits.hpp ../CMA/CMA.hpp \
+ ../CMA/../Basic/basic.hpp ../CPP_class/class_nullptr.hpp \
+ ../CPP_class/../Errno/errno.hpp ../Errno/errno.hpp
+advanced.hpp:
+../Basic/basic.hpp:
+../Basic/limits.hpp:
+../CMA/CMA.hpp:
+../CMA/../Basic/basic.hpp:
+../CPP_class/class_nullptr.hpp:
+../CPP_class/../Errno/errno.hpp:
+../Errno/errno.hpp:

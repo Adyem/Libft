@@ -66,6 +66,80 @@ static uint32_t demo_shade_color(uint32_t color, uint32_t numerator,
     return (demo_make_color(red, green, blue));
 }
 
+static uint32_t demo_blend_channel(uint32_t base_value, uint32_t light_value,
+    uint32_t blend_amount)
+{
+    if (blend_amount > 255U)
+    {
+        blend_amount = 255U;
+    }
+    return (((base_value * (255U - blend_amount))
+        + (light_value * blend_amount)) / 255U);
+}
+
+static uint32_t demo_apply_light_to_color(uint32_t base_color,
+    uint32_t light_color, uint32_t light_amount)
+{
+    uint32_t red;
+    uint32_t green;
+    uint32_t blue;
+
+    red = demo_blend_channel((base_color >> 16) & 255U,
+        (light_color >> 16) & 255U, light_amount);
+    green = demo_blend_channel((base_color >> 8) & 255U,
+        (light_color >> 8) & 255U, light_amount);
+    blue = demo_blend_channel(base_color & 255U, light_color & 255U,
+        light_amount);
+    return (demo_make_color(red, green, blue));
+}
+
+static uint32_t demo_apply_level_lighting(const demo_level &level,
+    uint32_t base_color, double hit_position_x, double hit_position_y)
+{
+    uint32_t light_index;
+    double distance_x;
+    double distance_y;
+    double distance_to_light;
+    double falloff;
+    uint32_t strongest_light;
+    uint32_t strongest_light_color;
+    uint32_t brightness_amount;
+
+    strongest_light = 0U;
+    strongest_light_color = demo_make_color(255U, 255U, 255U);
+    light_index = 0U;
+    while (light_index < level.light_count)
+    {
+        distance_x = hit_position_x - level.lights[light_index].position_x;
+        distance_y = hit_position_y - level.lights[light_index].position_y;
+        distance_to_light = std::sqrt((distance_x * distance_x)
+                + (distance_y * distance_y));
+        if (distance_to_light < level.lights[light_index].radius)
+        {
+            falloff = 1.0 - (distance_to_light / level.lights[light_index].radius);
+            brightness_amount = static_cast<uint32_t>(
+                static_cast<double>(level.lights[light_index].intensity)
+                * falloff * falloff);
+            if (brightness_amount > strongest_light)
+            {
+                strongest_light = brightness_amount;
+                strongest_light_color = level.lights[light_index].color;
+            }
+        }
+        light_index = light_index + 1U;
+    }
+    if (strongest_light == 0U)
+    {
+        return (demo_shade_color(base_color, 3U, 5U));
+    }
+    if (strongest_light > 220U)
+    {
+        strongest_light = 220U;
+    }
+    return (demo_apply_light_to_color(base_color, strongest_light_color,
+        strongest_light));
+}
+
 static demo_image demo_prepare_frame_image(ft_render_framebuffer &framebuffer)
 {
     demo_image image;
@@ -186,6 +260,23 @@ static void demo_draw_rectangle(demo_image &image, int32_t coordinate_x,
         }
         index_height = index_height + 1;
     }
+    return ;
+}
+
+static void demo_draw_light_marker(demo_image &image, int32_t center_x,
+    int32_t center_y, uint32_t color)
+{
+    demo_draw_rectangle(image, center_x - 6, center_y - 6, 13, 13,
+        demo_make_color(8U, 8U, 12U));
+    demo_draw_rectangle(image, center_x - 5, center_y - 5, 11, 11,
+        demo_make_color(24U, 24U, 30U));
+    demo_draw_rectangle(image, center_x - 4, center_y - 4, 9, 9, color);
+    demo_draw_rectangle(image, center_x - 1, center_y - 6, 3, 13,
+        demo_make_color(255U, 248U, 228U));
+    demo_draw_rectangle(image, center_x - 6, center_y - 1, 13, 3,
+        demo_make_color(255U, 248U, 228U));
+    demo_draw_rectangle(image, center_x - 2, center_y - 2, 5, 5,
+        demo_make_color(255U, 255U, 255U));
     return ;
 }
 
@@ -399,13 +490,120 @@ static void demo_draw_line(demo_image &image, int32_t start_x, int32_t start_y,
     return ;
 }
 
+static void demo_draw_light_sprite(demo_image &image, int32_t center_x,
+    int32_t center_y, int32_t sprite_radius, uint32_t light_color,
+    double sprite_depth, const std::vector<double> &wall_depth_by_column)
+{
+    int32_t draw_x;
+    int32_t draw_y;
+    double normalized_x;
+    double normalized_y;
+    double distance_squared;
+    uint32_t blend_amount;
+    uint32_t base_color;
+    uint32_t draw_color;
+    ft_size_t pixel_index;
+
+    draw_y = center_y - sprite_radius;
+    while (draw_y <= center_y + sprite_radius)
+    {
+        if (draw_y >= 0 && draw_y < image.height)
+        {
+            draw_x = center_x - sprite_radius;
+            while (draw_x <= center_x + sprite_radius)
+            {
+                if (draw_x >= 0 && draw_x < image.width
+                    && sprite_depth < wall_depth_by_column[static_cast<ft_size_t>(
+                            draw_x)])
+                {
+                    normalized_x = static_cast<double>(draw_x - center_x)
+                        / static_cast<double>(sprite_radius);
+                    normalized_y = static_cast<double>(draw_y - center_y)
+                        / static_cast<double>(sprite_radius);
+                    distance_squared = (normalized_x * normalized_x)
+                        + (normalized_y * normalized_y);
+                    if (distance_squared < 1.35)
+                    {
+                        draw_color = light_color;
+                        if (distance_squared < 0.18)
+                        {
+                            blend_amount = 255U;
+                            draw_color = demo_make_color(255U, 248U, 232U);
+                        }
+                        else
+                        {
+                            blend_amount = static_cast<uint32_t>(
+                                190.0 * (1.35 - distance_squared) / 1.35);
+                        }
+                        pixel_index = static_cast<ft_size_t>(
+                            (draw_y * image.width) + draw_x);
+                        base_color = image.pixels[pixel_index];
+                        image.pixels[pixel_index] = demo_apply_light_to_color(
+                            base_color, draw_color, blend_amount);
+                    }
+                }
+                draw_x = draw_x + 1;
+            }
+        }
+        draw_y = draw_y + 1;
+    }
+    return ;
+}
+
+static void demo_draw_level_light_sprites(demo_image &image,
+    const demo_game_state &game_state, const demo_level &level,
+    const std::vector<double> &wall_depth_by_column)
+{
+    uint32_t light_index;
+    double relative_x;
+    double relative_y;
+    double inverse_determinant;
+    double transform_x;
+    double transform_y;
+    int32_t sprite_screen_x;
+    int32_t sprite_size;
+    int32_t sprite_radius;
+
+    inverse_determinant = 1.0 / ((game_state.camera_plane_x
+            * game_state.player_direction_y)
+            - (game_state.player_direction_x * game_state.camera_plane_y));
+    light_index = 0U;
+    while (light_index < level.light_count)
+    {
+        relative_x = level.lights[light_index].position_x
+            - game_state.player_position_x;
+        relative_y = level.lights[light_index].position_y
+            - game_state.player_position_y;
+        transform_x = inverse_determinant * ((game_state.player_direction_y
+                * relative_x) - (game_state.player_direction_x * relative_y));
+        transform_y = inverse_determinant * ((-game_state.camera_plane_y
+                * relative_x) + (game_state.camera_plane_x * relative_y));
+        if (transform_y > 0.15)
+        {
+            sprite_screen_x = static_cast<int32_t>(
+                (static_cast<double>(image.width) / 2.0)
+                * (1.0 + (transform_x / transform_y)));
+            sprite_size = static_cast<int32_t>(
+                static_cast<double>(image.height) / transform_y);
+            sprite_radius = demo_clamp_s32(sprite_size / 2, 6, 36);
+            demo_draw_light_sprite(image, sprite_screen_x, image.height / 2,
+                sprite_radius, level.lights[light_index].color, transform_y,
+                wall_depth_by_column);
+        }
+        light_index = light_index + 1U;
+    }
+    return ;
+}
+
 static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_state)
 {
     const demo_level *level;
     int32_t screen_x;
+    std::vector<double> wall_depth_by_column;
 
     level = &g_demo_levels[game_state.current_level_index];
     demo_draw_background_gradient(image);
+    wall_depth_by_column.resize(static_cast<ft_size_t>(image.width), 1.0e30);
     screen_x = 0;
     while (screen_x < image.width)
     {
@@ -430,6 +628,8 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
         int32_t draw_end_y;
         uint32_t wall_color;
         uint32_t distance_shade;
+        double hit_position_x;
+        double hit_position_y;
 
         ray_end_x = screen_x + DEMO_RAYCAST_COLUMN_STEP - 1;
         if (ray_end_x >= image.width)
@@ -521,6 +721,10 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
         {
             perpendicular_wall_distance = 0.0001;
         }
+        hit_position_x = game_state.player_position_x
+            + (ray_direction_x * perpendicular_wall_distance);
+        hit_position_y = game_state.player_position_y
+            + (ray_direction_y * perpendicular_wall_distance);
         line_height = static_cast<int32_t>(
             static_cast<double>(image.height) / perpendicular_wall_distance);
         draw_start_y = demo_clamp_s32((-line_height / 2) + (image.height / 2),
@@ -535,10 +739,24 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
         distance_shade = demo_min_u32(
             static_cast<uint32_t>(perpendicular_wall_distance * 32.0), 180U);
         wall_color = demo_shade_color(wall_color, 220U - distance_shade, 220U);
+        wall_color = demo_apply_level_lighting(*level, wall_color, hit_position_x,
+            hit_position_y);
+        {
+            int32_t depth_x;
+
+            depth_x = screen_x;
+            while (depth_x <= ray_end_x)
+            {
+                wall_depth_by_column[static_cast<ft_size_t>(depth_x)]
+                    = perpendicular_wall_distance;
+                depth_x = depth_x + 1;
+            }
+        }
         demo_draw_wall_column(image, screen_x, ray_end_x, draw_start_y, draw_end_y,
             wall_color);
         screen_x = ray_end_x + 1;
     }
+    demo_draw_level_light_sprites(image, game_state, *level, wall_depth_by_column);
     return ;
 }
 
@@ -606,6 +824,10 @@ static void demo_draw_minimap(demo_image &image, const demo_game_state &game_sta
     int32_t cache_height;
     int32_t copy_row;
     ft_size_t copy_width_bytes;
+    uint32_t light_index;
+    int32_t light_x;
+    int32_t light_y;
+    char light_label[3];
 
     level = &g_demo_levels[game_state.current_level_index];
     tile_size = 8;
@@ -641,6 +863,24 @@ static void demo_draw_minimap(demo_image &image, const demo_game_state &game_sta
     line_end_y = player_y + static_cast<int32_t>(game_state.player_direction_y * 6.0);
     demo_draw_line(image, player_x, player_y, line_end_x, line_end_y,
         demo_make_color(255U, 255U, 255U));
+    light_index = 0U;
+    while (light_index < level->light_count)
+    {
+        light_x = map_origin_x + static_cast<int32_t>(
+            level->lights[light_index].position_x * static_cast<double>(tile_size));
+        light_y = map_origin_y + static_cast<int32_t>(
+            level->lights[light_index].position_y * static_cast<double>(tile_size));
+        demo_draw_light_marker(image, light_x, light_y,
+            level->lights[light_index].color);
+        light_label[0] = 'L';
+        light_label[1] = static_cast<char>('1' + light_index);
+        light_label[2] = '\0';
+        demo_draw_text(image, light_x + 8, light_y - 4, light_label, 1,
+            demo_make_color(255U, 248U, 228U));
+        light_index = light_index + 1U;
+    }
+    demo_draw_text(image, map_origin_x, map_origin_y + cache_height + 10,
+        "L1 L2 L3 = LIGHTS", 1, demo_make_color(245U, 240U, 210U));
     return ;
 }
 

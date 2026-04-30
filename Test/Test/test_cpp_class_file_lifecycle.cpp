@@ -80,3 +80,87 @@ FT_TEST(test_ft_file_copy_to_with_buffer_requires_open_source)
     cleanup_file(destination_path);
     return (1);
 }
+
+FT_TEST(test_ft_file_initialize_sets_initialised_state_and_invalid_descriptor)
+{
+    ft_file file;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.initialize());
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, file._initialised_state);
+    FT_ASSERT_EQ(-1, file._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, file._mutex);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.destroy());
+    return (1);
+}
+
+FT_TEST(test_ft_file_enable_thread_safety_installs_mutex)
+{
+    ft_file file;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.initialize());
+    FT_ASSERT_EQ(ft_nullptr, file._mutex);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.enable_thread_safety());
+    FT_ASSERT(file._mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, file.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.destroy());
+    return (1);
+}
+
+FT_TEST(test_ft_file_destroy_clears_mutex_and_descriptor)
+{
+    const char *path;
+    ft_file file;
+
+    path = "tmp_ft_file_destroy_state.txt";
+    cleanup_file(path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644));
+    FT_ASSERT(file._file_descriptor >= 0);
+    FT_ASSERT(file._mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.destroy());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, file._initialised_state);
+    FT_ASSERT_EQ(-1, file._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, file._mutex);
+    cleanup_file(path);
+    return (1);
+}
+
+FT_TEST(test_ft_file_reinitialize_after_thread_safe_destroy_resets_members)
+{
+    const char *path;
+    ft_file file;
+
+    path = "tmp_ft_file_reinitialize_state.txt";
+    cleanup_file(path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.initialize());
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, file._initialised_state);
+    FT_ASSERT_EQ(-1, file._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, file._mutex);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.destroy());
+    cleanup_file(path);
+    return (1);
+}
+
+FT_TEST(test_ft_file_close_keeps_object_initialised_for_reuse)
+{
+    const char *path;
+    ft_file file;
+
+    path = "tmp_ft_file_close_keeps_state.txt";
+    cleanup_file(path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644));
+    file.close();
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, file._initialised_state);
+    FT_ASSERT_EQ(-1, file._file_descriptor);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.open(path, O_WRONLY | O_TRUNC));
+    FT_ASSERT(file._file_descriptor >= 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file.destroy());
+    cleanup_file(path);
+    return (1);
+}

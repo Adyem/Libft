@@ -1,0 +1,144 @@
+objs_test_opt0/game_hooks.o: game_hooks.cpp \
+ ../PThread/pthread_internal.hpp ../PThread/mutex.hpp \
+ ../PThread/pthread.hpp ../PThread/../CPP_class/class_nullptr.hpp \
+ ../PThread/../CPP_class/../Errno/errno.hpp \
+ ../PThread/recursive_mutex.hpp game_hooks.hpp game_character.hpp \
+ ../Template/map.hpp ../Template/pair.hpp ../Template/constructor.hpp \
+ ../Template/../Basic/basic.hpp ../Template/../Basic/limits.hpp \
+ ../Template/move.hpp ../Template/../CMA/CMA.hpp \
+ ../Template/../CMA/../Basic/basic.hpp ../Template/../Errno/errno.hpp \
+ ../Template/../Errno/errno_internal.hpp \
+ ../Template/../CPP_class/class_nullptr.hpp \
+ ../Template/../PThread/recursive_mutex.hpp \
+ ../Template/../PThread/pthread_internal.hpp \
+ ../Template/../Printf/printf.hpp \
+ ../Template/../Printf/../CPP_class/class_string.hpp \
+ ../Template/../Printf/../CPP_class/../Errno/errno.hpp \
+ ../Template/../Printf/../CPP_class/../Errno/errno_internal.hpp \
+ ../Template/../Printf/../CPP_class/../PThread/recursive_mutex.hpp \
+ ../Template/../Printf/../CPP_class/../Basic/basic.hpp \
+ ../Template/../System_utils/system_utils.hpp \
+ ../Template/../System_utils/../CPP_class/class_string.hpp \
+ ../Template/../System_utils/../Compatebility/compatebility_internal.hpp \
+ ../Template/../System_utils/../Compatebility/../Basic/basic.hpp \
+ ../Template/../System_utils/../Compatebility/../File/open_dir.hpp \
+ ../Template/../System_utils/../Compatebility/../PThread/mutex.hpp \
+ ../Template/../System_utils/../Template/vector.hpp \
+ ../Template/../System_utils/../Template/../CPP_class/class_nullptr.hpp \
+ ../Template/../System_utils/../Template/../Errno/errno.hpp \
+ ../Template/../System_utils/../Template/../Errno/errno_internal.hpp \
+ ../Template/../System_utils/../Template/../CMA/CMA.hpp \
+ ../Template/../System_utils/../Template/constructor.hpp \
+ ../Template/../System_utils/../Template/move.hpp \
+ ../Template/../System_utils/../Template/../PThread/recursive_mutex.hpp \
+ ../Template/../System_utils/../Template/../PThread/pthread_internal.hpp \
+ ../Template/../System_utils/../Template/../Basic/basic.hpp \
+ game_quest.hpp ../CPP_class/class_string.hpp ../Template/vector.hpp \
+ game_item.hpp ../Errno/errno.hpp ../PThread/recursive_mutex.hpp \
+ ../PThread/mutex.hpp ../Template/shared_ptr.hpp game_achievement.hpp \
+ game_reputation.hpp game_buff.hpp game_debuff.hpp game_skill.hpp \
+ game_upgrade.hpp game_inventory.hpp game_equipment.hpp \
+ game_experience_table.hpp game_resistance.hpp game_world.hpp \
+ game_event_scheduler.hpp game_event.hpp ../Template/function.hpp \
+ ../Template/priority_queue.hpp ../Template/swap.hpp \
+ ../CPP_class/class_nullptr.hpp ../Time/time.hpp \
+ ../Time/../CPP_class/class_string.hpp game_pathfinding.hpp \
+ game_map3d.hpp ../Template/graph.hpp ../Template/vector.hpp \
+ game_world_replay.hpp game_economy_table.hpp game_price_definition.hpp \
+ game_rarity_band.hpp game_vendor_profile.hpp game_currency_rate.hpp \
+ game_crafting.hpp game_dialogue_table.hpp game_dialogue_line.hpp \
+ game_dialogue_script.hpp game_world_region.hpp game_world_registry.hpp \
+ game_region_definition.hpp ../Printf/printf.hpp \
+ ../System_utils/system_utils.hpp ../Errno/errno_internal.hpp \
+ ../Template/move.hpp
+../PThread/pthread_internal.hpp:
+../PThread/mutex.hpp:
+../PThread/pthread.hpp:
+../PThread/../CPP_class/class_nullptr.hpp:
+../PThread/../CPP_class/../Errno/errno.hpp:
+../PThread/recursive_mutex.hpp:
+game_hooks.hpp:
+game_character.hpp:
+../Template/map.hpp:
+../Template/pair.hpp:
+../Template/constructor.hpp:
+../Template/../Basic/basic.hpp:
+../Template/../Basic/limits.hpp:
+../Template/move.hpp:
+../Template/../CMA/CMA.hpp:
+../Template/../CMA/../Basic/basic.hpp:
+../Template/../Errno/errno.hpp:
+../Template/../Errno/errno_internal.hpp:
+../Template/../CPP_class/class_nullptr.hpp:
+../Template/../PThread/recursive_mutex.hpp:
+../Template/../PThread/pthread_internal.hpp:
+../Template/../Printf/printf.hpp:
+../Template/../Printf/../CPP_class/class_string.hpp:
+../Template/../Printf/../CPP_class/../Errno/errno.hpp:
+../Template/../Printf/../CPP_class/../Errno/errno_internal.hpp:
+../Template/../Printf/../CPP_class/../PThread/recursive_mutex.hpp:
+../Template/../Printf/../CPP_class/../Basic/basic.hpp:
+../Template/../System_utils/system_utils.hpp:
+../Template/../System_utils/../CPP_class/class_string.hpp:
+../Template/../System_utils/../Compatebility/compatebility_internal.hpp:
+../Template/../System_utils/../Compatebility/../Basic/basic.hpp:
+../Template/../System_utils/../Compatebility/../File/open_dir.hpp:
+../Template/../System_utils/../Compatebility/../PThread/mutex.hpp:
+../Template/../System_utils/../Template/vector.hpp:
+../Template/../System_utils/../Template/../CPP_class/class_nullptr.hpp:
+../Template/../System_utils/../Template/../Errno/errno.hpp:
+../Template/../System_utils/../Template/../Errno/errno_internal.hpp:
+../Template/../System_utils/../Template/../CMA/CMA.hpp:
+../Template/../System_utils/../Template/constructor.hpp:
+../Template/../System_utils/../Template/move.hpp:
+../Template/../System_utils/../Template/../PThread/recursive_mutex.hpp:
+../Template/../System_utils/../Template/../PThread/pthread_internal.hpp:
+../Template/../System_utils/../Template/../Basic/basic.hpp:
+game_quest.hpp:
+../CPP_class/class_string.hpp:
+../Template/vector.hpp:
+game_item.hpp:
+../Errno/errno.hpp:
+../PThread/recursive_mutex.hpp:
+../PThread/mutex.hpp:
+../Template/shared_ptr.hpp:
+game_achievement.hpp:
+game_reputation.hpp:
+game_buff.hpp:
+game_debuff.hpp:
+game_skill.hpp:
+game_upgrade.hpp:
+game_inventory.hpp:
+game_equipment.hpp:
+game_experience_table.hpp:
+game_resistance.hpp:
+game_world.hpp:
+game_event_scheduler.hpp:
+game_event.hpp:
+../Template/function.hpp:
+../Template/priority_queue.hpp:
+../Template/swap.hpp:
+../CPP_class/class_nullptr.hpp:
+../Time/time.hpp:
+../Time/../CPP_class/class_string.hpp:
+game_pathfinding.hpp:
+game_map3d.hpp:
+../Template/graph.hpp:
+../Template/vector.hpp:
+game_world_replay.hpp:
+game_economy_table.hpp:
+game_price_definition.hpp:
+game_rarity_band.hpp:
+game_vendor_profile.hpp:
+game_currency_rate.hpp:
+game_crafting.hpp:
+game_dialogue_table.hpp:
+game_dialogue_line.hpp:
+game_dialogue_script.hpp:
+game_world_region.hpp:
+game_world_registry.hpp:
+game_region_definition.hpp:
+../Printf/printf.hpp:
+../System_utils/system_utils.hpp:
+../Errno/errno_internal.hpp:
+../Template/move.hpp:

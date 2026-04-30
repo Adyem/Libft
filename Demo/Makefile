@@ -6,6 +6,7 @@ include ../compiler_flags.mk
 TARGET_DIR := build
 TARGET_NAME := demo_dumb_game
 TARGET := $(TARGET_DIR)/$(TARGET_NAME)
+LEGACY_TARGET := $(TARGET_NAME)
 MODULE_NAME := $(notdir $(CURDIR))
 
 ifeq ($(OS),Windows_NT)
@@ -32,18 +33,22 @@ else
     LINK_FLAGS += -lX11 -lXext -lGL -lpthread
 endif
 
-all: FORCE $(TARGET)
+all: FORCE $(TARGET) $(LEGACY_TARGET)
 
 $(TARGET): FORCE ../Full_Libft.a $(SRCS)
 	@printf '        [%s] Linking %s\n' "$(MODULE_NAME)" "$(TARGET)"
 	@mkdir -p $(TARGET_DIR)
 	@$(CXX) $(COMPILE_FLAGS) $(SRCS) -o $@ ../Full_Libft.a $(LINK_FLAGS)
 
+$(LEGACY_TARGET): FORCE $(TARGET)
+	@printf '        [%s] Syncing %s\n' "$(MODULE_NAME)" "$(LEGACY_TARGET)"
+	@cp $(TARGET) $(LEGACY_TARGET)
+
 ../Full_Libft.a: FORCE
 	@$(MAKE) -C .. Full_Libft.a OPT_LEVEL=$(OPT_LEVEL)
 
 clean:
-	@if $(RM) $(TARGET); then \
+	@if $(RM) $(TARGET) $(LEGACY_TARGET); then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
 	else \
 		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \

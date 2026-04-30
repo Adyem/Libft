@@ -26,7 +26,8 @@ ft_render_platform_result ft_render_platform_poll_events(
 
 ft_render_platform_result ft_render_platform_present(
     void *platform_state,
-    ft_render_framebuffer *framebuffer
+    ft_render_framebuffer *framebuffer,
+    const ft_render_depth_buffer *depth_buffer
 );
 
 ft_render_platform_result ft_render_platform_set_fullscreen(

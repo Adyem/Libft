@@ -136,3 +136,94 @@ FT_TEST(test_cpp_class_istringstream_move_constructor_transfers_buffer)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
     return (1);
 }
+
+FT_TEST(test_cpp_class_istringstream_move_self_is_noop_and_preserves_content)
+{
+    ft_istringstream stream_value;
+    ft_string source_value;
+    ft_string content_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("self"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize(source_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.move(stream_value));
+    content_value = stream_value.get_string();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(content_value.c_str(), "self"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_cpp_class_istringstream_destroy_clears_buffer_lifecycle_state)
+{
+    ft_istringstream stream_value;
+    ft_string source_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("gone"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize(source_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, stream_value._buffer._initialised_state);
+    FT_ASSERT_EQ(ft_nullptr, stream_value._buffer._mutex);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_cpp_class_istringstream_reinitialize_after_destroy_restores_content)
+{
+    ft_istringstream stream_value;
+    ft_string source_value;
+    int32_t parsed_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("901"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize(source_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize(source_value));
+    parsed_value = 0;
+    stream_value >> parsed_value;
+    FT_ASSERT_EQ(901, parsed_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_cpp_class_istringstream_move_into_destroyed_destination_transfers_content)
+{
+    ft_istringstream source_stream;
+    ft_istringstream destination_stream;
+    ft_string source_value;
+    int32_t parsed_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("305"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize(source_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stream.initialize(source_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stream.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stream.move(source_stream));
+    parsed_value = 0;
+    destination_stream >> parsed_value;
+    FT_ASSERT_EQ(305, parsed_value);
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_stream._buffer._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stream.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_cpp_class_istringstream_get_string_after_move_constructor_matches_source)
+{
+    ft_istringstream source_stream;
+    ft_string source_value;
+    ft_string content_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("alpha beta"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize(source_value));
+    {
+        ft_istringstream moved_stream(static_cast<ft_istringstream &&>(source_stream));
+
+        content_value = moved_stream.get_string();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value.get_error());
+        FT_ASSERT_EQ(0, ft_strcmp(content_value.c_str(), "alpha beta"));
+        FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_stream._buffer._initialised_state);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.destroy());
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
+    return (1);
+}

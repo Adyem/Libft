@@ -663,10 +663,13 @@ static void ft_render_x11_present_software(ft_render_x11_state *state,
 
 ft_render_platform_result ft_render_platform_present(
     void *platform_state,
-    ft_render_framebuffer *framebuffer
+    ft_render_framebuffer *framebuffer,
+    const ft_render_depth_buffer *depth_buffer
 )
 {
     ft_render_x11_state      *state;
+
+    (void)depth_buffer;
 
     if (platform_state == NULL || framebuffer == NULL)
     {

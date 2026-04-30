@@ -1,4 +1,5 @@
 #include "dumb_render_internal.hpp"
+#include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
@@ -77,6 +78,46 @@ static void unlock_ordered_mutexes(pt_recursive_mutex *first_mutex,
     return ;
 }
 
+static int32_t create_depth_buffer(ft_render_depth_buffer *depth_buffer,
+    int32_t width, int32_t height)
+{
+    ft_size_t pixel_count;
+
+    if (depth_buffer == ft_nullptr || width <= 0 || height <= 0)
+    {
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
+    depth_buffer->width = 0;
+    depth_buffer->height = 0;
+    depth_buffer->values = ft_nullptr;
+    pixel_count = static_cast<ft_size_t>(width) * static_cast<ft_size_t>(height);
+    depth_buffer->values = new (std::nothrow) uint8_t[pixel_count];
+    if (depth_buffer->values == ft_nullptr)
+    {
+        return (FT_ERR_NO_MEMORY);
+    }
+    ft_memset(depth_buffer->values, 0, pixel_count);
+    depth_buffer->width = width;
+    depth_buffer->height = height;
+    return (FT_ERR_SUCCESS);
+}
+
+static void destroy_depth_buffer(ft_render_depth_buffer *depth_buffer)
+{
+    if (depth_buffer == ft_nullptr)
+    {
+        return ;
+    }
+    if (depth_buffer->values != ft_nullptr)
+    {
+        delete[] depth_buffer->values;
+        depth_buffer->values = ft_nullptr;
+    }
+    depth_buffer->width = 0;
+    depth_buffer->height = 0;
+    return ;
+}
+
 ft_render_screen_size ft_render_get_primary_screen_size(void)
 {
     ft_render_platform_result  platform_result;
@@ -97,6 +138,9 @@ ft_render_window::ft_render_window(void)
     this->_framebuffer.width = 0;
     this->_framebuffer.height = 0;
     this->_framebuffer.pixels = ft_nullptr;
+    this->_depth_buffer.width = 0;
+    this->_depth_buffer.height = 0;
+    this->_depth_buffer.values = ft_nullptr;
 
     this->_is_initialised = FT_FALSE;
     this->_should_close = FT_FALSE;
@@ -110,6 +154,9 @@ ft_render_window::ft_render_window(const ft_render_window &other)
     this->_framebuffer.width = 0;
     this->_framebuffer.height = 0;
     this->_framebuffer.pixels = ft_nullptr;
+    this->_depth_buffer.width = 0;
+    this->_depth_buffer.height = 0;
+    this->_depth_buffer.values = ft_nullptr;
     this->_is_initialised = FT_FALSE;
     this->_should_close = FT_FALSE;
     this->_platform_state = ft_nullptr;
@@ -136,6 +183,9 @@ ft_render_window::ft_render_window(ft_render_window &&other)
     this->_framebuffer.width = 0;
     this->_framebuffer.height = 0;
     this->_framebuffer.pixels = ft_nullptr;
+    this->_depth_buffer.width = 0;
+    this->_depth_buffer.height = 0;
+    this->_depth_buffer.values = ft_nullptr;
     this->_is_initialised = FT_FALSE;
     this->_should_close = FT_FALSE;
     this->_platform_state = ft_nullptr;
@@ -175,6 +225,9 @@ int32_t ft_render_window::initialize(void)
     this->_framebuffer.width = 0;
     this->_framebuffer.height = 0;
     this->_framebuffer.pixels = ft_nullptr;
+    this->_depth_buffer.width = 0;
+    this->_depth_buffer.height = 0;
+    this->_depth_buffer.values = ft_nullptr;
     this->_is_initialised = FT_FALSE;
     this->_should_close = FT_FALSE;
     this->_platform_state = ft_nullptr;
@@ -209,6 +262,7 @@ int32_t ft_render_window::initialize(const ft_render_window &other)
         this->_framebuffer.width = 0;
         this->_framebuffer.height = 0;
         this->_framebuffer.pixels = ft_nullptr;
+        destroy_depth_buffer(&this->_depth_buffer);
         this->_is_initialised = FT_FALSE;
         this->_should_close = FT_FALSE;
         this->_platform_state = ft_nullptr;
@@ -277,6 +331,7 @@ int32_t ft_render_window::initialize(ft_render_window &&other)
         this->_framebuffer.width = 0;
         this->_framebuffer.height = 0;
         this->_framebuffer.pixels = ft_nullptr;
+        destroy_depth_buffer(&this->_depth_buffer);
         this->_is_initialised = FT_FALSE;
         this->_should_close = FT_FALSE;
         this->_platform_state = ft_nullptr;
@@ -344,6 +399,7 @@ int32_t ft_render_window::move(ft_render_window &other)
         this->_framebuffer.width = 0;
         this->_framebuffer.height = 0;
         this->_framebuffer.pixels = ft_nullptr;
+        destroy_depth_buffer(&this->_depth_buffer);
         this->_is_initialised = FT_FALSE;
         this->_should_close = FT_FALSE;
         this->_platform_state = ft_nullptr;
@@ -375,12 +431,16 @@ int32_t ft_render_window::move(ft_render_window &other)
         return (lock_error);
     }
     this->_framebuffer = other._framebuffer;
+    this->_depth_buffer = other._depth_buffer;
     this->_is_initialised = other._is_initialised;
     this->_should_close = other._should_close;
     this->_platform_state = other._platform_state;
     other._framebuffer.width = 0;
     other._framebuffer.height = 0;
     other._framebuffer.pixels = ft_nullptr;
+    other._depth_buffer.width = 0;
+    other._depth_buffer.height = 0;
+    other._depth_buffer.values = ft_nullptr;
     other._is_initialised = FT_FALSE;
     other._should_close = FT_FALSE;
     other._platform_state = ft_nullptr;
@@ -420,6 +480,20 @@ int32_t ft_render_window::initialize(const ft_render_window_desc &desc)
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (platform_result.error_code);
     }
+    if (create_depth_buffer(&this->_depth_buffer, this->_framebuffer.width,
+            this->_framebuffer.height) != FT_ERR_SUCCESS)
+    {
+        (void)ft_render_platform_destroy_window(
+            &this->_platform_state,
+            &this->_framebuffer
+        );
+        this->_platform_state = ft_nullptr;
+        this->_framebuffer.width = 0;
+        this->_framebuffer.height = 0;
+        this->_framebuffer.pixels = ft_nullptr;
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_NO_MEMORY);
+    }
     this->_is_initialised = FT_TRUE;
     this->_should_close = FT_FALSE;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
@@ -445,6 +519,7 @@ void ft_render_window::shutdown(void)
         this->_framebuffer.width = 0;
         this->_framebuffer.height = 0;
         this->_framebuffer.pixels = ft_nullptr;
+        destroy_depth_buffer(&this->_depth_buffer);
 
         this->_is_initialised = FT_FALSE;
         this->_should_close = FT_TRUE;
@@ -496,7 +571,8 @@ int32_t ft_render_window::present(void)
     }
     platform_result = ft_render_platform_present(
         this->_platform_state,
-        &this->_framebuffer
+        &this->_framebuffer,
+        &this->_depth_buffer
     );
     if (platform_result.error_code != FT_ERR_SUCCESS)
     {
@@ -512,6 +588,13 @@ ft_render_framebuffer &ft_render_window::framebuffer(void)
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::framebuffer");
     return (this->_framebuffer);
+}
+
+ft_render_depth_buffer &ft_render_window::depth_buffer(void)
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_render_window::depth_buffer");
+    return (this->_depth_buffer);
 }
 
 int32_t ft_render_window::clear(uint32_t color)

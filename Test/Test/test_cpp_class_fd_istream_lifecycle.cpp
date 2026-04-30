@@ -205,3 +205,93 @@ FT_TEST(test_cpp_class_fd_istream_move_constructor_preserves_readability)
     close(write_descriptor);
     return (1);
 }
+
+FT_TEST(test_cpp_class_fd_istream_default_constructor_sets_uninitialised_state)
+{
+    ft_fd_istream stream_value;
+
+    FT_ASSERT_EQ(FT_CLASS_STATE_UNINITIALISED, stream_value._initialised_state);
+    FT_ASSERT_EQ(-1, stream_value._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, stream_value._mutex);
+    return (1);
+}
+
+FT_TEST(test_cpp_class_fd_istream_initialize_sets_initialised_state_and_default_descriptor)
+{
+    ft_fd_istream stream_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, stream_value._initialised_state);
+    FT_ASSERT_EQ(-1, stream_value._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, stream_value._mutex);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_cpp_class_fd_istream_destroy_clears_mutex_and_descriptor)
+{
+    int read_descriptor;
+    int write_descriptor;
+    ft_fd_istream stream_value;
+
+    read_descriptor = -1;
+    write_descriptor = -1;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe_descriptors(read_descriptor, write_descriptor));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
+    stream_value.set_file_descriptor(read_descriptor);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.enable_thread_safety());
+    FT_ASSERT(stream_value._mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, stream_value._initialised_state);
+    FT_ASSERT_EQ(-1, stream_value._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, stream_value._mutex);
+    close(read_descriptor);
+    close(write_descriptor);
+    return (1);
+}
+
+FT_TEST(test_cpp_class_fd_istream_reinitialize_after_thread_safe_destroy_resets_members)
+{
+    int read_descriptor;
+    int write_descriptor;
+    ft_fd_istream stream_value;
+
+    read_descriptor = -1;
+    write_descriptor = -1;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe_descriptors(read_descriptor, write_descriptor));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
+    stream_value.set_file_descriptor(read_descriptor);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, stream_value._initialised_state);
+    FT_ASSERT_EQ(-1, stream_value._file_descriptor);
+    FT_ASSERT_EQ(ft_nullptr, stream_value._mutex);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    close(read_descriptor);
+    close(write_descriptor);
+    return (1);
+}
+
+FT_TEST(test_cpp_class_fd_istream_copy_and_move_from_destroyed_source_produce_destroyed_destination)
+{
+    ft_fd_istream source_stream;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.destroy());
+    {
+        ft_fd_istream copied_stream(source_stream);
+
+        FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, copied_stream._initialised_state);
+        FT_ASSERT_EQ(-1, copied_stream._file_descriptor);
+        FT_ASSERT_EQ(ft_nullptr, copied_stream._mutex);
+    }
+    {
+        ft_fd_istream moved_stream(static_cast<ft_fd_istream &&>(source_stream));
+
+        FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, moved_stream._initialised_state);
+        FT_ASSERT_EQ(-1, moved_stream._file_descriptor);
+        FT_ASSERT_EQ(ft_nullptr, moved_stream._mutex);
+    }
+    return (1);
+}

@@ -32,6 +32,15 @@ struct demo_leaderboard
 
 struct demo_level
 {
+    struct demo_light
+    {
+        double      position_x;
+        double      position_y;
+        double      radius;
+        uint32_t    color;
+        uint32_t    intensity;
+    };
+
     const char  *name;
     const char  *tiles;
     int32_t     width;
@@ -40,6 +49,8 @@ struct demo_level
     double      start_position_y;
     double      start_direction_x;
     double      start_direction_y;
+    const demo_light *lights;
+    uint32_t    light_count;
 };
 
 struct demo_game_state

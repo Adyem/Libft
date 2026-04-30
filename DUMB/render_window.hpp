@@ -27,6 +27,13 @@ struct ft_render_framebuffer
     uint32_t        *pixels;
 };
 
+struct ft_render_depth_buffer
+{
+    int32_t         width;
+    int32_t         height;
+    uint8_t         *values;
+};
+
 struct ft_render_screen_size
 {
     int32_t         width;
@@ -47,6 +54,7 @@ class ft_render_window
         uint8_t                      _initialised_state;
 
         ft_render_framebuffer        _framebuffer;
+        ft_render_depth_buffer       _depth_buffer;
         ft_bool                      _is_initialised;
         ft_bool                      _should_close;
 
@@ -74,6 +82,7 @@ class ft_render_window
         int32_t                      present(void);
 
         ft_render_framebuffer        &framebuffer(void);
+        ft_render_depth_buffer       &depth_buffer(void);
         int32_t                      clear(uint32_t color);
         int32_t                      put_pixel(int32_t coordinate_x,
             int32_t coordinate_y, uint32_t color);

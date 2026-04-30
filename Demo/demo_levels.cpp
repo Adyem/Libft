@@ -77,6 +77,34 @@ static const char g_demo_level_tiles_3[] =
     "10000000000000E1"
     "1111111111111111";
 
+static const demo_level::demo_light g_demo_level_lights_0[] =
+{
+    { 13.5, 1.5, 4.6, 0xFFD38CU, 190U },
+    { 11.5, 3.5, 3.8, 0x7CC8FFU, 160U },
+    { 14.5, 14.5, 5.8, 0xFFC06BU, 245U }
+};
+
+static const demo_level::demo_light g_demo_level_lights_1[] =
+{
+    { 5.5, 1.5, 4.2, 0xFFD39AU, 180U },
+    { 11.5, 7.5, 4.4, 0x88B8FFU, 170U },
+    { 13.5, 13.5, 5.0, 0xFFB45AU, 220U }
+};
+
+static const demo_level::demo_light g_demo_level_lights_2[] =
+{
+    { 2.5, 3.5, 4.6, 0xFFD18AU, 185U },
+    { 9.5, 7.5, 4.0, 0x8FD6FFU, 155U },
+    { 13.5, 13.5, 4.6, 0xFFAA52U, 215U }
+};
+
+static const demo_level::demo_light g_demo_level_lights_3[] =
+{
+    { 13.5, 1.5, 4.2, 0xFFC978U, 180U },
+    { 11.5, 5.5, 4.2, 0xA1C8FFU, 175U },
+    { 13.5, 14.5, 5.0, 0xFF9E48U, 225U }
+};
+
 const demo_level g_demo_levels[] =
 {
     {
@@ -87,7 +115,9 @@ const demo_level g_demo_levels[] =
         1.5,
         1.5,
         1.0,
-        0.0
+        0.0,
+        g_demo_level_lights_0,
+        sizeof(g_demo_level_lights_0) / sizeof(g_demo_level_lights_0[0])
     },
     {
         "BRICK LOOP",
@@ -97,7 +127,9 @@ const demo_level g_demo_levels[] =
         1.5,
         1.5,
         1.0,
-        0.0
+        0.0,
+        g_demo_level_lights_1,
+        sizeof(g_demo_level_lights_1) / sizeof(g_demo_level_lights_1[0])
     },
     {
         "LOW VAULT",
@@ -107,7 +139,9 @@ const demo_level g_demo_levels[] =
         1.5,
         1.5,
         1.0,
-        0.0
+        0.0,
+        g_demo_level_lights_2,
+        sizeof(g_demo_level_lights_2) / sizeof(g_demo_level_lights_2[0])
     },
     {
         "FINAL SPIRAL",
@@ -117,7 +151,9 @@ const demo_level g_demo_levels[] =
         1.5,
         1.5,
         1.0,
-        0.0
+        0.0,
+        g_demo_level_lights_3,
+        sizeof(g_demo_level_lights_3) / sizeof(g_demo_level_lights_3[0])
     }
 };
 
