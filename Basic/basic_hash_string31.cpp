@@ -1,4 +1,5 @@
 #include "basic.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
 int64_t ft_hash_string31(const char *string)
@@ -18,4 +19,9 @@ int64_t ft_hash_string31(const char *string)
         index++;
     }
     return (static_cast<int64_t>(static_cast<int32_t>(hash_value)));
+}
+
+int64_t ft_hash_string31(const ft_string &string)
+{
+    return (ft_hash_string31(string.c_str()));
 }

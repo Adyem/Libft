@@ -81,6 +81,7 @@ int32_t         ft_islower(int32_t character);
 int32_t         ft_isupper(int32_t character);
 int64_t         ft_atol(const char *string);
 int64_t         ft_hash_string31(const char *string);
+int64_t         ft_hash_string31(const ft_string &string);
 int64_t         ft_strtol(const char *input_string, char **end_pointer,
                     int32_t numeric_base);
 uint64_t        ft_strtoul(const char *input_string,

@@ -26,6 +26,7 @@ float ft_random_beta(float alpha, float beta);
 float ft_random_chi_squared(float degrees_of_freedom);
 uint32_t ft_random_seed(const char *seed_string = ft_nullptr);
 int64_t rng_seed_value(const char *seed_string = ft_nullptr);
+int64_t rng_seed_value(const ft_string &seed_string);
 int32_t rng_secure_bytes(unsigned char *buffer, ft_size_t length);
 uint32_t ft_random_uint32(void);
 void ft_generate_uuid(char output_buffer[37]);

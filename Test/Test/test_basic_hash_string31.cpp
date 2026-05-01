@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 
@@ -70,5 +71,26 @@ FT_TEST(test_basic_hash_string31_uses_unsigned_byte_values)
     string_with_high_bytes[2] = static_cast<char>(0x7F);
     string_with_high_bytes[3] = '\0';
     FT_ASSERT_EQ(249150, ft_hash_string31(string_with_high_bytes));
+    return (1);
+}
+
+FT_TEST(test_basic_hash_string31_ft_string_matches_c_string)
+{
+    ft_string string_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.assign("Minecraft", 9));
+    FT_ASSERT_EQ(ft_hash_string31("Minecraft"), ft_hash_string31(string_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
+    return (1);
+}
+
+FT_TEST(test_basic_hash_string31_ft_string_empty_matches_c_string)
+{
+    ft_string string_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.initialize());
+    FT_ASSERT_EQ(ft_hash_string31(""), ft_hash_string31(string_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
     return (1);
 }
