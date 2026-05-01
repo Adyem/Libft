@@ -37,6 +37,7 @@ BASIC_TEST_FILES := \
 	Test/test_basic_memset.cpp \
 	Test/test_basic_strchr.cpp \
 	Test/test_basic_strcmp.cpp \
+	Test/test_basic_hash_string31.cpp \
 	Test/test_basic_strcpy_s.cpp \
 	Test/test_basic_striteri.cpp \
 	Test/test_basic_strlcat.cpp \
@@ -147,12 +148,24 @@ X11_LIBS := -lX11
 else
 X11_LIBS :=
 endif
+HAS_GL_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libGL.so" && echo 1 || echo 0)
+HAS_XEXT_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXext.so" && echo 1 || echo 0)
 ifeq ($(HAS_ASOUND_LIB),1)
 ASOUND_LIBS := -lasound
 else
 ASOUND_LIBS :=
 endif
-LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(ASOUND_LIBS)
+ifeq ($(HAS_GL_LIB),1)
+GL_LIBS := -lGL
+else
+GL_LIBS :=
+endif
+ifeq ($(HAS_XEXT_LIB),1)
+XEXT_LIBS := -lXext
+else
+XEXT_LIBS :=
+endif
+LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(GL_LIBS) $(ASOUND_LIBS)
 export COMPILE_FLAGS
 
 BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
@@ -198,6 +211,15 @@ Efficiency:
 run_Efficiency:
 	@$(MAKE) $(EFFICIENCY_TARGET) OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL)
 	@./$(EFFICIENCY_TARGET)
+
+single_test:
+	@if [ -z "$(TEST)" ]; then \
+		echo "Usage: make single_test TEST=Test/test_name.cpp"; \
+		exit 1; \
+	fi
+	@python3 tools/build_single_test.py "$(TEST)"
+
+run_single_test: single_test
 
 get_next_line:
 	@echo "Building get_next_line test executable ($(TARGET))"
@@ -456,5 +478,14 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS) $(EFFICIENCY_DEPS)
 
 .PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA Efficiency run_Efficiency get_next_line re_get_next_line FORCE
+
+print_test_compile_flags:
+	@printf '%s\n' "$(COMPILE_FLAGS)"
+
+print_test_ldflags:
+	@printf '%s\n' "$(LDFLAGS)"
+
+print_test_objdir:
+	@printf '%s\n' "$(OBJDIR)"
 
 FORCE:

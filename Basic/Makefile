@@ -19,6 +19,7 @@ SRCS := basic_atoi.cpp \
     basic_strnstr.cpp \
     basic_strstr.cpp \
     basic_strrchr.cpp \
+    basic_hash_string31.cpp \
     basic_strtok.cpp \
     basic_atol.cpp \
     basic_strtol.cpp \

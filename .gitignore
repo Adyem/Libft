@@ -6,12 +6,17 @@
 **/objs_debug/**/*.d
 **/objs_test/**/*.o
 **/objs_test/**/*.d
+**/objs_test_opt0/**/*.o
+**/objs_test_opt0/**/*.d
 **/objs_debug_test/**/*.o
 **/objs_debug_test/**/*.d
+**/objs_debug_test_opt0/**/*.o
+**/objs_debug_test_opt0/**/*.d
 **/objs_opt3/**/*.o
 **/objs_opt3/**/*.d
 **/objs_test_opt3/**/*.o
 **/objs_test_opt3/**/*.d
+Test/single_tests/
 Test/objs_efficiency_opt3/
 Test/objs_efficiency_test_opt0/
 Test/objs_efficiency_test_opt3/
