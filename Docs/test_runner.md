@@ -31,6 +31,23 @@ confirm the resolved targets before invoking `make`.  At runtime the
 `FT_TEST_NAME_FILTER` environment variable is set so the updated test runner
 only executes the requested `FT_TEST` functions.
 
+The runtime filter also works directly when invoking `Test/libft_tests`.
+Filter values are comma-separated substring matches, so this runs every test
+whose name contains `serializer`:
+
+```bash
+FT_TEST_NAME_FILTER=serializer ./Test/libft_tests
+```
+
+Set `FT_TEST_HIDE_SUCCESSFUL=1` to keep successful tests out of the final
+output. The runner still prints the currently executing test on one transient
+line; that line is cleared when the test passes and replaced with a persistent
+`FAIL` line only when the test fails.
+
+```bash
+FT_TEST_NAME_FILTER=serializer FT_TEST_HIDE_SUCCESSFUL=1 ./Test/libft_tests
+```
+
 Targeting the more complex API request suite demonstrates that the helper can
 still quickly map a single FT_TEST to the sprawling `Test/test_api_request.cpp`
 translation unit.  Only that object is recompiled while the Full_Libft archive

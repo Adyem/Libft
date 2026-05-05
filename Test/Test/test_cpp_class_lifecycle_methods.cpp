@@ -394,7 +394,7 @@ FT_TEST(test_data_buffer_move_destroyed_source_marks_destination_destroyed)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.move(source_buffer));
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, destination_buffer._initialised_state);
     FT_ASSERT_EQ(ft_nullptr, destination_buffer._mutex);
-    FT_ASSERT_EQ((ft_size_t)0, destination_buffer.tell());
+    FT_ASSERT_EQ((ft_size_t)0, destination_buffer._read_pos);
     return (1);
 }
 

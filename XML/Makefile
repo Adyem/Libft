@@ -4,7 +4,8 @@ DEBUG_TARGET   := XMLParser_debug.a
 
 SRCS := xml_document.cpp \
         xml_node_thread_safety.cpp \
-        xml_dom_bridge.cpp
+        xml_dom_bridge.cpp \
+        xml_serializer.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -115,4 +116,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

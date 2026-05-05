@@ -1,0 +1,97 @@
+#include "../test_internal.hpp"
+#include "../../JSon/json.hpp"
+#include "../../JSon/document.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../System_utils/test_system_utils_runner.hpp"
+#include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+struct json_serializer_character
+{
+    const char *name;
+    const char *role;
+};
+
+static int32_t json_serializer_write_character(
+    json_document &document, void *user_data) noexcept
+{
+    json_serializer_character *character;
+    json_group *group;
+    json_item *name_item;
+    json_item *role_item;
+
+    character = static_cast<json_serializer_character *>(user_data);
+    if (character == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    group = document.create_group("character");
+    if (group == ft_nullptr)
+        return (document.get_error());
+    name_item = document.create_item("name", character->name);
+    if (name_item == ft_nullptr)
+        return (document.get_error());
+    role_item = document.create_item("role", character->role);
+    if (role_item == ft_nullptr)
+        return (document.get_error());
+    document.append_group(group);
+    document.add_item(group, name_item);
+    document.add_item(group, role_item);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t json_serializer_read_character(
+    const json_document &document, void *user_data) noexcept
+{
+    json_serializer_character *character;
+
+    character = static_cast<json_serializer_character *>(user_data);
+    if (character == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    character->name = document.get_value_by_pointer("/character/name");
+    if (character->name == ft_nullptr)
+        return (document.get_error());
+    character->role = document.get_value_by_pointer("/character/role");
+    if (character->role == ft_nullptr)
+        return (document.get_error());
+    return (FT_ERR_SUCCESS);
+}
+
+FT_TEST(test_json_serializer_to_string_and_from_string)
+{
+    json_serializer_character input_character;
+    json_serializer_character output_character;
+    ft_string serialized_content;
+
+    input_character.name = "Ada";
+    input_character.role = "wizard";
+    output_character.name = ft_nullptr;
+    output_character.role = ft_nullptr;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, serialized_content.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, json_serialize_to_string(
+            json_serializer_write_character, &input_character,
+            serialized_content));
+    FT_ASSERT(std::strstr(serialized_content.c_str(), "\"character\"")
+        != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, json_deserialize_from_string(
+            serialized_content.c_str(), json_serializer_read_character,
+            &output_character));
+    FT_ASSERT(output_character.name != ft_nullptr);
+    FT_ASSERT(output_character.role != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(output_character.name, "Ada"));
+    FT_ASSERT_EQ(0, std::strcmp(output_character.role, "wizard"));
+    return (1);
+}
+
+FT_TEST(test_json_serializer_rejects_null_callbacks)
+{
+    ft_string serialized_content;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, serialized_content.initialize());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+        json_serialize_to_string(ft_nullptr, ft_nullptr, serialized_content));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+        json_deserialize_from_string("{}", ft_nullptr, ft_nullptr));
+    return (1);
+}

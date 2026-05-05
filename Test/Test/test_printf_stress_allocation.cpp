@@ -693,11 +693,11 @@ FT_TEST(test_printf_alloc_limit_deeper_failure_limit_6)
     pf_fill_repeated(chunk, 256, 's');
     context.chunk = chunk;
     context.repeat_count = 28;
-    pf_unregister_custom_specifier('b');
-    FT_ASSERT_EQ(0, pf_register_custom_specifier('b', pf_custom_stress_handler,
+    pf_unregister_custom_specifier('Q');
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('Q', pf_custom_stress_handler,
             &context));
-    FT_ASSERT_EQ(-1, pf_run_stress_snprintf_with_limit(6, 'b', "x"));
-    FT_ASSERT_EQ(0, pf_unregister_custom_specifier('b'));
+    FT_ASSERT_EQ(-1, pf_run_stress_snprintf_with_limit(6, 'Q', "x"));
+    FT_ASSERT_EQ(0, pf_unregister_custom_specifier('Q'));
     return (1);
 }
 

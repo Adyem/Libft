@@ -534,7 +534,7 @@ int32_t ft_future<ValueType>::wait_ready() const
     start_time = std::chrono::steady_clock::now();
     while (!promise_pointer->is_ready())
     {
-        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(1))
+        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(5))
         {
             return (FT_ERR_TIMEOUT);
         }
@@ -1019,7 +1019,7 @@ inline int32_t ft_future<void>::wait_ready() const
     start_time = std::chrono::steady_clock::now();
     while (!promise_pointer->is_ready())
     {
-        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(1))
+        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(5))
         {
             return (FT_ERR_TIMEOUT);
         }

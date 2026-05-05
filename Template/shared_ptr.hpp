@@ -478,6 +478,9 @@ int32_t ft_sharedptr<ManagedType>::initialize(const ft_sharedptr &other) noexcep
         destroy_result = this->destroy();
         if (destroy_result != FT_ERR_SUCCESS)
             return (set_error(destroy_result));
+        destroy_result = this->disable_thread_safety();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (set_error(destroy_result));
     }
     if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
     {
@@ -555,6 +558,9 @@ int32_t ft_sharedptr<ManagedType>::move(ft_sharedptr<ManagedType> &other) noexce
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         destroy_result = this->destroy();
+        if (destroy_result != FT_ERR_SUCCESS)
+            return (set_error(destroy_result));
+        destroy_result = this->disable_thread_safety();
         if (destroy_result != FT_ERR_SUCCESS)
             return (set_error(destroy_result));
     }

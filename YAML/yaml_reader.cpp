@@ -19,6 +19,8 @@ static int32_t yaml_reader_take_error() noexcept
 
 static int32_t yaml_string_get_error(const ft_string &value) noexcept
 {
+    if (value.is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
     return (value.get_error());
 }
 
@@ -215,6 +217,11 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                     if (last_error != FT_ERR_SUCCESS)
                     {
                         error_code = last_error;
+                        goto list_cleanup;
+                    }
+                    if (inline_colon != static_cast<ft_size_t>(-1))
+                    {
+                        error_code = FT_ERR_INVALID_ARGUMENT;
                         goto list_cleanup;
                     }
                     if (inline_colon != static_cast<ft_size_t>(-1))
@@ -740,6 +747,7 @@ error:
 
 yaml_value *yaml_read_from_string(const ft_string &content) noexcept
 {
+    yaml_reader_set_error(FT_ERR_SUCCESS);
     {
         int32_t string_error = yaml_string_get_error(content);
 
@@ -780,6 +788,7 @@ yaml_value *yaml_read_from_string(const ft_string &content) noexcept
 
 yaml_value *yaml_read_from_file(const char *file_path) noexcept
 {
+    yaml_reader_set_error(FT_ERR_SUCCESS);
     su_file *file = su_fopen(file_path);
     int32_t file_error = yaml_reader_take_error();
     if (file == ft_nullptr)
@@ -839,6 +848,7 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
 
 yaml_value *yaml_read_from_backend(ft_document_source &source) noexcept
 {
+    yaml_reader_set_error(FT_ERR_SUCCESS);
     ft_string content;
     int32_t read_result;
 

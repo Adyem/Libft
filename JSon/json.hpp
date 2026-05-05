@@ -104,4 +104,18 @@ const char  *json_schema_field_get_error_str(const json_schema_field *field);
 int32_t         json_stream_reader_disable_thread_safety(json_stream_reader *reader);
 ft_bool        json_stream_reader_is_thread_safe(const json_stream_reader *reader);
 
+typedef int32_t (*json_serialize_callback)(
+    json_document &document, void *user_data) noexcept;
+typedef int32_t (*json_deserialize_callback)(
+    const json_document &document, void *user_data) noexcept;
+
+int32_t json_serialize_to_string(json_serialize_callback serialize_callback,
+    void *user_data, ft_string &output) noexcept;
+int32_t json_serialize_to_backend(json_serialize_callback serialize_callback,
+    void *user_data, ft_document_sink &sink) noexcept;
+int32_t json_deserialize_from_string(const char *content,
+    json_deserialize_callback deserialize_callback, void *user_data) noexcept;
+int32_t json_deserialize_from_backend(ft_document_source &source,
+    json_deserialize_callback deserialize_callback, void *user_data) noexcept;
+
 #endif

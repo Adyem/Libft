@@ -75,6 +75,8 @@ ft_task_scheduler::scheduled_task::operator=(scheduled_task &&other)
 
 int ft_task_scheduler::scheduled_task::initialize()
 {
+    int state_initialize_error;
+
     if (this->_initialised_state == ft_task_scheduler::scheduled_task::_state_initialised)
     {
         errno_abort_lifecycle(this->_initialised_state,
@@ -85,7 +87,13 @@ int ft_task_scheduler::scheduled_task::initialize()
     this->_time = t_monotonic_time_point();
     this->_interval_ms = 0;
     this->_function = ft_function<void()>();
-    this->_state = ft_sharedptr<ft_scheduled_task_state>();
+    (void)this->_state.destroy();
+    state_initialize_error = this->_state.initialize();
+    if (state_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = ft_task_scheduler::scheduled_task::_state_destroyed;
+        return (state_initialize_error);
+    }
     this->_trace_id = 0;
     this->_parent_id = 0;
     this->_label = ft_nullptr;
@@ -360,6 +368,11 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(const ft_scheduled_task_handl
     int lock_error = other.lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
+    if (!other._state)
+    {
+        other.unlock_internal(lock_acquired);
+        return ;
+    }
     state_initialize_error = this->_state.initialize(other._state);
     if (state_initialize_error != FT_ERR_SUCCESS)
     {
@@ -405,6 +418,13 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
     int other_lock_error = other.lock_internal(&other_lock_acquired);
     if (other_lock_error != FT_ERR_SUCCESS)
     {
+        this->unlock_internal(this_lock_acquired);
+        return (*this);
+    }
+    if (!other._state)
+    {
+        this->_scheduler = ft_nullptr;
+        other.unlock_internal(other_lock_acquired);
         this->unlock_internal(this_lock_acquired);
         return (*this);
     }

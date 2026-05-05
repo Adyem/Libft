@@ -712,10 +712,10 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     }
     auto make_future = [&promise_shared]() -> ft_future<return_type>
     {
-        ft_future<return_type> promise_future(promise_shared);
+        ft_future<return_type> promise_future;
         ft_future<return_type> future_value;
 
-        if (promise_future.initialize() != FT_ERR_SUCCESS)
+        if (promise_future.initialize(promise_shared) != FT_ERR_SUCCESS)
             return (ft_future<return_type>());
         if (future_value.move(promise_future) != FT_ERR_SUCCESS)
             return (ft_future<return_type>());
@@ -819,8 +819,8 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         return (result_pair);
     }
-    ft_future<return_type> promise_future(promise_shared);
-    int promise_future_initialize_error = promise_future.initialize();
+    ft_future<return_type> promise_future;
+    int promise_future_initialize_error = promise_future.initialize(promise_shared);
     if (promise_future_initialize_error != FT_ERR_SUCCESS)
     {
         return (result_pair);

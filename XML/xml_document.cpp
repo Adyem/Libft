@@ -418,6 +418,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
         children_initialize_error = node->children.initialize();
         if (children_initialize_error != FT_ERR_SUCCESS)
         {
+            cma_free(name);
             delete node;
             if (error_code_out)
                 *error_code_out = children_initialize_error;
@@ -426,6 +427,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
         attributes_initialize_error = node->attributes.initialize();
         if (attributes_initialize_error != FT_ERR_SUCCESS)
         {
+            cma_free(name);
             delete node;
             if (error_code_out)
                 *error_code_out = attributes_initialize_error;

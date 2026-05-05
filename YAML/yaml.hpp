@@ -81,4 +81,18 @@ int32_t           yaml_write_to_file(const char *file_path, const yaml_value *va
 int32_t           yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexcept;
 void          yaml_free(yaml_value *value) noexcept;
 
+typedef int32_t (*yaml_serialize_callback)(
+    yaml_value &root, void *user_data) noexcept;
+typedef int32_t (*yaml_deserialize_callback)(
+    const yaml_value &root, void *user_data) noexcept;
+
+int32_t yaml_serialize_to_string(yaml_serialize_callback serialize_callback,
+    void *user_data, ft_string &output) noexcept;
+int32_t yaml_serialize_to_backend(yaml_serialize_callback serialize_callback,
+    void *user_data, ft_document_sink &sink) noexcept;
+int32_t yaml_deserialize_from_string(const ft_string &content,
+    yaml_deserialize_callback deserialize_callback, void *user_data) noexcept;
+int32_t yaml_deserialize_from_backend(ft_document_source &source,
+    yaml_deserialize_callback deserialize_callback, void *user_data) noexcept;
+
 #endif

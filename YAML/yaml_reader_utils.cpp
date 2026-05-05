@@ -42,7 +42,7 @@ ft_string yaml_substr(const ft_string &string, ft_size_t start, ft_size_t length
 
 ft_string yaml_substr_from(const ft_string &string, ft_size_t start) noexcept
 {
-    if (start >= string.size())
+    if (start > string.size())
         return (ft_string());
     ft_string part = yaml_substr(string, start, string.size() - start);
     return (part);
@@ -71,7 +71,7 @@ void yaml_trim(ft_string &string) noexcept
     if (start_index == 0 && end_index == string_length)
         return ;
     ft_string trimmed = yaml_substr(string, start_index, end_index - start_index);
-    if (trimmed.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    if (trimmed.is_initialised() == FT_FALSE)
     {
         string = ft_string();
         return ;
@@ -99,7 +99,7 @@ int32_t yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) 
         while (end_index < content_length && data[end_index] != '\n')
             end_index++;
         ft_string part = yaml_substr(content, start_index, end_index - start_index);
-        if (part.is_initialised() != FT_CLASS_STATE_INITIALISED)
+        if (part.is_initialised() == FT_FALSE)
             return (FT_ERR_NO_MEMORY);
         lines.push_back(part);
         if (lines.get_error() != FT_ERR_SUCCESS)

@@ -221,6 +221,11 @@ FT_TEST(test_networking_http_server_post_echoes_body)
     FT_TEST_REQUIRE(client_socket.send_all(request_string.c_str(), request_string.size(), 0)
         == static_cast<ssize_t>(request_string.size()));
     FT_TEST_REQUIRE(collect_response(client_socket.get_file_descriptor(), response) == 1);
+    if (thread_started == FT_TRUE)
+    {
+        server_thread.join();
+        thread_started = FT_FALSE;
+    }
     FT_TEST_REQUIRE(context.result == FT_ERR_SUCCESS);
     status_match = ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size());
     FT_TEST_REQUIRE(status_match != ft_nullptr);
@@ -291,6 +296,11 @@ FT_TEST(test_networking_http_server_keep_alive_multiple_requests)
     FT_TEST_REQUIRE(client_socket.send_all(request_string.c_str(), request_string.size(), 0)
         == static_cast<ssize_t>(request_string.size()));
     FT_TEST_REQUIRE(collect_response(client_socket.get_file_descriptor(), response) == 1);
+    if (thread_started == FT_TRUE)
+    {
+        server_thread.join();
+        thread_started = FT_FALSE;
+    }
     FT_TEST_REQUIRE(context.result == FT_ERR_SUCCESS);
     first_response = ft_strnstr(response.c_str(), "Connection: keep-alive", response.size());
     FT_TEST_REQUIRE(first_response != ft_nullptr);
@@ -317,6 +327,7 @@ FT_TEST(test_networking_http_server_thread_safe_run_once)
 {
     ft_http_server server;
     http_server_context run_context;
+    http_server_context error_context;
     ft_thread server_thread;
     ft_thread error_thread;
     SocketConfig client_configuration;
@@ -335,15 +346,18 @@ FT_TEST(test_networking_http_server_thread_safe_run_once)
     response_initialized = FT_FALSE;
     test_passed = FT_FALSE;
     run_context.result = FT_ERR_INVALID_STATE;
+    error_context.result = FT_ERR_INVALID_STATE;
     FT_TEST_REQUIRE(server.initialize() == FT_ERR_SUCCESS);
     FT_TEST_REQUIRE(server.start("127.0.0.1", 54336) == FT_ERR_SUCCESS);
     run_context.server = &server;
     run_context.result = -1;
+    error_context.server = &server;
+    error_context.result = -1;
     server_thread = ft_thread(http_server_run_once, &run_context);
     FT_TEST_REQUIRE(server_thread.joinable());
     run_thread_started = FT_TRUE;
     usleep(50000);
-    error_thread = ft_thread(http_server_run_once, &run_context);
+    error_thread = ft_thread(http_server_run_once, &error_context);
     FT_TEST_REQUIRE(error_thread.joinable());
     error_thread_started = FT_TRUE;
     FT_TEST_REQUIRE(response.initialize() == FT_ERR_SUCCESS);
@@ -360,7 +374,20 @@ FT_TEST(test_networking_http_server_thread_safe_run_once)
     FT_TEST_REQUIRE(client_socket.send_all(request_string, ft_strlen(request_string), 0)
         == static_cast<ssize_t>(ft_strlen(request_string)));
     FT_TEST_REQUIRE(collect_response(client_socket.get_file_descriptor(), response) == 1);
-    FT_TEST_REQUIRE(run_context.result == FT_ERR_SUCCESS || run_context.result == 1);
+    if (run_thread_started == FT_TRUE)
+    {
+        server_thread.join();
+        run_thread_started = FT_FALSE;
+    }
+    if (error_thread_started == FT_TRUE)
+    {
+        error_thread.join();
+        error_thread_started = FT_FALSE;
+    }
+    FT_TEST_REQUIRE(run_context.result == FT_ERR_SUCCESS
+        || run_context.result == 1
+        || error_context.result == FT_ERR_SUCCESS
+        || error_context.result == 1);
     FT_TEST_REQUIRE(ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) != ft_nullptr);
     test_passed = FT_TRUE;
 cleanup:

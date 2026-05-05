@@ -1,6 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../DUMB/sound_clip.hpp"
 #include "../../DUMB/sound_device.hpp"
+#include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_system_utils_runner.hpp"
 #include <csignal>
@@ -9,7 +10,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
-#include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #if defined(__has_include)
@@ -49,13 +49,10 @@ static int32_t dumb_prepare_sparse_wav_file(char *path_buffer, ft_size_t path_bu
 
 static int32_t dumb_expect_load_wav_allocation_failure_with_temp_limit(void)
 {
-    struct rlimit original_limit_data;
-    struct rlimit limit_data;
     ft_sound_clip sound_clip_instance;
     char temporary_path[64];
     int32_t result_code;
     int32_t test_success;
-    ft_bool limit_was_set;
 
 #if FT_HAS_VALGRIND_HEADER
     if (RUNNING_ON_VALGRIND != 0)
@@ -63,18 +60,6 @@ static int32_t dumb_expect_load_wav_allocation_failure_with_temp_limit(void)
 #endif
     temporary_path[0] = '\0';
     test_success = 0;
-    limit_was_set = FT_FALSE;
-    if (getrlimit(RLIMIT_AS, &original_limit_data) != 0)
-        return (0);
-    limit_data = original_limit_data;
-    if (limit_data.rlim_cur == RLIM_INFINITY
-        || limit_data.rlim_cur > static_cast<rlim_t>(8 * 1024 * 1024))
-    {
-        limit_data.rlim_cur = static_cast<rlim_t>(8 * 1024 * 1024);
-    }
-    if (setrlimit(RLIMIT_AS, &limit_data) != 0)
-        return (0);
-    limit_was_set = FT_TRUE;
     if (dumb_prepare_sparse_wav_file(temporary_path, sizeof(temporary_path)) == 0)
     {
         test_success = 0;
@@ -85,15 +70,15 @@ static int32_t dumb_expect_load_wav_allocation_failure_with_temp_limit(void)
     }
     else
     {
+        cma_set_alloc_limit(1);
         result_code = sound_clip_instance.load_wav(temporary_path);
+        cma_set_alloc_limit(0);
         (void)sound_clip_instance.destroy();
         if (result_code == FT_ERR_IO)
             test_success = 1;
     }
     if (temporary_path[0] != '\0')
         unlink(temporary_path);
-    if (limit_was_set == FT_TRUE && setrlimit(RLIMIT_AS, &original_limit_data) != 0)
-        return (0);
     return (test_success);
 }
 

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <exception>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include "../Errno/errno.hpp"
 
@@ -39,6 +40,33 @@ static s_test_case *get_tests(void)
     static s_test_case tests[4096];
 
     return (tests);
+}
+
+static char *get_last_failure_message(void)
+{
+    static char last_failure_message[2048];
+
+    return (last_failure_message);
+}
+
+static void clear_last_failure_message(void)
+{
+    char *last_failure_message;
+
+    last_failure_message = get_last_failure_message();
+    last_failure_message[0] = '\0';
+    return ;
+}
+
+static void set_last_failure_message(const char *message)
+{
+    char *last_failure_message;
+
+    if (message == NULL)
+        return ;
+    last_failure_message = get_last_failure_message();
+    (void)std::snprintf(last_failure_message, 2048, "%s", message);
+    return ;
 }
 
 static void swap_test_cases(s_test_case *left, s_test_case *right)
@@ -107,6 +135,23 @@ static const char *get_name_filter(void)
     return (filter);
 }
 
+static int32_t filter_token_is_substring(const char *token,
+    ft_size_t token_length, const char *name)
+{
+    ft_size_t name_index;
+
+    if (token == NULL || name == NULL || token_length == 0)
+        return (0);
+    name_index = 0;
+    while (name[name_index] != '\0')
+    {
+        if (std::strncmp(name + name_index, token, token_length) == 0)
+            return (1);
+        name_index++;
+    }
+    return (0);
+}
+
 static int32_t name_matches_filter(const char *filter, const char *name)
 {
     const char *cursor;
@@ -122,7 +167,7 @@ static int32_t name_matches_filter(const char *filter, const char *name)
         while (*cursor && *cursor != ',')
             cursor++;
         length = static_cast<ft_size_t>(cursor - start);
-        if (length > 0 && std::strncmp(start, name, length) == 0 && name[length] == '\0')
+        if (filter_token_is_substring(start, length, name) != 0)
             return (1);
         if (*cursor == ',')
             cursor++;
@@ -138,6 +183,85 @@ static int32_t test_is_selected(const s_test_case *test)
     if (name_filter && !name_matches_filter(name_filter, test->name))
         return (0);
     return (1);
+}
+
+static int32_t env_value_is_enabled(const char *value)
+{
+    if (value == NULL)
+        return (0);
+    if (value[0] == '\0')
+        return (0);
+    if (std::strcmp(value, "0") == 0)
+        return (0);
+    if (std::strcmp(value, "false") == 0)
+        return (0);
+    if (std::strcmp(value, "FALSE") == 0)
+        return (0);
+    if (std::strcmp(value, "no") == 0)
+        return (0);
+    if (std::strcmp(value, "NO") == 0)
+        return (0);
+    if (std::strcmp(value, "off") == 0)
+        return (0);
+    if (std::strcmp(value, "OFF") == 0)
+        return (0);
+    return (1);
+}
+
+static int32_t hide_successful_tests_enabled(void)
+{
+    const char *hide_successful;
+
+    hide_successful = getenv("FT_TEST_HIDE_SUCCESSFUL");
+    if (env_value_is_enabled(hide_successful) != 0)
+        return (1);
+    hide_successful = getenv("FT_TEST_HIDE_SUCCESSES");
+    if (env_value_is_enabled(hide_successful) != 0)
+        return (1);
+    return (0);
+}
+
+static int32_t get_stdout_terminal_width(void)
+{
+    struct winsize terminal_size;
+
+    if (isatty(STDOUT_FILENO) == 0)
+        return (0);
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &terminal_size) != 0)
+        return (80);
+    if (terminal_size.ws_col == 0)
+        return (80);
+    return (static_cast<int32_t>(terminal_size.ws_col));
+}
+
+static void print_running_test_line(int32_t test_number,
+    const char *description)
+{
+    int32_t terminal_width;
+    int32_t prefix_length;
+    int32_t available_description_length;
+    int32_t description_index;
+
+    terminal_width = get_stdout_terminal_width();
+    if (terminal_width <= 0)
+        return ;
+    printf("\r\033[2KRunning test %d \"", test_number);
+    prefix_length = std::snprintf(ft_nullptr, 0, "Running test %d \"",
+        test_number);
+    available_description_length = terminal_width - prefix_length - 2;
+    if (available_description_length < 0)
+        available_description_length = 0;
+    description_index = 0;
+    while (description != ft_nullptr
+        && description[description_index] != '\0'
+        && description_index < available_description_length)
+    {
+        putchar(description[description_index]);
+        description_index++;
+    }
+    putchar('"');
+    fflush(stdout);
+    return ;
 }
 
 static void write_literal_to_stderr(const char *message)
@@ -312,6 +436,7 @@ static int32_t execute_test_function(const s_test_case *test)
     }
     ft_log_close();
     reset_mutex_failure_overrides();
+    clear_last_failure_message();
     try
     {
         result = test->func();
@@ -327,6 +452,7 @@ static int32_t execute_test_function(const s_test_case *test)
                 test->name, exception.what());
             fclose(log_file);
         }
+        set_last_failure_message(exception.what());
         result = 0;
     }
     catch (...)
@@ -340,6 +466,7 @@ static int32_t execute_test_function(const s_test_case *test)
                 test->name);
             fclose(log_file);
         }
+        set_last_failure_message("unknown exception");
         result = 0;
     }
     reset_error = cma_set_alloc_limit(0);
@@ -398,11 +525,16 @@ int32_t ft_register_test(t_test_func func, const char *description, const char *
 void ft_test_fail(const char *expression, const char *file, int32_t line)
 {
     FILE *log_file;
+    char failure_message[1024];
+
+    (void)std::snprintf(failure_message, sizeof(failure_message),
+        "%s:%d: %s", file, line, expression);
+    set_last_failure_message(failure_message);
 
     log_file = fopen("test_failures.log", "a");
     if (log_file)
     {
-        fprintf(log_file, "%s:%d: %s\n", file, line, expression);
+        fprintf(log_file, "%s\n", failure_message);
         fclose(log_file);
     }
     return ;
@@ -412,12 +544,17 @@ void ft_test_fail_values(const char *expression, const char *file, int32_t line,
     const char *expected_value, const char *actual_value)
 {
     FILE *log_file;
+    char failure_message[2048];
+
+    (void)std::snprintf(failure_message, sizeof(failure_message),
+        "%s:%d: %s | expected: %s | actual: %s",
+        file, line, expression, expected_value, actual_value);
+    set_last_failure_message(failure_message);
 
     log_file = fopen("test_failures.log", "a");
     if (log_file)
     {
-        fprintf(log_file, "%s:%d: %s | expected: %s | actual: %s\n",
-            file, line, expression, expected_value, actual_value);
+        fprintf(log_file, "%s\n", failure_message);
         fclose(log_file);
     }
     return ;
@@ -435,6 +572,9 @@ int32_t ft_run_registered_tests(void)
     int32_t *test_count;
     int32_t total_tests;
     int32_t selected_tests;
+    int32_t hide_successful_tests;
+    int32_t show_running_line;
+    const char *failure_message;
 
     log_file = fopen("test_failures.log", "w");
     if (log_file)
@@ -447,6 +587,7 @@ int32_t ft_run_registered_tests(void)
     baseline_stderr_descriptor = dup(STDERR_FILENO);
     total_tests = *test_count;
     selected_tests = 0;
+    hide_successful_tests = hide_successful_tests_enabled();
     index = 0;
     passed = 0;
     while (index < total_tests)
@@ -463,18 +604,34 @@ int32_t ft_run_registered_tests(void)
         if (baseline_stderr_descriptor >= 0)
             (void)dup2(baseline_stderr_descriptor, STDERR_FILENO);
         selected_tests++;
-        printf("Running test %d \"%s\"", selected_tests,
-            tests[index].description);
-        fflush(stdout);
+        show_running_line = 1;
+        if (hide_successful_tests != 0 && isatty(STDOUT_FILENO) == 0)
+            show_running_line = 0;
+        if (show_running_line != 0)
+        {
+            print_running_test_line(selected_tests, tests[index].description);
+        }
         if (execute_test_function(&tests[index]))
         {
-            printf("\r\033[2K\033[32mSUCCESS\033[0m %d %s\n", selected_tests, tests[index].description);
+            if (hide_successful_tests != 0)
+            {
+                if (show_running_line != 0)
+                    printf("\r\033[2K");
+            }
+            else
+                printf("\r\033[2K\033[32mSUCCESS\033[0m %d %s\n",
+                    selected_tests, tests[index].description);
             fflush(stdout);
             passed++;
         }
         else
         {
-            printf("\r\033[2K\033[31mFAIL\033[0m %d %s\n", selected_tests, tests[index].description);
+            if (show_running_line != 0)
+                printf("\r\033[2K");
+            printf("\033[31mFAIL\033[0m %d %s\n", selected_tests, tests[index].description);
+            failure_message = get_last_failure_message();
+            if (failure_message[0] != '\0')
+                printf("    %s\n", failure_message);
             fflush(stdout);
         }
         index++;

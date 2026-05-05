@@ -6,7 +6,8 @@ SRCS := yaml_reader.cpp \
         yaml_value.cpp \
         yaml_reader_utils.cpp \
         yaml_writer.cpp \
-        yaml_dom_bridge.cpp
+        yaml_dom_bridge.cpp \
+        yaml_serializer.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -117,4 +118,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

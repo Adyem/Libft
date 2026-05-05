@@ -13,6 +13,7 @@ SRCS :=         json_parsing.cpp \
                 json_schema.cpp \
                 json_schema_evolution.cpp \
                 json_dom_bridge.cpp \
+                json_serializer.cpp \
                 json_thread_safety.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
@@ -124,4 +125,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-
