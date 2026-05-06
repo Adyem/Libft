@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_economy_table.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_economy_table.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>

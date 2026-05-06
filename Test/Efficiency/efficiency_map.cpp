@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Template/map.hpp"
-#include "../../Template/swap.hpp"
+#include "../../Modules/Template/map.hpp"
+#include "../../Modules/Template/swap.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD

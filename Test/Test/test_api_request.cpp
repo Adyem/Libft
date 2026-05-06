@@ -1,17 +1,17 @@
 #include "../test_internal.hpp"
-#include "../../API/api.hpp"
-#include "../../API/api_internal.hpp"
-#include "../../API/api_http_internal.hpp"
-#include "../../Networking/socket_class.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../Networking/http2_client.hpp"
-#include "../../PThread/thread.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Printf/printf.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Time/time.hpp"
+#include "../../Modules/API/api.hpp"
+#include "../../Modules/API/api_internal.hpp"
+#include "../../Modules/API/api_http_internal.hpp"
+#include "../../Modules/Networking/socket_class.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/Networking/http2_client.hpp"
+#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Printf/printf.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Time/time.hpp"
 #include <cerrno>
 #include <cstdlib>
 #include <csignal>
@@ -35,6 +35,22 @@ static void api_request_noop_callback(char *body, int status, void *user_data)
     (void)status;
     (void)user_data;
     return ;
+}
+
+static ft_bool api_request_local_sockets_available(void)
+{
+    int32_t socket_fd;
+
+    errno = 0;
+    socket_fd = nw_socket(AF_INET, SOCK_STREAM, 0);
+    if (socket_fd >= 0)
+    {
+        nw_close(socket_fd);
+        return (FT_TRUE);
+    }
+    if (errno == EPERM || errno == EACCES)
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
 #if NETWORKING_HAS_OPENSSL
@@ -158,6 +174,7 @@ static ft_bool api_request_test_stream_http1_hook(const char *ip, uint16_t port,
     return (true);
 }
 
+#if NETWORKING_HAS_OPENSSL
 static int api_request_expect_sigabrt(void (*operation)(void))
 {
     return (test_expect_sigabrt_signal(operation));
@@ -207,6 +224,7 @@ static void http2_stream_manager_get_error_str_uninitialised_operation(void)
     g_http2_stream_manager_get_error_str_returned = FT_TRUE;
     return ;
 }
+#endif
 
 FT_TEST(test_api_request_prefers_http2_streaming)
 {
@@ -1452,6 +1470,8 @@ FT_TEST(test_api_request_success_resets_errno)
     int32_t status_code;
     ft_thread server_thread;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -1477,6 +1497,8 @@ FT_TEST(test_api_request_host_bearer_adds_header)
     char *body;
     int status_code;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -1516,6 +1538,8 @@ FT_TEST(test_api_request_host_basic_appends_after_existing_header)
     char *body;
     int status_code;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -1562,6 +1586,8 @@ FT_TEST(test_api_request_stream_large_response)
     bool result;
     size_t expected_size;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -1609,6 +1635,8 @@ FT_TEST(test_api_request_stream_chunked_response)
     bool result;
     size_t expected_size;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -1660,6 +1688,8 @@ FT_TEST(test_api_request_async_large_send_retries_do_not_timeout)
     size_t wait_iterations;
     char *body_result;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -1729,6 +1759,8 @@ FT_TEST(test_api_request_string_url_success)
     char *body;
     ft_thread server_thread;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -2326,6 +2358,8 @@ FT_TEST(test_api_request_http2_plain_fallback)
     ft_thread server_thread;
     ft_bool used_http2;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -2369,6 +2403,8 @@ FT_TEST(test_api_request_retry_policy_success)
     char *body;
     int status_value;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -2506,6 +2542,8 @@ FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold)
     ft_thread server_thread;
     int wait_attempts;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
     api_retry_circuit_reset();
     retry_policy.set_max_attempts(1);
     retry_policy.set_initial_delay_ms(0);
@@ -2564,6 +2602,8 @@ FT_TEST(test_api_request_circuit_breaker_half_open_recovers)
     ft_thread server_thread;
     int wait_attempts;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
     api_retry_circuit_reset();
     retry_policy.set_max_attempts(1);
     retry_policy.set_initial_delay_ms(0);

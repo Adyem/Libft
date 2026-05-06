@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../RNG/rng.hpp"
-#include "../../RNG/rng_internal.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Basic/basic.hpp"
+#include "../../Modules/RNG/rng.hpp"
+#include "../../Modules/RNG/rng_internal.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Basic/basic.hpp"
 #include "test_rng_test_utils.hpp"
 #include <limits>
 #include <random>

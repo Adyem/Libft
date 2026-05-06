@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../DUMB/controls.hpp"
-#include "../DUMB/render_window.hpp"
+#include "../Modules/DUMB/controls.hpp"
+#include "../Modules/DUMB/render_window.hpp"
 #include <chrono>
 
 struct demo_input_state

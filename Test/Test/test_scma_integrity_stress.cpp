@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
 #include "test_scma_shared.hpp"
-#include "../../SCMA/SCMA.hpp"
-#include "../../SCMA/scma_internal.hpp"
-#include "../../Basic/basic.hpp"
+#include "../../Modules/SCMA/SCMA.hpp"
+#include "../../Modules/SCMA/scma_internal.hpp"
+#include "../../Modules/Basic/basic.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <random>

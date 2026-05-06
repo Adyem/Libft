@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_dialogue_line.hpp"
-#include "../../Game/game_dialogue_script.hpp"
-#include "../../Game/game_behavior_action.hpp"
-#include "../../Template/vector.hpp"
-#include "../../Template/shared_ptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_dialogue_line.hpp"
+#include "../../Modules/Game/game_dialogue_script.hpp"
+#include "../../Modules/Game/game_behavior_action.hpp"
+#include "../../Modules/Template/vector.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

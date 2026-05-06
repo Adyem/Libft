@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
-#include "../../Encryption/encryption.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../RNG/rng.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Encryption/encryption.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/RNG/rng.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "compatebility_system_test_hooks.hpp"
 
 #ifndef LIBFT_TEST_BUILD

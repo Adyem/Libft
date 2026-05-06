@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Template/string_view.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../PThread/pthread.hpp"
+#include "../../Modules/Template/string_view.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/PThread/pthread.hpp"
 #include <atomic>
 
 #ifndef LIBFT_TEST_BUILD

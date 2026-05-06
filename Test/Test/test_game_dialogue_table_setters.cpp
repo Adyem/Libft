@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Template/shared_ptr.hpp"
-#include "../../Template/map.hpp"
-#include "../../Game/game_dialogue_table.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
+#include "../../Modules/Template/map.hpp"
+#include "../../Modules/Game/game_dialogue_table.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

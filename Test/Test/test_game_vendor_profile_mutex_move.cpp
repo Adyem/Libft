@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Template/map.hpp"
-#include "../../Game/game_vendor_profile.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/map.hpp"
+#include "../../Modules/Game/game_vendor_profile.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

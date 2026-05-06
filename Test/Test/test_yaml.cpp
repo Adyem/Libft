@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../YAML/yaml.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/YAML/yaml.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <cerrno>
 #include <memory>
 #include <new>

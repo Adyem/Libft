@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
-#include "../../Template/pool.hpp"
+#include "../../Modules/Template/pool.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-#include "../../Template/vector.hpp"
+#include "../../Modules/Template/vector.hpp"
 #include <utility>
 
 int test_efficiency_pool_acquire_release(void)

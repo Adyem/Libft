@@ -4,12 +4,12 @@
 #endif
 #define private public
 #define protected public
-#include "../../Encryption/encryption.hpp"
+#include "../../Modules/Encryption/encryption.hpp"
 #undef private
 #undef protected
-#include "../../Template/move.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Template/move.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>

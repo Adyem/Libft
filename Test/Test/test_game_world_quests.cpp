@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_quest.hpp"
-#include "../../Game/game_item.hpp"
-#include "../../Template/shared_ptr.hpp"
-#include "../../Template/vector.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_quest.hpp"
+#include "../../Modules/Game/game_item.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
+#include "../../Modules/Template/vector.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

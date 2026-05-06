@@ -1,7 +1,7 @@
 #include "demo_game.hpp"
 
-#include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
+#include "../Modules/CPP_class/class_nullptr.hpp"
+#include "../Modules/Errno/errno.hpp"
 #include <cstdio>
 #include <vector>
 

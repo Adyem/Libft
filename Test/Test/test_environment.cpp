@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../System_utils/system_utils.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/System_utils/system_utils.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include "compatebility_system_test_hooks.hpp"
 #include <cerrno>
 #include <cstring>

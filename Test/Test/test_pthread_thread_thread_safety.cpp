@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../PThread/thread.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

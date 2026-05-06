@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../XML/xml.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/XML/xml.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstring>
 
 #ifndef LIBFT_TEST_BUILD

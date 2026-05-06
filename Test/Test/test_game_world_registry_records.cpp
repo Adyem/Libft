@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_world_registry.hpp"
-#include "../../Template/vector.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_world_registry.hpp"
+#include "../../Modules/Template/vector.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

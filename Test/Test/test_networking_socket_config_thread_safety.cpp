@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

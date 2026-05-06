@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_buff.hpp"
-#include "../../Game/game_skill.hpp"
-#include "../../PThread/thread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_buff.hpp"
+#include "../../Modules/Game/game_skill.hpp"
+#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

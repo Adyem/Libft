@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_event_scheduler.hpp"
-#include "../../Game/game_event.hpp"
-#include "../../Game/game_world.hpp"
-#include "../../Template/vector.hpp"
-#include "../../Template/shared_ptr.hpp"
-#include "../../Template/function.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_event_scheduler.hpp"
+#include "../../Modules/Game/game_event.hpp"
+#include "../../Modules/Game/game_world.hpp"
+#include "../../Modules/Template/vector.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
+#include "../../Modules/Template/function.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Template/shared_ptr.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD

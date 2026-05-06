@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../RNG/rng.hpp"
-#include "../../RNG/rng_internal.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/RNG/rng.hpp"
+#include "../../Modules/RNG/rng_internal.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <limits>
 
 #ifndef LIBFT_TEST_BUILD

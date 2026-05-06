@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
 #include "test_scma_shared.hpp"
-#include "../../SCMA/SCMA.hpp"
-#include "../../SCMA/scma_internal.hpp"
-#include "../../PThread/recursive_mutex.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/SCMA/SCMA.hpp"
+#include "../../Modules/SCMA/scma_internal.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 
 #ifndef LIBFT_TEST_BUILD

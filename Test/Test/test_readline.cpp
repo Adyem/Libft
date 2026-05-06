@@ -6,14 +6,14 @@
 #include <climits>
 #include <cstring>
 #include <thread>
-#include "../../ReadLine/readline.hpp"
-#include "../../ReadLine/readline_internal.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Advanced/advanced.hpp"
+#include "../../Modules/ReadLine/readline.hpp"
+#include "../../Modules/ReadLine/readline_internal.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Advanced/advanced.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

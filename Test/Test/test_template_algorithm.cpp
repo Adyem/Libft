@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Template/algorithm.hpp"
-#include "../../RNG/rng.hpp"
-#include "../../RNG/rng_internal.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/algorithm.hpp"
+#include "../../Modules/RNG/rng.hpp"
+#include "../../Modules/RNG/rng_internal.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "test_rng_test_utils.hpp"
 #include <vector>
 #include <array>

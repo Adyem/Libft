@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_price_definition.hpp"
-#include "../../Game/game_rarity_band.hpp"
-#include "../../Game/game_currency_rate.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_price_definition.hpp"
+#include "../../Modules/Game/game_rarity_band.hpp"
+#include "../../Modules/Game/game_currency_rate.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

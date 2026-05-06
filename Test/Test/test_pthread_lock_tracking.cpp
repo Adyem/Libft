@@ -6,12 +6,12 @@
 #include <atomic>
 #include <csignal>
 #include <csetjmp>
-#include "../../Basic/basic.hpp"
-#include "../../PThread/mutex.hpp"
-#include "../../PThread/recursive_mutex.hpp"
-#include "../../PThread/pthread_lock_tracking.hpp"
-#include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/PThread/pthread_lock_tracking.hpp"
+#include "../../Modules/PThread/pthread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 static sigjmp_buf g_sigabrt_jump_buffer;
 static std::atomic<int> g_sigabrt_received;

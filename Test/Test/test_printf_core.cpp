@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Printf/printf.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Printf/printf.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 

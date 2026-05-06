@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
-#include "../../Encryption/encryption.hpp"
-#include "../../Networking/networking_tls_aead.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Networking/openssl_support.hpp"
+#include "../../Modules/Encryption/encryption.hpp"
+#include "../../Modules/Networking/networking_tls_aead.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Networking/openssl_support.hpp"
 
 #if NETWORKING_HAS_OPENSSL
 

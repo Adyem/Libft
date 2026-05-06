@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Time/time_fps.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Time/time_fps.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

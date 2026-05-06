@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Template/queue.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/queue.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <vector>
 
 #ifndef LIBFT_TEST_BUILD

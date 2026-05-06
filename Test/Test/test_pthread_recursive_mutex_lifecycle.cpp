@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../PThread/recursive_mutex.hpp"
-#include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/PThread/pthread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 

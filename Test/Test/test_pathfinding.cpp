@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_pathfinding.hpp"
-#include "../../Game/game_world.hpp"
-#include "../../Game/game_map3d.hpp"
-#include "../../Template/graph.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_pathfinding.hpp"
+#include "../../Modules/Game/game_world.hpp"
+#include "../../Modules/Game/game_map3d.hpp"
+#include "../../Modules/Template/graph.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

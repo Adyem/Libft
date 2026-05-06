@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Template/pair.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/pair.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <type_traits>
 #include <utility>
 

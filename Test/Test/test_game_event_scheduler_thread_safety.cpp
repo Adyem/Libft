@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_event_scheduler.hpp"
-#include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../Template/vector.hpp"
+#include "../../Modules/Game/game_event_scheduler.hpp"
+#include "../../Modules/PThread/pthread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Template/vector.hpp"
 #include <new>
 
 #ifndef LIBFT_TEST_BUILD

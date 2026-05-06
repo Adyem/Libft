@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Networking/socket_class.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../PThread/pthread.hpp"
+#include "../../Modules/Networking/socket_class.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/pthread.hpp"
 #include <thread>
 #include <atomic>
 #include <cstring>

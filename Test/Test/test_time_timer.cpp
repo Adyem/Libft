@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Time/time_timer.hpp"
-#include "../../Time/time.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Time/time_timer.hpp"
+#include "../../Modules/Time/time.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <climits>
 
 #ifndef LIBFT_TEST_BUILD

@@ -12,7 +12,7 @@ The `api_streaming_handler` already tracks callbacks and mutex protection. The
 reset when the scope ends, and centralises request startup logic.
 
 ```cpp
-#include "API/api.hpp"
+#include "Modules/API/api.hpp"
 
 class api_streaming_session
 {
@@ -71,7 +71,7 @@ those calls in a guard removes the need for manual shutdown calls when control
 flows exit early.
 
 ```cpp
-#include "PThread/task_scheduler.hpp"
+#include "Modules/PThread/task_scheduler.hpp"
 
 class scoped_task_scheduler
 {
@@ -123,7 +123,7 @@ with one object. The `client_socket_guard` below demonstrates how to pair
 configuration, connection, and teardown logic.
 
 ```cpp
-#include "Networking/socket_class.hpp"
+#include "Modules/Networking/socket_class.hpp"
 
 class client_socket_guard
 {

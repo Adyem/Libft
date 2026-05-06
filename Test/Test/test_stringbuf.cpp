@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
 #include <unistd.h>
-#include "../../CPP_class/class_stringbuf.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CPP_class/class_stringbuf.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>

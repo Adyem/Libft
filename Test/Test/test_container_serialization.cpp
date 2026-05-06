@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
-#include "../../Template/container_serialization.hpp"
-#include "../../Template/vector.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../JSon/json.hpp"
-#include "../../YAML/yaml.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/container_serialization.hpp"
+#include "../../Modules/Template/vector.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/JSon/json.hpp"
+#include "../../Modules/YAML/yaml.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

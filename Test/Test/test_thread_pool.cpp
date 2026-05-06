@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/thread_pool.hpp"
-#include "../../CPP_class/cancellation.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/CPP_class/thread_pool.hpp"
+#include "../../Modules/CPP_class/cancellation.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <atomic>
 
 #ifndef LIBFT_TEST_BUILD

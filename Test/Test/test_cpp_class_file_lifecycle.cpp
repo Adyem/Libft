@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_file.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CPP_class/class_file.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>

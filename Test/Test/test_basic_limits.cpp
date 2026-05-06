@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <limits>
 
 #ifndef LIBFT_TEST_BUILD

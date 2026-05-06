@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Template/promise.hpp"
-#include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../PThread/condition.hpp"
+#include "../../Modules/Template/promise.hpp"
+#include "../../Modules/PThread/pthread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/condition.hpp"
 #include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD

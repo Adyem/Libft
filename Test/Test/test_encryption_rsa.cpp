@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Encryption/encryption.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../RNG/rng_internal.hpp"
+#include "../../Modules/Encryption/encryption.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/RNG/rng_internal.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

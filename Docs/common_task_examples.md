@@ -14,8 +14,8 @@ into a temporary directory, confirm success, and remove any stale artifacts on
 failure.
 
 ```cpp
-#include "../File/file_utils.hpp"
-#include "../Errno/errno.hpp"
+#include "../Modules/File/file_utils.hpp"
+#include "../Modules/Errno/errno.hpp"
 #include <cstdio>
 
 bool copy_temporary_report(const char *source_path, const char *working_dir)
@@ -68,9 +68,9 @@ Capture the HTTP status, inspect `ft_errno` on failure, and release the body
 with `cma_free` when you are done.
 
 ```cpp
-#include "../API/api.hpp"
-#include "../CMA/CMA.hpp"
-#include "../Errno/errno.hpp"
+#include "../Modules/API/api.hpp"
+#include "../Modules/CMA/CMA.hpp"
+#include "../Modules/Errno/errno.hpp"
 #include <cstdio>
 
 bool fetch_profile(const char *host, uint16_t port)
@@ -120,8 +120,8 @@ periodic callback, poll `get_error()` for diagnostics, and cancel it when the
 application shuts down.
 
 ```cpp
-#include "../PThread/task_scheduler.hpp"
-#include "../Errno/errno.hpp"
+#include "../Modules/PThread/task_scheduler.hpp"
+#include "../Modules/Errno/errno.hpp"
 #include <atomic>
 #include <cstdio>
 

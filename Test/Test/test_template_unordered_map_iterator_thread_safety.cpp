@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Template/unordered_map.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Template/unordered_map.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <csignal>
 
 #ifndef LIBFT_TEST_BUILD

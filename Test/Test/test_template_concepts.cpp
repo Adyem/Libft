@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
-#include "../../Template/shared_ptr.hpp"
-#include "../../Template/unique_ptr.hpp"
-#include "../../Template/template_concepts.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../Basic/basic.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
+#include "../../Modules/Template/unique_ptr.hpp"
+#include "../../Modules/Template/template_concepts.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

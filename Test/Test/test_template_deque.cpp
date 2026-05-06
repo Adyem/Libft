@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Template/deque.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/deque.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <utility>
 
 #ifndef LIBFT_TEST_BUILD

@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_dialogue_table.hpp"
-#include "../../Game/game_dialogue_line.hpp"
-#include "../../Game/game_dialogue_script.hpp"
-#include "../../Template/shared_ptr.hpp"
-#include "../../Template/vector.hpp"
+#include "../../Modules/Game/game_dialogue_table.hpp"
+#include "../../Modules/Game/game_dialogue_line.hpp"
+#include "../../Modules/Game/game_dialogue_script.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
+#include "../../Modules/Template/vector.hpp"
 #include <cstring>
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

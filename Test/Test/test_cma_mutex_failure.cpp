@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../CMA/cma_internal.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../PThread/recursive_mutex.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/CMA/cma_internal.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 
 #ifndef LIBFT_TEST_BUILD

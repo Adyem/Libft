@@ -1,13 +1,13 @@
 #include "../test_internal.hpp"
-#include "../../API/api_http_internal.hpp"
-#include "../../API/api.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Networking/socket_class.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../Networking/openssl_support.hpp"
-#include "../../PThread/thread.hpp"
+#include "../../Modules/API/api_http_internal.hpp"
+#include "../../Modules/API/api.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Networking/socket_class.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/Networking/openssl_support.hpp"
+#include "../../Modules/PThread/thread.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

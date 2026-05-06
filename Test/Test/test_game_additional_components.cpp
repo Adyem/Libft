@@ -1,12 +1,12 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_inventory.hpp"
-#include "../../Game/game_price_definition.hpp"
-#include "../../Game/game_currency_rate.hpp"
-#include "../../Game/game_behavior_action.hpp"
-#include "../../Game/game_region_definition.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../Template/move.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_inventory.hpp"
+#include "../../Modules/Game/game_price_definition.hpp"
+#include "../../Modules/Game/game_currency_rate.hpp"
+#include "../../Modules/Game/game_behavior_action.hpp"
+#include "../../Modules/Game/game_region_definition.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/Template/move.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

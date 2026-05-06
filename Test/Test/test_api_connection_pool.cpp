@@ -1,14 +1,15 @@
 #include "../test_internal.hpp"
-#include "../../API/api.hpp"
-#include "../../API/api_internal.hpp"
-#include "../../Networking/socket_class.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../PThread/thread.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../Basic/basic.hpp"
+#include "../../Modules/API/api.hpp"
+#include "../../Modules/API/api_internal.hpp"
+#include "../../Modules/Networking/socket_class.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
 #include <atomic>
+#include <cerrno>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -20,6 +21,22 @@
 #endif
 
 static const uint16_t g_api_pool_test_port = 54540;
+
+static ft_bool api_pool_local_sockets_available(void)
+{
+    int32_t socket_fd;
+
+    errno = 0;
+    socket_fd = nw_socket(AF_INET, SOCK_STREAM, 0);
+    if (socket_fd >= 0)
+    {
+        nw_close(socket_fd);
+        return (FT_TRUE);
+    }
+    if (errno == EPERM || errno == EACCES)
+        return (FT_FALSE);
+    return (FT_TRUE);
+}
 
 struct api_pool_test_server_context
 {
@@ -195,6 +212,8 @@ FT_TEST(test_api_connection_pool_reuses_connections)
 {
     api_pool_test_server_context context;
 
+    if (api_pool_local_sockets_available() == FT_FALSE)
+        return (1);
     context.ready.store(false);
     context.accept_count.store(0);
     context.handled_requests.store(0);

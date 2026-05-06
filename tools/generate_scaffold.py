@@ -74,7 +74,7 @@ def build_module_source(name: str) -> str:
 
 def build_test_source(name: str) -> str:
     return (
-        "#include \"../../System_utils/test_system_utils_runner.hpp\"\n#include \"../../Errno/errno.hpp\"\n\nFT_TEST("
+        "#include \"../../Modules/System_utils/test_system_utils_runner.hpp\"\n#include \"../../Modules/Errno/errno.hpp\"\n\nFT_TEST("
         + name
         + ")\n{\n    FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);\n    return (1);\n}\n"
     )

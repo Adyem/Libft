@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
-#include "../../Networking/http_client.hpp"
-#include "../../Networking/http_server.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../PThread/thread.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Networking/http_client.hpp"
+#include "../../Modules/Networking/http_server.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

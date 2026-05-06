@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../PThread/condition.hpp"
-#include "../../PThread/mutex.hpp"
+#include "../../Modules/PThread/condition.hpp"
+#include "../../Modules/PThread/mutex.hpp"
 
 int pt_condition_variable::wait(pt_mutex &mutex)
 {

@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../CrossProcess/cross_process.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CrossProcess/cross_process.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -12,7 +12,7 @@
 #include <chrono>
 
 #ifndef _WIN32
-#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/mman.h>

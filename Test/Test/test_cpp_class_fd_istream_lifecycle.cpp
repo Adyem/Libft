@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_fd_istream.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CPP_class/class_fd_istream.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD

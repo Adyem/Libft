@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_hooks.hpp"
-#include "../../Game/game_character.hpp"
-#include "../../Game/game_item.hpp"
-#include "../../Game/game_world.hpp"
-#include "../../Game/game_event.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Game/game_hooks.hpp"
+#include "../../Modules/Game/game_character.hpp"
+#include "../../Modules/Game/game_item.hpp"
+#include "../../Modules/Game/game_world.hpp"
+#include "../../Modules/Game/game_event.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <cstdint>
 
 #ifndef LIBFT_TEST_BUILD

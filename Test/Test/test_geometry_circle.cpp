@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Geometry/geometry.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../CMA/CMA.hpp"
+#include "../../Modules/Geometry/geometry.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/CMA/CMA.hpp"
 #include <atomic>
 #include <cmath>
 #include <chrono>

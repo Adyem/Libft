@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Compatebility/compatebility_internal.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../PThread/mutex.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Compatebility/compatebility_internal.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 #include <cstdio>
 #include <ctime>

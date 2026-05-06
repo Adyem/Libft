@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../GetNextLine/gnl_stream.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/GetNextLine/gnl_stream.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 

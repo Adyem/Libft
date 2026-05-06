@@ -1,12 +1,12 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_pathfinding.hpp"
-#include "../../Game/game_map3d.hpp"
-#include "../../Template/vector.hpp"
-#include "../../Template/move.hpp"
-#include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Modules/Game/game_pathfinding.hpp"
+#include "../../Modules/Game/game_map3d.hpp"
+#include "../../Modules/Template/vector.hpp"
+#include "../../Modules/Template/move.hpp"
+#include "../../Modules/PThread/pthread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

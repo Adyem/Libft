@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_event.hpp"
-#include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Game/game_event.hpp"
+#include "../../Modules/PThread/pthread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <chrono>
 
 #ifndef LIBFT_TEST_BUILD

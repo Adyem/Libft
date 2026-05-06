@@ -1,13 +1,13 @@
 #include "../test_internal.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Math/math.hpp"
-#include "../../Basic/limits.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/system_utils.hpp"
-#include "../../Time/time.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Math/math.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/system_utils.hpp"
+#include "../../Modules/Time/time.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <cstring>
 #include <cstdlib>
 

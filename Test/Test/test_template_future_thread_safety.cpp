@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Template/future.hpp"
-#include "../../Template/promise.hpp"
-#include "../../Template/move.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Template/future.hpp"
+#include "../../Modules/Template/promise.hpp"
+#include "../../Modules/Template/move.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

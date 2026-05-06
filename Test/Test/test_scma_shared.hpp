@@ -1,9 +1,9 @@
 #ifndef TEST_SCMA_SHARED_HPP
 # define TEST_SCMA_SHARED_HPP
 
-#include "../../SCMA/SCMA.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/SCMA/SCMA.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 
 struct scma_test_pair
 {

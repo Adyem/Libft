@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../DUMB/sound_clip.hpp"
-#include "../../DUMB/sound_device.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/DUMB/sound_clip.hpp"
+#include "../../Modules/DUMB/sound_device.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstdint>
 #include <cstdio>

@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_experience_table.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Game/game_experience_table.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

@@ -2,8 +2,8 @@
 #define TEST_CPP_CLASS_STRING_LIFECYCLE_HELPERS_HPP
 
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
 #include <csetjmp>
 #include <csignal>
 #include <cstring>

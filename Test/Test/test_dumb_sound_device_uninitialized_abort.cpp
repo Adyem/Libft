@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../DUMB/sound_device.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/DUMB/sound_device.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>

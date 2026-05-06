@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
 #include "compatebility_system_test_hooks.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/system_utils.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/system_utils.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cerrno>
 
 #ifndef LIBFT_TEST_BUILD

@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../GetNextLine/gnl_stream.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../PThread/recursive_mutex.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/GetNextLine/gnl_stream.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 
 #ifndef LIBFT_TEST_BUILD

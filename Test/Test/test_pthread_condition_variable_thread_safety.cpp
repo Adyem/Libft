@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../PThread/condition.hpp"
-#include "../../PThread/mutex.hpp"
-#include "../../PThread/pthread.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Basic/basic.hpp"
+#include "../../Modules/PThread/condition.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/pthread.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Basic/basic.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>

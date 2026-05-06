@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_data_buffer.hpp"
-#include "../../CPP_class/class_stringbuf.hpp"
-#include "../../CPP_class/class_ofstream.hpp"
-#include "../../CPP_class/class_fd_istream.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CPP_class/class_data_buffer.hpp"
+#include "../../Modules/CPP_class/class_stringbuf.hpp"
+#include "../../Modules/CPP_class/class_ofstream.hpp"
+#include "../../Modules/CPP_class/class_fd_istream.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>

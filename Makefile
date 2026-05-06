@@ -21,75 +21,75 @@ else
     RMDIR  = rm -rf
 endif
 
-SUBDIRS := Basic \
-           Advanced \
-           Compatebility \
-           Errno \
-           CMA \
-           SCMA \
-           GetNextLine \
-           DUMB \
-           Math \
-           Geometry \
-           System_utils \
-           Printf \
-           ReadLine \
-           PThread \
-           CPP_class \
-           Template \
-           Config \
-           CrossProcess \
-           Compression \
-           Encryption \
-           RNG \
-           JSon \
-           YAML \
-           File \
-           HTML \
-           Time \
-           XML \
-           Storage \
-           Networking \
-           API \
-           Observability \
-           Logger \
-           Parser \
-           Game
+SUBDIRS := Modules/Basic \
+           Modules/Advanced \
+           Modules/Compatebility \
+           Modules/Errno \
+           Modules/CMA \
+           Modules/SCMA \
+           Modules/GetNextLine \
+           Modules/DUMB \
+           Modules/Math \
+           Modules/Geometry \
+           Modules/System_utils \
+           Modules/Printf \
+           Modules/ReadLine \
+           Modules/PThread \
+           Modules/CPP_class \
+           Modules/Template \
+           Modules/Config \
+           Modules/CrossProcess \
+           Modules/Compression \
+           Modules/Encryption \
+           Modules/RNG \
+           Modules/JSon \
+           Modules/YAML \
+           Modules/File \
+           Modules/HTML \
+           Modules/Time \
+           Modules/XML \
+           Modules/Storage \
+           Modules/Networking \
+           Modules/API \
+           Modules/Observability \
+           Modules/Logger \
+           Modules/Parser \
+           Modules/Game
 
 LIB_BASES := \
-  Basic/Basic \
-  Advanced/Advanced \
-  Compatebility/Compatebility \
-  Errno/errno \
-  CMA/CustomMemoryAllocator \
-  SCMA/SCMA \
-  GetNextLine/GetNextLine \
-  DUMB/dumb \
-  Math/Math \
-  Geometry/geometry \
-  System_utils/System_utils \
-  Printf/Printf \
-  ReadLine/ReadLine \
-  PThread/PThread \
-  CPP_class/CPP_class \
-  Config/config \
-  CrossProcess/CrossProcess \
-  Compression/compression \
-  Encryption/encryption \
-  RNG/RNG \
-  JSon/JSon \
-  YAML/YAML  \
-  File/file \
-  HTML/HTMLParser \
-  Time/time \
-  XML/XMLParser \
-  Storage/storage \
-  Networking/networking \
-  API/API \
-  Observability/Observability \
-  Logger/Logger \
-  Parser/parser \
-  Game/Game
+  Modules/Basic/Basic \
+  Modules/Advanced/Advanced \
+  Modules/Compatebility/Compatebility \
+  Modules/Errno/errno \
+  Modules/CMA/CustomMemoryAllocator \
+  Modules/SCMA/SCMA \
+  Modules/GetNextLine/GetNextLine \
+  Modules/DUMB/dumb \
+  Modules/Math/Math \
+  Modules/Geometry/geometry \
+  Modules/System_utils/System_utils \
+  Modules/Printf/Printf \
+  Modules/ReadLine/ReadLine \
+  Modules/PThread/PThread \
+  Modules/CPP_class/CPP_class \
+  Modules/Config/config \
+  Modules/CrossProcess/CrossProcess \
+  Modules/Compression/compression \
+  Modules/Encryption/encryption \
+  Modules/RNG/RNG \
+  Modules/JSon/JSon \
+  Modules/YAML/YAML  \
+  Modules/File/file \
+  Modules/HTML/HTMLParser \
+  Modules/Time/time \
+  Modules/XML/XMLParser \
+  Modules/Storage/storage \
+  Modules/Networking/networking \
+  Modules/API/API \
+  Modules/Observability/Observability \
+  Modules/Logger/Logger \
+  Modules/Parser/parser \
+  Modules/Game/Game
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
@@ -103,7 +103,7 @@ DEBUG_TARGET  := Full_Libft_debug.a
 TEST_TARGET   := Full_Libft_test.a
 TEST_DEBUG_TARGET := Full_Libft_test_debug.a
 
-CPP_CLASS_LIB := CPP_class/CPP_class.a
+CPP_CLASS_LIB := Modules/CPP_class/CPP_class.a
 
 all: $(TARGET) template
 
@@ -117,7 +117,7 @@ demo:
 
 template: $(CPP_CLASS_LIB)
 	@printf '\033[1;35m[LIBFT BUILD] Running Template verification\033[0m\n'
-	@$(MAKE) -C Template all $(SUBMAKE_OVERRIDES)
+	@$(MAKE) -C Modules/Template all $(SUBMAKE_OVERRIDES)
 
 tests:
 	@printf '\033[1;35m[LIBFT BUILD] Ensuring test archive %s\033[0m\n' "$(TEST_TARGET)"

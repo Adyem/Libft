@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_server.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../PThread/pthread.hpp"
+#include "../../Modules/Game/game_server.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/pthread.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

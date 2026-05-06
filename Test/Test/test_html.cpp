@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../HTML/html_parser.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/HTML/html_parser.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstring>
 
 #ifndef LIBFT_TEST_BUILD

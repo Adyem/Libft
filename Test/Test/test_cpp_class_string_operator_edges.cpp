@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../CMA/CMA.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CMA/CMA.hpp"
 #include "test_cpp_class_string_lifecycle_helpers.hpp"
 
 #ifndef LIBFT_TEST_BUILD

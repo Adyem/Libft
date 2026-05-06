@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Template/iterator.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/iterator.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <utility>
 
 #ifndef LIBFT_TEST_BUILD

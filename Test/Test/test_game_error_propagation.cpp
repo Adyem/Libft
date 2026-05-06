@@ -1,13 +1,13 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_buff.hpp"
-#include "../../Game/game_debuff.hpp"
-#include "../../Game/game_equipment.hpp"
-#include "../../Game/game_item.hpp"
-#include "../../Game/game_skill.hpp"
-#include "../../Template/shared_ptr.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Game/game_buff.hpp"
+#include "../../Modules/Game/game_debuff.hpp"
+#include "../../Modules/Game/game_equipment.hpp"
+#include "../../Modules/Game/game_item.hpp"
+#include "../../Modules/Game/game_skill.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

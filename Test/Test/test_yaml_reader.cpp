@@ -1,10 +1,10 @@
 #include "../test_internal.hpp"
-#include "../../YAML/yaml.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../System_utils/system_utils.hpp"
+#include "../../Modules/YAML/yaml.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/System_utils/system_utils.hpp"
 #include <cstdio>
 
 #ifndef LIBFT_TEST_BUILD

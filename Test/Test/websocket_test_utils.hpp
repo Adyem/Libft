@@ -1,14 +1,14 @@
 #ifndef WEBSOCKET_TEST_UTILS_HPP
 #define WEBSOCKET_TEST_UTILS_HPP
 
-#include "../../Networking/websocket_server.hpp"
-#include "../../Networking/websocket_client.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../Networking/socket_class.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../PThread/thread.hpp"
+#include "../../Modules/Networking/websocket_server.hpp"
+#include "../../Modules/Networking/websocket_client.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/Networking/socket_class.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/thread.hpp"
 #include <unistd.h>
 #include <cstring>
 #include <cstddef>

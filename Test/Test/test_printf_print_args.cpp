@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Printf/printf_internal.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Printf/printf_internal.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstddef>
 #include <unistd.h>
 #include <cstdio>

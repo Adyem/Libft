@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Math/math.hpp"
-#include "../../Basic/limits.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Math/math.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstdint>
 
 #ifndef LIBFT_TEST_BUILD

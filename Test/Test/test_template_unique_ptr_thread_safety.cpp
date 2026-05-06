@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Template/unique_ptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../Modules/Template/unique_ptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>

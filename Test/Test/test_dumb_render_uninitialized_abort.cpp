@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../DUMB/render_window.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/DUMB/render_window.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <csetjmp>
 #include <cstring>

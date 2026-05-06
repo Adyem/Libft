@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
-#include "../../JSon/json.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/JSon/json.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <string>
 
 #ifndef LIBFT_TEST_BUILD

@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../Template/move.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Modules/Template/move.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
 #include <memory>
 #include <type_traits>
 

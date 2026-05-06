@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
-#include "../../Networking/websocket_client.hpp"
-#include "../../Networking/websocket_server.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../PThread/thread.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
+#include "../../Modules/Networking/websocket_client.hpp"
+#include "../../Modules/Networking/websocket_server.hpp"
+#include "../../Modules/Networking/networking.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
 #include <thread>
 
 #ifndef LIBFT_TEST_BUILD

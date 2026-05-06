@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Template/unordered_map.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/unordered_map.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 #include <new>

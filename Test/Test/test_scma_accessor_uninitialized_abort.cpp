@@ -4,8 +4,8 @@
 #include <csignal>
 #include <cstring>
 #include <new>
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../PThread/recursive_mutex.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

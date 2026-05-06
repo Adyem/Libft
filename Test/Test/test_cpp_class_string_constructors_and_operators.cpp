@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../Template/move.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Template/move.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

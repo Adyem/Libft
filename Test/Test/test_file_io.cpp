@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../File/file_utils.hpp"
-#include "../../File/open_dir.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/File/file_utils.hpp"
+#include "../../Modules/File/open_dir.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cerrno>
 #include <cstdio>
 

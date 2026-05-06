@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../PThread/mutex.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 

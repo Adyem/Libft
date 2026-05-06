@@ -1,9 +1,9 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../GetNextLine/gnl_stream.hpp"
-#include "../../SCMA/SCMA.hpp"
-#include "../../Template/unordered_map.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/GetNextLine/gnl_stream.hpp"
+#include "../../Modules/SCMA/SCMA.hpp"
+#include "../../Modules/Template/unordered_map.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csignal>
 #include <cstring>
 #include <type_traits>

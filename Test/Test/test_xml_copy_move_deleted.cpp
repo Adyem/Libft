@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
-#include "../../XML/xml.hpp"
-#include "../../Template/move.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/XML/xml.hpp"
+#include "../../Modules/Template/move.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <type_traits>
 
 #ifndef LIBFT_TEST_BUILD

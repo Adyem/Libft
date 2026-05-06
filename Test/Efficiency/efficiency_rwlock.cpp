@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_nullptr.hpp"
-#include "../../PThread/pthread.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/PThread/pthread.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD

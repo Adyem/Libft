@@ -1,11 +1,11 @@
 #include "../test_internal.hpp"
-#include "../../Compression/compression.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../CPP_class/class_string.hpp"
-#include "../../Template/vector.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Compression/compression.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/Template/vector.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

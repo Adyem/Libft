@@ -1,13 +1,13 @@
 #include "../test_internal.hpp"
-#include "../../PThread/task_scheduler.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
-#include "../../CMA/CMA.hpp"
-#include "../../Time/time.hpp"
+#include "../../Modules/PThread/task_scheduler.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Time/time.hpp"
 #include <atomic>
 #include <chrono>
-#include "../../Errno/errno.hpp"
-#include "../../Template/promise.hpp"
-#include "../../Template/future.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Template/promise.hpp"
+#include "../../Modules/Template/future.hpp"
 #include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD

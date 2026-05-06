@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Game/game_resistance.hpp"
-#include "../../System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Game/game_resistance.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

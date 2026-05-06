@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../CMA/CMA.hpp"
+#include "../../Modules/CMA/CMA.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD
