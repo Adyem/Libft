@@ -37,10 +37,12 @@ SUBDIRS := Modules/Basic \
            Modules/PThread \
            Modules/CPP_class \
            Modules/Template \
+           Modules/Buffer \
            Modules/Config \
            Modules/CrossProcess \
            Modules/Compression \
            Modules/Encryption \
+           Modules/Encoding \
            Modules/RNG \
            Modules/JSon \
            Modules/YAML \
@@ -72,10 +74,12 @@ LIB_BASES := \
   Modules/ReadLine/ReadLine \
   Modules/PThread/PThread \
   Modules/CPP_class/CPP_class \
+  Modules/Buffer/buffer \
   Modules/Config/config \
   Modules/CrossProcess/CrossProcess \
   Modules/Compression/compression \
   Modules/Encryption/encryption \
+  Modules/Encoding/encoding \
   Modules/RNG/RNG \
   Modules/JSon/JSon \
   Modules/YAML/YAML  \

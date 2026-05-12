@@ -1,28 +1,13 @@
 include ../../compiler_flags.mk
-TARGET         := file.a
-DEBUG_TARGET   := file_debug.a
+TARGET         := encoding.a
+DEBUG_TARGET   := encoding_debug.a
 
-SRCS := file_opendir.cpp \
-        file_check_directory.cpp \
-        file_mkdir.cpp \
-        file_copy.cpp \
-        file_move.cpp \
-        file_exists.cpp \
-        file_delete.cpp \
-        file_path_join.cpp \
-        file_path_normalize.cpp \
-        file_path_parts.cpp \
-        file_watch.cpp \
-        file_fopen.cpp \
-        file_fclose.cpp \
-        file_fgets.cpp
+SRCS := encoding.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := open_dir.hpp \
-           file_utils.hpp \
-           file_watch.hpp
+HEADERS := encoding.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

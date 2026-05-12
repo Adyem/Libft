@@ -2,6 +2,7 @@
 #include "../../Modules/File/file_utils.hpp"
 #include "../../Modules/File/open_dir.hpp"
 #include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/CPP_class/class_file.hpp"
 #include "../../Modules/CPP_class/class_file_stream.hpp"
 #include "../../Modules/Errno/errno.hpp"
@@ -233,6 +234,182 @@ FT_TEST(test_file_path_join_with_empty_left)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
     build_native_path(expected_buffer, "folder/file.txt");
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
+    return (1);
+}
+
+FT_TEST(test_file_path_is_absolute_detects_root_and_drive)
+{
+    FT_ASSERT_EQ(FT_TRUE, file_path_is_absolute("/var/log"));
+    FT_ASSERT_EQ(FT_TRUE, file_path_is_absolute("\\var\\log"));
+    FT_ASSERT_EQ(FT_TRUE, file_path_is_absolute("C:/temp"));
+    FT_ASSERT_EQ(FT_FALSE, file_path_is_absolute("relative/path"));
+    FT_ASSERT_EQ(FT_FALSE, file_path_is_absolute(ft_nullptr));
+    return (1);
+}
+
+FT_TEST(test_file_path_is_relative_is_inverse)
+{
+    FT_ASSERT_EQ(FT_FALSE, file_path_is_relative("/var/log"));
+    FT_ASSERT_EQ(FT_FALSE, file_path_is_relative("C:/temp"));
+    FT_ASSERT_EQ(FT_TRUE, file_path_is_relative("relative/path"));
+    FT_ASSERT_EQ(FT_TRUE, file_path_is_relative(""));
+    return (1);
+}
+
+FT_TEST(test_file_path_basename_handles_trailing_separator)
+{
+    char path_buffer[64];
+    char *basename;
+
+    build_alternate_separator_path(path_buffer, "/folder/subdir///");
+    basename = file_path_basename(path_buffer);
+    FT_ASSERT(basename != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(basename, "subdir"));
+    cma_free(basename);
+    return (1);
+}
+
+FT_TEST(test_file_path_basename_keeps_root)
+{
+    char *basename;
+
+    basename = file_path_basename("/");
+    FT_ASSERT(basename != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(basename, "/"));
+    cma_free(basename);
+    return (1);
+}
+
+FT_TEST(test_file_path_dirname_handles_nested_path)
+{
+    char path_buffer[64];
+    char expected_buffer[64];
+    char *dirname;
+
+    build_alternate_separator_path(path_buffer, "/folder/subdir/file.txt");
+    dirname = file_path_dirname(path_buffer);
+    FT_ASSERT(dirname != ft_nullptr);
+    build_native_path(expected_buffer, "/folder/subdir");
+    FT_ASSERT_EQ(0, ft_strcmp(dirname, expected_buffer));
+    cma_free(dirname);
+    return (1);
+}
+
+FT_TEST(test_file_path_dirname_uses_current_directory_for_leaf)
+{
+    char *dirname;
+
+    dirname = file_path_dirname("file.txt");
+    FT_ASSERT(dirname != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(dirname, "."));
+    cma_free(dirname);
+    return (1);
+}
+
+FT_TEST(test_file_path_extension_extracts_last_extension)
+{
+    char *extension;
+
+    extension = file_path_extension("/tmp/archive.tar.gz");
+    FT_ASSERT(extension != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(extension, ".gz"));
+    cma_free(extension);
+    return (1);
+}
+
+FT_TEST(test_file_path_extension_ignores_hidden_file_prefix)
+{
+    char *extension;
+
+    extension = file_path_extension(".env");
+    FT_ASSERT(extension != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(extension, ""));
+    cma_free(extension);
+    return (1);
+}
+
+FT_TEST(test_file_path_extension_ignores_trailing_dot)
+{
+    char *extension;
+
+    extension = file_path_extension("filename.");
+    FT_ASSERT(extension != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(extension, ""));
+    cma_free(extension);
+    return (1);
+}
+
+FT_TEST(test_file_path_stem_removes_last_extension)
+{
+    char *stem;
+
+    stem = file_path_stem("/tmp/archive.tar.gz");
+    FT_ASSERT(stem != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(stem, "archive.tar"));
+    cma_free(stem);
+    return (1);
+}
+
+FT_TEST(test_file_path_stem_keeps_hidden_file_name)
+{
+    char *stem;
+
+    stem = file_path_stem(".env");
+    FT_ASSERT(stem != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(stem, ".env"));
+    cma_free(stem);
+    return (1);
+}
+
+FT_TEST(test_file_path_basename_string_returns_heap_string)
+{
+    ft_string *basename;
+
+    basename = file_path_basename_string("/tmp/report.txt");
+    FT_ASSERT(basename != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, basename->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(basename->c_str(), "report.txt"));
+    delete basename;
+    return (1);
+}
+
+FT_TEST(test_file_path_dirname_string_returns_heap_string)
+{
+    char path_buffer[64];
+    char expected_buffer[64];
+    ft_string *dirname;
+
+    build_alternate_separator_path(path_buffer, "/tmp/reports/report.txt");
+    dirname = file_path_dirname_string(path_buffer);
+    FT_ASSERT(dirname != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dirname->get_error());
+    build_native_path(expected_buffer, "/tmp/reports");
+    FT_ASSERT_EQ(0, ft_strcmp(dirname->c_str(), expected_buffer));
+    delete dirname;
+    return (1);
+}
+
+FT_TEST(test_file_path_extension_string_keeps_empty_result)
+{
+    ft_string *extension;
+
+    extension = file_path_extension_string("Makefile");
+    FT_ASSERT(extension != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, extension->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(extension->c_str(), ""));
+    delete extension;
+    return (1);
+}
+
+FT_TEST(test_file_path_stem_string_returns_heap_string)
+{
+    ft_string *stem;
+
+    stem = file_path_stem_string("/tmp/archive.tar.gz");
+    FT_ASSERT(stem != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stem->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(stem->c_str(), "archive.tar"));
+    delete stem;
     return (1);
 }
 

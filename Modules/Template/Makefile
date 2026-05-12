@@ -21,6 +21,7 @@ SRCS := template_basic_types.cpp \
         template_compile_priority_queue.cpp \
         template_compile_promise.cpp \
         template_compile_queue.cpp \
+        template_compile_result.cpp \
         template_compile_set.cpp \
         template_compile_shared_ptr.cpp \
         template_compile_stack.cpp \

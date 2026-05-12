@@ -55,6 +55,11 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Modules that require authentication, signing, or secure communication build on Encryption/ so they avoid rolling their own cryptography.
   Its purpose is to provide vetted algorithms through FullLibft patterns rather than letting every module re-develop similar utilities.
 
+- `Encoding/`: Provides low-dependency binary/text encoding helpers for transport and parser boundaries.
+  It covers base64, base64url, hexadecimal, percent-encoding, and UTF-8 validation/codepoint iteration with `FT_ERR_*` reporting.
+  Modules that need wire-safe text representations can use Encoding/ without depending on compression, encryption, or networking internals.
+  Keeping these helpers central avoids duplicated ad hoc encoders across API signing, storage, file parsing, and protocol code.
+
 - `Errno/`: Implements the shared global error stack, mutex wrappers, and the conventions that every class or module follows for reporting failure.
   It exposes helpers for pushing entries, querying depths, and mirroring results between the global and local stacks so errors stay consistent.
   Errno/ also documents the locking contract and operation ID generation that every consumer recreates when reporting issues.
