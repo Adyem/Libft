@@ -47,6 +47,7 @@ Modules/Game/game_reputation.hpp
 Modules/Game/game_upgrade.hpp
 Modules/Game/game_world.hpp
 Modules/Geometry/geometry.hpp
+Modules/Geometry/geometry_3d.hpp
 Modules/Geometry/geometry_lock_tracker.hpp
 Modules/GetNextLine/get_next_line.hpp
 Modules/HTML/document.hpp

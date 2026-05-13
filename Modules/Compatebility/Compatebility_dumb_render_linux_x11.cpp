@@ -2,9 +2,6 @@
 
 #include "../DUMB/dumb_render_internal.hpp"
 
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glxext.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -28,73 +25,10 @@ struct ft_render_x11_state
     ft_bool             has_back_buffer;
     XdbeBackBuffer      back_buffer;
 
-    ft_bool             uses_glx;
-    GLXContext          glx_context;
-    Colormap            glx_colormap;
-    GLuint              glx_texture;
-    uint32_t            *glx_pixels;
-
     Atom                wm_delete_window;
     Atom                net_wm_state;
     Atom                net_wm_state_fullscreen;
 };
-
-static ft_bool ft_render_x11_string_contains(const char *string,
-    const char *needle)
-{
-    if (string == NULL || needle == NULL)
-    {
-        return (FT_FALSE);
-    }
-    if (strstr(string, needle) != NULL)
-    {
-        return (FT_TRUE);
-    }
-    return (FT_FALSE);
-}
-
-static ft_bool ft_render_x11_should_try_glx(void)
-{
-    const char *enable_glx;
-
-    enable_glx = getenv("FT_DUMB_ENABLE_GLX_PRESENT");
-    if (enable_glx == NULL)
-    {
-        return (FT_FALSE);
-    }
-    if (enable_glx[0] == '1' && enable_glx[1] == '\0')
-    {
-        return (FT_TRUE);
-    }
-    if (strcmp(enable_glx, "true") == 0 || strcmp(enable_glx, "TRUE") == 0)
-    {
-        return (FT_TRUE);
-    }
-    return (FT_FALSE);
-}
-
-static ft_bool ft_render_x11_should_reject_gl_renderer(const char *vendor,
-    const char *renderer)
-{
-    const char *force_software_gl;
-
-    force_software_gl = getenv("LIBGL_ALWAYS_SOFTWARE");
-    if (force_software_gl != NULL && force_software_gl[0] != '\0'
-        && force_software_gl[0] != '0')
-    {
-        return (FT_TRUE);
-    }
-    if (ft_render_x11_string_contains(renderer, "llvmpipe") == FT_TRUE
-        || ft_render_x11_string_contains(renderer, "softpipe") == FT_TRUE
-        || ft_render_x11_string_contains(renderer, "Software Rasterizer")
-            == FT_TRUE
-        || ft_render_x11_string_contains(renderer, "SWR") == FT_TRUE
-        || ft_render_x11_string_contains(vendor, "Mesa/X.org") == FT_TRUE)
-    {
-        return (FT_TRUE);
-    }
-    return (FT_FALSE);
-}
 
 static void ft_render_x11_setup_window_metadata(ft_render_x11_state *state,
     const char *title)
@@ -145,234 +79,6 @@ static ft_render_platform_result ft_render_x11_create_image(
     out_framebuffer->width = state->width;
     out_framebuffer->height = state->height;
     out_framebuffer->pixels = reinterpret_cast<uint32_t *>(state->image->data);
-    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
-}
-
-static ft_render_platform_result ft_render_x11_create_gl_framebuffer(
-    ft_render_x11_state *state,
-    ft_render_framebuffer *out_framebuffer
-)
-{
-    ft_size_t           pixel_count;
-    ft_size_t           byte_count;
-
-    pixel_count = static_cast<ft_size_t>(state->width)
-        * static_cast<ft_size_t>(state->height);
-    byte_count = pixel_count * sizeof(uint32_t);
-    state->glx_pixels = static_cast<uint32_t *>(malloc(byte_count));
-    if (state->glx_pixels == NULL)
-    {
-        return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
-    }
-    memset(state->glx_pixels, 0, byte_count);
-    out_framebuffer->width = state->width;
-    out_framebuffer->height = state->height;
-    out_framebuffer->pixels = state->glx_pixels;
-    return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
-}
-
-static void ft_render_x11_enable_swap_interval(ft_render_x11_state *state)
-{
-    PFNGLXSWAPINTERVALEXTPROC  swap_interval_ext;
-    PFNGLXSWAPINTERVALMESAPROC swap_interval_mesa;
-    PFNGLXSWAPINTERVALSGIPROC  swap_interval_sgi;
-
-    swap_interval_ext = reinterpret_cast<PFNGLXSWAPINTERVALEXTPROC>(
-        glXGetProcAddressARB(reinterpret_cast<const GLubyte *>(
-            "glXSwapIntervalEXT"))
-    );
-    if (swap_interval_ext != NULL)
-    {
-        swap_interval_ext(state->display, state->window, 1);
-        return ;
-    }
-    swap_interval_mesa = reinterpret_cast<PFNGLXSWAPINTERVALMESAPROC>(
-        glXGetProcAddressARB(reinterpret_cast<const GLubyte *>(
-            "glXSwapIntervalMESA"))
-    );
-    if (swap_interval_mesa != NULL)
-    {
-        (void)swap_interval_mesa(1U);
-        return ;
-    }
-    swap_interval_sgi = reinterpret_cast<PFNGLXSWAPINTERVALSGIPROC>(
-        glXGetProcAddressARB(reinterpret_cast<const GLubyte *>(
-            "glXSwapIntervalSGI"))
-    );
-    if (swap_interval_sgi != NULL)
-    {
-        (void)swap_interval_sgi(1);
-    }
-    return ;
-}
-
-static void ft_render_x11_initialize_gl_state(ft_render_x11_state *state)
-{
-    glViewport(0, 0, state->width, state->height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_DITHER);
-    glEnable(GL_TEXTURE_2D);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glGenTextures(1, &state->glx_texture);
-    glBindTexture(GL_TEXTURE_2D, state->glx_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, state->width, state->height, 0,
-        GL_BGRA, GL_UNSIGNED_BYTE, state->glx_pixels);
-    ft_render_x11_enable_swap_interval(state);
-    return ;
-}
-
-static void ft_render_x11_destroy_gl_resources(ft_render_x11_state *state)
-{
-    if (state->display != NULL && state->glx_context != NULL)
-    {
-        if (state->glx_texture != 0U)
-        {
-            if (glXMakeCurrent(state->display, state->window,
-                    state->glx_context) != False)
-            {
-                glDeleteTextures(1, &state->glx_texture);
-                state->glx_texture = 0U;
-            }
-        }
-        glXMakeCurrent(state->display, None, NULL);
-        glXDestroyContext(state->display, state->glx_context);
-        state->glx_context = NULL;
-    }
-    if (state->glx_pixels != NULL)
-    {
-        free(state->glx_pixels);
-        state->glx_pixels = NULL;
-    }
-    if (state->display != NULL && state->glx_colormap != 0)
-    {
-        XFreeColormap(state->display, state->glx_colormap);
-        state->glx_colormap = 0;
-    }
-    return ;
-}
-
-static ft_render_platform_result ft_render_x11_try_create_gl_window(
-    ft_render_x11_state *state,
-    ft_render_framebuffer *out_framebuffer,
-    const ft_render_window_desc &desc
-)
-{
-    XVisualInfo         *visual_info;
-    XSetWindowAttributes window_attributes;
-    long                event_mask;
-    int32_t             glx_attributes[9];
-    ft_render_platform_result framebuffer_result;
-    const GLubyte       *vendor_string;
-    const GLubyte       *renderer_string;
-
-    glx_attributes[0] = GLX_RGBA;
-    glx_attributes[1] = GLX_DOUBLEBUFFER;
-    glx_attributes[2] = GLX_RED_SIZE;
-    glx_attributes[3] = 8;
-    glx_attributes[4] = GLX_GREEN_SIZE;
-    glx_attributes[5] = 8;
-    glx_attributes[6] = GLX_BLUE_SIZE;
-    glx_attributes[7] = 8;
-    glx_attributes[8] = None;
-    visual_info = glXChooseVisual(state->display, state->screen, glx_attributes);
-    if (visual_info == NULL)
-    {
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
-    }
-    memset(&window_attributes, 0, sizeof(window_attributes));
-    event_mask = ExposureMask | StructureNotifyMask;
-    state->glx_colormap = XCreateColormap(state->display,
-        RootWindow(state->display, state->screen), visual_info->visual,
-        AllocNone);
-    if (state->glx_colormap == 0)
-    {
-        XFree(visual_info);
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
-    }
-    window_attributes.colormap = state->glx_colormap;
-    window_attributes.event_mask = event_mask;
-    state->window = XCreateWindow(
-        state->display,
-        RootWindow(state->display, state->screen),
-        0,
-        0,
-        static_cast<uint32_t>(state->width),
-        static_cast<uint32_t>(state->height),
-        0,
-        visual_info->depth,
-        InputOutput,
-        visual_info->visual,
-        CWColormap | CWEventMask,
-        &window_attributes
-    );
-    if (state->window == 0)
-    {
-        XFreeColormap(state->display, state->glx_colormap);
-        state->glx_colormap = 0;
-        XFree(visual_info);
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
-    }
-    ft_render_x11_setup_window_metadata(state, desc.title);
-    XMapWindow(state->display, state->window);
-    state->glx_context = glXCreateContext(state->display, visual_info, NULL, True);
-    XFree(visual_info);
-    if (state->glx_context == NULL)
-    {
-        XDestroyWindow(state->display, state->window);
-        state->window = 0;
-        XFreeColormap(state->display, state->glx_colormap);
-        state->glx_colormap = 0;
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
-    }
-    if (glXMakeCurrent(state->display, state->window, state->glx_context) == False)
-    {
-        glXDestroyContext(state->display, state->glx_context);
-        state->glx_context = NULL;
-        XDestroyWindow(state->display, state->window);
-        state->window = 0;
-        XFreeColormap(state->display, state->glx_colormap);
-        state->glx_colormap = 0;
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, errno });
-    }
-    vendor_string = glGetString(GL_VENDOR);
-    renderer_string = glGetString(GL_RENDERER);
-    if (ft_render_x11_should_reject_gl_renderer(
-            reinterpret_cast<const char *>(vendor_string),
-            reinterpret_cast<const char *>(renderer_string)) == FT_TRUE)
-    {
-        glXMakeCurrent(state->display, None, NULL);
-        glXDestroyContext(state->display, state->glx_context);
-        state->glx_context = NULL;
-        XDestroyWindow(state->display, state->window);
-        state->window = 0;
-        XFreeColormap(state->display, state->glx_colormap);
-        state->glx_colormap = 0;
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
-    }
-    framebuffer_result = ft_render_x11_create_gl_framebuffer(state,
-        out_framebuffer);
-    if (framebuffer_result.error_code != FT_ERR_SUCCESS)
-    {
-        glXMakeCurrent(state->display, None, NULL);
-        glXDestroyContext(state->display, state->glx_context);
-        state->glx_context = NULL;
-        XDestroyWindow(state->display, state->window);
-        state->window = 0;
-        XFreeColormap(state->display, state->glx_colormap);
-        state->glx_colormap = 0;
-        return (framebuffer_result);
-    }
-    state->uses_glx = FT_TRUE;
-    ft_render_x11_initialize_gl_state(state);
     return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
@@ -500,16 +206,6 @@ ft_render_platform_result ft_render_platform_create_window(
     state->width = desc.width;
     state->height = desc.height;
     state->is_fullscreen = FT_FALSE;
-    if (ft_render_x11_should_try_glx() == FT_TRUE)
-    {
-        create_result = ft_render_x11_try_create_gl_window(state,
-            out_framebuffer, desc);
-        if (create_result.error_code == FT_ERR_SUCCESS)
-        {
-            *out_platform_state = state;
-            return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
-        }
-    }
     create_result = ft_render_x11_create_software_window(state, out_framebuffer,
         desc);
     if (create_result.error_code != FT_ERR_SUCCESS)
@@ -534,10 +230,6 @@ ft_render_platform_result ft_render_platform_destroy_window(
         return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
     }
     state = static_cast<ft_render_x11_state *>(*platform_state);
-    if (state->uses_glx == FT_TRUE)
-    {
-        ft_render_x11_destroy_gl_resources(state);
-    }
     if (state->image != NULL)
     {
         if (state->image->data != NULL)
@@ -605,28 +297,6 @@ ft_render_platform_result ft_render_platform_poll_events(
     return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
-static void ft_render_x11_present_glx(ft_render_x11_state *state,
-    ft_render_framebuffer *framebuffer)
-{
-    glBindTexture(GL_TEXTURE_2D, state->glx_texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer->width,
-        framebuffer->height, GL_BGRA, GL_UNSIGNED_BYTE, framebuffer->pixels);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glLoadIdentity();
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex2f(-1.0f, 1.0f);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex2f(1.0f, 1.0f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex2f(1.0f, -1.0f);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(-1.0f, -1.0f);
-    glEnd();
-    glXSwapBuffers(state->display, state->window);
-    return ;
-}
-
 static void ft_render_x11_present_software(ft_render_x11_state *state,
     ft_render_framebuffer *framebuffer)
 {
@@ -676,11 +346,6 @@ ft_render_platform_result ft_render_platform_present(
         return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
     state = static_cast<ft_render_x11_state *>(platform_state);
-    if (state->uses_glx == FT_TRUE)
-    {
-        ft_render_x11_present_glx(state, framebuffer);
-        return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
-    }
     ft_render_x11_present_software(state, framebuffer);
     return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }

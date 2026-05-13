@@ -17,6 +17,14 @@ int32_t cma_checked_free(void* memory_pointer)
 
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
+    if (cma_small_arena_owns_pointer_locked(memory_pointer) == FT_TRUE)
+    {
+        int32_t arena_error = cma_small_arena_deallocate_locked(memory_pointer);
+
+        if (lock_acquired)
+            cma_unlock_allocator(lock_acquired);
+        return (arena_error);
+    }
     Block* found = cma_find_block_for_pointer(memory_pointer);
     if (!found)
     {

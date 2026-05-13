@@ -9,7 +9,6 @@ static const int64_t DEMO_FPS_SAMPLE_MILLISECONDS = 250;
 static const int64_t DEMO_FPS_AVERAGE_MILLISECONDS = 10000;
 static const double  DEMO_NOMINAL_FRAME_SECONDS = 1.0 / 900.0;
 static const double  DEMO_MAX_FRAME_SECONDS = 0.05;
-
 static void demo_reset_name_entry(demo_game_state *game_state)
 {
     game_state->pending_name[0] = 'A';
@@ -28,6 +27,8 @@ static void demo_prepare_level(demo_game_state *game_state, int32_t level_index)
     game_state->current_level_index = level_index;
     game_state->player_position_x = level->start_position_x;
     game_state->player_position_y = level->start_position_y;
+    game_state->player_floor_height = 0.0;
+    game_state->stair_progress = 0.0;
     game_state->player_direction_x = level->start_direction_x;
     game_state->player_direction_y = level->start_direction_y;
     game_state->camera_plane_x = -level->start_direction_y * 0.66;
@@ -61,6 +62,8 @@ void demo_init_game_state(demo_game_state *game_state)
     game_state->pending_level_index = 0;
     game_state->player_position_x = 1.5;
     game_state->player_position_y = 1.5;
+    game_state->player_floor_height = 0.0;
+    game_state->stair_progress = 0.0;
     game_state->player_direction_x = 1.0;
     game_state->player_direction_y = 0.0;
     game_state->camera_plane_x = 0.0;
@@ -295,6 +298,49 @@ static void demo_try_move_player(demo_game_state *game_state, double delta_x,
     return ;
 }
 
+static double demo_tile_floor_height(char tile_value, double position_x)
+{
+    double tile_fraction;
+    double quarter_fraction;
+    double stair_height;
+
+    if (tile_value >= 'a' && tile_value <= 'l')
+    {
+        tile_fraction = position_x - std::floor(position_x);
+        quarter_fraction = std::floor(tile_fraction * 4.0) / 4.0;
+        stair_height = (static_cast<double>(tile_value - 'a') + quarter_fraction)
+            / 12.0;
+        if (stair_height < 0.0)
+            return (0.0);
+        if (stair_height > 1.0)
+            return (1.0);
+        return (stair_height);
+    }
+    if (tile_value == 'U' || tile_value == 'E')
+        return (1.0);
+    return (0.0);
+}
+
+static void demo_update_player_stair_height(demo_game_state *game_state,
+    const demo_level &level)
+{
+    char current_tile;
+
+    current_tile = demo_level_tile_at(level,
+        static_cast<int32_t>(game_state->player_position_x),
+        static_cast<int32_t>(game_state->player_position_y));
+    game_state->player_floor_height = demo_tile_floor_height(current_tile,
+        game_state->player_position_x);
+    game_state->stair_progress = game_state->player_floor_height;
+    return ;
+}
+
+static void demo_finish_floor_if_stair_complete(demo_game_state *game_state)
+{
+    (void)game_state;
+    return ;
+}
+
 static void demo_handle_playing(demo_game_state *game_state,
     const demo_input_state *input_state, double frame_delta_seconds)
 {
@@ -303,7 +349,6 @@ static void demo_handle_playing(demo_game_state *game_state,
     double move_distance;
     double turn_angle;
     const demo_level *level;
-    char current_tile;
 
     move_speed = 5.4;
     turn_speed = 3.6;
@@ -335,23 +380,8 @@ static void demo_handle_playing(demo_game_state *game_state,
         return ;
     }
     level = &g_demo_levels[game_state->current_level_index];
-    current_tile = demo_level_tile_at(*level,
-        static_cast<int32_t>(game_state->player_position_x),
-        static_cast<int32_t>(game_state->player_position_y));
-    if (current_tile == 'E')
-    {
-        game_state->pending_level_index = game_state->current_level_index + 1;
-        if (game_state->pending_level_index
-            >= static_cast<int32_t>(g_demo_level_count))
-        {
-            game_state->mode = DEMO_MODE_NAME_ENTRY;
-            demo_reset_name_entry(game_state);
-        }
-        else
-        {
-            game_state->mode = DEMO_MODE_LEVEL_CLEAR;
-        }
-    }
+    demo_update_player_stair_height(game_state, *level);
+    demo_finish_floor_if_stair_complete(game_state);
     return ;
 }
 

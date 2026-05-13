@@ -91,7 +91,8 @@ Notes:
 
 - Rendering is software-based. You write pixels into the framebuffer and call `present()`.
 - `poll_events()` updates window state, including the close request consumed by `should_close()`.
-- `clear(...)`, `put_pixel(...)`, `framebuffer()`, and `depth_buffer()` are the core drawing entry points.
+- `clear(...)`, `put_pixel(...)`, `shade(...)`, `framebuffer()`, and `depth_buffer()` are the core drawing entry points.
+- `shade(...)` runs a caller-provided fragment callback once per pixel on the CPU. It receives coordinates, the current color, the current depth value, and caller data; it returns the new color and can optionally update depth. No shader compiler, OpenGL, GLX, or GPU-side rendering library is involved.
 
 ## Input flow
 

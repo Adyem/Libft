@@ -61,6 +61,7 @@ BASIC_TEST_FILES := \
 CMA_TEST_FILES := \
 	Test/test_cma.cpp \
 	Test/test_cma_alloc.cpp \
+	Test/test_cma_arena.cpp \
 	Test/test_cma_backend.cpp \
 	Test/test_cma_block_size.cpp \
 	Test/test_cma_global_new.cpp \
@@ -148,24 +149,18 @@ X11_LIBS := -lX11
 else
 X11_LIBS :=
 endif
-HAS_GL_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libGL.so" && echo 1 || echo 0)
 HAS_XEXT_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXext.so" && echo 1 || echo 0)
 ifeq ($(HAS_ASOUND_LIB),1)
 ASOUND_LIBS := -lasound
 else
 ASOUND_LIBS :=
 endif
-ifeq ($(HAS_GL_LIB),1)
-GL_LIBS := -lGL
-else
-GL_LIBS :=
-endif
 ifeq ($(HAS_XEXT_LIB),1)
 XEXT_LIBS := -lXext
 else
 XEXT_LIBS :=
 endif
-LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(GL_LIBS) $(ASOUND_LIBS)
+LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(ASOUND_LIBS)
 export COMPILE_FLAGS
 
 BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)

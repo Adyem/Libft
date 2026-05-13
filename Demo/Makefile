@@ -30,7 +30,7 @@ ifeq ($(OS),Windows_NT)
 else ifeq ($(UNAME_S),Darwin)
     LINK_FLAGS += -framework Cocoa -framework CoreGraphics -lobjc -lpthread
 else
-    LINK_FLAGS += -lX11 -lXext -lGL -lpthread
+    LINK_FLAGS += -lX11 -lXext -lpthread
 endif
 
 all: FORCE $(TARGET) $(LEGACY_TARGET)

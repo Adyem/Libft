@@ -34,6 +34,29 @@ struct ft_render_depth_buffer
     uint8_t         *values;
 };
 
+struct ft_render_shader_input
+{
+    int32_t         coordinate_x;
+    int32_t         coordinate_y;
+    int32_t         width;
+    int32_t         height;
+    uint32_t        current_color;
+    uint8_t         current_depth;
+    void            *user_data;
+};
+
+struct ft_render_shader_output
+{
+    uint32_t        color;
+    uint8_t         depth;
+    ft_bool         write_depth;
+};
+
+typedef int32_t (*ft_render_fragment_shader)(
+    const ft_render_shader_input *input,
+    ft_render_shader_output *output
+);
+
 struct ft_render_screen_size
 {
     int32_t         width;
@@ -86,6 +109,8 @@ class ft_render_window
         int32_t                      clear(uint32_t color);
         int32_t                      put_pixel(int32_t coordinate_x,
             int32_t coordinate_y, uint32_t color);
+        int32_t                      shade(ft_render_fragment_shader shader,
+            void *user_data);
 
         int32_t                      set_fullscreen(ft_bool enabled);
 

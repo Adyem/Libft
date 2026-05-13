@@ -3,6 +3,7 @@ TARGET         := CustomMemoryAllocator.a
 DEBUG_TARGET   := CustomMemoryAllocator_debug.a
 
 SRCS := cma_backend.cpp \
+        cma_arena.cpp \
         cma_malloc.cpp \
         cma_free.cpp \
         cma_free_checked.cpp \

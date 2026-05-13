@@ -145,6 +145,59 @@ void *cma_realloc(void* memory_pointer, ft_size_t new_size)
         cma_free(memory_pointer);
         return (ft_nullptr);
     }
+    if (cma_small_arena_owns_pointer_locked(memory_pointer) == FT_TRUE)
+    {
+        ft_size_t previous_size = cma_small_arena_block_size_locked(
+                memory_pointer);
+        void *arena_pointer = cma_small_arena_reallocate_locked(memory_pointer,
+                new_size);
+
+        if (arena_pointer != ft_nullptr)
+        {
+            ft_size_t resized_size = cma_small_arena_block_size_locked(
+                    arena_pointer);
+
+            if (g_cma_current_bytes >= previous_size)
+                g_cma_current_bytes -= previous_size;
+            else
+                g_cma_current_bytes = 0;
+            g_cma_current_bytes += resized_size;
+            if (g_cma_current_bytes > g_cma_peak_bytes)
+                g_cma_peak_bytes = g_cma_current_bytes;
+            if (lock_acquired)
+                cma_unlock_allocator(lock_acquired);
+            return (arena_pointer);
+        }
+        ft_size_t copy_size = previous_size;
+        if (copy_size > new_size)
+            copy_size = new_size;
+        ft_size_t instrumented_arena_size = cma_debug_allocation_size(new_size);
+        if (instrumented_arena_size < new_size)
+        {
+            if (lock_acquired)
+                cma_unlock_allocator(lock_acquired);
+            return (ft_nullptr);
+        }
+        ft_size_t aligned_arena_size = align16(instrumented_arena_size);
+        if (aligned_arena_size < instrumented_arena_size)
+        {
+            if (lock_acquired)
+                cma_unlock_allocator(lock_acquired);
+            return (ft_nullptr);
+        }
+        void *new_ptr = allocate_block_locked(aligned_arena_size, new_size);
+        if (new_ptr == ft_nullptr)
+        {
+            if (lock_acquired)
+                cma_unlock_allocator(lock_acquired);
+            return (ft_nullptr);
+        }
+        ft_memcpy(new_ptr, memory_pointer, copy_size);
+        (void)cma_small_arena_deallocate_locked(memory_pointer);
+        if (lock_acquired)
+            cma_unlock_allocator(lock_acquired);
+        return (new_ptr);
+    }
     ft_size_t instrumented_size = cma_debug_allocation_size(new_size);
     if (instrumented_size < new_size)
     {

@@ -36,6 +36,12 @@ int32_t cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size
             cma_unlock_allocator(lock_acquired);
         return (lock_error);
     }
+    if (cma_small_arena_owns_pointer_locked(memory_pointer) == FT_TRUE)
+    {
+        *block_size = cma_small_arena_block_size_locked(memory_pointer);
+        cma_unlock_allocator(lock_acquired);
+        return (FT_ERR_SUCCESS);
+    }
     Block *block = cma_find_block_for_pointer(memory_pointer);
     if (block == ft_nullptr
         || block->magic != MAGIC_NUMBER_ALLOCATED

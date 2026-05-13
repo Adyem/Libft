@@ -73,6 +73,15 @@ struct Page
     int8_t              alloc_size_type;
 } __attribute__ ((aligned(16)));
 
+struct cma_arena
+{
+    uint8_t     *buffer;
+    ft_size_t   capacity;
+    ft_size_t   offset;
+    ft_bool     owns_buffer;
+    uint8_t     _initialised_state;
+};
+
 extern Page *page_list;
 
 Block    *split_block(Block *block, ft_size_t size);
@@ -104,6 +113,18 @@ ft_size_t    cma_backend_block_size(const void *memory_pointer)
             __attribute__ ((warn_unused_result, hot));
 int32_t cma_backend_checked_block_size(const void *memory_pointer,
             ft_size_t *block_size) __attribute__ ((warn_unused_result, hot));
+void    *cma_small_arena_allocate_locked(ft_size_t size)
+            __attribute__ ((warn_unused_result, hot));
+void    *cma_small_arena_aligned_allocate_locked(ft_size_t alignment,
+            ft_size_t size) __attribute__ ((warn_unused_result, hot));
+ft_bool cma_small_arena_owns_pointer_locked(const void *memory_pointer)
+            __attribute__ ((warn_unused_result, hot));
+ft_size_t cma_small_arena_block_size_locked(const void *memory_pointer)
+            __attribute__ ((warn_unused_result, hot));
+int32_t cma_small_arena_deallocate_locked(void *memory_pointer)
+            __attribute__ ((hot));
+void    *cma_small_arena_reallocate_locked(void *memory_pointer,
+            ft_size_t size) __attribute__ ((warn_unused_result, hot));
 #ifndef CMA_ENABLE_METADATA_PROTECTION
 # define CMA_ENABLE_METADATA_PROTECTION 1
 #endif

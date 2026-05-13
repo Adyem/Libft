@@ -47,6 +47,21 @@ void* cma_malloc(ft_size_t size)
     }
     if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
         return (ft_nullptr);
+    result = cma_small_arena_allocate_locked(size);
+    if (result != ft_nullptr)
+    {
+        ft_size_t arena_size = cma_small_arena_block_size_locked(result);
+
+        g_cma_allocation_count++;
+        g_cma_current_bytes += arena_size;
+        if (g_cma_current_bytes > g_cma_peak_bytes)
+            g_cma_peak_bytes = g_cma_current_bytes;
+        cma_unlock_allocator(lock_acquired);
+        lock_acquired = FT_FALSE;
+        if (ft_log_get_alloc_logging())
+            ft_log_debug("cma_malloc %llu -> %p", size, result);
+        return (result);
+    }
     instrumented_size = cma_debug_allocation_size(size);
     if (instrumented_size > FT_SYSTEM_SIZE_MAX - 15)
     {

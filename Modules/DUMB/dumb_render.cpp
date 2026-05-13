@@ -670,6 +670,71 @@ int32_t ft_render_window::put_pixel(int32_t coordinate_x, int32_t coordinate_y,
     return (FT_ERR_SUCCESS);
 }
 
+int32_t ft_render_window::shade(ft_render_fragment_shader shader,
+    void *user_data)
+{
+    ft_render_shader_input       input;
+    ft_render_shader_output      output;
+    int32_t                      index_width;
+    int32_t                      index_height;
+    int32_t                      index;
+    int32_t                      shader_error;
+    int32_t                      lock_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_render_window::shade");
+    if (shader == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (this->_is_initialised == FT_FALSE)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_NOT_INITIALISED);
+    }
+    if (this->_framebuffer.pixels == ft_nullptr
+        || this->_depth_buffer.values == ft_nullptr
+        || this->_framebuffer.width != this->_depth_buffer.width
+        || this->_framebuffer.height != this->_depth_buffer.height)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_STATE);
+    }
+    input.width = this->_framebuffer.width;
+    input.height = this->_framebuffer.height;
+    input.user_data = user_data;
+    index_height = 0;
+    while (index_height < this->_framebuffer.height)
+    {
+        index_width = 0;
+        while (index_width < this->_framebuffer.width)
+        {
+            index = (index_height * this->_framebuffer.width) + index_width;
+            input.coordinate_x = index_width;
+            input.coordinate_y = index_height;
+            input.current_color = this->_framebuffer.pixels[index];
+            input.current_depth = this->_depth_buffer.values[index];
+            output.color = input.current_color;
+            output.depth = input.current_depth;
+            output.write_depth = FT_FALSE;
+            shader_error = shader(&input, &output);
+            if (shader_error != FT_ERR_SUCCESS)
+            {
+                (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+                return (shader_error);
+            }
+            this->_framebuffer.pixels[index] = output.color;
+            if (output.write_depth == FT_TRUE)
+                this->_depth_buffer.values[index] = output.depth;
+            index_width = index_width + 1;
+        }
+        index_height = index_height + 1;
+    }
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
+}
+
 int32_t ft_render_window::set_fullscreen(ft_bool enabled)
 {
     ft_render_platform_result  platform_result;

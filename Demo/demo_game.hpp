@@ -63,6 +63,8 @@ struct demo_game_state
     int32_t     pending_level_index;
     double      player_position_x;
     double      player_position_y;
+    double      player_floor_height;
+    double      stair_progress;
     double      player_direction_x;
     double      player_direction_y;
     double      camera_plane_x;

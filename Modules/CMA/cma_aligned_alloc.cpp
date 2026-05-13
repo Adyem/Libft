@@ -201,6 +201,22 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
+    void *arena_pointer = cma_small_arena_aligned_allocate_locked(alignment,
+            request_size);
+    if (arena_pointer != ft_nullptr)
+    {
+        ft_size_t arena_size = cma_small_arena_block_size_locked(arena_pointer);
+
+        g_cma_allocation_count++;
+        g_cma_current_bytes += arena_size;
+        if (g_cma_current_bytes > g_cma_peak_bytes)
+            g_cma_peak_bytes = g_cma_current_bytes;
+        cma_unlock_allocator(lock_acquired);
+        if (ft_log_get_alloc_logging())
+            ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
+                    request_size, alignment, arena_pointer);
+        return (arena_pointer);
+    }
     ft_size_t padding = 0;
     Block *block = find_aligned_free_block(aligned_size, alignment, &padding);
     if (!block)
