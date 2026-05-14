@@ -1,6 +1,10 @@
 #ifndef COMPATEBILITY_CROSS_PROCESS_HPP
 #define COMPATEBILITY_CROSS_PROCESS_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "../CrossProcess/cross_process.hpp"
 
 struct cmp_cross_process_mapping

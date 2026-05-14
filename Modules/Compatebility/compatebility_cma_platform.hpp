@@ -1,6 +1,10 @@
 #ifndef COMPATEBILITY_CMA_PLATFORM_HPP
 #define COMPATEBILITY_CMA_PLATFORM_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 

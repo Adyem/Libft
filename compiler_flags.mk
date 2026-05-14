@@ -40,7 +40,8 @@ BUILD_OUTPUT_SUFFIX := _opt$(OPT_LEVEL)$(SANITIZER_SUFFIX)
 COMPILE_FLAGS ?= -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations \
                 -Wold-style-cast -Wshadow -Wconversion -Wformat=2 -Wundef \
                 -Wfloat-equal -Wodr -Wuseless-cast -Wzero-as-null-pointer-constant \
-                -Wmaybe-uninitialized $(OPT_FLAGS) $(SANITIZER_FLAGS)
+                -Wmaybe-uninitialized -DLIBFT_INTERNAL_HEADERS \
+                $(OPT_FLAGS) $(SANITIZER_FLAGS)
 
 export BUILD_OUTPUT_SUFFIX
 export COMPILE_FLAGS

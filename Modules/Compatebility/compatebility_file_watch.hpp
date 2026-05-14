@@ -1,6 +1,10 @@
 #ifndef COMPATEBILITY_FILE_WATCH_HPP
 #define COMPATEBILITY_FILE_WATCH_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "../File/file_watch_event.hpp"
 
 struct cmp_file_watch_context;

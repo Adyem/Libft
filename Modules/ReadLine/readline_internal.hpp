@@ -1,6 +1,10 @@
 #ifndef READLINE_INTERNAL_HPP
 #define READLINE_INTERNAL_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "../CPP_class/class_file.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"

@@ -1,6 +1,10 @@
 #ifndef COMPATEBILITY_STACK_TRACE_HPP
 # define COMPATEBILITY_STACK_TRACE_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 # include <cstdio>
 # include "../Basic/basic.hpp"
 

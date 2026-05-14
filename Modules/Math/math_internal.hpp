@@ -1,6 +1,10 @@
 #ifndef MATH_INTERNAL_HPP
 # define MATH_INTERNAL_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "roll.hpp"
 
 int32_t     math_roll_check_number_next(char *string, int32_t index);

@@ -1,6 +1,10 @@
 #ifndef API_INTERNAL_HPP
 #define API_INTERNAL_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "../CPP_class/class_string.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/openssl_support.hpp"

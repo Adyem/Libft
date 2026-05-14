@@ -1,6 +1,10 @@
 #ifndef COMPATEBILITY_SOUND_DEVICE_ALSA_HPP
 #define COMPATEBILITY_SOUND_DEVICE_ALSA_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #if !defined(_WIN32) && !defined(__APPLE__)
 
 #include "../DUMB/sound_device.hpp"

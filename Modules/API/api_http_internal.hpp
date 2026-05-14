@@ -1,6 +1,10 @@
 #ifndef API_HTTP_INTERNAL_HPP
 #define API_HTTP_INTERNAL_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "api_internal.hpp"
 #include "api.hpp"
 #include "../JSon/json.hpp"

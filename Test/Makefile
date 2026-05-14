@@ -138,7 +138,7 @@ else
 $(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
 
-COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations -fcf-protection=none -DLIBFT_TEST_BUILD
+COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations -fcf-protection=none -DLIBFT_TEST_BUILD -DLIBFT_INTERNAL_HEADERS
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
 EFFICIENCY_COMPILE_FLAGS := $(filter-out -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)) -DFT_EFFICIENCY_BUILD
 EFFICIENCY_CFLAGS := $(EFFICIENCY_COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"

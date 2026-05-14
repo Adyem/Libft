@@ -1,6 +1,10 @@
 #ifndef SCMA_INTERNAL_HPP
 # define SCMA_INTERNAL_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include <cstddef>
 #include "../Compatebility/compatebility_stack_trace.hpp"
 #include "SCMA.hpp"

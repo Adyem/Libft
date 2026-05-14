@@ -1,6 +1,10 @@
 #ifndef PTHREAD_INTERNAL_HPP
 # define PTHREAD_INTERNAL_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #include "mutex.hpp"
 #include "recursive_mutex.hpp"
 

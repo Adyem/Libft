@@ -1,6 +1,10 @@
 #ifndef SQLITE_SUPPORT_HPP
 #define SQLITE_SUPPORT_HPP
 
+
+#ifndef LIBFT_INTERNAL_HEADERS
+# error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
+#endif
 #if !defined(SQLITE3_AVAILABLE)
 # if defined(__has_include)
 #  if __has_include(<sqlite3.h>)
