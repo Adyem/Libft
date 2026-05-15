@@ -38,6 +38,8 @@ SUBDIRS := Modules/Basic \
            Modules/CPP_class \
            Modules/Template \
            Modules/Buffer \
+           Modules/CLI \
+           Modules/Command \
            Modules/Config \
            Modules/CrossProcess \
            Modules/Compression \
@@ -49,6 +51,7 @@ SUBDIRS := Modules/Basic \
            Modules/File \
            Modules/HTML \
            Modules/Time \
+           Modules/Filesystem \
            Modules/XML \
            Modules/Storage \
            Modules/Networking \
@@ -75,6 +78,8 @@ LIB_BASES := \
   Modules/PThread/PThread \
   Modules/CPP_class/CPP_class \
   Modules/Buffer/buffer \
+  Modules/CLI/cli \
+  Modules/Command/command \
   Modules/Config/config \
   Modules/CrossProcess/CrossProcess \
   Modules/Compression/compression \
@@ -86,6 +91,7 @@ LIB_BASES := \
   Modules/File/file \
   Modules/HTML/HTMLParser \
   Modules/Time/time \
+  Modules/Filesystem/filesystem \
   Modules/XML/XMLParser \
   Modules/Storage/storage \
   Modules/Networking/networking \
