@@ -68,8 +68,8 @@ class game_world
 
     public:
         game_world() noexcept;
-        game_world(const game_world &other) noexcept;
-        game_world(game_world &&other) noexcept;
+        game_world(const game_world &other) noexcept = delete;
+        game_world(game_world &&other) noexcept = delete;
         virtual ~game_world() noexcept;
         game_world &operator=(const game_world &other) noexcept = delete;
         game_world &operator=(game_world &&other) noexcept = delete;

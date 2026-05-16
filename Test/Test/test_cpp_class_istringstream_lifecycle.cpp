@@ -141,14 +141,17 @@ FT_TEST(test_cpp_class_istringstream_move_self_is_noop_and_preserves_content)
 {
     ft_istringstream stream_value;
     ft_string source_value;
-    ft_string content_value;
+    ft_string *content_value;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("self"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize(source_value));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.move(stream_value));
     content_value = stream_value.get_string();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value.get_error());
-    FT_ASSERT_EQ(0, ft_strcmp(content_value.c_str(), "self"));
+    FT_ASSERT(content_value != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(content_value->c_str(), "self"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value->destroy());
+    delete content_value;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
     return (1);
@@ -210,20 +213,21 @@ FT_TEST(test_cpp_class_istringstream_move_into_destroyed_destination_transfers_c
 FT_TEST(test_cpp_class_istringstream_get_string_after_move_constructor_matches_source)
 {
     ft_istringstream source_stream;
+    ft_istringstream moved_stream;
     ft_string source_value;
-    ft_string content_value;
+    ft_string *content_value;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("alpha beta"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize(source_value));
-    {
-        ft_istringstream moved_stream(static_cast<ft_istringstream &&>(source_stream));
-
-        content_value = moved_stream.get_string();
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value.get_error());
-        FT_ASSERT_EQ(0, ft_strcmp(content_value.c_str(), "alpha beta"));
-        FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_stream._buffer._initialised_state);
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.destroy());
-    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.move(source_stream));
+    content_value = moved_stream.get_string();
+    FT_ASSERT(content_value != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(content_value->c_str(), "alpha beta"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value->destroy());
+    delete content_value;
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_stream._buffer._initialised_state);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
     return (1);
 }

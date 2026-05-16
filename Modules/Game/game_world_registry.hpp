@@ -30,9 +30,9 @@ class game_world_registry
     public:
         game_world_registry() noexcept;
         virtual ~game_world_registry() noexcept;
-        game_world_registry(const game_world_registry &other) noexcept;
+        game_world_registry(const game_world_registry &other) noexcept = delete;
         game_world_registry &operator=(const game_world_registry &other) noexcept = delete;
-        game_world_registry(game_world_registry &&other) noexcept;
+        game_world_registry(game_world_registry &&other) noexcept = delete;
         game_world_registry &operator=(game_world_registry &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

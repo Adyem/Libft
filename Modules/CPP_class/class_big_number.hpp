@@ -42,13 +42,13 @@ class ft_big_number
         void    reduce_to_unlocked(ft_size_t new_size) noexcept;
         ft_bool    is_zero_value() const noexcept;
         int32_t     compare_magnitude(const ft_big_number& other) const noexcept;
-        ft_big_number    add_magnitude(const ft_big_number& other) const noexcept;
-        ft_big_number    subtract_magnitude(const ft_big_number& other) const noexcept;
+        ft_big_number    *add_magnitude(const ft_big_number& other) const noexcept;
+        ft_big_number    *subtract_magnitude(const ft_big_number& other) const noexcept;
 
     public:
         ft_big_number() noexcept;
-        ft_big_number(const ft_big_number& other) noexcept;
-        ft_big_number(ft_big_number&& other) noexcept;
+        ft_big_number(const ft_big_number& other) noexcept = delete;
+        ft_big_number(ft_big_number&& other) noexcept = delete;
         ~ft_big_number() noexcept;
 
         int32_t initialize() noexcept;
@@ -59,6 +59,7 @@ class ft_big_number
 
         ft_big_number& operator=(const ft_big_number& other) noexcept;
         ft_big_number& operator=(ft_big_number&& other) noexcept;
+        ft_big_number& operator=(const ft_big_number_proxy& other) noexcept;
         ft_big_number_proxy operator+(const ft_big_number& other) const noexcept;
         ft_big_number_proxy operator-(const ft_big_number& other) const noexcept;
         ft_big_number_proxy operator*(const ft_big_number& other) const noexcept;
@@ -85,8 +86,8 @@ class ft_big_number
         ft_bool        empty() const noexcept;
         ft_bool        is_negative() const noexcept;
         ft_bool        is_positive() const noexcept;
-        ft_string   to_string_base(int32_t base) noexcept;
-        ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
+        ft_string   *to_string_base(int32_t base) noexcept;
+        ft_big_number *mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
         static const char *get_error_str() noexcept;
         static int32_t get_error() noexcept;
         int32_t     enable_thread_safety(void) noexcept;
@@ -123,7 +124,7 @@ class ft_big_number_proxy
         ft_big_number_proxy operator/(const ft_big_number &right) const noexcept;
         ft_big_number_proxy operator%(const ft_big_number &right) const noexcept;
 
-        operator ft_big_number() const noexcept;
+        operator ft_big_number *() const noexcept;
         int32_t get_error() const noexcept;
 };
 
@@ -133,7 +134,7 @@ ft_big_number_proxy operator*(const ft_big_number_proxy &left, const ft_big_numb
 ft_big_number_proxy operator/(const ft_big_number_proxy &left, const ft_big_number &right) noexcept;
 ft_big_number_proxy operator%(const ft_big_number_proxy &left, const ft_big_number &right) noexcept;
 
-ft_string   big_number_to_hex_string(const ft_big_number& number) noexcept;
-ft_big_number   big_number_from_hex_string(const char* hex_digits) noexcept;
+ft_string       *big_number_to_hex_string(const ft_big_number& number) noexcept;
+ft_big_number   *big_number_from_hex_string(const char* hex_digits) noexcept;
 
 #endif

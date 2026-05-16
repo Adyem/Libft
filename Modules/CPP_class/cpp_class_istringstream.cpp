@@ -1,33 +1,10 @@
 #include "class_istringstream.hpp"
 #include "../Basic/basic.hpp"
+#include <new>
 
 ft_istringstream::ft_istringstream() noexcept
 : ft_istream(), _buffer()
 {
-    return ;
-}
-
-ft_istringstream::ft_istringstream(const ft_istringstream &other) noexcept
-: ft_istream(), _buffer()
-{
-    uint32_t initialize_error;
-    ft_string string_value;
-
-    string_value = other.get_string();
-    initialize_error = this->initialize(string_value);
-    if (initialize_error != FT_ERR_SUCCESS)
-        (void)this->destroy();
-    return ;
-}
-
-ft_istringstream::ft_istringstream(ft_istringstream &&other) noexcept
-: ft_istream(), _buffer()
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->move(other);
-    if (initialize_error != FT_ERR_SUCCESS)
-        (void)this->destroy();
     return ;
 }
 
@@ -93,28 +70,49 @@ ssize_t ft_istringstream::do_read(char *buffer, ft_size_t count)
     return (result);
 }
 
-ft_string ft_istringstream::get_string() const
+ft_string *ft_istringstream::get_string() const
 {
-    ft_string value;
+    ft_string *value;
     int32_t initialize_error;
 
-    initialize_error = value.initialize();
+    value = new (std::nothrow) ft_string();
+    if (value == ft_nullptr)
+        return (ft_nullptr);
+    initialize_error = value->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
-        return (value);
-    if (this->_buffer.get_string(value) != FT_ERR_SUCCESS)
+    {
+        delete value;
+        return (ft_nullptr);
+    }
+    if (this->_buffer.get_string(*value) != FT_ERR_SUCCESS)
         return (value);
     return (value);
 }
 
 ft_istringstream &operator>>(ft_istringstream &input, int32_t &value)
 {
-    ft_string content = input.get_string();
-    value = ft_atoi(content.c_str());
+    ft_string *content;
+
+    content = input.get_string();
+    if (content != ft_nullptr)
+    {
+        value = ft_atoi(content->c_str());
+        (void)content->destroy();
+        delete content;
+    }
     return (input);
 }
 
 ft_istringstream &operator>>(ft_istringstream &input, ft_string &value)
 {
-    value = input.get_string();
+    ft_string *content;
+
+    content = input.get_string();
+    if (content != ft_nullptr)
+    {
+        value = *content;
+        (void)content->destroy();
+        delete content;
+    }
     return (input);
 }

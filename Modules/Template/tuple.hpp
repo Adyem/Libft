@@ -34,8 +34,8 @@ class ft_tuple
 
     public:
         ft_tuple();
-        ft_tuple(const ft_tuple<Types...> &other);
-        ft_tuple(ft_tuple<Types...> &&other);
+        ft_tuple(const ft_tuple &other) = delete;
+        ft_tuple(ft_tuple &&other) = delete;
 
         template <typename... Args>
         explicit ft_tuple(Args&&... args);

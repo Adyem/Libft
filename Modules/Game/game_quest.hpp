@@ -33,8 +33,8 @@ class game_quest
 
     public:
         game_quest() noexcept;
-        game_quest(const game_quest &other) noexcept;
-        game_quest(game_quest &&other) noexcept;
+        game_quest(const game_quest &other) noexcept = delete;
+        game_quest(game_quest &&other) noexcept = delete;
         virtual ~game_quest() noexcept;
         game_quest &operator=(const game_quest &other) = delete;
         game_quest &operator=(game_quest &&other) = delete;

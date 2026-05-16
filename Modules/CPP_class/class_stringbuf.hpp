@@ -23,8 +23,8 @@ class ft_stringbuf
 
     public:
         ft_stringbuf() noexcept;
-        ft_stringbuf(const ft_stringbuf &other) noexcept;
-        ft_stringbuf(ft_stringbuf &&other) noexcept;
+        ft_stringbuf(const ft_stringbuf &other) noexcept = delete;
+        ft_stringbuf(ft_stringbuf &&other) noexcept = delete;
         ~ft_stringbuf() noexcept;
 
         ft_stringbuf &operator=(const ft_stringbuf &other) noexcept = delete;

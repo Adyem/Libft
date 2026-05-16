@@ -32,8 +32,8 @@ class ft_set
 
     public:
         ft_set(ft_size_t initial_capacity = 0);
-        ft_set(const ft_set &other);
-        ft_set(ft_set &&other);
+        ft_set(const ft_set &other) = delete;
+        ft_set(ft_set &&other) = delete;
         ~ft_set();
         ft_set& operator=(const ft_set&) = delete;
         ft_set& operator=(ft_set&& other) = delete;

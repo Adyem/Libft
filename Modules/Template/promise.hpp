@@ -9,7 +9,6 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include <atomic>
-#include <utility>
 #include <new>
 #include <cstdlib>
 #include "move.hpp"
@@ -28,8 +27,8 @@ class ft_promise
     protected:
     public:
         ft_promise();
-        ft_promise(const ft_promise& other);
-        ft_promise(ft_promise&& other);
+        ft_promise(const ft_promise& other) = delete;
+        ft_promise(ft_promise&& other) = delete;
         ~ft_promise();
 
         ft_promise& operator=(const ft_promise&) = delete;
@@ -61,8 +60,8 @@ class ft_promise<void>
 
     public:
         ft_promise();
-        ft_promise(const ft_promise& other);
-        ft_promise(ft_promise&& other);
+        ft_promise(const ft_promise& other) = delete;
+        ft_promise(ft_promise&& other) = delete;
         ~ft_promise();
 
         ft_promise& operator=(const ft_promise&) = delete;
@@ -91,82 +90,6 @@ ft_promise<ValueType>::ft_promise()
 }
 
 template <typename ValueType>
-ft_promise<ValueType>::ft_promise(const ft_promise<ValueType>& other)
-    : _value(), _ready(FT_FALSE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_bool lock_acquired;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_promise::ft_promise(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    if (other.lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_value = other._value;
-    this->_ready.store(other._ready.load(std::memory_order_acquire),
-        std::memory_order_release);
-    (void)other.unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ValueType>
-ft_promise<ValueType>::ft_promise(ft_promise<ValueType>&& other)
-    : _value(), _ready(FT_FALSE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_bool lock_acquired;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_promise::ft_promise(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    if (other.lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_value = ft_move(other._value);
-    this->_ready.store(other._ready.load(std::memory_order_acquire),
-        std::memory_order_release);
-    other._ready.store(FT_FALSE, std::memory_order_release);
-    (void)other.unlock_internal(lock_acquired);
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-template <typename ValueType>
 ft_promise<ValueType>::~ft_promise()
 {
     (void)this->destroy();
@@ -178,80 +101,6 @@ inline ft_promise<void>::ft_promise()
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     (void)this->initialize();
-    return ;
-}
-
-inline ft_promise<void>::ft_promise(const ft_promise<void>& other)
-    : _ready(FT_FALSE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_bool lock_acquired;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_promise<void>::ft_promise(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    if (other.lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_ready.store(other._ready.load(std::memory_order_acquire),
-        std::memory_order_release);
-    (void)other.unlock_internal(lock_acquired);
-    return ;
-}
-
-inline ft_promise<void>::ft_promise(ft_promise<void>&& other)
-    : _ready(FT_FALSE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_bool lock_acquired;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_promise<void>::ft_promise(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    if (other.lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_ready.store(other._ready.load(std::memory_order_acquire),
-        std::memory_order_release);
-    other._ready.store(FT_FALSE, std::memory_order_release);
-    (void)other.unlock_internal(lock_acquired);
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

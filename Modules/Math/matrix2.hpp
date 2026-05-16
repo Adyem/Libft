@@ -28,9 +28,9 @@ class matrix2
         matrix2() noexcept;
         matrix2(double m00, double m01,
                 double m10, double m11) noexcept;
-        matrix2(const matrix2 &other) noexcept;
+        matrix2(const matrix2 &other) noexcept = delete;
         matrix2 &operator=(const matrix2 &other) = delete;
-        matrix2(matrix2 &&other) noexcept;
+        matrix2(matrix2 &&other) noexcept = delete;
         matrix2 &operator=(matrix2 &&other) = delete;
         ~matrix2() noexcept;
         int32_t initialize() noexcept;

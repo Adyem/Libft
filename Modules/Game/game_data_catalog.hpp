@@ -34,8 +34,8 @@ class game_item_definition
 
     public:
         game_item_definition() noexcept;
-        game_item_definition(const game_item_definition &other) noexcept;
-        game_item_definition(game_item_definition &&other) noexcept;
+        game_item_definition(const game_item_definition &other) noexcept = delete;
+        game_item_definition(game_item_definition &&other) noexcept = delete;
         virtual ~game_item_definition() noexcept;
         game_item_definition &operator=(const game_item_definition &other) noexcept = delete;
         game_item_definition &operator=(game_item_definition &&other) noexcept = delete;
@@ -98,8 +98,8 @@ class game_recipe_blueprint
 
     public:
         game_recipe_blueprint() noexcept;
-        game_recipe_blueprint(const game_recipe_blueprint &other) noexcept;
-        game_recipe_blueprint(game_recipe_blueprint &&other) noexcept;
+        game_recipe_blueprint(const game_recipe_blueprint &other) noexcept = delete;
+        game_recipe_blueprint(game_recipe_blueprint &&other) noexcept = delete;
         virtual ~game_recipe_blueprint() noexcept;
         game_recipe_blueprint &operator=(const game_recipe_blueprint &other) noexcept = delete;
         game_recipe_blueprint &operator=(game_recipe_blueprint &&other) noexcept = delete;
@@ -151,8 +151,8 @@ class game_loadout_entry
 
     public:
         game_loadout_entry() noexcept;
-        game_loadout_entry(const game_loadout_entry &other) noexcept;
-        game_loadout_entry(game_loadout_entry &&other) noexcept;
+        game_loadout_entry(const game_loadout_entry &other) noexcept = delete;
+        game_loadout_entry(game_loadout_entry &&other) noexcept = delete;
         virtual ~game_loadout_entry() noexcept;
         game_loadout_entry &operator=(const game_loadout_entry &other) noexcept = delete;
         game_loadout_entry &operator=(game_loadout_entry &&other) noexcept = delete;
@@ -202,8 +202,8 @@ class game_loadout_blueprint
 
     public:
         game_loadout_blueprint() noexcept;
-        game_loadout_blueprint(const game_loadout_blueprint &other) noexcept;
-        game_loadout_blueprint(game_loadout_blueprint &&other) noexcept;
+        game_loadout_blueprint(const game_loadout_blueprint &other) noexcept = delete;
+        game_loadout_blueprint(game_loadout_blueprint &&other) noexcept = delete;
         virtual ~game_loadout_blueprint() noexcept;
         game_loadout_blueprint &operator=(const game_loadout_blueprint &other) noexcept = delete;
         game_loadout_blueprint &operator=(game_loadout_blueprint &&other) noexcept = delete;
@@ -252,8 +252,8 @@ class game_data_catalog
 
     public:
         game_data_catalog() noexcept;
-        game_data_catalog(const game_data_catalog &other) noexcept;
-        game_data_catalog(game_data_catalog &&other) noexcept;
+        game_data_catalog(const game_data_catalog &other) noexcept = delete;
+        game_data_catalog(game_data_catalog &&other) noexcept = delete;
         ~game_data_catalog() noexcept;
         game_data_catalog &operator=(const game_data_catalog &other) noexcept = delete;
         game_data_catalog &operator=(game_data_catalog &&other) noexcept = delete;

@@ -1,40 +1,88 @@
 #include "math.hpp"
+#include <new>
 
-static ft_big_number math_big_error_result(int32_t error_code)
+static ft_big_number *math_big_allocate_result(int32_t *error_code)
 {
-    return (ft_big_number_proxy(error_code));
+    ft_big_number *result;
+    int32_t initialization_error;
+
+    result = new (std::nothrow) ft_big_number();
+    if (result == ft_nullptr)
+    {
+        if (error_code != ft_nullptr)
+            *error_code = FT_ERR_NO_MEMORY;
+        return (ft_nullptr);
+    }
+    initialization_error = result->initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+    {
+        delete result;
+        if (error_code != ft_nullptr)
+            *error_code = initialization_error;
+        return (ft_nullptr);
+    }
+    if (error_code != ft_nullptr)
+        *error_code = FT_ERR_SUCCESS;
+    return (result);
 }
 
-static ft_big_number math_big_absolute_value(const ft_big_number &number)
+static ft_big_number *math_big_error_result(int32_t error_code)
+{
+    ft_big_number *result;
+    int32_t allocation_error;
+
+    result = math_big_allocate_result(&allocation_error);
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    (void)error_code;
+    return (result);
+}
+
+static ft_big_number *math_big_absolute_value(const ft_big_number &number)
 {
     ft_big_number zero_number;
-    int32_t zero_initialization_error;
+    ft_big_number *result;
+    int32_t initialization_error;
 
-    zero_initialization_error = zero_number.initialize();
-    if (zero_initialization_error != FT_ERR_SUCCESS)
-        return (math_big_error_result(zero_initialization_error));
+    initialization_error = zero_number.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (math_big_error_result(initialization_error));
+    result = math_big_allocate_result(&initialization_error);
+    if (result == ft_nullptr)
+        return (math_big_error_result(initialization_error));
     if (!number.is_negative())
     {
-        ft_big_number positive_number;
-        int32_t positive_initialization_error = positive_number.initialize(number);
-
-        if (positive_initialization_error != FT_ERR_SUCCESS)
-            return (math_big_error_result(positive_initialization_error));
-        positive_number.trim_leading_zeros();
-        return (positive_number + zero_number);
+        *result = number;
+        if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+        {
+            initialization_error = ft_big_number::get_error();
+            (void)result->destroy();
+            delete result;
+            return (math_big_error_result(initialization_error));
+        }
+        result->trim_leading_zeros();
+        return (result);
     }
-    ft_big_number positive_number = zero_number - number;
-
-    positive_number.trim_leading_zeros();
-    return (positive_number + zero_number);
+    *result = zero_number - number;
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+    {
+        initialization_error = ft_big_number::get_error();
+        (void)result->destroy();
+        delete result;
+        return (math_big_error_result(initialization_error));
+    }
+    result->trim_leading_zeros();
+    return (result);
 }
 
-static ft_big_number math_big_gcd_normalized(const ft_big_number &first_input,
+static ft_big_number *math_big_gcd_normalized(const ft_big_number &first_input,
     const ft_big_number &second_input)
 {
     ft_big_number first_value;
     ft_big_number second_value;
     ft_big_number zero_number;
+    ft_big_number remainder_number;
+    ft_big_number *result;
     int32_t initialization_error;
 
     initialization_error = zero_number.initialize();
@@ -46,54 +94,134 @@ static ft_big_number math_big_gcd_normalized(const ft_big_number &first_input,
     initialization_error = second_value.initialize(second_input);
     if (initialization_error != FT_ERR_SUCCESS)
         return (math_big_error_result(initialization_error));
-
+    initialization_error = remainder_number.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (math_big_error_result(initialization_error));
     while (!(second_value == zero_number))
     {
-        ft_big_number remainder_number = first_value % second_value;
-
+        remainder_number = first_value % second_value;
+        if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+            return (math_big_error_result(ft_big_number::get_error()));
         first_value = second_value;
         second_value = remainder_number;
     }
     first_value.trim_leading_zeros();
-    return (first_value + zero_number);
-}
-
-ft_big_number math_big_gcd(const ft_big_number &first_number, const ft_big_number &second_number)
-{
-    ft_big_number first_value = math_big_absolute_value(first_number);
-    ft_big_number zero_number;
-    int32_t zero_initialization_error;
-
-    zero_initialization_error = zero_number.initialize();
-    if (zero_initialization_error != FT_ERR_SUCCESS)
-        return (math_big_error_result(zero_initialization_error));
-    ft_big_number second_value = math_big_absolute_value(second_number);
-    ft_big_number gcd_value = math_big_gcd_normalized(first_value, second_value);
-    return (gcd_value + zero_number);
-}
-
-ft_big_number math_big_lcm(const ft_big_number &first_number, const ft_big_number &second_number)
-{
-    ft_big_number first_value = math_big_absolute_value(first_number);
-    ft_big_number second_value = math_big_absolute_value(second_number);
-    ft_big_number zero_number;
-    int32_t zero_initialization_error;
-
-    zero_initialization_error = zero_number.initialize();
-    if (zero_initialization_error != FT_ERR_SUCCESS)
-        return (math_big_error_result(zero_initialization_error));
-
-    if (first_value == zero_number || second_value == zero_number)
+    result = math_big_allocate_result(&initialization_error);
+    if (result == ft_nullptr)
+        return (math_big_error_result(initialization_error));
+    *result = first_value;
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
     {
-        ft_big_number zero_result;
-        int32_t zero_result_initialization_error = zero_result.initialize();
-
-        if (zero_result_initialization_error != FT_ERR_SUCCESS)
-            return (math_big_error_result(zero_result_initialization_error));
-        return (zero_result + zero_number);
+        initialization_error = ft_big_number::get_error();
+        (void)result->destroy();
+        delete result;
+        return (math_big_error_result(initialization_error));
     }
-    ft_big_number gcd_value = math_big_gcd_normalized(first_value, second_value);
-    ft_big_number product_value = first_value * second_value;
-    ft_big_number lcm_value = product_value / gcd_value;
-    return (lcm_value + zero_number);
+    return (result);
+}
+
+ft_big_number *math_big_gcd(const ft_big_number &first_number, const ft_big_number &second_number)
+{
+    ft_big_number *first_value;
+    ft_big_number *second_value;
+    ft_big_number *gcd_value;
+
+    first_value = math_big_absolute_value(first_number);
+    if (first_value == ft_nullptr)
+        return (ft_nullptr);
+    second_value = math_big_absolute_value(second_number);
+    if (second_value == ft_nullptr)
+    {
+        (void)first_value->destroy();
+        delete first_value;
+        return (ft_nullptr);
+    }
+    gcd_value = math_big_gcd_normalized(*first_value, *second_value);
+    (void)first_value->destroy();
+    delete first_value;
+    (void)second_value->destroy();
+    delete second_value;
+    return (gcd_value);
+}
+
+ft_big_number *math_big_lcm(const ft_big_number &first_number, const ft_big_number &second_number)
+{
+    ft_big_number *first_value;
+    ft_big_number *second_value;
+    ft_big_number *gcd_value;
+    ft_big_number *result;
+    ft_big_number zero_number;
+    ft_big_number product_value;
+    int32_t initialization_error;
+
+    first_value = math_big_absolute_value(first_number);
+    if (first_value == ft_nullptr)
+        return (ft_nullptr);
+    second_value = math_big_absolute_value(second_number);
+    if (second_value == ft_nullptr)
+    {
+        (void)first_value->destroy();
+        delete first_value;
+        return (ft_nullptr);
+    }
+    initialization_error = zero_number.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+    {
+        (void)first_value->destroy();
+        delete first_value;
+        (void)second_value->destroy();
+        delete second_value;
+        return (math_big_error_result(initialization_error));
+    }
+    if (*first_value == zero_number || *second_value == zero_number)
+    {
+        (void)first_value->destroy();
+        delete first_value;
+        (void)second_value->destroy();
+        delete second_value;
+        result = math_big_allocate_result(&initialization_error);
+        if (result == ft_nullptr)
+            return (math_big_error_result(initialization_error));
+        return (result);
+    }
+    gcd_value = math_big_gcd_normalized(*first_value, *second_value);
+    if (gcd_value == ft_nullptr)
+    {
+        (void)first_value->destroy();
+        delete first_value;
+        (void)second_value->destroy();
+        delete second_value;
+        return (ft_nullptr);
+    }
+    initialization_error = product_value.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+    {
+        (void)first_value->destroy();
+        delete first_value;
+        (void)second_value->destroy();
+        delete second_value;
+        (void)gcd_value->destroy();
+        delete gcd_value;
+        return (math_big_error_result(initialization_error));
+    }
+    product_value = *first_value * *second_value;
+    result = math_big_allocate_result(&initialization_error);
+    if (result != ft_nullptr)
+        *result = product_value / *gcd_value;
+    (void)first_value->destroy();
+    delete first_value;
+    (void)second_value->destroy();
+    delete second_value;
+    (void)gcd_value->destroy();
+    delete gcd_value;
+    if (result == ft_nullptr)
+        return (math_big_error_result(initialization_error));
+    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+    {
+        initialization_error = ft_big_number::get_error();
+        (void)result->destroy();
+        delete result;
+        return (math_big_error_result(initialization_error));
+    }
+    return (result);
 }

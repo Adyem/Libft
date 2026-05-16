@@ -19,64 +19,6 @@ ft_istream::ft_istream() noexcept
     return ;
 }
 
-ft_istream::ft_istream(const ft_istream &other) noexcept
-    : _gcount(0), _is_valid(FT_TRUE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t lock_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_istream::ft_istream copy source",
-            "called with uninitialised source object");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_gcount = other._gcount;
-    this->_is_valid = other._is_valid;
-    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (other._mutex != ft_nullptr && this->enable_thread_safety() != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_istream::ft_istream(ft_istream &&other) noexcept
-    : _gcount(0), _is_valid(FT_TRUE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_istream::ft_istream move source",
-            "called with uninitialised source object");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_istream::~ft_istream() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

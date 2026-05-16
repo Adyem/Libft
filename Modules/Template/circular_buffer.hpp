@@ -36,8 +36,8 @@ class ft_circular_buffer
 
     public:
         explicit ft_circular_buffer(ft_size_t capacity);
-        ft_circular_buffer(const ft_circular_buffer<ElementType> &other);
-        ft_circular_buffer(ft_circular_buffer<ElementType> &&other);
+        ft_circular_buffer(const ft_circular_buffer<ElementType> &other) = delete;
+        ft_circular_buffer(ft_circular_buffer<ElementType> &&other) = delete;
         ~ft_circular_buffer();
         ft_circular_buffer& operator=(const ft_circular_buffer&) = delete;
         ft_circular_buffer& operator=(ft_circular_buffer&& other) = delete;

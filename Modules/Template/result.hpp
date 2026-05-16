@@ -31,8 +31,8 @@ class ft_result
 
     public:
         ft_result() noexcept;
-        ft_result(const ft_result<ValueType> &other) noexcept;
-        ft_result(ft_result<ValueType> &&other) noexcept;
+        ft_result(const ft_result &other) = delete;
+        ft_result(ft_result &&other) = delete;
         ~ft_result() noexcept;
 
         ft_result &operator=(const ft_result<ValueType> &other) noexcept = delete;

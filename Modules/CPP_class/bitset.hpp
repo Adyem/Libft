@@ -33,8 +33,8 @@ class ft_bitset
 
     public:
         explicit ft_bitset(ft_size_t bits = 0);
-        ft_bitset(const ft_bitset &other);
-        ft_bitset(ft_bitset &&other);
+        ft_bitset(const ft_bitset &other) = delete;
+        ft_bitset(ft_bitset &&other) = delete;
         ~ft_bitset();
 
         ft_bitset& operator=(const ft_bitset&) = delete;

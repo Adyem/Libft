@@ -52,44 +52,6 @@ ft_fd_istream::ft_fd_istream() noexcept
     return ;
 }
 
-ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
-    : ft_istream(other), _file_descriptor(-1), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_file_descriptor = other._file_descriptor;
-    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    if (other._mutex != ft_nullptr && this->enable_thread_safety() != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
-    : ft_istream(static_cast<ft_istream &&>(other)), _file_descriptor(-1), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_file_descriptor = other._file_descriptor;
-    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    if (other._mutex != ft_nullptr)
-    {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)other.disable_thread_safety();
-    }
-    other._file_descriptor = -1;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_fd_istream::~ft_fd_istream() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)

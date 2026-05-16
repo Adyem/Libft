@@ -20,8 +20,8 @@ class ft_fd_istream : public ft_istream
 
     public:
         ft_fd_istream() noexcept;
-        ft_fd_istream(const ft_fd_istream &other) noexcept;
-        ft_fd_istream(ft_fd_istream &&other) noexcept;
+        ft_fd_istream(const ft_fd_istream &other) noexcept = delete;
+        ft_fd_istream(ft_fd_istream &&other) noexcept = delete;
         ~ft_fd_istream() noexcept;
 
         ft_fd_istream &operator=(const ft_fd_istream &other) noexcept = delete;

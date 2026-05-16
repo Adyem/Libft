@@ -7,13 +7,11 @@
 #include "../CMA/CMA.hpp"
 #include "constructor.hpp"
 #include "move.hpp"
-#include <cstddef>
 #include <type_traits>
 #include <cstdint>
 #include <new>
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Basic/basic.hpp"
 
 template <typename Type, typename = void>
 struct ft_is_complete
@@ -86,8 +84,8 @@ class ft_vector
         using const_iterator = const ElementType*;
 
         ft_vector(ft_size_t initial_capacity = 0);
-        ft_vector(const ft_vector<ElementType> &other);
-        ft_vector(ft_vector<ElementType> &&other);
+        ft_vector(const ft_vector<ElementType> &other) = delete;
+        ft_vector(ft_vector<ElementType> &&other) = delete;
         ~ft_vector();
 
         ft_vector& operator=(const ft_vector&) = delete;
@@ -204,70 +202,6 @@ ft_vector<ElementType>::ft_vector(ft_size_t initial_capacity)
             return ;
         }
     }
-    return ;
-}
-
-template <typename ElementType>
-ft_vector<ElementType>::ft_vector(const ft_vector<ElementType> &other)
-    : _data(ft_nullptr),
-      _size(0),
-      _capacity(0),
-      _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = ft_vector<ElementType>::_last_error;
-    this->reset_to_small_buffer();
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_vector::ft_vector(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_vector<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_vector<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)ft_vector<ElementType>::set_error(previous_error);
-    return ;
-}
-
-template <typename ElementType>
-ft_vector<ElementType>::ft_vector(ft_vector<ElementType> &&other)
-    : _data(ft_nullptr),
-      _size(0),
-      _capacity(0),
-      _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = ft_vector<ElementType>::_last_error;
-    this->reset_to_small_buffer();
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_vector::ft_vector(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_vector<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_vector<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)ft_vector<ElementType>::set_error(previous_error);
     return ;
 }
 

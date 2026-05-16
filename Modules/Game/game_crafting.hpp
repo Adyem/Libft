@@ -79,8 +79,8 @@ class game_crafting
 
     public:
         game_crafting() noexcept;
-        game_crafting(const game_crafting &other) noexcept;
-        game_crafting(game_crafting &&other) noexcept;
+        game_crafting(const game_crafting &other) noexcept = delete;
+        game_crafting(game_crafting &&other) noexcept = delete;
         virtual ~game_crafting() noexcept;
         game_crafting &operator=(const game_crafting &other) noexcept = delete;
         game_crafting &operator=(game_crafting &&other) noexcept = delete;

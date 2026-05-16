@@ -22,8 +22,8 @@ class ft_cancellation_state
 
     public:
         ft_cancellation_state() noexcept;
-        ft_cancellation_state(const ft_cancellation_state &other) noexcept;
-        ft_cancellation_state(ft_cancellation_state &&other) noexcept;
+        ft_cancellation_state(const ft_cancellation_state &other) noexcept = delete;
+        ft_cancellation_state(ft_cancellation_state &&other) noexcept = delete;
         ~ft_cancellation_state() noexcept;
 
         ft_cancellation_state &operator=(const ft_cancellation_state&) = delete;
@@ -79,8 +79,8 @@ class ft_cancellation_source
 
     public:
         ft_cancellation_source() noexcept;
-        ft_cancellation_source(const ft_cancellation_source &other) noexcept;
-        ft_cancellation_source(ft_cancellation_source &&other) noexcept;
+        ft_cancellation_source(const ft_cancellation_source &other) noexcept = delete;
+        ft_cancellation_source(ft_cancellation_source &&other) noexcept = delete;
         ~ft_cancellation_source() noexcept;
 
         ft_cancellation_source &operator=(const ft_cancellation_source&) = delete;

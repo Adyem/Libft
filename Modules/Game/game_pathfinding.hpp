@@ -30,8 +30,8 @@ class game_path_step
 
     public:
         game_path_step() noexcept;
-        game_path_step(const game_path_step &other) noexcept;
-        game_path_step(game_path_step &&other) noexcept;
+        game_path_step(const game_path_step &other) noexcept = delete;
+        game_path_step(game_path_step &&other) noexcept = delete;
         ~game_path_step() noexcept;
         game_path_step &operator=(const game_path_step &other) noexcept = delete;
         game_path_step &operator=(game_path_step &&other) noexcept = delete;
@@ -101,8 +101,8 @@ class game_pathfinding
 
     public:
         game_pathfinding() noexcept;
-        game_pathfinding(const game_pathfinding &other);
-        game_pathfinding(game_pathfinding &&other);
+        game_pathfinding(const game_pathfinding &other) = delete;
+        game_pathfinding(game_pathfinding &&other) = delete;
         ~game_pathfinding();
         game_pathfinding &operator=(const game_pathfinding &other) = delete;
         game_pathfinding &operator=(game_pathfinding &&other) = delete;

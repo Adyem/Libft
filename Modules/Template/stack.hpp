@@ -34,8 +34,8 @@ class ft_stack
 
     public:
         ft_stack();
-        ft_stack(const ft_stack &other);
-        ft_stack(ft_stack &&other);
+        ft_stack(const ft_stack &other) = delete;
+        ft_stack(ft_stack &&other) = delete;
         ~ft_stack();
         ft_stack& operator=(const ft_stack&) = delete;
         ft_stack& operator=(ft_stack&& other) = delete;

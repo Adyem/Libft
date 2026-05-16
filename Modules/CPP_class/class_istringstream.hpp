@@ -16,8 +16,8 @@ class ft_istringstream : public ft_istream
 
     public:
         ft_istringstream() noexcept;
-        ft_istringstream(const ft_istringstream &) noexcept;
-        ft_istringstream(ft_istringstream &&) noexcept;
+        ft_istringstream(const ft_istringstream &) noexcept = delete;
+        ft_istringstream(ft_istringstream &&) noexcept = delete;
         ~ft_istringstream() noexcept;
 
         ft_istringstream &operator=(const ft_istringstream &) = delete;
@@ -27,7 +27,7 @@ class ft_istringstream : public ft_istream
         int32_t destroy() noexcept;
         int32_t move(ft_istringstream &other) noexcept;
 
-        ft_string get_string() const;
+        ft_string *get_string() const;
 
     protected:
         ssize_t do_read(char *buffer, ft_size_t count);

@@ -22,8 +22,8 @@ class ft_ofstream
 
     public:
         ft_ofstream() noexcept;
-        ft_ofstream(const ft_ofstream &other) noexcept;
-        ft_ofstream(ft_ofstream &&other) noexcept;
+        ft_ofstream(const ft_ofstream &other) noexcept = delete;
+        ft_ofstream(ft_ofstream &&other) noexcept = delete;
         ~ft_ofstream() noexcept;
 
         ft_ofstream &operator=(const ft_ofstream &other) noexcept = delete;

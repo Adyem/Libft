@@ -314,34 +314,6 @@ ft_big_number::ft_big_number() noexcept
     return ;
 }
 
-ft_big_number::ft_big_number(const ft_big_number& other) noexcept
-    : _digits(ft_nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _is_negative(FT_FALSE)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _operation_error(FT_ERR_SUCCESS)
-{
-    (void)this->initialize(other);
-    ft_big_number::_last_initialised_state = this->_initialised_state;
-    return ;
-}
-
-ft_big_number::ft_big_number(ft_big_number&& other) noexcept
-    : _digits(ft_nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _is_negative(FT_FALSE)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _operation_error(FT_ERR_SUCCESS)
-{
-    (void)this->move(other);
-    ft_big_number::_last_initialised_state = this->_initialised_state;
-    return ;
-}
-
 int32_t ft_big_number::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -544,6 +516,22 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
     return (*this);
 }
 
+ft_big_number& ft_big_number::operator=(const ft_big_number_proxy& other) noexcept
+{
+    ft_big_number *other_value;
+
+    other_value = static_cast<ft_big_number *>(other);
+    if (other_value == ft_nullptr)
+    {
+        ft_big_number::set_error(FT_ERR_NO_MEMORY);
+        return (*this);
+    }
+    *this = *other_value;
+    (void)other_value->destroy();
+    delete other_value;
+    return (*this);
+}
+
 int32_t ft_big_number::move(ft_big_number& other) noexcept
 {
     const ft_big_number *lower;
@@ -650,49 +638,58 @@ int32_t ft_big_number::compare_magnitude(const ft_big_number& other) const noexc
     return (0);
 }
 
-ft_big_number ft_big_number::add_magnitude(const ft_big_number& other) const noexcept
+ft_big_number *ft_big_number::add_magnitude(const ft_big_number& other) const noexcept
 {
-    ft_big_number result;
-    int32_t result_initialization_error = result.initialize();
+    ft_big_number *result;
+    int32_t result_initialization_error;
+
+    result = new (std::nothrow) ft_big_number();
+    if (result == ft_nullptr)
+    {
+        ft_big_number::set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    result_initialization_error = result->initialize();
     if (result_initialization_error != FT_ERR_SUCCESS)
     {
+        delete result;
         ft_big_number::set_error(result_initialization_error);
-        return (result);
+        return (ft_nullptr);
     }
     if (this->is_zero_value())
     {
         if (other._size > 0 && other._digits)
         {
-            result.reserve(other._size + 1);
-            ft_memcpy(result._digits, other._digits, other._size + 1);
-            result._size = other._size;
-            result._digits[result._size] = '\0';
+            result->reserve(other._size + 1);
+            ft_memcpy(result->_digits, other._digits, other._size + 1);
+            result->_size = other._size;
+            result->_digits[result->_size] = '\0';
         }
         else
         {
-            result._size = 0;
-            if (result._digits)
-                result._digits[0] = '\0';
+            result->_size = 0;
+            if (result->_digits)
+                result->_digits[0] = '\0';
         }
-        result._is_negative = FT_FALSE;
+        result->_is_negative = FT_FALSE;
         return (result);
     }
     if (other.is_zero_value())
     {
         if (this->_size > 0 && this->_digits)
         {
-            result.reserve(this->_size + 1);
-            ft_memcpy(result._digits, this->_digits, this->_size + 1);
-            result._size = this->_size;
-            result._digits[result._size] = '\0';
+            result->reserve(this->_size + 1);
+            ft_memcpy(result->_digits, this->_digits, this->_size + 1);
+            result->_size = this->_size;
+            result->_digits[result->_size] = '\0';
         }
         else
         {
-            result._size = 0;
-            if (result._digits)
-                result._digits[0] = '\0';
+            result->_size = 0;
+            if (result->_digits)
+                result->_digits[0] = '\0';
         }
-        result._is_negative = FT_FALSE;
+        result->_is_negative = FT_FALSE;
         return (result);
     }
     ft_size_t left_length = this->_size;
@@ -701,9 +698,9 @@ ft_big_number ft_big_number::add_magnitude(const ft_big_number& other) const noe
     if (max_length < right_length)
         max_length = right_length;
     max_length++;
-    result.reserve(max_length + 1);
-    result._size = max_length;
-    result._digits[max_length] = '\0';
+    result->reserve(max_length + 1);
+    result->_size = max_length;
+    result->_digits[max_length] = '\0';
     ft_size_t left_index = left_length;
     ft_size_t right_index = right_length;
     ft_size_t write_index = max_length;
@@ -722,35 +719,44 @@ ft_big_number ft_big_number::add_magnitude(const ft_big_number& other) const noe
             digit_sum += other._digits[right_index] - '0';
         }
         write_index--;
-        result._digits[write_index] = static_cast<char>('0' + (digit_sum % 10));
+        result->_digits[write_index] = static_cast<char>('0' + (digit_sum % 10));
         carry_value = digit_sum / 10;
     }
     ft_size_t used_digits = max_length - write_index;
     if (used_digits == 0)
     {
-        result._digits[0] = '0';
-        result._digits[1] = '\0';
-        result._size = 1;
+        result->_digits[0] = '0';
+        result->_digits[1] = '\0';
+        result->_size = 1;
     }
     else
     {
-        ft_memmove(result._digits, result._digits + write_index, used_digits);
-        result._digits[used_digits] = '\0';
-        result._size = used_digits;
+        ft_memmove(result->_digits, result->_digits + write_index, used_digits);
+        result->_digits[used_digits] = '\0';
+        result->_size = used_digits;
     }
-    result.shrink_capacity();
-    result._is_negative = FT_FALSE;
+    result->shrink_capacity();
+    result->_is_negative = FT_FALSE;
     return (result);
 }
 
-ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) const noexcept
+ft_big_number *ft_big_number::subtract_magnitude(const ft_big_number& other) const noexcept
 {
-    ft_big_number result;
-    int32_t result_initialization_error = result.initialize();
+    ft_big_number *result;
+    int32_t result_initialization_error;
+
+    result = new (std::nothrow) ft_big_number();
+    if (result == ft_nullptr)
+    {
+        ft_big_number::set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    result_initialization_error = result->initialize();
     if (result_initialization_error != FT_ERR_SUCCESS)
     {
+        delete result;
         ft_big_number::set_error(result_initialization_error);
-        return (result);
+        return (ft_nullptr);
     }
     int32_t comparison = this->compare_magnitude(other);
     if (comparison < 0)
@@ -763,23 +769,23 @@ ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) cons
     {
         if (this->_size > 0 && this->_digits)
         {
-            result.reserve(this->_size + 1);
-            ft_memcpy(result._digits, this->_digits, this->_size + 1);
-            result._size = this->_size;
-            result._digits[result._size] = '\0';
+            result->reserve(this->_size + 1);
+            ft_memcpy(result->_digits, this->_digits, this->_size + 1);
+            result->_size = this->_size;
+            result->_digits[result->_size] = '\0';
         }
         else
         {
-            result._size = 0;
-            if (result._digits)
-                result._digits[0] = '\0';
+            result->_size = 0;
+            if (result->_digits)
+                result->_digits[0] = '\0';
         }
-        result._is_negative = FT_FALSE;
+        result->_is_negative = FT_FALSE;
         return (result);
     }
-    result.reserve(this->_size + 1);
-    result._size = this->_size;
-    result._digits[this->_size] = '\0';
+    result->reserve(this->_size + 1);
+    result->_size = this->_size;
+    result->_digits[this->_size] = '\0';
     ft_size_t left_index = this->_size;
     ft_size_t right_index = other._size;
     int32_t borrow_value = 0;
@@ -802,10 +808,10 @@ ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) cons
         }
         else
             borrow_value = 0;
-        result._digits[left_index] = static_cast<char>('0' + left_digit_value);
+        result->_digits[left_index] = static_cast<char>('0' + left_digit_value);
     }
-    result.trim_leading_zeros();
-    result._is_negative = FT_FALSE;
+    result->trim_leading_zeros();
+    result->_is_negative = FT_FALSE;
     return (result);
 }
 
@@ -1023,7 +1029,16 @@ int32_t ft_big_number::assign_base(const char* digits, int32_t base) noexcept
                                 local_error = ft_big_number::_last_error;
                                 break ;
                             }
-                            ft_big_number sum = result + addend;
+                            ft_big_number sum;
+                            int32_t sum_initialization_error;
+
+                            sum_initialization_error = sum.initialize();
+                            if (sum_initialization_error != FT_ERR_SUCCESS)
+                            {
+                                local_error = sum_initialization_error;
+                                break ;
+                            }
+                            sum = result + addend;
                             if (ft_big_number::_last_error != FT_ERR_SUCCESS)
                             {
                                 local_error = ft_big_number::_last_error;
@@ -1235,7 +1250,17 @@ ft_big_number_proxy ft_big_number::operator+(const ft_big_number& other) const n
     }
     if (this->_is_negative == other._is_negative)
     {
-        result = this->add_magnitude(other);
+        ft_big_number *magnitude_result;
+
+        magnitude_result = this->add_magnitude(other);
+        if (magnitude_result == ft_nullptr)
+        {
+            operation_error = ft_big_number::_last_error;
+            goto finalize_add;
+        }
+        result = *magnitude_result;
+        (void)magnitude_result->destroy();
+        delete magnitude_result;
         if (ft_big_number::_last_error == FT_ERR_SUCCESS)
         {
             result._is_negative = this->_is_negative;
@@ -1253,13 +1278,33 @@ ft_big_number_proxy ft_big_number::operator+(const ft_big_number& other) const n
         }
         if (comparison > 0)
         {
-            result = this->subtract_magnitude(other);
+            ft_big_number *magnitude_result;
+
+            magnitude_result = this->subtract_magnitude(other);
+            if (magnitude_result == ft_nullptr)
+            {
+                operation_error = ft_big_number::_last_error;
+                goto finalize_add;
+            }
+            result = *magnitude_result;
+            (void)magnitude_result->destroy();
+            delete magnitude_result;
             if (ft_big_number::_last_error == FT_ERR_SUCCESS)
                 result._is_negative = this->_is_negative;
         }
         else
         {
-            result = other.subtract_magnitude(*this);
+            ft_big_number *magnitude_result;
+
+            magnitude_result = other.subtract_magnitude(*this);
+            if (magnitude_result == ft_nullptr)
+            {
+                operation_error = ft_big_number::_last_error;
+                goto finalize_add;
+            }
+            result = *magnitude_result;
+            (void)magnitude_result->destroy();
+            delete magnitude_result;
             if (ft_big_number::_last_error == FT_ERR_SUCCESS)
                 result._is_negative = other._is_negative;
         }
@@ -1324,7 +1369,17 @@ ft_big_number_proxy ft_big_number::operator-(const ft_big_number& other) const n
         right_negative = FT_FALSE;
     if (left_negative == right_negative)
     {
-        result = this->add_magnitude(other);
+        ft_big_number *magnitude_result;
+
+        magnitude_result = this->add_magnitude(other);
+        if (magnitude_result == ft_nullptr)
+        {
+            operation_error = ft_big_number::_last_error;
+            goto finalize_subtract;
+        }
+        result = *magnitude_result;
+        (void)magnitude_result->destroy();
+        delete magnitude_result;
         if (ft_big_number::_last_error == FT_ERR_SUCCESS)
         {
             result._is_negative = left_negative;
@@ -1347,7 +1402,17 @@ ft_big_number_proxy ft_big_number::operator-(const ft_big_number& other) const n
         }
         if (comparison > 0)
         {
-            result = this->subtract_magnitude(other);
+            ft_big_number *magnitude_result;
+
+            magnitude_result = this->subtract_magnitude(other);
+            if (magnitude_result == ft_nullptr)
+            {
+                operation_error = ft_big_number::_last_error;
+                goto finalize_subtract;
+            }
+            result = *magnitude_result;
+            (void)magnitude_result->destroy();
+            delete magnitude_result;
             if (ft_big_number::_last_error == FT_ERR_SUCCESS)
                 result._is_negative = left_negative;
             else
@@ -1358,7 +1423,17 @@ ft_big_number_proxy ft_big_number::operator-(const ft_big_number& other) const n
         }
         else
         {
-            result = other.subtract_magnitude(*this);
+            ft_big_number *magnitude_result;
+
+            magnitude_result = other.subtract_magnitude(*this);
+            if (magnitude_result == ft_nullptr)
+            {
+                operation_error = ft_big_number::_last_error;
+                goto finalize_subtract;
+            }
+            result = *magnitude_result;
+            (void)magnitude_result->destroy();
+            delete magnitude_result;
             if (ft_big_number::_last_error == FT_ERR_SUCCESS)
                 result._is_negative = right_negative;
             else
@@ -1625,7 +1700,17 @@ ft_big_number_proxy ft_big_number::operator/(const ft_big_number& other) const n
                     operation_error = ft_big_number::_last_error;
                     goto cleanup_division;
                 }
-                ft_big_number candidate_product = other * digit_multiplier;
+                ft_big_number candidate_product;
+                int32_t candidate_product_initialization_error;
+
+                candidate_product_initialization_error = candidate_product.initialize();
+                if (candidate_product_initialization_error != FT_ERR_SUCCESS)
+                {
+                    operation_error = candidate_product_initialization_error;
+                    ft_big_number::set_error(operation_error);
+                    goto cleanup_division;
+                }
+                candidate_product = other * digit_multiplier;
 
                 if (ft_big_number::_last_error != FT_ERR_SUCCESS)
                 {
@@ -1648,7 +1733,17 @@ ft_big_number_proxy ft_big_number::operator/(const ft_big_number& other) const n
             }
             if (best_digit_value > 0)
             {
-                remainder = remainder.subtract_magnitude(best_product);
+                ft_big_number *magnitude_result;
+
+                magnitude_result = remainder.subtract_magnitude(best_product);
+                if (magnitude_result == ft_nullptr)
+                {
+                    operation_error = ft_big_number::_last_error;
+                    goto cleanup_division;
+                }
+                remainder = *magnitude_result;
+                (void)magnitude_result->destroy();
+                delete magnitude_result;
                 if (ft_big_number::_last_error != FT_ERR_SUCCESS)
                 {
                     operation_error = ft_big_number::_last_error;
@@ -1988,7 +2083,7 @@ ft_bool ft_big_number::is_positive() const noexcept
     return (result);
 }
 
-ft_string ft_big_number::to_string_base(int32_t base) noexcept
+ft_string *ft_big_number::to_string_base(int32_t base) noexcept
 {
     if (base < 2 || base > 16)
     {
@@ -2002,11 +2097,11 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
         ft_big_number::set_error(lock_error);
         return (ft_string::from_error(lock_error));
     }
-    auto finalize_to_string = [&](ft_string result_value, int32_t error_code) noexcept -> ft_string
+    auto finalize_to_string = [&](ft_string *result_value, int32_t error_code) noexcept -> ft_string *
     {
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         ft_big_number::set_error(error_code);
-        return (ft_move(result_value));
+        return (result_value);
     };
     if (ft_big_number::_last_error != 0)
     {
@@ -2019,17 +2114,27 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
 
     if (is_zero_value_result)
     {
-        ft_string zero_result;
+        ft_string *zero_result;
         int32_t initialization_error;
 
-        initialization_error = zero_result.initialize();
+        zero_result = new (std::nothrow) ft_string();
+        if (zero_result == ft_nullptr)
+            return (finalize_to_string(ft_nullptr, FT_ERR_NO_MEMORY));
+        initialization_error = zero_result->initialize();
         if (initialization_error != FT_ERR_SUCCESS)
+        {
+            delete zero_result;
             return (finalize_to_string(ft_string::from_error(initialization_error),
                         initialization_error));
+        }
 
-        zero_result.append('0');
+        zero_result->append('0');
         if (ft_big_number::_last_error != 0)
+        {
+            (void)zero_result->destroy();
+            delete zero_result;
             return (finalize_to_string(ft_string::from_error(FT_ERR_NO_MEMORY), FT_ERR_NO_MEMORY));
+        }
         return (finalize_to_string(zero_result, FT_ERR_SUCCESS));
     }
     ft_big_number magnitude;
@@ -2064,24 +2169,42 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
 
     while (!magnitude.is_zero_value())
     {
-        ft_big_number quotient = magnitude / base_value;
+        ft_big_number quotient;
+        int32_t quotient_initialization_error;
 
+        quotient_initialization_error = quotient.initialize();
+        if (quotient_initialization_error != FT_ERR_SUCCESS)
+            return (finalize_to_string(ft_string::from_error(quotient_initialization_error),
+                        quotient_initialization_error));
+        quotient = magnitude / base_value;
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
         {
             int32_t stored_error = ft_big_number::_last_error;
 
             return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
         }
-        ft_big_number product = quotient * base_value;
+        ft_big_number product;
+        int32_t product_initialization_error;
 
+        product_initialization_error = product.initialize();
+        if (product_initialization_error != FT_ERR_SUCCESS)
+            return (finalize_to_string(ft_string::from_error(product_initialization_error),
+                        product_initialization_error));
+        product = quotient * base_value;
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
         {
             int32_t stored_error = ft_big_number::_last_error;
 
             return (finalize_to_string(ft_string::from_error(stored_error), stored_error));
         }
-        ft_big_number remainder_number = magnitude - product;
+        ft_big_number remainder_number;
+        int32_t remainder_number_initialization_error;
 
+        remainder_number_initialization_error = remainder_number.initialize();
+        if (remainder_number_initialization_error != FT_ERR_SUCCESS)
+            return (finalize_to_string(ft_string::from_error(remainder_number_initialization_error),
+                        remainder_number_initialization_error));
+        remainder_number = magnitude - product;
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
         {
             int32_t stored_error = ft_big_number::_last_error;
@@ -2122,20 +2245,30 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
         }
         magnitude._is_negative = FT_FALSE;
     }
-    ft_string result;
+    ft_string *result;
     int32_t result_initialization_error;
 
-    result_initialization_error = result.initialize();
+    result = new (std::nothrow) ft_string();
+    if (result == ft_nullptr)
+        return (finalize_to_string(ft_nullptr, FT_ERR_NO_MEMORY));
+    result_initialization_error = result->initialize();
     if (result_initialization_error != FT_ERR_SUCCESS)
+    {
+        delete result;
         return (finalize_to_string(ft_string::from_error(result_initialization_error),
                     result_initialization_error));
+    }
 
     if (original_negative)
     {
-        result.append('-');
+        result->append('-');
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
+        {
+            (void)result->destroy();
+            delete result;
             return (finalize_to_string(ft_string::from_error(FT_ERR_NO_MEMORY),
                         FT_ERR_NO_MEMORY));
+        }
     }
     const char* digits_buffer = digits.c_str();
     ft_size_t digits_length = digits.size();
@@ -2149,40 +2282,43 @@ ft_string ft_big_number::to_string_base(int32_t base) noexcept
     while (digits_length > 0)
     {
         digits_length--;
-        result.append(digits_buffer[digits_length]);
+        result->append(digits_buffer[digits_length]);
         if (ft_big_number::_last_error != FT_ERR_SUCCESS)
+        {
+            (void)result->destroy();
+            delete result;
             return (finalize_to_string(ft_string::from_error(FT_ERR_NO_MEMORY),
                         FT_ERR_NO_MEMORY));
+        }
     }
     return (finalize_to_string(result, FT_ERR_SUCCESS));
 }
 
-ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept
+ft_big_number *ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept
 {
-    const auto make_error_result = [&](int32_t error_code) -> ft_big_number
+    const auto make_error_result = [&](int32_t error_code) -> ft_big_number *
     {
-        ft_big_number error_result;
+        ft_big_number *error_result;
         int32_t error_result_initialization_error;
         int32_t stored_error_code;
 
-        error_result_initialization_error = error_result.initialize();
+        error_result = new (std::nothrow) ft_big_number();
         stored_error_code = error_code;
         if (stored_error_code == FT_ERR_SUCCESS)
             stored_error_code = FT_ERR_INVALID_STATE;
+        if (error_result == ft_nullptr)
+        {
+            ft_big_number::set_error(FT_ERR_NO_MEMORY);
+            return (ft_nullptr);
+        }
+        error_result_initialization_error = error_result->initialize();
         if (error_result_initialization_error != FT_ERR_SUCCESS)
         {
-            error_result._digits = ft_nullptr;
-            error_result._size = 0;
-            error_result._capacity = 0;
-            error_result._is_negative = FT_FALSE;
-            error_result._mutex = ft_nullptr;
-            error_result._initialised_state = FT_CLASS_STATE_DESTROYED;
-            error_result._operation_error = stored_error_code;
-            ft_big_number::_last_initialised_state = error_result._initialised_state;
+            delete error_result;
             ft_big_number::set_error(stored_error_code);
-            return (error_result);
+            return (ft_nullptr);
         }
-        error_result._operation_error = stored_error_code;
+        error_result->_operation_error = stored_error_code;
         ft_big_number::set_error(stored_error_code);
         return (error_result);
     };
@@ -2210,14 +2346,24 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         return (make_error_result(FT_ERR_INVALID_ARGUMENT));
     modulus_value._is_negative = FT_FALSE;
     modulus_value.trim_leading_zeros();
-    ft_big_number base_remainder = base_value % modulus_value;
+    ft_big_number base_remainder;
+    int32_t base_remainder_initialization_error;
 
+    base_remainder_initialization_error = base_remainder.initialize();
+    if (base_remainder_initialization_error != FT_ERR_SUCCESS)
+        return (make_error_result(base_remainder_initialization_error));
+    base_remainder = base_value % modulus_value;
     if (ft_big_number::_last_error != 0)
         return (make_error_result(ft_big_number::_last_error));
     while (base_remainder.is_negative())
     {
-        ft_big_number adjusted_base = base_remainder + modulus_value;
+        ft_big_number adjusted_base;
+        int32_t adjusted_base_initialization_error;
 
+        adjusted_base_initialization_error = adjusted_base.initialize();
+        if (adjusted_base_initialization_error != FT_ERR_SUCCESS)
+            return (make_error_result(adjusted_base_initialization_error));
+        adjusted_base = base_remainder + modulus_value;
         if (ft_big_number::_last_error != 0)
             return (make_error_result(ft_big_number::_last_error));
         base_remainder = adjusted_base;
@@ -2236,14 +2382,29 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         return (make_error_result(ft_big_number::_last_error));
     if (exponent_value.is_zero_value())
     {
-        ft_big_number identity_result = one % modulus_value;
+        ft_big_number *identity_result;
+        int32_t identity_result_initialization_error;
 
+        identity_result = new (std::nothrow) ft_big_number();
+        if (identity_result == ft_nullptr)
+            return (make_error_result(FT_ERR_NO_MEMORY));
+        identity_result_initialization_error = identity_result->initialize();
+        if (identity_result_initialization_error != FT_ERR_SUCCESS)
+        {
+            delete identity_result;
+            return (make_error_result(identity_result_initialization_error));
+        }
+        *identity_result = one % modulus_value;
         if (ft_big_number::_last_error != 0)
+        {
+            (void)identity_result->destroy();
+            delete identity_result;
             return (make_error_result(ft_big_number::_last_error));
-        identity_result._is_negative = FT_FALSE;
-        if (identity_result.is_zero_value())
-            identity_result._is_negative = FT_FALSE;
-        identity_result.trim_leading_zeros();
+        }
+        identity_result->_is_negative = FT_FALSE;
+        if (identity_result->is_zero_value())
+            identity_result->_is_negative = FT_FALSE;
+        identity_result->trim_leading_zeros();
         return (identity_result);
     }
     ft_big_number accumulator;
@@ -2253,17 +2414,32 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         return (make_error_result(accumulator_initialization_error));
     while (!exponent_value.is_zero_value())
     {
-        ft_big_number product_value = accumulator * base_remainder;
+        ft_big_number product_value;
+        int32_t product_value_initialization_error;
 
+        product_value_initialization_error = product_value.initialize();
+        if (product_value_initialization_error != FT_ERR_SUCCESS)
+            return (make_error_result(product_value_initialization_error));
+        product_value = accumulator * base_remainder;
         if (ft_big_number::_last_error != 0)
             return (make_error_result(ft_big_number::_last_error));
-        ft_big_number reduced_value = product_value % modulus_value;
+        ft_big_number reduced_value;
+        int32_t reduced_value_initialization_error;
 
+        reduced_value_initialization_error = reduced_value.initialize();
+        if (reduced_value_initialization_error != FT_ERR_SUCCESS)
+            return (make_error_result(reduced_value_initialization_error));
+        reduced_value = product_value % modulus_value;
         if (ft_big_number::_last_error != 0)
             return (make_error_result(ft_big_number::_last_error));
         accumulator = reduced_value;
-        ft_big_number next_exponent = exponent_value - one;
+        ft_big_number next_exponent;
+        int32_t next_exponent_initialization_error;
 
+        next_exponent_initialization_error = next_exponent.initialize();
+        if (next_exponent_initialization_error != FT_ERR_SUCCESS)
+            return (make_error_result(next_exponent_initialization_error));
+        next_exponent = exponent_value - one;
         if (ft_big_number::_last_error != 0)
             return (make_error_result(ft_big_number::_last_error));
         exponent_value = next_exponent;
@@ -2274,7 +2450,19 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     if (accumulator.is_zero_value())
         accumulator._is_negative = FT_FALSE;
     accumulator.trim_leading_zeros();
-    return (accumulator);
+    ft_big_number *result;
+    int32_t result_initialization_error;
+
+    result = new (std::nothrow) ft_big_number();
+    if (result == ft_nullptr)
+        return (make_error_result(FT_ERR_NO_MEMORY));
+    result_initialization_error = result->initialize(accumulator);
+    if (result_initialization_error != FT_ERR_SUCCESS)
+    {
+        delete result;
+        return (make_error_result(result_initialization_error));
+    }
+    return (result);
 }
 
 ft_big_number_proxy::ft_big_number_proxy() noexcept
@@ -2391,38 +2579,47 @@ ft_big_number_proxy ft_big_number_proxy::operator%(const ft_big_number &right) c
     return (this->_value % right);
 }
 
-ft_big_number_proxy::operator ft_big_number() const noexcept
+ft_big_number_proxy::operator ft_big_number *() const noexcept
 {
-    ft_big_number result;
+    ft_big_number *result;
     int32_t initialization_error;
 
+    result = new (std::nothrow) ft_big_number();
+    if (result == ft_nullptr)
+    {
+        ft_big_number::set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
     if (this->_last_error != FT_ERR_SUCCESS)
     {
-        initialization_error = result.initialize();
+        initialization_error = result->initialize();
         if (initialization_error != FT_ERR_SUCCESS)
         {
+            delete result;
             ft_big_number::set_error(initialization_error);
-            return (result);
+            return (ft_nullptr);
         }
         ft_big_number::set_error(this->_last_error);
         return (result);
     }
     if (this->_value._initialised_state != FT_CLASS_STATE_INITIALISED)
     {
-        initialization_error = result.initialize();
+        initialization_error = result->initialize();
         if (initialization_error != FT_ERR_SUCCESS)
         {
+            delete result;
             ft_big_number::set_error(initialization_error);
-            return (result);
+            return (ft_nullptr);
         }
         ft_big_number::set_error(FT_ERR_INVALID_STATE);
         return (result);
     }
-    initialization_error = result.initialize(this->_value);
+    initialization_error = result->initialize(this->_value);
     if (initialization_error != FT_ERR_SUCCESS)
     {
+        delete result;
         ft_big_number::set_error(initialization_error);
-        return (result);
+        return (ft_nullptr);
     }
     ft_big_number::set_error(this->_last_error);
     return (result);

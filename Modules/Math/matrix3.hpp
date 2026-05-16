@@ -29,9 +29,9 @@ class matrix3
         matrix3(double m00, double m01, double m02,
                 double m10, double m11, double m12,
                 double m20, double m21, double m22) noexcept;
-        matrix3(const matrix3 &other) noexcept;
+        matrix3(const matrix3 &other) noexcept = delete;
         matrix3 &operator=(const matrix3 &other) = delete;
-        matrix3(matrix3 &&other) noexcept;
+        matrix3(matrix3 &&other) noexcept = delete;
         matrix3 &operator=(matrix3 &&other) = delete;
         ~matrix3() noexcept;
         int32_t initialize() noexcept;

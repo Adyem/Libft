@@ -27,8 +27,8 @@ class game_behavior_action
 
     public:
         game_behavior_action() noexcept;
-        game_behavior_action(const game_behavior_action &other) noexcept;
-        game_behavior_action(game_behavior_action &&other) noexcept;
+        game_behavior_action(const game_behavior_action &other) noexcept = delete;
+        game_behavior_action(game_behavior_action &&other) noexcept = delete;
         virtual ~game_behavior_action() noexcept;
         game_behavior_action &operator=(const game_behavior_action &other) noexcept = delete;
         game_behavior_action &operator=(game_behavior_action &&other) noexcept = delete;

@@ -442,7 +442,46 @@ static int32_t pf_engine_parse_specifier(const char *format, ft_size_t length, f
     return (FT_ERR_SUCCESS);
 }
 
-static int32_t pf_engine_parse_format(const char *format, std::vector<pf_engine_token> &tokens, ft_bool *uses_positional, ft_bool *uses_sequential)
+static void pf_engine_destroy_token(pf_engine_token *token)
+{
+    if (token == ft_nullptr)
+        return ;
+    delete token;
+    return ;
+}
+
+static void pf_engine_clear_tokens(std::vector<pf_engine_token *> &tokens)
+{
+    ft_size_t index;
+
+    index = 0;
+    while (index < tokens.size())
+    {
+        pf_engine_destroy_token(tokens[index]);
+        index += 1;
+    }
+    tokens.clear();
+    return ;
+}
+
+static int32_t pf_engine_push_token(std::vector<pf_engine_token *> &tokens,
+    pf_engine_token *token)
+{
+    if (token == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    try
+    {
+        tokens.push_back(token);
+    }
+    catch (const std::bad_alloc &)
+    {
+        pf_engine_destroy_token(token);
+        return (FT_ERR_NO_MEMORY);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t pf_engine_parse_format(const char *format, std::vector<pf_engine_token *> &tokens, ft_bool *uses_positional, ft_bool *uses_sequential)
 {
     ft_size_t length;
     length = 0;
@@ -463,26 +502,46 @@ static int32_t pf_engine_parse_format(const char *format, std::vector<pf_engine_
         }
         if (index > literal_start)
         {
-            pf_engine_token literal_token;
-            literal_token.is_literal = FT_TRUE;
-            int32_t literal_error = literal_token.ensure_literal_initialised();
+            pf_engine_token *literal_token;
+            int32_t literal_error;
+
+            literal_token = new (std::nothrow) pf_engine_token();
+            if (literal_token == ft_nullptr)
+                return (FT_ERR_NO_MEMORY);
+            literal_token->is_literal = FT_TRUE;
+            literal_error = literal_token->ensure_literal_initialised();
+            if (literal_error != FT_ERR_SUCCESS)
+            {
+                pf_engine_destroy_token(literal_token);
+                return (literal_error);
+            }
+            literal_token->literal_value.assign(format + literal_start, index - literal_start);
+            literal_error = pf_engine_push_token(tokens, literal_token);
             if (literal_error != FT_ERR_SUCCESS)
                 return (literal_error);
-            literal_token.literal_value.assign(format + literal_start, index - literal_start);
-            tokens.push_back(literal_token);
         }
         index += 1;
         if (index >= length)
             return (FT_ERR_INVALID_ARGUMENT);
         if (format[index] == '%')
         {
-            pf_engine_token literal_token;
-            literal_token.is_literal = FT_TRUE;
-            int32_t literal_error = literal_token.ensure_literal_initialised();
+            pf_engine_token *literal_token;
+            int32_t literal_error;
+
+            literal_token = new (std::nothrow) pf_engine_token();
+            if (literal_token == ft_nullptr)
+                return (FT_ERR_NO_MEMORY);
+            literal_token->is_literal = FT_TRUE;
+            literal_error = literal_token->ensure_literal_initialised();
+            if (literal_error != FT_ERR_SUCCESS)
+            {
+                pf_engine_destroy_token(literal_token);
+                return (literal_error);
+            }
+            literal_token->literal_value.assign("%", 1);
+            literal_error = pf_engine_push_token(tokens, literal_token);
             if (literal_error != FT_ERR_SUCCESS)
                 return (literal_error);
-            literal_token.literal_value.assign("%", 1);
-            tokens.push_back(literal_token);
             index += 1;
             literal_start = index;
             continue ;
@@ -492,25 +551,43 @@ static int32_t pf_engine_parse_format(const char *format, std::vector<pf_engine_
         spec_cursor = index;
         if (pf_engine_parse_specifier(format, length, &spec_cursor, format_spec, uses_positional, uses_sequential) != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_ARGUMENT);
-        pf_engine_token spec_token;
-        spec_token.is_literal = FT_FALSE;
-        spec_token.format_spec = format_spec;
-        int32_t literal_error = spec_token.ensure_literal_initialised();
+        pf_engine_token *spec_token;
+        spec_token = new (std::nothrow) pf_engine_token();
+        if (spec_token == ft_nullptr)
+            return (FT_ERR_NO_MEMORY);
+        spec_token->is_literal = FT_FALSE;
+        spec_token->format_spec = format_spec;
+        int32_t literal_error = spec_token->ensure_literal_initialised();
+        if (literal_error != FT_ERR_SUCCESS)
+        {
+            pf_engine_destroy_token(spec_token);
+            return (literal_error);
+        }
+        literal_error = pf_engine_push_token(tokens, spec_token);
         if (literal_error != FT_ERR_SUCCESS)
             return (literal_error);
-        tokens.push_back(spec_token);
         index = spec_cursor;
         literal_start = index;
     }
     if (literal_start < length)
     {
-        pf_engine_token literal_token;
-        literal_token.is_literal = FT_TRUE;
-        int32_t literal_error = literal_token.ensure_literal_initialised();
+        pf_engine_token *literal_token;
+        int32_t literal_error;
+
+        literal_token = new (std::nothrow) pf_engine_token();
+        if (literal_token == ft_nullptr)
+            return (FT_ERR_NO_MEMORY);
+        literal_token->is_literal = FT_TRUE;
+        literal_error = literal_token->ensure_literal_initialised();
+        if (literal_error != FT_ERR_SUCCESS)
+        {
+            pf_engine_destroy_token(literal_token);
+            return (literal_error);
+        }
+        literal_token->literal_value.assign(format + literal_start, length - literal_start);
+        literal_error = pf_engine_push_token(tokens, literal_token);
         if (literal_error != FT_ERR_SUCCESS)
             return (literal_error);
-        literal_token.literal_value.assign(format + literal_start, length - literal_start);
-        tokens.push_back(literal_token);
     }
     return (FT_ERR_SUCCESS);
 }
@@ -554,12 +631,13 @@ static int32_t pf_engine_write_literal(const ft_string &literal, t_pf_engine_wri
     return (FT_ERR_SUCCESS);
 }
 
-static ft_string pf_engine_build_format_string(const pf_engine_format_spec &format_spec, int32_t width_value, ft_bool width_specified, int32_t precision_value, ft_bool precision_specified)
+static int32_t pf_engine_build_format_string(const pf_engine_format_spec &format_spec,
+    int32_t width_value, ft_bool width_specified, int32_t precision_value,
+    ft_bool precision_specified, ft_string &format_string)
 {
-    ft_string format_string;
     int32_t initialization_error = format_string.initialize();
     if (initialization_error != FT_ERR_SUCCESS)
-        return (format_string);
+        return (initialization_error);
     format_string.append("%", 1);
     if (format_spec.argument_index >= 0)
     {
@@ -604,7 +682,7 @@ static ft_string pf_engine_build_format_string(const pf_engine_format_spec &form
     specifier_buffer[0] = format_spec.conversion_specifier;
     specifier_buffer[1] = '\0';
     format_string.append(specifier_buffer, 1);
-    return (format_string);
+    return (FT_ERR_SUCCESS);
 }
 
 static int32_t pf_engine_format_boolean(int32_t value, t_pf_engine_write_callback writer, void *context, ft_size_t *written_count)
@@ -816,8 +894,11 @@ static int32_t pf_engine_format_standard_sequential(const pf_engine_format_spec 
         return (FT_ERR_SUCCESS);
     }
     ft_string format_string;
-    format_string = pf_engine_build_format_string(format_spec, width_value, width_specified, precision_value, precision_specified);
     int32_t status;
+    status = pf_engine_build_format_string(format_spec, width_value, width_specified,
+            precision_value, precision_specified, format_string);
+    if (status != FT_ERR_SUCCESS)
+        return (status);
     if (format_spec.conversion_specifier == 'd' || format_spec.conversion_specifier == 'i')
     {
         if (format_spec.length_modifier == PF_LEN_HH)
@@ -997,7 +1078,7 @@ static int32_t pf_engine_format_standard_sequential(const pf_engine_format_spec 
     return (FT_ERR_SUCCESS);
 }
 
-static int32_t pf_engine_process_sequential(const std::vector<pf_engine_token> &tokens, va_list argument_list, t_pf_engine_write_callback writer, void *context, ft_size_t *written_count)
+static int32_t pf_engine_process_sequential(const std::vector<pf_engine_token *> &tokens, va_list argument_list, t_pf_engine_write_callback writer, void *context, ft_size_t *written_count)
 {
     ft_size_t index;
     index = 0;
@@ -1011,23 +1092,23 @@ static int32_t pf_engine_process_sequential(const std::vector<pf_engine_token> &
     mark_overflow = FT_FALSE;
     while (index < tokens.size())
     {
-        const pf_engine_token &token = tokens[index];
-        if (token.is_literal)
+        const pf_engine_token *token = tokens[index];
+        if (token->is_literal)
         {
-            status = pf_engine_write_literal(token.literal_value, writer, context, written_count);
+            status = pf_engine_write_literal(token->literal_value, writer, context, written_count);
             if (status != FT_ERR_SUCCESS)
                 break ;
             character_count = *written_count;
         }
         else
         {
-            if (token.format_spec.is_custom_specifier)
+            if (token->format_spec.is_custom_specifier)
             {
                 ft_string custom_output;
                 ft_bool handled;
 
                 handled = FT_FALSE;
-                status = pf_try_format_custom_specifier(token.format_spec.conversion_specifier, &current_args, custom_output, &handled);
+                status = pf_try_format_custom_specifier(token->format_spec.conversion_specifier, &current_args, custom_output, &handled);
                 if (status != FT_ERR_SUCCESS)
                 {
                     mark_overflow = FT_TRUE;
@@ -1045,7 +1126,7 @@ static int32_t pf_engine_process_sequential(const std::vector<pf_engine_token> &
                     status = writer("%", 1, context, written_count);
                     if (status != FT_ERR_SUCCESS)
                         break ;
-                    status = writer(&token.format_spec.conversion_specifier, 1, context, written_count);
+                    status = writer(&token->format_spec.conversion_specifier, 1, context, written_count);
                     if (status != FT_ERR_SUCCESS)
                         break ;
                     character_count = *written_count;
@@ -1053,7 +1134,7 @@ static int32_t pf_engine_process_sequential(const std::vector<pf_engine_token> &
                 index += 1;
                 continue ;
             }
-            status = pf_engine_format_standard_sequential(token.format_spec, &current_args, writer, context, written_count, &character_count);
+            status = pf_engine_format_standard_sequential(token->format_spec, &current_args, writer, context, written_count, &character_count);
             if (status != FT_ERR_SUCCESS)
                 break ;
         }
@@ -1091,19 +1172,19 @@ static int32_t pf_engine_register_argument_kind(std::vector<pf_engine_argument_k
     return (FT_ERR_INVALID_ARGUMENT);
 }
 
-static int32_t pf_engine_collect_argument_kinds(const std::vector<pf_engine_token> &tokens, std::vector<pf_engine_argument_kind> &kinds)
+static int32_t pf_engine_collect_argument_kinds(const std::vector<pf_engine_token *> &tokens, std::vector<pf_engine_argument_kind> &kinds)
 {
     ft_size_t index;
     index = 0;
     while (index < tokens.size())
     {
-        const pf_engine_token &token = tokens[index];
-        if (token.is_literal)
+        const pf_engine_token *token = tokens[index];
+        if (token->is_literal)
         {
             index += 1;
             continue ;
         }
-        const pf_engine_format_spec &format_spec = token.format_spec;
+        const pf_engine_format_spec &format_spec = token->format_spec;
         if (format_spec.width_from_argument && format_spec.width_argument_index >= 0)
         {
             if (pf_engine_register_argument_kind(kinds, static_cast<ft_size_t>(format_spec.width_argument_index), PF_ARGUMENT_INT) != FT_ERR_SUCCESS)
@@ -1384,8 +1465,11 @@ static int32_t pf_engine_format_standard_positional(const pf_engine_format_spec 
         return (FT_ERR_SUCCESS);
     }
     ft_string format_string;
-    format_string = pf_engine_build_format_string(format_spec, width_value, width_specified, precision_value, precision_specified);
     int32_t status;
+    status = pf_engine_build_format_string(format_spec, width_value, width_specified,
+            precision_value, precision_specified, format_string);
+    if (status != FT_ERR_SUCCESS)
+        return (status);
     status = FT_ERR_INVALID_ARGUMENT;
     if (format_spec.conversion_specifier == 'd' || format_spec.conversion_specifier == 'i')
     {
@@ -1484,7 +1568,7 @@ static int32_t pf_engine_format_standard_positional(const pf_engine_format_spec 
     return (FT_ERR_SUCCESS);
 }
 
-static int32_t pf_engine_process_positional(const std::vector<pf_engine_token> &tokens, va_list argument_list, t_pf_engine_write_callback writer, void *context, ft_size_t *written_count)
+static int32_t pf_engine_process_positional(const std::vector<pf_engine_token *> &tokens, va_list argument_list, t_pf_engine_write_callback writer, void *context, ft_size_t *written_count)
 {
     std::vector<pf_engine_argument_kind> kinds;
     if (pf_engine_collect_argument_kinds(tokens, kinds) != FT_ERR_SUCCESS)
@@ -1498,23 +1582,23 @@ static int32_t pf_engine_process_positional(const std::vector<pf_engine_token> &
     character_count = *written_count;
     while (index < tokens.size())
     {
-        const pf_engine_token &token = tokens[index];
-        if (token.is_literal)
+        const pf_engine_token *token = tokens[index];
+        if (token->is_literal)
         {
             int32_t write_error;
 
-            write_error = pf_engine_write_literal(token.literal_value, writer, context, written_count);
+            write_error = pf_engine_write_literal(token->literal_value, writer, context, written_count);
             if (write_error != FT_ERR_SUCCESS)
                 return (write_error);
             character_count = *written_count;
         }
         else
         {
-            if (token.format_spec.is_custom_specifier)
+            if (token->format_spec.is_custom_specifier)
                 return (FT_ERR_INVALID_ARGUMENT);
             int32_t format_error;
 
-            format_error = pf_engine_format_standard_positional(token.format_spec, values, writer, context, written_count, &character_count);
+            format_error = pf_engine_format_standard_positional(token->format_spec, values, writer, context, written_count, &character_count);
             if (format_error != FT_ERR_SUCCESS)
                 return (format_error);
         }
@@ -1530,16 +1614,20 @@ int32_t pf_engine_format(const char *format, va_list argument_list, t_pf_engine_
     {
         if (!format || !written_count || !writer)
             return (FT_ERR_INVALID_ARGUMENT);
-        std::vector<pf_engine_token> tokens;
+        std::vector<pf_engine_token *> tokens;
         ft_bool uses_positional;
         ft_bool uses_sequential;
         uses_positional = FT_FALSE;
         uses_sequential = FT_FALSE;
         int32_t parse_status = pf_engine_parse_format(format, tokens, &uses_positional, &uses_sequential);
         if (parse_status != FT_ERR_SUCCESS)
+        {
+            pf_engine_clear_tokens(tokens);
             return (parse_status);
+        }
         if (uses_positional && uses_sequential)
         {
+            pf_engine_clear_tokens(tokens);
             return (FT_ERR_INVALID_ARGUMENT);
         }
         ft_size_t initial_count;
@@ -1550,11 +1638,16 @@ int32_t pf_engine_format(const char *format, va_list argument_list, t_pf_engine_
         else
             status = pf_engine_process_sequential(tokens, argument_list, writer, context, written_count);
         if (status != FT_ERR_SUCCESS)
+        {
+            pf_engine_clear_tokens(tokens);
             return (status);
+        }
         if (*written_count < initial_count)
         {
+            pf_engine_clear_tokens(tokens);
             return (FT_ERR_INVALID_ARGUMENT);
         }
+        pf_engine_clear_tokens(tokens);
         return (FT_ERR_SUCCESS);
     }
     catch (const std::bad_alloc &)

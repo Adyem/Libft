@@ -30,9 +30,9 @@ class game_vendor_profile
     public:
         game_vendor_profile() noexcept;
         virtual ~game_vendor_profile() noexcept;
-        game_vendor_profile(const game_vendor_profile &other) noexcept;
+        game_vendor_profile(const game_vendor_profile &other) noexcept = delete;
         game_vendor_profile &operator=(const game_vendor_profile &other) = delete;
-        game_vendor_profile(game_vendor_profile &&other) noexcept;
+        game_vendor_profile(game_vendor_profile &&other) noexcept = delete;
         game_vendor_profile &operator=(game_vendor_profile &&other) = delete;
 
         int32_t initialize() noexcept;

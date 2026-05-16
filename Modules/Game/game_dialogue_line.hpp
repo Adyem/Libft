@@ -30,9 +30,9 @@ class game_dialogue_line
     public:
         game_dialogue_line() noexcept;
         virtual ~game_dialogue_line() noexcept;
-        game_dialogue_line(const game_dialogue_line &other) noexcept;
+        game_dialogue_line(const game_dialogue_line &other) noexcept = delete;
         game_dialogue_line &operator=(const game_dialogue_line &other) noexcept = delete;
-        game_dialogue_line(game_dialogue_line &&other) noexcept;
+        game_dialogue_line(game_dialogue_line &&other) noexcept = delete;
         game_dialogue_line &operator=(game_dialogue_line &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

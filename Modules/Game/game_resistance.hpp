@@ -23,8 +23,8 @@ class game_resistance
 
     public:
         game_resistance() noexcept;
-        game_resistance(const game_resistance &other) noexcept;
-        game_resistance(game_resistance &&other) noexcept;
+        game_resistance(const game_resistance &other) noexcept = delete;
+        game_resistance(game_resistance &&other) noexcept = delete;
         ~game_resistance() noexcept;
         int32_t initialize() noexcept;
         int32_t initialize(const game_resistance &other) noexcept;

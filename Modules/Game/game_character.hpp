@@ -109,9 +109,9 @@ class game_character
         int32_t initialize() noexcept;
         int32_t destroy() noexcept;
         int32_t move(game_character &other) noexcept;
-        game_character(const game_character &other) noexcept;
+        game_character(const game_character &other) noexcept = delete;
         game_character &operator=(const game_character &other) noexcept = delete;
-        game_character(game_character &&other) noexcept;
+        game_character(game_character &&other) noexcept = delete;
         game_character &operator=(game_character &&other) noexcept = delete;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;

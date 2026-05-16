@@ -35,9 +35,9 @@ class vector3
     public:
         vector3() noexcept;
         vector3(double x_component, double y_component, double z_component) noexcept;
-        vector3(const vector3 &other) noexcept;
+        vector3(const vector3 &other) noexcept = delete;
         vector3 &operator=(const vector3 &other) = delete;
-        vector3(vector3 &&other) noexcept;
+        vector3(vector3 &&other) noexcept = delete;
         vector3 &operator=(vector3 &&other) = delete;
         ~vector3() noexcept;
         int32_t initialize() noexcept;

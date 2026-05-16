@@ -30,8 +30,8 @@ class game_skill
         int32_t get_error() const noexcept;
         const char *get_error_str() const noexcept;
         game_skill() noexcept;
-        game_skill(const game_skill &other) noexcept;
-        game_skill(game_skill &&other) noexcept;
+        game_skill(const game_skill &other) noexcept = delete;
+        game_skill(game_skill &&other) noexcept = delete;
         virtual ~game_skill() noexcept;
         game_skill &operator=(const game_skill &other) = delete;
         game_skill &operator=(game_skill &&other) = delete;

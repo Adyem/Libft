@@ -42,8 +42,8 @@ class ft_thread_pool
 
     public:
         ft_thread_pool(ft_size_t thread_count = 0, ft_size_t max_tasks = 0);
-        ft_thread_pool(const ft_thread_pool &other);
-        ft_thread_pool(ft_thread_pool &&other);
+        ft_thread_pool(const ft_thread_pool &other) = delete;
+        ft_thread_pool(ft_thread_pool &&other) = delete;
         ~ft_thread_pool();
 
         ft_thread_pool& operator=(const ft_thread_pool&) = delete;

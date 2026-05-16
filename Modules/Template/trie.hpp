@@ -41,8 +41,8 @@ class ft_trie
 
     public:
         ft_trie();
-        ft_trie(const ft_trie<ValueType> &other);
-        ft_trie(ft_trie<ValueType> &&other);
+        ft_trie(const ft_trie &other) = delete;
+        ft_trie(ft_trie &&other) = delete;
         ~ft_trie();
 
         ft_trie &operator=(const ft_trie &other) = delete;

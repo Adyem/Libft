@@ -7,11 +7,8 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "constructor.hpp"
 #include "move.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <new>
@@ -163,9 +160,9 @@ class ft_unordered_map
         };
 
         ft_unordered_map(ft_size_t initial_capacity = 10);
-        ft_unordered_map(const ft_unordered_map& other);
+        ft_unordered_map(const ft_unordered_map& other) = delete;
         ft_unordered_map& operator=(const ft_unordered_map& other);
-        ft_unordered_map(ft_unordered_map&& other) noexcept;
+        ft_unordered_map(ft_unordered_map&& other) noexcept = delete;
         ft_unordered_map& operator=(ft_unordered_map&& other) noexcept;
         ~ft_unordered_map();
 
@@ -500,87 +497,6 @@ ft_unordered_map<Key, MappedType>::ft_unordered_map(ft_size_t initial_capacity)
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename Key, typename MappedType>
-ft_unordered_map<Key, MappedType>::ft_unordered_map(
-    const ft_unordered_map<Key, MappedType>& other)
-    : _data(ft_nullptr)
-    , _occupied(ft_nullptr)
-    , _capacity(0)
-    , _size(0)
-    , _requested_capacity(other._requested_capacity)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = ft_unordered_map<Key, MappedType>::_last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_unordered_map::ft_unordered_map(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_unordered_map<Key, MappedType>::set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_unordered_map<Key, MappedType>::set_error(previous_error);
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_unordered_map<Key, MappedType>::set_error(previous_error);
-        return ;
-    }
-    (void)this->operator=(other);
-    if (this->get_error() != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    }
-    (void)ft_unordered_map<Key, MappedType>::set_error(previous_error);
-    return ;
-}
-
-template <typename Key, typename MappedType>
-ft_unordered_map<Key, MappedType>::ft_unordered_map(
-    ft_unordered_map<Key, MappedType>&& other) noexcept
-    : _data(ft_nullptr)
-    , _occupied(ft_nullptr)
-    , _capacity(0)
-    , _size(0)
-    , _requested_capacity(other._requested_capacity)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = ft_unordered_map<Key, MappedType>::_last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_unordered_map::ft_unordered_map(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_unordered_map<Key, MappedType>::set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_unordered_map<Key, MappedType>::set_error(previous_error);
-        return ;
-    }
-    (void)this->operator=(ft_move(other));
-    if (this->get_error() != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)ft_unordered_map<Key, MappedType>::set_error(previous_error);
     return ;
 }
 

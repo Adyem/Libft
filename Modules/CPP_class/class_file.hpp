@@ -28,8 +28,8 @@ class ft_file
 
     public:
         ft_file() noexcept;
-        ft_file(const ft_file& other) noexcept;
-        ft_file(ft_file&& other) noexcept;
+        ft_file(const ft_file& other) noexcept = delete;
+        ft_file(ft_file&& other) noexcept = delete;
         ~ft_file() noexcept;
 
         ft_file &operator=(const ft_file&) = delete;

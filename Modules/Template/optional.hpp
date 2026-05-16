@@ -60,8 +60,8 @@ class ft_optional
         };
 
         ft_optional();
-        ft_optional(const ft_optional<ElementType> &other);
-        ft_optional(ft_optional<ElementType> &&other);
+        ft_optional(const ft_optional &other) = delete;
+        ft_optional(ft_optional &&other) = delete;
         ft_optional(const ElementType& value);
         ft_optional(ElementType&& value);
         ~ft_optional();

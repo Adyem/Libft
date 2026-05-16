@@ -27,8 +27,8 @@ class game_reputation
 
     public:
         game_reputation() noexcept;
-        game_reputation(const game_reputation &other) noexcept;
-        game_reputation(game_reputation &&other) noexcept;
+        game_reputation(const game_reputation &other) noexcept = delete;
+        game_reputation(game_reputation &&other) noexcept = delete;
         virtual ~game_reputation() noexcept;
         game_reputation &operator=(const game_reputation &other) = delete;
         game_reputation &operator=(game_reputation &&other) = delete;

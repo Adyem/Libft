@@ -19,57 +19,6 @@ ft_stringbuf::ft_stringbuf() noexcept
     return ;
 }
 
-ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
-    : _storage(), _position(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_stringbuf::ft_stringbuf copy source",
-            "called with uninitialised source object");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other._storage) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_position = other._position;
-    if (other._mutex != ft_nullptr && this->enable_thread_safety() != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
-    : _storage(), _position(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_stringbuf::ft_stringbuf move source",
-            "called with uninitialised source object");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    return ;
-}
-
 ft_stringbuf::~ft_stringbuf() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)

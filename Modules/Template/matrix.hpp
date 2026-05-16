@@ -37,11 +37,11 @@ class ft_matrix
 
     public:
         ft_matrix(ft_size_t rows = 0, ft_size_t cols = 0);
-        ft_matrix(const ft_matrix<ElementType> &other);
+        ft_matrix(const ft_matrix<ElementType> &other) = delete;
         ~ft_matrix();
 
         ft_matrix& operator=(const ft_matrix&) = delete;
-        ft_matrix(ft_matrix&& other) noexcept;
+        ft_matrix(ft_matrix&& other) noexcept = delete;
         ft_matrix& operator=(ft_matrix&& other) noexcept = delete;
 
         int32_t initialize();

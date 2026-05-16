@@ -6,7 +6,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <new>
 
@@ -61,8 +60,8 @@ class ft_sharedptr
         ft_sharedptr(ManagedType *pointer, ft_bool array_type = FT_FALSE,
             ft_size_t array_size = 1) noexcept;
         explicit ft_sharedptr(ft_size_t size) noexcept;
-        ft_sharedptr(const ft_sharedptr &other) noexcept;
-        ft_sharedptr(ft_sharedptr &&other) noexcept;
+        ft_sharedptr(const ft_sharedptr &other) noexcept = delete;
+        ft_sharedptr(ft_sharedptr &&other) noexcept = delete;
         ft_sharedptr &operator=(const ft_sharedptr &other) noexcept;
         ft_sharedptr &operator=(ft_sharedptr &&other) noexcept;
         ~ft_sharedptr();
@@ -280,59 +279,6 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_size_t size) noexcept
 
     previous_error = _last_error;
     (void)this->initialize(size);
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr &other) noexcept
-    : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
-      _array_size(0), _is_array_type(FT_FALSE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
-    {
-        this->_managed_pointer = other._managed_pointer;
-        this->_reference_count = other._reference_count;
-        this->_array_size = other._array_size;
-        this->_is_array_type = other._is_array_type;
-        this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-        if (this->_reference_count != ft_nullptr)
-            *this->_reference_count = *this->_reference_count + 1;
-    }
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr &&other) noexcept
-    : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
-      _array_size(0), _is_array_type(FT_FALSE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_sharedptr::ft_sharedptr(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     (void)set_error(previous_error);
     return ;
 }

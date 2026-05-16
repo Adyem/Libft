@@ -31,9 +31,9 @@ class game_price_definition
     public:
         game_price_definition() noexcept;
         virtual ~game_price_definition() noexcept;
-        game_price_definition(const game_price_definition &other) noexcept;
+        game_price_definition(const game_price_definition &other) noexcept = delete;
         game_price_definition &operator=(const game_price_definition &other) noexcept = delete;
-        game_price_definition(game_price_definition &&other) noexcept;
+        game_price_definition(game_price_definition &&other) noexcept = delete;
         game_price_definition &operator=(game_price_definition &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

@@ -35,9 +35,9 @@ class game_dialogue_script
     public:
         game_dialogue_script() noexcept;
         virtual ~game_dialogue_script() noexcept;
-        game_dialogue_script(const game_dialogue_script &other) noexcept;
+        game_dialogue_script(const game_dialogue_script &other) noexcept = delete;
         game_dialogue_script &operator=(const game_dialogue_script &other) noexcept = delete;
-        game_dialogue_script(game_dialogue_script &&other) noexcept;
+        game_dialogue_script(game_dialogue_script &&other) noexcept = delete;
         game_dialogue_script &operator=(game_dialogue_script &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

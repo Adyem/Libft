@@ -3,7 +3,6 @@
 #include "compatebility_internal.hpp"
 #include "compatebility_sound_device_alsa.hpp"
 #include <alsa/asoundlib.h>
-#include <limits>
 #include <new>
 #include <pthread.h>
 #include <string.h>
@@ -35,34 +34,6 @@ void *ft_sound_device_alsa::sound_thread(void *argument)
 
 ft_sound_device_alsa::ft_sound_device_alsa(void)
 {
-    this->_pcm_handle = ft_nullptr;
-    this->_is_running = FT_FALSE;
-    this->_buffer = ft_nullptr;
-    this->_buffer_size = 0;
-    memset(&this->_spec, 0, sizeof(this->_spec));
-    this->_current_clip = ft_nullptr;
-    this->_playback_pos = 0;
-    return ;
-}
-
-ft_sound_device_alsa::ft_sound_device_alsa(const ft_sound_device_alsa &other)
-    : ft_sound_device(other)
-{
-    (void)other;
-    this->_pcm_handle = ft_nullptr;
-    this->_is_running = FT_FALSE;
-    this->_buffer = ft_nullptr;
-    this->_buffer_size = 0;
-    memset(&this->_spec, 0, sizeof(this->_spec));
-    this->_current_clip = ft_nullptr;
-    this->_playback_pos = 0;
-    return ;
-}
-
-ft_sound_device_alsa::ft_sound_device_alsa(ft_sound_device_alsa &&other)
-    : ft_sound_device(static_cast<ft_sound_device &&>(other))
-{
-    (void)other;
     this->_pcm_handle = ft_nullptr;
     this->_is_running = FT_FALSE;
     this->_buffer = ft_nullptr;

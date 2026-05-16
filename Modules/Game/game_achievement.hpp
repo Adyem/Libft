@@ -26,8 +26,8 @@ class game_goal
 
     public:
         game_goal() noexcept;
-        game_goal(const game_goal &other) noexcept;
-        game_goal(game_goal &&other) noexcept;
+        game_goal(const game_goal &other) noexcept = delete;
+        game_goal(game_goal &&other) noexcept = delete;
         ~game_goal() noexcept;
         game_goal &operator=(const game_goal &other) = delete;
         game_goal &operator=(game_goal &&other) = delete;
@@ -72,8 +72,8 @@ class game_achievement
 
     public:
         game_achievement() noexcept;
-        game_achievement(const game_achievement &other) noexcept;
-        game_achievement(game_achievement &&other) noexcept;
+        game_achievement(const game_achievement &other) noexcept = delete;
+        game_achievement(game_achievement &&other) noexcept = delete;
         virtual ~game_achievement() noexcept;
         game_achievement &operator=(const game_achievement &other) = delete;
         game_achievement &operator=(game_achievement &&other) = delete;

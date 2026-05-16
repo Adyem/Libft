@@ -65,8 +65,8 @@ class ft_uniqueptr
         template <typename... Args>
         explicit ft_uniqueptr(std::in_place_t, Args&&... args);
 
-        ft_uniqueptr(const ft_uniqueptr &other);
-        ft_uniqueptr(ft_uniqueptr &&other) noexcept;
+        ft_uniqueptr(const ft_uniqueptr &other) = delete;
+        ft_uniqueptr(ft_uniqueptr &&other) noexcept = delete;
         ft_uniqueptr &operator=(const ft_uniqueptr &other) = delete;
         ft_uniqueptr &operator=(ft_uniqueptr &&other) noexcept;
 

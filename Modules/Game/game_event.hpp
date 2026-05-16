@@ -38,9 +38,9 @@ class game_event
         int32_t initialize() noexcept;
         int32_t move(game_event &other) noexcept;
         int32_t destroy() noexcept;
-        game_event(const game_event &other) noexcept;
+        game_event(const game_event &other) noexcept = delete;
         game_event &operator=(const game_event &other) noexcept = delete;
-        game_event(game_event &&other) noexcept;
+        game_event(game_event &&other) noexcept = delete;
         game_event &operator=(game_event &&other) noexcept = delete;
 
         int32_t get_id() const noexcept;

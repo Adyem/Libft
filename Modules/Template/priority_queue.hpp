@@ -36,8 +36,8 @@ class ft_priority_queue
     public:
         ft_priority_queue(ft_size_t initial_capacity = 0,
             const Compare& comp = Compare());
-        ft_priority_queue(const ft_priority_queue<ElementType, Compare> &other);
-        ft_priority_queue(ft_priority_queue<ElementType, Compare> &&other);
+        ft_priority_queue(const ft_priority_queue<ElementType, Compare> &other) = delete;
+        ft_priority_queue(ft_priority_queue<ElementType, Compare> &&other) = delete;
         ~ft_priority_queue();
         ft_priority_queue& operator=(const ft_priority_queue&) = delete;
         ft_priority_queue& operator=(ft_priority_queue&& other) = delete;

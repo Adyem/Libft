@@ -29,8 +29,8 @@ class game_buff
 
     public:
         game_buff() noexcept;
-        game_buff(const game_buff &other) noexcept;
-        game_buff(game_buff &&other) noexcept;
+        game_buff(const game_buff &other) noexcept = delete;
+        game_buff(game_buff &&other) noexcept = delete;
         virtual ~game_buff() noexcept;
         game_buff &operator=(const game_buff &other) = delete;
         game_buff &operator=(game_buff &&other) = delete;

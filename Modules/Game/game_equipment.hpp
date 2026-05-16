@@ -38,9 +38,9 @@ class game_equipment
     public:
         game_equipment() noexcept;
         virtual ~game_equipment() noexcept;
-        game_equipment(const game_equipment &other) noexcept;
+        game_equipment(const game_equipment &other) noexcept = delete;
         game_equipment &operator=(const game_equipment &other) noexcept = delete;
-        game_equipment(game_equipment &&other) noexcept;
+        game_equipment(game_equipment &&other) noexcept = delete;
         game_equipment &operator=(game_equipment &&other) noexcept = delete;
         int32_t initialize() noexcept;
         int32_t destroy() noexcept;

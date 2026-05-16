@@ -1,6 +1,4 @@
 #include "class_data_buffer.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
 
@@ -100,28 +98,6 @@ DataBuffer::DataBuffer() noexcept
     : _buffer(), _read_pos(0), _ok(FT_TRUE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _operation_error(FT_ERR_SUCCESS)
 {
-    return ;
-}
-
-DataBuffer::DataBuffer(const DataBuffer& other) noexcept
-    : _buffer(), _read_pos(0), _ok(FT_TRUE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _operation_error(FT_ERR_SUCCESS)
-{
-    int32_t initialization_error = this->initialize(other);
-
-    if (initialization_error != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-DataBuffer::DataBuffer(DataBuffer&& other) noexcept
-    : _buffer(), _read_pos(0), _ok(FT_TRUE), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _operation_error(FT_ERR_SUCCESS)
-{
-    int32_t initialization_error = this->move(other);
-
-    if (initialization_error != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

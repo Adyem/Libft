@@ -35,9 +35,9 @@ class game_economy_table
     public:
         game_economy_table() noexcept;
         ~game_economy_table() noexcept;
-        game_economy_table(const game_economy_table &other) noexcept;
+        game_economy_table(const game_economy_table &other) noexcept = delete;
         game_economy_table &operator=(const game_economy_table &other) noexcept = delete;
-        game_economy_table(game_economy_table &&other) noexcept;
+        game_economy_table(game_economy_table &&other) noexcept = delete;
         game_economy_table &operator=(game_economy_table &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

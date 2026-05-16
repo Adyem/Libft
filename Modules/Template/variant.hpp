@@ -108,8 +108,8 @@ class ft_variant
         static const ft_size_t npos = static_cast<ft_size_t>(-1);
 
         ft_variant();
-        ft_variant(const ft_variant<Types...> &other);
-        ft_variant(ft_variant<Types...> &&other);
+        ft_variant(const ft_variant &other) = delete;
+        ft_variant(ft_variant &&other) = delete;
 
         template <typename TypeToStore>
         explicit ft_variant(const TypeToStore& value);

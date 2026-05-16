@@ -12,7 +12,6 @@
 #include <chrono>
 #include <cstdlib>
 
-#include "move.hpp"
 template <typename ValueType>
 class ft_future
 {
@@ -29,8 +28,8 @@ class ft_future
 
     public:
         ft_future();
-        ft_future(const ft_future &other);
-        ft_future(ft_future &&other);
+        ft_future(const ft_future &other) = delete;
+        ft_future(ft_future &&other) = delete;
         explicit ft_future(ft_promise<ValueType>& promise);
         explicit ft_future(ft_sharedptr<ft_promise<ValueType> > promise_pointer);
         ~ft_future();
@@ -72,8 +71,8 @@ class ft_future<void>
 
     public:
         ft_future();
-        ft_future(const ft_future &other);
-        ft_future(ft_future &&other);
+        ft_future(const ft_future &other) = delete;
+        ft_future(ft_future &&other) = delete;
         explicit ft_future(ft_promise<void>& promise);
         explicit ft_future(ft_sharedptr<ft_promise<void> > promise_pointer);
         ~ft_future();
@@ -251,24 +250,6 @@ ft_future<ValueType>::ft_future(ft_promise<ValueType>& promise)
     : _promise(&promise), _shared_promise(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename ValueType>
-ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
-    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-template <typename ValueType>
-ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
-    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->move(other);
     return ;
 }
 
@@ -785,26 +766,12 @@ inline ft_future<void>::ft_future(ft_promise<void>& promise)
     return ;
 }
 
-inline ft_future<void>::ft_future(const ft_future<void> &other)
-    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-inline ft_future<void>::ft_future(ft_future<void> &&other)
-    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->move(other);
-    return ;
-}
-
 inline ft_future<void>::ft_future(ft_sharedptr<ft_promise<void> > promise_pointer)
-    : _promise(promise_pointer.get()), _shared_promise(promise_pointer),
+    : _promise(ft_nullptr), _shared_promise(),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    if (this->_shared_promise.initialize(promise_pointer) == FT_ERR_SUCCESS)
+        this->_promise = this->_shared_promise.get();
     return ;
 }
 

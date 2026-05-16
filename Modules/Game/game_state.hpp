@@ -36,9 +36,9 @@ class game_state
     public:
         game_state() noexcept;
         ~game_state() noexcept;
-        game_state(const game_state &other) noexcept;
+        game_state(const game_state &other) noexcept = delete;
         game_state &operator=(const game_state &other) noexcept = delete;
-        game_state(game_state &&other) noexcept;
+        game_state(game_state &&other) noexcept = delete;
         game_state &operator=(game_state &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

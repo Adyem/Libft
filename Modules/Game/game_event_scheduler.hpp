@@ -67,8 +67,8 @@ class game_event_scheduler
 
     public:
         game_event_scheduler() noexcept;
-        game_event_scheduler(const game_event_scheduler &other) noexcept;
-        game_event_scheduler(game_event_scheduler &&other) noexcept;
+        game_event_scheduler(const game_event_scheduler &other) noexcept = delete;
+        game_event_scheduler(game_event_scheduler &&other) noexcept = delete;
         ~game_event_scheduler();
         game_event_scheduler &operator=(const game_event_scheduler &other) noexcept = delete;
         game_event_scheduler &operator=(game_event_scheduler &&other) noexcept = delete;

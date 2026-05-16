@@ -28,9 +28,9 @@ class game_behavior_table
     public:
         game_behavior_table() noexcept;
         ~game_behavior_table() noexcept;
-        game_behavior_table(const game_behavior_table &other) noexcept;
+        game_behavior_table(const game_behavior_table &other) noexcept = delete;
         game_behavior_table &operator=(const game_behavior_table &other) noexcept = delete;
-        game_behavior_table(game_behavior_table &&other) noexcept;
+        game_behavior_table(game_behavior_table &&other) noexcept = delete;
         game_behavior_table &operator=(game_behavior_table &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

@@ -84,59 +84,6 @@ ft_thread_pool::ft_thread_pool(ft_size_t thread_count, ft_size_t max_tasks)
     return ;
 }
 
-ft_thread_pool::ft_thread_pool(const ft_thread_pool &other)
-    : _workers(), _tasks(),
-      _configured_thread_count(other._configured_thread_count),
-      _max_tasks(other._max_tasks), _stop(FT_FALSE), _active(0),
-      _work_mutex(ft_nullptr), _thread_safe_mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_thread_pool::ft_thread_pool(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    return ;
-}
-
-ft_thread_pool::ft_thread_pool(ft_thread_pool &&other)
-    : _workers(), _tasks(),
-      _configured_thread_count(other._configured_thread_count),
-      _max_tasks(other._max_tasks), _stop(FT_FALSE), _active(0),
-      _work_mutex(ft_nullptr), _thread_safe_mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_thread_pool::ft_thread_pool(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_thread_pool::~ft_thread_pool()
 {
     int32_t previous_error;

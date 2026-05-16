@@ -29,9 +29,9 @@ class game_progress_tracker
     public:
         game_progress_tracker() noexcept;
         ~game_progress_tracker() noexcept;
-        game_progress_tracker(const game_progress_tracker &other) noexcept;
+        game_progress_tracker(const game_progress_tracker &other) noexcept = delete;
         game_progress_tracker &operator=(const game_progress_tracker &other) noexcept = delete;
-        game_progress_tracker(game_progress_tracker &&other) noexcept;
+        game_progress_tracker(game_progress_tracker &&other) noexcept = delete;
         game_progress_tracker &operator=(game_progress_tracker &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

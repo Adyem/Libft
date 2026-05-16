@@ -34,8 +34,8 @@ class game_map3d
 
     public:
         game_map3d();
-        game_map3d(const game_map3d &other);
-        game_map3d(game_map3d &&other);
+        game_map3d(const game_map3d &other) = delete;
+        game_map3d(game_map3d &&other) = delete;
         ~game_map3d();
         game_map3d &operator=(const game_map3d &other) = delete;
         game_map3d &operator=(game_map3d &&other) = delete;

@@ -28,9 +28,9 @@ class game_rarity_band
     public:
         game_rarity_band() noexcept;
         virtual ~game_rarity_band() noexcept;
-        game_rarity_band(const game_rarity_band &other) noexcept;
+        game_rarity_band(const game_rarity_band &other) noexcept = delete;
         game_rarity_band &operator=(const game_rarity_band &other) noexcept = delete;
-        game_rarity_band(game_rarity_band &&other) noexcept;
+        game_rarity_band(game_rarity_band &&other) noexcept = delete;
         game_rarity_band &operator=(game_rarity_band &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

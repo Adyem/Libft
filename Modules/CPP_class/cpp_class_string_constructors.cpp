@@ -16,50 +16,24 @@ ft_string::ft_string() noexcept
     return ;
 }
 
-ft_string::ft_string(const ft_string &other) noexcept
-    : _data(ft_nullptr)
-    , _length(0)
-    , _capacity(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+ft_string *ft_string::from_error(int32_t error_code) noexcept
 {
-    int32_t initialization_error;
-    int32_t other_error;
-
-    other_error = other.get_error();
-    initialization_error = this->initialize(other);
-    if (initialization_error == FT_ERR_SUCCESS)
-        ft_string::set_error(other_error);
-    ft_string::_last_initialised_state = this->_initialised_state;
-    return ;
-}
-
-ft_string::ft_string(ft_string &&other) noexcept
-    : _data(ft_nullptr)
-    , _length(0)
-    , _capacity(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialization_error;
-    int32_t other_error;
-
-    other_error = other.get_error();
-    initialization_error = this->initialize(static_cast<ft_string &&>(other));
-    if (initialization_error == FT_ERR_SUCCESS)
-        ft_string::set_error(other_error);
-    ft_string::_last_initialised_state = this->_initialised_state;
-    return ;
-}
-
-ft_string ft_string::from_error(int32_t error_code) noexcept
-{
-    ft_string value;
+    ft_string *value;
     int32_t initialization_error;
 
-    initialization_error = value.initialize();
+    value = new (std::nothrow) ft_string();
+    if (value == ft_nullptr)
+    {
+        ft_string::set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    initialization_error = value->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
+    {
+        delete value;
         ft_string::set_error(initialization_error);
+        return (ft_nullptr);
+    }
     else
         ft_string::set_error(error_code);
     return (value);

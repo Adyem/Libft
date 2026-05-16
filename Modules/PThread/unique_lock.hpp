@@ -33,7 +33,7 @@ class ft_unique_lock
         ft_unique_lock(const ft_unique_lock &) = delete;
         ft_unique_lock &operator=(const ft_unique_lock &) = delete;
 
-        ft_unique_lock(ft_unique_lock &&other) noexcept;
+        ft_unique_lock(ft_unique_lock &&other) noexcept = delete;
         ft_unique_lock &operator=(ft_unique_lock &&other) noexcept;
 
         void move_from(ft_unique_lock &other);

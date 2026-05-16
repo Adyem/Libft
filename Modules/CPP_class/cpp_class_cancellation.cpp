@@ -45,76 +45,6 @@ ft_cancellation_state::ft_cancellation_state() noexcept
     return ;
 }
 
-ft_cancellation_state::ft_cancellation_state(
-    const ft_cancellation_state &other) noexcept
-    : _cancelled(FT_FALSE), _callbacks(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_bool lock_acquired;
-    int32_t lock_error;
-    ft_size_t callback_index;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_cancellation_state::ft_cancellation_state(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_cancelled.store(other._cancelled.load(std::memory_order_acquire),
-        std::memory_order_release);
-    callback_index = 0;
-    while (callback_index < other._callbacks.size())
-    {
-        this->_callbacks.push_back(other._callbacks[callback_index]);
-        callback_index += 1;
-    }
-    (void)other.unlock_internal(lock_acquired);
-    return ;
-}
-
-ft_cancellation_state::ft_cancellation_state(
-    ft_cancellation_state &&other) noexcept
-    : _cancelled(FT_FALSE), _callbacks(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_cancellation_state::ft_cancellation_state(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_cancellation_state::~ft_cancellation_state() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -393,55 +323,6 @@ int32_t ft_cancellation_token::register_callback(
 ft_cancellation_source::ft_cancellation_source() noexcept
     : _state(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-ft_cancellation_source::ft_cancellation_source(
-    const ft_cancellation_source &other) noexcept
-    : _state(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_cancellation_source::ft_cancellation_source(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._state != ft_nullptr && other._state->is_cancelled())
-        (void)this->_state->request_cancel();
-    return ;
-}
-
-ft_cancellation_source::ft_cancellation_source(
-    ft_cancellation_source &&other) noexcept
-    : _state(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_cancellation_source::ft_cancellation_source(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

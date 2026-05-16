@@ -33,9 +33,9 @@ class game_behavior_profile
     public:
         game_behavior_profile() noexcept;
         virtual ~game_behavior_profile() noexcept;
-        game_behavior_profile(const game_behavior_profile &other) noexcept;
+        game_behavior_profile(const game_behavior_profile &other) noexcept = delete;
         game_behavior_profile &operator=(const game_behavior_profile &other) = delete;
-        game_behavior_profile(game_behavior_profile &&other) noexcept;
+        game_behavior_profile(game_behavior_profile &&other) noexcept = delete;
         game_behavior_profile &operator=(game_behavior_profile &&other) = delete;
 
         int32_t initialize() noexcept;

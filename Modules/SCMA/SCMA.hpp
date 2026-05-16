@@ -101,8 +101,8 @@ class scma_handle_accessor
     public:
         scma_handle_accessor(void);
         scma_handle_accessor(scma_handle handle) = delete;
-        scma_handle_accessor(const scma_handle_accessor &other);
-        scma_handle_accessor(scma_handle_accessor &&other);
+        scma_handle_accessor(const scma_handle_accessor &other) = delete;
+        scma_handle_accessor(scma_handle_accessor &&other) = delete;
         ~scma_handle_accessor(void);
         scma_handle_accessor &operator=(const scma_handle_accessor &other) = delete;
         scma_handle_accessor &operator=(scma_handle_accessor &&other) = delete;
@@ -161,58 +161,6 @@ inline scma_handle_accessor<TValue>::~scma_handle_accessor(void)
         (void)this->destroy();
         scma_handle_accessor<TValue>::_last_error = previous_error;
     }
-    return ;
-}
-
-template <typename TValue>
-inline scma_handle_accessor<TValue>::scma_handle_accessor(
-        const scma_handle_accessor &other)
-{
-    this->_handle = scma_invalid_handle();
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "scma_handle_accessor::copy_constructor",
-            "source object is uninitialised");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    this->_handle = other._handle;
-    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    this->set_error(other.get_error());
-    return ;
-}
-
-template <typename TValue>
-inline scma_handle_accessor<TValue>::scma_handle_accessor(
-        scma_handle_accessor &&other)
-{
-    this->_handle = scma_invalid_handle();
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "scma_handle_accessor::move_constructor",
-            "source object is uninitialised");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    this->_handle = other._handle;
-    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    this->set_error(other.get_error());
-    other._handle = scma_invalid_handle();
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

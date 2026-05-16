@@ -23,9 +23,9 @@ class game_item_modifier
     public:
         game_item_modifier() noexcept;
         virtual ~game_item_modifier() noexcept;
-        game_item_modifier(const game_item_modifier &other) noexcept;
+        game_item_modifier(const game_item_modifier &other) noexcept = delete;
         game_item_modifier &operator=(const game_item_modifier &other) noexcept = delete;
-        game_item_modifier(game_item_modifier &&other) noexcept;
+        game_item_modifier(game_item_modifier &&other) noexcept = delete;
         game_item_modifier &operator=(game_item_modifier &&other) noexcept = delete;
 
         int32_t initialize() noexcept;
@@ -79,9 +79,9 @@ class game_item
     public:
         game_item() noexcept;
         virtual ~game_item() noexcept;
-        game_item(const game_item &other) noexcept;
+        game_item(const game_item &other) noexcept = delete;
         game_item &operator=(const game_item &other) noexcept = delete;
-        game_item(game_item &&other) noexcept;
+        game_item(game_item &&other) noexcept = delete;
         game_item &operator=(game_item &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

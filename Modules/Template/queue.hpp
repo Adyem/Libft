@@ -7,11 +7,8 @@
 #include "../CMA/CMA.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "constructor.hpp"
 #include "move.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <new>
 
@@ -62,8 +59,8 @@ class ft_queue
         };
 
         ft_queue();
-        ft_queue(const ft_queue &other);
-        ft_queue(ft_queue &&other);
+        ft_queue(const ft_queue &other) = delete;
+        ft_queue(ft_queue &&other) = delete;
         ~ft_queue();
         ft_queue& operator=(const ft_queue&) = delete;
         ft_queue& operator=(ft_queue&& other) = delete;
@@ -196,99 +193,6 @@ ft_queue<ElementType>::ft_queue()
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename ElementType>
-ft_queue<ElementType>::ft_queue(const ft_queue<ElementType> &other)
-    : _front(ft_nullptr)
-    , _rear(ft_nullptr)
-    , _size(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-    QueueNode *source_node;
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    previous_error = ft_queue<ElementType>::_last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_queue::ft_queue(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_queue<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_queue<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_queue<ElementType>::set_error(previous_error);
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_queue<ElementType>::set_error(previous_error);
-        return ;
-    }
-    source_node = other._front;
-    while (source_node != ft_nullptr)
-    {
-        this->enqueue(source_node->_data);
-        if (this->get_error() != FT_ERR_SUCCESS)
-        {
-            (void)other.unlock_internal(lock_acquired);
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            (void)ft_queue<ElementType>::set_error(previous_error);
-            return ;
-        }
-        source_node = source_node->_next;
-    }
-    (void)other.unlock_internal(lock_acquired);
-    (void)ft_queue<ElementType>::set_error(previous_error);
-    return ;
-}
-
-template <typename ElementType>
-ft_queue<ElementType>::ft_queue(ft_queue<ElementType> &&other)
-    : _front(ft_nullptr)
-    , _rear(ft_nullptr)
-    , _size(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = ft_queue<ElementType>::_last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_queue::ft_queue(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_queue<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)ft_queue<ElementType>::set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)ft_queue<ElementType>::set_error(previous_error);
     return ;
 }
 

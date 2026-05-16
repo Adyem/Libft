@@ -77,9 +77,9 @@ class game_hooks
     public:
         game_hooks() noexcept;
         ~game_hooks() noexcept;
-        game_hooks(const game_hooks &other) noexcept;
+        game_hooks(const game_hooks &other) noexcept = delete;
         game_hooks &operator=(const game_hooks &other) noexcept = delete;
-        game_hooks(game_hooks &&other) noexcept;
+        game_hooks(game_hooks &&other) noexcept = delete;
         game_hooks &operator=(game_hooks &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

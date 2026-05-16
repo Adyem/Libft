@@ -29,9 +29,9 @@ class game_world_region
     public:
         game_world_region() noexcept;
         virtual ~game_world_region() noexcept;
-        game_world_region(const game_world_region &other) noexcept;
+        game_world_region(const game_world_region &other) noexcept = delete;
         game_world_region &operator=(const game_world_region &other) = delete;
-        game_world_region(game_world_region &&other) noexcept;
+        game_world_region(game_world_region &&other) noexcept = delete;
         game_world_region &operator=(game_world_region &&other) = delete;
 
         int32_t initialize() noexcept;

@@ -49,6 +49,7 @@ class ft_blocking_queue
 
     public:
         ft_blocking_queue();
+        ft_blocking_queue(ft_blocking_queue &&other) = delete;
         ~ft_blocking_queue();
 
         ft_blocking_queue(const ft_blocking_queue&) = delete;

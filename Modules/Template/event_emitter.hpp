@@ -43,8 +43,8 @@ class ft_event_emitter
 
     public:
         ft_event_emitter(ft_size_t initial_capacity = 0);
-        ft_event_emitter(const ft_event_emitter<EventType, Args...> &other);
-        ft_event_emitter(ft_event_emitter<EventType, Args...> &&other);
+        ft_event_emitter(const ft_event_emitter<EventType, Args...> &other) = delete;
+        ft_event_emitter(ft_event_emitter<EventType, Args...> &&other) = delete;
         ~ft_event_emitter();
         ft_event_emitter& operator=(const ft_event_emitter&) = delete;
         ft_event_emitter& operator=(ft_event_emitter&&) = delete;

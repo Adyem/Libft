@@ -60,44 +60,6 @@ ft_bitset::ft_bitset(ft_size_t bits)
     return ;
 }
 
-ft_bitset::ft_bitset(const ft_bitset &other)
-    : _size(0)
-    , _configured_bits(0)
-    , _block_count(0)
-    , _data(ft_nullptr)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_result;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_bitset::ft_bitset(copy)",
-            "source object is not initialised");
-    initialize_result = this->initialize(other);
-    if (initialize_result != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_bitset::ft_bitset(ft_bitset &&other)
-    : _size(0)
-    , _configured_bits(0)
-    , _block_count(0)
-    , _data(ft_nullptr)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_result;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_bitset::ft_bitset(move)",
-            "source object is not initialised");
-    initialize_result = this->move(other);
-    if (initialize_result != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_bitset::~ft_bitset()
 {
     uint32_t previous_error;

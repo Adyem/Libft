@@ -36,9 +36,9 @@ class vector4
     public:
         vector4() noexcept;
         vector4(double x_component, double y_component, double z_component, double w_component) noexcept;
-        vector4(const vector4 &other) noexcept;
+        vector4(const vector4 &other) noexcept = delete;
         vector4 &operator=(const vector4 &other) = delete;
-        vector4(vector4 &&other) noexcept;
+        vector4(vector4 &&other) noexcept = delete;
         vector4 &operator=(vector4 &&other) = delete;
         ~vector4() noexcept;
         int32_t initialize() noexcept;

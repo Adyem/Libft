@@ -30,9 +30,9 @@ class matrix4
                 double m10, double m11, double m12, double m13,
                 double m20, double m21, double m22, double m23,
                 double m30, double m31, double m32, double m33) noexcept;
-        matrix4(const matrix4 &other) noexcept;
+        matrix4(const matrix4 &other) noexcept = delete;
         matrix4 &operator=(const matrix4 &other) = delete;
-        matrix4(matrix4 &&other) noexcept;
+        matrix4(matrix4 &&other) noexcept = delete;
         matrix4 &operator=(matrix4 &&other) = delete;
         ~matrix4() noexcept;
         int32_t initialize() noexcept;

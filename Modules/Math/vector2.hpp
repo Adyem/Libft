@@ -34,9 +34,9 @@ class vector2
     public:
         vector2() noexcept;
         vector2(double x_component, double y_component) noexcept;
-        vector2(const vector2 &other) noexcept;
+        vector2(const vector2 &other) noexcept = delete;
         vector2 &operator=(const vector2 &other) = delete;
-        vector2(vector2 &&other) noexcept;
+        vector2(vector2 &&other) noexcept = delete;
         vector2 &operator=(vector2 &&other) = delete;
         ~vector2() noexcept;
         int32_t initialize() noexcept;

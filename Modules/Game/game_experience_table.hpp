@@ -28,9 +28,9 @@ class game_experience_table
     public:
         game_experience_table() noexcept;
         ~game_experience_table() noexcept;
-        game_experience_table(const game_experience_table &other) noexcept;
+        game_experience_table(const game_experience_table &other) noexcept = delete;
         game_experience_table &operator=(const game_experience_table &other) noexcept = delete;
-        game_experience_table(game_experience_table &&other) noexcept;
+        game_experience_table(game_experience_table &&other) noexcept = delete;
         game_experience_table &operator=(game_experience_table &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

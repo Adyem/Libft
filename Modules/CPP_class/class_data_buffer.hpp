@@ -76,8 +76,8 @@ class DataBuffer
 
     public:
         DataBuffer() noexcept;
-        DataBuffer(const DataBuffer& other) noexcept;
-        DataBuffer(DataBuffer&& other) noexcept;
+        DataBuffer(const DataBuffer& other) noexcept = delete;
+        DataBuffer(DataBuffer&& other) noexcept = delete;
         ~DataBuffer() noexcept;
 
         DataBuffer& operator=(const DataBuffer& other) noexcept = delete;

@@ -32,9 +32,9 @@ class quaternion
     public:
         quaternion() noexcept;
         quaternion(double scalar_w, double x_component, double y_component, double z_component) noexcept;
-        quaternion(const quaternion &other) noexcept;
+        quaternion(const quaternion &other) noexcept = delete;
         quaternion &operator=(const quaternion &other) = delete;
-        quaternion(quaternion &&other) noexcept;
+        quaternion(quaternion &&other) noexcept = delete;
         quaternion &operator=(quaternion &&other) noexcept = delete;
         ~quaternion() noexcept;
         int32_t initialize() noexcept;

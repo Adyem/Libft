@@ -49,8 +49,8 @@ class ft_string
 
     public:
         ft_string() noexcept;
-        ft_string(const ft_string &other) noexcept;
-        ft_string(ft_string &&other) noexcept;
+        ft_string(const ft_string &other) noexcept = delete;
+        ft_string(ft_string &&other) noexcept = delete;
         ~ft_string();
 
         ft_string &operator=(const ft_string &other) noexcept;
@@ -99,8 +99,8 @@ class ft_string
         ft_size_t   find(const ft_string &substring) const noexcept;
         ft_size_t   find(const char *substring) const noexcept;
         int32_t     resize_length(ft_size_t new_length) noexcept;
-        ft_string   substr(ft_size_t index, ft_size_t count = npos) const noexcept;
-        static ft_string from_error(int32_t error_code) noexcept;
+        ft_string   *substr(ft_size_t index, ft_size_t count = npos) const noexcept;
+        static ft_string *from_error(int32_t error_code) noexcept;
 
         static const ft_size_t npos = static_cast<ft_size_t>(-1);
         static int32_t get_error() noexcept;
@@ -150,7 +150,7 @@ class ft_string_proxy
         ft_string_proxy operator+(const char *right) const noexcept;
         ft_string_proxy operator+(char right) const noexcept;
 
-        operator ft_string() const noexcept;
+        operator ft_string *() const noexcept;
         int32_t get_error() const noexcept;
 };
 

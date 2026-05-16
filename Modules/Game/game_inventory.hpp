@@ -42,8 +42,8 @@ class game_inventory
 
     public:
         game_inventory() noexcept;
-        game_inventory(const game_inventory &other) noexcept;
-        game_inventory(game_inventory &&other) noexcept;
+        game_inventory(const game_inventory &other) noexcept = delete;
+        game_inventory(game_inventory &&other) noexcept = delete;
         virtual ~game_inventory() noexcept;
         game_inventory &operator=(const game_inventory &other) noexcept = delete;
         game_inventory &operator=(game_inventory &&other) noexcept = delete;

@@ -29,8 +29,8 @@ class game_debuff
 
     public:
         game_debuff() noexcept;
-        game_debuff(const game_debuff &other) noexcept;
-        game_debuff(game_debuff &&other) noexcept;
+        game_debuff(const game_debuff &other) noexcept = delete;
+        game_debuff(game_debuff &&other) noexcept = delete;
         virtual ~game_debuff() noexcept;
         game_debuff &operator=(const game_debuff &other) = delete;
         game_debuff &operator=(game_debuff &&other) = delete;

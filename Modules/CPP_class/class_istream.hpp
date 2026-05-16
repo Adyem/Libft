@@ -28,8 +28,8 @@ class ft_istream
     public:
         virtual ~ft_istream() noexcept;
 
-        ft_istream(const ft_istream &other) noexcept;
-        ft_istream(ft_istream &&other) noexcept;
+        ft_istream(const ft_istream &other) noexcept = delete;
+        ft_istream(ft_istream &&other) noexcept = delete;
         ft_istream &operator=(const ft_istream &other) noexcept = delete;
         ft_istream &operator=(ft_istream &&other) noexcept = delete;
 

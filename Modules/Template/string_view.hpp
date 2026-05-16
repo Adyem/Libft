@@ -41,8 +41,8 @@ class ft_string_view
         };
 
         ft_string_view();
-        ft_string_view(const ft_string_view<CharType> &other);
-        ft_string_view(ft_string_view<CharType> &&other);
+        ft_string_view(const ft_string_view &other) = delete;
+        ft_string_view(ft_string_view &&other) = delete;
         ft_string_view(const CharType* string);
         ft_string_view(const CharType* string, ft_size_t size);
         ~ft_string_view();

@@ -30,9 +30,9 @@ class game_region_definition
     public:
         game_region_definition() noexcept;
         virtual ~game_region_definition() noexcept;
-        game_region_definition(const game_region_definition &other) noexcept;
+        game_region_definition(const game_region_definition &other) noexcept = delete;
         game_region_definition &operator=(const game_region_definition &other) noexcept = delete;
-        game_region_definition(game_region_definition &&other) noexcept;
+        game_region_definition(game_region_definition &&other) noexcept = delete;
         game_region_definition &operator=(game_region_definition &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

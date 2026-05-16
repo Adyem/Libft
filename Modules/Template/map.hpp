@@ -10,9 +10,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
@@ -78,8 +75,8 @@ class ft_map
 
     public:
         ft_map(ft_size_t initial_capacity = 10);
-        ft_map(const ft_map<Key, MappedType>& other);
-        ft_map(ft_map<Key, MappedType>&& other);
+        ft_map(const ft_map<Key, MappedType>& other) = delete;
+        ft_map(ft_map<Key, MappedType>&& other) = delete;
         ~ft_map();
 
         ft_map& operator=(const ft_map& other);
@@ -128,76 +125,6 @@ ft_map<Key, MappedType>::ft_map(ft_size_t initial_capacity)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _initial_capacity(initial_capacity)
 {
-    return ;
-}
-
-template <typename Key, typename MappedType>
-ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
-    : _data(ft_nullptr)
-    , _capacity(other._initial_capacity)
-    , _size(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _initial_capacity(other._initial_capacity)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_map::ft_map(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->copy_from(other) != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    return ;
-}
-
-template <typename Key, typename MappedType>
-ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other)
-    : _data(ft_nullptr)
-    , _capacity(other._initial_capacity)
-    , _size(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-    , _initial_capacity(other._initial_capacity)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_map::ft_map(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move_from(other) != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
     return ;
 }
 

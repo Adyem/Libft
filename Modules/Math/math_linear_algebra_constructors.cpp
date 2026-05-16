@@ -437,66 +437,6 @@ vector2::vector2(double x_component, double y_component) noexcept
     return ;
 }
 
-vector2::vector2(const vector2 &other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = vector2::_last_error;
-    this->_x_component = 0.0;
-    this->_y_component = 0.0;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("vector2::vector2(const vector2 &) source",
-            "called with uninitialised source object");
-        vector2::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        vector2::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(other);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    vector2::set_error(previous_last_error);
-    return ;
-}
-
-vector2::vector2(vector2 &&other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = vector2::_last_error;
-    this->_x_component = 0.0;
-    this->_y_component = 0.0;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("vector2::vector2(vector2 &&) source",
-            "called with uninitialised source object");
-        vector2::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        vector2::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(static_cast<vector2 &&>(other));
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    vector2::set_error(previous_last_error);
-    return ;
-}
-
 vector2::~vector2() noexcept
 {
     uint32_t previous_last_error;
@@ -742,68 +682,6 @@ vector3::vector3(double x_component, double y_component, double z_component) noe
     this->_z_component = 0.0;
     this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     initialization_error = this->initialize(x_component, y_component, z_component);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    vector3::set_error(previous_last_error);
-    return ;
-}
-
-vector3::vector3(const vector3 &other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = vector3::_last_error;
-    this->_x_component = 0.0;
-    this->_y_component = 0.0;
-    this->_z_component = 0.0;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("vector3::vector3(const vector3 &) source",
-            "called with uninitialised source object");
-        vector3::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        vector3::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(other);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    vector3::set_error(previous_last_error);
-    return ;
-}
-
-vector3::vector3(vector3 &&other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = vector3::_last_error;
-    this->_x_component = 0.0;
-    this->_y_component = 0.0;
-    this->_z_component = 0.0;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("vector3::vector3(vector3 &&) source",
-            "called with uninitialised source object");
-        vector3::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        vector3::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(static_cast<vector3 &&>(other));
     if (initialization_error != FT_ERR_SUCCESS
         && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -1075,70 +953,6 @@ vector4::vector4(double x_component, double y_component, double z_component, dou
     return ;
 }
 
-vector4::vector4(const vector4 &other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = vector4::_last_error;
-    this->_x_component = 0.0;
-    this->_y_component = 0.0;
-    this->_z_component = 0.0;
-    this->_w_component = 0.0;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("vector4::vector4(const vector4 &) source",
-            "called with uninitialised source object");
-        vector4::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        vector4::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(other);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    vector4::set_error(previous_last_error);
-    return ;
-}
-
-vector4::vector4(vector4 &&other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = vector4::_last_error;
-    this->_x_component = 0.0;
-    this->_y_component = 0.0;
-    this->_z_component = 0.0;
-    this->_w_component = 0.0;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("vector4::vector4(vector4 &&) source",
-            "called with uninitialised source object");
-        vector4::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        vector4::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(static_cast<vector4 &&>(other));
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    vector4::set_error(previous_last_error);
-    return ;
-}
-
 vector4::~vector4() noexcept
 {
     uint32_t previous_last_error;
@@ -1390,64 +1204,6 @@ matrix2::matrix2(double m00, double m01, double m10, double m11) noexcept
     matrix2_set_identity(this->_m);
     this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     initialization_error = this->initialize(m00, m01, m10, m11);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    matrix2::set_error(previous_last_error);
-    return ;
-}
-
-matrix2::matrix2(const matrix2 &other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = matrix2::_last_error;
-    matrix2_set_identity(this->_m);
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("matrix2::matrix2(const matrix2 &) source",
-            "called with uninitialised source object");
-        matrix2::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        matrix2::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(other);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    matrix2::set_error(previous_last_error);
-    return ;
-}
-
-matrix2::matrix2(matrix2 &&other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = matrix2::_last_error;
-    matrix2_set_identity(this->_m);
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("matrix2::matrix2(matrix2 &&) source",
-            "called with uninitialised source object");
-        matrix2::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        matrix2::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(static_cast<matrix2 &&>(other));
     if (initialization_error != FT_ERR_SUCCESS
         && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -1715,64 +1471,6 @@ matrix3::matrix3(double m00, double m01, double m02,
     this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     initialization_error = this->initialize(m00, m01, m02, m10, m11, m12,
             m20, m21, m22);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    matrix3::set_error(previous_last_error);
-    return ;
-}
-
-matrix3::matrix3(const matrix3 &other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = matrix3::_last_error;
-    matrix3_set_identity(this->_m);
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("matrix3::matrix3(const matrix3 &) source",
-            "called with uninitialised source object");
-        matrix3::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        matrix3::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(other);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    matrix3::set_error(previous_last_error);
-    return ;
-}
-
-matrix3::matrix3(matrix3 &&other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = matrix3::_last_error;
-    matrix3_set_identity(this->_m);
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("matrix3::matrix3(matrix3 &&) source",
-            "called with uninitialised source object");
-        matrix3::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        matrix3::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(static_cast<matrix3 &&>(other));
     if (initialization_error != FT_ERR_SUCCESS
         && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -2052,64 +1750,6 @@ matrix4::matrix4(double m00, double m01, double m02, double m03,
             m10, m11, m12, m13,
             m20, m21, m22, m23,
             m30, m31, m32, m33);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    matrix4::set_error(previous_last_error);
-    return ;
-}
-
-matrix4::matrix4(const matrix4 &other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = matrix4::_last_error;
-    matrix4_set_identity(this->_m);
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("matrix4::matrix4(const matrix4 &) source",
-            "called with uninitialised source object");
-        matrix4::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        matrix4::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(other);
-    if (initialization_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    matrix4::set_error(previous_last_error);
-    return ;
-}
-
-matrix4::matrix4(matrix4 &&other) noexcept
-{
-    int32_t initialization_error;
-    uint32_t previous_last_error;
-
-    previous_last_error = matrix4::_last_error;
-    matrix4_set_identity(this->_m);
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        other.abort_lifecycle_error("matrix4::matrix4(matrix4 &&) source",
-            "called with uninitialised source object");
-        matrix4::set_error(previous_last_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        matrix4::set_error(previous_last_error);
-        return ;
-    }
-    initialization_error = this->initialize(static_cast<matrix4 &&>(other));
     if (initialization_error != FT_ERR_SUCCESS
         && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;

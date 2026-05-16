@@ -29,8 +29,8 @@ class game_upgrade
 
     public:
         game_upgrade() noexcept;
-        game_upgrade(const game_upgrade &other) noexcept;
-        game_upgrade(game_upgrade &&other) noexcept;
+        game_upgrade(const game_upgrade &other) noexcept = delete;
+        game_upgrade(game_upgrade &&other) noexcept = delete;
         virtual ~game_upgrade() noexcept;
         game_upgrade &operator=(const game_upgrade &other) = delete;
         game_upgrade &operator=(game_upgrade &&other) = delete;

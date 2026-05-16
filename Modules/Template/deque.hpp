@@ -41,8 +41,8 @@ class ft_deque
 
     public:
         ft_deque();
-        ft_deque(const ft_deque &other);
-        ft_deque(ft_deque &&other);
+        ft_deque(const ft_deque &other) = delete;
+        ft_deque(ft_deque &&other) = delete;
         ~ft_deque();
         ft_deque &operator=(const ft_deque &other) = delete;
         ft_deque &operator=(ft_deque &&other) = delete;

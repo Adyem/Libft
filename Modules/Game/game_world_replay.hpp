@@ -27,9 +27,9 @@ class game_world_replay_session
     public:
         game_world_replay_session() noexcept;
         ~game_world_replay_session() noexcept;
-        game_world_replay_session(const game_world_replay_session &other) noexcept;
+        game_world_replay_session(const game_world_replay_session &other) noexcept = delete;
         game_world_replay_session &operator=(const game_world_replay_session &other) noexcept = delete;
-        game_world_replay_session(game_world_replay_session &&other) noexcept;
+        game_world_replay_session(game_world_replay_session &&other) noexcept = delete;
         game_world_replay_session &operator=(game_world_replay_session &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

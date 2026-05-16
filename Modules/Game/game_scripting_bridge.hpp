@@ -28,8 +28,8 @@ class game_script_context
 
     public:
         game_script_context() noexcept;
-        game_script_context(const game_script_context &other) noexcept;
-        game_script_context(game_script_context &&other) noexcept;
+        game_script_context(const game_script_context &other) noexcept = delete;
+        game_script_context(game_script_context &&other) noexcept = delete;
         ~game_script_context() noexcept;
         int32_t destroy() noexcept;
         game_script_context &operator=(const game_script_context &other) noexcept = delete;
@@ -83,8 +83,8 @@ class game_script_bridge
 
     public:
         game_script_bridge() noexcept;
-        game_script_bridge(const game_script_bridge &other) noexcept;
-        game_script_bridge(game_script_bridge &&other) noexcept;
+        game_script_bridge(const game_script_bridge &other) noexcept = delete;
+        game_script_bridge(game_script_bridge &&other) noexcept = delete;
         ~game_script_bridge() noexcept;
         game_script_bridge &operator=(const game_script_bridge &other) noexcept = delete;
         game_script_bridge &operator=(game_script_bridge &&other) noexcept = delete;

@@ -28,9 +28,9 @@ class game_currency_rate
     public:
         game_currency_rate() noexcept;
         virtual ~game_currency_rate() noexcept;
-        game_currency_rate(const game_currency_rate &other) noexcept;
+        game_currency_rate(const game_currency_rate &other) noexcept = delete;
         game_currency_rate &operator=(const game_currency_rate &other) noexcept = delete;
-        game_currency_rate(game_currency_rate &&other) noexcept;
+        game_currency_rate(game_currency_rate &&other) noexcept = delete;
         game_currency_rate &operator=(game_currency_rate &&other) noexcept = delete;
 
         int32_t initialize() noexcept;

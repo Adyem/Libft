@@ -47,8 +47,8 @@ class ft_graph
 
     public:
         explicit ft_graph(ft_size_t initial_capacity = 0);
-        ft_graph(const ft_graph<VertexType> &other);
-        ft_graph(ft_graph<VertexType> &&other);
+        ft_graph(const ft_graph<VertexType> &other) = delete;
+        ft_graph(ft_graph<VertexType> &&other) = delete;
         ~ft_graph();
         ft_graph& operator=(const ft_graph&) = delete;
         ft_graph& operator=(ft_graph&& other) = delete;
