@@ -35,8 +35,8 @@ class gnl_stream
 
     public:
         gnl_stream() noexcept;
-        gnl_stream(const gnl_stream &other) noexcept;
-        gnl_stream(gnl_stream &&other) noexcept;
+        gnl_stream(const gnl_stream &other) noexcept = delete;
+        gnl_stream(gnl_stream &&other) noexcept = delete;
         ~gnl_stream() noexcept;
 
         gnl_stream &operator=(const gnl_stream &other) = delete;

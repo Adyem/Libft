@@ -21,8 +21,8 @@ class time_timer
 
     public:
         time_timer() noexcept;
-        time_timer(const time_timer &other) noexcept;
-        time_timer(time_timer &&other) noexcept;
+        time_timer(const time_timer &other) noexcept = delete;
+        time_timer(time_timer &&other) noexcept = delete;
         ~time_timer() noexcept;
 
         time_timer &operator=(const time_timer &) = delete;

@@ -33,8 +33,8 @@ class ft_cubic_spline
         ft_vector<double> _d_coefficients;
 
         ft_cubic_spline() noexcept;
-        ft_cubic_spline(const ft_cubic_spline &other) noexcept;
-        ft_cubic_spline(ft_cubic_spline &&other) noexcept;
+        ft_cubic_spline(const ft_cubic_spline &other) noexcept = delete;
+        ft_cubic_spline(ft_cubic_spline &&other) noexcept = delete;
         ft_cubic_spline &operator=(const ft_cubic_spline &other) = delete;
         ft_cubic_spline &operator=(ft_cubic_spline &&other) noexcept = delete;
         ~ft_cubic_spline() noexcept;
@@ -71,7 +71,7 @@ int32_t math_bezier_evaluate(const ft_vector<double> &control_points,
 int32_t math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
         double parameter,
         vector2 &result) noexcept;
-ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
+ft_cubic_spline *ft_cubic_spline_build(const ft_vector<double> &x_values_input,
         const ft_vector<double> &y_values) noexcept;
 double ft_cubic_spline_evaluate(const ft_cubic_spline &spline,
         double input_value) noexcept;

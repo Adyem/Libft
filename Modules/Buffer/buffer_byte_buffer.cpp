@@ -112,26 +112,6 @@ ft_byte_buffer::ft_byte_buffer() noexcept
     return ;
 }
 
-ft_byte_buffer::ft_byte_buffer(const ft_byte_buffer &other) noexcept
-    : _data(ft_nullptr), _size(0), _capacity(0), _read_position(0),
-      _fixed_capacity(FT_FALSE),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
-{
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_byte_buffer::ft_byte_buffer(ft_byte_buffer &&other) noexcept
-    : _data(ft_nullptr), _size(0), _capacity(0), _read_position(0),
-      _fixed_capacity(FT_FALSE),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
-{
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_byte_buffer::~ft_byte_buffer() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

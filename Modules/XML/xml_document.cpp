@@ -691,36 +691,6 @@ xml_document::xml_document() noexcept
     return ;
 }
 
-xml_document::xml_document(const xml_document &other) noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "xml_document::xml_document(copy)", "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-xml_document::xml_document(xml_document &&other) noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "xml_document::xml_document(move)", "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(static_cast<xml_document &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 xml_document::~xml_document() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

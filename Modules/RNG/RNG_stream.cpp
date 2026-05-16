@@ -25,25 +25,6 @@ rng_stream::rng_stream() noexcept
     return ;
 }
 
-rng_stream::rng_stream(const rng_stream &other) noexcept
-    : _engine()
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-rng_stream::rng_stream(rng_stream &&other) noexcept
-    : _engine()
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(static_cast<rng_stream &&>(other));
-    return ;
-}
-
-
 rng_stream::~rng_stream() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

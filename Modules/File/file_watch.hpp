@@ -32,8 +32,8 @@ class ft_file_watch
 
     public:
         ft_file_watch();
-        ft_file_watch(const ft_file_watch &other);
-        ft_file_watch(ft_file_watch &&other);
+        ft_file_watch(const ft_file_watch &other) = delete;
+        ft_file_watch(ft_file_watch &&other) = delete;
         ~ft_file_watch();
 
         ft_file_watch &operator=(const ft_file_watch &) = delete;

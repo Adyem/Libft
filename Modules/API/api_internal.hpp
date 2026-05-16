@@ -53,8 +53,8 @@ class api_connection_pool_handle
         ft_bool plain_socket_validated;
 
         api_connection_pool_handle();
-        api_connection_pool_handle(const api_connection_pool_handle &other) noexcept;
-        api_connection_pool_handle(api_connection_pool_handle &&other) noexcept;
+        api_connection_pool_handle(const api_connection_pool_handle &other) noexcept = delete;
+        api_connection_pool_handle(api_connection_pool_handle &&other) noexcept = delete;
         ~api_connection_pool_handle();
 
         api_connection_pool_handle &operator=(const api_connection_pool_handle &other) = delete;

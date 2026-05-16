@@ -37,8 +37,9 @@ FT_TEST(test_xml_document_copy_move_deleted)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_document.get_error());
     FT_ASSERT_EQ(FT_TRUE, source_document.is_thread_safe());
 
-    moved_document_pointer = new xml_document(ft_move(source_document));
+    moved_document_pointer = new xml_document();
     FT_ASSERT(moved_document_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_document_pointer->move(source_document));
     FT_ASSERT_EQ(FT_TRUE, moved_document_pointer->is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_document_pointer->get_error());
     FT_ASSERT(moved_document_pointer->get_root() != ft_nullptr);

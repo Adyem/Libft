@@ -14,46 +14,6 @@ api_retry_policy::api_retry_policy() noexcept
     return ;
 }
 
-api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _max_attempts(0),
-      _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0),
-      _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0),
-      _circuit_breaker_half_open_successes(0), _mutex(ft_nullptr)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_retry_policy::api_retry_policy(copy)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _max_attempts(0),
-      _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0),
-      _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0),
-      _circuit_breaker_half_open_successes(0), _mutex(ft_nullptr)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_retry_policy::api_retry_policy(move)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 api_retry_policy::~api_retry_policy()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

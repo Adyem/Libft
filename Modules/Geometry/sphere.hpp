@@ -24,8 +24,8 @@ class sphere
 
     public:
         sphere() noexcept;
-        sphere(const sphere &other) noexcept;
-        sphere(sphere &&other) noexcept;
+        sphere(const sphere &other) noexcept = delete;
+        sphere(sphere &&other) noexcept = delete;
         ~sphere() noexcept;
 
         sphere &operator=(const sphere &other) = delete;

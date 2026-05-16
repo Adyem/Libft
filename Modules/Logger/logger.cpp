@@ -8,6 +8,7 @@
 #include "../PThread/pthread.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Template/move.hpp"
+#include <new>
 
 ft_logger *g_logger = ft_nullptr;
 
@@ -17,42 +18,6 @@ ft_logger::ft_logger() noexcept
       _api_logging(FT_FALSE), _error_code(FT_ERR_SUCCESS)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-ft_logger::ft_logger(const ft_logger &other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr),
-      _thread_safe_enabled(FT_FALSE), _alloc_logging(FT_FALSE),
-      _api_logging(FT_FALSE), _error_code(FT_ERR_SUCCESS)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_logger copy constructor",
-            "source object is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_logger::ft_logger(ft_logger &&other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr),
-      _thread_safe_enabled(FT_FALSE), _alloc_logging(FT_FALSE),
-      _api_logging(FT_FALSE), _error_code(FT_ERR_SUCCESS)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_logger move constructor",
-            "source object is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -693,26 +658,38 @@ void ft_logger::pop_context(ft_size_t field_count) noexcept
     return ;
 }
 
-ft_log_context_guard ft_logger::make_context_guard(const s_log_field *fields,
+ft_log_context_guard *ft_logger::make_context_guard(const s_log_field *fields,
         ft_size_t field_count) noexcept
 {
-    ft_log_context_guard context_guard;
+    ft_log_context_guard *context_guard;
     ft_bool lock_acquired;
     int32_t operation_result;
 
-    operation_result = context_guard.initialize();
+    context_guard = new (std::nothrow) ft_log_context_guard();
+    if (context_guard == ft_nullptr)
+        return (ft_nullptr);
+    operation_result = context_guard->initialize();
     if (operation_result != FT_ERR_SUCCESS)
-        return (context_guard);
-    operation_result = context_guard.initialize(fields, field_count);
+    {
+        delete context_guard;
+        return (ft_nullptr);
+    }
+    operation_result = context_guard->initialize(fields, field_count);
     if (operation_result != FT_ERR_SUCCESS)
-        return (context_guard);
+    {
+        delete context_guard;
+        return (ft_nullptr);
+    }
 
     lock_acquired = FT_FALSE;
-    if (this->lock(&lock_acquired) == FT_ERR_SUCCESS)
+    operation_result = this->lock(&lock_acquired);
+    if (operation_result != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_SUCCESS);
-        this->unlock(lock_acquired);
+        delete context_guard;
+        return (ft_nullptr);
     }
+    this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (context_guard);
 }
 

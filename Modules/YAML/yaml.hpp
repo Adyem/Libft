@@ -36,8 +36,8 @@ class yaml_value
 
     public:
         yaml_value() noexcept;
-        yaml_value(const yaml_value &other) noexcept;
-        yaml_value(yaml_value &&other) noexcept;
+        yaml_value(const yaml_value &other) noexcept = delete;
+        yaml_value(yaml_value &&other) noexcept = delete;
         ~yaml_value() noexcept;
 
         yaml_value &operator=(const yaml_value &) = delete;

@@ -4721,7 +4721,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `bool ft_logger::is_thread_safe_enabled() const noexcept`
 - `bool ft_logger::thread_guard::lock_acquired() const noexcept`
 - `const char *ft_logger::get_error_str() const noexcept`
-- `ft_log_context_guard ft_logger::make_context_guard(const s_log_field *fields, size_t field_count) noexcept`
+- `ft_log_context_guard *ft_logger::make_context_guard(const s_log_field *fields, size_t field_count) noexcept`
 - `int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept`
 - `int ft_logger::get_async_metrics(s_log_async_metrics *metrics) noexcept`
 - `int ft_logger::get_error() const noexcept`
@@ -5450,7 +5450,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `) , _mutex()`
 - `const char *ft_cubic_spline::get_error_str() const noexcept`
 - `double ft_cubic_spline_evaluate(const ft_cubic_spline &spline, double x) noexcept`
-- `ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept`
+- `ft_cubic_spline *ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept`
 - `int ft_cubic_spline::get_error() const noexcept`
 - `int math_bezier_evaluate(const ft_vector<double> &control_points, double parameter, double &result) noexcept`
 - `int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points, double parameter, vector2 &result) noexcept`
@@ -5475,7 +5475,7 @@ The catalog lists the function declarations and definitions that appear in the C
 ### Math/ft_cubic_spline.hpp
 
 - `double ft_cubic_spline_evaluate(const ft_cubic_spline &spline, double x) noexcept;`
-- `ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept;`
+- `ft_cubic_spline *ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept;`
 - `int math_bezier_evaluate(const ft_vector<double> &control_points, double parameter, double &result) noexcept;`
 - `int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points, double parameter, vector2 &result) noexcept;`
 - `int math_integrate_simpson(math_unary_function function, void *user_data, double lower_bound, double upper_bound, double tolerance, double &result) noexcept;`
@@ -6644,7 +6644,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_dom_node *ft_dom_document::get_root() const noexcept`
 - `ft_dom_node *ft_dom_node::find_child(const ft_string &name) const noexcept`
 - `ft_dom_node_type ft_dom_node::get_type() const noexcept`
-- `ft_string ft_dom_node::get_attribute(const ft_string &key) const noexcept`
+- `ft_string *ft_dom_node::get_attribute(const ft_string &key) const noexcept`
 - `int ft_dom_document::get_error() const noexcept`
 - `int ft_dom_document::lock(bool *lock_acquired) const noexcept`
 - `int ft_dom_document::prepare_thread_safety() noexcept`
@@ -10448,8 +10448,6 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `api_streaming_handler() noexcept;`
 - `api_streaming_handler();`
-- `api_streaming_handler(api_streaming_handler &&other) noexcept;`
-- `api_streaming_handler(const api_streaming_handler &other) noexcept;`
 
 ### API/api_connection_pool.cpp
 
@@ -10457,7 +10455,6 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### API/api_connection_pool_handle.cpp
 
-- `api_connection_pool_handle::api_connection_pool_handle( api_connection_pool_handle &&other) : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
 - `api_connection_pool_handle_lock_guard::api_connection_pool_handle_lock_guard( api_connection_pool_handle &handle) : _handle(handle), _lock_acquired(false), _lock_result(-1)`
 
 ### API/api_request.cpp
@@ -10478,8 +10475,6 @@ The catalog lists the function declarations and definitions that appear in the C
 ### API/api_retry_policy.cpp
 
 - `api_retry_policy::api_retry_policy() noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
-- `api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
-- `api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### API/api_streaming_handler.cpp
 
@@ -11366,7 +11361,6 @@ The catalog lists the function declarations and definitions that appear in the C
 ### Logger/logger_log_context_guard.cpp
 
 - `ft_log_context_guard::ft_log_context_guard(const s_log_field *fields, size_t field_count) noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESS)`
-- `ft_log_context_guard::ft_log_context_guard(ft_log_context_guard &&other) noexcept : _pushed_count(other._pushed_count), _active(other._active), _error_code(other._error_code)`
 
 ### Logger/logger_log_health.cpp
 

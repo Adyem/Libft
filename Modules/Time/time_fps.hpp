@@ -21,8 +21,8 @@ class time_fps
 
     public:
         time_fps(void) noexcept;
-        time_fps(const time_fps &other) noexcept;
-        time_fps(time_fps &&other) noexcept;
+        time_fps(const time_fps &other) noexcept = delete;
+        time_fps(time_fps &&other) noexcept = delete;
         ~time_fps() noexcept;
 
         time_fps &operator=(const time_fps &) = delete;

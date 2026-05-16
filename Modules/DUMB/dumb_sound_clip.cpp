@@ -87,48 +87,6 @@ ft_sound_clip::ft_sound_clip(void)
     return ;
 }
 
-ft_sound_clip::ft_sound_clip(const ft_sound_clip &other)
-    : _spec(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_sound_clip::ft_sound_clip(const ft_sound_clip &)",
-            "called with uninitialised source object");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_sound_clip::ft_sound_clip(ft_sound_clip &&other)
-    : _spec(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_sound_clip::ft_sound_clip(ft_sound_clip &&)",
-            "called with uninitialised source object");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(static_cast<ft_sound_clip &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_sound_clip::~ft_sound_clip(void)
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

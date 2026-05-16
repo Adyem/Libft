@@ -16,20 +16,6 @@ ft_dom_document::ft_dom_document() noexcept
     return ;
 }
 
-ft_dom_document::ft_dom_document(const ft_dom_document &other) noexcept
-    : _root(other._root), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_dom_document::ft_dom_document(ft_dom_document &&other) noexcept
-    : _root(other._root), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
 ft_dom_document::~ft_dom_document() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

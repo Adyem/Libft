@@ -13,24 +13,6 @@ yaml_value::yaml_value() noexcept
     return ;
 }
 
-yaml_value::yaml_value(const yaml_value &other) noexcept
-{
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    this->_mutex = ft_nullptr;
-    this->_type = YAML_SCALAR;
-    (void)this->initialize(other);
-    return ;
-}
-
-yaml_value::yaml_value(yaml_value &&other) noexcept
-{
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    this->_mutex = ft_nullptr;
-    this->_type = YAML_SCALAR;
-    (void)this->initialize(static_cast<yaml_value &&>(other));
-    return ;
-}
-
 yaml_value::~yaml_value() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

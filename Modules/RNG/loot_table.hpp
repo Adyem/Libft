@@ -27,8 +27,8 @@ class ft_loot_entry
 
     public:
         ft_loot_entry() noexcept;
-        ft_loot_entry(const ft_loot_entry &other) noexcept;
-        ft_loot_entry(ft_loot_entry &&other) noexcept;
+        ft_loot_entry(const ft_loot_entry &other) noexcept = delete;
+        ft_loot_entry(ft_loot_entry &&other) noexcept = delete;
         ~ft_loot_entry() noexcept;
 
         ft_loot_entry &operator=(const ft_loot_entry &other) = delete;
@@ -78,8 +78,8 @@ class ft_loot_table
 
     public:
         ft_loot_table() noexcept;
-        ft_loot_table(const ft_loot_table &other) noexcept;
-        ft_loot_table(ft_loot_table &&other) noexcept;
+        ft_loot_table(const ft_loot_table &other) noexcept = delete;
+        ft_loot_table(ft_loot_table &&other) noexcept = delete;
         ~ft_loot_table() noexcept;
 
         ft_loot_table &operator=(const ft_loot_table &other) = delete;
@@ -113,30 +113,6 @@ ft_loot_entry<ElementType>::ft_loot_entry() noexcept
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template<typename ElementType>
-ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry &other) noexcept
-    : _item(ft_nullptr)
-    , _weight(1)
-    , _rarity(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-template<typename ElementType>
-ft_loot_entry<ElementType>::ft_loot_entry(ft_loot_entry &&other) noexcept
-    : _item(ft_nullptr)
-    , _weight(1)
-    , _rarity(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(static_cast<ft_loot_entry &&>(other));
     return ;
 }
 
@@ -475,30 +451,6 @@ ft_loot_table<ElementType>::ft_loot_table() noexcept
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template<typename ElementType>
-ft_loot_table<ElementType>::ft_loot_table(const ft_loot_table &other) noexcept
-    : _entries(ft_nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-template<typename ElementType>
-ft_loot_table<ElementType>::ft_loot_table(ft_loot_table &&other) noexcept
-    : _entries(ft_nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(static_cast<ft_loot_table &&>(other));
     return ;
 }
 

@@ -23,9 +23,9 @@ class ft_document_source
     public:
         ft_document_source() noexcept;
         virtual ~ft_document_source();
-        ft_document_source(const ft_document_source &other) noexcept;
+        ft_document_source(const ft_document_source &other) noexcept = delete;
         ft_document_source &operator=(const ft_document_source &other) = delete;
-        ft_document_source(ft_document_source &&other) noexcept;
+        ft_document_source(ft_document_source &&other) noexcept = delete;
         ft_document_source &operator=(ft_document_source &&other) = delete;
 
         int32_t initialize() noexcept;
@@ -54,9 +54,9 @@ class ft_document_sink
     public:
         ft_document_sink() noexcept;
         virtual ~ft_document_sink();
-        ft_document_sink(const ft_document_sink &other) noexcept;
+        ft_document_sink(const ft_document_sink &other) noexcept = delete;
         ft_document_sink &operator=(const ft_document_sink &other) = delete;
-        ft_document_sink(ft_document_sink &&other) noexcept;
+        ft_document_sink(ft_document_sink &&other) noexcept = delete;
         ft_document_sink &operator=(ft_document_sink &&other) = delete;
 
         int32_t initialize() noexcept;
@@ -85,8 +85,8 @@ class ft_file_document_source : public ft_document_source
 
     public:
         ft_file_document_source() noexcept;
-        ft_file_document_source(const ft_file_document_source &other) noexcept;
-        ft_file_document_source(ft_file_document_source &&other) noexcept;
+        ft_file_document_source(const ft_file_document_source &other) noexcept = delete;
+        ft_file_document_source(ft_file_document_source &&other) noexcept = delete;
         virtual ~ft_file_document_source();
         
         ft_file_document_source &operator=(const ft_file_document_source &other) = delete;
@@ -122,8 +122,8 @@ class ft_file_document_sink : public ft_document_sink
 
     public:
         ft_file_document_sink() noexcept;
-        ft_file_document_sink(const ft_file_document_sink &other) noexcept;
-        ft_file_document_sink(ft_file_document_sink &&other) noexcept;
+        ft_file_document_sink(const ft_file_document_sink &other) noexcept = delete;
+        ft_file_document_sink(ft_file_document_sink &&other) noexcept = delete;
         virtual ~ft_file_document_sink();
         
         ft_file_document_sink &operator=(const ft_file_document_sink &other) = delete;
@@ -160,8 +160,8 @@ class ft_memory_document_source : public ft_document_source
 
     public:
         ft_memory_document_source() noexcept;
-        ft_memory_document_source(const ft_memory_document_source &other) noexcept;
-        ft_memory_document_source(ft_memory_document_source &&other) noexcept;
+        ft_memory_document_source(const ft_memory_document_source &other) noexcept = delete;
+        ft_memory_document_source(ft_memory_document_source &&other) noexcept = delete;
         virtual ~ft_memory_document_source();
         
         ft_memory_document_source &operator=(const ft_memory_document_source &other) = delete;
@@ -198,8 +198,8 @@ class ft_memory_document_sink : public ft_document_sink
 
     public:
         ft_memory_document_sink() noexcept;
-        ft_memory_document_sink(const ft_memory_document_sink &other) noexcept;
-        ft_memory_document_sink(ft_memory_document_sink &&other) noexcept;
+        ft_memory_document_sink(const ft_memory_document_sink &other) noexcept = delete;
+        ft_memory_document_sink(ft_memory_document_sink &&other) noexcept = delete;
         virtual ~ft_memory_document_sink();
         
         ft_memory_document_sink &operator=(const ft_memory_document_sink &other) = delete;
@@ -239,8 +239,8 @@ class ft_http_document_source : public ft_document_source
 
     public:
         ft_http_document_source() noexcept;
-        ft_http_document_source(const ft_http_document_source &other) noexcept;
-        ft_http_document_source(ft_http_document_source &&other) noexcept;
+        ft_http_document_source(const ft_http_document_source &other) noexcept = delete;
+        ft_http_document_source(ft_http_document_source &&other) noexcept = delete;
         virtual ~ft_http_document_source();
         
         ft_http_document_source &operator=(const ft_http_document_source &other) = delete;
@@ -282,8 +282,8 @@ class ft_http_document_sink : public ft_document_sink
 
     public:
         ft_http_document_sink() noexcept;
-        ft_http_document_sink(const ft_http_document_sink &other) noexcept;
-        ft_http_document_sink(ft_http_document_sink &&other) noexcept;
+        ft_http_document_sink(const ft_http_document_sink &other) noexcept = delete;
+        ft_http_document_sink(ft_http_document_sink &&other) noexcept = delete;
         virtual ~ft_http_document_sink();
         
         ft_http_document_sink &operator=(const ft_http_document_sink &other) = delete;

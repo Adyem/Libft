@@ -37,26 +37,6 @@ kv_store::kv_store() noexcept
     return ;
 }
 
-kv_store::kv_store(const kv_store &other) noexcept
-    : kv_store()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "kv_store::kv_store(copy)", "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-kv_store::kv_store(kv_store &&other) noexcept
-    : kv_store()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "kv_store::kv_store(move)", "source is uninitialised");
-    if (this->initialize(static_cast<kv_store &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t kv_store::initialize(const kv_store &other) noexcept
 {
     int32_t destroy_error;

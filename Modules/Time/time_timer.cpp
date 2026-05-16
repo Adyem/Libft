@@ -21,44 +21,6 @@ time_timer::time_timer() noexcept
     return ;
 }
 
-time_timer::time_timer(const time_timer &other) noexcept
-{
-    this->_mutex = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    this->_duration_ms = static_cast<int64_t>(0);
-    this->_start_time = std::chrono::steady_clock::time_point();
-    this->_running = FT_FALSE;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "time_timer::time_timer(copy)", "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-time_timer::time_timer(time_timer &&other) noexcept
-{
-    this->_mutex = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    this->_duration_ms = static_cast<int64_t>(0);
-    this->_start_time = std::chrono::steady_clock::time_point();
-    this->_running = FT_FALSE;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "time_timer::time_timer(move)", "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(static_cast<time_timer &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 time_timer::~time_timer() noexcept
 {
     (void)this->destroy();

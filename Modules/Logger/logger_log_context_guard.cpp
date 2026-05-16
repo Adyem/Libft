@@ -13,45 +13,9 @@ ft_log_context_guard::ft_log_context_guard() noexcept
     return ;
 }
 
-ft_log_context_guard::ft_log_context_guard(
-    const ft_log_context_guard &other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _pushed_count(0), _active(FT_FALSE), _error_code(FT_ERR_SUCCESS)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_log_context_guard copy constructor",
-            "source object is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_log_context_guard::~ft_log_context_guard() noexcept
 {
     (void)this->destroy();
-    return ;
-}
-
-ft_log_context_guard::ft_log_context_guard(ft_log_context_guard &&other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _pushed_count(other._pushed_count), _active(other._active), _error_code(other._error_code)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_log_context_guard move constructor",
-            "source object is uninitialised");
-    this->_initialised_state = other._initialised_state;
-    other._pushed_count = 0;
-    other._active = FT_FALSE;
-    other._error_code = FT_ERR_SUCCESS;
-    other.set_error(FT_ERR_SUCCESS);
-    this->set_error(this->_error_code);
     return ;
 }
 

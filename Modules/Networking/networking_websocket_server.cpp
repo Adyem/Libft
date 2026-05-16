@@ -327,30 +327,6 @@ ft_websocket_server::ft_websocket_server() noexcept
     return ;
 }
 
-ft_websocket_server::ft_websocket_server(const ft_websocket_server &other) noexcept
-    : ft_websocket_server()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_websocket_server::ft_websocket_server(copy)",
-            "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_websocket_server::ft_websocket_server(ft_websocket_server &&other) noexcept
-    : ft_websocket_server()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_websocket_server::ft_websocket_server(move)",
-            "source is uninitialised");
-    if (this->initialize(static_cast<ft_websocket_server &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_websocket_server::~ft_websocket_server() noexcept
 {
     (void)this->destroy();

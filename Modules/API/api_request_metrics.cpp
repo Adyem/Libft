@@ -23,58 +23,6 @@ api_request_metrics_guard::api_request_metrics_guard() noexcept
     return ;
 }
 
-api_request_metrics_guard::api_request_metrics_guard(
-    const api_request_metrics_guard &other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _start_time(),
-      _endpoint(),
-      _method(ft_nullptr),
-      _resource(ft_nullptr),
-      _request_bytes(0),
-      _result_body(ft_nullptr),
-      _status_pointer(ft_nullptr),
-      _error_pointer(ft_nullptr),
-      _enabled(FT_FALSE)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->abort_lifecycle_error("api_request_metrics_guard::api_request_metrics_guard(copy)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-api_request_metrics_guard::api_request_metrics_guard(
-    api_request_metrics_guard &&other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _start_time(),
-      _endpoint(),
-      _method(ft_nullptr),
-      _resource(ft_nullptr),
-      _request_bytes(0),
-      _result_body(ft_nullptr),
-      _status_pointer(ft_nullptr),
-      _error_pointer(ft_nullptr),
-      _enabled(FT_FALSE)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->abort_lifecycle_error("api_request_metrics_guard::api_request_metrics_guard(move)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t api_request_metrics_guard::initialize(const char *host, uint16_t port,
     const char *method, const char *resource, ft_size_t request_bytes,
     char **result_body, int32_t *status_pointer, int32_t *error_pointer) noexcept

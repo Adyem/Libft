@@ -31,30 +31,6 @@ http2_header_field::~http2_header_field() noexcept
     return ;
 }
 
-http2_header_field::http2_header_field(const http2_header_field &other) noexcept
-    : http2_header_field()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_header_field::http2_header_field(copy)",
-            "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-http2_header_field::http2_header_field(http2_header_field &&other) noexcept
-    : http2_header_field()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_header_field::http2_header_field(move)",
-            "source is uninitialised");
-    if (this->initialize(static_cast<http2_header_field &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t http2_header_field::move(http2_header_field &other) noexcept
 {
     return (this->initialize(static_cast<http2_header_field &&>(other)));
@@ -470,30 +446,6 @@ int32_t http2_frame::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-http2_frame::http2_frame(const http2_frame &other) noexcept
-    : http2_frame()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_frame::http2_frame(copy)",
-            "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-http2_frame::http2_frame(http2_frame &&other) noexcept
-    : http2_frame()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_frame::http2_frame(move)",
-            "source is uninitialised");
-    if (this->initialize(static_cast<http2_frame &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t http2_frame::move(http2_frame &other) noexcept
 {
     return (this->initialize(static_cast<http2_frame &&>(other)));
@@ -823,30 +775,6 @@ http2_stream_manager::http2_stream_manager() noexcept
 }
 
 thread_local int32_t http2_stream_manager::_last_error = FT_ERR_SUCCESS;
-
-http2_stream_manager::http2_stream_manager(const http2_stream_manager &other) noexcept
-    : http2_stream_manager()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_stream_manager::http2_stream_manager(copy)",
-            "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-http2_stream_manager::http2_stream_manager(http2_stream_manager &&other) noexcept
-    : http2_stream_manager()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_stream_manager::http2_stream_manager(move)",
-            "source is uninitialised");
-    if (this->initialize(static_cast<http2_stream_manager &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
 
 http2_stream_manager::~http2_stream_manager() noexcept
 {
@@ -2003,30 +1931,6 @@ http2_settings_state::http2_settings_state() noexcept
       _initial_local_window(65535), _initial_remote_window(65535),
       _max_frame_size(16384), _max_header_list_size(0)
 {
-    return ;
-}
-
-http2_settings_state::http2_settings_state(const http2_settings_state &other) noexcept
-    : http2_settings_state()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_settings_state::http2_settings_state(copy)",
-            "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-http2_settings_state::http2_settings_state(http2_settings_state &&other) noexcept
-    : http2_settings_state()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "http2_settings_state::http2_settings_state(move)",
-            "source is uninitialised");
-    if (this->initialize(static_cast<http2_settings_state &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

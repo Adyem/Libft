@@ -33,8 +33,8 @@ class encryption_aead_context
 
     public:
         encryption_aead_context() noexcept;
-        encryption_aead_context(const encryption_aead_context &other) noexcept;
-        encryption_aead_context(encryption_aead_context &&other) noexcept;
+        encryption_aead_context(const encryption_aead_context &other) noexcept = delete;
+        encryption_aead_context(encryption_aead_context &&other) noexcept = delete;
         ~encryption_aead_context() noexcept;
 
         encryption_aead_context &operator=(const encryption_aead_context &other) = delete;

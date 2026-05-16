@@ -58,40 +58,6 @@ aabb::aabb() noexcept
     return ;
 }
 
-aabb::aabb(const aabb &other) noexcept
-    : _minimum_x(0.0)
-    , _minimum_y(0.0)
-    , _maximum_x(0.0)
-    , _maximum_y(0.0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-aabb::aabb(aabb &&other) noexcept
-    : _minimum_x(0.0)
-    , _minimum_y(0.0)
-    , _maximum_x(0.0)
-    , _maximum_y(0.0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->initialize(static_cast<aabb &&>(other));
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t aabb::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

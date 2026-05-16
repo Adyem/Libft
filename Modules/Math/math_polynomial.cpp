@@ -95,32 +95,6 @@ ft_cubic_spline::ft_cubic_spline() noexcept
     return ;
 }
 
-ft_cubic_spline::ft_cubic_spline(const ft_cubic_spline &other) noexcept
-    : _mutex(ft_nullptr)
-{
-    int32_t initialize_error;
-
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept
-    : _mutex(ft_nullptr)
-{
-    int32_t initialize_error;
-
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    initialize_error = this->initialize(ft_move(other));
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t ft_cubic_spline::initialize() noexcept
 {
     int32_t initialize_error;
@@ -768,10 +742,18 @@ int32_t math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     return (FT_ERR_SUCCESS);
 }
 
-ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
+static ft_cubic_spline *math_polynomial_destroy_spline_and_return_null(
+    ft_cubic_spline *spline) noexcept
+{
+    if (spline != ft_nullptr)
+        delete spline;
+    return (ft_nullptr);
+}
+
+ft_cubic_spline *ft_cubic_spline_build(const ft_vector<double> &x_values_input,
     const ft_vector<double> &y_values) noexcept
 {
-    ft_cubic_spline spline;
+    ft_cubic_spline *spline;
     int32_t spline_initialization_error;
     ft_size_t count;
     ft_size_t segment_count;
@@ -781,61 +763,64 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
     int32_t error_code;
     double epsilon;
 
-    spline_initialization_error = spline.initialize();
+    spline = new (std::nothrow) ft_cubic_spline();
+    if (spline == ft_nullptr)
+        return (ft_nullptr);
+    spline_initialization_error = spline->initialize();
     if (spline_initialization_error != FT_ERR_SUCCESS)
-        return (spline);
+        return (math_polynomial_destroy_spline_and_return_null(spline));
     int32_t x_error = FT_ERR_SUCCESS;
     if (x_error != FT_ERR_SUCCESS)
     {
-        return (spline);
+        return (math_polynomial_destroy_spline_and_return_null(spline));
     }
     int32_t y_error = FT_ERR_SUCCESS;
     if (y_error != FT_ERR_SUCCESS)
     {
-        return (spline);
+        return (math_polynomial_destroy_spline_and_return_null(spline));
     }
     if (x_values_input.size() < 2 || x_values_input.size() != y_values.size())
     {
-        return (spline);
+        return (math_polynomial_destroy_spline_and_return_null(spline));
     }
     count = x_values_input.size();
     epsilon = 0.000000000001;
     segment_count = count - 1;
-    math_polynomial_copy_vector(x_values_input, spline._x_values, count, error_code);
+    math_polynomial_copy_vector(x_values_input, spline->_x_values, count, error_code);
     if (error_code != FT_ERR_SUCCESS)
     {
-        return (spline);
+        return (math_polynomial_destroy_spline_and_return_null(spline));
     }
-    math_polynomial_copy_vector(y_values, spline._a_coefficients, count, error_code);
+    math_polynomial_copy_vector(y_values, spline->_a_coefficients, count, error_code);
     if (error_code != FT_ERR_SUCCESS)
     {
-        return (spline);
+        return (math_polynomial_destroy_spline_and_return_null(spline));
     }
-    spline._b_coefficients.resize(segment_count, 0.0);
+    spline->_b_coefficients.resize(segment_count, 0.0);
     {
         int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
-            return (spline);
+            return (math_polynomial_destroy_spline_and_return_null(spline));
         }
     }
-    spline._c_coefficients.resize(count, 0.0);
+    spline->_c_coefficients.resize(count, 0.0);
     {
         int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
-            return (spline);
+            return (math_polynomial_destroy_spline_and_return_null(spline));
         }
     }
-    spline._d_coefficients.resize(segment_count, 0.0);
+    spline->_d_coefficients.resize(segment_count, 0.0);
     {
         int32_t resize_error = FT_ERR_SUCCESS;
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
-            return (spline);
+            return (math_polynomial_destroy_spline_and_return_null(spline));
         }
     }
     h.resize(segment_count, 0.0);
@@ -844,7 +829,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
-            return (spline);
+            return (math_polynomial_destroy_spline_and_return_null(spline));
         }
     }
     alpha.resize(count, 0.0);
@@ -853,35 +838,35 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
         if (resize_error != FT_ERR_SUCCESS)
         {
             error_code = resize_error;
-            return (spline);
+            return (math_polynomial_destroy_spline_and_return_null(spline));
         }
     }
     index = 0;
     while (index < segment_count)
     {
-        h[index] = spline._x_values[index + 1] - spline._x_values[index];
+        h[index] = spline->_x_values[index + 1] - spline->_x_values[index];
         if (h[index] <= 0.0)
         {
-            return (spline);
+            return (math_polynomial_destroy_spline_and_return_null(spline));
         }
         index++;
     }
     index = 1;
     while (index < segment_count)
     {
-        alpha[index] = 3.0 * (spline._a_coefficients[index + 1] - spline._a_coefficients[index]) / h[index]
-            - 3.0 * (spline._a_coefficients[index] - spline._a_coefficients[index - 1]) / h[index - 1];
+        alpha[index] = 3.0 * (spline->_a_coefficients[index + 1] - spline->_a_coefficients[index]) / h[index]
+            - 3.0 * (spline->_a_coefficients[index] - spline->_a_coefficients[index - 1]) / h[index - 1];
         index++;
     }
     if (segment_count == 1)
     {
         double slope;
 
-        slope = (spline._a_coefficients[1] - spline._a_coefficients[0]) / h[0];
-        spline._b_coefficients[0] = slope;
-        spline._c_coefficients[0] = 0.0;
-        spline._c_coefficients[1] = 0.0;
-        spline._d_coefficients[0] = 0.0;
+        slope = (spline->_a_coefficients[1] - spline->_a_coefficients[0]) / h[0];
+        spline->_b_coefficients[0] = slope;
+        spline->_c_coefficients[0] = 0.0;
+        spline->_c_coefficients[1] = 0.0;
+        spline->_d_coefficients[0] = 0.0;
         return (spline);
     }
     if (segment_count == 2)
@@ -891,11 +876,11 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
         denominator_two_segments = 2.0 * (h[0] + h[1]);
         if (std::fabs(denominator_two_segments) <= epsilon)
         {
-            return (spline);
+            return (math_polynomial_destroy_spline_and_return_null(spline));
         }
-        spline._c_coefficients[0] = 0.0;
-        spline._c_coefficients[1] = alpha[1] / denominator_two_segments;
-        spline._c_coefficients[2] = 0.0;
+        spline->_c_coefficients[0] = 0.0;
+        spline->_c_coefficients[1] = alpha[1] / denominator_two_segments;
+        spline->_c_coefficients[2] = 0.0;
     }
     else
     {
@@ -919,7 +904,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
-                return (spline);
+                return (math_polynomial_destroy_spline_and_return_null(spline));
             }
         }
         diagonal.resize(equation_count, 0.0);
@@ -928,7 +913,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
-                return (spline);
+                return (math_polynomial_destroy_spline_and_return_null(spline));
             }
         }
         upper.resize(equation_count, 0.0);
@@ -937,7 +922,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
-                return (spline);
+                return (math_polynomial_destroy_spline_and_return_null(spline));
             }
         }
         rhs.resize(equation_count, 0.0);
@@ -946,7 +931,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
-                return (spline);
+                return (math_polynomial_destroy_spline_and_return_null(spline));
             }
         }
         interior_c.resize(equation_count, 0.0);
@@ -955,7 +940,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             if (resize_error != FT_ERR_SUCCESS)
             {
                 error_code = resize_error;
-                return (spline);
+                return (math_polynomial_destroy_spline_and_return_null(spline));
             }
         }
         diagonal[0] = (h[0] + h[1]) * (h[0] + 2.0 * h[1]);
@@ -983,7 +968,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             pivot = diagonal[equation_index - 1];
             if (std::fabs(pivot) <= epsilon)
             {
-                return (spline);
+                return (math_polynomial_destroy_spline_and_return_null(spline));
             }
             factor = lower[equation_index] / pivot;
             diagonal[equation_index] -= factor * upper[equation_index - 1];
@@ -999,7 +984,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             pivot = diagonal[current_index];
             if (std::fabs(pivot) <= epsilon)
             {
-                return (spline);
+                return (math_polynomial_destroy_spline_and_return_null(spline));
             }
             value = rhs[current_index];
             if (current_index + 1 < equation_count)
@@ -1007,22 +992,22 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values_input,
             value /= pivot;
             interior_c[current_index] = value;
         }
-        spline._c_coefficients[0] = ((h[0] + h[1]) * interior_c[0] - h[0] * interior_c[1]) / h[1];
+        spline->_c_coefficients[0] = ((h[0] + h[1]) * interior_c[0] - h[0] * interior_c[1]) / h[1];
         equation_index = 0;
         while (equation_index < equation_count)
         {
-            spline._c_coefficients[equation_index + 1] = interior_c[equation_index];
+            spline->_c_coefficients[equation_index + 1] = interior_c[equation_index];
             equation_index++;
         }
-        spline._c_coefficients[count - 1] = ((h[segment_count - 2] + h[segment_count - 1]) * interior_c[equation_count - 1]
+        spline->_c_coefficients[count - 1] = ((h[segment_count - 2] + h[segment_count - 1]) * interior_c[equation_count - 1]
                 - h[segment_count - 1] * interior_c[equation_count - 2]) / h[segment_count - 2];
     }
     index = segment_count;
     while (index > 0)
     {
-        spline._b_coefficients[index - 1] = (spline._a_coefficients[index] - spline._a_coefficients[index - 1]) / h[index - 1]
-            - h[index - 1] * (spline._c_coefficients[index] + 2.0 * spline._c_coefficients[index - 1]) / 3.0;
-        spline._d_coefficients[index - 1] = (spline._c_coefficients[index] - spline._c_coefficients[index - 1]) / (3.0 * h[index - 1]);
+        spline->_b_coefficients[index - 1] = (spline->_a_coefficients[index] - spline->_a_coefficients[index - 1]) / h[index - 1]
+            - h[index - 1] * (spline->_c_coefficients[index] + 2.0 * spline->_c_coefficients[index - 1]) / 3.0;
+        spline->_d_coefficients[index - 1] = (spline->_c_coefficients[index] - spline->_c_coefficients[index - 1]) / (3.0 * h[index - 1]);
         index--;
     }
     return (spline);

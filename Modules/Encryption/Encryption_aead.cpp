@@ -31,127 +31,6 @@ encryption_aead_context::encryption_aead_context() noexcept
     return ;
 }
 
-encryption_aead_context::encryption_aead_context(
-    const encryption_aead_context &other) noexcept
-{
-    int32_t initialize_result;
-    int32_t lock_result;
-    int32_t enable_result;
-
-    this->_context = ft_nullptr;
-    this->_cipher = ft_nullptr;
-    this->_encrypt_mode = FT_FALSE;
-    this->_initialised = FT_FALSE;
-    this->_initialization_vector_length = 0;
-    this->_mutex = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "encryption_aead_context::encryption_aead_context(const encryption_aead_context&)",
-            "source object is uninitialised");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    initialize_result = this->initialize();
-    if (initialize_result != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_result = pt_recursive_mutex_lock_if_not_null(other._mutex);
-    if (lock_result != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._context == ft_nullptr)
-    {
-        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (EVP_CIPHER_CTX_copy(this->_context, other._context) != 1)
-    {
-        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_cipher = other._cipher;
-    this->_encrypt_mode = other._encrypt_mode;
-    this->_initialised = other._initialised;
-    this->_initialization_vector_length = other._initialization_vector_length;
-    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    if (other._mutex != ft_nullptr)
-    {
-        enable_result = this->enable_thread_safety();
-        if (enable_result != FT_ERR_SUCCESS)
-        {
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return ;
-        }
-    }
-    return ;
-}
-
-encryption_aead_context::encryption_aead_context(
-    encryption_aead_context &&other) noexcept
-{
-    pt_recursive_mutex *source_mutex;
-    int32_t lock_result;
-
-    this->_context = ft_nullptr;
-    this->_cipher = ft_nullptr;
-    this->_encrypt_mode = FT_FALSE;
-    this->_initialised = FT_FALSE;
-    this->_initialization_vector_length = 0;
-    this->_mutex = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "encryption_aead_context::encryption_aead_context(encryption_aead_context&&)",
-            "source object is uninitialised");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    source_mutex = other._mutex;
-    lock_result = pt_recursive_mutex_lock_if_not_null(source_mutex);
-    if (lock_result != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_context = other._context;
-    this->_cipher = other._cipher;
-    this->_encrypt_mode = other._encrypt_mode;
-    this->_initialised = other._initialised;
-    this->_initialization_vector_length = other._initialization_vector_length;
-    this->_mutex = other._mutex;
-    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    other._context = ft_nullptr;
-    other._cipher = ft_nullptr;
-    other._encrypt_mode = FT_FALSE;
-    other._initialised = FT_FALSE;
-    other._initialization_vector_length = 0;
-    other._mutex = ft_nullptr;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)pt_recursive_mutex_unlock_if_not_null(source_mutex);
-    return ;
-}
-
 encryption_aead_context::~encryption_aead_context() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -283,6 +162,11 @@ int32_t encryption_aead_context::initialize() noexcept
 int32_t encryption_aead_context::initialize(
     const encryption_aead_context &other) noexcept
 {
+    encryption_aead_context temporary_context;
+    int32_t initialize_result;
+    int32_t lock_result;
+    int32_t enable_result;
+
     if (&other == this)
         return (FT_ERR_SUCCESS);
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
@@ -308,15 +192,51 @@ int32_t encryption_aead_context::initialize(
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
     }
+    initialize_result = temporary_context.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
     {
-        encryption_aead_context temporary_context(other);
-        if (temporary_context._initialised_state != FT_CLASS_STATE_INITIALISED)
-        {
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return (FT_ERR_INTERNAL);
-        }
-        return (static_cast<int32_t>(this->move(temporary_context)));
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (initialize_result);
     }
+    lock_result = pt_recursive_mutex_lock_if_not_null(other._mutex);
+    if (lock_result != FT_ERR_SUCCESS)
+    {
+        (void)temporary_context.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (lock_result);
+    }
+    if (other._context == ft_nullptr)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+        (void)temporary_context.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (EVP_CIPHER_CTX_copy(temporary_context._context, other._context) != 1)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+        (void)temporary_context.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_INTERNAL);
+    }
+    temporary_context._cipher = other._cipher;
+    temporary_context._encrypt_mode = other._encrypt_mode;
+    temporary_context._initialised = other._initialised;
+    temporary_context._initialization_vector_length =
+        other._initialization_vector_length;
+    if (other._mutex != ft_nullptr)
+    {
+        enable_result = temporary_context.enable_thread_safety();
+        if (enable_result != FT_ERR_SUCCESS)
+        {
+            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+            (void)temporary_context.destroy();
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (enable_result);
+        }
+    }
+    (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
+    return (static_cast<int32_t>(this->move(temporary_context)));
 }
 
 int32_t encryption_aead_context::initialize(

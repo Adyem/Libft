@@ -31,26 +31,6 @@ SocketConfig::SocketConfig() noexcept
     return ;
 }
 
-SocketConfig::SocketConfig(const SocketConfig &other) noexcept
-    : SocketConfig()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "SocketConfig::SocketConfig(copy)",
-            "source is uninitialised");
-    (void)this->initialize(other);
-    return ;
-}
-
-SocketConfig::SocketConfig(SocketConfig &&other) noexcept
-    : SocketConfig()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "SocketConfig::SocketConfig(move)",
-            "source is uninitialised");
-    (void)this->initialize(static_cast<SocketConfig &&>(other));
-    return ;
-}
-
 int32_t SocketConfig::move(SocketConfig &other) noexcept
 {
     return (this->initialize(static_cast<SocketConfig &&>(other)));

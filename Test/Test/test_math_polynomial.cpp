@@ -101,6 +101,7 @@ FT_TEST(test_polynomial_cubic_spline_tracks_curve)
     ft_vector<double> x_values;
     ft_vector<double> y_values;
     ft_cubic_spline spline;
+    ft_cubic_spline *built_spline;
     double evaluated;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, x_values.initialize());
@@ -113,7 +114,10 @@ FT_TEST(test_polynomial_cubic_spline_tracks_curve)
     y_values.push_back(1.0);
     y_values.push_back(8.0);
     y_values.push_back(27.0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, spline.initialize(ft_cubic_spline_build(x_values, y_values)));
+    built_spline = ft_cubic_spline_build(x_values, y_values);
+    FT_ASSERT(built_spline != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, spline.initialize(*built_spline));
+    delete built_spline;
     evaluated = ft_cubic_spline_evaluate(spline, 1.5);
     FT_ASSERT(std::fabs(evaluated - 3.375) < 0.01);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline.destroy());

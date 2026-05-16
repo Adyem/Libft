@@ -23,26 +23,6 @@ ft_http_server::ft_http_server() noexcept
     return ;
 }
 
-ft_http_server::ft_http_server(const ft_http_server &other) noexcept
-    : ft_http_server()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_http_server::ft_http_server(copy)",
-            "source is uninitialised");
-    (void)this->initialize(other);
-    return ;
-}
-
-ft_http_server::ft_http_server(ft_http_server &&other) noexcept
-    : ft_http_server()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_http_server::ft_http_server(move)",
-            "source is uninitialised");
-    (void)this->initialize(static_cast<ft_http_server &&>(other));
-    return ;
-}
-
 ft_http_server::~ft_http_server() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

@@ -34,8 +34,8 @@ class ft_deck : public ft_vector<ElementType*>
         int32_t disable_thread_safety();
         ft_bool is_thread_safe() const;
         ft_deck() noexcept;
-        ft_deck(const ft_deck &other) noexcept;
-        ft_deck(ft_deck &&other) noexcept;
+        ft_deck(const ft_deck &other) noexcept = delete;
+        ft_deck(ft_deck &&other) noexcept = delete;
         ~ft_deck() noexcept;
 
         ft_deck &operator=(const ft_deck&) = delete;
@@ -54,26 +54,6 @@ ft_deck<ElementType>::ft_deck() noexcept
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template<typename ElementType>
-ft_deck<ElementType>::ft_deck(const ft_deck &other) noexcept
-    : ft_vector<ElementType*>(other)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-template<typename ElementType>
-ft_deck<ElementType>::ft_deck(ft_deck &&other) noexcept
-    : ft_vector<ElementType*>(static_cast<ft_vector<ElementType*> &&>(other))
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(static_cast<ft_deck &&>(other));
     return ;
 }
 

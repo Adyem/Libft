@@ -26,8 +26,8 @@ struct api_request_metrics_guard
     void abort_lifecycle_error(const char *method_name,
         const char *reason) const noexcept;
     api_request_metrics_guard() noexcept;
-    api_request_metrics_guard(const api_request_metrics_guard &other) noexcept;
-    api_request_metrics_guard(api_request_metrics_guard &&other) noexcept;
+    api_request_metrics_guard(const api_request_metrics_guard &other) noexcept = delete;
+    api_request_metrics_guard(api_request_metrics_guard &&other) noexcept = delete;
     api_request_metrics_guard &operator=(const api_request_metrics_guard &other) = delete;
     api_request_metrics_guard &operator=(api_request_metrics_guard &&other) = delete;
     int32_t initialize(const char *host, uint16_t port,

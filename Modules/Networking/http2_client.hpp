@@ -30,8 +30,8 @@ class http2_header_field
         http2_header_field() noexcept;
         ~http2_header_field() noexcept;
 
-        http2_header_field(const http2_header_field &other) noexcept;
-        http2_header_field(http2_header_field &&other) noexcept;
+        http2_header_field(const http2_header_field &other) noexcept = delete;
+        http2_header_field(http2_header_field &&other) noexcept = delete;
         http2_header_field &operator=(const http2_header_field &other) noexcept = delete;
         http2_header_field &operator=(http2_header_field &&other) noexcept = delete;
         int32_t move(http2_header_field &other) noexcept;
@@ -85,8 +85,8 @@ class http2_frame
         http2_frame() noexcept;
         ~http2_frame() noexcept;
 
-        http2_frame(const http2_frame &other) noexcept;
-        http2_frame(http2_frame &&other) noexcept;
+        http2_frame(const http2_frame &other) noexcept = delete;
+        http2_frame(http2_frame &&other) noexcept = delete;
         http2_frame &operator=(const http2_frame &other) noexcept = delete;
         http2_frame &operator=(http2_frame &&other) noexcept = delete;
         int32_t move(http2_frame &other) noexcept;
@@ -160,8 +160,8 @@ class http2_stream_manager
 
     public:
         http2_stream_manager() noexcept;
-        http2_stream_manager(const http2_stream_manager &other) noexcept;
-        http2_stream_manager(http2_stream_manager &&other) noexcept;
+        http2_stream_manager(const http2_stream_manager &other) noexcept = delete;
+        http2_stream_manager(http2_stream_manager &&other) noexcept = delete;
         ~http2_stream_manager() noexcept;
 
         http2_stream_manager &operator=(const http2_stream_manager &other) = delete;
@@ -227,8 +227,8 @@ class http2_settings_state
 
     public:
         http2_settings_state() noexcept;
-        http2_settings_state(const http2_settings_state &other) noexcept;
-        http2_settings_state(http2_settings_state &&other) noexcept;
+        http2_settings_state(const http2_settings_state &other) noexcept = delete;
+        http2_settings_state(http2_settings_state &&other) noexcept = delete;
         ~http2_settings_state() noexcept;
         http2_settings_state &operator=(const http2_settings_state &other) noexcept = delete;
         http2_settings_state &operator=(http2_settings_state &&other) noexcept = delete;

@@ -24,8 +24,8 @@ class aabb
 
     public:
         aabb() noexcept;
-        aabb(const aabb &other) noexcept;
-        aabb(aabb &&other) noexcept;
+        aabb(const aabb &other) noexcept = delete;
+        aabb(aabb &&other) noexcept = delete;
         ~aabb() noexcept;
 
         aabb &operator=(const aabb &other) = delete;

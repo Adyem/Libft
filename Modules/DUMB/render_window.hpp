@@ -87,8 +87,8 @@ class ft_render_window
 
     public:
         ft_render_window(void);
-        ft_render_window(const ft_render_window &other);
-        ft_render_window(ft_render_window &&other);
+        ft_render_window(const ft_render_window &other) = delete;
+        ft_render_window(ft_render_window &&other) = delete;
         ft_render_window &operator=(const ft_render_window &other) = delete;
         ft_render_window &operator=(ft_render_window &&other) = delete;
         ~ft_render_window(void);

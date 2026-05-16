@@ -16,18 +16,6 @@ ft_document_source::ft_document_source() noexcept
     return ;
 }
 
-ft_document_source::ft_document_source(const ft_document_source &other) noexcept
-    : _mutex(ft_nullptr), _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_document_source::ft_document_source(ft_document_source &&other) noexcept
-    : _mutex(ft_nullptr), _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
 ft_document_source::~ft_document_source()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -134,18 +122,6 @@ void ft_document_source::unlock(ft_bool lock_acquired) const noexcept
 
 ft_document_sink::ft_document_sink() noexcept
     : _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    return ;
-}
-
-ft_document_sink::ft_document_sink(const ft_document_sink &other) noexcept
-    : _mutex(ft_nullptr), _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_document_sink::ft_document_sink(ft_document_sink &&other) noexcept
-    : _mutex(ft_nullptr), _initialised_state(other._initialised_state)
 {
     return ;
 }
@@ -257,22 +233,6 @@ void ft_document_sink::unlock(ft_bool lock_acquired) const noexcept
 ft_file_document_source::ft_file_document_source() noexcept
     : _path(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    return ;
-}
-
-ft_file_document_source::ft_file_document_source(
-    const ft_file_document_source &other) noexcept
-    : ft_document_source(other), _path(other._path), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_file_document_source::ft_file_document_source(
-    ft_file_document_source &&other) noexcept
-    : ft_document_source(other), _path(other._path), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
 {
     return ;
 }
@@ -476,22 +436,6 @@ ft_file_document_sink::ft_file_document_sink() noexcept
     return ;
 }
 
-ft_file_document_sink::ft_file_document_sink(
-    const ft_file_document_sink &other) noexcept
-    : ft_document_sink(other), _path(other._path), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_file_document_sink::ft_file_document_sink(
-    ft_file_document_sink &&other) noexcept
-    : ft_document_sink(other), _path(other._path), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
 ft_file_document_sink::~ft_file_document_sink()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -654,24 +598,6 @@ ft_memory_document_source::ft_memory_document_source() noexcept
     return ;
 }
 
-ft_memory_document_source::ft_memory_document_source(
-    const ft_memory_document_source &other) noexcept
-    : ft_document_source(other), _data_pointer(other._data_pointer),
-      _data_length(other._data_length), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_memory_document_source::ft_memory_document_source(
-    ft_memory_document_source &&other) noexcept
-    : ft_document_source(other), _data_pointer(other._data_pointer),
-      _data_length(other._data_length), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    return ;
-}
-
 ft_memory_document_source::~ft_memory_document_source()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -825,22 +751,6 @@ ft_memory_document_sink::ft_memory_document_sink() noexcept
     return ;
 }
 
-ft_memory_document_sink::ft_memory_document_sink(
-    const ft_memory_document_sink &other) noexcept
-    : ft_document_sink(other), _storage_pointer(other._storage_pointer), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_memory_document_sink::ft_memory_document_sink(
-    ft_memory_document_sink &&other) noexcept
-    : ft_document_sink(other), _storage_pointer(other._storage_pointer), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
 ft_memory_document_sink::~ft_memory_document_sink()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -984,24 +894,6 @@ int32_t ft_memory_document_sink::write_all(const char *data_pointer, ft_size_t d
 ft_http_document_source::ft_http_document_source() noexcept
     : _host(), _path(), _port(), _use_ssl(false), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    return ;
-}
-
-ft_http_document_source::ft_http_document_source(
-    const ft_http_document_source &other) noexcept
-    : ft_document_source(other), _host(other._host), _path(other._path), _port(other._port),
-      _use_ssl(other._use_ssl), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_http_document_source::ft_http_document_source(
-    ft_http_document_source &&other) noexcept
-    : ft_document_source(other), _host(other._host), _path(other._path), _port(other._port),
-      _use_ssl(other._use_ssl), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
 {
     return ;
 }
@@ -1193,24 +1085,6 @@ int32_t ft_http_document_source::read_all(ft_string &output)
 ft_http_document_sink::ft_http_document_sink() noexcept
     : _host(), _path(), _port(), _use_ssl(false), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    return ;
-}
-
-ft_http_document_sink::ft_http_document_sink(
-    const ft_http_document_sink &other) noexcept
-    : ft_document_sink(other), _host(other._host), _path(other._path), _port(other._port),
-      _use_ssl(other._use_ssl), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_http_document_sink::ft_http_document_sink(
-    ft_http_document_sink &&other) noexcept
-    : ft_document_sink(other), _host(other._host), _path(other._path), _port(other._port),
-      _use_ssl(other._use_ssl), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
 {
     return ;
 }

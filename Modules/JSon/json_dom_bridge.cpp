@@ -217,11 +217,16 @@ static int32_t json_dom_apply_item(ft_dom_node *item_node, json_group *group, js
         document.set_manual_error(type_initialize_error);
         return (FT_ERR_INVALID_STATE);
     }
-    ft_string type_attribute = item_node->get_attribute(type_key);
+    ft_string *type_attribute = item_node->get_attribute(type_key);
     ft_bool has_type_attribute;
 
-    has_type_attribute = (type_attribute.size() > 0);
-    if (has_type_attribute && type_attribute == "big_number")
+    if (type_attribute == ft_nullptr)
+    {
+        document.set_manual_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    has_type_attribute = (type_attribute->size() > 0);
+    if (has_type_attribute && *type_attribute == "big_number")
     {
         ft_big_number big_number_value;
         int32_t big_number_error;
@@ -230,6 +235,7 @@ static int32_t json_dom_apply_item(ft_dom_node *item_node, json_group *group, js
         big_number_initialize_error = big_number_value.initialize();
         if (big_number_initialize_error != FT_ERR_SUCCESS)
         {
+            delete type_attribute;
             document.set_manual_error(big_number_initialize_error);
             return (FT_ERR_INVALID_STATE);
         }
@@ -237,6 +243,7 @@ static int32_t json_dom_apply_item(ft_dom_node *item_node, json_group *group, js
         big_number_error = big_number_value.get_error();
         if (big_number_error != FT_ERR_SUCCESS)
         {
+            delete type_attribute;
             document.set_manual_error(big_number_error);
             return (FT_ERR_INVALID_STATE);
         }
@@ -244,10 +251,15 @@ static int32_t json_dom_apply_item(ft_dom_node *item_node, json_group *group, js
 
         json_item_pointer = document.create_item(item_key, big_number_value);
         if (!json_item_pointer)
+        {
+            delete type_attribute;
             return (FT_ERR_INVALID_STATE);
+        }
         document.add_item(group, json_item_pointer);
+        delete type_attribute;
         return (FT_ERR_SUCCESS);
     }
+    delete type_attribute;
     json_item *json_item_pointer;
 
     json_item_pointer = document.create_item(item_key, item_value);

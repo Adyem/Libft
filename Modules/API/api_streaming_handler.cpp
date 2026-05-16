@@ -12,46 +12,6 @@ api_streaming_handler::api_streaming_handler() noexcept
     return ;
 }
 
-api_streaming_handler::api_streaming_handler(
-    const api_streaming_handler &other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
-      _user_data(ft_nullptr), _mutex(ft_nullptr)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_streaming_handler::api_streaming_handler(copy)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-api_streaming_handler::api_streaming_handler(
-    api_streaming_handler &&other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
-      _user_data(ft_nullptr), _mutex(ft_nullptr)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_streaming_handler::api_streaming_handler(move)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 api_streaming_handler::~api_streaming_handler()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

@@ -16,40 +16,6 @@ sphere::sphere() noexcept
     return ;
 }
 
-sphere::sphere(const sphere &other) noexcept
-    : _center_x(0.0)
-    , _center_y(0.0)
-    , _center_z(0.0)
-    , _radius(0.0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-sphere::sphere(sphere &&other) noexcept
-    : _center_x(0.0)
-    , _center_y(0.0)
-    , _center_z(0.0)
-    , _radius(0.0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t initialize_error;
-
-    initialize_error = this->initialize(static_cast<sphere &&>(other));
-    if (initialize_error != FT_ERR_SUCCESS
-        && this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t sphere::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

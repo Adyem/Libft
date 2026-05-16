@@ -228,26 +228,6 @@ ft_socket::ft_socket() noexcept
     return ;
 }
 
-ft_socket::ft_socket(const ft_socket &other) noexcept
-    : ft_socket()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_socket::ft_socket(copy)",
-            "source is uninitialised");
-    (void)this->initialize(other);
-    return ;
-}
-
-ft_socket::ft_socket(ft_socket &&other) noexcept
-    : ft_socket()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "ft_socket::ft_socket(move)",
-            "source is uninitialised");
-    (void)this->initialize(static_cast<ft_socket &&>(other));
-    return ;
-}
-
 ft_socket::~ft_socket() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

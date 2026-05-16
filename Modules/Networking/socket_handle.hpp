@@ -19,8 +19,8 @@ class ft_socket_handle
 
     public:
         ft_socket_handle() noexcept;
-        ft_socket_handle(const ft_socket_handle &other) noexcept;
-        ft_socket_handle(ft_socket_handle &&other) noexcept;
+        ft_socket_handle(const ft_socket_handle &other) noexcept = delete;
+        ft_socket_handle(ft_socket_handle &&other) noexcept = delete;
         ~ft_socket_handle() noexcept;
         ft_socket_handle &operator=(const ft_socket_handle &other) = delete;
         ft_socket_handle &operator=(ft_socket_handle &&other) noexcept = delete;

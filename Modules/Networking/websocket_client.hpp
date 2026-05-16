@@ -24,8 +24,8 @@ class ft_websocket_client
         int32_t receive_text_locked(ft_string &message);
     public:
         ft_websocket_client() noexcept;
-        ft_websocket_client(const ft_websocket_client &other) noexcept;
-        ft_websocket_client(ft_websocket_client &&other) noexcept;
+        ft_websocket_client(const ft_websocket_client &other) noexcept = delete;
+        ft_websocket_client(ft_websocket_client &&other) noexcept = delete;
         ~ft_websocket_client() noexcept;
         ft_websocket_client &operator=(const ft_websocket_client &other) = delete;
         ft_websocket_client &operator=(ft_websocket_client &&other) noexcept = delete;

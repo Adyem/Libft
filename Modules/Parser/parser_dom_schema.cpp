@@ -25,22 +25,6 @@ ft_dom_schema::ft_dom_schema() noexcept
     return ;
 }
 
-ft_dom_schema::ft_dom_schema(const ft_dom_schema &other) noexcept
-    : _rules(other._rules), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    _last_error = other._last_error;
-    return ;
-}
-
-ft_dom_schema::ft_dom_schema(ft_dom_schema &&other) noexcept
-    : _rules(other._rules), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    _last_error = other._last_error;
-    return ;
-}
-
 ft_dom_schema::~ft_dom_schema() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

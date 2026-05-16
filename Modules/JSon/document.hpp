@@ -24,8 +24,8 @@ class json_document
 
     public:
         json_document() noexcept;
-        json_document(const json_document &other) noexcept;
-        json_document(json_document &&other) noexcept;
+        json_document(const json_document &other) noexcept = delete;
+        json_document(json_document &&other) noexcept = delete;
         ~json_document() noexcept;
 
         json_document &operator=(const json_document &) = delete;

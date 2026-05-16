@@ -19,60 +19,6 @@ api_connection_pool_handle::api_connection_pool_handle()
     return ;
 }
 
-api_connection_pool_handle::api_connection_pool_handle(
-    const api_connection_pool_handle &other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _mutex(ft_nullptr), key(), socket(),
-      security_mode(api_connection_security_mode::PLAIN),
-      has_socket(FT_FALSE), from_pool(FT_FALSE), should_store(FT_FALSE),
-      negotiated_http2(FT_FALSE), plain_socket_timed_out(FT_FALSE),
-      plain_socket_validated(FT_FALSE)
-{
-#if NETWORKING_HAS_OPENSSL
-    this->tls_session = ft_nullptr;
-    this->tls_context = ft_nullptr;
-#endif
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_connection_pool_handle::api_connection_pool_handle(copy)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-api_connection_pool_handle::api_connection_pool_handle(
-    api_connection_pool_handle &&other) noexcept
-    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _mutex(ft_nullptr), key(), socket(),
-      security_mode(api_connection_security_mode::PLAIN),
-      has_socket(FT_FALSE), from_pool(FT_FALSE), should_store(FT_FALSE),
-      negotiated_http2(FT_FALSE), plain_socket_timed_out(FT_FALSE),
-      plain_socket_validated(FT_FALSE)
-{
-#if NETWORKING_HAS_OPENSSL
-    this->tls_session = ft_nullptr;
-    this->tls_context = ft_nullptr;
-#endif
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_connection_pool_handle::api_connection_pool_handle(move)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 api_connection_pool_handle::~api_connection_pool_handle()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

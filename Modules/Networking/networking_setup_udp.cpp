@@ -88,28 +88,6 @@ udp_socket::udp_socket() noexcept
     return ;
 }
 
-udp_socket::udp_socket(const udp_socket &other) noexcept
-    : udp_socket()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "udp_socket::udp_socket(copy)", "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-udp_socket::udp_socket(udp_socket &&other) noexcept
-    : udp_socket()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "udp_socket::udp_socket(move)", "source is uninitialised");
-    if (this->initialize(static_cast<udp_socket &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 udp_socket::~udp_socket() noexcept
 {
     (void)this->destroy();

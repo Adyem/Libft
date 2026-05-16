@@ -149,7 +149,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `api_connection_pool_handle::api_connection_pool_handle() : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
-  - `api_connection_pool_handle::api_connection_pool_handle(api_connection_pool_handle &&other) : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
   - `api_connection_pool_handle::~api_connection_pool_handle()`
   - `int api_connection_pool_handle::enable_thread_safety()`
   - `bool api_connection_pool_handle::is_thread_safe() const`
@@ -503,8 +502,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void api_retry_policy::set_error(int error) const noexcept`
   - `int api_retry_policy::lock_pair(const api_retry_policy &first, const api_retry_policy &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept`
   - `api_retry_policy::api_retry_policy() noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
-  - `api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
-  - `api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `api_retry_policy::~api_retry_policy()`
   - `void api_retry_policy::reset() noexcept`
   - `void api_retry_policy::set_max_attempts(int value) noexcept`
@@ -533,8 +530,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void api_streaming_handler::set_error(int error) const noexcept`
   - `int api_streaming_handler::lock_pair(const api_streaming_handler &first, const api_streaming_handler &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept`
   - `api_streaming_handler::api_streaming_handler() noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
-  - `api_streaming_handler::api_streaming_handler(const api_streaming_handler &other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
-  - `api_streaming_handler::api_streaming_handler(api_streaming_handler &&other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `api_streaming_handler::~api_streaming_handler()`
   - `void api_streaming_handler::reset() noexcept`
   - `void api_streaming_handler::set_headers_callback(api_stream_headers_callback callback) noexcept`
@@ -7050,7 +7045,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_logger::get_remote_health(s_log_remote_health *statuses, size_t capacity, size_t *count) noexcept`
   - `int ft_logger::push_context(const s_log_field *fields, size_t field_count) noexcept`
   - `void ft_logger::pop_context(size_t field_count) noexcept`
-  - `ft_log_context_guard ft_logger::make_context_guard(const s_log_field *fields, size_t field_count) noexcept`
+  - `ft_log_context_guard *ft_logger::make_context_guard(const s_log_field *fields, size_t field_count) noexcept`
   - `int ft_logger::get_error() const noexcept`
   - `const char *ft_logger::get_error_str() const noexcept`
   - `void ft_logger::debug(const char *fmt, ...) noexcept`
@@ -7164,7 +7159,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int get_remote_health(s_log_remote_health *statuses, size_t capacity, size_t *count) noexcept`
   - `int push_context(const s_log_field *fields, size_t field_count) noexcept`
   - `void pop_context(size_t field_count) noexcept`
-  - `ft_log_context_guard make_context_guard(const s_log_field *fields, size_t field_count) noexcept`
+  - `ft_log_context_guard *make_context_guard(const s_log_field *fields, size_t field_count) noexcept`
   - `int get_error() const noexcept`
   - `const char *get_error_str() const noexcept`
   - `void debug(const char *fmt, ...) noexcept`
@@ -7317,7 +7312,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_log_context_guard::ft_log_context_guard() noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESS)`
   - `ft_log_context_guard::ft_log_context_guard(const s_log_field *fields, size_t field_count) noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESS)`
   - `ft_log_context_guard::~ft_log_context_guard() noexcept`
-  - `ft_log_context_guard::ft_log_context_guard(ft_log_context_guard &&other) noexcept : _pushed_count(other._pushed_count), _active(other._active), _error_code(other._error_code)`
   - `void ft_log_context_guard::set_error(int error_code) const`
   - `void ft_log_context_guard::release() noexcept`
   - `bool ft_log_context_guard::is_active() const noexcept`
@@ -8235,7 +8229,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int math_bezier_evaluate(const ft_vector<double> &control_points, double parameter, double &result) noexcept`
   - `static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control_points, ft_vector<double> &x_coordinates, ft_vector<double> &y_coordinates) noexcept`
   - `int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points, double parameter, vector2 &result) noexcept`
-  - `ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept`
+  - `ft_cubic_spline *ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept`
   - `double ft_cubic_spline_evaluate(const ft_cubic_spline &spline, double x) noexcept`
   - `static int math_integrate_trapezoidal_step(math_unary_function function, void *user_data, double lower_bound, double upper_bound, size_t subdivisions, double &result) noexcept`
   - `int math_integrate_trapezoidal(math_unary_function function, void *user_data, double lower_bound, double upper_bound, size_t subdivisions, double &result) noexcept`
@@ -8256,7 +8250,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values, const ft_vector<double> &y_values, double x, double &result) noexcept`
   - `int math_bezier_evaluate(const ft_vector<double> &control_points, double parameter, double &result) noexcept`
   - `int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points, double parameter, vector2 &result) noexcept`
-  - `ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept`
+  - `ft_cubic_spline *ft_cubic_spline_build(const ft_vector<double> &x_values, const ft_vector<double> &y_values) noexcept`
   - `double ft_cubic_spline_evaluate(const ft_cubic_spline &spline, double x) noexcept`
   - `int math_integrate_trapezoidal(math_unary_function function, void *user_data, double lower_bound, double upper_bound, size_t subdivisions, double &result) noexcept`
   - `int math_integrate_simpson(math_unary_function function, void *user_data, double lower_bound, double upper_bound, double tolerance, double &result) noexcept`
@@ -10081,7 +10075,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_dom_node::add_attribute(const ft_string &key, const ft_string &value) noexcept`
   - `int ft_dom_node::add_attribute(const char *key, const char *value) noexcept`
   - `bool ft_dom_node::has_attribute(const ft_string &key) const noexcept`
-  - `ft_string ft_dom_node::get_attribute(const ft_string &key) const noexcept`
+  - `ft_string *ft_dom_node::get_attribute(const ft_string &key) const noexcept`
   - `const ft_vector<ft_string> &ft_dom_node::get_attribute_keys() const noexcept`
   - `const ft_vector<ft_string> &ft_dom_node::get_attribute_values() const noexcept`
   - `ft_dom_node *ft_dom_node::find_child(const ft_string &name) const noexcept`
@@ -10150,7 +10144,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int add_attribute(const ft_string &key, const ft_string &value) noexcept`
   - `int add_attribute(const char *key, const char *value) noexcept`
   - `bool has_attribute(const ft_string &key) const noexcept`
-  - `ft_string get_attribute(const ft_string &key) const noexcept`
+  - `ft_string *get_attribute(const ft_string &key) const noexcept`
   - `const ft_vector<ft_string> &get_attribute_keys() const noexcept`
   - `const ft_vector<ft_string> &get_attribute_values() const noexcept`
   - `ft_dom_node *find_child(const ft_string &name) const noexcept`

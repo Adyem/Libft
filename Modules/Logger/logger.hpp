@@ -150,8 +150,8 @@ class ft_log_context_guard
 
     public:
         ft_log_context_guard() noexcept;
-        ft_log_context_guard(const ft_log_context_guard &other) noexcept;
-        ft_log_context_guard(ft_log_context_guard &&other) noexcept;
+        ft_log_context_guard(const ft_log_context_guard &other) noexcept = delete;
+        ft_log_context_guard(ft_log_context_guard &&other) noexcept = delete;
         ~ft_log_context_guard() noexcept;
 
         int32_t initialize() noexcept;
@@ -220,8 +220,8 @@ class ft_logger
 
     public:
         ft_logger() noexcept;
-        ft_logger(const ft_logger &other) noexcept;
-        ft_logger(ft_logger &&other) noexcept;
+        ft_logger(const ft_logger &other) noexcept = delete;
+        ft_logger(ft_logger &&other) noexcept = delete;
         ~ft_logger() noexcept;
 
         ft_logger &operator=(const ft_logger&) = delete;
@@ -268,7 +268,7 @@ class ft_logger
                                ft_size_t capacity, ft_size_t *entry_count) noexcept;
         int32_t  push_context(const s_log_field *fields, ft_size_t field_count) noexcept;
         void pop_context(ft_size_t field_count) noexcept;
-        ft_log_context_guard make_context_guard(const s_log_field *fields,
+        ft_log_context_guard *make_context_guard(const s_log_field *fields,
                 ft_size_t field_count) noexcept;
         int32_t  get_error() const noexcept;
         const char *get_error_str() const noexcept;

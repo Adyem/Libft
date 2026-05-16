@@ -65,8 +65,8 @@ class quic_experimental_session
     public:
         quic_experimental_session() noexcept;
         ~quic_experimental_session() noexcept;
-        quic_experimental_session(const quic_experimental_session &other) noexcept;
-        quic_experimental_session(quic_experimental_session &&other) noexcept;
+        quic_experimental_session(const quic_experimental_session &other) noexcept = delete;
+        quic_experimental_session(quic_experimental_session &&other) noexcept = delete;
         quic_experimental_session &operator=(const quic_experimental_session &other) = delete;
         quic_experimental_session &operator=(quic_experimental_session &&other) noexcept = delete;
         int32_t move(quic_experimental_session &other) noexcept;

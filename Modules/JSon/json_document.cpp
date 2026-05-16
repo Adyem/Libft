@@ -141,26 +141,6 @@ json_document::json_document() noexcept
     return ;
 }
 
-json_document::json_document(const json_document &other) noexcept
-    : _groups(ft_nullptr)
-    , _error_code(FT_ERR_SUCCESS)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-json_document::json_document(json_document &&other) noexcept
-    : _groups(ft_nullptr)
-    , _error_code(FT_ERR_SUCCESS)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(static_cast<json_document &&>(other));
-    return ;
-}
-
 json_document::~json_document() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

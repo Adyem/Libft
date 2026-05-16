@@ -37,9 +37,9 @@ class api_streaming_handler
 
     public:
         api_streaming_handler() noexcept;
-        api_streaming_handler(const api_streaming_handler &other) noexcept;
+        api_streaming_handler(const api_streaming_handler &other) noexcept = delete;
         api_streaming_handler &operator=(const api_streaming_handler &other) noexcept = delete;
-        api_streaming_handler(api_streaming_handler &&other) noexcept;
+        api_streaming_handler(api_streaming_handler &&other) noexcept = delete;
         api_streaming_handler &operator=(api_streaming_handler &&other) noexcept = delete;
         ~api_streaming_handler();
         int32_t initialize() noexcept;
@@ -89,9 +89,9 @@ class api_retry_policy
 
     public:
         api_retry_policy() noexcept;
-        api_retry_policy(const api_retry_policy &other) noexcept;
+        api_retry_policy(const api_retry_policy &other) noexcept = delete;
         api_retry_policy &operator=(const api_retry_policy &other) noexcept = delete;
-        api_retry_policy(api_retry_policy &&other) noexcept;
+        api_retry_policy(api_retry_policy &&other) noexcept = delete;
         api_retry_policy &operator=(api_retry_policy &&other) noexcept = delete;
         ~api_retry_policy();
         int32_t initialize() noexcept;

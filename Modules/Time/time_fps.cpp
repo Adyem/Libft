@@ -20,44 +20,6 @@ time_fps::time_fps(void) noexcept
     return ;
 }
 
-time_fps::time_fps(const time_fps &other) noexcept
-{
-    this->_mutex = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    this->_frame_duration_ms = 0.0;
-    this->_frames_per_second = static_cast<int64_t>(0);
-    this->_last_frame_time = std::chrono::steady_clock::time_point();
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "time_fps::time_fps(copy)", "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-time_fps::time_fps(time_fps &&other) noexcept
-{
-    this->_mutex = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    this->_frame_duration_ms = 0.0;
-    this->_frames_per_second = static_cast<int64_t>(0);
-    this->_last_frame_time = std::chrono::steady_clock::time_point();
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state, "time_fps::time_fps(move)", "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(static_cast<time_fps &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 time_fps::~time_fps() noexcept
 {
     (void)this->destroy();

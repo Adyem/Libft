@@ -13,24 +13,6 @@ ft_file_watch::ft_file_watch()
     return ;
 }
 
-ft_file_watch::ft_file_watch(const ft_file_watch &other)
-    : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(),
-      _running(FT_FALSE), _stopped(FT_TRUE), _mutex(ft_nullptr), _state(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(other);
-    return ;
-}
-
-ft_file_watch::ft_file_watch(ft_file_watch &&other)
-    : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(),
-      _running(FT_FALSE), _stopped(FT_TRUE), _mutex(ft_nullptr), _state(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    (void)this->initialize(ft_move(other));
-    return ;
-}
-
 ft_file_watch::~ft_file_watch()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

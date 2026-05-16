@@ -50,24 +50,6 @@ ft_dom_validation_report::ft_dom_validation_report() noexcept
     return ;
 }
 
-ft_dom_validation_report::ft_dom_validation_report(
-    const ft_dom_validation_report &other) noexcept
-    : _valid(other._valid), _errors(other._errors), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    _last_error = other._last_error;
-    return ;
-}
-
-ft_dom_validation_report::ft_dom_validation_report(
-    ft_dom_validation_report &&other) noexcept
-    : _valid(other._valid), _errors(other._errors), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    _last_error = other._last_error;
-    return ;
-}
-
 
 int32_t ft_dom_validation_report::initialize() noexcept
 {

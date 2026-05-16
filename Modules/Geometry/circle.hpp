@@ -23,8 +23,8 @@ class circle
 
     public:
         circle() noexcept;
-        circle(const circle &other) noexcept;
-        circle(circle &&other) noexcept;
+        circle(const circle &other) noexcept = delete;
+        circle(circle &&other) noexcept = delete;
         ~circle() noexcept;
 
         circle &operator=(const circle &other) = delete;

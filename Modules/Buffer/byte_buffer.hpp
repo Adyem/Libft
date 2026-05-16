@@ -32,8 +32,8 @@ class ft_byte_buffer
 
     public:
         ft_byte_buffer() noexcept;
-        ft_byte_buffer(const ft_byte_buffer &other) noexcept;
-        ft_byte_buffer(ft_byte_buffer &&other) noexcept;
+        ft_byte_buffer(const ft_byte_buffer &other) noexcept = delete;
+        ft_byte_buffer(ft_byte_buffer &&other) noexcept = delete;
         ~ft_byte_buffer() noexcept;
 
         ft_byte_buffer &operator=(const ft_byte_buffer &other) noexcept = delete;

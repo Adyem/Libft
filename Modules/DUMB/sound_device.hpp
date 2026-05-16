@@ -30,8 +30,8 @@ class ft_sound_device
 
     public:
         ft_sound_device(void);
-        ft_sound_device(const ft_sound_device &other);
-        ft_sound_device(ft_sound_device &&other);
+        ft_sound_device(const ft_sound_device &other) = delete;
+        ft_sound_device(ft_sound_device &&other) = delete;
         ft_sound_device &operator=(const ft_sound_device &other) = delete;
         ft_sound_device &operator=(ft_sound_device &&other) = delete;
         virtual ~ft_sound_device(void);

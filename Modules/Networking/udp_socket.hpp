@@ -34,8 +34,8 @@ class udp_socket
 
     public:
         udp_socket() noexcept;
-        udp_socket(const udp_socket &other) noexcept;
-        udp_socket(udp_socket &&other) noexcept;
+        udp_socket(const udp_socket &other) noexcept = delete;
+        udp_socket(udp_socket &&other) noexcept = delete;
         ~udp_socket() noexcept;
         udp_socket &operator=(const udp_socket &other) = delete;
         udp_socket &operator=(udp_socket &&other) noexcept = delete;

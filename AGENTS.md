@@ -35,11 +35,12 @@ For template classes, the top section of the header must contain only the class 
 Template member function bodies must not be defined inside the class declaration; they must be defined out-of-class in a separate section below the class declaration in the same header.
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a default constructor and destructor. Do not use = default; explicitly define the bodies.
-All classes must define copy and move constructors.
-Specialized constructors are forbidden by default; keep only default, copy, and move constructors unless a module-specific exception is explicitly documented.
+Lifecycle classes must explicitly delete copy and move constructors and must not define copy or move constructor bodies unless a module-specific exception is explicitly documented.
+Specialized constructors are forbidden by default; keep only the default constructor unless a module-specific exception is explicitly documented.
 When a specialized construction flow is required by exception, route fallible setup through `initialize(...)` instead of performing fallible work directly in that constructor body.
 All classes must delete copy and move assignment operators by default. Only add assignment operators when a class explicitly needs assignment semantics and document that requirement. Operator overloading alone does not justify adding assignment operators.
 Lifecycle classes must expose a dedicated explicit move helper named exactly `move` (for example `uint32_t move(ft_string& other) noexcept`) and keep this name consistent across classes.
+Functions must not return lifecycle class objects by value. When a function needs to create and return a lifecycle class instance, it must allocate the object on the heap, initialize it, and return an owning pointer or an explicitly documented ownership wrapper. If a raw pointer to a class is returned, any error path must destroy and free partial state and return a null pointer (`ft_nullptr` / `nullptr`).
 
 Assignment operator exceptions:
 - `ft_string`: copy/move assignment is allowed for required string value semantics used by stream/conversion APIs.
@@ -78,8 +79,8 @@ class ft_example
 
     public:
         ft_example() noexcept;
-        ft_example(const ft_example &other) noexcept;
-        ft_example(ft_example &&other) noexcept;
+        ft_example(const ft_example &other) noexcept = delete;
+        ft_example(ft_example &&other) noexcept = delete;
         ~ft_example() noexcept;
 
         ft_example &operator=(const ft_example &other) noexcept = delete;
@@ -167,7 +168,7 @@ Shared lifecycle abort helper:
 
 Initialize / destroy / destructor rules:
 - `initialize()` aborts only when called while already initialised (`state == 2`) unless a class explicitly documents a different contract.
-- Copy/move style initialization (`initialize(const T&)`, `initialize(T&&)`, copy/move constructors, explicit `move(...)`, and any explicitly-enabled copy/move assignment) must follow:
+- Copy/move style initialization (`initialize(const T&)`, `initialize(T&&)`, explicit `move(...)`, and any explicitly-enabled copy/move assignment) must follow:
   1. Source must be initialised (`state == 2`) or lifecycle abort helper is invoked.
   2. `this == &other` is a no-op success.
   3. Destination may be uninitialised, destroyed, or initialised.
@@ -187,17 +188,16 @@ Copy/move safety rules:
 - Only after success, apply non-failing state swaps/commits.
 - Source remains unchanged until the failing phase is complete.
 - On any copy/move failure (allocation failure, mutex/setup failure, or any reported sub-call failure), destination must be left in destroyed state (`state = 1`).
-- For constructor-based copy/move, lifecycle state is the primary success/failure signal:
-  - success => destination `_initialised_state == FT_CLASS_STATE_INITIALISED`
-  - failure => destination `_initialised_state == FT_CLASS_STATE_DESTROYED`
-  - Copy and move constructors must never leave the destination in uninitialised state on failure; failure must result in destroyed state (`_initialised_state == FT_CLASS_STATE_DESTROYED`).
-  - Copy/move constructors must abort only for invalid source lifecycle misuse (`other._initialised_state == FT_CLASS_STATE_UNINITIALISED`), not for ordinary operational failures.
-  - Destroyed-state propagation is intentional for constructors: copy-constructing or move-constructing from a destroyed source (`state = FT_CLASS_STATE_DESTROYED`) is valid and must produce a destroyed destination (`state = FT_CLASS_STATE_DESTROYED`).
-  - Example: if `other._initialised_state == FT_CLASS_STATE_DESTROYED`, then `ft_example copied(other);` must succeed without aborting and leave `copied._initialised_state == FT_CLASS_STATE_DESTROYED`.
+- Lifecycle classes must not use constructor-based copy/move. Use explicit `initialize(const T&)`, `initialize(T&&)`, or `move(...)` flows so failures can be reported by return code instead of hidden constructor state.
 - Source state handling:
   - Source in uninitialised state (`state = FT_CLASS_STATE_UNINITIALISED`) is lifecycle misuse and must trigger lifecycle abort behavior.
   - Source in destroyed state (`state = FT_CLASS_STATE_DESTROYED`) is allowed for copy/move propagation paths; destination must end in destroyed state as well.
   - Source `_last_error` state is propagated as part of copy/move behavior when the class exposes `_last_error`.
+
+Lifecycle return ownership:
+- Lifecycle classes may still be declared as local variables inside functions while constructing or testing state, but lifecycle objects must not cross function boundaries by value.
+- Public and internal functions that previously returned a lifecycle class by value must be migrated to return a heap-allocated instance (`T *`) or a project ownership wrapper whose ownership contract is explicit in the API.
+- Heap-returning lifecycle factory functions must leave no initialized heap object behind on failure. On any error or initialization failure, call `destroy()` when needed, release the allocation, and return a null pointer (`ft_nullptr` / `nullptr`).
 
 Sub-object initialization:
 - When a class initializes multiple sub-objects, it must call `initialize(...)` on each required sub-object.

@@ -49,8 +49,8 @@ class ft_socket
 
     public:
         ft_socket() noexcept;
-        ft_socket(const ft_socket &other) noexcept;
-        ft_socket(ft_socket &&other) noexcept;
+        ft_socket(const ft_socket &other) noexcept = delete;
+        ft_socket(ft_socket &&other) noexcept = delete;
         ~ft_socket() noexcept;
         ft_socket &operator=(ft_socket &&other) noexcept = delete;
         int32_t move(ft_socket &other) noexcept;

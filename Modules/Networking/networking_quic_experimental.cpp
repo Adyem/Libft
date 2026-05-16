@@ -75,30 +75,6 @@ quic_experimental_session::~quic_experimental_session() noexcept
     return ;
 }
 
-quic_experimental_session::quic_experimental_session(const quic_experimental_session &other) noexcept
-    : quic_experimental_session()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "quic_experimental_session::quic_experimental_session(copy)",
-            "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-quic_experimental_session::quic_experimental_session(quic_experimental_session &&other) noexcept
-    : quic_experimental_session()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "quic_experimental_session::quic_experimental_session(move)",
-            "source is uninitialised");
-    if (this->initialize(static_cast<quic_experimental_session &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t quic_experimental_session::initialize() noexcept
 {
     int32_t vector_initialise_error;

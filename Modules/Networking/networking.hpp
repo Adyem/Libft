@@ -136,8 +136,8 @@ class SocketConfig
         char _multicast_interface[46];
 
         SocketConfig() noexcept;
-        SocketConfig(const SocketConfig& other) noexcept;
-        SocketConfig(SocketConfig&& other) noexcept;
+        SocketConfig(const SocketConfig& other) noexcept = delete;
+        SocketConfig(SocketConfig&& other) noexcept = delete;
         ~SocketConfig() noexcept;
 
         SocketConfig& operator=(const SocketConfig& other) noexcept = delete;

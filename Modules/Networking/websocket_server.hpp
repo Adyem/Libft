@@ -41,8 +41,8 @@ class ft_websocket_server
     public:
         ft_websocket_server() noexcept;
         ~ft_websocket_server() noexcept;
-        ft_websocket_server(const ft_websocket_server &other) noexcept;
-        ft_websocket_server(ft_websocket_server &&other) noexcept;
+        ft_websocket_server(const ft_websocket_server &other) noexcept = delete;
+        ft_websocket_server(ft_websocket_server &&other) noexcept = delete;
         ft_websocket_server &operator=(const ft_websocket_server &other) = delete;
         ft_websocket_server &operator=(ft_websocket_server &&other) noexcept = delete;
         int32_t move(ft_websocket_server &other) noexcept;

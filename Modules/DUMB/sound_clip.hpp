@@ -25,8 +25,8 @@ class ft_sound_clip
 
     public:
         ft_sound_clip(void);
-        ft_sound_clip(const ft_sound_clip &other);
-        ft_sound_clip(ft_sound_clip &&other);
+        ft_sound_clip(const ft_sound_clip &other) = delete;
+        ft_sound_clip(ft_sound_clip &&other) = delete;
         ft_sound_clip &operator=(const ft_sound_clip &other) = delete;
         ft_sound_clip &operator=(ft_sound_clip &&other) = delete;
         ~ft_sound_clip(void);

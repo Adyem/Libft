@@ -56,9 +56,9 @@ class api_tls_client
 
     public:
         api_tls_client() noexcept;
-        api_tls_client(const api_tls_client &other) noexcept;
+        api_tls_client(const api_tls_client &other) noexcept = delete;
         api_tls_client &operator=(const api_tls_client &other) = delete;
-        api_tls_client(api_tls_client &&other) noexcept;
+        api_tls_client(api_tls_client &&other) noexcept = delete;
         api_tls_client &operator=(api_tls_client &&other) = delete;
         ~api_tls_client();
         int32_t initialize() noexcept;

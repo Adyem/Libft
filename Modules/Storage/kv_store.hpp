@@ -61,8 +61,8 @@ class kv_store_entry
         mutable pt_recursive_mutex *_mutex;
     public:
         kv_store_entry() noexcept;
-        kv_store_entry(const kv_store_entry &other) noexcept;
-        kv_store_entry(kv_store_entry &&other) noexcept;
+        kv_store_entry(const kv_store_entry &other) noexcept = delete;
+        kv_store_entry(kv_store_entry &&other) noexcept = delete;
         kv_store_entry &operator=(const kv_store_entry &other) noexcept = delete;
         kv_store_entry &operator=(kv_store_entry &&other) noexcept = delete;
         ~kv_store_entry() noexcept;
@@ -183,8 +183,8 @@ class kv_store
 
     public:
         kv_store() noexcept;
-        kv_store(const kv_store &other) noexcept;
-        kv_store(kv_store &&other) noexcept;
+        kv_store(const kv_store &other) noexcept = delete;
+        kv_store(kv_store &&other) noexcept = delete;
         kv_store &operator=(const kv_store &other) noexcept = delete;
         kv_store &operator=(kv_store &&other) noexcept = delete;
         ~kv_store() noexcept;

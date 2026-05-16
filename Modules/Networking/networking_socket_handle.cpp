@@ -39,30 +39,6 @@ ft_socket_handle::ft_socket_handle() noexcept
     return ;
 }
 
-ft_socket_handle::ft_socket_handle(const ft_socket_handle &other) noexcept
-    : ft_socket_handle()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_socket_handle::ft_socket_handle(copy)",
-            "source is uninitialised");
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_socket_handle::ft_socket_handle(ft_socket_handle &&other) noexcept
-    : ft_socket_handle()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_socket_handle::ft_socket_handle(move)",
-            "source is uninitialised");
-    if (this->initialize(static_cast<ft_socket_handle &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_socket_handle::~ft_socket_handle() noexcept
 {
     (void)this->destroy();

@@ -22,8 +22,8 @@ class ft_http_server
 
     public:
         ft_http_server() noexcept;
-        ft_http_server(const ft_http_server &other) noexcept;
-        ft_http_server(ft_http_server &&other) noexcept;
+        ft_http_server(const ft_http_server &other) noexcept = delete;
+        ft_http_server(ft_http_server &&other) noexcept = delete;
         ~ft_http_server() noexcept;
         ft_http_server &operator=(const ft_http_server &other) = delete;
         ft_http_server &operator=(ft_http_server &&other) noexcept = delete;

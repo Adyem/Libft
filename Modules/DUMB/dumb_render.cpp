@@ -149,64 +149,6 @@ ft_render_window::ft_render_window(void)
     return ;
 }
 
-ft_render_window::ft_render_window(const ft_render_window &other)
-{
-    this->_framebuffer.width = 0;
-    this->_framebuffer.height = 0;
-    this->_framebuffer.pixels = ft_nullptr;
-    this->_depth_buffer.width = 0;
-    this->_depth_buffer.height = 0;
-    this->_depth_buffer.values = ft_nullptr;
-    this->_is_initialised = FT_FALSE;
-    this->_should_close = FT_FALSE;
-    this->_platform_state = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_render_window::ft_render_window(const ft_render_window &)",
-            "called with uninitialised source object");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-ft_render_window::ft_render_window(ft_render_window &&other)
-{
-    this->_framebuffer.width = 0;
-    this->_framebuffer.height = 0;
-    this->_framebuffer.pixels = ft_nullptr;
-    this->_depth_buffer.width = 0;
-    this->_depth_buffer.height = 0;
-    this->_depth_buffer.values = ft_nullptr;
-    this->_is_initialised = FT_FALSE;
-    this->_should_close = FT_FALSE;
-    this->_platform_state = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_render_window::ft_render_window(ft_render_window &&)",
-            "called with uninitialised source object");
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(static_cast<ft_render_window &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 ft_render_window::~ft_render_window(void)
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

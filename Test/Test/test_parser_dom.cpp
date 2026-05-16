@@ -224,9 +224,11 @@ FT_TEST(test_json_dom_bridge_round_trip)
         {
             ft_string attribute_key;
             FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_key.initialize("json:type"));
-            ft_string attribute_value = item_node->get_attribute(attribute_key);
-            FT_ASSERT(std::string(attribute_value.c_str()) == "big_number");
-            FT_ASSERT(std::string(attribute_value.c_str()) == "big_number");
+            ft_string *attribute_value = item_node->get_attribute(attribute_key);
+            FT_ASSERT(attribute_value != ft_nullptr);
+            FT_ASSERT(std::string(attribute_value->c_str()) == "big_number");
+            FT_ASSERT(std::string(attribute_value->c_str()) == "big_number");
+            delete attribute_value;
             found_big_number = true;
         }
         index += 1;
@@ -296,9 +298,11 @@ FT_TEST(test_xml_dom_bridge_round_trip)
     FT_ASSERT(std::string(dom_root->get_name().c_str()) == "root");
     ft_string attribute_key;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_key.initialize("attr"));
-    ft_string attribute_value = dom_root->get_attribute(attribute_key);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_value.get_error());
-    FT_ASSERT(std::string(attribute_value.c_str()) == "value");
+    ft_string *attribute_value = dom_root->get_attribute(attribute_key);
+    FT_ASSERT(attribute_value != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_value->get_error());
+    FT_ASSERT(std::string(attribute_value->c_str()) == "value");
+    delete attribute_value;
     const ft_vector<ft_dom_node*> &child_nodes = dom_root->get_children();
     FT_ASSERT_EQ(static_cast<size_t>(1), child_nodes.size());
     ft_dom_node *child_node = child_nodes[0];

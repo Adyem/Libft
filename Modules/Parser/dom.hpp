@@ -40,9 +40,9 @@ class ft_dom_node
         ft_dom_node() noexcept;
         ~ft_dom_node() noexcept;
 
-        ft_dom_node(const ft_dom_node &other) noexcept;
+        ft_dom_node(const ft_dom_node &other) noexcept = delete;
         ft_dom_node &operator=(const ft_dom_node &) = delete;
-        ft_dom_node(ft_dom_node &&other) noexcept;
+        ft_dom_node(ft_dom_node &&other) noexcept = delete;
         ft_dom_node &operator=(ft_dom_node &&) = delete;
 
         int32_t initialize() noexcept;
@@ -66,7 +66,7 @@ class ft_dom_node
         int32_t add_attribute(const ft_string &key, const ft_string &value) noexcept;
         int32_t add_attribute(const char *key, const char *value) noexcept;
         ft_bool has_attribute(const ft_string &key) const noexcept;
-        ft_string get_attribute(const ft_string &key) const noexcept;
+        ft_string *get_attribute(const ft_string &key) const noexcept;
         const ft_vector<ft_string> &get_attribute_keys() const noexcept;
         const ft_vector<ft_string> &get_attribute_values() const noexcept;
         ft_dom_node *find_child(const ft_string &name) const noexcept;
@@ -91,9 +91,9 @@ class ft_dom_document
         ft_dom_document() noexcept;
         ~ft_dom_document() noexcept;
 
-        ft_dom_document(const ft_dom_document &other) noexcept;
+        ft_dom_document(const ft_dom_document &other) noexcept = delete;
         ft_dom_document &operator=(const ft_dom_document &) = delete;
-        ft_dom_document(ft_dom_document &&other) noexcept;
+        ft_dom_document(ft_dom_document &&other) noexcept = delete;
         ft_dom_document &operator=(ft_dom_document &&) = delete;
 
         int32_t initialize() noexcept;
@@ -148,9 +148,9 @@ class ft_dom_validation_report
     public:
         ft_dom_validation_report() noexcept;
         ~ft_dom_validation_report() noexcept;
-        ft_dom_validation_report(const ft_dom_validation_report &other) noexcept;
+        ft_dom_validation_report(const ft_dom_validation_report &other) noexcept = delete;
         ft_dom_validation_report &operator=(const ft_dom_validation_report &) = delete;
-        ft_dom_validation_report(ft_dom_validation_report &&other) noexcept;
+        ft_dom_validation_report(ft_dom_validation_report &&other) noexcept = delete;
         ft_dom_validation_report &operator=(ft_dom_validation_report &&) = delete;
 
         int32_t initialize() noexcept;
@@ -191,9 +191,9 @@ class ft_dom_schema
     public:
         ft_dom_schema() noexcept;
         ~ft_dom_schema() noexcept;
-        ft_dom_schema(const ft_dom_schema &other) noexcept;
+        ft_dom_schema(const ft_dom_schema &other) noexcept = delete;
         ft_dom_schema &operator=(const ft_dom_schema &) = delete;
-        ft_dom_schema(ft_dom_schema &&other) noexcept;
+        ft_dom_schema(ft_dom_schema &&other) noexcept = delete;
         ft_dom_schema &operator=(ft_dom_schema &&) = delete;
 
         int32_t initialize() noexcept;

@@ -52,8 +52,8 @@ class xml_document
 
     public:
         xml_document() noexcept;
-        xml_document(const xml_document &other) noexcept;
-        xml_document(xml_document &&other) noexcept;
+        xml_document(const xml_document &other) noexcept = delete;
+        xml_document(xml_document &&other) noexcept = delete;
         ~xml_document() noexcept;
 
         int32_t enable_thread_safety() noexcept;

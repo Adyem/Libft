@@ -21,8 +21,8 @@ class html_document
 
     public:
         html_document() noexcept;
-        html_document(const html_document &other) noexcept;
-        html_document(html_document &&other) noexcept;
+        html_document(const html_document &other) noexcept = delete;
+        html_document(html_document &&other) noexcept = delete;
         ~html_document() noexcept;
 
         html_document &operator=(const html_document &) = delete;

@@ -17,24 +17,6 @@ ft_dom_node::ft_dom_node() noexcept
     return ;
 }
 
-ft_dom_node::ft_dom_node(const ft_dom_node &other) noexcept
-    : _type(other._type), _name(other._name), _value(other._value),
-      _children(other._children), _attribute_keys(other._attribute_keys),
-      _attribute_values(other._attribute_values), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
-ft_dom_node::ft_dom_node(ft_dom_node &&other) noexcept
-    : _type(other._type), _name(other._name), _value(other._value),
-      _children(other._children), _attribute_keys(other._attribute_keys),
-      _attribute_values(other._attribute_values), _mutex(ft_nullptr),
-      _initialised_state(other._initialised_state)
-{
-    return ;
-}
-
 ft_dom_node::~ft_dom_node() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -452,31 +434,45 @@ ft_bool ft_dom_node::has_attribute(const ft_string &key) const noexcept
     return (false);
 }
 
-ft_string ft_dom_node::get_attribute(const ft_string &key) const noexcept
+ft_string *ft_dom_node::get_attribute(const ft_string &key) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t value_initialize_error;
     ft_size_t key_index;
     ft_size_t key_count;
-    ft_string value;
+    ft_string *value;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_node::get_attribute");
-    value_initialize_error = value.initialize();
+    value = new (std::nothrow) ft_string();
+    if (value == ft_nullptr)
+        return (ft_nullptr);
+    value_initialize_error = value->initialize();
     if (value_initialize_error != FT_ERR_SUCCESS)
-        return (ft_string::from_error(value_initialize_error));
+    {
+        delete value;
+        return (ft_nullptr);
+    }
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (value);
+    {
+        delete value;
+        return (ft_nullptr);
+    }
     key_index = 0;
     key_count = this->_attribute_keys.size();
     while (key_index < key_count)
     {
         if (this->_attribute_keys[key_index] == key)
         {
-            value = this->_attribute_values[key_index];
+            *value = this->_attribute_values[key_index];
             (void)this->unlock_internal(lock_acquired);
+            if (value->get_error() != FT_ERR_SUCCESS)
+            {
+                delete value;
+                return (ft_nullptr);
+            }
             return (value);
         }
         key_index += 1;

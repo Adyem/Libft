@@ -491,46 +491,6 @@ api_tls_client::api_tls_client() noexcept
     return ;
 }
 
-api_tls_client::api_tls_client(const api_tls_client &other) noexcept
-: _initialised_state(FT_CLASS_STATE_UNINITIALISED), _ctx(ft_nullptr),
-  _ssl(ft_nullptr), _sock(-1), _host(), _port(0), _timeout(60000),
-  _mutex(ft_nullptr), _is_shutting_down(FT_FALSE), _async_workers(),
-  _handshake_diagnostics()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_tls_client::api_tls_client(copy)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-api_tls_client::api_tls_client(api_tls_client &&other) noexcept
-: _initialised_state(FT_CLASS_STATE_UNINITIALISED), _ctx(ft_nullptr),
-  _ssl(ft_nullptr), _sock(-1), _host(), _port(0), _timeout(60000),
-  _mutex(ft_nullptr), _is_shutting_down(FT_FALSE), _async_workers(),
-  _handshake_diagnostics()
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_lifecycle(other._initialised_state,
-            "api_tls_client::api_tls_client(move)",
-            "source is uninitialised");
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(ft_move(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 api_tls_client::~api_tls_client()
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

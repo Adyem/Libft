@@ -18,8 +18,8 @@ class rng_stream
 
     public:
         rng_stream() noexcept;
-        rng_stream(const rng_stream &other) noexcept;
-        rng_stream(rng_stream &&other) noexcept;
+        rng_stream(const rng_stream &other) noexcept = delete;
+        rng_stream(rng_stream &&other) noexcept = delete;
         rng_stream &operator=(const rng_stream &other) noexcept = delete;
         rng_stream &operator=(rng_stream &&other) noexcept = delete;
         ~rng_stream() noexcept;
