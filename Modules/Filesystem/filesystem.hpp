@@ -7,12 +7,12 @@
 typedef int32_t (*filesystem_walk_callback)(const char *path, ft_bool is_directory,
     void *user_context);
 
-ft_string   filesystem_normalize_path(const char *path);
-ft_string   filesystem_join_path(const char *path_left, const char *path_right);
-ft_string   filesystem_basename(const char *path);
-ft_string   filesystem_dirname(const char *path);
-ft_string   filesystem_extension(const char *path);
-ft_string   filesystem_stem(const char *path);
+ft_string   *filesystem_normalize_path(const char *path);
+ft_string   *filesystem_join_path(const char *path_left, const char *path_right);
+ft_string   *filesystem_basename(const char *path);
+ft_string   *filesystem_dirname(const char *path);
+ft_string   *filesystem_extension(const char *path);
+ft_string   *filesystem_stem(const char *path);
 ft_bool     filesystem_is_absolute(const char *path) noexcept;
 ft_bool     filesystem_is_relative(const char *path) noexcept;
 ft_bool     filesystem_has_extension(const char *path, const char *extension) noexcept;

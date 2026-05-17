@@ -71,7 +71,7 @@ FT_TEST(test_game_equipment_invalid_slot_sets_errno)
     result = equipment.equip(99, item);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(result, equipment.get_error());
-    FT_ASSERT(equipment.get_item(EQUIP_HEAD).get() == ft_nullptr);
+    FT_ASSERT(equipment.get_item(EQUIP_HEAD)->get() == ft_nullptr);
     return (1);
 }
 
@@ -86,6 +86,6 @@ FT_TEST(test_game_equipment_invalid_item_sets_errno)
     result = equipment.equip(EQUIP_HEAD, item);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(result, equipment.get_error());
-    FT_ASSERT(equipment.get_item(EQUIP_HEAD).get() == ft_nullptr);
+    FT_ASSERT(equipment.get_item(EQUIP_HEAD)->get() == ft_nullptr);
     return (1);
 }

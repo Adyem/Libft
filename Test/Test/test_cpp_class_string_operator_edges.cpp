@@ -80,11 +80,10 @@ FT_TEST(test_ft_string_operator_plus_equal_nullptr_sets_invalid_argument)
     ft_string value;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize("abc"));
 
-    ft_string value_copy(value);
     value += static_cast<const char *>(ft_nullptr);
     int32_t append_error = value.get_error();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, append_error);
-    FT_ASSERT_EQ(value_copy, value);
+    FT_ASSERT(value == "abc");
     return (1);
 }
 

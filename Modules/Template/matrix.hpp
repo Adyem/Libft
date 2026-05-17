@@ -62,9 +62,9 @@ class ft_matrix
         ft_size_t rows() const;
         ft_size_t cols() const;
 
-        ft_matrix add(const ft_matrix& other) const;
-        ft_matrix multiply(const ft_matrix& other) const;
-        ft_matrix transpose() const;
+        ft_matrix *add(const ft_matrix& other) const;
+        ft_matrix *multiply(const ft_matrix& other) const;
+        ft_matrix *transpose() const;
         ElementType determinant() const;
 
         void clear();
@@ -179,59 +179,6 @@ ft_matrix<ElementType>::ft_matrix(ft_size_t rows, ft_size_t cols)
 }
 
 template <typename ElementType>
-ft_matrix<ElementType>::ft_matrix(const ft_matrix<ElementType> &other)
-    : _data(ft_nullptr)
-    , _configured_rows(other._configured_rows)
-    , _configured_cols(other._configured_cols)
-    , _rows(0)
-    , _cols(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_size_t total;
-    ft_size_t index;
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_matrix::ft_matrix(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize(other._configured_rows, other._configured_cols) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    total = other._rows * other._cols;
-    index = 0;
-    while (index < total)
-    {
-        this->_data[index] = other._data[index];
-        index = index + 1;
-    }
-    this->_rows = other._rows;
-    this->_cols = other._cols;
-    (void)other.unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ElementType>
 ft_matrix<ElementType>::~ft_matrix()
 {
     uint32_t previous_error;
@@ -241,39 +188,6 @@ ft_matrix<ElementType>::~ft_matrix()
         (void)this->destroy();
     if (this->_mutex != ft_nullptr)
         (void)this->disable_thread_safety();
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ElementType>
-ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
-    : _data(ft_nullptr)
-    , _configured_rows(other._configured_rows)
-    , _configured_cols(other._configured_cols)
-    , _rows(0)
-    , _cols(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = ft_matrix<ElementType>::_last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_matrix::ft_matrix(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     (void)set_error(previous_error);
     return ;
 }
@@ -558,9 +472,19 @@ ft_size_t ft_matrix<ElementType>::cols() const
 }
 
 template <typename ElementType>
-ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
+static void ft_matrix_delete_result(ft_matrix<ElementType> *result)
 {
-    ft_matrix result(this->_rows, this->_cols);
+    if (result == ft_nullptr)
+        return ;
+    (void)result->destroy();
+    delete result;
+    return ;
+}
+
+template <typename ElementType>
+ft_matrix<ElementType> *ft_matrix<ElementType>::add(const ft_matrix& other) const
+{
+    ft_matrix<ElementType> *result;
     ft_bool this_lock_acquired;
     ft_bool other_lock_acquired;
     int32_t this_lock_error;
@@ -571,10 +495,17 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::add");
     errno_abort_if_uninitialised_or_destroyed(other._initialised_state,
         "ft_matrix::add(other)");
-    if (result.initialize() != FT_ERR_SUCCESS)
+    result = new (std::nothrow) ft_matrix<ElementType>(this->_rows, this->_cols);
+    if (result == ft_nullptr)
     {
-        set_error(static_cast<uint32_t>(result.get_error()));
-        return (result);
+        set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    if (result->initialize() != FT_ERR_SUCCESS)
+    {
+        set_error(static_cast<uint32_t>(result->get_error()));
+        delete result;
+        return (ft_nullptr);
     }
     this_lock_acquired = FT_FALSE;
     other_lock_acquired = FT_FALSE;
@@ -582,34 +513,38 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
     if (this_lock_error != FT_ERR_SUCCESS)
     {
         set_error(this_lock_error);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
     other_lock_error = other.lock_internal(&other_lock_acquired);
     if (other_lock_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         set_error(other_lock_error);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
     if (this->_rows != other._rows || this->_cols != other._cols)
     {
         this->unlock_internal(this_lock_acquired);
         other.unlock_internal(other_lock_acquired);
         set_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
-    if (result.init(this->_rows, this->_cols) == FT_FALSE)
+    if (result->init(this->_rows, this->_cols) == FT_FALSE)
     {
         this->unlock_internal(this_lock_acquired);
         other.unlock_internal(other_lock_acquired);
         set_error(FT_ERR_NO_MEMORY);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
     total = this->_rows * this->_cols;
     index = 0;
     while (index < total)
     {
-        result._data[index] = this->_data[index] + other._data[index];
+        result->_data[index] = this->_data[index] + other._data[index];
         index = index + 1;
     }
     (void)this->unlock_internal(this_lock_acquired);
@@ -619,9 +554,9 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
 }
 
 template <typename ElementType>
-ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) const
+ft_matrix<ElementType> *ft_matrix<ElementType>::multiply(const ft_matrix& other) const
 {
-    ft_matrix result(this->_rows, other._cols);
+    ft_matrix<ElementType> *result;
     ft_bool this_lock_acquired;
     ft_bool other_lock_acquired;
     int32_t this_lock_error;
@@ -633,10 +568,17 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::multiply");
     errno_abort_if_uninitialised_or_destroyed(other._initialised_state,
         "ft_matrix::multiply(other)");
-    if (result.initialize() != FT_ERR_SUCCESS)
+    result = new (std::nothrow) ft_matrix<ElementType>(this->_rows, other._cols);
+    if (result == ft_nullptr)
     {
-        set_error(static_cast<uint32_t>(result.get_error()));
-        return (result);
+        set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    if (result->initialize() != FT_ERR_SUCCESS)
+    {
+        set_error(static_cast<uint32_t>(result->get_error()));
+        delete result;
+        return (ft_nullptr);
     }
     this_lock_acquired = FT_FALSE;
     other_lock_acquired = FT_FALSE;
@@ -644,28 +586,32 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
     if (this_lock_error != FT_ERR_SUCCESS)
     {
         set_error(this_lock_error);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
     other_lock_error = other.lock_internal(&other_lock_acquired);
     if (other_lock_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         set_error(other_lock_error);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
     if (this->_cols != other._rows)
     {
         this->unlock_internal(this_lock_acquired);
         other.unlock_internal(other_lock_acquired);
         set_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
-    if (result.init(this->_rows, other._cols) == FT_FALSE)
+    if (result->init(this->_rows, other._cols) == FT_FALSE)
     {
         this->unlock_internal(this_lock_acquired);
         other.unlock_internal(other_lock_acquired);
         set_error(FT_ERR_NO_MEMORY);
-        return (result);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
     row_index = 0;
     while (row_index < this->_rows)
@@ -683,7 +629,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
                     * other._data[inner_index * other._cols + column_index];
                 inner_index = inner_index + 1;
             }
-            result._data[row_index * other._cols + column_index] = sum_value;
+            result->_data[row_index * other._cols + column_index] = sum_value;
             column_index = column_index + 1;
         }
         row_index = row_index + 1;
@@ -695,25 +641,41 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
 }
 
 template <typename ElementType>
-ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
+ft_matrix<ElementType> *ft_matrix<ElementType>::transpose() const
 {
-    ft_matrix result(this->_cols, this->_rows);
+    ft_matrix<ElementType> *result;
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_size_t row_index;
     ft_size_t column_index;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_matrix::transpose");
-    if (result.initialize() != FT_ERR_SUCCESS)
-        return (result);
+    result = new (std::nothrow) ft_matrix<ElementType>(this->_cols, this->_rows);
+    if (result == ft_nullptr)
+    {
+        set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    if (result->initialize() != FT_ERR_SUCCESS)
+    {
+        set_error(result->get_error());
+        delete result;
+        return (ft_nullptr);
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (result);
-    if (result.init(this->_cols, this->_rows) == FT_FALSE)
+    {
+        set_error(lock_error);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
+    }
+    if (result->init(this->_cols, this->_rows) == FT_FALSE)
     {
         this->unlock_internal(lock_acquired);
-        return (result);
+        set_error(FT_ERR_NO_MEMORY);
+        ft_matrix_delete_result(result);
+        return (ft_nullptr);
     }
     row_index = 0;
     while (row_index < this->_rows)
@@ -721,7 +683,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
         column_index = 0;
         while (column_index < this->_cols)
         {
-            result._data[column_index * this->_rows + row_index] =
+            result->_data[column_index * this->_rows + row_index] =
                 this->_data[row_index * this->_cols + column_index];
             column_index = column_index + 1;
         }

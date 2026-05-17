@@ -58,7 +58,7 @@ class game_state
         void remove_character(ft_size_t index) noexcept;
 
         void set_hooks(const ft_sharedptr<game_hooks> &hooks) noexcept;
-        ft_sharedptr<game_hooks> get_hooks() const noexcept;
+        ft_sharedptr<game_hooks> *get_hooks() const noexcept;
         void reset_hooks() noexcept;
 
         void dispatch_item_crafted(game_character &character, game_item &item) const noexcept;

@@ -9,9 +9,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <new>
 
@@ -136,93 +133,6 @@ ft_deque<ElementType>::ft_deque()
     : _front(ft_nullptr), _back(ft_nullptr), _size(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename ElementType>
-ft_deque<ElementType>::ft_deque(const ft_deque<ElementType> &other)
-    : _front(ft_nullptr), _back(ft_nullptr), _size(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-    deque_node *source_node;
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_deque::ft_deque(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    source_node = other._front;
-    while (source_node != ft_nullptr)
-    {
-        this->push_back(source_node->_data);
-        if (this->get_error() != FT_ERR_SUCCESS)
-        {
-            (void)other.unlock_internal(lock_acquired);
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            (void)set_error(previous_error);
-            return ;
-        }
-        source_node = source_node->_next;
-    }
-    (void)other.unlock_internal(lock_acquired);
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ElementType>
-ft_deque<ElementType>::ft_deque(ft_deque<ElementType> &&other)
-    : _front(ft_nullptr), _back(ft_nullptr), _size(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_deque::ft_deque(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)set_error(previous_error);
     return ;
 }
 

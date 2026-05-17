@@ -73,8 +73,10 @@ FT_TEST(test_cpp_class_stringbuf_move_constructor_transfers_state)
     prefix_buffer[2] = '\0';
     FT_ASSERT_EQ(0, ft_strcmp(prefix_buffer, "ab"));
 
-    ft_stringbuf moved_buffer(static_cast<ft_stringbuf &&>(source_buffer));
+    ft_stringbuf moved_buffer;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.initialize(source_string));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.move(source_buffer));
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_buffer._initialised_state);
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, moved_buffer._initialised_state);
     FT_ASSERT_EQ(2U, moved_buffer._position);

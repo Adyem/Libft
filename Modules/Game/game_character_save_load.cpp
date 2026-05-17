@@ -6,6 +6,26 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Printf/printf.hpp"
 
+static int32_t game_character_build_skill_key(const ft_string &prefix,
+    const char *suffix, ft_string &key) noexcept
+{
+    int32_t string_error;
+
+    if (key.is_initialised() == FT_FALSE)
+        string_error = key.initialize();
+    else
+        string_error = key.clear();
+    if (string_error != FT_ERR_SUCCESS)
+        return (string_error);
+    key = prefix;
+    if (key.get_error() != FT_ERR_SUCCESS)
+        return (key.get_error());
+    key += suffix;
+    if (key.get_error() != FT_ERR_SUCCESS)
+        return (key.get_error());
+    return (FT_ERR_SUCCESS);
+}
+
 json_group *serialize_character(const game_character &character)
 {
     json_group *group = json_create_json_group("character");
@@ -174,8 +194,12 @@ json_group *serialize_character(const game_character &character)
             return (ft_nullptr);
         }
         prefix += skill_index_buffer;
-        ft_string key = prefix;
-        key += "_id";
+        ft_string key;
+        if (game_character_build_skill_key(prefix, "_id", key) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
         item = json_create_item(key.c_str(), skill_start[skill_index].value.get_id());
         if (!item)
         {
@@ -183,8 +207,11 @@ json_group *serialize_character(const game_character &character)
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
-        key = prefix;
-        key += "_level";
+        if (game_character_build_skill_key(prefix, "_level", key) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
         item = json_create_item(key.c_str(), skill_start[skill_index].value.get_level());
         if (!item)
         {
@@ -192,8 +219,11 @@ json_group *serialize_character(const game_character &character)
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
-        key = prefix;
-        key += "_cooldown";
+        if (game_character_build_skill_key(prefix, "_cooldown", key) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
         item = json_create_item(key.c_str(), skill_start[skill_index].value.get_cooldown());
         if (!item)
         {
@@ -201,8 +231,11 @@ json_group *serialize_character(const game_character &character)
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
-        key = prefix;
-        key += "_mod1";
+        if (game_character_build_skill_key(prefix, "_mod1", key) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
         item = json_create_item(key.c_str(), skill_start[skill_index].value.get_modifier1());
         if (!item)
         {
@@ -210,8 +243,11 @@ json_group *serialize_character(const game_character &character)
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
-        key = prefix;
-        key += "_mod2";
+        if (game_character_build_skill_key(prefix, "_mod2", key) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
         item = json_create_item(key.c_str(), skill_start[skill_index].value.get_modifier2());
         if (!item)
         {
@@ -219,8 +255,11 @@ json_group *serialize_character(const game_character &character)
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
-        key = prefix;
-        key += "_mod3";
+        if (game_character_build_skill_key(prefix, "_mod3", key) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
         item = json_create_item(key.c_str(), skill_start[skill_index].value.get_modifier3());
         if (!item)
         {
@@ -314,26 +353,27 @@ int32_t deserialize_character(game_character &character, json_group *group)
             if (prefix.initialize("skill_") != FT_ERR_SUCCESS)
                 return (FT_ERR_NO_MEMORY);
             prefix += skill_index_buffer;
-            ft_string key = prefix;
-            key += "_id";
+            ft_string key;
+            if (game_character_build_skill_key(prefix, "_id", key) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             json_item *id_item = json_find_item(group, key.c_str());
-            key = prefix;
-            key += "_level";
+            if (game_character_build_skill_key(prefix, "_level", key) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             json_item *level_item = json_find_item(group, key.c_str());
-            key = prefix;
-            key += "_cooldown";
+            if (game_character_build_skill_key(prefix, "_cooldown", key) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             json_item *cool_item = json_find_item(group, key.c_str());
-            key = prefix;
-            key += "_mod1";
+            if (game_character_build_skill_key(prefix, "_mod1", key) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             json_item *mod1_item = json_find_item(group, key.c_str());
-            key = prefix;
-            key += "_mod2";
+            if (game_character_build_skill_key(prefix, "_mod2", key) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             json_item *mod2_item = json_find_item(group, key.c_str());
-            key = prefix;
-            key += "_mod3";
+            if (game_character_build_skill_key(prefix, "_mod3", key) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             json_item *mod3_item = json_find_item(group, key.c_str());
-            key = prefix;
-            key += "_mod4";
+            if (game_character_build_skill_key(prefix, "_mod4", key) != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             json_item *mod4_item = json_find_item(group, key.c_str());
             if (!id_item || !level_item || !cool_item || !mod1_item || !mod2_item || !mod3_item || !mod4_item)
             {

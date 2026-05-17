@@ -39,9 +39,9 @@ FT_TEST(test_game_world_copy_preserves_new_resources)
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
-    ft_sharedptr<game_quest> quest = world.get_quest();
-    ft_sharedptr<game_vendor_profile> vendor = world.get_vendor_profile();
-    ft_sharedptr<game_upgrade> upgrade = world.get_upgrade();
+    ft_sharedptr<game_quest> &quest = world.get_quest();
+    ft_sharedptr<game_vendor_profile> &vendor = world.get_vendor_profile();
+    ft_sharedptr<game_upgrade> &upgrade = world.get_upgrade();
 
     quest->set_id(9);
     quest->set_phases(3);
@@ -68,9 +68,9 @@ FT_TEST(test_game_world_move_transfers_new_resources)
 {
     game_world source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
-    ft_sharedptr<game_quest> quest = source.get_quest();
-    ft_sharedptr<game_vendor_profile> vendor = source.get_vendor_profile();
-    ft_sharedptr<game_upgrade> upgrade = source.get_upgrade();
+    ft_sharedptr<game_quest> &quest = source.get_quest();
+    ft_sharedptr<game_vendor_profile> &vendor = source.get_vendor_profile();
+    ft_sharedptr<game_upgrade> &upgrade = source.get_upgrade();
 
     quest->set_id(13);
     vendor->set_vendor_id(77);
@@ -97,7 +97,7 @@ FT_TEST(test_game_world_get_quest_propagates_errors)
 {
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
-    ft_sharedptr<game_quest> quest = world.get_quest();
+    ft_sharedptr<game_quest> &quest = world.get_quest();
 
     quest->set_phases(-5);
     world.get_quest();
@@ -125,7 +125,7 @@ FT_TEST(test_game_world_get_vendor_profile_propagates_errors)
 {
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
-    ft_sharedptr<game_vendor_profile> vendor_profile = world.get_vendor_profile();
+    ft_sharedptr<game_vendor_profile> &vendor_profile = world.get_vendor_profile();
 
     vendor_profile->set_vendor_id(-9);
     world.get_vendor_profile();
@@ -175,7 +175,7 @@ FT_TEST(test_game_world_get_upgrade_propagates_errors)
 {
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
-    ft_sharedptr<game_upgrade> upgrade = world.get_upgrade();
+    ft_sharedptr<game_upgrade> &upgrade = world.get_upgrade();
 
     upgrade->set_id(-3);
     world.get_upgrade();
@@ -351,7 +351,7 @@ FT_TEST(test_game_world_move_transfers_world_region_data)
 {
     game_world source;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
-    ft_sharedptr<game_world_region> world_region = source.get_world_region();
+    ft_sharedptr<game_world_region> &world_region = source.get_world_region();
     ft_vector<int> region_ids;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_ids.initialize());
@@ -377,9 +377,9 @@ FT_TEST(test_game_world_reuses_shared_new_components)
 {
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
-    ft_sharedptr<game_quest> first_quest = world.get_quest();
-    ft_sharedptr<game_vendor_profile> first_vendor = world.get_vendor_profile();
-    ft_sharedptr<game_upgrade> first_upgrade = world.get_upgrade();
+    ft_sharedptr<game_quest> &first_quest = world.get_quest();
+    ft_sharedptr<game_vendor_profile> &first_vendor = world.get_vendor_profile();
+    ft_sharedptr<game_upgrade> &first_upgrade = world.get_upgrade();
 
     first_quest->set_id(77);
     first_vendor->set_tax_rate(0.15);
@@ -480,7 +480,7 @@ FT_TEST(test_game_world_get_upgrade_propagates_level_error)
 {
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
-    ft_sharedptr<game_upgrade> upgrade = world.get_upgrade();
+    ft_sharedptr<game_upgrade> &upgrade = world.get_upgrade();
 
     upgrade->set_max_level(2);
     upgrade->set_current_level(5);
@@ -495,7 +495,7 @@ FT_TEST(test_game_world_upgrade_error_clears_after_valid_level)
 {
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
-    ft_sharedptr<game_upgrade> upgrade = world.get_upgrade();
+    ft_sharedptr<game_upgrade> &upgrade = world.get_upgrade();
 
     upgrade->set_max_level(1);
     upgrade->set_current_level(4);
@@ -514,7 +514,7 @@ FT_TEST(test_game_world_vendor_profile_error_clears_after_valid_id)
 {
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
-    ft_sharedptr<game_vendor_profile> vendor_profile = world.get_vendor_profile();
+    ft_sharedptr<game_vendor_profile> &vendor_profile = world.get_vendor_profile();
 
     vendor_profile->set_vendor_id(-3);
 

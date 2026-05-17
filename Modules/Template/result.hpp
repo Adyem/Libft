@@ -6,6 +6,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstdint>
+#include <new>
 
 struct ft_status
 {
@@ -38,9 +39,9 @@ class ft_result
         ft_result &operator=(const ft_result<ValueType> &other) noexcept = delete;
         ft_result &operator=(ft_result<ValueType> &&other) noexcept = delete;
 
-        static ft_result<ValueType> success(const ValueType &value) noexcept;
-        static ft_result<ValueType> success(ValueType &&value) noexcept;
-        static ft_result<ValueType> failure(int32_t error_code) noexcept;
+        static ft_result<ValueType> *success(const ValueType &value) noexcept;
+        static ft_result<ValueType> *success(ValueType &&value) noexcept;
+        static ft_result<ValueType> *failure(int32_t error_code) noexcept;
 
         int32_t initialize() noexcept;
         int32_t initialize_value(const ValueType &value) noexcept;
@@ -120,32 +121,6 @@ ft_result<ValueType>::ft_result() noexcept
 }
 
 template <typename ValueType>
-ft_result<ValueType>::ft_result(const ft_result<ValueType> &other) noexcept
-    : _error_code(FT_ERR_SUCCESS), _has_value(FT_FALSE), _storage()
-{
-    if (other._has_value == FT_TRUE)
-    {
-        construct_at(this->value_pointer(), *other.value_pointer());
-        this->_has_value = FT_TRUE;
-    }
-    this->_error_code = other._error_code;
-    return ;
-}
-
-template <typename ValueType>
-ft_result<ValueType>::ft_result(ft_result<ValueType> &&other) noexcept
-    : _error_code(FT_ERR_SUCCESS), _has_value(FT_FALSE), _storage()
-{
-    if (other._has_value == FT_TRUE)
-    {
-        construct_at(this->value_pointer(), ft_move(*other.value_pointer()));
-        this->_has_value = FT_TRUE;
-    }
-    this->_error_code = other._error_code;
-    return ;
-}
-
-template <typename ValueType>
 ft_result<ValueType>::~ft_result() noexcept
 {
     this->destroy_value();
@@ -153,29 +128,50 @@ ft_result<ValueType>::~ft_result() noexcept
 }
 
 template <typename ValueType>
-ft_result<ValueType> ft_result<ValueType>::success(const ValueType &value) noexcept
+ft_result<ValueType> *ft_result<ValueType>::success(const ValueType &value) noexcept
 {
-    ft_result<ValueType> result;
+    ft_result<ValueType> *result;
 
-    result.initialize_value(value);
+    result = new (std::nothrow) ft_result<ValueType>();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    if (result->initialize_value(value) != FT_ERR_SUCCESS)
+    {
+        delete result;
+        return (ft_nullptr);
+    }
     return (result);
 }
 
 template <typename ValueType>
-ft_result<ValueType> ft_result<ValueType>::success(ValueType &&value) noexcept
+ft_result<ValueType> *ft_result<ValueType>::success(ValueType &&value) noexcept
 {
-    ft_result<ValueType> result;
+    ft_result<ValueType> *result;
 
-    result.initialize_value(ft_move(value));
+    result = new (std::nothrow) ft_result<ValueType>();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    if (result->initialize_value(ft_move(value)) != FT_ERR_SUCCESS)
+    {
+        delete result;
+        return (ft_nullptr);
+    }
     return (result);
 }
 
 template <typename ValueType>
-ft_result<ValueType> ft_result<ValueType>::failure(int32_t error_code) noexcept
+ft_result<ValueType> *ft_result<ValueType>::failure(int32_t error_code) noexcept
 {
-    ft_result<ValueType> result;
+    ft_result<ValueType> *result;
 
-    result.initialize_error(error_code);
+    result = new (std::nothrow) ft_result<ValueType>();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    if (result->initialize_error(error_code) != FT_ERR_SUCCESS)
+    {
+        delete result;
+        return (ft_nullptr);
+    }
     return (result);
 }
 

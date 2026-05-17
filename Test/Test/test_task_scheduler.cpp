@@ -18,7 +18,9 @@ FT_TEST(test_task_scheduler_submit)
     ft_task_scheduler scheduler_instance(2);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     (void)write(2, "S1\n", 3);
-    auto future_value = scheduler_instance.submit([]() { return (7); });
+    ft_future<int> future_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        scheduler_instance.submit(future_value, []() { return (7); }));
     (void)write(2, "S2\n", 3);
     FT_ASSERT(future_value.valid());
     (void)write(2, "S3\n", 3);

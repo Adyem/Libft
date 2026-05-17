@@ -15,64 +15,6 @@ game_world_registry::game_world_registry() noexcept
     return ;
 }
 
-game_world_registry::game_world_registry(const game_world_registry &other) noexcept
-    : _regions(), _world_regions(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_world_registry::game_world_registry(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(initialize_error);
-    }
-    return ;
-}
-
-game_world_registry::game_world_registry(game_world_registry &&other) noexcept
-    : _regions(), _world_regions(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_world_registry::game_world_registry(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(move_error);
-    }
-    return ;
-}
-
 game_world_registry::~game_world_registry() noexcept
 {
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)

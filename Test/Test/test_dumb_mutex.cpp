@@ -34,15 +34,15 @@ test_sound_device_mutex_impl::test_sound_device_mutex_impl(void)
 
 test_sound_device_mutex_impl::test_sound_device_mutex_impl(
     const test_sound_device_mutex_impl &other)
-    : ft_sound_device(other)
 {
+    this->initialize(other);
     return ;
 }
 
 test_sound_device_mutex_impl::test_sound_device_mutex_impl(
     test_sound_device_mutex_impl &&other)
-    : ft_sound_device(static_cast<ft_sound_device &&>(other))
 {
+    this->initialize(static_cast<ft_sound_device &&>(other));
     return ;
 }
 

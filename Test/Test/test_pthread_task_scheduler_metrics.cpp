@@ -50,12 +50,12 @@ static int32_t task_scheduler_metrics_flow_body()
     if (worker_total != 1)
         return (0);
     release_flag = std::make_shared<std::atomic<bool> >(false);
-    if (blocking_future.initialize(scheduler_instance.submit([release_flag]() mutable
+    if (scheduler_instance.submit(blocking_future, [release_flag]() mutable
     {
         while (!release_flag->load())
             usleep(1000);
         return ;
-    })) != FT_ERR_SUCCESS)
+    }) != FT_ERR_SUCCESS)
         return (0);
     if (!blocking_future.valid())
         return (0);
@@ -66,10 +66,10 @@ static int32_t task_scheduler_metrics_flow_body()
     idle_count = scheduler_instance.get_worker_idle_count();
     if (idle_count != 0)
         return (0);
-    if (queued_future.initialize(scheduler_instance.submit([]()
+    if (scheduler_instance.submit(queued_future, []()
     {
         return ;
-    })) != FT_ERR_SUCCESS)
+    }) != FT_ERR_SUCCESS)
         return (0);
     if (!queued_future.valid())
         return (0);

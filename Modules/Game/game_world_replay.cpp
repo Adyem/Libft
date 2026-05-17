@@ -6,6 +6,13 @@
 #include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 
+static void world_replay_clear_event_handles(
+    ft_vector<ft_sharedptr<game_event> > &events) noexcept
+{
+    events.clear();
+    return ;
+}
+
 static int32_t world_replay_collect_callbacks(game_world &world,
     ft_vector<ft_function<void(game_world&, game_event&)> > &callbacks) noexcept
 {
@@ -19,7 +26,10 @@ static int32_t world_replay_collect_callbacks(game_world &world,
 
     scheduler->dump_events(scheduled_events);
     if (scheduler->get_error() != FT_ERR_SUCCESS)
+    {
+        world_replay_clear_event_handles(scheduled_events);
         return (scheduler->get_error());
+    }
     ft_size_t event_index;
     ft_size_t event_count;
 
@@ -27,16 +37,31 @@ static int32_t world_replay_collect_callbacks(game_world &world,
     event_count = scheduled_events.size();
     while (event_index < event_count)
     {
+        int32_t event_error;
+
+        if (!scheduled_events[event_index])
+        {
+            world_replay_clear_event_handles(scheduled_events);
+            return (FT_ERR_GAME_GENERAL_ERROR);
+        }
         const ft_function<void(game_world&, game_event&)> &event_callback =
             scheduled_events[event_index]->get_callback();
 
-        if (scheduled_events[event_index]->get_error() != FT_ERR_SUCCESS)
-            return (scheduled_events[event_index]->get_error());
+        event_error = scheduled_events[event_index]->get_error();
+        if (event_error != FT_ERR_SUCCESS)
+        {
+            world_replay_clear_event_handles(scheduled_events);
+            return (event_error);
+        }
         callbacks.push_back(event_callback);
         if (callbacks.get_error() != FT_ERR_SUCCESS)
+        {
+            world_replay_clear_event_handles(scheduled_events);
             return (callbacks.get_error());
+        }
         event_index++;
     }
+    world_replay_clear_event_handles(scheduled_events);
     return (FT_ERR_SUCCESS);
 }
 
@@ -55,7 +80,10 @@ static int32_t world_replay_restore_callbacks(game_world &world,
 
     scheduler->dump_events(scheduled_events);
     if (scheduler->get_error() != FT_ERR_SUCCESS)
+    {
+        world_replay_clear_event_handles(scheduled_events);
         return (scheduler->get_error());
+    }
     ft_size_t event_index;
     ft_size_t event_count;
     ft_size_t callback_count;
@@ -64,16 +92,30 @@ static int32_t world_replay_restore_callbacks(game_world &world,
     event_index = 0;
     event_count = scheduled_events.size();
     if (callback_count != event_count)
+    {
+        world_replay_clear_event_handles(scheduled_events);
         return (FT_ERR_GAME_GENERAL_ERROR);
+    }
     while (event_index < event_count)
     {
         ft_function<void(game_world&, game_event&)> callback_copy(callbacks[event_index]);
+        int32_t event_error;
 
+        if (!scheduled_events[event_index])
+        {
+            world_replay_clear_event_handles(scheduled_events);
+            return (FT_ERR_GAME_GENERAL_ERROR);
+        }
         scheduled_events[event_index]->set_callback(ft_move(callback_copy));
-        if (scheduled_events[event_index]->get_error() != FT_ERR_SUCCESS)
-            return (scheduled_events[event_index]->get_error());
+        event_error = scheduled_events[event_index]->get_error();
+        if (event_error != FT_ERR_SUCCESS)
+        {
+            world_replay_clear_event_handles(scheduled_events);
+            return (event_error);
+        }
         event_index++;
     }
+    world_replay_clear_event_handles(scheduled_events);
     return (FT_ERR_SUCCESS);
 }
 
@@ -81,72 +123,6 @@ game_world_replay_session::game_world_replay_session() noexcept
     : _snapshot_payload(), _event_callbacks(),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-game_world_replay_session::game_world_replay_session(
-    const game_world_replay_session &other) noexcept
-    : _snapshot_payload(), _event_callbacks(),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-    ft_size_t callback_index;
-    ft_size_t callback_count;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_world_replay_session::game_world_replay_session(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_snapshot_payload = other._snapshot_payload;
-    this->_event_callbacks.clear();
-    callback_index = 0;
-    callback_count = other._event_callbacks.size();
-    while (callback_index < callback_count)
-    {
-        this->_event_callbacks.push_back(other._event_callbacks[callback_index]);
-        callback_index++;
-    }
-    return ;
-}
-
-game_world_replay_session::game_world_replay_session(
-    game_world_replay_session &&other) noexcept
-    : _snapshot_payload(), _event_callbacks(),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_world_replay_session::game_world_replay_session(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

@@ -6,9 +6,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include <cstddef>
 #include <new>
-#include <type_traits>
 #include <utility>
 
 template <typename ManagedType>
@@ -256,113 +254,6 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_size_t size) noexcept
 
     previous_error = _last_error;
     (void)this->initialize(size);
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ManagedType>
-ft_uniqueptr<ManagedType>::ft_uniqueptr(const ft_uniqueptr<ManagedType> &other)
-    : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
-      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-    ft_bool lock_acquired;
-    int32_t lock_error;
-    ft_size_t index;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_uniqueptr::ft_uniqueptr(copy)", "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._managed_pointer == ft_nullptr)
-    {
-        (void)other.unlock_internal(lock_acquired);
-        if (this->initialize() != FT_ERR_SUCCESS)
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._is_array_type == FT_TRUE)
-    {
-        this->_managed_pointer = new (std::nothrow) ManagedType[other._array_size];
-        if (this->_managed_pointer == ft_nullptr)
-        {
-            (void)other.unlock_internal(lock_acquired);
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            (void)set_error(previous_error);
-            return ;
-        }
-        this->_array_size = other._array_size;
-        this->_is_array_type = FT_TRUE;
-        index = 0;
-        while (index < this->_array_size)
-        {
-            this->_managed_pointer[index] = other._managed_pointer[index];
-            index += 1;
-        }
-    }
-    else
-    {
-        this->_managed_pointer = new (std::nothrow) ManagedType(*other._managed_pointer);
-        if (this->_managed_pointer == ft_nullptr)
-        {
-            (void)other.unlock_internal(lock_acquired);
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            (void)set_error(previous_error);
-            return ;
-        }
-        this->_array_size = 1;
-        this->_is_array_type = FT_FALSE;
-    }
-    (void)other.unlock_internal(lock_acquired);
-    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ManagedType>
-ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr<ManagedType> &&other) noexcept
-    : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
-      _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_uniqueptr::ft_uniqueptr(move)", "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     (void)set_error(previous_error);
     return ;
 }

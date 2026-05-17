@@ -1,7 +1,5 @@
 #include "../PThread/pthread_internal.hpp"
 #include "game_world_region.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
@@ -31,64 +29,6 @@ game_world_region::game_world_region() noexcept
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-game_world_region::game_world_region(const game_world_region &other) noexcept
-    : _world_id(0), _region_ids(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_world_region::game_world_region(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(initialize_error);
-    }
-    return ;
-}
-
-game_world_region::game_world_region(game_world_region &&other) noexcept
-    : _world_id(0), _region_ids(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_world_region::game_world_region(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(move_error);
-    }
     return ;
 }
 

@@ -68,8 +68,10 @@ FT_TEST(test_cpp_class_file_copy_constructor_preserves_open_handle)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.enable_thread_safety());
     FT_ASSERT_EQ(2, static_cast<int>(source_file.write_buffer("xy", 2)));
 
-    ft_file copied_file(source_file);
+    ft_file copied_file;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_file.move(source_file));
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, copied_file._initialised_state);
     FT_ASSERT_EQ(FT_TRUE, copied_file.is_thread_safe());
     FT_ASSERT(copied_file.get_file_descriptor() >= 0);
@@ -124,8 +126,10 @@ FT_TEST(test_cpp_class_file_move_constructor_preserves_open_handle)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.enable_thread_safety());
     FT_ASSERT_EQ(3, static_cast<int>(source_file.write_buffer("abc", 3)));
 
-    ft_file moved_file(static_cast<ft_file &&>(source_file));
+    ft_file moved_file;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_file.move(source_file));
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_file._initialised_state);
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, moved_file._initialised_state);
     FT_ASSERT_EQ(FT_TRUE, moved_file.is_thread_safe());
@@ -189,8 +193,10 @@ FT_TEST(test_cpp_class_file_copy_constructor_from_destroyed_source_produces_dest
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.destroy());
 
-    ft_file copied_file(source_file);
+    ft_file copied_file;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_file.move(source_file));
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, copied_file._initialised_state);
     FT_ASSERT_EQ(-1, copied_file._file_descriptor);
     FT_ASSERT_EQ(ft_nullptr, copied_file._mutex);
@@ -204,8 +210,10 @@ FT_TEST(test_cpp_class_file_move_constructor_from_destroyed_source_produces_dest
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.destroy());
 
-    ft_file moved_file(static_cast<ft_file &&>(source_file));
+    ft_file moved_file;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_file.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_file.move(source_file));
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, moved_file._initialised_state);
     FT_ASSERT_EQ(-1, moved_file._file_descriptor);
     FT_ASSERT_EQ(ft_nullptr, moved_file._mutex);

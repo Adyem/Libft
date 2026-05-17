@@ -18,7 +18,8 @@ FT_TEST(test_ft_priority_queue_move_constructor_rebuilds_mutex)
     FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
     FT_ASSERT(source_queue.is_thread_safe());
 
-    ft_priority_queue<int> new_queue(ft_move(source_queue));
+    ft_priority_queue<int> new_queue;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, new_queue.move(source_queue));
 
     FT_ASSERT(new_queue.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());

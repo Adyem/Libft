@@ -81,36 +81,6 @@ game_behavior_action::game_behavior_action() noexcept
     return ;
 }
 
-game_behavior_action::game_behavior_action(const game_behavior_action &other) noexcept
-    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_behavior_action::game_behavior_action(copy)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_behavior_action::game_behavior_action(game_behavior_action &&other) noexcept
-    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_behavior_action::game_behavior_action(move)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(static_cast<game_behavior_action &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t game_behavior_action::initialize() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

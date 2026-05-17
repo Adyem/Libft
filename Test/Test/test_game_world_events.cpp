@@ -80,7 +80,7 @@ FT_TEST(test_game_world_copy_keeps_scheduled_events)
     battle->set_duration(3);
     original.schedule_event(battle);
 
-    game_world copy(original);
+    game_world &copy = original;
     original.get_event_scheduler()->dump_events(original_events);
     copy.get_event_scheduler()->dump_events(copied_events);
     FT_ASSERT_EQ((size_t)1, original_events.size());
@@ -257,11 +257,12 @@ FT_TEST(test_game_world_move_transfers_scheduler_state)
     queued_event->set_duration(2);
     original.schedule_event(queued_event);
 
-    game_world moved(original);
+    game_world moved;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.move(original));
     moved.get_event_scheduler()->dump_events(moved_events);
     FT_ASSERT_EQ((size_t)1, moved_events.size());
-    FT_ASSERT_EQ((size_t)1, original.get_event_scheduler()->size());
     FT_ASSERT_EQ((size_t)1, moved.get_event_scheduler()->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, original._initialised_state);
     return (1);
 }

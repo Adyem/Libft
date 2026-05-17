@@ -9,7 +9,6 @@
 #include <tuple>
 #include <utility>
 #include <new>
-#include <type_traits>
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 
@@ -131,66 +130,6 @@ ft_tuple<Types...>::ft_tuple()
     : _data(ft_nullptr), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename... Types>
-ft_tuple<Types...>::ft_tuple(const ft_tuple<Types...> &other)
-    : _data(ft_nullptr), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_tuple::ft_tuple(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    *this->_data = *other._data;
-    (void)other.unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename... Types>
-ft_tuple<Types...>::ft_tuple(ft_tuple<Types...> &&other)
-    : _data(ft_nullptr), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_tuple::ft_tuple(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

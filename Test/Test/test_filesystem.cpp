@@ -71,22 +71,34 @@ static int32_t filesystem_make_test_directory(ft_string *path, const char *name)
 
 FT_TEST(test_filesystem_path_wrappers)
 {
-    ft_string normalized;
-    ft_string joined;
-    ft_string extension;
-    ft_string stem;
+    ft_string *normalized;
+    ft_string *joined;
+    ft_string *extension;
+    ft_string *stem;
 
     normalized = filesystem_normalize_path("alpha//beta/../gamma.txt");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized.get_error());
+    FT_ASSERT(normalized != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->get_error());
     joined = filesystem_join_path("alpha", "beta.txt");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, joined.get_error());
-    extension = filesystem_extension(joined.c_str());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, extension.get_error());
-    FT_ASSERT_EQ(FT_TRUE, extension == ".txt");
-    stem = filesystem_stem(joined.c_str());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stem.get_error());
-    FT_ASSERT_EQ(FT_TRUE, filesystem_has_extension(joined.c_str(), ".txt"));
+    FT_ASSERT(joined != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, joined->get_error());
+    extension = filesystem_extension(joined->c_str());
+    FT_ASSERT(extension != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, extension->get_error());
+    FT_ASSERT_EQ(FT_TRUE, *extension == ".txt");
+    stem = filesystem_stem(joined->c_str());
+    FT_ASSERT(stem != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stem->get_error());
+    FT_ASSERT_EQ(FT_TRUE, filesystem_has_extension(joined->c_str(), ".txt"));
     FT_ASSERT_EQ(FT_TRUE, filesystem_is_relative("alpha/beta"));
+    (void)normalized->destroy();
+    delete normalized;
+    (void)joined->destroy();
+    delete joined;
+    (void)extension->destroy();
+    delete extension;
+    (void)stem->destroy();
+    delete stem;
     return (1);
 }
 
@@ -125,18 +137,20 @@ FT_TEST(test_filesystem_atomic_write_creates_target_contents)
 FT_TEST(test_filesystem_walk_recursive_visits_children)
 {
     ft_string root_path;
-    ft_string child_directory;
-    ft_string child_file;
+    ft_string *child_directory;
+    ft_string *child_file;
     filesystem_walk_test_context context;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_make_test_directory(&root_path,
             "libft_walk_root"));
     child_directory = filesystem_join_path(root_path.c_str(), "child");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_directory.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(child_directory.c_str(), 0700));
-    child_file = filesystem_join_path(child_directory.c_str(), "entry.txt");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_file.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_atomic_write(child_file.c_str(), "x", 1));
+    FT_ASSERT(child_directory != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_directory->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(child_directory->c_str(), 0700));
+    child_file = filesystem_join_path(child_directory->c_str(), "entry.txt");
+    FT_ASSERT(child_file != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_file->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_atomic_write(child_file->c_str(), "x", 1));
     context.entries = 0;
     context.saw_file = FT_FALSE;
     context.saw_directory = FT_FALSE;
@@ -144,37 +158,53 @@ FT_TEST(test_filesystem_walk_recursive_visits_children)
             filesystem_walk_test_callback, &context));
     FT_ASSERT_EQ(FT_TRUE, context.saw_file);
     FT_ASSERT_EQ(FT_TRUE, context.saw_directory);
-    (void)file_delete(child_file.c_str());
-    (void)file_delete(child_directory.c_str());
+    (void)file_delete(child_file->c_str());
+    (void)file_delete(child_directory->c_str());
     (void)file_delete(root_path.c_str());
+    (void)child_file->destroy();
+    delete child_file;
+    (void)child_directory->destroy();
+    delete child_directory;
     return (1);
 }
 
 FT_TEST(test_filesystem_basename_and_dirname_edge_cases)
 {
-    ft_string basename;
-    ft_string dirname;
+    ft_string *basename;
+    ft_string *dirname;
 
     basename = filesystem_basename("/tmp/example.txt");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, basename.get_error());
-    FT_ASSERT_EQ(FT_TRUE, basename == "example.txt");
+    FT_ASSERT(basename != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, basename->get_error());
+    FT_ASSERT_EQ(FT_TRUE, *basename == "example.txt");
     dirname = filesystem_dirname("/tmp/example.txt");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, dirname.get_error());
-    FT_ASSERT_EQ(FT_TRUE, dirname == "/tmp");
+    FT_ASSERT(dirname != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dirname->get_error());
+    FT_ASSERT_EQ(FT_TRUE, *dirname == "/tmp");
+    (void)basename->destroy();
+    delete basename;
+    (void)dirname->destroy();
+    delete dirname;
     return (1);
 }
 
 FT_TEST(test_filesystem_extension_rejects_hidden_file_without_suffix)
 {
-    ft_string extension;
-    ft_string stem;
+    ft_string *extension;
+    ft_string *stem;
 
     extension = filesystem_extension(".env");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, extension.get_error());
-    FT_ASSERT_EQ(FT_TRUE, extension == "");
+    FT_ASSERT(extension != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, extension->get_error());
+    FT_ASSERT_EQ(FT_TRUE, *extension == "");
     stem = filesystem_stem(".env");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stem.get_error());
-    FT_ASSERT_EQ(FT_TRUE, stem == ".env");
+    FT_ASSERT(stem != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stem->get_error());
+    FT_ASSERT_EQ(FT_TRUE, *stem == ".env");
+    (void)extension->destroy();
+    delete extension;
+    (void)stem->destroy();
+    delete stem;
     return (1);
 }
 
@@ -212,20 +242,23 @@ FT_TEST(test_filesystem_atomic_write_accepts_empty_payload)
 FT_TEST(test_filesystem_walk_recursive_propagates_callback_error)
 {
     ft_string root_path;
-    ft_string child_file;
+    ft_string *child_file;
     filesystem_walk_failure_context context;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_make_test_directory(&root_path,
             "libft_walk_fail"));
     child_file = filesystem_join_path(root_path.c_str(), "entry.txt");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_file.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_atomic_write(child_file.c_str(), "x", 1));
+    FT_ASSERT(child_file != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_file->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_atomic_write(child_file->c_str(), "x", 1));
     context.entries = 0;
     FT_ASSERT_EQ(FT_ERR_TERMINATED, filesystem_walk_recursive(root_path.c_str(),
             filesystem_walk_failure_callback, &context));
     FT_ASSERT_EQ(static_cast<ft_size_t>(1), context.entries);
-    (void)file_delete(child_file.c_str());
+    (void)file_delete(child_file->c_str());
     (void)file_delete(root_path.c_str());
+    (void)child_file->destroy();
+    delete child_file;
     return (1);
 }
 

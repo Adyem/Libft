@@ -109,8 +109,8 @@ class game_hooks
             ft_function<void(ft_game_hook_context&)> &&callback) noexcept;
         void unregister_listener(const ft_string &hook_identifier,
             const ft_string &listener_name) noexcept;
-        ft_vector<ft_game_hook_metadata> get_catalog_metadata() const noexcept;
-        ft_vector<ft_game_hook_metadata> get_catalog_metadata_for(const ft_string &hook_identifier) const noexcept;
+        ft_vector<ft_game_hook_metadata> *get_catalog_metadata() const noexcept;
+        ft_vector<ft_game_hook_metadata> *get_catalog_metadata_for(const ft_string &hook_identifier) const noexcept;
         void invoke_hook(const ft_string &hook_identifier,
             ft_game_hook_context &context) const noexcept;
 

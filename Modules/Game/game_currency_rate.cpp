@@ -1,7 +1,5 @@
 #include "../PThread/pthread_internal.hpp"
 #include "game_currency_rate.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
 
@@ -13,66 +11,6 @@ game_currency_rate::game_currency_rate() noexcept
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-game_currency_rate::game_currency_rate(const game_currency_rate &other) noexcept
-    : _currency_id(0), _rate_to_base(1.0), _display_precision(2),
-      _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_currency_rate::game_currency_rate(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(initialize_error);
-    }
-    return ;
-}
-
-game_currency_rate::game_currency_rate(game_currency_rate &&other) noexcept
-    : _currency_id(0), _rate_to_base(1.0), _display_precision(2),
-      _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_currency_rate::game_currency_rate(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(move_error);
-    }
     return ;
 }
 

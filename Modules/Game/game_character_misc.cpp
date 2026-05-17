@@ -459,7 +459,7 @@ int32_t game_character::equip_item(int32_t slot, const ft_sharedptr<game_item> &
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    ft_sharedptr<game_item> current;
+    ft_sharedptr<game_item> *current;
     int32_t equip_error;
 
     lock_acquired = FT_FALSE;
@@ -470,8 +470,14 @@ int32_t game_character::equip_item(int32_t slot, const ft_sharedptr<game_item> &
         return (this->get_error());
     }
     current = this->_equipment.get_item(slot);
-    if (this->handle_component_error(this->_equipment.get_error()) == FT_TRUE)
+    equip_error = this->_equipment.get_error();
+    if (this->handle_component_error(equip_error) == FT_TRUE)
     {
+        if (current != ft_nullptr)
+        {
+            (void)current->destroy();
+            delete current;
+        }
         this->unlock_internal(lock_acquired);
         return (this->get_error());
     }
@@ -479,20 +485,30 @@ int32_t game_character::equip_item(int32_t slot, const ft_sharedptr<game_item> &
     if (equip_error != FT_ERR_SUCCESS)
     {
         this->handle_component_error(equip_error);
+        if (current != ft_nullptr)
+        {
+            (void)current->destroy();
+            delete current;
+        }
         this->unlock_internal(lock_acquired);
         return (this->get_error());
     }
-    if (current)
+    if (current != ft_nullptr && *current)
     {
         game_item_modifier mod;
-        if (current->get_modifier1(mod) == FT_ERR_SUCCESS)
+        if ((*current)->get_modifier1(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
-        if (current->get_modifier2(mod) == FT_ERR_SUCCESS)
+        if ((*current)->get_modifier2(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
-        if (current->get_modifier3(mod) == FT_ERR_SUCCESS)
+        if ((*current)->get_modifier3(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
-        if (current->get_modifier4(mod) == FT_ERR_SUCCESS)
+        if ((*current)->get_modifier4(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
+    }
+    if (current != ft_nullptr)
+    {
+        (void)current->destroy();
+        delete current;
     }
     if (item)
     {
@@ -515,7 +531,7 @@ void game_character::unequip_item(int32_t slot) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
-    ft_sharedptr<game_item> item;
+    ft_sharedptr<game_item> *item;
 
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
@@ -525,17 +541,22 @@ void game_character::unequip_item(int32_t slot) noexcept
         return ;
     }
     item = this->_equipment.get_item(slot);
-    if (item)
+    if (item != ft_nullptr && *item)
     {
         game_item_modifier mod;
-        if (item->get_modifier1(mod) == FT_ERR_SUCCESS)
+        if ((*item)->get_modifier1(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
-        if (item->get_modifier2(mod) == FT_ERR_SUCCESS)
+        if ((*item)->get_modifier2(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
-        if (item->get_modifier3(mod) == FT_ERR_SUCCESS)
+        if ((*item)->get_modifier3(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
-        if (item->get_modifier4(mod) == FT_ERR_SUCCESS)
+        if ((*item)->get_modifier4(mod) == FT_ERR_SUCCESS)
             this->apply_modifier_internal(mod, -1);
+    }
+    if (item != ft_nullptr)
+    {
+        (void)item->destroy();
+        delete item;
     }
     this->_equipment.unequip(slot);
     if (this->handle_component_error(this->_equipment.get_error()) == FT_TRUE)

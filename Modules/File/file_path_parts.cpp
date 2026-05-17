@@ -144,72 +144,110 @@ ft_bool file_path_is_relative(const char *path) noexcept
 
 char *file_path_basename(const char *path)
 {
-    ft_string normalized_path;
+    ft_string *normalized_path;
     ft_size_t trimmed_length;
     ft_size_t separator_index;
+    char *result;
 
     normalized_path = file_path_normalize(path);
-    if (normalized_path.get_error() != FT_ERR_SUCCESS)
+    if (normalized_path == ft_nullptr)
         return (ft_nullptr);
-    if (normalized_path.size() == 0)
-        return (file_path_duplicate_empty());
-    trimmed_length = file_path_trimmed_length(normalized_path);
+    result = ft_nullptr;
+    if (normalized_path->get_error() != FT_ERR_SUCCESS)
+        goto cleanup;
+    if (normalized_path->size() == 0)
+    {
+        result = file_path_duplicate_empty();
+        goto cleanup;
+    }
+    trimmed_length = file_path_trimmed_length(*normalized_path);
     if (trimmed_length == 1
-        && file_is_path_separator(normalized_path.c_str()[0]) == FT_TRUE)
-        return (file_path_duplicate_span(normalized_path.c_str(), 1));
-    separator_index = file_path_last_separator(normalized_path, trimmed_length);
+        && file_is_path_separator(normalized_path->c_str()[0]) == FT_TRUE)
+    {
+        result = file_path_duplicate_span(normalized_path->c_str(), 1);
+        goto cleanup;
+    }
+    separator_index = file_path_last_separator(*normalized_path, trimmed_length);
     if (separator_index == ft_string::npos)
-        return (file_path_duplicate_span(normalized_path.c_str(),
-            trimmed_length));
-    return (file_path_duplicate_span(normalized_path.c_str() + separator_index + 1,
-        trimmed_length - separator_index - 1));
+        result = file_path_duplicate_span(normalized_path->c_str(), trimmed_length);
+    else
+        result = file_path_duplicate_span(normalized_path->c_str() + separator_index
+                + 1, trimmed_length - separator_index - 1);
+cleanup:
+    (void)normalized_path->destroy();
+    delete normalized_path;
+    return (result);
 }
 
 char *file_path_dirname(const char *path)
 {
-    ft_string normalized_path;
+    ft_string *normalized_path;
     ft_size_t trimmed_length;
     ft_size_t separator_index;
+    char *result;
 
     normalized_path = file_path_normalize(path);
-    if (normalized_path.get_error() != FT_ERR_SUCCESS)
+    if (normalized_path == ft_nullptr)
         return (ft_nullptr);
-    if (normalized_path.size() == 0)
-        return (file_path_duplicate_empty());
-    trimmed_length = file_path_trimmed_length(normalized_path);
+    result = ft_nullptr;
+    if (normalized_path->get_error() != FT_ERR_SUCCESS)
+        goto cleanup;
+    if (normalized_path->size() == 0)
+    {
+        result = file_path_duplicate_empty();
+        goto cleanup;
+    }
+    trimmed_length = file_path_trimmed_length(*normalized_path);
     if (trimmed_length == 1
-        && file_is_path_separator(normalized_path.c_str()[0]) == FT_TRUE)
-        return (file_path_duplicate_span(normalized_path.c_str(), 1));
-    separator_index = file_path_last_separator(normalized_path, trimmed_length);
+        && file_is_path_separator(normalized_path->c_str()[0]) == FT_TRUE)
+    {
+        result = file_path_duplicate_span(normalized_path->c_str(), 1);
+        goto cleanup;
+    }
+    separator_index = file_path_last_separator(*normalized_path, trimmed_length);
     if (separator_index == ft_string::npos)
-        return (file_path_duplicate_span(".", 1));
-    if (separator_index == 0)
-        return (file_path_duplicate_span(normalized_path.c_str(), 1));
-    return (file_path_duplicate_span(normalized_path.c_str(), separator_index));
+        result = file_path_duplicate_span(".", 1);
+    else if (separator_index == 0)
+        result = file_path_duplicate_span(normalized_path->c_str(), 1);
+    else
+        result = file_path_duplicate_span(normalized_path->c_str(), separator_index);
+cleanup:
+    (void)normalized_path->destroy();
+    delete normalized_path;
+    return (result);
 }
 
 char *file_path_extension(const char *path)
 {
-    ft_string normalized_path;
+    ft_string *normalized_path;
     ft_size_t trimmed_length;
     ft_size_t separator_index;
     ft_size_t basename_start;
     ft_size_t dot_index;
+    char *result;
 
     normalized_path = file_path_normalize(path);
-    if (normalized_path.get_error() != FT_ERR_SUCCESS)
+    if (normalized_path == ft_nullptr)
         return (ft_nullptr);
-    trimmed_length = file_path_trimmed_length(normalized_path);
-    separator_index = file_path_last_separator(normalized_path, trimmed_length);
+    result = ft_nullptr;
+    if (normalized_path->get_error() != FT_ERR_SUCCESS)
+        goto cleanup;
+    trimmed_length = file_path_trimmed_length(*normalized_path);
+    separator_index = file_path_last_separator(*normalized_path, trimmed_length);
     basename_start = 0;
     if (separator_index != ft_string::npos)
         basename_start = separator_index + 1;
-    dot_index = file_path_extension_dot(normalized_path, basename_start,
+    dot_index = file_path_extension_dot(*normalized_path, basename_start,
             trimmed_length);
     if (dot_index == ft_string::npos)
-        return (file_path_duplicate_empty());
-    return (file_path_duplicate_span(normalized_path.c_str() + dot_index,
-        trimmed_length - dot_index));
+        result = file_path_duplicate_empty();
+    else
+        result = file_path_duplicate_span(normalized_path->c_str() + dot_index,
+                trimmed_length - dot_index);
+cleanup:
+    (void)normalized_path->destroy();
+    delete normalized_path;
+    return (result);
 }
 
 char *file_path_stem(const char *path)

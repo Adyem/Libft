@@ -1,20 +1,7 @@
 #include "promise.hpp"
 #include "../Networking/openssl_support.hpp"
-#include "../Template/move.hpp"
 
 api_promise::api_promise() noexcept
-{
-    return ;
-}
-
-api_promise::api_promise(const api_promise &other) noexcept
-    : ft_promise<json_group*>(other)
-{
-    return ;
-}
-
-api_promise::api_promise(api_promise &&other) noexcept
-    : ft_promise<json_group*>(ft_move(other))
 {
     return ;
 }
@@ -43,18 +30,6 @@ api_string_promise::api_string_promise() noexcept
     return ;
 }
 
-api_string_promise::api_string_promise(const api_string_promise &other) noexcept
-    : ft_promise<char*>(other)
-{
-    return ;
-}
-
-api_string_promise::api_string_promise(api_string_promise &&other) noexcept
-    : ft_promise<char*>(ft_move(other))
-{
-    return ;
-}
-
 api_string_promise::~api_string_promise() noexcept
 {
     return ;
@@ -75,18 +50,6 @@ ft_bool api_string_promise::request(const char *ip_address, uint16_t port,
 }
 
 api_tls_promise::api_tls_promise() noexcept
-{
-    return ;
-}
-
-api_tls_promise::api_tls_promise(const api_tls_promise &other) noexcept
-    : ft_promise<json_group*>(other)
-{
-    return ;
-}
-
-api_tls_promise::api_tls_promise(api_tls_promise &&other) noexcept
-    : ft_promise<json_group*>(ft_move(other))
 {
     return ;
 }
@@ -123,18 +86,6 @@ ft_bool api_tls_promise::request(const char *host, uint16_t port,
 }
 
 api_tls_string_promise::api_tls_string_promise() noexcept
-{
-    return ;
-}
-
-api_tls_string_promise::api_tls_string_promise(const api_tls_string_promise &other) noexcept
-    : ft_promise<char*>(other)
-{
-    return ;
-}
-
-api_tls_string_promise::api_tls_string_promise(api_tls_string_promise &&other) noexcept
-    : ft_promise<char*>(ft_move(other))
 {
     return ;
 }

@@ -247,10 +247,12 @@ FT_TEST(test_json_dom_bridge_round_trip)
     FT_ASSERT(round_trip_count != ft_nullptr);
     FT_ASSERT(round_trip_count->is_big_number);
     FT_ASSERT(round_trip_count->big_number != ft_nullptr);
-    ft_string round_trip_count_string;
-    round_trip_count_string = round_trip_count->big_number->to_string_base(10);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_count_string.get_error());
-    FT_ASSERT(std::string(round_trip_count_string.c_str()) == "12345678901234567890");
+    ft_string *round_trip_count_string = round_trip_count->big_number->to_string_base(10);
+    FT_ASSERT(round_trip_count_string != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_count_string->get_error());
+    FT_ASSERT(std::string(round_trip_count_string->c_str()) == "12345678901234567890");
+    (void)round_trip_count_string->destroy();
+    delete round_trip_count_string;
     return (1);
 }
 

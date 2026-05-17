@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Template/string_view.hpp"
+#include "../../Modules/Template/move.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/CMA/CMA.hpp"
@@ -146,8 +147,9 @@ FT_TEST(test_string_view_move_constructor_preserves_thread_safety_and_data)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_view.get_error());
 
-    moved_view_pointer = new ft_string_view<char>(ft_move(source_view));
+    moved_view_pointer = new ft_string_view<char>();
     FT_ASSERT(moved_view_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_view_pointer->move(source_view));
     FT_ASSERT_EQ(FT_TRUE, moved_view_pointer->is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_view_pointer->get_error());
     FT_ASSERT_EQ(5u, moved_view_pointer->size());

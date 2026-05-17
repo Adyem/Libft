@@ -39,67 +39,6 @@ game_server::game_server() noexcept
     return ;
 }
 
-game_server::game_server(const game_server &other) noexcept
-    : _server(ft_nullptr), _world(), _clients(), _auth_token(),
-      _on_join(ft_nullptr), _on_leave(ft_nullptr), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_server::game_server(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    initialize_error = this->initialize(other._world, other._auth_token.c_str());
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_clients = other._clients;
-    this->_on_join = other._on_join;
-    this->_on_leave = other._on_leave;
-    this->set_error(other.get_error());
-    return ;
-}
-
-game_server::game_server(game_server &&other) noexcept
-    : _server(ft_nullptr), _world(), _clients(), _auth_token(),
-      _on_join(ft_nullptr), _on_leave(ft_nullptr), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_server::game_server(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t game_server::initialize() noexcept
 {
     ft_sharedptr<game_world> world;

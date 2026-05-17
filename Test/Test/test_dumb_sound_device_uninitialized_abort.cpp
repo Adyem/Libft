@@ -26,20 +26,22 @@ class test_sound_device_impl : public ft_sound_device
         void stop(void);
 };
 
+static int32_t g_sound_device_initialize_error;
+
 test_sound_device_impl::test_sound_device_impl(void)
 {
     return ;
 }
 
 test_sound_device_impl::test_sound_device_impl(const test_sound_device_impl &other)
-    : ft_sound_device(other)
 {
+    this->initialize(other);
     return ;
 }
 
 test_sound_device_impl::test_sound_device_impl(test_sound_device_impl &&other)
-    : ft_sound_device(static_cast<ft_sound_device &&>(other))
 {
+    this->initialize(static_cast<ft_sound_device &&>(other));
     return ;
 }
 
@@ -85,7 +87,7 @@ static void sound_device_sigabrt_handler(int32_t signal_number)
     siglongjmp(g_sound_device_jump_buffer, 1);
 }
 
-static int32_t sound_device_expect_sigabrt_uninitialised(void (*operation)(test_sound_device_impl &))
+static int32_t sound_device_expect_sigabrt_uninitialised(int32_t (*operation)(test_sound_device_impl &))
 {
     struct sigaction new_action;
     struct sigaction old_action;
@@ -152,28 +154,28 @@ static int32_t sound_device_expect_sigabrt_uninitialised(void (*operation)(test_
     return (result);
 }
 
-static void sound_device_call_move(test_sound_device_impl &sound_device_instance)
+static int32_t sound_device_call_move(test_sound_device_impl &sound_device_instance)
 {
-    (void)sound_device_instance.move(sound_device_instance);
-    return ;
+    g_sound_device_initialize_error = sound_device_instance.move(sound_device_instance);
+    return (g_sound_device_initialize_error);
 }
 
-static void sound_device_call_enable_thread_safety(test_sound_device_impl &sound_device_instance)
+static int32_t sound_device_call_enable_thread_safety(test_sound_device_impl &sound_device_instance)
 {
-    (void)sound_device_instance.enable_thread_safety();
-    return ;
+    g_sound_device_initialize_error = sound_device_instance.enable_thread_safety();
+    return (g_sound_device_initialize_error);
 }
 
-static void sound_device_call_disable_thread_safety(test_sound_device_impl &sound_device_instance)
+static int32_t sound_device_call_disable_thread_safety(test_sound_device_impl &sound_device_instance)
 {
-    sound_device_instance.disable_thread_safety();
-    return ;
+    g_sound_device_initialize_error = sound_device_instance.disable_thread_safety();
+    return (g_sound_device_initialize_error);
 }
 
-static void sound_device_call_is_thread_safe(test_sound_device_impl &sound_device_instance)
+static int32_t sound_device_call_is_thread_safe(test_sound_device_impl &sound_device_instance)
 {
-    (void)sound_device_instance.is_thread_safe();
-    return ;
+    g_sound_device_initialize_error = sound_device_instance.is_thread_safe();
+    return (g_sound_device_initialize_error);
 }
 
 FT_TEST(test_dumb_sound_device_uninitialised_destroy_returns_invalid_state)

@@ -112,20 +112,28 @@ FT_TEST(test_ft_result_error_has_no_value)
 
 FT_TEST(test_ft_result_success_factory)
 {
-    ft_result<int32_t> result(ft_result<int32_t>::success(77));
+    ft_result<int32_t> *result;
 
-    FT_ASSERT_EQ(FT_TRUE, result.has_value());
-    FT_ASSERT(result.get_value() != ft_nullptr);
-    FT_ASSERT_EQ(77, *result.get_value());
+    result = ft_result<int32_t>::success(77);
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, result->has_value());
+    FT_ASSERT(result->get_value() != ft_nullptr);
+    FT_ASSERT_EQ(77, *result->get_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->destroy());
+    delete result;
     return (1);
 }
 
 FT_TEST(test_ft_result_failure_factory_rejects_success_error)
 {
-    ft_result<int32_t> result(ft_result<int32_t>::failure(FT_ERR_SUCCESS));
+    ft_result<int32_t> *result;
 
-    FT_ASSERT_EQ(FT_FALSE, result.has_value());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result.get_error());
+    result = ft_result<int32_t>::failure(FT_ERR_SUCCESS);
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(FT_FALSE, result->has_value());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->destroy());
+    delete result;
     return (1);
 }
 

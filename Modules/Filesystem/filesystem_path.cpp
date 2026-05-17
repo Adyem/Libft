@@ -2,58 +2,71 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../File/file_utils.hpp"
+#include <new>
 
-static ft_string filesystem_empty_string(void)
+static ft_string *filesystem_empty_string(void)
 {
-    ft_string result;
+    ft_string *result;
 
-    (void)result.initialize();
+    result = new (std::nothrow) ft_string();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    if (result->initialize() != FT_ERR_SUCCESS)
+    {
+        delete result;
+        return (ft_nullptr);
+    }
     return (result);
 }
 
-static ft_string filesystem_string_from_owned_c_string(char *value)
+static ft_string *filesystem_string_from_owned_c_string(char *value)
 {
-    ft_string result;
+    ft_string *result;
 
     if (value == ft_nullptr)
-    {
         return (filesystem_empty_string());
-    }
-    if (result.initialize(value) != FT_ERR_SUCCESS)
+    result = new (std::nothrow) ft_string();
+    if (result == ft_nullptr)
     {
         cma_free(value);
-        return (result);
+        return (ft_nullptr);
+    }
+    if (result->initialize(value) != FT_ERR_SUCCESS)
+    {
+        cma_free(value);
+        delete result;
+        return (ft_nullptr);
     }
     cma_free(value);
     return (result);
 }
 
-ft_string filesystem_normalize_path(const char *path)
+ft_string *filesystem_normalize_path(const char *path)
 {
     return (file_path_normalize(path));
 }
 
-ft_string filesystem_join_path(const char *path_left, const char *path_right)
+ft_string *filesystem_join_path(const char *path_left, const char *path_right)
 {
     return (file_path_join(path_left, path_right));
 }
 
-ft_string filesystem_basename(const char *path)
+ft_string *filesystem_basename(const char *path)
 {
     return (filesystem_string_from_owned_c_string(file_path_basename(path)));
 }
 
-ft_string filesystem_dirname(const char *path)
+ft_string *filesystem_dirname(const char *path)
 {
     return (filesystem_string_from_owned_c_string(file_path_dirname(path)));
 }
 
-ft_string filesystem_extension(const char *path)
+ft_string *filesystem_extension(const char *path)
 {
     return (filesystem_string_from_owned_c_string(file_path_extension(path)));
 }
 
-ft_string filesystem_stem(const char *path)
+ft_string *filesystem_stem(const char *path)
 {
     return (filesystem_string_from_owned_c_string(file_path_stem(path)));
 }

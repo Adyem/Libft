@@ -10,9 +10,6 @@
 #include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <new>
 
@@ -205,106 +202,6 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_size_t initial_capacit
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename EventType, typename... Args>
-ft_event_emitter<EventType, Args...>::ft_event_emitter(
-    const ft_event_emitter<EventType, Args...> &other)
-    : _listeners(ft_nullptr)
-    , _configured_initial_capacity(other._configured_initial_capacity)
-    , _capacity(0)
-    , _size(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-    ft_size_t listener_index;
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    previous_error = ft_event_emitter<EventType, Args...>::_last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_event_emitter::ft_event_emitter(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    listener_index = 0;
-    while (listener_index < other._size)
-    {
-        this->on(other._listeners[listener_index]._event,
-            other._listeners[listener_index]._callback);
-        if (this->get_error() != FT_ERR_SUCCESS)
-        {
-            (void)other.unlock_internal(lock_acquired);
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            (void)set_error(previous_error);
-            return ;
-        }
-        listener_index = listener_index + 1;
-    }
-    (void)other.unlock_internal(lock_acquired);
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename EventType, typename... Args>
-ft_event_emitter<EventType, Args...>::ft_event_emitter(
-    ft_event_emitter<EventType, Args...> &&other)
-    : _listeners(ft_nullptr)
-    , _configured_initial_capacity(other._configured_initial_capacity)
-    , _capacity(0)
-    , _size(0)
-    , _mutex(ft_nullptr)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = ft_event_emitter<EventType, Args...>::_last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_event_emitter::ft_event_emitter(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)set_error(previous_error);
     return ;
 }
 

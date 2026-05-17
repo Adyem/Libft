@@ -47,7 +47,8 @@ FT_TEST(test_ft_deque_move_constructor_recreates_mutex)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.enable_thread_safety());
     FT_ASSERT(source_deque.is_thread_safe());
 
-    ft_deque<int> target_deque(ft_move(source_deque));
+    ft_deque<int> target_deque;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_deque.move(source_deque));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, target_deque.get_error());
     FT_ASSERT(target_deque.is_thread_safe());

@@ -46,7 +46,8 @@ FT_TEST(test_template_bitset_move_constructor_preserves_thread_safety)
     source_value.set(9);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
 
-    ft_bitset moved_value(static_cast<ft_bitset &&>(source_value));
+    ft_bitset moved_value(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_value.move(source_value));
 
     FT_ASSERT_EQ(FT_TRUE, moved_value.is_thread_safe());
     FT_ASSERT_EQ(FT_TRUE, moved_value.test(3));

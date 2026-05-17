@@ -14,6 +14,15 @@ static void json_dom_delete_node(ft_dom_node *node) noexcept
     return ;
 }
 
+static void json_dom_delete_string(ft_string *string) noexcept
+{
+    if (!string)
+        return ;
+    (void)string->destroy();
+    delete string;
+    return ;
+}
+
 static int32_t json_dom_append_item(const json_item *item, ft_dom_node *group_node) noexcept
 {
     int32_t node_initialize_error;
@@ -53,19 +62,27 @@ static int32_t json_dom_append_item(const json_item *item, ft_dom_node *group_no
             json_dom_delete_node(item_node);
             return (FT_ERR_INVALID_STATE);
         }
-        ft_string number_string;
+        ft_string *number_string;
 
         number_string = item->big_number->to_string_base(10);
-        if (number_string.get_error() != FT_ERR_SUCCESS)
+        if (!number_string)
         {
             json_dom_delete_node(item_node);
             return (FT_ERR_INVALID_STATE);
         }
-        if (item_node->set_value(number_string) != FT_ERR_SUCCESS)
+        if (number_string->get_error() != FT_ERR_SUCCESS)
         {
+            json_dom_delete_string(number_string);
             json_dom_delete_node(item_node);
             return (FT_ERR_INVALID_STATE);
         }
+        if (item_node->set_value(*number_string) != FT_ERR_SUCCESS)
+        {
+            json_dom_delete_string(number_string);
+            json_dom_delete_node(item_node);
+            return (FT_ERR_INVALID_STATE);
+        }
+        json_dom_delete_string(number_string);
         if (item_node->add_attribute("json:type", "big_number") != FT_ERR_SUCCESS)
         {
             json_dom_delete_node(item_node);

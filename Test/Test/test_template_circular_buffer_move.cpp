@@ -18,8 +18,9 @@ FT_TEST(test_ft_circular_buffer_move_constructor_preserves_state)
     FT_ASSERT_EQ(FT_TRUE, source_buffer.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.get_error());
 
-    moved_buffer_pointer = new ft_circular_buffer<int>(ft_move(source_buffer));
+    moved_buffer_pointer = new ft_circular_buffer<int>(3);
     FT_ASSERT(moved_buffer_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer_pointer->move(source_buffer));
     FT_ASSERT_EQ(FT_TRUE, moved_buffer_pointer->is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer_pointer->get_error());
     FT_ASSERT_EQ(11, moved_buffer_pointer->pop());

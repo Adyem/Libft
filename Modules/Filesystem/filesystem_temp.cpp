@@ -66,7 +66,7 @@ int32_t filesystem_temp_path(const char *prefix, const char *extension,
     ft_string *output)
 {
     ft_string name;
-    ft_string joined_path;
+    ft_string *joined_path;
     int32_t error_code;
 
     if (output == ft_nullptr)
@@ -118,10 +118,19 @@ int32_t filesystem_temp_path(const char *prefix, const char *extension,
         }
     }
     joined_path = file_path_join(filesystem_temp_directory(), name.c_str());
-    if (joined_path.get_error() != FT_ERR_SUCCESS)
+    if (joined_path == ft_nullptr)
     {
-        return (joined_path.get_error());
+        return (FT_ERR_INVALID_STATE);
     }
-    *output = joined_path;
+    if (joined_path->get_error() != FT_ERR_SUCCESS)
+    {
+        error_code = joined_path->get_error();
+        (void)joined_path->destroy();
+        delete joined_path;
+        return (error_code);
+    }
+    *output = *joined_path;
+    (void)joined_path->destroy();
+    delete joined_path;
     return (output->get_error());
 }

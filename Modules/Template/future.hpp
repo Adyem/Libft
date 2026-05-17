@@ -31,12 +31,12 @@ class ft_future
         ft_future(const ft_future &other) = delete;
         ft_future(ft_future &&other) = delete;
         explicit ft_future(ft_promise<ValueType>& promise);
-        explicit ft_future(ft_sharedptr<ft_promise<ValueType> > promise_pointer);
+        explicit ft_future(const ft_sharedptr<ft_promise<ValueType> > &promise_pointer);
         ~ft_future();
         ft_future &operator=(const ft_future &other) = delete;
         ft_future &operator=(ft_future &&other) = delete;
         int32_t initialize();
-        int32_t initialize(ft_sharedptr<ft_promise<ValueType> > promise_pointer);
+        int32_t initialize(const ft_sharedptr<ft_promise<ValueType> > &promise_pointer);
         int32_t destroy();
         int32_t initialize(const ft_future &other);
         int32_t initialize(ft_future &&other);
@@ -74,12 +74,12 @@ class ft_future<void>
         ft_future(const ft_future &other) = delete;
         ft_future(ft_future &&other) = delete;
         explicit ft_future(ft_promise<void>& promise);
-        explicit ft_future(ft_sharedptr<ft_promise<void> > promise_pointer);
+        explicit ft_future(const ft_sharedptr<ft_promise<void> > &promise_pointer);
         ~ft_future();
         ft_future &operator=(const ft_future &other) = delete;
         ft_future &operator=(ft_future &&other) = delete;
         int32_t initialize();
-        int32_t initialize(ft_sharedptr<ft_promise<void> > promise_pointer);
+        int32_t initialize(const ft_sharedptr<ft_promise<void> > &promise_pointer);
         int32_t destroy();
         int32_t initialize(const ft_future &other);
         int32_t initialize(ft_future &&other);
@@ -191,7 +191,8 @@ int32_t ft_future<ValueType>::initialize()
 }
 
 template <typename ValueType>
-int32_t ft_future<ValueType>::initialize(ft_sharedptr<ft_promise<ValueType> > promise_pointer)
+int32_t ft_future<ValueType>::initialize(
+    const ft_sharedptr<ft_promise<ValueType> > &promise_pointer)
 {
     int32_t shared_promise_error;
 
@@ -208,7 +209,7 @@ int32_t ft_future<ValueType>::initialize(ft_sharedptr<ft_promise<ValueType> > pr
         return (shared_promise_error);
     }
     this->_shared_promise = promise_pointer;
-    this->_promise = promise_pointer.get();
+    this->_promise = this->_shared_promise.get();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -254,8 +255,9 @@ ft_future<ValueType>::ft_future(ft_promise<ValueType>& promise)
 }
 
 template <typename ValueType>
-ft_future<ValueType>::ft_future(ft_sharedptr<ft_promise<ValueType> > promise_pointer)
-    : _promise(promise_pointer.get()), _shared_promise(promise_pointer),
+ft_future<ValueType>::ft_future(
+    const ft_sharedptr<ft_promise<ValueType> > &)
+    : _promise(ft_nullptr), _shared_promise(),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     return ;
@@ -706,7 +708,8 @@ inline int32_t ft_future<void>::initialize()
     return (FT_ERR_SUCCESS);
 }
 
-inline int32_t ft_future<void>::initialize(ft_sharedptr<ft_promise<void> > promise_pointer)
+inline int32_t ft_future<void>::initialize(
+    const ft_sharedptr<ft_promise<void> > &promise_pointer)
 {
     int32_t shared_promise_error;
 
@@ -723,7 +726,7 @@ inline int32_t ft_future<void>::initialize(ft_sharedptr<ft_promise<void> > promi
         return (shared_promise_error);
     }
     this->_shared_promise = promise_pointer;
-    this->_promise = promise_pointer.get();
+    this->_promise = this->_shared_promise.get();
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -766,12 +769,11 @@ inline ft_future<void>::ft_future(ft_promise<void>& promise)
     return ;
 }
 
-inline ft_future<void>::ft_future(ft_sharedptr<ft_promise<void> > promise_pointer)
+inline ft_future<void>::ft_future(
+    const ft_sharedptr<ft_promise<void> > &)
     : _promise(ft_nullptr), _shared_promise(),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    if (this->_shared_promise.initialize(promise_pointer) == FT_ERR_SUCCESS)
-        this->_promise = this->_shared_promise.get();
     return ;
 }
 

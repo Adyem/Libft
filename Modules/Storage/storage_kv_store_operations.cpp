@@ -1656,10 +1656,17 @@ int32_t kv_store::set_backend(kv_store_backend_type backend_type, const char *lo
     {
         return (FT_ERR_INVALID_OPERATION);
     }
-    ft_string previous_path(this->_file_path);
-    int32_t previous_path_error = storage_kv_move_string_error(previous_path);
+    ft_string previous_path;
+    int32_t previous_path_error = previous_path.initialize(this->_file_path);
     if (previous_path_error != FT_ERR_SUCCESS)
     {
+        kv_store_finalize_lock(this->_mutex, lock_acquired);
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    previous_path_error = storage_kv_move_string_error(previous_path);
+    if (previous_path_error != FT_ERR_SUCCESS)
+    {
+        kv_store_finalize_lock(this->_mutex, lock_acquired);
         return (FT_ERR_INVALID_OPERATION);
     }
     kv_store_backend_type previous_backend;
@@ -1674,6 +1681,7 @@ int32_t kv_store::set_backend(kv_store_backend_type backend_type, const char *lo
         if (revert_error != FT_ERR_SUCCESS)
             this->_file_path.clear();
         this->_backend_type = previous_backend;
+        kv_store_finalize_lock(this->_mutex, lock_acquired);
         return (FT_ERR_INVALID_OPERATION);
     }
     this->_backend_type = backend_type;
@@ -1686,11 +1694,11 @@ int32_t kv_store::set_backend(kv_store_backend_type backend_type, const char *lo
             if (revert_error != FT_ERR_SUCCESS)
                 this->_file_path.clear();
             this->_backend_type = previous_backend;
+            kv_store_finalize_lock(this->_mutex, lock_acquired);
             return (FT_ERR_INVALID_OPERATION);
         }
     }
-    if (lock_acquired)
-        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    kv_store_finalize_lock(this->_mutex, lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 

@@ -71,7 +71,8 @@ FT_TEST(test_ft_cancellation_token_callbacks_after_request)
     });
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registration_status);
 
-    ft_cancellation_state moved_state(static_cast<ft_cancellation_state &&>(source_state));
+    ft_cancellation_state moved_state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_state.move(source_state));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_state.request_cancel());
     FT_ASSERT_EQ(1, callback_count.load());

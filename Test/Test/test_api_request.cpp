@@ -2215,8 +2215,9 @@ FT_TEST(test_http2_frame_copy_move_preserve_state)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, source.set_error(FT_ERR_ALREADY_EXISTS));
     {
-        http2_frame copied(source);
+        http2_frame copied;
 
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.initialize(source));
         FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, copied._initialised_state);
         FT_ASSERT_EQ(FT_TRUE, copied.is_thread_safe());
         FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, copied.get_error());

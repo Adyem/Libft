@@ -63,24 +63,21 @@ static int su_write_text_file(const char *path, const char *contents)
     return (0);
 }
 
-static ft_string su_read_text_file(const char *path)
+static int su_read_text_file(const char *path, ft_string &result)
 {
     su_file *file_stream;
     char buffer[128];
-    ft_string result;
     int initialize_error;
 
     file_stream = su_fopen(path, O_RDONLY);
     if (file_stream == ft_nullptr)
-    {
-        return (result);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
 
     initialize_error = result.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         (void)su_fclose(file_stream);
-        return (result);
+        return (initialize_error);
     }
     while (true)
     {
@@ -96,7 +93,7 @@ static ft_string su_read_text_file(const char *path)
         }
     }
     su_fclose(file_stream);
-    return (result);
+    return (FT_ERR_SUCCESS);
 }
 
 static void su_prepare_directory_fixture(void)
@@ -133,7 +130,7 @@ FT_TEST(test_su_copy_file_copies_contents)
     su_cleanup_path(destination_path);
     FT_ASSERT_EQ(0, su_write_text_file(source_path, "example payload"));
     FT_ASSERT_EQ(0, su_copy_file(source_path, destination_path));
-    contents = su_read_text_file(destination_path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, su_read_text_file(destination_path, contents));
     FT_ASSERT(strcmp(contents.c_str(), "example payload") == 0);
     su_cleanup_path(source_path);
     su_cleanup_path(destination_path);
@@ -148,9 +145,12 @@ FT_TEST(test_su_copy_directory_recursive_replicates_structure)
     su_prepare_directory_fixture();
     su_remove_directory("su_copy_dir_destination");
     FT_ASSERT_EQ(0, su_copy_directory_recursive("su_copy_dir_source", "su_copy_dir_destination"));
-    contents = su_read_text_file("su_copy_dir_destination/root.txt");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, su_read_text_file(
+        "su_copy_dir_destination/root.txt", contents));
     FT_ASSERT(strcmp(contents.c_str(), "root payload\n") == 0);
-    contents = su_read_text_file("su_copy_dir_destination/nested/item.txt");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, contents.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, su_read_text_file(
+        "su_copy_dir_destination/nested/item.txt", contents));
     FT_ASSERT(strcmp(contents.c_str(), "nested payload\n") == 0);
     su_cleanup_directory_fixture();
     return (1);

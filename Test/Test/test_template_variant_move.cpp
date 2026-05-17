@@ -52,8 +52,9 @@ FT_TEST(test_variant_move_constructor_rebuilds_mutex)
     source_variant.emplace<std::string>("reset");
     FT_ASSERT(source_variant.is_thread_safe());
 
-    moved_variant_pointer = new ft_variant<int, std::string>(ft_move(source_variant));
+    moved_variant_pointer = new ft_variant<int, std::string>();
     FT_ASSERT(moved_variant_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_variant_pointer->move(source_variant));
     FT_ASSERT(moved_variant_pointer->is_thread_safe());
     FT_ASSERT(moved_variant_pointer->holds_alternative<std::string>());
     FT_ASSERT_EQ(std::string("reset"), variant_instance_get<std::string>(*moved_variant_pointer));
@@ -100,8 +101,9 @@ FT_TEST(test_variant_move_preserves_disabled_thread_safety)
 
     FT_ASSERT_EQ(0, source_variant.initialize());
     source_variant.emplace<int>(5);
-    moved_variant_pointer = new ft_variant<int, std::string>(ft_move(source_variant));
+    moved_variant_pointer = new ft_variant<int, std::string>();
     FT_ASSERT(moved_variant_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_variant_pointer->move(source_variant));
     FT_ASSERT_EQ(FT_FALSE, moved_variant_pointer->is_thread_safe());
     FT_ASSERT_EQ(5, variant_instance_get<int>(*moved_variant_pointer));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_variant.initialize());

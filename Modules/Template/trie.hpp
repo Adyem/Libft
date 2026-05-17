@@ -7,10 +7,7 @@
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "unordered_map.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <new>
 
@@ -190,99 +187,6 @@ ft_trie<ValueType>::ft_trie()
     : _data(ft_nullptr), _children(), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename ValueType>
-ft_trie<ValueType>::ft_trie(const ft_trie<ValueType> &other)
-    : _data(ft_nullptr), _children(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_trie::ft_trie(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._data != ft_nullptr)
-    {
-        this->_data = static_cast<node_value*>(cma_malloc(sizeof(node_value)));
-        if (this->_data == ft_nullptr)
-        {
-            (void)other.unlock_internal(lock_acquired);
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return ;
-        }
-        *this->_data = *other._data;
-    }
-    typename ft_unordered_map<char, ft_trie<ValueType>*>::const_iterator child_iterator(
-        other._children.begin());
-    typename ft_unordered_map<char, ft_trie<ValueType>*>::const_iterator child_end(
-        other._children.end());
-    while (child_iterator != child_end)
-    {
-        ft_trie<ValueType> *new_child;
-
-        new_child = new (std::nothrow) ft_trie<ValueType>(*child_iterator->second);
-        if (new_child == ft_nullptr
-            || new_child->_initialised_state == FT_CLASS_STATE_DESTROYED)
-        {
-            if (new_child != ft_nullptr)
-                delete new_child;
-            (void)other.unlock_internal(lock_acquired);
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            return ;
-        }
-        this->_children[child_iterator->first] = new_child;
-        ++child_iterator;
-    }
-    (void)other.unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ValueType>
-ft_trie<ValueType>::ft_trie(ft_trie<ValueType> &&other)
-    : _data(ft_nullptr), _children(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "ft_trie::ft_trie(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

@@ -67,8 +67,8 @@ class yaml_value
 };
 
 ft_size_t      yaml_find_char(const ft_string &string, char character) noexcept;
-ft_string   yaml_substr(const ft_string &string, ft_size_t start, ft_size_t length) noexcept;
-ft_string   yaml_substr_from(const ft_string &string, ft_size_t start) noexcept;
+ft_string   *yaml_substr(const ft_string &string, ft_size_t start, ft_size_t length) noexcept;
+ft_string   *yaml_substr_from(const ft_string &string, ft_size_t start) noexcept;
 ft_size_t      yaml_count_indent(const ft_string &line) noexcept;
 void        yaml_trim(ft_string &string) noexcept;
 int32_t         yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noexcept;
@@ -76,7 +76,7 @@ int32_t         yaml_split_lines(const ft_string &content, ft_vector<ft_string> 
 yaml_value    *yaml_read_from_string(const ft_string &content) noexcept;
 yaml_value    *yaml_read_from_file(const char *file_path) noexcept;
 yaml_value    *yaml_read_from_backend(ft_document_source &source) noexcept;
-ft_string      yaml_write_to_string(const yaml_value *value) noexcept;
+ft_string     *yaml_write_to_string(const yaml_value *value) noexcept;
 int32_t           yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept;
 int32_t           yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexcept;
 void          yaml_free(yaml_value *value) noexcept;

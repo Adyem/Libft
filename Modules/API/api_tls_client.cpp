@@ -49,17 +49,30 @@ static char tls_string_char_at(const ft_string &value, ft_size_t index)
     return (data[index]);
 }
 
-static ft_string tls_string_substr(const ft_string &value, ft_size_t start_index, ft_size_t length)
+static int32_t tls_string_substr(const ft_string &value, ft_size_t start_index,
+    ft_size_t length, ft_string &output)
 {
-    ft_string result;
     ft_size_t total_length;
     ft_size_t copy_length;
     const char *data;
     ft_size_t index;
+    int32_t string_error;
 
+    if (output.is_initialised() == FT_FALSE)
+    {
+        string_error = output.initialize();
+        if (string_error != FT_ERR_SUCCESS)
+            return (string_error);
+    }
+    else
+    {
+        string_error = output.clear();
+        if (string_error != FT_ERR_SUCCESS)
+            return (string_error);
+    }
     total_length = value.size();
     if (start_index >= total_length)
-        return (result);
+        return (FT_ERR_SUCCESS);
     data = value.c_str();
     copy_length = length;
     if (start_index + copy_length > total_length)
@@ -67,10 +80,12 @@ static ft_string tls_string_substr(const ft_string &value, ft_size_t start_index
     index = 0;
     while (index < copy_length)
     {
-        result.append(data[start_index + index]);
+        string_error = output.append(data[start_index + index]);
+        if (string_error != FT_ERR_SUCCESS)
+            return (string_error);
         index++;
     }
-    return (result);
+    return (FT_ERR_SUCCESS);
 }
 
 static ft_size_t tls_string_find_substring(const ft_string &value, const char *needle, ft_size_t start_index)
@@ -796,7 +811,8 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     ft_bool has_content_length = FT_FALSE;
     ft_bool is_chunked = FT_FALSE;
     ft_string headers_section;
-    headers_section = tls_string_substr(response, 0, header_len);
+    if (tls_string_substr(response, 0, header_len, headers_section) != FT_ERR_SUCCESS)
+        return (ft_nullptr);
     ft_size_t line_offset = 0;
     while (line_offset < headers_section.size())
     {
@@ -804,20 +820,25 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         if (line_end == TLS_STRING_NPOS)
             break ;
         ft_string header_line;
-        header_line = tls_string_substr(headers_section, line_offset, line_end - line_offset);
+        if (tls_string_substr(headers_section, line_offset, line_end - line_offset,
+                header_line) != FT_ERR_SUCCESS)
+            return (ft_nullptr);
         line_offset = line_end + 2;
         if (header_line.empty())
-            continue;
+            continue ;
         ft_size_t colon_index = tls_string_find_char(header_line, ':', 0);
         if (colon_index == TLS_STRING_NPOS)
-            continue;
+            continue ;
         ft_string header_name;
-        header_name = tls_string_substr(header_line, 0, colon_index);
+        if (tls_string_substr(header_line, 0, colon_index, header_name) != FT_ERR_SUCCESS)
+            return (ft_nullptr);
         tls_trim_whitespace(header_name);
         if (header_name.empty())
-            continue;
+            continue ;
         ft_string header_value;
-        header_value = tls_string_substr(header_line, colon_index + 1, header_line.size());
+        if (tls_string_substr(header_line, colon_index + 1, header_line.size(),
+                header_value) != FT_ERR_SUCCESS)
+            return (ft_nullptr);
         tls_trim_whitespace(header_value);
         if (tls_header_equals(header_name, "Content-Length") && !has_content_length)
         {
@@ -856,7 +877,9 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                     && tls_string_char_at(lowered_value, token_end) != ',')
                     token_end++;
                 ft_string token_value;
-                token_value = tls_string_substr(lowered_value, token_start, token_end - token_start);
+                if (tls_string_substr(lowered_value, token_start, token_end - token_start,
+                        token_value) != FT_ERR_SUCCESS)
+                    return (ft_nullptr);
                 tls_trim_whitespace(token_value);
                 if (token_value == "chunked")
                     is_chunked = FT_TRUE;

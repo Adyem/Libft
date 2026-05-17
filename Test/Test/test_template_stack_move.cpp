@@ -71,7 +71,8 @@ FT_TEST(test_ft_stack_move_constructor_rebuilds_mutex)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.initialize());
     push_values(source_stack, values);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stack.enable_thread_safety());
-    stack_type destination_stack(ft_move(source_stack));
+    stack_type destination_stack;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_stack.move(source_stack));
 
     std::vector<int> drained = drain_stack(destination_stack);
     FT_ASSERT_EQ(values.size(), drained.size());

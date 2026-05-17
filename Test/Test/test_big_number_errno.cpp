@@ -121,31 +121,43 @@ FT_TEST(test_big_number_errno_resets_arithmetic)
     exponent_number.assign("3");
     modulus_number.assign("7");
 
-    ft_big_number sum_number = left_number + right_number;
+    ft_big_number sum_number;
+    sum_number = left_number + right_number;
     FT_ASSERT_EQ(0, std::strcmp(sum_number.c_str(), "25"));
 
-    ft_big_number difference_number = left_number - right_number;
+    ft_big_number difference_number;
+    difference_number = left_number - right_number;
     FT_ASSERT_EQ(0, std::strcmp(difference_number.c_str(), "15"));
 
-    ft_big_number product_number = left_number * right_number;
+    ft_big_number product_number;
+    product_number = left_number * right_number;
     FT_ASSERT_EQ(0, std::strcmp(product_number.c_str(), "100"));
 
-    ft_big_number quotient_number = left_number / right_number;
+    ft_big_number quotient_number;
+    quotient_number = left_number / right_number;
     FT_ASSERT_EQ(0, std::strcmp(quotient_number.c_str(), "4"));
 
-    ft_big_number remainder_number = left_number % right_number;
+    ft_big_number remainder_number;
+    remainder_number = left_number % right_number;
     FT_ASSERT_EQ(0, std::strcmp(remainder_number.c_str(), "0"));
 
-    ft_big_number power_number = base_number.mod_pow(exponent_number, modulus_number);
-    FT_ASSERT_EQ(0, std::strcmp(power_number.c_str(), "1"));
+    ft_big_number *power_number = base_number.mod_pow(exponent_number, modulus_number);
+    FT_ASSERT(power_number != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(power_number->c_str(), "1"));
+    (void)power_number->destroy();
+    delete power_number;
 
-    ft_string base16_string = left_number.to_string_base(16);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, base16_string.get_error());
+    ft_string *base16_string = left_number.to_string_base(16);
+    FT_ASSERT(base16_string != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, base16_string->get_error());
+    (void)base16_string->destroy();
+    delete base16_string;
     ft_big_number error_divisor;
     INIT_BIG_NUMBER(error_divisor);
 
     error_divisor.assign("0");
-    ft_big_number error_quotient = left_number / error_divisor;
+    ft_big_number error_quotient;
+    error_quotient = left_number / error_divisor;
     FT_ASSERT_EQ(0, std::strcmp(error_quotient.c_str(), "0"));
     return (1);
 }
@@ -157,12 +169,18 @@ FT_TEST(test_big_number_errno_resets_hex_helpers)
     INIT_BIG_NUMBER(number_value);
     number_value.assign("255");
 
-    ft_string hex_digits = big_number_to_hex_string(number_value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, hex_digits.get_error());
-    FT_ASSERT(hex_digits == "FF");
+    ft_string *hex_digits = big_number_to_hex_string(number_value);
+    FT_ASSERT(hex_digits != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hex_digits->get_error());
+    FT_ASSERT(*hex_digits == "FF");
 
-    ft_big_number parsed_value = big_number_from_hex_string(hex_digits.c_str());
-    FT_ASSERT_EQ(0, std::strcmp(parsed_value.c_str(), "255"));
+    ft_big_number *parsed_value = big_number_from_hex_string(hex_digits->c_str());
+    FT_ASSERT(parsed_value != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(parsed_value->c_str(), "255"));
+    (void)parsed_value->destroy();
+    delete parsed_value;
+    (void)hex_digits->destroy();
+    delete hex_digits;
     return (1);
 }
 

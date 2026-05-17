@@ -82,58 +82,6 @@ game_hooks::game_hooks() noexcept
     return ;
 }
 
-game_hooks::game_hooks(const game_hooks &other) noexcept
-    : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(),
-      _listener_catalog(), _catalog_metadata(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_hooks::game_hooks(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    initialize_error = this->initialize(other);
-    if (initialize_error != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_hooks::game_hooks(game_hooks &&other) noexcept
-    : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(),
-      _listener_catalog(), _catalog_metadata(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_hooks::game_hooks(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 game_hooks::~game_hooks() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
@@ -675,61 +623,109 @@ void game_hooks::unregister_listener(const ft_string &hook_identifier,
     return ;
 }
 
-ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata() const noexcept
+static void game_hooks_delete_metadata_vector(
+    ft_vector<ft_game_hook_metadata> *metadata) noexcept
 {
-    ft_vector<ft_game_hook_metadata> result;
+    if (metadata == ft_nullptr)
+        return ;
+    (void)metadata->destroy();
+    delete metadata;
+    return ;
+}
+
+ft_vector<ft_game_hook_metadata> *game_hooks::get_catalog_metadata() const noexcept
+{
+    ft_vector<ft_game_hook_metadata> *result;
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_size_t index;
     ft_size_t metadata_count;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata");
-    if (result.initialize() != FT_ERR_SUCCESS)
-        return (result);
+    result = new (std::nothrow) ft_vector<ft_game_hook_metadata>();
+    if (result == ft_nullptr)
+    {
+        const_cast<game_hooks *>(this)->set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    if (result->initialize() != FT_ERR_SUCCESS)
+    {
+        const_cast<game_hooks *>(this)->set_error(result->get_error());
+        delete result;
+        return (ft_nullptr);
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (result);
+    {
+        game_hooks_delete_metadata_vector(result);
+        return (ft_nullptr);
+    }
     index = 0;
     metadata_count = this->_catalog_metadata.size();
     while (index < metadata_count)
     {
-        if (result.push_back(this->_catalog_metadata[index]) != FT_ERR_SUCCESS)
-            break ;
+        if (result->push_back(this->_catalog_metadata[index]) != FT_ERR_SUCCESS)
+        {
+            const_cast<game_hooks *>(this)->set_error(result->get_error());
+            (void)this->unlock_internal(lock_acquired);
+            game_hooks_delete_metadata_vector(result);
+            return (ft_nullptr);
+        }
         index += 1;
     }
     (void)this->unlock_internal(lock_acquired);
+    const_cast<game_hooks *>(this)->set_error(FT_ERR_SUCCESS);
     return (result);
 }
 
-ft_vector<ft_game_hook_metadata> game_hooks::get_catalog_metadata_for(
+ft_vector<ft_game_hook_metadata> *game_hooks::get_catalog_metadata_for(
     const ft_string &hook_identifier) const noexcept
 {
-    ft_vector<ft_game_hook_metadata> result;
+    ft_vector<ft_game_hook_metadata> *result;
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_size_t index;
     ft_size_t metadata_count;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_catalog_metadata_for");
-    if (result.initialize() != FT_ERR_SUCCESS)
-        return (result);
+    result = new (std::nothrow) ft_vector<ft_game_hook_metadata>();
+    if (result == ft_nullptr)
+    {
+        const_cast<game_hooks *>(this)->set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    if (result->initialize() != FT_ERR_SUCCESS)
+    {
+        const_cast<game_hooks *>(this)->set_error(result->get_error());
+        delete result;
+        return (ft_nullptr);
+    }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (result);
+    {
+        game_hooks_delete_metadata_vector(result);
+        return (ft_nullptr);
+    }
     index = 0;
     metadata_count = this->_catalog_metadata.size();
     while (index < metadata_count)
     {
         if (this->_catalog_metadata[index].hook_identifier == hook_identifier)
         {
-            if (result.push_back(this->_catalog_metadata[index]) != FT_ERR_SUCCESS)
-                break ;
+            if (result->push_back(this->_catalog_metadata[index]) != FT_ERR_SUCCESS)
+            {
+                const_cast<game_hooks *>(this)->set_error(result->get_error());
+                (void)this->unlock_internal(lock_acquired);
+                game_hooks_delete_metadata_vector(result);
+                return (ft_nullptr);
+            }
         }
         index += 1;
     }
     (void)this->unlock_internal(lock_acquired);
+    const_cast<game_hooks *>(this)->set_error(FT_ERR_SUCCESS);
     return (result);
 }
 

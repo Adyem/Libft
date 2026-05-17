@@ -9,9 +9,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <new>
 #include <type_traits>
@@ -214,78 +211,6 @@ ft_optional<ElementType>::ft_optional()
     : _value(ft_nullptr), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename ElementType>
-ft_optional<ElementType>::ft_optional(const ft_optional<ElementType> &other)
-    : _value(ft_nullptr), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-    int32_t initialize_result;
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_optional::ft_optional(copy)", "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._value == ft_nullptr)
-        initialize_result = this->initialize();
-    else
-        initialize_result = this->initialize(*other._value);
-    (void)other.unlock_internal(lock_acquired);
-    if (initialize_result != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ElementType>
-ft_optional<ElementType>::ft_optional(ft_optional<ElementType> &&other)
-    : _value(ft_nullptr), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_optional::ft_optional(move)", "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)set_error(previous_error);
     return ;
 }
 

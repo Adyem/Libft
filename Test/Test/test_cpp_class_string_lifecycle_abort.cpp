@@ -141,7 +141,8 @@ static void string_call_copy_ctor_from_uninitialised(void)
 
     std::memset(storage, 0, sizeof(storage));
     source_pointer = reinterpret_cast<ft_string *>(storage);
-    ft_string copy_value(*source_pointer);
+    ft_string copy_value;
+    (void)copy_value.initialize(*source_pointer);
     (void)copy_value;
     return ;
 }
@@ -153,7 +154,8 @@ static void string_call_move_ctor_from_uninitialised(void)
 
     std::memset(storage, 0, sizeof(storage));
     source_pointer = reinterpret_cast<ft_string *>(storage);
-    ft_string moved_value(static_cast<ft_string &&>(*source_pointer));
+    ft_string moved_value;
+    (void)moved_value.initialize(static_cast<ft_string &&>(*source_pointer));
     (void)moved_value;
     return ;
 }

@@ -18,86 +18,6 @@ game_state::game_state() noexcept
     return ;
 }
 
-game_state::game_state(const game_state &other) noexcept
-    : _worlds(), _characters(), _variables(), _hooks(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-    ft_size_t index;
-    ft_size_t count;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_state::game_state(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(initialize_error);
-        return ;
-    }
-    this->_worlds.clear();
-    index = 0;
-    count = other._worlds.size();
-    while (index < count)
-    {
-        this->_worlds.push_back(other._worlds[index]);
-        index += 1;
-    }
-    this->_characters.clear();
-    index = 0;
-    count = other._characters.size();
-    while (index < count)
-    {
-        this->_characters.push_back(other._characters[index]);
-        index += 1;
-    }
-    this->_variables = other._variables;
-    this->_hooks = other._hooks;
-    this->set_error(other.get_error());
-    return ;
-}
-
-game_state::game_state(game_state &&other) noexcept
-    : _worlds(), _characters(), _variables(), _hooks(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_state::game_state(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(move_error);
-    }
-    return ;
-}
-
 game_state::~game_state() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -530,28 +450,52 @@ void game_state::set_hooks(const ft_sharedptr<game_hooks> &hooks) noexcept
     return ;
 }
 
-ft_sharedptr<game_hooks> game_state::get_hooks() const noexcept
+static void game_state_delete_hooks_handle(ft_sharedptr<game_hooks> *hooks) noexcept
 {
-    ft_sharedptr<game_hooks> hooks_copy;
+    if (hooks == ft_nullptr)
+        return ;
+    (void)hooks->destroy();
+    delete hooks;
+    return ;
+}
+
+ft_sharedptr<game_hooks> *game_state::get_hooks() const noexcept
+{
+    ft_sharedptr<game_hooks> *hooks_copy;
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t hooks_initialize_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_state::get_hooks");
-    hooks_initialize_error = hooks_copy.initialize();
+    hooks_copy = new (std::nothrow) ft_sharedptr<game_hooks>();
+    if (hooks_copy == ft_nullptr)
+    {
+        const_cast<game_state *>(this)->set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    hooks_initialize_error = hooks_copy->initialize();
     if (hooks_initialize_error != FT_ERR_SUCCESS)
     {
         const_cast<game_state *>(this)->set_error(hooks_initialize_error);
-        return (hooks_copy);
+        delete hooks_copy;
+        return (ft_nullptr);
     }
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<game_state *>(this)->set_error(lock_error);
-        return (hooks_copy);
+        game_state_delete_hooks_handle(hooks_copy);
+        return (ft_nullptr);
     }
-    hooks_copy = this->_hooks;
+    *hooks_copy = this->_hooks;
+    if (hooks_copy->get_error() != FT_ERR_SUCCESS)
+    {
+        const_cast<game_state *>(this)->set_error(hooks_copy->get_error());
+        this->unlock_internal(lock_acquired);
+        game_state_delete_hooks_handle(hooks_copy);
+        return (ft_nullptr);
+    }
     const_cast<game_state *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (hooks_copy);

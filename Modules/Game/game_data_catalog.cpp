@@ -218,38 +218,6 @@ game_item_definition::game_item_definition() noexcept
     return ;
 }
 
-game_item_definition::game_item_definition(const game_item_definition &other) noexcept
-    : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0),
-      _slot_requirement(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_item_definition::game_item_definition(copy)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_item_definition::game_item_definition(game_item_definition &&other) noexcept
-    : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0),
-      _slot_requirement(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_item_definition::game_item_definition(move)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(static_cast<game_item_definition &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 game_item_definition::~game_item_definition() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -850,36 +818,6 @@ game_recipe_blueprint::game_recipe_blueprint() noexcept
     return ;
 }
 
-game_recipe_blueprint::game_recipe_blueprint(const game_recipe_blueprint &other) noexcept
-    : _recipe_id(0), _result_item_id(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_recipe_blueprint::game_recipe_blueprint(copy)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_recipe_blueprint::game_recipe_blueprint(game_recipe_blueprint &&other) noexcept
-    : _recipe_id(0), _result_item_id(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_recipe_blueprint::game_recipe_blueprint(move)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(static_cast<game_recipe_blueprint &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 game_recipe_blueprint::~game_recipe_blueprint() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -1348,38 +1286,6 @@ game_loadout_entry::game_loadout_entry() noexcept
     return ;
 }
 
-game_loadout_entry::game_loadout_entry(const game_loadout_entry &other) noexcept
-    : _slot(0), _item_id(0), _quantity(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_loadout_entry::game_loadout_entry(copy)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_loadout_entry::game_loadout_entry(game_loadout_entry &&other) noexcept
-    : _slot(0), _item_id(0), _quantity(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_loadout_entry::game_loadout_entry(move)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(static_cast<game_loadout_entry &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 game_loadout_entry::~game_loadout_entry() noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -1795,38 +1701,6 @@ game_loadout_blueprint::game_loadout_blueprint() noexcept
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-game_loadout_blueprint::game_loadout_blueprint(const game_loadout_blueprint &other) noexcept
-    : _loadout_id(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_loadout_blueprint::game_loadout_blueprint(copy)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_loadout_blueprint::game_loadout_blueprint(game_loadout_blueprint &&other) noexcept
-    : _loadout_id(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_loadout_blueprint::game_loadout_blueprint(move)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(static_cast<game_loadout_blueprint &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -2255,38 +2129,6 @@ game_data_catalog::game_data_catalog() noexcept
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-game_data_catalog::game_data_catalog(const game_data_catalog &other) noexcept
-    : _item_definitions(), _recipes(), _loadouts(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_data_catalog::game_data_catalog(copy)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_data_catalog::game_data_catalog(game_data_catalog &&other) noexcept
-    : _item_definitions(), _recipes(), _loadouts(), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_data_catalog::game_data_catalog(move)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(static_cast<game_data_catalog &&>(other)) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 

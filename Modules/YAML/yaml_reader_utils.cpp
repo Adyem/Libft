@@ -16,36 +16,69 @@ ft_size_t yaml_find_char(const ft_string &string, char character) noexcept
     return (static_cast<ft_size_t>(-1));
 }
 
-ft_string yaml_substr(const ft_string &string, ft_size_t start, ft_size_t length) noexcept
+static void yaml_delete_string(ft_string *string) noexcept
 {
+    if (string == ft_nullptr)
+        return ;
+    (void)string->destroy();
+    delete string;
+    return ;
+}
+
+ft_string *yaml_substr(const ft_string &string, ft_size_t start, ft_size_t length) noexcept
+{
+    ft_string *output;
     int32_t initialize_error;
 
-    ft_string result;
-    initialize_error = result.initialize();
+    output = new (std::nothrow) ft_string();
+    if (output == ft_nullptr)
+        return (ft_nullptr);
+    initialize_error = output->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        return (ft_string());
+        delete output;
+        return (ft_nullptr);
     }
     const char *data = string.c_str();
     ft_size_t index = 0;
     while (index < length && start + index < string.size())
     {
-        result.append(data[start + index]);
-        if (result.get_error() != FT_ERR_SUCCESS)
+        output->append(data[start + index]);
+        if (output->get_error() != FT_ERR_SUCCESS)
         {
-            return (ft_string());
+            yaml_delete_string(output);
+            return (ft_nullptr);
         }
         index++;
     }
-    return (result);
+    return (output);
 }
 
-ft_string yaml_substr_from(const ft_string &string, ft_size_t start) noexcept
+ft_string *yaml_substr_from(const ft_string &string, ft_size_t start) noexcept
 {
     if (start > string.size())
-        return (ft_string());
-    ft_string part = yaml_substr(string, start, string.size() - start);
-    return (part);
+        return (ft_nullptr);
+    return (yaml_substr(string, start, string.size() - start));
+}
+
+static int32_t yaml_assign_substr(const ft_string &string, ft_size_t start, ft_size_t length,
+    ft_string &output) noexcept
+{
+    ft_string *substring;
+
+    substring = yaml_substr(string, start, length);
+    if (substring == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    output = *substring;
+    if (output.get_error() != FT_ERR_SUCCESS)
+    {
+        int32_t output_error = output.get_error();
+
+        yaml_delete_string(substring);
+        return (output_error);
+    }
+    yaml_delete_string(substring);
+    return (FT_ERR_SUCCESS);
 }
 
 ft_size_t yaml_count_indent(const ft_string &line) noexcept
@@ -70,10 +103,12 @@ void yaml_trim(ft_string &string) noexcept
         end_index--;
     if (start_index == 0 && end_index == string_length)
         return ;
-    ft_string trimmed = yaml_substr(string, start_index, end_index - start_index);
-    if (trimmed.is_initialised() == FT_FALSE)
+    ft_string trimmed;
+    int32_t substr_error;
+
+    substr_error = yaml_assign_substr(string, start_index, end_index - start_index, trimmed);
+    if (substr_error != FT_ERR_SUCCESS)
     {
-        string = ft_string();
         return ;
     }
     string = trimmed;
@@ -98,9 +133,12 @@ int32_t yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) 
         ft_size_t end_index = start_index;
         while (end_index < content_length && data[end_index] != '\n')
             end_index++;
-        ft_string part = yaml_substr(content, start_index, end_index - start_index);
-        if (part.is_initialised() == FT_FALSE)
-            return (FT_ERR_NO_MEMORY);
+        ft_string part;
+        int32_t substr_error;
+
+        substr_error = yaml_assign_substr(content, start_index, end_index - start_index, part);
+        if (substr_error != FT_ERR_SUCCESS)
+            return (substr_error);
         lines.push_back(part);
         if (lines.get_error() != FT_ERR_SUCCESS)
             return (lines.get_error());

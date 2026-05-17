@@ -89,10 +89,11 @@ class game_behavior_composite : public game_behavior_node
 
     public:
         game_behavior_composite() noexcept;
-        game_behavior_composite(const game_behavior_composite &other) noexcept;
-        game_behavior_composite(game_behavior_composite &&other) noexcept;
+        game_behavior_composite(const game_behavior_composite &other) noexcept = delete;
+        game_behavior_composite(game_behavior_composite &&other) noexcept = delete;
         virtual ~game_behavior_composite() noexcept;
         game_behavior_composite &operator=(const game_behavior_composite &other) noexcept = delete;
+        game_behavior_composite &operator=(game_behavior_composite &&other) noexcept = delete;
 
         void add_child(const ft_sharedptr<game_behavior_node> &child) noexcept;
         void clear_children() noexcept;
@@ -104,10 +105,11 @@ class game_behavior_selector : public game_behavior_composite
 {
     public:
         game_behavior_selector() noexcept;
-        game_behavior_selector(const game_behavior_selector &other) noexcept;
-        game_behavior_selector(game_behavior_selector &&other) noexcept;
+        game_behavior_selector(const game_behavior_selector &other) noexcept = delete;
+        game_behavior_selector(game_behavior_selector &&other) noexcept = delete;
         virtual ~game_behavior_selector() noexcept;
         game_behavior_selector &operator=(const game_behavior_selector &other) noexcept = delete;
+        game_behavior_selector &operator=(game_behavior_selector &&other) noexcept = delete;
 
         virtual int32_t tick(game_behavior_context &context) noexcept;
 };
@@ -116,10 +118,11 @@ class game_behavior_sequence : public game_behavior_composite
 {
     public:
         game_behavior_sequence() noexcept;
-        game_behavior_sequence(const game_behavior_sequence &other) noexcept;
-        game_behavior_sequence(game_behavior_sequence &&other) noexcept;
+        game_behavior_sequence(const game_behavior_sequence &other) noexcept = delete;
+        game_behavior_sequence(game_behavior_sequence &&other) noexcept = delete;
         virtual ~game_behavior_sequence() noexcept;
         game_behavior_sequence &operator=(const game_behavior_sequence &other) noexcept = delete;
+        game_behavior_sequence &operator=(game_behavior_sequence &&other) noexcept = delete;
 
         virtual int32_t tick(game_behavior_context &context) noexcept;
 };
@@ -138,8 +141,8 @@ class game_behavior_tree
 
     public:
         game_behavior_tree() noexcept;
-        game_behavior_tree(const game_behavior_tree &other) noexcept;
-        game_behavior_tree(game_behavior_tree &&other) noexcept;
+        game_behavior_tree(const game_behavior_tree &other) noexcept = delete;
+        game_behavior_tree(game_behavior_tree &&other) noexcept = delete;
         ~game_behavior_tree() noexcept;
         game_behavior_tree &operator=(const game_behavior_tree &other) noexcept = delete;
         game_behavior_tree &operator=(game_behavior_tree &&other) noexcept = delete;

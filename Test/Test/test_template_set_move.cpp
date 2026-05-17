@@ -47,7 +47,8 @@ FT_TEST(test_ft_set_move_constructor_rebuilds_mutex)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_set.enable_thread_safety());
     FT_ASSERT(source_set.is_thread_safe());
 
-    set_type moved_set(ft_move(source_set));
+    set_type moved_set;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_set.move(source_set));
 
     FT_ASSERT(moved_set.is_thread_safe());
     FT_ASSERT_EQ(2UL, moved_set.size());

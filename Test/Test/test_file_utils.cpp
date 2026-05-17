@@ -153,19 +153,25 @@ static void build_alternate_separator_path(char *destination, const char *path_t
 
 FT_TEST(test_file_path_join_prefers_absolute_right)
 {
-    ft_string result = file_path_join("/etc", "/var/log");
+    ft_string *result = file_path_join("/etc", "/var/log");
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
-    FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), "/var/log"));
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), "/var/log"));
+    (void)result->destroy();
+    delete result;
     return (1);
 }
 
 FT_TEST(test_file_path_join_keeps_drive_letter)
 {
-    ft_string result = file_path_join("/left", "C:/temp");
+    ft_string *result = file_path_join("/left", "C:/temp");
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
-    FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), "C:/temp"));
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), "C:/temp"));
+    (void)result->destroy();
+    delete result;
     return (1);
 }
 
@@ -173,13 +179,16 @@ FT_TEST(test_file_path_normalize_collapses_duplicates)
 {
     char path_buffer[64];
     char expected_buffer[64];
-    ft_string normalized;
+    ft_string *normalized;
 
     build_alternate_separator_path(path_buffer, "/folder///sub///file.txt");
     normalized = file_path_normalize(path_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized.get_error());
+    FT_ASSERT(normalized != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->get_error());
     build_native_path(expected_buffer, "/folder/sub/file.txt");
-    FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
+    FT_ASSERT_EQ(0, ft_strcmp(normalized->c_str(), expected_buffer));
+    (void)normalized->destroy();
+    delete normalized;
     return (1);
 }
 
@@ -187,23 +196,29 @@ FT_TEST(test_file_path_normalize_preserves_trailing_separator)
 {
     char path_buffer[64];
     char expected_buffer[64];
-    ft_string normalized;
+    ft_string *normalized;
 
     build_alternate_separator_path(path_buffer, "/folder/subdir///");
     normalized = file_path_normalize(path_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized.get_error());
+    FT_ASSERT(normalized != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->get_error());
     build_native_path(expected_buffer, "/folder/subdir/");
-    FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
+    FT_ASSERT_EQ(0, ft_strcmp(normalized->c_str(), expected_buffer));
+    (void)normalized->destroy();
+    delete normalized;
     return (1);
 }
 
 FT_TEST(test_file_path_normalize_handles_null_input)
 {
-    ft_string normalized;
+    ft_string *normalized;
 
     normalized = file_path_normalize(ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized.get_error());
-    FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), ""));
+    FT_ASSERT(normalized != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(normalized->c_str(), ""));
+    (void)normalized->destroy();
+    delete normalized;
     return (1);
 }
 
@@ -212,14 +227,17 @@ FT_TEST(test_file_path_join_appends_missing_separator)
     char left_buffer[64];
     char right_buffer[64];
     char expected_buffer[128];
-    ft_string result;
+    ft_string *result;
 
     build_alternate_separator_path(left_buffer, "/var//log");
     build_alternate_separator_path(right_buffer, "nginx///access.log");
     result = file_path_join(left_buffer, right_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
     build_native_path(expected_buffer, "/var/log/nginx/access.log");
-    FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
+    FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), expected_buffer));
+    (void)result->destroy();
+    delete result;
     return (1);
 }
 
@@ -227,13 +245,16 @@ FT_TEST(test_file_path_join_with_empty_left)
 {
     char right_buffer[64];
     char expected_buffer[64];
-    ft_string result;
+    ft_string *result;
 
     build_alternate_separator_path(right_buffer, "folder//file.txt");
     result = file_path_join("", right_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
     build_native_path(expected_buffer, "folder/file.txt");
-    FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
+    FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), expected_buffer));
+    (void)result->destroy();
+    delete result;
     return (1);
 }
 

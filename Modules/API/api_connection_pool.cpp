@@ -365,17 +365,19 @@ static void api_connection_pool_record_dispose_snapshot(
     return ;
 }
 
-static ft_string api_connection_pool_build_key(const char *host, uint16_t port,
+static int32_t api_connection_pool_build_key(const char *host, uint16_t port,
         api_connection_security_mode security_mode,
-        const char *security_identity)
+        const char *security_identity, ft_string &key)
 {
-    ft_string key;
     char port_buffer[16];
     int32_t key_initialization_error;
 
-    key_initialization_error = key.initialize();
+    if (key.is_initialised() == FT_FALSE)
+        key_initialization_error = key.initialize();
+    else
+        key_initialization_error = key.clear();
     if (key_initialization_error != FT_ERR_SUCCESS)
-        return (ft_string::from_error(key_initialization_error));
+        return (key_initialization_error);
 
     if (host)
         key = host;
@@ -390,7 +392,7 @@ static ft_string api_connection_pool_build_key(const char *host, uint16_t port,
     key += ":";
     if (security_identity && security_identity[0] != '\0')
         key += security_identity;
-    return (key);
+    return (key.get_error());
 }
 
 #if NETWORKING_HAS_OPENSSL
@@ -457,8 +459,13 @@ ft_bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         return (FT_FALSE);
     }
 
-    handle.key = api_connection_pool_build_key(host, port, security_mode,
-            security_identity);
+    if (api_connection_pool_build_key(host, port, security_mode,
+            security_identity, handle.key) != FT_ERR_SUCCESS)
+    {
+        handle.unlock(handle_lock_acquired);
+        g_api_connection_pool_acquire_misses++;
+        return (FT_FALSE);
+    }
     handle.security_mode = security_mode;
 #if NETWORKING_HAS_OPENSSL
     handle.tls_session = ft_nullptr;

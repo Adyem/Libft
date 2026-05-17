@@ -234,8 +234,8 @@ class game_character
 
         int32_t equip_item(int32_t slot, const ft_sharedptr<game_item> &item) noexcept;
         void unequip_item(int32_t slot) noexcept;
-        ft_sharedptr<game_item> get_equipped_item(int32_t slot) noexcept;
-        ft_sharedptr<game_item> get_equipped_item(int32_t slot) const noexcept;
+        ft_sharedptr<game_item> *get_equipped_item(int32_t slot) noexcept;
+        ft_sharedptr<game_item> *get_equipped_item(int32_t slot) const noexcept;
 
         int32_t get_level() const noexcept;
 

@@ -21,11 +21,13 @@ class test_cpp_class_istream_probe : public ft_istream
 
         test_cpp_class_istream_probe(
             const test_cpp_class_istream_probe &other) noexcept
-            : ft_istream(other), _storage(), _length(other._length),
+            : ft_istream(), _storage(), _length(other._length),
               _position(other._position)
         {
             ft_size_t index;
 
+            if (ft_istream::initialize() != FT_ERR_SUCCESS)
+                return ;
             index = 0;
             while (index < 16)
             {
@@ -37,11 +39,15 @@ class test_cpp_class_istream_probe : public ft_istream
 
         test_cpp_class_istream_probe(
             test_cpp_class_istream_probe &&other) noexcept
-            : ft_istream(static_cast<ft_istream &&>(other)), _storage(),
+            : ft_istream(), _storage(),
               _length(other._length), _position(other._position)
         {
             ft_size_t index;
 
+            if (ft_istream::initialize() != FT_ERR_SUCCESS)
+                return ;
+            if (this->move(other) != FT_ERR_SUCCESS)
+                return ;
             index = 0;
             while (index < 16)
             {

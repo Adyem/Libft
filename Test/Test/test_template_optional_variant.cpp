@@ -56,7 +56,8 @@ FT_TEST(test_ft_optional_move_constructor_preserves_thread_safety)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_optional.enable_thread_safety());
 
-    ft_optional<int> moved_optional(static_cast<ft_optional<int> &&>(source_optional));
+    ft_optional<int> moved_optional;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_optional.move(source_optional));
 
     FT_ASSERT(moved_optional.has_value());
     FT_ASSERT_EQ(123, moved_optional.value());

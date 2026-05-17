@@ -11,12 +11,19 @@
 #include <cstdio>
 #include <limits>
 
-static ft_string time_format_failure(int32_t error_code)
+static ft_string *time_format_failure(int32_t error_code) noexcept
 {
-    ft_string failure;
-
     (void)(error_code);
-    return (failure);
+    return (ft_nullptr);
+}
+
+static void time_format_delete_string(ft_string *string) noexcept
+{
+    if (string == ft_nullptr)
+        return ;
+    (void)string->destroy();
+    delete string;
+    return ;
 }
 
 static pt_mutex *g_time_format_gmtime_mutex = ft_nullptr;
@@ -73,13 +80,13 @@ static void time_format_unlock_gmtime_mutex(ft_bool lock_acquired)
     return ;
 }
 
-ft_string    time_format_iso8601(t_time time_value)
+ft_string    *time_format_iso8601(t_time time_value)
 {
     std::time_t standard_time;
     std::tm time_storage;
     std::tm *time_pointer;
     char buffer[21];
-    ft_string formatted;
+    ft_string *formatted;
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_size_t strftime_result;
@@ -102,19 +109,25 @@ ft_string    time_format_iso8601(t_time time_value)
     {
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
-    if (formatted.initialize(buffer) != FT_ERR_SUCCESS)
-        return (time_format_failure(formatted.get_error()));
+    formatted = new (std::nothrow) ft_string();
+    if (formatted == ft_nullptr)
+        return (time_format_failure(FT_ERR_NO_MEMORY));
+    if (formatted->initialize(buffer) != FT_ERR_SUCCESS)
+    {
+        time_format_delete_string(formatted);
+        return (time_format_failure(FT_ERR_NO_MEMORY));
+    }
     (void)(FT_ERR_SUCCESS);
     return (formatted);
 }
 
-ft_string    time_format_iso8601_with_offset(t_time time_value, int32_t offset_minutes)
+ft_string    *time_format_iso8601_with_offset(t_time time_value, int32_t offset_minutes)
 {
     std::tm *time_pointer;
     std::tm time_storage;
     char buffer[20];
     char offset_buffer[7];
-    ft_string formatted;
+    ft_string *formatted;
     ft_bool lock_acquired;
     int32_t lock_error;
     ft_size_t strftime_result;
@@ -164,9 +177,20 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int32_t offset_m
             sign_character, offset_hours, offset_minutes_part);
     if (snprintf_result < 0 || snprintf_result >= static_cast<int32_t>(sizeof(offset_buffer)))
         return (time_format_failure(FT_ERR_INTERNAL));
-    if (formatted.initialize(buffer) != FT_ERR_SUCCESS)
-        return (time_format_failure(formatted.get_error()));
-    formatted += offset_buffer;
+    formatted = new (std::nothrow) ft_string();
+    if (formatted == ft_nullptr)
+        return (time_format_failure(FT_ERR_NO_MEMORY));
+    if (formatted->initialize(buffer) != FT_ERR_SUCCESS)
+    {
+        time_format_delete_string(formatted);
+        return (time_format_failure(FT_ERR_NO_MEMORY));
+    }
+    *formatted += offset_buffer;
+    if (formatted->get_error() != FT_ERR_SUCCESS)
+    {
+        time_format_delete_string(formatted);
+        return (time_format_failure(FT_ERR_NO_MEMORY));
+    }
     (void)(FT_ERR_SUCCESS);
     return (formatted);
 }

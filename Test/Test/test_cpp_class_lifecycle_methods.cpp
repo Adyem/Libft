@@ -232,7 +232,10 @@ FT_TEST(test_data_buffer_move_constructor_preserves_state_and_thread_safety)
     FT_ASSERT_EQ(FT_TRUE, source_buffer.seek(0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.get_operation_error());
     {
-        DataBuffer moved_buffer(static_cast<DataBuffer &&>(source_buffer));
+        DataBuffer moved_buffer;
+
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.initialize());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.move(source_buffer));
 
         FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_buffer._initialised_state);
         FT_ASSERT_EQ(FT_TRUE, moved_buffer.is_thread_safe());
@@ -320,8 +323,10 @@ FT_TEST(test_ft_ofstream_move_constructor_preserves_open_file)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.open(file_path));
     FT_ASSERT_EQ((ssize_t)3, source_stream.write("one"));
     {
-        ft_ofstream moved_stream(static_cast<ft_ofstream &&>(source_stream));
+        ft_ofstream moved_stream;
 
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.initialize());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.move(source_stream));
         FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_stream._initialised_state);
         FT_ASSERT_EQ((ssize_t)3, moved_stream.write("two"));
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.close());

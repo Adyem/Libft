@@ -116,21 +116,6 @@ ft_unique_lock<MutexType>::~ft_unique_lock()
 }
 
 template <typename MutexType>
-ft_unique_lock<MutexType>::ft_unique_lock(ft_unique_lock &&other) noexcept
-    : _mutex(ft_nullptr)
-    , _owns_lock(false)
-    , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->_mutex = other._mutex;
-    this->_owns_lock = other._owns_lock;
-    this->_initialised_state = other._initialised_state;
-    other._mutex = ft_nullptr;
-    other._owns_lock = false;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-template <typename MutexType>
 ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &&other) noexcept
 {
     if (this == &other)

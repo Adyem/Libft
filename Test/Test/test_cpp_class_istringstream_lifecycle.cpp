@@ -123,9 +123,10 @@ FT_TEST(test_cpp_class_istringstream_move_constructor_transfers_buffer)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("84"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize(source_value));
     {
-        ft_istringstream moved_stream(static_cast<ft_istringstream &&>(
-            source_stream));
+        ft_istringstream moved_stream;
 
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.initialize(source_value));
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.move(source_stream));
         parsed_value = 0;
         moved_stream >> parsed_value;
         FT_ASSERT_EQ(84, parsed_value);

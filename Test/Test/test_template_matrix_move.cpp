@@ -19,7 +19,8 @@ FT_TEST(test_ft_matrix_move_constructor_recreates_mutex)
     source_matrix.at(1, 0) = 7;
     source_matrix.at(1, 1) = 9;
 
-    ft_matrix<int> moved_matrix(ft_move(source_matrix));
+    ft_matrix<int> moved_matrix(0, 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_matrix.move(source_matrix));
 
     FT_ASSERT(moved_matrix.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_matrix.initialize());

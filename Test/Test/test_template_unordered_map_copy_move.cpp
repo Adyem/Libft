@@ -87,7 +87,9 @@ FT_TEST(test_ft_unordered_map_move_constructor_resets_source_mutex)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_map.enable_thread_safety());
     FT_ASSERT(source_map.is_thread_safe());
 
-    ft_unordered_map<int, int> moved_map(ft_move(source_map));
+    ft_unordered_map<int, int> moved_map;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_map.initialize());
+    moved_map = ft_move(source_map);
 
     FT_ASSERT(moved_map.is_thread_safe());
     FT_ASSERT_EQ(2UL, moved_map.size());

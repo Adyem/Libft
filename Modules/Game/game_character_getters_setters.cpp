@@ -1356,54 +1356,58 @@ int32_t game_character::get_level() const noexcept
     return (level_value);
 }
 
-ft_sharedptr<game_item> game_character::get_equipped_item(int32_t slot) noexcept
+ft_sharedptr<game_item> *game_character::get_equipped_item(int32_t slot) noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t equipment_error;
+    ft_sharedptr<game_item> *item;
+
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        return (ft_sharedptr<game_item>());
+        return (ft_nullptr);
     }
-    this->_equipment.get_item(slot);
+    item = this->_equipment.get_item(slot);
     equipment_error = this->_equipment.get_error();
     if (equipment_error != FT_ERR_SUCCESS)
     {
         this->handle_component_error(equipment_error);
         this->unlock_internal(lock_acquired);
-        return (ft_sharedptr<game_item>());
+        return (ft_nullptr);
     }
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
-    return (this->_equipment.get_item(slot));
+    return (item);
 }
 
-ft_sharedptr<game_item> game_character::get_equipped_item(int32_t slot) const noexcept
+ft_sharedptr<game_item> *game_character::get_equipped_item(int32_t slot) const noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
     int32_t equipment_error;
+    ft_sharedptr<game_item> *item;
+
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<game_character *>(this)->set_error(lock_error);
-        return (ft_sharedptr<game_item>());
+        return (ft_nullptr);
     }
-    this->_equipment.get_item(slot);
+    item = this->_equipment.get_item(slot);
     equipment_error = this->_equipment.get_error();
     if (equipment_error != FT_ERR_SUCCESS)
     {
         const_cast<game_character *>(this)->handle_component_error(equipment_error);
         this->unlock_internal(lock_acquired);
-        return (ft_sharedptr<game_item>());
+        return (ft_nullptr);
     }
     const_cast<game_character *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
-    return (this->_equipment.get_item(slot));
+    return (item);
 }
 
 int32_t game_character::get_error() const noexcept

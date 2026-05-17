@@ -19,7 +19,7 @@ FT_TEST(test_game_state_dispatches_registered_hooks)
     game_state state;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<game_hooks> hooks(new (std::nothrow) game_hooks());
-    ft_sharedptr<game_hooks> stored_hooks;
+    ft_sharedptr<game_hooks> *stored_hooks;
     game_character character;
     game_item item;
     game_world world;
@@ -62,8 +62,9 @@ FT_TEST(test_game_state_dispatches_registered_hooks)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     stored_hooks = state.get_hooks();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_hooks.get_error());
-    FT_ASSERT(static_cast<bool>(stored_hooks));
+    FT_ASSERT(stored_hooks != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_hooks->get_error());
+    FT_ASSERT(static_cast<bool>(*stored_hooks));
     state.dispatch_item_crafted(character, item);
     state.dispatch_character_damaged(character, 9, static_cast<uint8_t>(1));
     state.dispatch_event_triggered(world, event);
@@ -81,7 +82,7 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks)
     game_state state;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<game_hooks> hooks(new (std::nothrow) game_hooks());
-    ft_sharedptr<game_hooks> stored_hooks;
+    ft_sharedptr<game_hooks> *stored_hooks;
     game_character character;
     game_item item;
     game_world world;
@@ -123,8 +124,9 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks)
     state.set_hooks(hooks);
     stored_hooks = state.get_hooks();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_hooks.get_error());
-    FT_ASSERT(static_cast<bool>(stored_hooks));
+    FT_ASSERT(stored_hooks != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_hooks->get_error());
+    FT_ASSERT(static_cast<bool>(*stored_hooks));
     state.dispatch_item_crafted(character, item);
     state.dispatch_character_damaged(character, 12, static_cast<uint8_t>(4));
     state.dispatch_event_triggered(world, event);

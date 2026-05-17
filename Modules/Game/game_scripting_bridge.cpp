@@ -39,6 +39,15 @@ static void trim_whitespace(ft_string &target) noexcept
     return ;
 }
 
+static void game_script_delete_string(ft_string *string) noexcept
+{
+    if (string == ft_nullptr)
+        return ;
+    (void)string->destroy();
+    delete string;
+    return ;
+}
+
 thread_local int32_t game_script_context::_last_error = FT_ERR_SUCCESS;
 thread_local int32_t game_script_bridge::_last_error = FT_ERR_SUCCESS;
 
@@ -53,38 +62,6 @@ game_script_context::game_script_context() noexcept
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-game_script_context::game_script_context(const game_script_context &other) noexcept
-    : _state(ft_nullptr), _world(), _variables(),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_script_context::game_script_context(copy)",
-            "source object is uninitialised");
-    }
-    if (this->initialize(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
-game_script_context::game_script_context(game_script_context &&other) noexcept
-    : _state(ft_nullptr), _world(), _variables(),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_script_context::game_script_context(move)",
-            "source object is uninitialised");
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -422,52 +399,6 @@ game_script_bridge::game_script_bridge() noexcept
     return ;
 }
 
-game_script_bridge::game_script_bridge(const game_script_bridge &other) noexcept
-    : _world(), _callbacks(), _language(), _max_operations(32),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _mutex(ft_nullptr)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_script_bridge::game_script_bridge(copy)",
-            "source object is uninitialised");
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    if (this->initialize(other._world, other._language.c_str()) != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_max_operations = other._max_operations;
-    this->_callbacks = other._callbacks;
-    this->set_error(other.get_error());
-    return ;
-}
-
-game_script_bridge::game_script_bridge(game_script_bridge &&other) noexcept
-    : _world(), _callbacks(), _language(), _max_operations(32),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _mutex(ft_nullptr)
-{
-    this->set_error(FT_ERR_SUCCESS);
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "game_script_bridge::game_script_bridge(move)",
-            "source object is uninitialised");
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return ;
-}
-
 int32_t game_script_bridge::initialize() noexcept
 {
     ft_sharedptr<game_world> world;
@@ -792,8 +723,17 @@ void game_script_bridge::tokenize_line(const ft_string &line, ft_vector<ft_strin
             && data[index] != '\t')
             index++;
         end = index;
-        ft_string token = line.substr(start, end - start);
-        tokens.push_back(ft_move(token));
+        ft_string *token;
+
+        token = line.substr(start, end - start);
+        if (token == ft_nullptr)
+            return ;
+        if (tokens.push_back(ft_move(*token)) != FT_ERR_SUCCESS)
+        {
+            game_script_delete_string(token);
+            return ;
+        }
+        game_script_delete_string(token);
     }
     return ;
 }
@@ -870,14 +810,13 @@ int32_t game_script_bridge::handle_call(game_script_context &context, const ft_v
     index = 2;
     while (index < count)
     {
-        ft_string argument = tokens[index];
-        initialize_error = arguments.push_back(ft_move(argument));
+        initialize_error = arguments.push_back(tokens[index]);
         if (initialize_error != FT_ERR_SUCCESS)
         {
             this->set_error(initialize_error);
             return (initialize_error);
         }
-        index++;
+        index += 1;
     }
     result = entry->value(context, arguments);
     if (result != FT_ERR_SUCCESS)
@@ -973,7 +912,23 @@ int32_t game_script_bridge::execute(const ft_string &script, game_state &state) 
             && data[index] != '\r')
             index++;
         count = index - start;
-        line = script.substr(start, count);
+        ft_string *line_substring;
+
+        line_substring = script.substr(start, count);
+        if (line_substring == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NO_MEMORY);
+            this->unlock_internal(lock_acquired);
+            return (FT_ERR_NO_MEMORY);
+        }
+        if (line.initialize(*line_substring) != FT_ERR_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            game_script_delete_string(line_substring);
+            this->unlock_internal(lock_acquired);
+            return (line.get_error());
+        }
+        game_script_delete_string(line_substring);
         trim_whitespace(line);
         if (!line.empty())
         {
@@ -1046,7 +1001,23 @@ int32_t game_script_bridge::check_sandbox_capabilities(const ft_string &script, 
             && data[index] != '\r')
             index++;
         count = index - start;
-        line = script.substr(start, count);
+        ft_string *line_substring;
+
+        line_substring = script.substr(start, count);
+        if (line_substring == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NO_MEMORY);
+            this->unlock_internal(lock_acquired);
+            return (FT_ERR_NO_MEMORY);
+        }
+        if (line.initialize(*line_substring) != FT_ERR_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            game_script_delete_string(line_substring);
+            this->unlock_internal(lock_acquired);
+            return (line.get_error());
+        }
+        game_script_delete_string(line_substring);
         trim_whitespace(line);
         if (!line.empty())
         {
@@ -1169,7 +1140,23 @@ int32_t game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<
             && data[index] != '\r')
             index++;
         count = index - start;
-        line = script.substr(start, count);
+        ft_string *line_substring;
+
+        line_substring = script.substr(start, count);
+        if (line_substring == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NO_MEMORY);
+            this->unlock_internal(lock_acquired);
+            return (FT_ERR_NO_MEMORY);
+        }
+        if (line.initialize(*line_substring) != FT_ERR_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            game_script_delete_string(line_substring);
+            this->unlock_internal(lock_acquired);
+            return (line.get_error());
+        }
+        game_script_delete_string(line_substring);
         trim_whitespace(line);
         if (!line.empty())
         {
@@ -1351,7 +1338,23 @@ int32_t game_script_bridge::inspect_bytecode_budget(const ft_string &script, int
             && data[index] != '\r')
             index++;
         count = index - start;
-        line = script.substr(start, count);
+        ft_string *line_substring;
+
+        line_substring = script.substr(start, count);
+        if (line_substring == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NO_MEMORY);
+            this->unlock_internal(lock_acquired);
+            return (FT_ERR_NO_MEMORY);
+        }
+        if (line.initialize(*line_substring) != FT_ERR_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            game_script_delete_string(line_substring);
+            this->unlock_internal(lock_acquired);
+            return (line.get_error());
+        }
+        game_script_delete_string(line_substring);
         trim_whitespace(line);
         if (!line.empty())
         {

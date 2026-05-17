@@ -164,56 +164,84 @@ static int32_t write_node(const yaml_value *value, ft_string &output, int32_t in
     return (FT_ERR_SUCCESS);
 }
 
-ft_string yaml_write_to_string(const yaml_value *value) noexcept
+static void yaml_writer_delete_string(ft_string *string) noexcept
 {
-    ft_string output;
+    if (string == ft_nullptr)
+        return ;
+    (void)string->destroy();
+    delete string;
+    return ;
+}
+
+ft_string *yaml_write_to_string(const yaml_value *value) noexcept
+{
+    ft_string *output;
     int32_t initialize_error;
     int32_t write_error;
 
-    initialize_error = output.initialize();
+    output = new (std::nothrow) ft_string();
+    if (output == ft_nullptr)
+        return (ft_nullptr);
+    initialize_error = output->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
-        return (ft_string());
-    write_error = write_node(value, output, 0);
+    {
+        delete output;
+        return (ft_nullptr);
+    }
+    write_error = write_node(value, *output, 0);
     if (write_error != FT_ERR_SUCCESS)
-        return (ft_string());
+    {
+        yaml_writer_delete_string(output);
+        return (ft_nullptr);
+    }
     return (output);
 }
 
 int32_t yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
 {
-    ft_string output = yaml_write_to_string(value);
+    ft_string *output;
     su_file *file;
     const char *data;
     ft_size_t expected_size;
     ft_size_t written;
 
-    if (output.is_initialised() == FT_FALSE)
+    output = yaml_write_to_string(value);
+    if (output == ft_nullptr)
         return (FT_ERR_INVALID_STATE);
     file = su_fopen(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file == ft_nullptr)
+    {
+        yaml_writer_delete_string(output);
         return (FT_ERR_IO);
-    data = output.c_str();
-    expected_size = output.size();
+    }
+    data = output->c_str();
+    expected_size = output->size();
     written = su_fwrite(data, 1, expected_size, file);
     if (written != expected_size)
     {
         (void)su_fclose(file);
+        yaml_writer_delete_string(output);
         return (FT_ERR_IO);
     }
     if (su_fclose(file) != 0)
+    {
+        yaml_writer_delete_string(output);
         return (FT_ERR_IO);
+    }
+    yaml_writer_delete_string(output);
     return (FT_ERR_SUCCESS);
 }
 
 int32_t yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexcept
 {
-    ft_string serialized;
+    ft_string *serialized;
     int32_t write_result;
 
     serialized = yaml_write_to_string(value);
-    if (serialized.is_initialised() == FT_FALSE)
+    if (serialized == ft_nullptr)
         return (FT_ERR_INVALID_STATE);
-    write_result = sink.write_all(serialized.c_str(), serialized.size());
+    write_result = sink.write_all(serialized->c_str(), serialized->size());
+    yaml_writer_delete_string(serialized);
     if (write_result != FT_ERR_SUCCESS)
         return (write_result);
     return (FT_ERR_SUCCESS);

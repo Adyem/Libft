@@ -24,6 +24,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
@@ -230,8 +231,8 @@ class ft_task_scheduler
         int destroy();
 
         template <typename FunctionType, typename... Args>
-        auto submit(FunctionType function, Args... args)
-            -> ft_future<typename std::invoke_result<FunctionType, Args...>::type>;
+        int32_t submit(ft_future<typename std::invoke_result<FunctionType, Args...>::type> &future_value,
+                FunctionType function, Args... args);
 
         template <typename Rep, typename Period, typename FunctionType, typename... Args>
         auto schedule_after(std::chrono::duration<Rep, Period> delay,
@@ -685,8 +686,9 @@ void ft_blocking_queue<ElementType>::shutdown()
 }
 
 template <typename FunctionType, typename... Args>
-auto ft_task_scheduler::submit(FunctionType function, Args... args)
-    -> ft_future<typename std::invoke_result<FunctionType, Args...>::type>
+int32_t ft_task_scheduler::submit(
+    ft_future<typename std::invoke_result<FunctionType, Args...>::type> &future_value,
+    FunctionType function, Args... args)
 {
     this->abort_if_not_initialised("ft_task_scheduler::submit");
     using return_type = typename std::invoke_result<FunctionType, Args...>::type;
@@ -694,42 +696,33 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
 
     promise_type *promise_raw;
     ft_sharedptr<promise_type> promise_shared;
+    std::shared_ptr<ft_sharedptr<promise_type> > promise_capture;
     int promise_shared_initialize_error;
+    int future_initialize_error;
 
     promise_shared_initialize_error = promise_shared.initialize();
     if (promise_shared_initialize_error != FT_ERR_SUCCESS)
-        return (ft_future<return_type>());
+        return (promise_shared_initialize_error);
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
-    {
-        return (ft_future<return_type>());
-    }
+        return (FT_ERR_NO_MEMORY);
     promise_shared.reset(promise_raw, 1, false);
     int promise_error = promise_shared.get_error();
 
     if (promise_error != FT_ERR_SUCCESS)
+        return (promise_error);
+    future_initialize_error = future_value.initialize(promise_shared);
+    if (future_initialize_error != FT_ERR_SUCCESS)
+        return (future_initialize_error);
+    promise_capture.reset(new (std::nothrow) ft_sharedptr<promise_type>());
+    if (!promise_capture)
+        return (FT_ERR_NO_MEMORY);
+    promise_shared_initialize_error = promise_capture->initialize(promise_shared);
+    if (promise_shared_initialize_error != FT_ERR_SUCCESS)
+        return (promise_shared_initialize_error);
+    auto task_body = [promise_capture, function, args...]() mutable
     {
-        return (ft_future<return_type>());
-    }
-    auto make_future = [&promise_shared]() -> ft_future<return_type>
-    {
-        ft_future<return_type> promise_future;
-        ft_future<return_type> future_value;
-
-        if (promise_future.initialize(promise_shared) != FT_ERR_SUCCESS)
-            return (ft_future<return_type>());
-        if (future_value.move(promise_future) != FT_ERR_SUCCESS)
-            return (ft_future<return_type>());
-        return (future_value);
-    };
-    {
-        int future_error = promise_shared.get_error();
-        if (future_error != FT_ERR_SUCCESS)
-            return (make_future());
-    }
-    auto task_body = [promise_shared, function, args...]() mutable
-    {
-        if (!promise_shared)
+        if (!*promise_capture)
         {
             if constexpr (std::is_void_v<return_type>)
                 function(args...);
@@ -740,14 +733,14 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         if constexpr (std::is_void_v<return_type>)
         {
             function(args...);
-            promise_shared->set_value();
+            (*promise_capture)->set_value();
         }
         else
         {
             return_type result_value;
 
             result_value = function(args...);
-            promise_shared->set_value(ft_move(result_value));
+            (*promise_capture)->set_value(ft_move(result_value));
         }
         return ;
     };
@@ -772,14 +765,12 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     {
         this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
                 g_ft_task_trace_label_async, false);
-        return (make_future());
+        return (queue_push_error);
     }
     metrics_updated = this->update_queue_size(1);
     if (!metrics_updated)
-    {
-        return (make_future());
-    }
-    return (make_future());
+        return (FT_ERR_INTERNAL);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
@@ -871,9 +862,19 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     task_entry._time = time_monotonic_point_add_ms(start_point, delay_milliseconds);
     task_entry._interval_ms = 0;
     task_entry._state = state_shared;
-    auto task_body = [promise_shared, function, args...]() mutable
+    std::shared_ptr<ft_sharedptr<ft_promise<return_type> > > promise_capture(
+        new (std::nothrow) ft_sharedptr<ft_promise<return_type> >());
+    if (!promise_capture)
     {
-        if (!promise_shared)
+        return (result_pair);
+    }
+    if (promise_capture->initialize(promise_shared) != FT_ERR_SUCCESS)
+    {
+        return (result_pair);
+    }
+    auto task_body = [promise_capture, function, args...]() mutable
+    {
+        if (!*promise_capture)
         {
             if constexpr (std::is_void_v<return_type>)
                 function(args...);
@@ -884,14 +885,14 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         if constexpr (std::is_void_v<return_type>)
         {
             function(args...);
-            promise_shared->set_value();
+            (*promise_capture)->set_value();
         }
         else
         {
             return_type result_value;
 
             result_value = function(args...);
-            promise_shared->set_value(ft_move(result_value));
+            (*promise_capture)->set_value(ft_move(result_value));
         }
         return ;
     };

@@ -16,8 +16,8 @@ FT_TEST(test_yaml_round_trip)
     yaml_value root;
     std::unique_ptr<yaml_value> name_value_guard;
     std::unique_ptr<yaml_value> role_value_guard;
-    ft_string yaml_string;
-    ft_string round_trip_string;
+    ft_string *yaml_string;
+    ft_string *round_trip_string;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, root.initialize());
     root.set_type(YAML_MAP);
@@ -44,11 +44,17 @@ FT_TEST(test_yaml_round_trip)
     role_value_guard.release();
 
     yaml_string = yaml_write_to_string(&root);
-    FT_ASSERT_EQ(FT_TRUE, yaml_string.is_initialised());
+    FT_ASSERT(yaml_string != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, yaml_string->is_initialised());
 
     round_trip_string = yaml_write_to_string(&root);
-    FT_ASSERT_EQ(FT_TRUE, round_trip_string.is_initialised());
-    FT_ASSERT_EQ(0, ft_strcmp(yaml_string.c_str(), round_trip_string.c_str()));
+    FT_ASSERT(round_trip_string != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, round_trip_string->is_initialised());
+    FT_ASSERT_EQ(0, ft_strcmp(yaml_string->c_str(), round_trip_string->c_str()));
+    (void)yaml_string->destroy();
+    (void)round_trip_string->destroy();
+    delete yaml_string;
+    delete round_trip_string;
     return (1);
 }
 

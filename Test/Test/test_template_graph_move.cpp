@@ -48,7 +48,8 @@ FT_TEST(test_ft_graph_move_constructor_recreates_mutex)
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
 
-    ft_graph<int> moved_graph(ft_move(source_graph));
+    ft_graph<int> moved_graph;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_graph.move(source_graph));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_graph.get_error());
     FT_ASSERT(moved_graph.is_thread_safe());

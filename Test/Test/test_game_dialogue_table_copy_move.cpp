@@ -9,15 +9,15 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static ft_sharedptr<game_dialogue_line> make_line(int id, const char *speaker,
-        const char *text)
+static int32_t make_line(ft_sharedptr<game_dialogue_line> &stored, int id,
+        const char *speaker, const char *text)
 {
     ft_vector<int> next;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, next.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, next.get_error());
     next.push_back(id + 1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, next.get_error());
-    ft_sharedptr<game_dialogue_line> stored(new (std::nothrow) game_dialogue_line());
+    stored = ft_sharedptr<game_dialogue_line>(new (std::nothrow) game_dialogue_line());
     FT_ASSERT(stored.get() != ft_nullptr);
     ft_string speaker_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
@@ -27,7 +27,7 @@ static ft_sharedptr<game_dialogue_line> make_line(int id, const char *speaker,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id, speaker_string,
         text_string, next));
-    return (stored);
+    return (FT_ERR_SUCCESS);
 }
 
 FT_TEST(test_dialogue_table_register_line_retrieves_data)
@@ -67,7 +67,9 @@ FT_TEST(test_dialogue_table_scripts_store_lines_via_sharedptrs)
     ft_vector<ft_sharedptr<game_dialogue_line>> lines;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
-    lines.push_back(make_line(2, "player", "reply"));
+    ft_sharedptr<game_dialogue_line> line;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, make_line(line, 2, "player", "reply"));
+    lines.push_back(line);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.get_error());
 
     game_dialogue_script script;

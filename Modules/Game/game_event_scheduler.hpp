@@ -31,7 +31,7 @@ typedef struct s_event_scheduler_profile
 
 struct game_event_compare_ptr
 {
-    ft_bool operator()(const ft_sharedptr<game_event> &left, const ft_sharedptr<game_event> &right) const noexcept;
+    ft_bool operator()(const ft_sharedptr<game_event> *left, const ft_sharedptr<game_event> *right) const noexcept;
 };
 
 class game_event_scheduler
@@ -41,12 +41,12 @@ class game_event_scheduler
     #else
         private:
     #endif
-        mutable ft_priority_queue<ft_sharedptr<game_event>, game_event_compare_ptr> _events;
+        mutable ft_priority_queue<ft_sharedptr<game_event> *, game_event_compare_ptr> _events;
         static thread_local int32_t _last_error;
         mutable pt_recursive_mutex *_mutex;
         mutable ft_bool _profiling_enabled;
         mutable t_event_scheduler_profile _profile;
-        mutable ft_vector<ft_sharedptr<game_event> > _ready_cache;
+        mutable ft_vector<ft_sharedptr<game_event> *> _ready_cache;
         uint8_t _initialised_state;
 
         static int32_t set_error(int32_t error_code) noexcept;
@@ -57,7 +57,7 @@ class game_event_scheduler
                 ft_size_t rescheduled_count,
                 ft_size_t queue_depth,
                 int64_t duration_ns) const noexcept;
-        void finalize_update(ft_vector<ft_sharedptr<game_event> > &events,
+        void finalize_update(ft_vector<ft_sharedptr<game_event> *> &events,
                 ft_size_t ready_count,
                 ft_size_t rescheduled_count,
                 ft_size_t queue_depth,

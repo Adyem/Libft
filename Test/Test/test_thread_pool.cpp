@@ -137,7 +137,8 @@ FT_TEST(test_thread_pool_move_constructor_preserves_execution)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_pool.enable_thread_safety());
 
-    ft_thread_pool moved_pool(static_cast<ft_thread_pool &&>(source_pool));
+    ft_thread_pool moved_pool(0, 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_pool.move(source_pool));
 
     moved_pool.submit([&execution_count]()
     {

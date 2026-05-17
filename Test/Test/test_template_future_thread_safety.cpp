@@ -63,7 +63,8 @@ FT_TEST(test_future_move_constructor_transfers_thread_safety)
     FT_ASSERT_EQ(0, original.enable_thread_safety());
     FT_ASSERT_EQ(true, original.is_thread_safe());
 
-    ft_future<int> moved(static_cast<ft_future<int> &&>(original));
+    ft_future<int> moved;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.move(original));
 
     FT_ASSERT_EQ(false, original.valid());
     FT_ASSERT_EQ(true, moved.is_thread_safe());

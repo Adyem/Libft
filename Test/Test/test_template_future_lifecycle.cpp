@@ -170,7 +170,8 @@ FT_TEST(test_ft_future_void_move_constructor_and_thread_safety)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_future.initialize());
     FT_ASSERT_EQ(0, source_future.enable_thread_safety());
 
-    ft_future<void> moved_future(static_cast<ft_future<void> &&>(source_future));
+    ft_future<void> moved_future;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_future.move(source_future));
 
     lock_acquired = FT_FALSE;
     FT_ASSERT_EQ(true, moved_future.valid());

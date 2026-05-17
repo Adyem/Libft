@@ -21,28 +21,6 @@ game_item_modifier::game_item_modifier() noexcept
     return ;
 }
 
-game_item_modifier::game_item_modifier(const game_item_modifier &other) noexcept
-    : _id(0), _value(0), _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _mutex(ft_nullptr)
-{
-    int32_t initialize_error;
-
-    initialize_error = this->initialize(other);
-    this->set_error(initialize_error);
-    return ;
-}
-
-game_item_modifier::game_item_modifier(game_item_modifier &&other) noexcept
-    : _id(0), _value(0), _initialised_state(FT_CLASS_STATE_UNINITIALISED),
-      _mutex(ft_nullptr)
-{
-    int32_t initialize_error;
-
-    initialize_error = this->initialize(static_cast<game_item_modifier &&>(other));
-    this->set_error(initialize_error);
-    return ;
-}
-
 game_item_modifier::~game_item_modifier() noexcept
 {
     (void)this->destroy();
@@ -413,32 +391,6 @@ game_item::game_item() noexcept
       _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-game_item::game_item(const game_item &other) noexcept
-    : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
-      _width(1), _height(1), _modifier1(), _modifier2(),
-      _modifier3(), _modifier4(),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
-{
-    int32_t initialize_error;
-
-    initialize_error = this->initialize(other);
-    this->set_error(initialize_error);
-    return ;
-}
-
-game_item::game_item(game_item &&other) noexcept
-    : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
-      _width(1), _height(1), _modifier1(), _modifier2(),
-      _modifier3(), _modifier4(),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED), _mutex(ft_nullptr)
-{
-    int32_t initialize_error;
-
-    initialize_error = this->initialize(static_cast<game_item &&>(other));
-    this->set_error(initialize_error);
     return ;
 }
 

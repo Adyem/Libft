@@ -24,6 +24,15 @@ static int32_t yaml_string_get_error(const ft_string &value) noexcept
     return (value.get_error());
 }
 
+static void yaml_reader_delete_string(ft_string *string) noexcept
+{
+    if (string == ft_nullptr)
+        return ;
+    (void)string->destroy();
+    delete string;
+    return ;
+}
+
 static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &index, int32_t indent,
     int32_t *error_code_out) noexcept
 {
@@ -54,13 +63,18 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
         goto error;
     }
     {
-        ft_string line = yaml_substr_from(lines[index], line_indent);
-        last_error = yaml_reader_take_error();
-        if (last_error != FT_ERR_SUCCESS)
+        ft_string line;
+        ft_string *line_substring;
+
+        line_substring = yaml_substr_from(lines[index], line_indent);
+        if (line_substring == ft_nullptr)
         {
-            error_code = last_error;
+            error_code = FT_ERR_NO_MEMORY;
+            yaml_reader_set_error(error_code);
             goto error;
         }
+        line = *line_substring;
+        yaml_reader_delete_string(line_substring);
         {
             int32_t string_error = yaml_string_get_error(line);
 
@@ -124,13 +138,18 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                 }
                 if (current_indent != static_cast<ft_size_t>(indent))
                     break ;
-                ft_string item_line = yaml_substr_from(lines[index], current_indent);
-                last_error = yaml_reader_take_error();
-                if (last_error != FT_ERR_SUCCESS)
+                ft_string item_line;
+                ft_string *item_substring;
+
+                item_substring = yaml_substr_from(lines[index], current_indent);
+                if (item_substring == ft_nullptr)
                 {
-                    error_code = last_error;
+                    error_code = FT_ERR_NO_MEMORY;
+                    yaml_reader_set_error(error_code);
                     goto list_cleanup;
                 }
+                item_line = *item_substring;
+                yaml_reader_delete_string(item_substring);
                 {
                     int32_t string_error = yaml_string_get_error(item_line);
 
@@ -159,12 +178,18 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                 const char *item_data = item_line.c_str();
                 if (item_line.size() == 0 || item_data[0] != '-')
                     break ;
-                item_line = yaml_substr_from(item_line, 1);
-                last_error = yaml_reader_take_error();
-                if (last_error != FT_ERR_SUCCESS)
                 {
-                    error_code = last_error;
-                    goto list_cleanup;
+                    ft_string *trimmed_item;
+
+                    trimmed_item = yaml_substr_from(item_line, 1);
+                    if (trimmed_item == ft_nullptr)
+                    {
+                        error_code = FT_ERR_NO_MEMORY;
+                        yaml_reader_set_error(error_code);
+                        goto list_cleanup;
+                    }
+                    item_line = *trimmed_item;
+                    yaml_reader_delete_string(trimmed_item);
                 }
                 {
                     int32_t string_error = yaml_string_get_error(item_line);
@@ -261,6 +286,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                             else
                             {
                                 ft_size_t child_indent;
+                                ft_string *map_substring;
 
                                 if (index >= lines_count)
                                     break ;
@@ -274,14 +300,16 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                                 }
                                 if (child_indent != static_cast<ft_size_t>(map_indent))
                                     break ;
-                                map_line = yaml_substr_from(lines[index], child_indent);
-                                last_error = yaml_reader_take_error();
-                                if (last_error != FT_ERR_SUCCESS)
+                                map_substring = yaml_substr_from(lines[index], child_indent);
+                                if (map_substring == ft_nullptr)
                                 {
-                                    error_code = last_error;
+                                    error_code = FT_ERR_NO_MEMORY;
+                                    yaml_reader_set_error(error_code);
                                     delete map_child;
                                     goto list_cleanup;
                                 }
+                                map_line = *map_substring;
+                                yaml_reader_delete_string(map_substring);
                                 {
                                     int32_t string_error = yaml_string_get_error(map_line);
 
@@ -307,14 +335,19 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                                 delete map_child;
                                 goto list_cleanup;
                             }
-                            ft_string key = yaml_substr(map_line, 0, map_colon);
-                            last_error = yaml_reader_take_error();
-                            if (last_error != FT_ERR_SUCCESS)
+                            ft_string key;
+                            ft_string *key_substring;
+
+                            key_substring = yaml_substr(map_line, 0, map_colon);
+                            if (key_substring == ft_nullptr)
                             {
-                                error_code = last_error;
+                                error_code = FT_ERR_NO_MEMORY;
+                                yaml_reader_set_error(error_code);
                                 delete map_child;
                                 goto list_cleanup;
                             }
+                            key = *key_substring;
+                            yaml_reader_delete_string(key_substring);
                             {
                                 int32_t string_error = yaml_string_get_error(key);
 
@@ -343,14 +376,19 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                                     goto list_cleanup;
                                 }
                             }
-                            ft_string value_part = yaml_substr_from(map_line, map_colon + 1);
-                            last_error = yaml_reader_take_error();
-                            if (last_error != FT_ERR_SUCCESS)
+                            ft_string value_part;
+                            ft_string *value_substring;
+
+                            value_substring = yaml_substr_from(map_line, map_colon + 1);
+                            if (value_substring == ft_nullptr)
                             {
-                                error_code = last_error;
+                                error_code = FT_ERR_NO_MEMORY;
+                                yaml_reader_set_error(error_code);
                                 delete map_child;
                                 goto list_cleanup;
                             }
+                            value_part = *value_substring;
+                            yaml_reader_delete_string(value_substring);
                             {
                                 int32_t string_error = yaml_string_get_error(value_part);
 
@@ -536,13 +574,18 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                 }
                 if (current_indent != static_cast<ft_size_t>(indent))
                     break ;
-                ft_string pair_line = yaml_substr_from(lines[index], current_indent);
-                last_error = yaml_reader_take_error();
-                if (last_error != FT_ERR_SUCCESS)
+                ft_string pair_line;
+                ft_string *pair_substring;
+
+                pair_substring = yaml_substr_from(lines[index], current_indent);
+                if (pair_substring == ft_nullptr)
                 {
-                    error_code = last_error;
+                    error_code = FT_ERR_NO_MEMORY;
+                    yaml_reader_set_error(error_code);
                     goto map_cleanup;
                 }
+                pair_line = *pair_substring;
+                yaml_reader_delete_string(pair_substring);
                 {
                     int32_t string_error = yaml_string_get_error(pair_line);
 
@@ -561,13 +604,18 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                 }
                 if (pair_colon == static_cast<ft_size_t>(-1))
                     break ;
-                ft_string key = yaml_substr(pair_line, 0, pair_colon);
-                last_error = yaml_reader_take_error();
-                if (last_error != FT_ERR_SUCCESS)
+                ft_string key;
+                ft_string *key_substring;
+
+                key_substring = yaml_substr(pair_line, 0, pair_colon);
+                if (key_substring == ft_nullptr)
                 {
-                    error_code = last_error;
+                    error_code = FT_ERR_NO_MEMORY;
+                    yaml_reader_set_error(error_code);
                     goto map_cleanup;
                 }
+                key = *key_substring;
+                yaml_reader_delete_string(key_substring);
                 {
                     int32_t string_error = yaml_string_get_error(key);
 
@@ -593,13 +641,18 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, ft_size_t &ind
                         goto map_cleanup;
                     }
                 }
-                ft_string value_part = yaml_substr_from(pair_line, pair_colon + 1);
-                last_error = yaml_reader_take_error();
-                if (last_error != FT_ERR_SUCCESS)
+                ft_string value_part;
+                ft_string *value_substring;
+
+                value_substring = yaml_substr_from(pair_line, pair_colon + 1);
+                if (value_substring == ft_nullptr)
                 {
-                    error_code = last_error;
+                    error_code = FT_ERR_NO_MEMORY;
+                    yaml_reader_set_error(error_code);
                     goto map_cleanup;
                 }
+                value_part = *value_substring;
+                yaml_reader_delete_string(value_substring);
                 {
                     int32_t string_error = yaml_string_get_error(value_part);
 

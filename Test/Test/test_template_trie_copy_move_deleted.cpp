@@ -49,8 +49,9 @@ FT_TEST(test_ft_trie_move_constructor_preserves_entries_and_thread_safety)
     FT_ASSERT_EQ(FT_TRUE, source_trie.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_trie.get_error());
 
-    moved_trie_pointer = new ft_trie<int>(ft_move(source_trie));
+    moved_trie_pointer = new ft_trie<int>();
     FT_ASSERT(moved_trie_pointer != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_trie_pointer->move(source_trie));
     FT_ASSERT_EQ(FT_TRUE, moved_trie_pointer->is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_trie_pointer->get_error());
     const auto *found_value = moved_trie_pointer->search("answer");

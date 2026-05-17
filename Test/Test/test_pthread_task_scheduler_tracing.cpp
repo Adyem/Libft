@@ -96,7 +96,9 @@ FT_TEST(test_task_scheduler_tracing_submit)
 
     root_span = task_scheduler_trace_generate_span_id();
     previous_span = task_scheduler_trace_push_span(root_span);
-    auto future_value = scheduler_instance.submit([]() { return (11); });
+    ft_future<int> future_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        scheduler_instance.submit(future_value, []() { return (11); }));
     FT_ASSERT_EQ(11, future_value.get());
     task_scheduler_trace_pop_span(previous_span);
     std::vector<ft_task_trace_event> events = task_scheduler_trace_snapshot();

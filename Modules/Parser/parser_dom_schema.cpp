@@ -184,21 +184,30 @@ int32_t ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, ft
     return (set_error(FT_ERR_SUCCESS));
 }
 
-static ft_string ft_dom_build_path(const ft_string &base, const ft_string &segment) noexcept
+static int32_t ft_dom_build_path(const ft_string &base, const ft_string &segment,
+    ft_string &output) noexcept
 {
-    ft_string result;
+    int32_t string_error;
 
-    result = base;
-    if (result.get_error() != FT_ERR_SUCCESS)
-        return (ft_string());
-    if (result.size() != 0)
-        result += "/";
-    if (result.get_error() != FT_ERR_SUCCESS)
-        return (ft_string());
-    result += segment;
-    if (result.get_error() != FT_ERR_SUCCESS)
-        return (ft_string());
-    return (result);
+    if (output.is_initialised() == FT_FALSE)
+        string_error = output.initialize();
+    else
+        string_error = output.clear();
+    if (string_error != FT_ERR_SUCCESS)
+        return (string_error);
+    output = base;
+    if (output.get_error() != FT_ERR_SUCCESS)
+        return (output.get_error());
+    if (output.size() != 0)
+    {
+        output += "/";
+        if (output.get_error() != FT_ERR_SUCCESS)
+            return (output.get_error());
+    }
+    output += segment;
+    if (output.get_error() != FT_ERR_SUCCESS)
+        return (output.get_error());
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_node *node,
@@ -209,9 +218,9 @@ int32_t ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_do
     int32_t find_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::validate_rule");
-    full_path = ft_dom_build_path(base_path, rule.path);
-    if (full_path.get_error() != FT_ERR_SUCCESS)
-        return (set_error(full_path.get_error()));
+    find_error = ft_dom_build_path(base_path, rule.path, full_path);
+    if (find_error != FT_ERR_SUCCESS)
+        return (set_error(find_error));
     target_node = ft_nullptr;
     find_error = ft_dom_find_path(node, full_path, &target_node);
     if (find_error != FT_ERR_SUCCESS)

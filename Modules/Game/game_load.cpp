@@ -25,71 +25,98 @@ static int32_t parse_item_field(json_group *group, const ft_string &key, int32_t
     return (FT_ERR_SUCCESS);
 }
 
+static int32_t build_item_field_key(const ft_string &item_prefix,
+    const char *suffix, ft_string &key) noexcept
+{
+    int32_t error_code;
+
+    error_code = key.initialize(item_prefix);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = key.append(suffix);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
 static int32_t build_item_from_group(game_item &item, json_group *group, const ft_string &item_prefix)
 {
     int32_t value;
-    ft_string key_max = item_prefix;
-    key_max += "_max_stack";
+    ft_string key_max;
+    if (build_item_field_key(item_prefix, "_max_stack", key_max) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_max, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_max_stack(value);
-    ft_string key_current = item_prefix;
-    key_current += "_stack_size";
+    ft_string key_current;
+    if (build_item_field_key(item_prefix, "_stack_size", key_current) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_current, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_stack_size(value);
-    ft_string key_id = item_prefix;
-    key_id += "_id";
+    ft_string key_id;
+    if (build_item_field_key(item_prefix, "_id", key_id) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_id, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_item_id(value);
-    ft_string key_width = item_prefix;
-    key_width += "_width";
+    ft_string key_width;
+    if (build_item_field_key(item_prefix, "_width", key_width) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_width, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_width(value);
-    ft_string key_height = item_prefix;
-    key_height += "_height";
+    ft_string key_height;
+    if (build_item_field_key(item_prefix, "_height", key_height) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_height, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_height(value);
-    ft_string key_mod1_id = item_prefix;
-    key_mod1_id += "_mod1_id";
+    ft_string key_mod1_id;
+    if (build_item_field_key(item_prefix, "_mod1_id", key_mod1_id) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod1_id, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier1_id(value);
-    ft_string key_mod1_value = item_prefix;
-    key_mod1_value += "_mod1_value";
+    ft_string key_mod1_value;
+    if (build_item_field_key(item_prefix, "_mod1_value", key_mod1_value) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod1_value, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier1_value(value);
-    ft_string key_mod2_id = item_prefix;
-    key_mod2_id += "_mod2_id";
+    ft_string key_mod2_id;
+    if (build_item_field_key(item_prefix, "_mod2_id", key_mod2_id) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod2_id, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier2_id(value);
-    ft_string key_mod2_value = item_prefix;
-    key_mod2_value += "_mod2_value";
+    ft_string key_mod2_value;
+    if (build_item_field_key(item_prefix, "_mod2_value", key_mod2_value) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod2_value, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier2_value(value);
-    ft_string key_mod3_id = item_prefix;
-    key_mod3_id += "_mod3_id";
+    ft_string key_mod3_id;
+    if (build_item_field_key(item_prefix, "_mod3_id", key_mod3_id) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod3_id, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier3_id(value);
-    ft_string key_mod3_value = item_prefix;
-    key_mod3_value += "_mod3_value";
+    ft_string key_mod3_value;
+    if (build_item_field_key(item_prefix, "_mod3_value", key_mod3_value) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod3_value, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier3_value(value);
-    ft_string key_mod4_id = item_prefix;
-    key_mod4_id += "_mod4_id";
+    ft_string key_mod4_id;
+    if (build_item_field_key(item_prefix, "_mod4_id", key_mod4_id) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod4_id, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier4_id(value);
-    ft_string key_mod4_value = item_prefix;
-    key_mod4_value += "_mod4_value";
+    ft_string key_mod4_value;
+    if (build_item_field_key(item_prefix, "_mod4_value", key_mod4_value) != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     if (parse_item_field(group, key_mod4_value, value) != FT_ERR_SUCCESS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier4_value(value);

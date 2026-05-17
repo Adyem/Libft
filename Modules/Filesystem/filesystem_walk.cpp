@@ -20,6 +20,15 @@ static ft_bool filesystem_is_dot_entry(const char *name) noexcept
     return (FT_FALSE);
 }
 
+static void filesystem_delete_string(ft_string *string) noexcept
+{
+    if (string == ft_nullptr)
+        return ;
+    (void)string->destroy();
+    delete string;
+    return ;
+}
+
 static int32_t filesystem_walk_child(const char *path,
     filesystem_walk_callback callback, void *user_context)
 {
@@ -48,7 +57,7 @@ int32_t filesystem_walk_recursive(const char *root_path,
 {
     file_dir *directory_stream;
     file_dirent *entry;
-    ft_string child_path;
+    ft_string *child_path;
     int32_t walk_error;
     int32_t close_error;
 
@@ -68,13 +77,20 @@ int32_t filesystem_walk_recursive(const char *root_path,
         if (filesystem_is_dot_entry(entry->d_name) == FT_FALSE)
         {
             child_path = file_path_join(root_path, entry->d_name);
-            if (child_path.get_error() != FT_ERR_SUCCESS)
+            if (child_path == ft_nullptr)
             {
-                walk_error = child_path.get_error();
+                walk_error = FT_ERR_INVALID_STATE;
                 break ;
             }
-            walk_error = filesystem_walk_child(child_path.c_str(), callback,
+            if (child_path->get_error() != FT_ERR_SUCCESS)
+            {
+                walk_error = child_path->get_error();
+                filesystem_delete_string(child_path);
+                break ;
+            }
+            walk_error = filesystem_walk_child(child_path->c_str(), callback,
                     user_context);
+            filesystem_delete_string(child_path);
             if (walk_error != FT_ERR_SUCCESS)
             {
                 break ;

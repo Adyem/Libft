@@ -34,6 +34,13 @@ int32_t deserialize_equipment(game_character &character, json_group *group);
 
 thread_local int32_t game_world::_last_error = FT_ERR_SUCCESS;
 
+static void game_world_clear_event_handles(
+    ft_vector<ft_sharedptr<game_event> > &events) noexcept
+{
+    events.clear();
+    return ;
+}
+
 static void default_event_callback(game_world &world, game_event &event) noexcept;
 static ft_function<void(game_world&, game_event&)> get_callback_by_id(int32_t type_id) noexcept;
 static void destroy_world_lifecycle_components(
@@ -130,76 +137,6 @@ game_world::game_world() noexcept
     _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-game_world::game_world(const game_world &other) noexcept
-    : _event_scheduler(), _world_registry(), _replay_session(),
-    _economy_table(), _crafting(), _dialogue_table(), _world_region(), _quest(),
-    _vendor_profile(), _upgrade(),
-    _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t initialize_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_world::game_world(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        return ;
-    }
-    this->_event_scheduler = other._event_scheduler;
-    this->_world_registry = other._world_registry;
-    this->_replay_session = other._replay_session;
-    this->_economy_table = other._economy_table;
-    this->_crafting = other._crafting;
-    this->_dialogue_table = other._dialogue_table;
-    this->_world_region = other._world_region;
-    this->_quest = other._quest;
-    this->_vendor_profile = other._vendor_profile;
-    this->_upgrade = other._upgrade;
-    this->set_error(other.get_error());
-    return ;
-}
-
-game_world::game_world(game_world &&other) noexcept
-    : _event_scheduler(), _world_registry(), _replay_session(),
-    _economy_table(), _crafting(), _dialogue_table(), _world_region(), _quest(),
-    _vendor_profile(), _upgrade(),
-    _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    int32_t move_error;
-
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state, "game_world::game_world(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        this->set_error(other.get_error());
-        return ;
-    }
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return ;
 }
 
@@ -1119,12 +1056,21 @@ int32_t game_world::restore_from_groups(json_group *groups, game_character &char
     {
         ft_sharedptr<game_event> &scheduled_event = scheduled_events[event_index];
 
+        if (!scheduled_event)
+        {
+            event_index++;
+            continue ;
+        }
         scheduled_event->set_callback(get_callback_by_id(scheduled_event->get_id()));
         this->_event_scheduler->schedule_event(scheduled_event);
         if (this->propagate_scheduler_state_error() == FT_TRUE)
+        {
+            game_world_clear_event_handles(scheduled_events);
             return (this->get_error());
+        }
         event_index++;
     }
+    game_world_clear_event_handles(scheduled_events);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }

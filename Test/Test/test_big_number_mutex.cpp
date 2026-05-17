@@ -61,7 +61,9 @@ FT_TEST(test_big_number_move_constructor_preserves_thread_safety_and_value)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.enable_thread_safety());
 
-    ft_big_number moved_value(static_cast<ft_big_number &&>(source_value));
+    ft_big_number moved_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_value.initialize(static_cast<ft_big_number &&>(source_value)));
 
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_value._initialised_state);
     FT_ASSERT_EQ(ft_nullptr, source_value._mutex);

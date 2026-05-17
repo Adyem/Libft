@@ -8,13 +8,13 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static ft_sharedptr<game_dialogue_line> make_line(int id, const char *speaker,
-        const char *text)
+static int32_t make_line(ft_sharedptr<game_dialogue_line> &stored, int id,
+        const char *speaker, const char *text)
 {
     ft_vector<int> next;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, next.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, next.push_back(id + 1));
-    ft_sharedptr<game_dialogue_line> stored(new (std::nothrow) game_dialogue_line());
+    stored = ft_sharedptr<game_dialogue_line>(new (std::nothrow) game_dialogue_line());
     FT_ASSERT(stored.get() != ft_nullptr);
     ft_string speaker_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
@@ -23,7 +23,7 @@ static ft_sharedptr<game_dialogue_line> make_line(int id, const char *speaker,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id, speaker_string,
         text_string, next));
-    return (stored);
+    return (FT_ERR_SUCCESS);
 }
 
 FT_TEST(test_dialogue_script_initial_state)
@@ -34,8 +34,8 @@ FT_TEST(test_dialogue_script_initial_state)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty.initialize());
     FT_ASSERT_EQ(0, script.get_script_id());
-    FT_ASSERT_EQ(empty, script.get_title());
-    FT_ASSERT_EQ(empty, script.get_summary());
+    FT_ASSERT_EQ(empty.c_str(), script.get_title().c_str());
+    FT_ASSERT_EQ(empty.c_str(), script.get_summary().c_str());
     FT_ASSERT_EQ(0, script.get_start_line_id());
     FT_ASSERT_EQ(0u, script.get_lines().size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
@@ -56,7 +56,9 @@ FT_TEST(test_dialogue_script_setters_modify_metadata_and_lines)
     script.set_start_line_id(2);
     ft_vector<ft_sharedptr<game_dialogue_line>> lines;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.push_back(make_line(2, "npc", "reply")));
+    ft_sharedptr<game_dialogue_line> line;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, make_line(line, 2, "npc", "reply"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.push_back(line));
     script.set_lines(lines);
 
     const ft_vector<ft_sharedptr<game_dialogue_line>> &stored = script.get_lines();

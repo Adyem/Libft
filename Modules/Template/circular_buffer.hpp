@@ -9,9 +9,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <new>
 
@@ -136,101 +133,6 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(ft_size_t capacity)
       _size(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    return ;
-}
-
-template <typename ElementType>
-ft_circular_buffer<ElementType>::ft_circular_buffer(
-    const ft_circular_buffer<ElementType> &other)
-    : _buffer(ft_nullptr), _configured_capacity(other._configured_capacity), _head(0),
-      _tail(0), _size(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-    ft_size_t index;
-    ft_size_t source_index;
-    ft_bool lock_acquired;
-    int32_t lock_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_circular_buffer::ft_circular_buffer(copy)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->initialize() != FT_ERR_SUCCESS)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    lock_acquired = FT_FALSE;
-    lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    index = 0;
-    while (index < other._size)
-    {
-        source_index = (other._head + index) % other._configured_capacity;
-        this->push(other._buffer[source_index]);
-        if (this->get_error() != FT_ERR_SUCCESS)
-        {
-            (void)other.unlock_internal(lock_acquired);
-            (void)this->destroy();
-            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-            (void)set_error(previous_error);
-            return ;
-        }
-        index += 1;
-    }
-    (void)other.unlock_internal(lock_acquired);
-    (void)set_error(previous_error);
-    return ;
-}
-
-template <typename ElementType>
-ft_circular_buffer<ElementType>::ft_circular_buffer(
-    ft_circular_buffer<ElementType> &&other)
-    : _buffer(ft_nullptr), _configured_capacity(other._configured_capacity), _head(0),
-      _tail(0), _size(0), _mutex(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
-{
-    uint32_t previous_error;
-
-    previous_error = _last_error;
-    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_lifecycle(other._initialised_state,
-            "ft_circular_buffer::ft_circular_buffer(move)",
-            "source object is uninitialised");
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
-    {
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-        (void)set_error(previous_error);
-        return ;
-    }
-    if (this->move(other) != FT_ERR_SUCCESS)
-        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    (void)set_error(previous_error);
     return ;
 }
 

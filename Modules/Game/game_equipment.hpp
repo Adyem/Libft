@@ -48,8 +48,8 @@ class game_equipment
 
         int32_t equip(int32_t slot, const ft_sharedptr<game_item> &item) noexcept;
         void unequip(int32_t slot) noexcept;
-        ft_sharedptr<game_item> get_item(int32_t slot) noexcept;
-        ft_sharedptr<game_item> get_item(int32_t slot) const noexcept;
+        ft_sharedptr<game_item> *get_item(int32_t slot) noexcept;
+        ft_sharedptr<game_item> *get_item(int32_t slot) const noexcept;
         int32_t enable_thread_safety() noexcept;
         int32_t disable_thread_safety() noexcept;
         ft_bool is_thread_safe() const noexcept;

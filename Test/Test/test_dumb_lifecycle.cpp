@@ -35,15 +35,15 @@ test_sound_device_lifecycle_impl::test_sound_device_lifecycle_impl(void)
 
 test_sound_device_lifecycle_impl::test_sound_device_lifecycle_impl(
     const test_sound_device_lifecycle_impl &other)
-    : ft_sound_device(other)
 {
+    (void)this->initialize(other);
     return ;
 }
 
 test_sound_device_lifecycle_impl::test_sound_device_lifecycle_impl(
     test_sound_device_lifecycle_impl &&other)
-    : ft_sound_device(static_cast<ft_sound_device &&>(other))
 {
+    (void)this->initialize(static_cast<ft_sound_device &&>(other));
     return ;
 }
 

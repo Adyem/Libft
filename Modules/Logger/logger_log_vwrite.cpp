@@ -60,7 +60,7 @@ static int32_t logger_append_quoted_token(ft_string &buffer, const char *value)
 int32_t logger_build_standard_message(t_log_level level, const ft_string &message_text,
     const ft_string &context_fragment, ft_string &formatted_message)
 {
-    ft_string timestamp;
+    ft_string *timestamp;
     ft_string assembled;
     int32_t string_error;
     int32_t severity_value;
@@ -68,9 +68,15 @@ int32_t logger_build_standard_message(t_log_level level, const ft_string &messag
     int32_t severity_length;
 
     timestamp = time_format_iso8601(time_now());
-    string_error = timestamp.get_error();
-    if (string_error != FT_ERR_SUCCESS)
+    if (timestamp == ft_nullptr)
         return (FT_ERR_INTERNAL);
+    string_error = timestamp->get_error();
+    if (string_error != FT_ERR_SUCCESS)
+    {
+        (void)timestamp->destroy();
+        delete timestamp;
+        return (FT_ERR_INTERNAL);
+    }
     severity_value = ft_log_level_to_severity(level);
     severity_length = pf_snprintf(severity_buffer, sizeof(severity_buffer), "%d",
             severity_value);
@@ -80,7 +86,9 @@ int32_t logger_build_standard_message(t_log_level level, const ft_string &messag
     string_error = assembled.initialize("time=");
     if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
-    string_error = assembled.append(timestamp);
+    string_error = assembled.append(*timestamp);
+    (void)timestamp->destroy();
+    delete timestamp;
     if (string_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     string_error = assembled.append(" level=");

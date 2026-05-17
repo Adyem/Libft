@@ -44,7 +44,11 @@ FT_TEST(test_ft_tuple_construction_and_get)
 {
     ft_string second_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second_string.initialize("value"));
-    triple_tuple tuple_instance(7, second_string, 3.5);
+    triple_tuple tuple_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_instance.initialize());
+    tuple_instance.get<0>() = 7;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_instance.get<1>().initialize(second_string));
+    tuple_instance.get<2>() = 3.5;
 
     int first_value = tuple_instance.get<0>();
     FT_ASSERT_EQ(7, first_value);
@@ -68,7 +72,10 @@ FT_TEST(test_ft_tuple_reset_and_error_reporting)
 {
     ft_string answer_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, answer_string.initialize("answer"));
-    duo_tuple tuple_instance(42, answer_string);
+    duo_tuple tuple_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_instance.initialize());
+    tuple_instance.get<0>() = 42;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_instance.get<1>().initialize(answer_string));
 
     tuple_instance.reset();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_instance.get_error());
@@ -83,7 +90,10 @@ FT_TEST(test_ft_tuple_reset_and_error_reporting)
 
     ft_string eleven_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, eleven_string.initialize("eleven"));
-    duo_tuple refreshed_tuple(11, eleven_string);
+    duo_tuple refreshed_tuple;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, refreshed_tuple.initialize());
+    refreshed_tuple.get<0>() = 11;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, refreshed_tuple.get<1>().initialize(eleven_string));
     tuple_instance.reset();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tuple_instance.get_error());
     FT_ASSERT_EQ(11, refreshed_tuple.get<0>());
@@ -96,8 +106,12 @@ FT_TEST(test_ft_tuple_move_constructor_preserves_values)
 {
     ft_string five_string;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, five_string.initialize("five"));
-    duo_tuple source_tuple(5, five_string);
-    duo_tuple moved_tuple(ft_move(source_tuple));
+    duo_tuple source_tuple;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_tuple.initialize());
+    source_tuple.get<0>() = 5;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_tuple.get<1>().initialize(five_string));
+    duo_tuple moved_tuple;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_tuple.move(source_tuple));
 
     int moved_value = moved_tuple.get<0>();
     FT_ASSERT_EQ(5, moved_value);

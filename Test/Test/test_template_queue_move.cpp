@@ -24,7 +24,8 @@ FT_TEST(test_ft_queue_move_constructor_rebuilds_mutex)
     enqueue_values(source_queue, values);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.get_error());
 
-    queue_type moved_queue(ft_move(source_queue));
+    queue_type moved_queue;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_queue.move(source_queue));
 
     FT_ASSERT_EQ(true, moved_queue.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());

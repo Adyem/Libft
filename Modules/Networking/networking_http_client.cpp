@@ -73,7 +73,7 @@ struct http_client_active_connection
 };
 
 static pt_recursive_mutex *g_http_client_pool_mutex = ft_nullptr;
-static std::vector<http_client_connection_entry> g_http_client_pool_entries;
+static std::vector<http_client_connection_entry *> g_http_client_pool_entries;
 static ft_size_t g_http_client_pool_max_idle = 8;
 static int64_t g_http_client_pool_idle_timeout_ms = 30000;
 static ft_size_t g_http_client_pool_acquire_calls = 0;
@@ -192,6 +192,17 @@ static void http_client_pool_dispose_entry(http_client_connection_entry &entry)
     return ;
 }
 
+static void http_client_pool_delete_entry(http_client_connection_entry *entry) noexcept
+{
+    if (entry == NULL)
+        return ;
+    http_client_pool_dispose_entry(*entry);
+    (void)entry->host.destroy();
+    (void)entry->port.destroy();
+    delete entry;
+    return ;
+}
+
 static void http_client_pool_prune_locked(t_monotonic_time_point now)
 {
     ft_size_t index;
@@ -199,15 +210,20 @@ static void http_client_pool_prune_locked(t_monotonic_time_point now)
     index = 0;
     while (index < g_http_client_pool_entries.size())
     {
-        http_client_connection_entry &candidate = g_http_client_pool_entries[index];
+        http_client_connection_entry *candidate = g_http_client_pool_entries[index];
         int64_t idle_time_ms;
 
-        idle_time_ms = time_monotonic_point_diff_ms(candidate.last_used, now);
+        if (candidate == NULL)
+        {
+            g_http_client_pool_entries.erase(g_http_client_pool_entries.begin() + index);
+            continue ;
+        }
+        idle_time_ms = time_monotonic_point_diff_ms(candidate->last_used, now);
         if (idle_time_ms < 0)
             idle_time_ms = 0;
         if (idle_time_ms > g_http_client_pool_idle_timeout_ms)
         {
-            http_client_pool_dispose_entry(candidate);
+            http_client_pool_delete_entry(candidate);
             g_http_client_pool_entries.erase(g_http_client_pool_entries.begin() + index);
             continue ;
         }
@@ -231,6 +247,7 @@ static void http_client_pool_release_connection(http_client_active_connection &c
     }
     int32_t lock_error;
     t_monotonic_time_point now;
+    http_client_connection_entry *pooled_entry;
 
     lock_error = pt_recursive_mutex_lock_if_not_null(g_http_client_pool_mutex);
     if (lock_error != FT_ERR_SUCCESS)
@@ -248,8 +265,32 @@ static void http_client_pool_release_connection(http_client_active_connection &c
         http_client_pool_reset_active(connection);
         return ;
     }
-    connection.entry.last_used = now;
-    g_http_client_pool_entries.push_back(connection.entry);
+    pooled_entry = new (std::nothrow) http_client_connection_entry();
+    if (pooled_entry == NULL)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
+        http_client_pool_dispose_entry(connection.entry);
+        http_client_pool_reset_active(connection);
+        return ;
+    }
+    if (pooled_entry->host.initialize(connection.entry.host) != FT_ERR_SUCCESS
+        || pooled_entry->port.initialize(connection.entry.port) != FT_ERR_SUCCESS)
+    {
+        (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
+        http_client_pool_delete_entry(pooled_entry);
+        http_client_pool_dispose_entry(connection.entry);
+        http_client_pool_reset_active(connection);
+        return ;
+    }
+    pooled_entry->use_ssl = connection.entry.use_ssl;
+    pooled_entry->socket_fd = connection.entry.socket_fd;
+    pooled_entry->ssl_context = connection.entry.ssl_context;
+    pooled_entry->ssl_connection = connection.entry.ssl_connection;
+    pooled_entry->last_used = now;
+    connection.entry.socket_fd = -1;
+    connection.entry.ssl_context = NULL;
+    connection.entry.ssl_connection = NULL;
+    g_http_client_pool_entries.push_back(pooled_entry);
 #ifdef LIBFT_TEST_BUILD
     http_client_pool_untrack_runtime_leaks();
 #endif
@@ -280,14 +321,31 @@ static int32_t http_client_pool_acquire_connection(const char *host, const char 
     index = 0;
     while (index < g_http_client_pool_entries.size())
     {
-        http_client_connection_entry &candidate = g_http_client_pool_entries[index];
+        http_client_connection_entry *candidate = g_http_client_pool_entries[index];
 
-        if (candidate.use_ssl == use_ssl && candidate.host == host && candidate.port == port)
+        if (candidate != NULL && candidate->use_ssl == use_ssl
+            && candidate->host == host && candidate->port == port)
         {
-            connection.entry = candidate;
+            if (http_client_reinitialize_string(connection.entry.host) != FT_ERR_SUCCESS
+                || http_client_reinitialize_string(connection.entry.port) != FT_ERR_SUCCESS)
+            {
+                (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
+                return (FT_ERR_NO_MEMORY);
+            }
+            connection.entry.host = candidate->host;
+            connection.entry.port = candidate->port;
+            connection.entry.use_ssl = candidate->use_ssl;
+            connection.entry.socket_fd = candidate->socket_fd;
+            connection.entry.ssl_context = candidate->ssl_context;
+            connection.entry.ssl_connection = candidate->ssl_connection;
+            connection.entry.last_used = candidate->last_used;
+            candidate->socket_fd = -1;
+            candidate->ssl_context = NULL;
+            candidate->ssl_connection = NULL;
             connection.from_pool = FT_TRUE;
             connection.store_allowed = FT_TRUE;
             g_http_client_pool_entries.erase(g_http_client_pool_entries.begin() + index);
+            http_client_pool_delete_entry(candidate);
             g_http_client_pool_reuse_hits++;
             reused = FT_TRUE;
             (void)pt_recursive_mutex_unlock_if_not_null(g_http_client_pool_mutex);
@@ -482,7 +540,7 @@ void http_client_pool_flush(void)
     index = 0;
     while (index < g_http_client_pool_entries.size())
     {
-        http_client_pool_dispose_entry(g_http_client_pool_entries[index]);
+        http_client_pool_delete_entry(g_http_client_pool_entries[index]);
         index++;
     }
     g_http_client_pool_entries.clear();
@@ -508,7 +566,7 @@ void http_client_pool_set_max_idle(ft_size_t max_idle)
         index = g_http_client_pool_max_idle;
         while (index < g_http_client_pool_entries.size())
         {
-            http_client_pool_dispose_entry(g_http_client_pool_entries[index]);
+            http_client_pool_delete_entry(g_http_client_pool_entries[index]);
             index++;
         }
         g_http_client_pool_entries.resize(g_http_client_pool_max_idle);

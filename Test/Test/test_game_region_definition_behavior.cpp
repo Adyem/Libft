@@ -15,9 +15,9 @@ FT_TEST(test_game_region_definition_defaults)
     FT_ASSERT_EQ(0, region.get_region_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, empty.initialize());
-    FT_ASSERT_EQ(empty, region.get_name());
+    FT_ASSERT_STR_EQ(empty.c_str(), region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    FT_ASSERT_EQ(empty, region.get_description());
+    FT_ASSERT_STR_EQ(empty.c_str(), region.get_description().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(0, region.get_recommended_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());

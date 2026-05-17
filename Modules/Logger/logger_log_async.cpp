@@ -6,13 +6,14 @@
 #include "../Printf/printf.hpp"
 #include <unistd.h>
 #include <cerrno>
+#include <new>
 
 ft_bool g_async_running = FT_FALSE;
 static ft_size_t g_async_queue_limit = 1024;
 static ft_size_t g_async_pending_messages = 0;
 static ft_size_t g_async_peak_pending = 0;
 static ft_size_t g_async_dropped_messages = 0;
-static ft_queue<ft_string> g_log_queue;
+static ft_queue<ft_string *> g_log_queue;
 static int32_t log_queue_initialize(void);
 static int32_t g_log_queue_initializer_result = log_queue_initialize();
 static int32_t log_queue_initialize(void)
@@ -25,6 +26,15 @@ static pthread_mutex_t g_condition_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_queue_condition = PTHREAD_COND_INITIALIZER;
 #pragma GCC diagnostic pop
 static pthread_t g_log_thread;
+
+static void ft_log_delete_message(ft_string *message) noexcept
+{
+    if (message == ft_nullptr)
+        return ;
+    (void)message->destroy();
+    delete message;
+    return ;
+}
 
 void ft_log_process_message(const ft_string &message)
 {
@@ -136,7 +146,7 @@ void ft_log_process_message(const ft_string &message)
 static void *ft_log_worker(void *argument)
 {
     ft_bool queue_is_empty;
-    ft_string message;
+    ft_string *message;
     int32_t queue_error;
 
     (void)argument;
@@ -165,7 +175,10 @@ static void *ft_log_worker(void *argument)
             }
             pthread_mutex_unlock(&g_condition_mutex);
             if (queue_error == FT_ERR_SUCCESS)
-                ft_log_process_message(message);
+            {
+                ft_log_process_message(*message);
+                ft_log_delete_message(message);
+            }
             if (pthread_mutex_lock(&g_condition_mutex) != 0)
                 return (ft_nullptr);
         }
@@ -233,6 +246,7 @@ void ft_log_enqueue(t_log_level level, const char *format_string, va_list argume
     int32_t queue_error;
     int32_t signal_result;
     int32_t unlock_status;
+    ft_string *queued_message;
     int32_t format_error;
     char message_buffer[1024];
     va_list args_copy;
@@ -329,8 +343,22 @@ void ft_log_enqueue(t_log_level level, const char *format_string, va_list argume
         }
         return ;
     }
-    g_log_queue.enqueue(final_message);
+    queued_message = new (std::nothrow) ft_string();
+    if (queued_message == ft_nullptr)
+    {
+        (void)pthread_mutex_unlock(&g_condition_mutex);
+        return ;
+    }
+    if (queued_message->initialize(final_message) != FT_ERR_SUCCESS)
+    {
+        ft_log_delete_message(queued_message);
+        (void)pthread_mutex_unlock(&g_condition_mutex);
+        return ;
+    }
+    g_log_queue.enqueue(queued_message);
     queue_error = g_log_queue.get_error();
+    if (queue_error != FT_ERR_SUCCESS)
+        ft_log_delete_message(queued_message);
     if (queue_error == FT_ERR_SUCCESS)
     {
         g_async_pending_messages += 1;
@@ -368,7 +396,7 @@ void ft_log_set_async_queue_limit(ft_size_t limit)
         needs_trim = g_async_pending_messages > g_async_queue_limit;
         while (needs_trim)
         {
-            ft_string dropped_message;
+            ft_string *dropped_message;
             int32_t drop_error;
 
             dropped_message = g_log_queue.dequeue();
@@ -381,6 +409,7 @@ void ft_log_set_async_queue_limit(ft_size_t limit)
                 }
                 return ;
             }
+            ft_log_delete_message(dropped_message);
             if (g_async_pending_messages > 0)
                 g_async_pending_messages -= 1;
             g_async_dropped_messages += 1;
