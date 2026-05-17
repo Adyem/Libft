@@ -8,6 +8,36 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int32_t initialize_hook_metadata(ft_game_hook_metadata &metadata,
+    const char *hook_identifier, const char *listener_name,
+    const char *description, const char *argument_contract)
+{
+    int32_t error_code;
+
+    error_code = metadata.hook_identifier.initialize(hook_identifier);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.listener_name.initialize(listener_name);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.description.initialize(description);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.argument_contract.initialize(argument_contract);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+static void destroy_metadata_vector(ft_vector<ft_game_hook_metadata> *metadata)
+{
+    if (metadata == ft_nullptr)
+        return ;
+    metadata->destroy();
+    delete metadata;
+    return ;
+}
+
 FT_TEST(test_game_hooks_getters_clone_callbacks)
 {
     game_hooks hooks;
@@ -26,10 +56,9 @@ FT_TEST(test_game_hooks_getters_clone_callbacks)
         crafted_invocations = crafted_invocations + 1;
         return ;
     }));
-    metadata.hook_identifier = ft_game_hook_item_crafted_identifier;
-    metadata.listener_name = "getter.custom";
-    metadata.description = "Metadata test listener";
-    metadata.argument_contract = "game_character&,game_item&";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_hook_metadata(metadata,
+        ft_game_hook_item_crafted_identifier, "getter.custom",
+        "Metadata test listener", "game_character&,game_item&"));
     hooks.register_listener(metadata, 900, ft_game_hook_make_character_item_adapter(ft_function<void(game_character&, game_item&)>([](game_character &character_ref, game_item &item_ref)
     {
         (void)character_ref;
@@ -61,5 +90,8 @@ FT_TEST(test_game_hooks_getters_clone_callbacks)
     FT_ASSERT_EQ(1, scoped_after->size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
+    destroy_metadata_vector(catalog_after);
+    destroy_metadata_vector(scoped_catalog_after);
+    destroy_metadata_vector(scoped_after);
     return (1);
 }

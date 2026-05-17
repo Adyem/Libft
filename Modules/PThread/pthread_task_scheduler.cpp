@@ -424,11 +424,13 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
     }
     if (!other._state)
     {
+        (void)this->_state.destroy();
         this->_scheduler = ft_nullptr;
         other.unlock_internal(other_lock_acquired);
         this->unlock_internal(this_lock_acquired);
         return (*this);
     }
+    (void)this->_state.destroy();
     state_initialize_error = this->_state.initialize(other._state);
     if (state_initialize_error != FT_ERR_SUCCESS)
     {
@@ -471,11 +473,15 @@ ft_scheduled_task_handle::~ft_scheduled_task_handle()
     int lock_result = this->lock_internal(&lock_acquired);
     if (lock_result == FT_ERR_SUCCESS)
     {
+        (void)this->_state.destroy();
         this->_scheduler = ft_nullptr;
         this->unlock_internal(lock_acquired);
     }
     else
+    {
+        (void)this->_state.destroy();
         this->_scheduler = ft_nullptr;
+    }
     this->teardown_thread_safety();
     return ;
 }

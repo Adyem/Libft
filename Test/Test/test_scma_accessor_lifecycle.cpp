@@ -149,14 +149,14 @@ FT_TEST(test_scma_accessor_is_bound_after_destroy_aborts)
 
 FT_TEST(test_scma_accessor_copy_constructor_deleted)
 {
-    FT_ASSERT_EQ(true,
+    FT_ASSERT_EQ(false,
         static_cast<bool>(std::is_copy_constructible<scma_handle_accessor<int> >::value));
     return (1);
 }
 
 FT_TEST(test_scma_accessor_move_constructor_deleted)
 {
-    FT_ASSERT_EQ(true,
+    FT_ASSERT_EQ(false,
         static_cast<bool>(std::is_move_constructible<scma_handle_accessor<int> >::value));
     return (1);
 }

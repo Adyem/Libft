@@ -16,6 +16,35 @@ struct s_json_sink_field
     {
         return ;
     }
+
+    int32_t initialize(const s_json_sink_field &other) noexcept
+    {
+        int32_t error_code;
+
+        error_code = this->key.initialize(other.key);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = this->value.initialize(other.value);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        this->has_value = other.has_value;
+        this->value_is_json = other.value_is_json;
+        return (FT_ERR_SUCCESS);
+    }
+
+    int32_t destroy() noexcept
+    {
+        int32_t first_error;
+        int32_t error_code;
+
+        first_error = this->key.destroy();
+        error_code = this->value.destroy();
+        if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+            first_error = error_code;
+        this->has_value = FT_FALSE;
+        this->value_is_json = FT_FALSE;
+        return (first_error);
+    }
 };
 
 static int32_t logger_json_sink_append_literal(ft_string &buffer, const char *literal)

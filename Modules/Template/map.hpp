@@ -563,10 +563,24 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
     if constexpr (ft_map<Key, MappedType>::template has_initialize_copy<MappedType>::value)
     {
         construct_at(&this->_data[this->_size]);
-        this->_data[this->_size].key = key;
+        if constexpr (ft_map<Key, MappedType>::template has_initialize_copy<Key>::value)
+        {
+            int32_t key_initialize_error = this->_data[this->_size].key.initialize(key);
+            if (key_initialize_error != FT_ERR_SUCCESS)
+            {
+                destroy_at(&this->_data[this->_size]);
+                (void)this->unlock_internal(lock_acquired);
+                this->set_error(key_initialize_error);
+                return ;
+            }
+        }
+        else
+            this->_data[this->_size].key = key;
         int32_t initialize_error = this->_data[this->_size].value.initialize(value);
         if (initialize_error != FT_ERR_SUCCESS)
         {
+            if constexpr (ft_map<Key, MappedType>::template has_destroy<Key>::value)
+                (void)this->_data[this->_size].key.destroy();
             destroy_at(&this->_data[this->_size]);
             (void)this->unlock_internal(lock_acquired);
             this->set_error(initialize_error);
@@ -578,7 +592,19 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
     else if constexpr (std::is_copy_assignable<MappedType>::value)
     {
         construct_at(&this->_data[this->_size]);
-        this->_data[this->_size].key = key;
+        if constexpr (ft_map<Key, MappedType>::template has_initialize_copy<Key>::value)
+        {
+            int32_t key_initialize_error = this->_data[this->_size].key.initialize(key);
+            if (key_initialize_error != FT_ERR_SUCCESS)
+            {
+                destroy_at(&this->_data[this->_size]);
+                (void)this->unlock_internal(lock_acquired);
+                this->set_error(key_initialize_error);
+                return ;
+            }
+        }
+        else
+            this->_data[this->_size].key = key;
         this->_data[this->_size].value = value;
     }
     this->_size += 1;
@@ -654,10 +680,24 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     if constexpr (ft_map<Key, MappedType>::template has_initialize_move<MappedType>::value)
     {
         construct_at(&this->_data[this->_size]);
-        this->_data[this->_size].key = key;
+        if constexpr (ft_map<Key, MappedType>::template has_initialize_copy<Key>::value)
+        {
+            int32_t key_initialize_error = this->_data[this->_size].key.initialize(key);
+            if (key_initialize_error != FT_ERR_SUCCESS)
+            {
+                destroy_at(&this->_data[this->_size]);
+                (void)this->unlock_internal(lock_acquired);
+                this->set_error(key_initialize_error);
+                return ;
+            }
+        }
+        else
+            this->_data[this->_size].key = key;
         int32_t initialize_error = this->_data[this->_size].value.initialize(ft_move(value));
         if (initialize_error != FT_ERR_SUCCESS)
         {
+            if constexpr (ft_map<Key, MappedType>::template has_destroy<Key>::value)
+                (void)this->_data[this->_size].key.destroy();
             destroy_at(&this->_data[this->_size]);
             (void)this->unlock_internal(lock_acquired);
             this->set_error(initialize_error);
@@ -669,7 +709,19 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     else if constexpr (std::is_move_assignable<MappedType>::value)
     {
         construct_at(&this->_data[this->_size]);
-        this->_data[this->_size].key = key;
+        if constexpr (ft_map<Key, MappedType>::template has_initialize_copy<Key>::value)
+        {
+            int32_t key_initialize_error = this->_data[this->_size].key.initialize(key);
+            if (key_initialize_error != FT_ERR_SUCCESS)
+            {
+                destroy_at(&this->_data[this->_size]);
+                (void)this->unlock_internal(lock_acquired);
+                this->set_error(key_initialize_error);
+                return ;
+            }
+        }
+        else
+            this->_data[this->_size].key = key;
         this->_data[this->_size].value = ft_move(value);
     }
     this->_size += 1;

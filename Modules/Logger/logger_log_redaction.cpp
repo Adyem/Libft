@@ -3,6 +3,31 @@
 
 ft_vector<s_redaction_rule> g_redaction_rules;
 
+int32_t s_redaction_rule::initialize(const s_redaction_rule &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->pattern.initialize(other.pattern);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->replacement.initialize(other.replacement);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t s_redaction_rule::destroy() noexcept
+{
+    int32_t first_error;
+    int32_t error_code;
+
+    first_error = this->pattern.destroy();
+    error_code = this->replacement.destroy();
+    if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+        first_error = error_code;
+    return (first_error);
+}
+
 static int32_t logger_apply_redaction_rule(ft_string &text,
     const s_redaction_rule &rule)
 {
@@ -169,13 +194,11 @@ int32_t logger_copy_redaction_rules(ft_vector<s_redaction_rule> &destination)
     entry_index = 0;
     while (entry_index < rule_count)
     {
-        s_redaction_rule rule;
-
-        rule = g_redaction_rules[entry_index];
+        const s_redaction_rule &source_rule = g_redaction_rules[entry_index];
         error_code_value = g_redaction_rules.get_error();
         if (error_code_value != FT_ERR_SUCCESS)
             return (error_code_value);
-        destination.push_back(rule);
+        destination.push_back(source_rule);
         error_code_value = destination.get_error();
         if (error_code_value != FT_ERR_SUCCESS)
             return (error_code_value);
@@ -203,14 +226,13 @@ int32_t logger_apply_redactions(ft_string &text,
     entry_index = 0;
     while (entry_index < rule_count)
     {
-        s_redaction_rule rule;
         int32_t             apply_error;
 
-        rule = rules[entry_index];
+        const s_redaction_rule &source_rule = rules[entry_index];
         error_code_value = rules.get_error();
         if (error_code_value != FT_ERR_SUCCESS)
             return (error_code_value);
-        apply_error = logger_apply_redaction_rule(text, rule);
+        apply_error = logger_apply_redaction_rule(text, source_rule);
         if (apply_error != FT_ERR_SUCCESS)
             return (apply_error);
         entry_index++;

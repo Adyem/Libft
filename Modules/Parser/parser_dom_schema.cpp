@@ -77,7 +77,7 @@ int32_t ft_dom_schema::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t initialize_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (set_error(FT_ERR_SUCCESS));
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -141,7 +141,7 @@ int32_t ft_dom_schema::lock(ft_bool *lock_acquired) const noexcept
 
 void ft_dom_schema::unlock(ft_bool lock_acquired) const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::unlock");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::unlock");
     (void)this->unlock_internal(lock_acquired);
     set_error(FT_ERR_SUCCESS);
     return ;
@@ -150,14 +150,14 @@ void ft_dom_schema::unlock(ft_bool lock_acquired) const noexcept
 int32_t ft_dom_schema::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::get_error");
+        errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::get_error");
     return (_last_error);
 }
 
 const char *ft_dom_schema::get_error_str() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::get_error_str");
+        errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::get_error_str");
     return (ft_strerror(_last_error));
 }
 
@@ -167,10 +167,10 @@ int32_t ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, ft
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::add_rule");
-    rule.path = path;
-    if (rule.path.get_error() != FT_ERR_SUCCESS)
-        return (set_error(rule.path.get_error()));
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::add_rule");
+    lock_error = rule.path.initialize(path);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (set_error(lock_error));
     rule.type = type;
     rule.required = required;
     lock_acquired = false;
@@ -217,7 +217,7 @@ int32_t ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_do
     const ft_dom_node *target_node;
     int32_t find_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::validate_rule");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::validate_rule");
     find_error = ft_dom_build_path(base_path, rule.path, full_path);
     if (find_error != FT_ERR_SUCCESS)
         return (set_error(find_error));
@@ -279,7 +279,7 @@ int32_t ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validati
     ft_bool lock_acquired;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_schema::validate");
+    errno_abort_if_uninitialised(this->_initialised_state, "ft_dom_schema::validate");
     report.mark_valid();
     root = document.get_root();
     if (!root)

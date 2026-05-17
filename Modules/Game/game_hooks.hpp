@@ -20,6 +20,9 @@ struct ft_game_hook_metadata
     ft_string listener_name;
     ft_string description;
     ft_string argument_contract;
+
+    int32_t initialize(const ft_game_hook_metadata &other) noexcept;
+    int32_t destroy() noexcept;
 };
 
 struct ft_game_hook_context
@@ -37,6 +40,9 @@ struct ft_game_hook_listener_entry
     ft_game_hook_metadata metadata;
     int32_t priority;
     ft_function<void(ft_game_hook_context&)> callback;
+
+    int32_t initialize(const ft_game_hook_listener_entry &other) noexcept;
+    int32_t destroy() noexcept;
 };
 
 extern const char *ft_game_hook_item_crafted_identifier;

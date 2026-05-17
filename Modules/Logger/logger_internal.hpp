@@ -83,6 +83,9 @@ struct s_redaction_rule
     {
         return ;
     }
+
+    int32_t initialize(const s_redaction_rule &other) noexcept;
+    int32_t destroy() noexcept;
 };
 
 struct s_log_context_entry
@@ -96,6 +99,9 @@ struct s_log_context_entry
     {
         return ;
     }
+
+    int32_t initialize(const s_log_context_entry &other) noexcept;
+    int32_t destroy() noexcept;
 };
 
 struct s_log_context_view

@@ -11,6 +11,27 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static int32_t initialize_hook_metadata(ft_game_hook_metadata &metadata,
+    const char *hook_identifier, const char *listener_name,
+    const char *description, const char *argument_contract)
+{
+    int32_t error_code;
+
+    error_code = metadata.hook_identifier.initialize(hook_identifier);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.listener_name.initialize(listener_name);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.description.initialize(description);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.argument_contract.initialize(argument_contract);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
 FT_TEST(test_game_hooks_invoke_callbacks)
 {
     game_hooks hooks;
@@ -64,10 +85,9 @@ FT_TEST(test_game_hooks_invoke_callbacks)
     ft_game_hook_metadata high_metadata;
     ft_game_hook_metadata low_metadata;
 
-    high_metadata.hook_identifier = ft_game_hook_item_crafted_identifier;
-    high_metadata.listener_name = "test.high";
-    high_metadata.description = "High priority test listener";
-    high_metadata.argument_contract = "game_character&,game_item&";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_hook_metadata(high_metadata,
+        ft_game_hook_item_crafted_identifier, "test.high",
+        "High priority test listener", "game_character&,game_item&"));
     hooks.register_listener(high_metadata, 1500, ft_game_hook_make_character_item_adapter(ft_function<void(game_character&, game_item&)>([&invocation_counter, &high_priority_step](game_character &character_ref, game_item &item_ref)
     {
         (void)character_ref;
@@ -76,10 +96,9 @@ FT_TEST(test_game_hooks_invoke_callbacks)
         high_priority_step = invocation_counter;
         return ;
     })));
-    low_metadata.hook_identifier = ft_game_hook_item_crafted_identifier;
-    low_metadata.listener_name = "test.low";
-    low_metadata.description = "Low priority test listener";
-    low_metadata.argument_contract = "game_character&,game_item&";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_hook_metadata(low_metadata,
+        ft_game_hook_item_crafted_identifier, "test.low",
+        "Low priority test listener", "game_character&,game_item&"));
     hooks.register_listener(low_metadata, 500, ft_game_hook_make_character_item_adapter(ft_function<void(game_character&, game_item&)>([&invocation_counter, &low_priority_step](game_character &character_ref, game_item &item_ref)
     {
         (void)character_ref;

@@ -168,14 +168,14 @@ int32_t ft_big_number::set_error(int32_t error_code) noexcept
 
 int32_t ft_big_number::get_error() noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(ft_big_number::_last_initialised_state,
+    errno_abort_if_uninitialised(ft_big_number::_last_initialised_state,
         "ft_big_number::get_error");
     return (ft_big_number::_last_error);
 }
 
 const char *ft_big_number::get_error_str() noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(ft_big_number::_last_initialised_state,
+    errno_abort_if_uninitialised(ft_big_number::_last_initialised_state,
         "ft_big_number::get_error_str");
     const char* error_string = ft_strerror(ft_big_number::_last_error);
 

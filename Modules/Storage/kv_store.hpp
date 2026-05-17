@@ -45,6 +45,10 @@ typedef struct s_kv_store_snapshot_entry
     ft_string value;
     ft_bool has_expiration;
     int64_t expiration_timestamp;
+
+    int32_t initialize(const s_kv_store_snapshot_entry &other) noexcept;
+    int32_t initialize(s_kv_store_snapshot_entry &&other) noexcept;
+    int32_t destroy() noexcept;
 }   kv_store_snapshot_entry;
 
 class kv_store_entry
@@ -101,6 +105,10 @@ typedef struct s_kv_store_operation
     ft_bool _has_value;
     ft_bool _has_ttl;
     int64_t _ttl_seconds;
+
+    int32_t initialize(const s_kv_store_operation &other) noexcept;
+    int32_t initialize(s_kv_store_operation &&other) noexcept;
+    int32_t destroy() noexcept;
 }   kv_store_operation;
 
 typedef int32_t (*kv_store_replication_operations_callback)(const ft_vector<kv_store_operation> &operations, void *user_data);

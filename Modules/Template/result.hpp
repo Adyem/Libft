@@ -163,11 +163,13 @@ template <typename ValueType>
 ft_result<ValueType> *ft_result<ValueType>::failure(int32_t error_code) noexcept
 {
     ft_result<ValueType> *result;
+    int32_t stored_error;
 
     result = new (std::nothrow) ft_result<ValueType>();
     if (result == ft_nullptr)
         return (ft_nullptr);
-    if (result->initialize_error(error_code) != FT_ERR_SUCCESS)
+    stored_error = result->initialize_error(error_code);
+    if (stored_error == FT_ERR_SUCCESS)
     {
         delete result;
         return (ft_nullptr);

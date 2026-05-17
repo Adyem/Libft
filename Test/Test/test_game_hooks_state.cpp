@@ -14,6 +14,15 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static void destroy_hooks_handle(ft_sharedptr<game_hooks> *hooks)
+{
+    if (hooks == ft_nullptr)
+        return ;
+    hooks->destroy();
+    delete hooks;
+    return ;
+}
+
 FT_TEST(test_game_state_dispatches_registered_hooks)
 {
     game_state state;
@@ -74,6 +83,7 @@ FT_TEST(test_game_state_dispatches_registered_hooks)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
+    destroy_hooks_handle(stored_hooks);
     return (1);
 }
 
@@ -147,5 +157,6 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
+    destroy_hooks_handle(stored_hooks);
     return (1);
 }

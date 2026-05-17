@@ -34,6 +34,88 @@ const char *ft_game_hook_item_crafted_identifier = "game.item.crafted";
 const char *ft_game_hook_character_damaged_identifier = "game.character.damaged";
 const char *ft_game_hook_event_triggered_identifier = "game.event.triggered";
 
+int32_t ft_game_hook_metadata::initialize(
+    const ft_game_hook_metadata &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->hook_identifier.initialize(other.hook_identifier);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->listener_name.initialize(other.listener_name);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->description.initialize(other.description);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->argument_contract.initialize(other.argument_contract);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_game_hook_metadata::destroy() noexcept
+{
+    int32_t first_error;
+    int32_t error_code;
+
+    first_error = this->hook_identifier.destroy();
+    error_code = this->listener_name.destroy();
+    if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+        first_error = error_code;
+    error_code = this->description.destroy();
+    if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+        first_error = error_code;
+    error_code = this->argument_contract.destroy();
+    if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+        first_error = error_code;
+    return (first_error);
+}
+
+int32_t ft_game_hook_listener_entry::initialize(
+    const ft_game_hook_listener_entry &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->metadata.initialize(other.metadata);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    this->priority = other.priority;
+    this->callback = other.callback;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t ft_game_hook_listener_entry::destroy() noexcept
+{
+    int32_t error_code;
+
+    error_code = this->metadata.destroy();
+    this->priority = 0;
+    this->callback = ft_function<void(ft_game_hook_context&)>();
+    return (error_code);
+}
+
+static int32_t game_hooks_initialize_metadata(ft_game_hook_metadata &metadata,
+    const char *hook_identifier, const char *listener_name,
+    const char *description, const char *argument_contract) noexcept
+{
+    int32_t error_code;
+
+    error_code = metadata.hook_identifier.initialize(hook_identifier);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.listener_name.initialize(listener_name);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.description.initialize(description);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = metadata.argument_contract.initialize(argument_contract);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
 ft_function<void(ft_game_hook_context&)> ft_game_hook_make_character_item_adapter(ft_function<void(game_character&, game_item&)> &&callback) noexcept
 {
     return (ft_function<void(ft_game_hook_context&)>([inner_callback = ft_move(callback)](ft_game_hook_context &context) mutable
@@ -423,16 +505,23 @@ void game_hooks::set_on_item_crafted(
     ft_game_hook_listener_entry entry;
     ft_function<void(game_character&, game_item&)> callback_copy;
     ft_bool lock_acquired;
+    int32_t metadata_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_item_crafted");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_item_crafted = ft_move(callback);
     callback_copy = this->_legacy_item_crafted;
-    entry.metadata.hook_identifier = ft_game_hook_item_crafted_identifier;
-    entry.metadata.listener_name = "legacy.item_crafted";
-    entry.metadata.description = "Legacy callback set via set_on_item_crafted";
-    entry.metadata.argument_contract = "game_character&,game_item&";
+    metadata_error = game_hooks_initialize_metadata(entry.metadata,
+        ft_game_hook_item_crafted_identifier, "legacy.item_crafted",
+        "Legacy callback set via set_on_item_crafted",
+        "game_character&,game_item&");
+    if (metadata_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(metadata_error);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_character_item_adapter(
         ft_move(callback_copy));
@@ -450,16 +539,23 @@ void game_hooks::set_on_character_damaged(
     ft_game_hook_listener_entry entry;
     ft_function<void(game_character&, int32_t, uint8_t)> callback_copy;
     ft_bool lock_acquired;
+    int32_t metadata_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_character_damaged");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_character_damaged = ft_move(callback);
     callback_copy = this->_legacy_character_damaged;
-    entry.metadata.hook_identifier = ft_game_hook_character_damaged_identifier;
-    entry.metadata.listener_name = "legacy.character_damaged";
-    entry.metadata.description = "Legacy callback set via set_on_character_damaged";
-    entry.metadata.argument_contract = "game_character&,int32_t,uint8_t";
+    metadata_error = game_hooks_initialize_metadata(entry.metadata,
+        ft_game_hook_character_damaged_identifier, "legacy.character_damaged",
+        "Legacy callback set via set_on_character_damaged",
+        "game_character&,int32_t,uint8_t");
+    if (metadata_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(metadata_error);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_character_damage_adapter(
         ft_move(callback_copy));
@@ -477,16 +573,23 @@ void game_hooks::set_on_event_triggered(
     ft_game_hook_listener_entry entry;
     ft_function<void(game_world&, game_event&)> callback_copy;
     ft_bool lock_acquired;
+    int32_t metadata_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_event_triggered");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_legacy_event_triggered = ft_move(callback);
     callback_copy = this->_legacy_event_triggered;
-    entry.metadata.hook_identifier = ft_game_hook_event_triggered_identifier;
-    entry.metadata.listener_name = "legacy.event_triggered";
-    entry.metadata.description = "Legacy callback set via set_on_event_triggered";
-    entry.metadata.argument_contract = "game_world&,game_event&";
+    metadata_error = game_hooks_initialize_metadata(entry.metadata,
+        ft_game_hook_event_triggered_identifier, "legacy.event_triggered",
+        "Legacy callback set via set_on_event_triggered",
+        "game_world&,game_event&");
+    if (metadata_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(metadata_error);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_world_event_adapter(
         ft_move(callback_copy));
@@ -595,11 +698,24 @@ void game_hooks::register_listener(const ft_game_hook_metadata &metadata,
 {
     ft_game_hook_listener_entry entry;
     ft_bool lock_acquired;
+    int32_t metadata_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::register_listener");
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    entry.metadata = metadata;
+    metadata_error = entry.metadata.hook_identifier.initialize(metadata.hook_identifier);
+    if (metadata_error == FT_ERR_SUCCESS)
+        metadata_error = entry.metadata.listener_name.initialize(metadata.listener_name);
+    if (metadata_error == FT_ERR_SUCCESS)
+        metadata_error = entry.metadata.description.initialize(metadata.description);
+    if (metadata_error == FT_ERR_SUCCESS)
+        metadata_error = entry.metadata.argument_contract.initialize(metadata.argument_contract);
+    if (metadata_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(metadata_error);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     entry.priority = priority;
     entry.callback = ft_move(callback);
     this->remove_listener_unlocked(entry.metadata.hook_identifier,

@@ -134,6 +134,7 @@ int32_t ft_fd_istream::move(ft_fd_istream &other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (base_move_error);
     }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->_file_descriptor = other._file_descriptor;
     other._file_descriptor = -1;
     if (other._mutex != ft_nullptr)

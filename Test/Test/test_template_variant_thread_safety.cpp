@@ -27,7 +27,7 @@ FT_TEST(test_variant_thread_safety_controls)
 
 FT_TEST(test_variant_move_not_supported)
 {
-    FT_ASSERT((std::is_move_constructible<ft_variant<int, const char*>>::value == true));
+    FT_ASSERT((std::is_move_constructible<ft_variant<int, const char*>>::value == false));
     FT_ASSERT((std::is_move_assignable<ft_variant<int, const char*>>::value == false));
     return (1);
 }

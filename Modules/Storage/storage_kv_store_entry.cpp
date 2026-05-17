@@ -3,7 +3,123 @@
 #include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Template/move.hpp"
 #include <new>
+
+int32_t s_kv_store_snapshot_entry::initialize(
+    const s_kv_store_snapshot_entry &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->key.initialize(other.key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->value.initialize(other.value);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        this->key.destroy();
+        return (error_code);
+    }
+    this->has_expiration = other.has_expiration;
+    this->expiration_timestamp = other.expiration_timestamp;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t s_kv_store_snapshot_entry::initialize(
+    s_kv_store_snapshot_entry &&other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->key.initialize(ft_move(other.key));
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->value.initialize(ft_move(other.value));
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        this->key.destroy();
+        return (error_code);
+    }
+    this->has_expiration = other.has_expiration;
+    this->expiration_timestamp = other.expiration_timestamp;
+    other.has_expiration = FT_FALSE;
+    other.expiration_timestamp = 0;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t s_kv_store_snapshot_entry::destroy() noexcept
+{
+    int32_t first_error;
+    int32_t error_code;
+
+    first_error = this->key.destroy();
+    error_code = this->value.destroy();
+    if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+        first_error = error_code;
+    this->has_expiration = FT_FALSE;
+    this->expiration_timestamp = 0;
+    return (first_error);
+}
+
+int32_t s_kv_store_operation::initialize(
+    const s_kv_store_operation &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->_key.initialize(other._key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->_value.initialize(other._value);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        this->_key.destroy();
+        return (error_code);
+    }
+    this->_type = other._type;
+    this->_has_value = other._has_value;
+    this->_has_ttl = other._has_ttl;
+    this->_ttl_seconds = other._ttl_seconds;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t s_kv_store_operation::initialize(
+    s_kv_store_operation &&other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->_key.initialize(ft_move(other._key));
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->_value.initialize(ft_move(other._value));
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        this->_key.destroy();
+        return (error_code);
+    }
+    this->_type = other._type;
+    this->_has_value = other._has_value;
+    this->_has_ttl = other._has_ttl;
+    this->_ttl_seconds = other._ttl_seconds;
+    other._has_value = FT_FALSE;
+    other._has_ttl = FT_FALSE;
+    other._ttl_seconds = -1;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t s_kv_store_operation::destroy() noexcept
+{
+    int32_t first_error;
+    int32_t error_code;
+
+    first_error = this->_key.destroy();
+    error_code = this->_value.destroy();
+    if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+        first_error = error_code;
+    this->_type = KV_STORE_OPERATION_TYPE_SET;
+    this->_has_value = FT_FALSE;
+    this->_has_ttl = FT_FALSE;
+    this->_ttl_seconds = -1;
+    return (first_error);
+}
 
 kv_store_entry::kv_store_entry() noexcept
     : _value()

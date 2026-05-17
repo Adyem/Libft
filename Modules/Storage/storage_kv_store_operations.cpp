@@ -2383,13 +2383,33 @@ int32_t kv_store::kv_delete(const char *key_string)
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::kv_delete");
     ft_vector<kv_store_operation> operations;
     kv_store_operation operation;
+    ft_string key_value;
+    ft_bool lock_acquired;
+    Pair<ft_string, kv_store_entry> *existing_pair;
+    Pair<ft_string, kv_store_entry> *map_end;
     int32_t operations_initialize_error;
     int32_t operations_error;
+    int32_t lock_error;
 
     if (key_string == ft_nullptr)
     {
         return (FT_ERR_INVALID_OPERATION);
     }
+    operations_error = key_value.initialize(key_string);
+    if (operations_error != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_OPERATION);
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_store(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_store_guard(lock_acquired, lock_error);
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    existing_pair = this->_data.find(key_value);
+    map_end = this->_data.end();
+    this->unlock_store_guard(lock_acquired, FT_ERR_SUCCESS);
+    if (existing_pair == map_end)
+        return (FT_ERR_SUCCESS);
     operations_initialize_error = operations.initialize();
     if (operations_initialize_error != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_OPERATION);

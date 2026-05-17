@@ -118,6 +118,8 @@ struct ft_dom_schema_rule
 
     ft_dom_schema_rule() noexcept;
     ~ft_dom_schema_rule() noexcept;
+    int32_t initialize(const ft_dom_schema_rule &other) noexcept;
+    int32_t destroy() noexcept;
 };
 
 struct ft_dom_validation_error
@@ -127,6 +129,8 @@ struct ft_dom_validation_error
 
     ft_dom_validation_error() noexcept;
     ~ft_dom_validation_error() noexcept;
+    int32_t initialize(const ft_dom_validation_error &other) noexcept;
+    int32_t destroy() noexcept;
 };
 
 class ft_dom_validation_report

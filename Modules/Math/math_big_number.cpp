@@ -63,14 +63,15 @@ static ft_big_number *math_big_absolute_value(const ft_big_number &number)
         result->trim_leading_zeros();
         return (result);
     }
-    *result = zero_number - number;
-    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+    ft_big_number_proxy absolute_proxy = zero_number - number;
+    if (absolute_proxy.get_error() != FT_ERR_SUCCESS)
     {
-        initialization_error = ft_big_number::get_error();
+        initialization_error = absolute_proxy.get_error();
         (void)result->destroy();
         delete result;
         return (math_big_error_result(initialization_error));
     }
+    *result = absolute_proxy;
     result->trim_leading_zeros();
     return (result);
 }
@@ -99,9 +100,11 @@ static ft_big_number *math_big_gcd_normalized(const ft_big_number &first_input,
         return (math_big_error_result(initialization_error));
     while (!(second_value == zero_number))
     {
-        remainder_number = first_value % second_value;
-        if (ft_big_number::get_error() != FT_ERR_SUCCESS)
-            return (math_big_error_result(ft_big_number::get_error()));
+        ft_big_number_proxy remainder_proxy = first_value % second_value;
+
+        if (remainder_proxy.get_error() != FT_ERR_SUCCESS)
+            return (math_big_error_result(remainder_proxy.get_error()));
+        remainder_number = remainder_proxy;
         first_value = second_value;
         second_value = remainder_number;
     }
@@ -204,10 +207,29 @@ ft_big_number *math_big_lcm(const ft_big_number &first_number, const ft_big_numb
         delete gcd_value;
         return (math_big_error_result(initialization_error));
     }
-    product_value = *first_value * *second_value;
+    ft_big_number_proxy product_proxy = *first_value * *second_value;
+    if (product_proxy.get_error() != FT_ERR_SUCCESS)
+    {
+        initialization_error = product_proxy.get_error();
+        (void)first_value->destroy();
+        delete first_value;
+        (void)second_value->destroy();
+        delete second_value;
+        (void)gcd_value->destroy();
+        delete gcd_value;
+        return (math_big_error_result(initialization_error));
+    }
+    product_value = product_proxy;
     result = math_big_allocate_result(&initialization_error);
     if (result != ft_nullptr)
-        *result = product_value / *gcd_value;
+    {
+        ft_big_number_proxy quotient_proxy = product_value / *gcd_value;
+
+        if (quotient_proxy.get_error() == FT_ERR_SUCCESS)
+            *result = quotient_proxy;
+        else
+            initialization_error = quotient_proxy.get_error();
+    }
     (void)first_value->destroy();
     delete first_value;
     (void)second_value->destroy();
@@ -216,9 +238,8 @@ ft_big_number *math_big_lcm(const ft_big_number &first_number, const ft_big_numb
     delete gcd_value;
     if (result == ft_nullptr)
         return (math_big_error_result(initialization_error));
-    if (ft_big_number::get_error() != FT_ERR_SUCCESS)
+    if (initialization_error != FT_ERR_SUCCESS)
     {
-        initialization_error = ft_big_number::get_error();
         (void)result->destroy();
         delete result;
         return (math_big_error_result(initialization_error));

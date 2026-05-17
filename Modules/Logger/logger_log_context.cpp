@@ -4,6 +4,34 @@
 
 static thread_local ft_vector<s_log_context_entry> g_log_context_entries;
 
+int32_t s_log_context_entry::initialize(
+    const s_log_context_entry &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->key.initialize(other.key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->value.initialize(other.value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    this->has_value = other.has_value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t s_log_context_entry::destroy() noexcept
+{
+    int32_t first_error;
+    int32_t error_code;
+
+    first_error = this->key.destroy();
+    error_code = this->value.destroy();
+    if (first_error == FT_ERR_SUCCESS && error_code != FT_ERR_SUCCESS)
+        first_error = error_code;
+    this->has_value = FT_FALSE;
+    return (first_error);
+}
+
 static int32_t logger_context_ensure_entries_ready()
 {
     uint8_t state_value;

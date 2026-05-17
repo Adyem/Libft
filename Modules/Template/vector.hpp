@@ -177,6 +177,13 @@ int32_t ft_vector<ElementType>::construct_element_unlocked(
         }
         return (ft_vector<ElementType>::set_error(FT_ERR_SUCCESS));
     }
+    else if constexpr (std::is_default_constructible<ElementType>::value
+        && std::is_assignable<ElementType &, ArgType&&>::value)
+    {
+        construct_default_at(destination);
+        *destination = std::forward<ArgType>(value);
+        return (ft_vector<ElementType>::set_error(FT_ERR_SUCCESS));
+    }
     else
     {
         return (ft_vector<ElementType>::set_error(FT_ERR_UNSUPPORTED_TYPE));

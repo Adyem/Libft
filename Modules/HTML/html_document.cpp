@@ -307,7 +307,7 @@ int32_t html_document::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int32_t mutex_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::enable_thread_safety");
+    errno_abort_if_uninitialised(this->_initialised_state, "html_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -638,7 +638,7 @@ html_node *html_document::get_root() const noexcept
     int32_t lock_error;
     html_node *root_node;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_root");
+    errno_abort_if_uninitialised(this->_initialised_state, "html_document::get_root");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
@@ -650,7 +650,7 @@ html_node *html_document::get_root() const noexcept
 int32_t html_document::get_error() const noexcept
 {
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_error");
+        errno_abort_if_uninitialised(this->_initialised_state, "html_document::get_error");
     return (html_document::_last_error);
 }
 
@@ -659,7 +659,7 @@ const char *html_document::get_error_str() const noexcept
     const char *message;
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-        errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "html_document::get_error_str");
+        errno_abort_if_uninitialised(this->_initialised_state, "html_document::get_error_str");
     message = ft_strerror(html_document::_last_error);
     if (message == ft_nullptr)
         message = "unknown error";

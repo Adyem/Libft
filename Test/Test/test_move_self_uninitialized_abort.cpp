@@ -63,7 +63,7 @@ FT_TEST(test_scma_proxy_uninitialised_self_move_assignment_aborts)
 
 FT_TEST(test_gnl_stream_move_operations_are_deleted)
 {
-    FT_ASSERT_EQ(true, std::is_move_constructible<gnl_stream>::value);
+    FT_ASSERT_EQ(false, std::is_move_constructible<gnl_stream>::value);
     FT_ASSERT_EQ(false, std::is_move_assignable<gnl_stream>::value);
     return (1);
 }

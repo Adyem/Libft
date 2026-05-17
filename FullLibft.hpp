@@ -110,6 +110,7 @@
 #include "Modules/Geometry/aabb.hpp"
 #include "Modules/Geometry/circle.hpp"
 #include "Modules/Geometry/geometry.hpp"
+#include "Modules/Geometry/geometry_3d.hpp"
 #include "Modules/Geometry/geometry_lock_tracker.hpp"
 #include "Modules/Geometry/sphere.hpp"
 #include "Modules/GetNextLine/get_next_line.hpp"
