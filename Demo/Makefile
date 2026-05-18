@@ -35,6 +35,9 @@ endif
 
 all: FORCE $(TARGET) $(LEGACY_TARGET)
 
+validate-levels:
+	@perl tools/demo_validate_levels.pl demo_levels.cpp
+
 $(TARGET): FORCE ../Full_Libft.a $(SRCS)
 	@printf '        [%s] Linking %s\n' "$(MODULE_NAME)" "$(TARGET)"
 	@mkdir -p $(TARGET_DIR)
@@ -60,7 +63,7 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re FORCE
+.PHONY: all clean fclean re validate-levels FORCE
 
 FORCE:
 	@true

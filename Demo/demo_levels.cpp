@@ -19,10 +19,10 @@ static const char g_demo_level_tiles_0[] =
     "101011111010111010111101"
     "101000000010100010000001"
     "101111101110101111111101"
-    "1000001000UUUUUUUUUUUUU1"
-    "1011101000UUUUUUUUUUUUE1"
-    "10000abcdefghijklUUUUUE1"
-    "100000000000000000000001"
+    "100000101110101000001001"
+    "1011101000100010111010E1"
+    "100010001010100010000001"
+    "101011111010111110111101"
     "111111111111111111111111";
 
 static const char g_demo_level_tiles_1[] =
@@ -39,10 +39,10 @@ static const char g_demo_level_tiles_1[] =
     "101110111111101010111101"
     "100000000000101010000001"
     "101111111110101011111101"
-    "100000000010UUUUUUUUUUU1"
-    "101111100010UUUUUUUUUUE1"
-    "100000abcdefghijklUUUUE1"
-    "100000000000000000000001"
+    "100000000010111010001001"
+    "1011111010100010101110E1"
+    "100000101011101010000001"
+    "111010101000001011111101"
     "111111111111111111111111";
 
 static const char g_demo_level_tiles_2[] =
@@ -59,10 +59,10 @@ static const char g_demo_level_tiles_2[] =
     "101111111111101111010111"
     "100000000001100000010001"
     "111110111101111111110101"
-    "1000001000UUUUUUUUUUUUU1"
-    "1011101000UUUUUUUUUUUUE1"
-    "100010abcdefghijklUUUUE1"
-    "100000000000000000000001"
+    "100000100010101000001001"
+    "1011101110101010111010E1"
+    "100010000010001000100001"
+    "101011111111101110101101"
     "111111111111111111111111";
 
 static const char g_demo_level_tiles_3[] =
@@ -79,10 +79,10 @@ static const char g_demo_level_tiles_3[] =
     "100010111110101111110101"
     "111010000010100000010001"
     "100010111010111110111101"
-    "1011101000UUUUUUUUUUUUU1"
-    "1000001000UUUUUUUUUUUUE1"
-    "100000abcdefghijklUUUUE1"
-    "100000000000000000000001"
+    "101110100010111010001001"
+    "1000001010100010101110E1"
+    "101111101011101010000001"
+    "100000001000001011111101"
     "111111111111111111111111";
 
 static const demo_level::demo_light g_demo_level_lights_0[] =
@@ -211,9 +211,7 @@ static int32_t demo_validate_level_tiles(const demo_level &level,
         while (tile_x < level.width)
         {
             tile_value = demo_level_tile_at(level, tile_x, tile_y);
-            if (tile_value != '0' && tile_value != '1' && tile_value != 'E'
-                && tile_value != 'U'
-                && (tile_value < 'a' || tile_value > 'l'))
+            if (tile_value != '0' && tile_value != '1' && tile_value != 'E')
             {
                 return (FT_ERR_CONFIGURATION);
             }

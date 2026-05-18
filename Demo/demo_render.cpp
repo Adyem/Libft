@@ -35,22 +35,6 @@ static uint32_t demo_min_u32(uint32_t left_value, uint32_t right_value)
     return (right_value);
 }
 
-static ft_bool demo_tile_is_stair(char tile_value)
-{
-    if (tile_value >= 'a' && tile_value <= 'l')
-        return (FT_TRUE);
-    return (FT_FALSE);
-}
-
-static double demo_tile_stair_height(char tile_value)
-{
-    if (demo_tile_is_stair(tile_value) == FT_TRUE)
-        return ((static_cast<double>(tile_value - 'a') + 1.0) / 12.0);
-    if (tile_value == 'U' || tile_value == 'E')
-        return (1.0);
-    return (0.0);
-}
-
 static int32_t demo_clamp_s32(int32_t value, int32_t minimum_value,
     int32_t maximum_value)
 {
@@ -643,18 +627,10 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
         int32_t draw_start_y;
         int32_t draw_end_y;
         int32_t wall_center_y;
-        ft_bool hit_stair;
-        double stair_distance;
-        double stair_progress;
-        int32_t stair_top_y;
-        int32_t stair_bottom_y;
-        int32_t stair_height;
-        uint32_t stair_color;
         uint32_t wall_color;
         uint32_t distance_shade;
         double hit_position_x;
         double hit_position_y;
-        char ray_tile_value;
 
         ray_end_x = screen_x + DEMO_RAYCAST_COLUMN_STEP - 1;
         if (ray_end_x >= image.width)
@@ -710,9 +686,6 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
                 - game_state.player_position_y) * delta_distance_y;
         }
         hit_wall = FT_FALSE;
-        hit_stair = FT_FALSE;
-        stair_distance = 1.0e30;
-        stair_progress = 0.0;
         wall_side = 0;
         while (hit_wall == FT_FALSE)
         {
@@ -728,32 +701,9 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
                 map_y = map_y + step_y;
                 wall_side = 1;
             }
-            ray_tile_value = demo_level_tile_at(*level, map_x, map_y);
             if (demo_level_is_wall(*level, map_x, map_y) == FT_TRUE)
             {
                 hit_wall = FT_TRUE;
-            }
-            else if (hit_stair == FT_FALSE
-                && demo_tile_is_stair(ray_tile_value) == FT_TRUE)
-            {
-                if (wall_side == 0)
-                {
-                    stair_distance = (static_cast<double>(map_x)
-                        - game_state.player_position_x
-                        + static_cast<double>(1 - step_x) / 2.0)
-                        / ray_direction_x;
-                }
-                else
-                {
-                    stair_distance = (static_cast<double>(map_y)
-                        - game_state.player_position_y
-                        + static_cast<double>(1 - step_y) / 2.0)
-                        / ray_direction_y;
-                }
-                if (stair_distance < 0.0001)
-                    stair_distance = 0.0001;
-                stair_progress = demo_tile_stair_height(ray_tile_value);
-                hit_stair = FT_TRUE;
             }
         }
         if (wall_side == 0)
@@ -778,8 +728,7 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
             + (ray_direction_y * perpendicular_wall_distance);
         line_height = static_cast<int32_t>(
             static_cast<double>(image.height) / perpendicular_wall_distance);
-        wall_center_y = (image.height / 2) - static_cast<int32_t>(
-            game_state.player_floor_height * static_cast<double>(image.height) * 0.22);
+        wall_center_y = image.height / 2;
         draw_start_y = demo_clamp_s32((-line_height / 2) + wall_center_y,
             0, image.height - 1);
         draw_end_y = demo_clamp_s32((line_height / 2) + wall_center_y,
@@ -807,27 +756,6 @@ static void demo_draw_3d_view(demo_image &image, const demo_game_state &game_sta
         }
         demo_draw_wall_column(image, screen_x, ray_end_x, draw_start_y, draw_end_y,
             wall_color);
-        if (hit_stair == FT_TRUE && stair_distance < perpendicular_wall_distance)
-        {
-            stair_height = static_cast<int32_t>(
-                (static_cast<double>(image.height) / stair_distance) * 0.32);
-            stair_top_y = wall_center_y + static_cast<int32_t>(
-                static_cast<double>(image.height) * (0.28 - (stair_progress * 0.20)))
-                - stair_height;
-            stair_bottom_y = image.height - 1;
-            stair_top_y = demo_clamp_s32(stair_top_y, wall_center_y, image.height - 1);
-            stair_color = demo_make_color(150U, 112U, 62U);
-            stair_color = demo_shade_color(stair_color,
-                210U - demo_min_u32(static_cast<uint32_t>(stair_distance * 24.0), 120U),
-                210U);
-            demo_draw_wall_column(image, screen_x, ray_end_x, stair_top_y,
-                stair_bottom_y, stair_color);
-            if (stair_top_y + 3 < image.height)
-            {
-                demo_draw_wall_column(image, screen_x, ray_end_x, stair_top_y,
-                    stair_top_y + 2, demo_make_color(214U, 176U, 104U));
-            }
-        }
         screen_x = ray_end_x + 1;
     }
     demo_draw_level_light_sprites(image, game_state, *level, wall_depth_by_column);
@@ -859,15 +787,6 @@ static void demo_rebuild_minimap_cache(const demo_level &level)
             else if (demo_level_tile_at(level, tile_x, tile_y) == 'E')
             {
                 color = demo_make_color(50U, 180U, 110U);
-            }
-            else if (demo_tile_is_stair(demo_level_tile_at(level, tile_x,
-                    tile_y)) == FT_TRUE)
-            {
-                color = demo_make_color(150U, 112U, 62U);
-            }
-            else if (demo_level_tile_at(level, tile_x, tile_y) == 'U')
-            {
-                color = demo_make_color(66U, 88U, 112U);
             }
             else
             {
@@ -971,7 +890,6 @@ static void demo_draw_playing_hud(demo_image &image, const demo_game_state &game
 {
     char time_buffer[32];
     char level_buffer[64];
-    char floor_buffer[64];
     char fps_buffer[32];
     char average_fps_buffer[32];
     int64_t elapsed_milliseconds;
@@ -987,9 +905,6 @@ static void demo_draw_playing_hud(demo_image &image, const demo_game_state &game
     std::snprintf(level_buffer, sizeof(level_buffer), "LEVEL %d  %s",
         game_state.current_level_index + 1,
         g_demo_levels[game_state.current_level_index].name);
-    std::snprintf(floor_buffer, sizeof(floor_buffer), "FLOOR %d  STAIR %u",
-        game_state.current_level_index + 1,
-        static_cast<uint32_t>(game_state.stair_progress * 100.0));
     std::snprintf(fps_buffer, sizeof(fps_buffer), "FPS %u",
         game_state.displayed_fps);
     std::snprintf(average_fps_buffer, sizeof(average_fps_buffer), "AVG10 %u",
@@ -998,8 +913,6 @@ static void demo_draw_playing_hud(demo_image &image, const demo_game_state &game
         demo_make_color(255U, 232U, 180U));
     demo_draw_text(image, 12, image.height - 28, time_buffer, 2,
         demo_make_color(210U, 230U, 255U));
-    demo_draw_text(image, 12, image.height - 72, floor_buffer, 2,
-        demo_make_color(205U, 238U, 190U));
     demo_draw_text(image, image.width - 110, 14, fps_buffer, 2,
         demo_make_color(255U, 236U, 166U));
     demo_draw_text(image, image.width - 146, 36, average_fps_buffer, 2,
@@ -1058,7 +971,7 @@ static void demo_draw_level_clear(demo_image &image,
         g_demo_levels[game_state.pending_level_index].name);
     demo_draw_text(image, 160, 148, level_buffer, 2,
         demo_make_color(220U, 235U, 255U));
-    demo_draw_text(image, 136, 208, "ENTER FOR NEXT FLOOR", 2,
+    demo_draw_text(image, 136, 208, "ENTER FOR NEXT LEVEL", 2,
         demo_make_color(255U, 255U, 255U));
     demo_draw_text(image, 170, 236, "ESC FOR MENU", 2,
         demo_make_color(190U, 200U, 220U));
