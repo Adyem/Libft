@@ -20,6 +20,7 @@ SRCS := game_map3d.cpp \
         game_event_scheduler.cpp \
         game_event_scheduler_telemetry.cpp \
         game_world.cpp \
+        game_voxel_region.cpp \
         game_world_replay.cpp \
         game_server.cpp \
         game_item.cpp \
@@ -68,6 +69,8 @@ HEADERS := game_map3d.hpp \
         game_event_scheduler.hpp \
         game_event_scheduler_telemetry.hpp \
         game_world.hpp \
+        game_voxel_region.hpp \
+        game_region_backend.hpp \
         game_world_replay.hpp \
         game_server.hpp \
 	game_item.hpp \

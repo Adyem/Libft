@@ -91,6 +91,7 @@ Modules/Game/game_price_definition.hpp
 Modules/Game/game_progress_tracker.hpp
 Modules/Game/game_quest.hpp
 Modules/Game/game_rarity_band.hpp
+Modules/Game/game_region_backend.hpp
 Modules/Game/game_region_definition.hpp
 Modules/Game/game_reputation.hpp
 Modules/Game/game_resistance.hpp
@@ -100,6 +101,7 @@ Modules/Game/game_skill.hpp
 Modules/Game/game_state.hpp
 Modules/Game/game_upgrade.hpp
 Modules/Game/game_vendor_profile.hpp
+Modules/Game/game_voxel_region.hpp
 Modules/Game/game_world.hpp
 Modules/Game/game_world_region.hpp
 Modules/Game/game_world_registry.hpp

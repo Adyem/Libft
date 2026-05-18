@@ -27,7 +27,7 @@ FT_TEST(test_basic_hash_string31_single_character)
 
 FT_TEST(test_basic_hash_string31_matches_known_java_value)
 {
-    FT_ASSERT_EQ(-1595926131LL, ft_hash_string31("Minecraft"));
+    FT_ASSERT_EQ(-1494523878LL, ft_hash_string31("VoxelCraft"));
     return (1);
 }
 
@@ -79,8 +79,8 @@ FT_TEST(test_basic_hash_string31_ft_string_matches_c_string)
     ft_string string_value;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.assign("Minecraft", 9));
-    FT_ASSERT_EQ(ft_hash_string31("Minecraft"), ft_hash_string31(string_value));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.assign("VoxelCraft", 10));
+    FT_ASSERT_EQ(ft_hash_string31("VoxelCraft"), ft_hash_string31(string_value));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
     return (1);
 }
