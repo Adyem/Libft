@@ -104,6 +104,7 @@
 #include "Modules/Game/game_state.hpp"
 #include "Modules/Game/game_upgrade.hpp"
 #include "Modules/Game/game_vendor_profile.hpp"
+#include "Modules/Game/game_voxel_chunk.hpp"
 #include "Modules/Game/game_voxel_region.hpp"
 #include "Modules/Game/game_world.hpp"
 #include "Modules/Game/game_world_region.hpp"
