@@ -29,9 +29,9 @@ FT_TEST(test_big_number_hex_serialization_round_trip)
     FT_ASSERT_EQ(0, std::strcmp(parsed_value->c_str(), decimal_value.c_str()));
     FT_ASSERT(!parsed_value->is_negative());
     FT_ASSERT(parsed_value->is_positive());
-    (void)parsed_value->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, parsed_value->destroy());
     delete parsed_value;
-    (void)hex_string->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hex_string->destroy());
     delete hex_string;
     return (1);
 }
@@ -66,13 +66,13 @@ FT_TEST(test_big_number_hex_serialization_prefix_support)
     FT_ASSERT(!prefixed_positive->is_negative());
     FT_ASSERT(prefixed_positive->is_positive());
     FT_ASSERT_EQ(0, std::strcmp(prefixed_positive->c_str(), "3405691582"));
-    (void)prefixed_positive->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, prefixed_positive->destroy());
     delete prefixed_positive;
-    (void)prefixed_negative->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, prefixed_negative->destroy());
     delete prefixed_negative;
-    (void)round_trip_negative->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_negative->destroy());
     delete round_trip_negative;
-    (void)negative_hex->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, negative_hex->destroy());
     delete negative_hex;
     return (1);
 }

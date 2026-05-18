@@ -158,7 +158,7 @@ FT_TEST(test_file_path_join_prefers_absolute_right)
     FT_ASSERT(result != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
     FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), "/var/log"));
-    (void)result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->destroy());
     delete result;
     return (1);
 }
@@ -170,7 +170,7 @@ FT_TEST(test_file_path_join_keeps_drive_letter)
     FT_ASSERT(result != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
     FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), "C:/temp"));
-    (void)result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->destroy());
     delete result;
     return (1);
 }
@@ -187,7 +187,7 @@ FT_TEST(test_file_path_normalize_collapses_duplicates)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->get_error());
     build_native_path(expected_buffer, "/folder/sub/file.txt");
     FT_ASSERT_EQ(0, ft_strcmp(normalized->c_str(), expected_buffer));
-    (void)normalized->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->destroy());
     delete normalized;
     return (1);
 }
@@ -204,7 +204,7 @@ FT_TEST(test_file_path_normalize_preserves_trailing_separator)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->get_error());
     build_native_path(expected_buffer, "/folder/subdir/");
     FT_ASSERT_EQ(0, ft_strcmp(normalized->c_str(), expected_buffer));
-    (void)normalized->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->destroy());
     delete normalized;
     return (1);
 }
@@ -217,7 +217,7 @@ FT_TEST(test_file_path_normalize_handles_null_input)
     FT_ASSERT(normalized != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->get_error());
     FT_ASSERT_EQ(0, ft_strcmp(normalized->c_str(), ""));
-    (void)normalized->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->destroy());
     delete normalized;
     return (1);
 }
@@ -236,7 +236,7 @@ FT_TEST(test_file_path_join_appends_missing_separator)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
     build_native_path(expected_buffer, "/var/log/nginx/access.log");
     FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), expected_buffer));
-    (void)result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->destroy());
     delete result;
     return (1);
 }
@@ -253,7 +253,7 @@ FT_TEST(test_file_path_join_with_empty_left)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result->get_error());
     build_native_path(expected_buffer, "folder/file.txt");
     FT_ASSERT_EQ(0, ft_strcmp(result->c_str(), expected_buffer));
-    (void)result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->destroy());
     delete result;
     return (1);
 }

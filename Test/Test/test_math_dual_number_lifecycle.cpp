@@ -60,7 +60,7 @@ FT_TEST(test_math_dual_number_proxy_chain_propagates_error)
     result = static_cast<ft_dual_number *>(numerator / denominator);
     FT_ASSERT(result != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, result->get_error());
-    (void)result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result->destroy());
     delete result;
     return (1);
 }

@@ -88,9 +88,9 @@ cleanup:
     if (server_thread_started == FT_TRUE)
         server_thread.join();
     if (response_initialized == FT_TRUE)
-        (void)response.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, response.destroy());
     if (server_initialized == FT_TRUE)
-        (void)server.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, server.destroy());
     if (pool_thread_safety_enabled == FT_TRUE)
         (void)http_client_pool_disable_thread_safety();
     if (test_passed == FT_FALSE)

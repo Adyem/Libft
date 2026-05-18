@@ -492,14 +492,14 @@ cleanup:
     if (server_thread.joinable())
         server_thread.join();
     if (chunk_two_initialized == 1)
-        (void)handler_state.chunks[2].destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handler_state.chunks[2].destroy());
     if (chunk_one_initialized == 1)
-        (void)handler_state.chunks[1].destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handler_state.chunks[1].destroy());
     if (chunk_zero_initialized == 1)
-        (void)handler_state.chunks[0].destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handler_state.chunks[0].destroy());
     if (headers_initialized == 1)
-        (void)handler_state.headers.destroy();
-    (void)port_string.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handler_state.headers.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, port_string.destroy());
     return (0);
 }
 #endif

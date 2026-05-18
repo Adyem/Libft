@@ -391,6 +391,9 @@ When using `cma_set_alloc_limit` in tests to force allocation failures:
 ## Build and test timing
 
 Building the library and running the full test suite typically takes about two and a half minutes, possibly a little longer.
+When running the `libft_tests` test runner, always hide successful tests to avoid noisy output:
+`FT_TEST_HIDE_SUCCESSFUL=1 ./libft_tests` (or `FT_TEST_HIDE_SUCCESSFUL=1 ./Test/libft_tests` from the repository root).
+Successful test lines are unnecessary; inspect failures and the final summary only.
 
 ### Locking guidelines
 

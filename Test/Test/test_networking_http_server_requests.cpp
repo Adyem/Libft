@@ -104,12 +104,12 @@ FT_TEST(test_networking_http_server_get_response)
     test_passed = FT_TRUE;
 cleanup:
     if (response_initialized == FT_TRUE)
-        (void)response.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, response.destroy());
     if (client_initialized == FT_TRUE)
-        (void)client_socket.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.destroy());
     if (thread_started == FT_TRUE)
         server_thread.join();
-    (void)server.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server.destroy());
     if (test_passed == FT_FALSE)
         return (0);
     return (1);
@@ -157,10 +157,10 @@ FT_TEST(test_networking_http_server_short_write_sets_error)
     test_passed = FT_TRUE;
 cleanup:
     if (client_initialized == FT_TRUE)
-        (void)client_socket.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.destroy());
     if (thread_started == FT_TRUE)
         server_thread.join();
-    (void)server.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server.destroy());
     if (test_passed == FT_FALSE)
         return (0);
     return (1);
@@ -236,14 +236,14 @@ FT_TEST(test_networking_http_server_post_echoes_body)
     test_passed = FT_TRUE;
 cleanup:
     if (response_initialized == FT_TRUE)
-        (void)response.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, response.destroy());
     if (request_initialized == FT_TRUE)
-        (void)request_string.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, request_string.destroy());
     if (client_initialized == FT_TRUE)
-        (void)client_socket.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.destroy());
     if (thread_started == FT_TRUE)
         server_thread.join();
-    (void)server.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server.destroy());
     if (test_passed == FT_FALSE)
         return (0);
     return (1);
@@ -310,14 +310,14 @@ FT_TEST(test_networking_http_server_keep_alive_multiple_requests)
     test_passed = FT_TRUE;
 cleanup:
     if (response_initialized == FT_TRUE)
-        (void)response.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, response.destroy());
     if (request_initialized == FT_TRUE)
-        (void)request_string.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, request_string.destroy());
     if (client_initialized == FT_TRUE)
-        (void)client_socket.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.destroy());
     if (thread_started == FT_TRUE)
         server_thread.join();
-    (void)server.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server.destroy());
     if (test_passed == FT_FALSE)
         return (0);
     return (1);
@@ -392,14 +392,14 @@ FT_TEST(test_networking_http_server_thread_safe_run_once)
     test_passed = FT_TRUE;
 cleanup:
     if (response_initialized == FT_TRUE)
-        (void)response.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, response.destroy());
     if (client_initialized == FT_TRUE)
-        (void)client_socket.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.destroy());
     if (error_thread_started == FT_TRUE)
         error_thread.join();
     if (run_thread_started == FT_TRUE)
         server_thread.join();
-    (void)server.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server.destroy());
     if (test_passed == FT_FALSE)
         return (0);
     return (1);

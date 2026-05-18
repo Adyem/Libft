@@ -138,15 +138,15 @@ FT_TEST(test_websocket_handshake_and_echo)
     {
         server_thread.join();
         client.close();
-        message.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
         return (0);
     }
     if (received.initialize() != FT_ERR_SUCCESS)
     {
         server_thread.join();
         client.close();
-        message.destroy();
-        reply.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
         return (0);
     }
     message = "ping";
@@ -155,9 +155,9 @@ FT_TEST(test_websocket_handshake_and_echo)
     {
         server_thread.join();
         client.close();
-        message.destroy();
-        reply.destroy();
-        received.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, received.destroy());
         return (0);
     }
     server_thread.join();
@@ -166,9 +166,9 @@ FT_TEST(test_websocket_handshake_and_echo)
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
-        message.destroy();
-        reply.destroy();
-        received.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, received.destroy());
         return (0);
     }
     if (!(context.message == message))
@@ -176,9 +176,9 @@ FT_TEST(test_websocket_handshake_and_echo)
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
-        message.destroy();
-        reply.destroy();
-        received.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, received.destroy());
         return (0);
     }
     if (server.send_text(context.client_fd, reply) != 0)
@@ -186,9 +186,9 @@ FT_TEST(test_websocket_handshake_and_echo)
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
-        message.destroy();
-        reply.destroy();
-        received.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, received.destroy());
         return (0);
     }
     if (client.receive_text(received) != 0)
@@ -196,9 +196,9 @@ FT_TEST(test_websocket_handshake_and_echo)
         client.close();
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
-        message.destroy();
-        reply.destroy();
-        received.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, received.destroy());
         return (0);
     }
     client.close();
@@ -206,14 +206,14 @@ FT_TEST(test_websocket_handshake_and_echo)
         nw_close(context.client_fd);
     if (received == reply)
     {
-        message.destroy();
-        reply.destroy();
-        received.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, received.destroy());
         return (1);
     }
-    message.destroy();
-    reply.destroy();
-    received.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, message.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reply.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, received.destroy());
     return (0);
 }
 
@@ -308,7 +308,7 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
     {
         nw_close(client_socket);
         server_thread.join();
-        handshake_request.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handshake_request.destroy());
         return (0);
     }
     handshake_response.clear();
@@ -331,8 +331,8 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
     {
         nw_close(client_socket);
         server_thread.join();
-        handshake_request.destroy();
-        handshake_response.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handshake_request.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handshake_response.destroy());
         return (0);
     }
     expected_message = "split";
@@ -369,14 +369,14 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
         nw_close(context.client_fd);
     if (context.result == 0 && context.message == expected_message)
     {
-        handshake_request.destroy();
-        handshake_response.destroy();
-        expected_message.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handshake_request.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, handshake_response.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, expected_message.destroy());
         return (1);
     }
-    handshake_request.destroy();
-    handshake_response.destroy();
-    expected_message.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handshake_request.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handshake_response.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, expected_message.destroy());
     return (0);
 }
 

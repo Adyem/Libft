@@ -147,27 +147,27 @@ FT_TEST(test_big_number_to_string_base_conversions)
     FT_ASSERT(hex_output != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hex_output->get_error());
     FT_ASSERT(*hex_output == "FF");
-    (void)hex_output->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hex_output->destroy());
     delete hex_output;
 
     ft_string *octal_output = decimal_value.to_string_base(8);
     FT_ASSERT(octal_output != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, octal_output->get_error());
     FT_ASSERT(*octal_output == "377");
-    (void)octal_output->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, octal_output->destroy());
     delete octal_output;
 
     ft_string *binary_output = negative_value.to_string_base(2);
     FT_ASSERT(binary_output != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, binary_output->get_error());
     FT_ASSERT(*binary_output == "-11110000");
-    (void)binary_output->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, binary_output->destroy());
     delete binary_output;
 
     ft_string *invalid_output = decimal_value.to_string_base(1);
     FT_ASSERT(invalid_output != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, invalid_output->get_error());
-    (void)invalid_output->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_output->destroy());
     delete invalid_output;
     return (1);
 }

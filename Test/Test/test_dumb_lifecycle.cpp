@@ -423,7 +423,7 @@ FT_TEST(test_dumb_sound_clip_move_destroyed_destination_succeeds)
 FT_TEST(test_dumb_sound_clip_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, dumb_expect_sigabrt(sound_clip_initialize_twice_aborts_operation));
-    (void)g_sound_clip_abort_instance.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_sound_clip_abort_instance.destroy());
     return (1);
 }
 

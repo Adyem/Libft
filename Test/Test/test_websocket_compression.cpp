@@ -134,15 +134,15 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     }
     if (frame_buffer.initialize() != FT_ERR_SUCCESS)
     {
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         server_thread.join();
         return (0);
     }
     if (websocket_permessage_deflate_compress(expected_message, compressed_payload) == false)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         server_thread.join();
         return (0);
@@ -254,8 +254,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     server_thread.join();
     if (context.result != 0)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -263,8 +263,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     }
     if (context.message != expected_message)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -272,8 +272,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     }
     if (reply.initialize("response payload") != FT_ERR_SUCCESS)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -281,8 +281,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     }
     if (server.send_text(context.client_fd, reply) != 0)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -291,8 +291,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     header_received = nw_recv(client_socket, header_bytes, 2, MSG_WAITALL);
     if (header_received != 2)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -300,8 +300,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     }
     if (header_bytes[0] != 0xC1)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -309,8 +309,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     }
     if ((header_bytes[1] & 0x80) != 0)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -327,8 +327,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
         extended_received = nw_recv(client_socket, extended, 2, MSG_WAITALL);
         if (extended_received != 2)
         {
-            frame_buffer.destroy();
-            compressed_payload.destroy();
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
             nw_close(client_socket);
             if (context.client_fd >= 0)
                 nw_close(context.client_fd);
@@ -345,8 +345,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
         extended_received = nw_recv(client_socket, extended, 8, MSG_WAITALL);
         if (extended_received != 8)
         {
-            frame_buffer.destroy();
-            compressed_payload.destroy();
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
             nw_close(client_socket);
             if (context.client_fd >= 0)
                 nw_close(context.client_fd);
@@ -364,8 +364,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
         payload_length = length_code;
     if (payload_length > sizeof(payload_buffer))
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
@@ -379,8 +379,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
         chunk_received = nw_recv(client_socket, payload_buffer + payload_received, payload_length - payload_received, 0);
         if (chunk_received <= 0)
         {
-            frame_buffer.destroy();
-            compressed_payload.destroy();
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
             nw_close(client_socket);
             if (context.client_fd >= 0)
                 nw_close(context.client_fd);
@@ -390,15 +390,15 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate)
     }
     if (websocket_permessage_deflate_decompress(payload_buffer, payload_length, decompressed_reply) == false)
     {
-        frame_buffer.destroy();
-        compressed_payload.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
         nw_close(client_socket);
         if (context.client_fd >= 0)
             nw_close(context.client_fd);
         return (0);
     }
-    frame_buffer.destroy();
-    compressed_payload.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, frame_buffer.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, compressed_payload.destroy());
     nw_close(client_socket);
     if (context.client_fd >= 0)
         nw_close(context.client_fd);

@@ -268,8 +268,8 @@ FT_TEST(test_ft_stringbuf_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, lifecycle_expect_sigabrt_signal_handler(
         stringbuf_initialize_twice_aborts));
-    (void)g_stringbuf_abort_buffer_value.destroy();
-    (void)g_stringbuf_abort_source_value.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_stringbuf_abort_buffer_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_stringbuf_abort_source_value.destroy());
     return (1);
 }
 

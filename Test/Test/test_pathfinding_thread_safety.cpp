@@ -296,7 +296,7 @@ FT_TEST(test_path_step_thread_safety)
             failure_line = __LINE__;
         }
         if (test_failed == 0)
-            (void)copy_target.destroy();
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, copy_target.destroy());
         if (test_failed == 0
             && copy_target.initialize(moved_constructed) != FT_ERR_SUCCESS)
         {
@@ -312,7 +312,7 @@ FT_TEST(test_path_step_thread_safety)
         }
         if (test_failed == 0)
         {
-            (void)assign_target.destroy();
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, assign_target.destroy());
             if (assign_target.initialize(copy_target) != FT_ERR_SUCCESS)
             {
                 test_failed = 1;
@@ -328,7 +328,7 @@ FT_TEST(test_path_step_thread_safety)
         }
         if (test_failed == 0)
         {
-            (void)move_target.destroy();
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, move_target.destroy());
             if (move_target.initialize(ft_move(assign_target)) != FT_ERR_SUCCESS)
             {
                 test_failed = 1;

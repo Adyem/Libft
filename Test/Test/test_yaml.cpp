@@ -51,8 +51,8 @@ FT_TEST(test_yaml_round_trip)
     FT_ASSERT(round_trip_string != ft_nullptr);
     FT_ASSERT_EQ(FT_TRUE, round_trip_string->is_initialised());
     FT_ASSERT_EQ(0, ft_strcmp(yaml_string->c_str(), round_trip_string->c_str()));
-    (void)yaml_string->destroy();
-    (void)round_trip_string->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, yaml_string->destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_string->destroy());
     delete yaml_string;
     delete round_trip_string;
     return (1);

@@ -287,8 +287,8 @@ FT_TEST(test_unordered_map_iterator_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
         unordered_map_iterator_initialize_twice_aborts_operation));
-    (void)g_unordered_map_iterator_abort_iterator.destroy();
-    (void)g_unordered_map_iterator_abort_map.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_unordered_map_iterator_abort_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_unordered_map_iterator_abort_map.destroy());
     return (1);
 }
 
@@ -324,8 +324,8 @@ FT_TEST(test_unordered_map_const_iterator_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
         unordered_map_const_iterator_initialize_twice_aborts_operation));
-    (void)g_unordered_map_const_iterator_abort_iterator.destroy();
-    (void)g_unordered_map_const_iterator_abort_map.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_unordered_map_const_iterator_abort_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_unordered_map_const_iterator_abort_map.destroy());
     return (1);
 }
 

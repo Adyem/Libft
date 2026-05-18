@@ -25,7 +25,7 @@ FT_TEST(test_world_process_events)
     world->get_event_scheduler()->dump_events(events);
     if (events.size() != 1 || events[0]->get_duration() != 2)
     {
-        events.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, events.destroy());
         return (0);
     }
 
@@ -34,7 +34,7 @@ FT_TEST(test_world_process_events)
     world->get_event_scheduler()->dump_events(events);
     if (events.size() != 0)
     {
-        events.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, events.destroy());
         return (0);
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, events.destroy());

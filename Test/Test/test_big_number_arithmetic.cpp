@@ -339,7 +339,7 @@ FT_TEST(test_big_number_modular_exponentiation)
     FT_ASSERT_EQ(0, std::strcmp(power_result->c_str(), "9"));
     FT_ASSERT(!power_result->is_negative());
     FT_ASSERT(power_result->is_positive());
-    (void)power_result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, power_result->destroy());
     delete power_result;
 
     ft_big_number zero_exponent;
@@ -351,7 +351,7 @@ FT_TEST(test_big_number_modular_exponentiation)
     FT_ASSERT_EQ(0, std::strcmp(identity_result->c_str(), "1"));
     FT_ASSERT(!identity_result->is_negative());
     FT_ASSERT(identity_result->is_positive());
-    (void)identity_result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, identity_result->destroy());
     delete identity_result;
 
     ft_big_number negative_base;
@@ -370,7 +370,7 @@ FT_TEST(test_big_number_modular_exponentiation)
     FT_ASSERT_EQ(0, std::strcmp(wrapped_result->c_str(), "2"));
     FT_ASSERT(!wrapped_result->is_negative());
     FT_ASSERT(wrapped_result->is_positive());
-    (void)wrapped_result->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, wrapped_result->destroy());
     delete wrapped_result;
 
     ft_big_number zero_modulus;
@@ -383,7 +383,7 @@ FT_TEST(test_big_number_modular_exponentiation)
     exponent_one.assign("1");
     ft_big_number *modulus_error = base_number.mod_pow(exponent_one, zero_modulus);
     FT_ASSERT(modulus_error != ft_nullptr);
-    (void)modulus_error->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, modulus_error->destroy());
     delete modulus_error;
 
     ft_big_number negative_exponent;
@@ -393,7 +393,7 @@ FT_TEST(test_big_number_modular_exponentiation)
     ft_big_number *exponent_error
         = base_number.mod_pow(negative_exponent, modulus_number);
     FT_ASSERT(exponent_error != ft_nullptr);
-    (void)exponent_error->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, exponent_error->destroy());
     delete exponent_error;
     return (1);
 }

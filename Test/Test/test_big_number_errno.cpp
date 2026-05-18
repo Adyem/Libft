@@ -144,13 +144,13 @@ FT_TEST(test_big_number_errno_resets_arithmetic)
     ft_big_number *power_number = base_number.mod_pow(exponent_number, modulus_number);
     FT_ASSERT(power_number != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(power_number->c_str(), "1"));
-    (void)power_number->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, power_number->destroy());
     delete power_number;
 
     ft_string *base16_string = left_number.to_string_base(16);
     FT_ASSERT(base16_string != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, base16_string->get_error());
-    (void)base16_string->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, base16_string->destroy());
     delete base16_string;
     ft_big_number error_divisor;
     INIT_BIG_NUMBER(error_divisor);
@@ -177,9 +177,9 @@ FT_TEST(test_big_number_errno_resets_hex_helpers)
     ft_big_number *parsed_value = big_number_from_hex_string(hex_digits->c_str());
     FT_ASSERT(parsed_value != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(parsed_value->c_str(), "255"));
-    (void)parsed_value->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, parsed_value->destroy());
     delete parsed_value;
-    (void)hex_digits->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hex_digits->destroy());
     delete hex_digits;
     return (1);
 }

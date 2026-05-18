@@ -48,6 +48,6 @@ FT_TEST(test_dialogue_table_setters)
     table.set_lines(lines);
     FT_ASSERT_EQ(1, table.get_lines().size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
-    (void)lines.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.destroy());
     return (1);
 }

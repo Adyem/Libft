@@ -84,7 +84,7 @@ FT_TEST(test_pt_mutex_destroy_busy_then_unlock)
 FT_TEST(test_pt_mutex_initialize_twice_aborts)
 {
     FT_ASSERT_EQ(1, pt_mutex_expect_sigabrt(pt_mutex_initialize_twice_aborts_operation));
-    (void)g_pt_mutex_abort_object.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_pt_mutex_abort_object.destroy());
     return (1);
 }
 

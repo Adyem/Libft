@@ -18,7 +18,7 @@ FT_TEST(test_time_format_iso8601_with_offset_zero)
     FT_ASSERT(result_string != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string->get_error());
     FT_ASSERT_STR_EQ(expected_string.c_str(), result_string->c_str());
-    (void)result_string->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string->destroy());
     delete result_string;
     return (1);
 }
@@ -33,7 +33,7 @@ FT_TEST(test_time_format_iso8601_with_offset_positive)
     FT_ASSERT(result_string != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string->get_error());
     FT_ASSERT_STR_EQ(expected_string.c_str(), result_string->c_str());
-    (void)result_string->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string->destroy());
     delete result_string;
     return (1);
 }
@@ -48,7 +48,7 @@ FT_TEST(test_time_format_iso8601_with_offset_negative)
     FT_ASSERT(result_string != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string->get_error());
     FT_ASSERT_STR_EQ(expected_string.c_str(), result_string->c_str());
-    (void)result_string->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_string->destroy());
     delete result_string;
     return (1);
 }

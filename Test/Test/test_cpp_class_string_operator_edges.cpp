@@ -26,7 +26,7 @@ FT_TEST(test_ft_string_operator_assign_cstring_reinitializes_destroyed_destinati
     ft_string destination;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize("seed"));
 
-    (void)destination.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.destroy());
     destination = "restored";
     FT_ASSERT(destination == "restored");
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
@@ -52,7 +52,7 @@ FT_TEST(test_ft_string_operator_assign_copy_from_destroyed_source_succeeds)
     ft_string destination;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize("keep"));
 
-    (void)source.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.destroy());
     destination = source;
     int32_t assignment_error = destination.get_error();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assignment_error);
@@ -67,7 +67,7 @@ FT_TEST(test_ft_string_operator_assign_move_from_destroyed_source_succeeds)
     ft_string destination;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize("keep"));
 
-    (void)source.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.destroy());
     destination = static_cast<ft_string &&>(source);
     int32_t assignment_error = destination.get_error();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assignment_error);
@@ -103,8 +103,8 @@ FT_TEST(test_ft_string_operator_plus_equal_destroyed_source_sets_invalid_state)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
             string_call_plus_equal_destroyed_source));
-    (void)g_destroyed_source_append_source.destroy();
-    (void)g_destroyed_source_append_value.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_destroyed_source_append_source.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_destroyed_source_append_value.destroy());
     return (1);
 }
 

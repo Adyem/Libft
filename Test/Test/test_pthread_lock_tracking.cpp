@@ -450,8 +450,8 @@ cleanup:
             failure_line = __LINE__;
         }
     }
-    (void)first_mutex.destroy();
-    (void)second_mutex.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_mutex.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_mutex.destroy());
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
@@ -553,7 +553,7 @@ cleanup:
     {
         sigaction(SIGABRT, &previous_sigabrt_action, ft_nullptr);
     }
-    (void)mutex_object.destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
@@ -673,7 +673,7 @@ cleanup:
         return (0);
     }
     if (mutex_initialized == 1)
-        (void)mutex_object.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     #undef RECORD_ASSERT
     return (1);
 }
@@ -790,7 +790,7 @@ cleanup:
         }
     }
     if (mutex_initialized == 1)
-        (void)mutex_object.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
@@ -1082,7 +1082,7 @@ cleanup:
         (void)pt_thread_join(holder_thread, ft_nullptr);
     pt_buffer_destroy(thread_state.owned_mutexes);
     if (mutex_initialized == 1)
-        (void)mutex_object.destroy();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);

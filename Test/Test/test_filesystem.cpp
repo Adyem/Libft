@@ -91,13 +91,13 @@ FT_TEST(test_filesystem_path_wrappers)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stem->get_error());
     FT_ASSERT_EQ(FT_TRUE, filesystem_has_extension(joined->c_str(), ".txt"));
     FT_ASSERT_EQ(FT_TRUE, filesystem_is_relative("alpha/beta"));
-    (void)normalized->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized->destroy());
     delete normalized;
-    (void)joined->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, joined->destroy());
     delete joined;
-    (void)extension->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, extension->destroy());
     delete extension;
-    (void)stem->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stem->destroy());
     delete stem;
     return (1);
 }
@@ -161,9 +161,9 @@ FT_TEST(test_filesystem_walk_recursive_visits_children)
     (void)file_delete(child_file->c_str());
     (void)file_delete(child_directory->c_str());
     (void)file_delete(root_path.c_str());
-    (void)child_file->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_file->destroy());
     delete child_file;
-    (void)child_directory->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_directory->destroy());
     delete child_directory;
     return (1);
 }
@@ -181,9 +181,9 @@ FT_TEST(test_filesystem_basename_and_dirname_edge_cases)
     FT_ASSERT(dirname != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dirname->get_error());
     FT_ASSERT_EQ(FT_TRUE, *dirname == "/tmp");
-    (void)basename->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, basename->destroy());
     delete basename;
-    (void)dirname->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dirname->destroy());
     delete dirname;
     return (1);
 }
@@ -201,9 +201,9 @@ FT_TEST(test_filesystem_extension_rejects_hidden_file_without_suffix)
     FT_ASSERT(stem != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stem->get_error());
     FT_ASSERT_EQ(FT_TRUE, *stem == ".env");
-    (void)extension->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, extension->destroy());
     delete extension;
-    (void)stem->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stem->destroy());
     delete stem;
     return (1);
 }
@@ -257,7 +257,7 @@ FT_TEST(test_filesystem_walk_recursive_propagates_callback_error)
     FT_ASSERT_EQ(static_cast<ft_size_t>(1), context.entries);
     (void)file_delete(child_file->c_str());
     (void)file_delete(root_path.c_str());
-    (void)child_file->destroy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_file->destroy());
     delete child_file;
     return (1);
 }
