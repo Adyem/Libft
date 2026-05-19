@@ -10,11 +10,16 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 
+static const uint32_t PT_MUTEX_TRY_LOCK_ATTEMPTS = 2U;
+
 int pt_mutex::try_lock() const
 {
     pt_thread_id_type thread_id = pt_thread_self();
     int ensure_error = this->ensure_native_mutex();
     int notify_error;
+    int mutex_error;
+    bool acquired;
+    uint32_t attempt_count;
 
     if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
@@ -24,7 +29,24 @@ int pt_mutex::try_lock() const
             && pt_thread_equal(owner, thread_id))
         return (FT_ERR_MUTEX_ALREADY_LOCKED);
 
-    if (!this->_native_mutex->try_lock())
+    mutex_error = FT_ERR_SUCCESS;
+    acquired = false;
+    attempt_count = 0U;
+    while (attempt_count < PT_MUTEX_TRY_LOCK_ATTEMPTS && !acquired)
+    {
+        try
+        {
+            acquired = this->_native_mutex->try_lock();
+        }
+        catch (const std::system_error &error)
+        {
+            mutex_error = cmp_map_system_error_to_ft(error.code().value());
+        }
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
+        attempt_count++;
+    }
+    if (!acquired)
         return (FT_ERR_MUTEX_ALREADY_LOCKED);
 
     this->_owner.store(thread_id, std::memory_order_relaxed);

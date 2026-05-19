@@ -6,10 +6,15 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
 
+static const uint32_t PT_RECURSIVE_MUTEX_TRY_LOCK_ATTEMPTS = 2U;
+
 int pt_recursive_mutex::try_lock(pthread_t thread_id) const
 {
     int ensure_error = this->ensure_native_mutex();
     const void *mutex_handle;
+    int mutex_error;
+    bool acquired;
+    uint32_t attempt_count;
 
     if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
@@ -25,14 +30,22 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
         }
     }
 
-    bool acquired = false;
-    try
+    mutex_error = FT_ERR_SUCCESS;
+    acquired = false;
+    attempt_count = 0U;
+    while (attempt_count < PT_RECURSIVE_MUTEX_TRY_LOCK_ATTEMPTS && !acquired)
     {
-        acquired = this->_native_mutex->try_lock();
-    }
-    catch (const std::system_error &error)
-    {
-        return (cmp_map_system_error_to_ft(error.code().value()));
+        try
+        {
+            acquired = this->_native_mutex->try_lock();
+        }
+        catch (const std::system_error &error)
+        {
+            mutex_error = cmp_map_system_error_to_ft(error.code().value());
+        }
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
+        attempt_count++;
     }
     if (!acquired)
         return (FT_ERR_MUTEX_ALREADY_LOCKED);

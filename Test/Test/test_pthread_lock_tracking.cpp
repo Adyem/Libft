@@ -4,6 +4,7 @@
 #endif
 #define PT_LOCK_TRACKING_TESTING
 #include <atomic>
+#include <chrono>
 #include <csignal>
 #include <csetjmp>
 #include "../../Modules/Basic/basic.hpp"
@@ -87,6 +88,23 @@ struct s_recursive_contender_shared_state
     pt_recursive_mutex *mutex_pointer;
     std::atomic<int> stage;
     std::atomic<int> lock_result;
+    std::atomic<pt_thread_id_type> thread_identifier;
+};
+
+struct s_timed_try_lock_shared_state
+{
+    pt_mutex *mutex_pointer;
+    std::atomic<int> stage;
+    std::atomic<int> try_lock_result;
+    std::atomic<int64_t> elapsed_ms;
+};
+
+struct s_timed_recursive_try_lock_shared_state
+{
+    pt_recursive_mutex *mutex_pointer;
+    std::atomic<int> stage;
+    std::atomic<int> try_lock_result;
+    std::atomic<int64_t> elapsed_ms;
     std::atomic<pt_thread_id_type> thread_identifier;
 };
 
@@ -296,6 +314,29 @@ static void initialize_recursive_contender_shared_state(
     return ;
 }
 
+static void initialize_timed_try_lock_shared_state(
+    s_timed_try_lock_shared_state *shared_state,
+    pt_mutex *mutex_pointer)
+{
+    shared_state->mutex_pointer = mutex_pointer;
+    shared_state->stage.store(0);
+    shared_state->try_lock_result.store(FT_ERR_SUCCESS);
+    shared_state->elapsed_ms.store(0);
+    return ;
+}
+
+static void initialize_timed_recursive_try_lock_shared_state(
+    s_timed_recursive_try_lock_shared_state *shared_state,
+    pt_recursive_mutex *mutex_pointer)
+{
+    shared_state->mutex_pointer = mutex_pointer;
+    shared_state->stage.store(0);
+    shared_state->try_lock_result.store(FT_ERR_SUCCESS);
+    shared_state->elapsed_ms.store(0);
+    shared_state->thread_identifier.store(0);
+    return ;
+}
+
 static void *try_lock_worker(void *argument)
 {
     s_try_lock_shared_state *shared_state;
@@ -312,6 +353,23 @@ static void *try_lock_worker(void *argument)
     shared_state->unlock_result.store(shared_state->mutex_pointer->unlock());
     shared_state->unlock_error.store(FT_ERR_SUCCESS);
     shared_state->stage.store(4);
+    return (ft_nullptr);
+}
+
+static void *timed_try_lock_worker(void *argument)
+{
+    s_timed_try_lock_shared_state *shared_state;
+    std::chrono::steady_clock::time_point start_time;
+    std::chrono::steady_clock::time_point end_time;
+
+    shared_state = static_cast<s_timed_try_lock_shared_state *>(argument);
+    shared_state->stage.store(1);
+    start_time = std::chrono::steady_clock::now();
+    shared_state->try_lock_result.store(shared_state->mutex_pointer->try_lock());
+    end_time = std::chrono::steady_clock::now();
+    shared_state->elapsed_ms.store(std::chrono::duration_cast<
+            std::chrono::milliseconds>(end_time - start_time).count());
+    shared_state->stage.store(2);
     return (ft_nullptr);
 }
 
@@ -362,6 +420,25 @@ static void *recursive_holder_worker(void *argument)
     }
     shared_state->unlock_result.store(shared_state->mutex_pointer->unlock());
     shared_state->stage.store(4);
+    return (ft_nullptr);
+}
+
+static void *timed_recursive_try_lock_worker(void *argument)
+{
+    s_timed_recursive_try_lock_shared_state *shared_state;
+    std::chrono::steady_clock::time_point start_time;
+    std::chrono::steady_clock::time_point end_time;
+
+    shared_state = static_cast<s_timed_recursive_try_lock_shared_state *>(argument);
+    shared_state->thread_identifier.store(THREAD_ID);
+    shared_state->stage.store(1);
+    start_time = std::chrono::steady_clock::now();
+    shared_state->try_lock_result.store(
+            shared_state->mutex_pointer->try_lock(THREAD_ID));
+    end_time = std::chrono::steady_clock::now();
+    shared_state->elapsed_ms.store(std::chrono::duration_cast<
+            std::chrono::milliseconds>(end_time - start_time).count());
+    shared_state->stage.store(2);
     return (ft_nullptr);
 }
 
@@ -633,7 +710,8 @@ FT_TEST(test_pt_mutex_try_lock_owned_by_other_thread)
     else
         RECORD_ASSERT(0);
     initialize_try_lock_shared_state(&shared_state, &mutex_object);
-    if (pt_thread_create(&worker_thread, ft_nullptr, try_lock_worker, &shared_state) != 0)
+    if (pt_thread_create(&worker_thread, ft_nullptr, try_lock_worker,
+            &shared_state) != 0)
     {
         RECORD_ASSERT(0);
     }
@@ -674,6 +752,191 @@ cleanup:
     }
     if (mutex_initialized == 1)
         FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
+    #undef RECORD_ASSERT
+    return (1);
+}
+
+FT_TEST(test_pt_mutex_try_lock_returns_quickly_when_locked)
+{
+    pt_mutex mutex_object;
+    s_timed_try_lock_shared_state shared_state;
+    pthread_t worker_thread;
+    int thread_created;
+    int test_failed;
+    int mutex_locked;
+    int wait_attempts;
+    const char *failure_expression;
+    int failure_line;
+#define RECORD_ASSERT(expression) \
+    if (!(expression) && test_failed == 0) \
+    { \
+        test_failed = 1; \
+        failure_expression = #expression; \
+        failure_line = __LINE__; \
+        goto cleanup; \
+    }
+
+    thread_created = 0;
+    test_failed = 0;
+    mutex_locked = 0;
+    wait_attempts = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    RECORD_ASSERT(mutex_object.initialize() == FT_ERR_SUCCESS);
+    RECORD_ASSERT(mutex_object.lock() == FT_ERR_SUCCESS);
+    mutex_locked = 1;
+    initialize_timed_try_lock_shared_state(&shared_state, &mutex_object);
+    if (pt_thread_create(&worker_thread, ft_nullptr, timed_try_lock_worker,
+            &shared_state) != 0)
+    {
+        RECORD_ASSERT(0);
+    }
+    else
+        thread_created = 1;
+    while (shared_state.stage.load() < 2 && wait_attempts < 200)
+    {
+        pt_thread_sleep(1);
+        wait_attempts++;
+    }
+    RECORD_ASSERT(shared_state.stage.load() == 2);
+
+cleanup:
+    if (mutex_locked == 1)
+    {
+        if (mutex_object.unlock() == FT_ERR_SUCCESS)
+            mutex_locked = 0;
+        else if (test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "mutex_object.unlock() == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
+    }
+    if (thread_created == 1)
+    {
+        if (pt_thread_timed_join(worker_thread, ft_nullptr, 500) != 0
+            && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "pt_thread_timed_join(worker_thread, ft_nullptr, 500) == 0";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed == 0)
+    {
+        if (shared_state.try_lock_result.load() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            test_failed = 1;
+            failure_expression = "shared_state.try_lock_result.load() == FT_ERR_MUTEX_ALREADY_LOCKED";
+            failure_line = __LINE__;
+        }
+        else if (shared_state.elapsed_ms.load() >= 50)
+        {
+            test_failed = 1;
+            failure_expression = "shared_state.elapsed_ms.load() < 50";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        #undef RECORD_ASSERT
+        return (0);
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
+    #undef RECORD_ASSERT
+    return (1);
+}
+
+FT_TEST(test_pt_recursive_mutex_try_lock_returns_quickly_when_locked)
+{
+    pt_recursive_mutex mutex_object;
+    s_timed_recursive_try_lock_shared_state shared_state;
+    pthread_t worker_thread;
+    int thread_created;
+    int test_failed;
+    int mutex_locked;
+    int wait_attempts;
+    const char *failure_expression;
+    int failure_line;
+#define RECORD_ASSERT(expression) \
+    if (!(expression) && test_failed == 0) \
+    { \
+        test_failed = 1; \
+        failure_expression = #expression; \
+        failure_line = __LINE__; \
+        goto cleanup; \
+    }
+
+    thread_created = 0;
+    test_failed = 0;
+    mutex_locked = 0;
+    wait_attempts = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    RECORD_ASSERT(mutex_object.initialize() == FT_ERR_SUCCESS);
+    RECORD_ASSERT(mutex_object.lock() == FT_ERR_SUCCESS);
+    mutex_locked = 1;
+    initialize_timed_recursive_try_lock_shared_state(&shared_state,
+            &mutex_object);
+    if (pt_thread_create(&worker_thread, ft_nullptr,
+            timed_recursive_try_lock_worker, &shared_state) != 0)
+    {
+        RECORD_ASSERT(0);
+    }
+    else
+        thread_created = 1;
+    while (shared_state.stage.load() < 2 && wait_attempts < 200)
+    {
+        pt_thread_sleep(1);
+        wait_attempts++;
+    }
+    RECORD_ASSERT(shared_state.stage.load() == 2);
+
+cleanup:
+    if (mutex_locked == 1)
+    {
+        if (mutex_object.unlock() == FT_ERR_SUCCESS)
+            mutex_locked = 0;
+        else if (test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "mutex_object.unlock() == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
+    }
+    if (thread_created == 1)
+    {
+        if (pt_thread_timed_join(worker_thread, ft_nullptr, 500) != 0
+            && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "pt_thread_timed_join(worker_thread, ft_nullptr, 500) == 0";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed == 0)
+    {
+        if (shared_state.try_lock_result.load() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            test_failed = 1;
+            failure_expression = "shared_state.try_lock_result.load() == FT_ERR_MUTEX_ALREADY_LOCKED";
+            failure_line = __LINE__;
+        }
+        else if (shared_state.elapsed_ms.load() >= 50)
+        {
+            test_failed = 1;
+            failure_expression = "shared_state.elapsed_ms.load() < 50";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        #undef RECORD_ASSERT
+        return (0);
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());
     #undef RECORD_ASSERT
     return (1);
 }

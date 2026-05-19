@@ -101,6 +101,7 @@ Modules/Game/game_skill.hpp
 Modules/Game/game_state.hpp
 Modules/Game/game_upgrade.hpp
 Modules/Game/game_vendor_profile.hpp
+Modules/Game/game_voxel_chunk.hpp
 Modules/Game/game_voxel_region.hpp
 Modules/Game/game_world.hpp
 Modules/Game/game_world_region.hpp
