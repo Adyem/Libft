@@ -4,6 +4,7 @@
 #include "../Errno/errno_internal.hpp"
 #include "../File/file_utils.hpp"
 #include "../Printf/printf.hpp"
+#include <climits>
 #include <cstdio>
 #include <new>
 
@@ -120,6 +121,80 @@ static int32_t game_voxel_read_file(FILE *file, void *data,
     return (FT_ERR_SUCCESS);
 }
 
+static int32_t game_voxel_region_file_size(FILE *file,
+    uint64_t *file_size) noexcept
+{
+    long current_position;
+    long end_position;
+
+    if (file_size == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    current_position = std::ftell(file);
+    if (current_position < 0)
+        return (FT_ERR_IO);
+    if (std::fseek(file, 0, SEEK_END) != 0)
+        return (FT_ERR_IO);
+    end_position = std::ftell(file);
+    if (end_position < 0)
+        return (FT_ERR_IO);
+    if (std::fseek(file, current_position, SEEK_SET) != 0)
+        return (FT_ERR_IO);
+    *file_size = static_cast<uint64_t>(end_position);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_region_validate_table(
+    const t_game_voxel_region_table_entry *table, uint64_t file_size) noexcept
+{
+    uint16_t slot;
+    uint64_t header_size;
+
+    header_size = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(int32_t)
+        + sizeof(int32_t)
+        + (sizeof(t_game_voxel_region_table_entry)
+            * GAME_VOXEL_REGION_CHUNK_COUNT);
+    if (file_size < header_size)
+        return (FT_ERR_IO);
+    slot = 0;
+    while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
+    {
+        if (table[slot].size > 0)
+        {
+            if (table[slot].offset < header_size
+                || table[slot].offset > file_size
+                || static_cast<uint64_t>(table[slot].size)
+                    > file_size - table[slot].offset
+                || table[slot].offset > static_cast<uint64_t>(LONG_MAX))
+                return (FT_ERR_IO);
+        }
+        slot += 1;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_region_destroy_buffers(
+    ft_byte_buffer *chunk_buffers) noexcept
+{
+    uint16_t slot;
+    int32_t first_error;
+    int32_t destroy_error;
+
+    first_error = FT_ERR_SUCCESS;
+    slot = 0;
+    while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
+    {
+        if (chunk_buffers[slot].is_initialised() == FT_TRUE)
+        {
+            destroy_error = chunk_buffers[slot].destroy();
+            if (first_error == FT_ERR_SUCCESS
+                && destroy_error != FT_ERR_SUCCESS)
+                first_error = destroy_error;
+        }
+        slot += 1;
+    }
+    return (first_error);
+}
+
 int32_t game_voxel_region::set_error(int32_t error_code) noexcept
 {
     game_voxel_region::_last_error = error_code;
@@ -193,38 +268,48 @@ int32_t game_voxel_region::initialize(int32_t world_x, int32_t world_z,
     return (this->set_error(FT_ERR_SUCCESS));
 }
 
-void game_voxel_region::clear_chunks() noexcept
+int32_t game_voxel_region::clear_chunks() noexcept
 {
     uint16_t slot;
+    int32_t first_error;
+    int32_t destroy_error;
 
+    first_error = FT_ERR_SUCCESS;
     slot = 0;
     while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
     {
         if (this->_chunks[slot] != ft_nullptr)
         {
-            (void)this->_chunks[slot]->destroy();
+            destroy_error = this->_chunks[slot]->destroy();
+            if (first_error == FT_ERR_SUCCESS
+                && destroy_error != FT_ERR_SUCCESS)
+                first_error = destroy_error;
             delete this->_chunks[slot];
             this->_chunks[slot] = ft_nullptr;
         }
         slot += 1;
     }
-    return ;
+    return (first_error);
 }
 
 int32_t game_voxel_region::destroy() noexcept
 {
+    int32_t error_code;
+
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    this->clear_chunks();
+    error_code = this->clear_chunks();
     if (this->_storage_path.is_initialised() == FT_TRUE)
         (void)this->_storage_path.clear();
     this->_region_start_x = 0;
     this->_region_start_z = 0;
     this->_dirty = FT_FALSE;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    if (error_code != FT_ERR_SUCCESS)
+        return (this->set_error(error_code));
     return (this->set_error(FT_ERR_SUCCESS));
 }
 
@@ -364,11 +449,14 @@ int32_t game_voxel_region::load_region(int32_t world_x,
     int32_t file_start_z;
     t_game_voxel_region_table_entry table[GAME_VOXEL_REGION_CHUNK_COUNT];
     uint16_t slot;
+    uint64_t file_size;
     int32_t error_code;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "game_voxel_region::load_region");
-    this->clear_chunks();
+    error_code = this->clear_chunks();
+    if (error_code != FT_ERR_SUCCESS)
+        return (this->set_error(error_code));
     this->_region_start_x = game_voxel_region_start_coordinate(world_x);
     this->_region_start_z = game_voxel_region_start_coordinate(world_z);
     error_code = file_path.initialize();
@@ -398,12 +486,17 @@ int32_t game_voxel_region::load_region(int32_t world_x,
             sizeof(file_start_z));
     if (error_code == FT_ERR_SUCCESS)
         error_code = game_voxel_read_file(file, table, sizeof(table));
+    if (error_code == FT_ERR_SUCCESS)
+        error_code = game_voxel_region_file_size(file, &file_size);
+    if (error_code == FT_ERR_SUCCESS)
+        error_code = game_voxel_region_validate_table(table, file_size);
     if (error_code != FT_ERR_SUCCESS || magic != GAME_VOXEL_REGION_MAGIC
         || version != GAME_VOXEL_REGION_VERSION
         || file_start_x != this->_region_start_x
         || file_start_z != this->_region_start_z)
     {
         (void)std::fclose(file);
+        (void)this->clear_chunks();
         return (this->set_error(FT_ERR_IO));
     }
     slot = 0;
@@ -445,6 +538,7 @@ int32_t game_voxel_region::load_region(int32_t world_x,
             if (error_code != FT_ERR_SUCCESS)
             {
                 (void)std::fclose(file);
+                (void)this->clear_chunks();
                 return (this->set_error(error_code));
             }
         }
@@ -466,6 +560,7 @@ int32_t game_voxel_region::save_region() noexcept
     uint16_t slot;
     uint64_t offset;
     int32_t error_code;
+    int32_t cleanup_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "game_voxel_region::save_region");
@@ -485,10 +580,16 @@ int32_t game_voxel_region::save_region() noexcept
         {
             error_code = chunk_buffers[slot].initialize();
             if (error_code != FT_ERR_SUCCESS)
+            {
+                (void)game_voxel_region_destroy_buffers(chunk_buffers);
                 return (this->set_error(error_code));
+            }
             error_code = this->_chunks[slot]->serialize(chunk_buffers[slot]);
             if (error_code != FT_ERR_SUCCESS)
+            {
+                (void)game_voxel_region_destroy_buffers(chunk_buffers);
                 return (this->set_error(error_code));
+            }
             table[slot].offset = offset;
             table[slot].size = static_cast<uint32_t>(chunk_buffers[slot].size());
             offset += table[slot].size;
@@ -497,17 +598,24 @@ int32_t game_voxel_region::save_region() noexcept
     }
     error_code = file_path.initialize();
     if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)game_voxel_region_destroy_buffers(chunk_buffers);
         return (this->set_error(error_code));
+    }
     error_code = this->build_file_path(file_path);
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)file_path.destroy();
+        (void)game_voxel_region_destroy_buffers(chunk_buffers);
         return (this->set_error(error_code));
     }
     file = std::fopen(file_path.c_str(), "wb");
     (void)file_path.destroy();
     if (file == ft_nullptr)
+    {
+        (void)game_voxel_region_destroy_buffers(chunk_buffers);
         return (this->set_error(FT_ERR_FILE_OPEN_FAILED));
+    }
     magic = GAME_VOXEL_REGION_MAGIC;
     version = GAME_VOXEL_REGION_VERSION;
     error_code = game_voxel_write_file(file, &magic, sizeof(magic));
@@ -531,17 +639,18 @@ int32_t game_voxel_region::save_region() noexcept
         slot += 1;
     }
     (void)std::fclose(file);
+    cleanup_error = game_voxel_region_destroy_buffers(chunk_buffers);
+    if (error_code != FT_ERR_SUCCESS)
+        return (this->set_error(error_code));
+    if (cleanup_error != FT_ERR_SUCCESS)
+        return (this->set_error(cleanup_error));
     slot = 0;
     while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
     {
-        if (chunk_buffers[slot].is_initialised() == FT_TRUE)
-            (void)chunk_buffers[slot].destroy();
         if (this->_chunks[slot] != ft_nullptr)
             this->_chunks[slot]->clear_dirty();
         slot += 1;
     }
-    if (error_code != FT_ERR_SUCCESS)
-        return (this->set_error(error_code));
     this->_dirty = FT_FALSE;
     return (this->set_error(FT_ERR_SUCCESS));
 }

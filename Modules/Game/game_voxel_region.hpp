@@ -32,7 +32,7 @@ class game_voxel_region
         int32_t build_file_path(ft_string &file_path) const noexcept;
         int32_t ensure_chunk(uint16_t slot,
             game_voxel_chunk **chunk_out) noexcept;
-        void clear_chunks() noexcept;
+        int32_t clear_chunks() noexcept;
 
     public:
         game_voxel_region() noexcept;

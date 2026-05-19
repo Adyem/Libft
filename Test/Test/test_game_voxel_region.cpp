@@ -719,3 +719,82 @@ FT_TEST(test_game_voxel_region_load_region_truncated_chunk_payload)
     test_voxel_cleanup_region_dir(directory_path);
     return (1);
 }
+
+FT_TEST(test_game_voxel_region_load_region_rejects_invalid_table_offset)
+{
+    typedef struct s_test_voxel_region_table_entry
+    {
+        uint64_t offset;
+        uint32_t size;
+    }   t_test_voxel_region_table_entry;
+
+    char directory_path[256];
+    char file_path[300];
+    game_voxel_region region;
+    game_voxel_region loaded_region;
+    FILE *file;
+    uint64_t invalid_offset;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
+        sizeof(directory_path)));
+    test_voxel_cleanup_region_dir(directory_path);
+    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(1, 1, 1, 601));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(17, 1, 1, 602));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.save_region());
+    (void)pf_snprintf(file_path, sizeof(file_path), "%s/region_P0P0.dat",
+        directory_path);
+    file = std::fopen(file_path, "r+b");
+    FT_ASSERT(file != ft_nullptr);
+    invalid_offset = 0x7FFFFFFFFFFFFFFFULL;
+    FT_ASSERT_EQ(0, std::fseek(file, 16
+        + static_cast<long>(sizeof(t_test_voxel_region_table_entry)),
+        SEEK_SET));
+    FT_ASSERT_EQ(1, std::fwrite(&invalid_offset, sizeof(invalid_offset), 1,
+        file));
+    (void)std::fclose(file);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, loaded_region.initialize(0, 0,
+        directory_path));
+    FT_ASSERT_EQ(FT_ERR_IO, loaded_region.load_region(0, 0));
+    FT_ASSERT_EQ(FT_FALSE, loaded_region.has_chunk(0, 0));
+    FT_ASSERT_EQ(FT_FALSE, loaded_region.has_chunk(1, 0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, loaded_region.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.destroy());
+    test_voxel_cleanup_region_dir(directory_path);
+    return (1);
+}
+
+FT_TEST(test_game_voxel_region_save_region_cleans_buffers_on_open_failure)
+{
+    char directory_path[256];
+    char missing_path[300];
+    game_voxel_region region;
+    ft_size_t allocation_count;
+    ft_size_t free_count;
+    ft_size_t current_bytes_before;
+    ft_size_t current_bytes_after;
+    ft_size_t peak_bytes;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
+        sizeof(directory_path)));
+    test_voxel_cleanup_region_dir(directory_path);
+    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(1, 1, 1, 701));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(17, 1, 1, 702));
+    (void)pf_snprintf(missing_path, sizeof(missing_path),
+        "%s/missing/subdir", directory_path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.set_region_storage_path(missing_path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_get_extended_stats(&allocation_count,
+        &free_count, &current_bytes_before, &peak_bytes));
+    FT_ASSERT_EQ(FT_ERR_FILE_OPEN_FAILED, region.save_region());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_get_extended_stats(&allocation_count,
+        &free_count, &current_bytes_after, &peak_bytes));
+    FT_ASSERT_EQ(current_bytes_before, current_bytes_after);
+    FT_ASSERT_EQ(FT_TRUE, region._chunks[0]->is_dirty());
+    FT_ASSERT_EQ(FT_TRUE, region._chunks[1]->is_dirty());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.destroy());
+    test_voxel_cleanup_region_dir(directory_path);
+    return (1);
+}
