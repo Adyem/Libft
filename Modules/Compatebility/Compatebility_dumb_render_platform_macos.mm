@@ -2,6 +2,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <QuartzCore/QuartzCore.h>
 
 #include "../DUMB/dumb_render_internal.hpp"
 #include <stdlib.h>
@@ -142,6 +143,8 @@ ft_render_platform_result ft_render_platform_create_window(
     }
     [state->window setDelegate:(id<NSWindowDelegate>)state->window_delegate];
     [state->window setTitle:[NSString stringWithUTF8String:desc.title]];
+    [[state->window contentView] setWantsLayer:YES];
+    [[[state->window contentView] layer] setContentsGravity:kCAGravityResize];
     [state->window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
 
@@ -221,11 +224,20 @@ ft_render_platform_result ft_render_platform_poll_events(
 
     while (event != nil)
     {
-        if ([event type] == NSEventTypeApplicationDefined)
+        if ([event type] == NSEventTypeKeyDown
+            || [event type] == NSEventTypeKeyUp
+            || [event type] == NSEventTypeFlagsChanged)
+        {
+            /* Controls are polled through CGEventSourceKeyState. */
+        }
+        else if ([event type] == NSEventTypeApplicationDefined)
         {
             /* nothing */
         }
-        [NSApp sendEvent:event];
+        else
+        {
+            [NSApp sendEvent:event];
+        }
         event = [NSApp nextEventMatchingMask:NSEventMaskAny
             untilDate:[NSDate distantPast]
             inMode:NSDefaultRunLoopMode
@@ -247,6 +259,7 @@ ft_render_platform_result ft_render_platform_present(
     CGColorSpaceRef color_space;
     CGContextRef context;
     CGImageRef image;
+    NSView *view;
     size_t bytes_per_row;
 
     (void)depth_buffer;
@@ -278,13 +291,15 @@ ft_render_platform_result ft_render_platform_present(
     }
 
     image = CGBitmapContextCreateImage(context);
-
-    NSView *view = [state->window contentView];
-    [view lockFocus];
-    CGContextRef ns_context = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
-    CGRect rect = CGRectMake(0, 0, framebuffer->width, framebuffer->height);
-    CGContextDrawImage(ns_context, rect, image);
-    [view unlockFocus];
+    view = [state->window contentView];
+    if (view == nil || [view layer] == nil)
+    {
+        CGImageRelease(image);
+        CGContextRelease(context);
+        CGColorSpaceRelease(color_space);
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
+    }
+    [[view layer] setContents:(id)image];
 
     CGImageRelease(image);
     CGContextRelease(context);
