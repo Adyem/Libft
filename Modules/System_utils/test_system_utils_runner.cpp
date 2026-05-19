@@ -15,17 +15,9 @@
 #include <unistd.h>
 #include "../Errno/errno.hpp"
 
-static int32_t *get_test_count(void)
-{
-    static int32_t test_count = 0;
-
-    return (&test_count);
-}
-
-static int32_t get_test_capacity(void)
-{
-    return (4096);
-}
+#ifndef FT_TEST_RUNNER_INITIAL_CAPACITY
+# define FT_TEST_RUNNER_INITIAL_CAPACITY 4096
+#endif
 
 struct s_test_case
 {
@@ -35,11 +27,68 @@ struct s_test_case
     const char *name;
 };
 
+static int32_t *get_test_count(void)
+{
+    static int32_t test_count = 0;
+
+    return (&test_count);
+}
+
+static int32_t *get_test_capacity(void)
+{
+    static int32_t test_capacity = 0;
+
+    return (&test_capacity);
+}
+
+static s_test_case **get_test_storage(void)
+{
+    static s_test_case *tests = NULL;
+
+    return (&tests);
+}
+
 static s_test_case *get_tests(void)
 {
-    static s_test_case tests[4096];
+    return (*get_test_storage());
+}
 
-    return (tests);
+static int32_t ensure_test_capacity(int32_t required_capacity)
+{
+    s_test_case **tests;
+    int32_t *test_capacity;
+    int32_t new_capacity;
+    ft_size_t allocation_size;
+    void *new_tests;
+
+    if (required_capacity <= 0)
+        return (FT_ERR_SUCCESS);
+    tests = get_test_storage();
+    test_capacity = get_test_capacity();
+    if (required_capacity <= *test_capacity)
+        return (FT_ERR_SUCCESS);
+    new_capacity = *test_capacity;
+    if (new_capacity < 1)
+        new_capacity = FT_TEST_RUNNER_INITIAL_CAPACITY;
+    if (new_capacity < 1)
+        new_capacity = 1;
+    while (new_capacity < required_capacity)
+    {
+        if (new_capacity > 1073741823)
+        {
+            new_capacity = required_capacity;
+            break ;
+        }
+        new_capacity = new_capacity * 2;
+    }
+    allocation_size = sizeof(s_test_case)
+        * static_cast<ft_size_t>(new_capacity);
+    new_tests = std::realloc(*tests, static_cast<size_t>(allocation_size));
+    if (new_tests == NULL)
+        return (FT_ERR_NO_MEMORY);
+    *tests = static_cast<s_test_case *>(new_tests);
+    *test_capacity = new_capacity;
+    return (FT_ERR_SUCCESS);
 }
 
 static char *get_last_failure_message(void)
@@ -503,23 +552,46 @@ static int32_t execute_test_function(const s_test_case *test)
     return (result);
 }
 
+#ifdef LIBFT_TEST_BUILD
+int32_t ft_test_runner_reserve_capacity(int32_t required_capacity)
+{
+    return (ensure_test_capacity(required_capacity));
+}
+
+int32_t ft_test_runner_registered_count(void)
+{
+    return (*get_test_count());
+}
+
+int32_t ft_test_runner_registered_capacity(void)
+{
+    return (*get_test_capacity());
+}
+#endif
+
 int32_t ft_register_test(t_test_func func, const char *description, const char *module, const char *name)
 {
     s_test_case test_case;
     s_test_case *tests;
     int32_t *test_count;
+    int32_t error_code;
 
     test_case.func = func;
     test_case.description = description;
     test_case.module = module;
     test_case.name = name;
-    tests = get_tests();
     test_count = get_test_count();
-    if (*test_count >= get_test_capacity())
-        return (1);
+    error_code = ensure_test_capacity(*test_count + 1);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)std::fprintf(stderr,
+            "failed to grow test registry while registering %s\n", name);
+        return (error_code);
+    }
+    tests = get_tests();
     tests[*test_count] = test_case;
     *test_count = *test_count + 1;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_test_fail(const char *expression, const char *file, int32_t line)
@@ -569,6 +641,7 @@ int32_t ft_run_registered_tests(void)
     int32_t index;
     int32_t passed;
     s_test_case *tests;
+    s_test_case current_test;
     int32_t *test_count;
     int32_t total_tests;
     int32_t selected_tests;
@@ -592,6 +665,7 @@ int32_t ft_run_registered_tests(void)
     passed = 0;
     while (index < total_tests)
     {
+        tests = get_tests();
         if (!test_is_selected(&tests[index]))
         {
             index++;
@@ -604,14 +678,15 @@ int32_t ft_run_registered_tests(void)
         if (baseline_stderr_descriptor >= 0)
             (void)dup2(baseline_stderr_descriptor, STDERR_FILENO);
         selected_tests++;
+        current_test = tests[index];
         show_running_line = 1;
         if (hide_successful_tests != 0 && isatty(STDOUT_FILENO) == 0)
             show_running_line = 0;
         if (show_running_line != 0)
         {
-            print_running_test_line(selected_tests, tests[index].description);
+            print_running_test_line(selected_tests, current_test.description);
         }
-        if (execute_test_function(&tests[index]))
+        if (execute_test_function(&current_test))
         {
             if (hide_successful_tests != 0)
             {
@@ -620,7 +695,7 @@ int32_t ft_run_registered_tests(void)
             }
             else
                 printf("\r\033[2K\033[32mSUCCESS\033[0m %d %s\n",
-                    selected_tests, tests[index].description);
+                    selected_tests, current_test.description);
             fflush(stdout);
             passed++;
         }
@@ -628,7 +703,7 @@ int32_t ft_run_registered_tests(void)
         {
             if (show_running_line != 0)
                 printf("\r\033[2K");
-            printf("\033[31mFAIL\033[0m %d %s\n", selected_tests, tests[index].description);
+            printf("\033[31mFAIL\033[0m %d %s\n", selected_tests, current_test.description);
             failure_message = get_last_failure_message();
             if (failure_message[0] != '\0')
                 printf("    %s\n", failure_message);

@@ -212,3 +212,19 @@ FT_TEST(test_su_chmod_valid_file_returns_zero)
     cleanup_system_utils_additional_file(path);
     return (1);
 }
+
+FT_TEST(test_system_utils_test_runner_capacity_grows)
+{
+    int32_t initial_count;
+    int32_t initial_capacity;
+    int32_t required_capacity;
+
+    initial_count = ft_test_runner_registered_count();
+    initial_capacity = ft_test_runner_registered_capacity();
+    required_capacity = initial_capacity + 1;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        ft_test_runner_reserve_capacity(required_capacity));
+    FT_ASSERT(ft_test_runner_registered_capacity() >= required_capacity);
+    FT_ASSERT_EQ(initial_count, ft_test_runner_registered_count());
+    return (1);
+}

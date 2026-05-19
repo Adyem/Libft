@@ -21,6 +21,12 @@ void ft_test_fail_values(const char *expression, const char *file, int32_t line,
     const char *expected_value, const char *actual_value);
 int32_t ft_run_registered_tests(void);
 
+#ifdef LIBFT_TEST_BUILD
+int32_t ft_test_runner_reserve_capacity(int32_t required_capacity);
+int32_t ft_test_runner_registered_count(void);
+int32_t ft_test_runner_registered_capacity(void);
+#endif
+
 template <typename ValueType, typename = void>
 struct ft_test_is_streamable
 {
