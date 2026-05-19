@@ -9,6 +9,7 @@
 struct ft_render_macos_state
 {
     NSWindow        *window;
+    NSObject        *window_delegate;
 
     int32_t         width;
     int32_t         height;
@@ -18,6 +19,36 @@ struct ft_render_macos_state
     ft_bool         is_fullscreen;
     ft_bool         should_close;
 };
+
+@interface FtRenderMacOSWindowDelegate : NSObject <NSWindowDelegate>
+{
+    ft_render_macos_state *_state;
+}
+- (id)initWithRenderState:(ft_render_macos_state *)state;
+- (BOOL)windowShouldClose:(id)sender;
+@end
+
+@implementation FtRenderMacOSWindowDelegate
+- (id)initWithRenderState:(ft_render_macos_state *)state
+{
+    self = [super init];
+    if (self != nil)
+    {
+        _state = state;
+    }
+    return (self);
+}
+
+- (BOOL)windowShouldClose:(id)sender
+{
+    (void)sender;
+    if (_state != NULL)
+    {
+        _state->should_close = FT_TRUE;
+    }
+    return (NO);
+}
+@end
 
 ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_screen_size *out_size)
 {
@@ -100,6 +131,16 @@ ft_render_platform_result ft_render_platform_create_window(
         return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
     }
 
+    state->window_delegate = [[FtRenderMacOSWindowDelegate alloc]
+        initWithRenderState:state];
+    if (state->window_delegate == nil)
+    {
+        [state->window close];
+        free(state->pixels);
+        free(state);
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
+    }
+    [state->window setDelegate:(id<NSWindowDelegate>)state->window_delegate];
     [state->window setTitle:[NSString stringWithUTF8String:desc.title]];
     [state->window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
@@ -128,8 +169,14 @@ ft_render_platform_result ft_render_platform_destroy_window(
 
     if (state->window != nil)
     {
+        [state->window setDelegate:nil];
         [state->window close];
         state->window = nil;
+    }
+    if (state->window_delegate != nil)
+    {
+        [state->window_delegate release];
+        state->window_delegate = nil;
     }
 
     if (state->pixels != NULL)
