@@ -42,21 +42,24 @@ static int32_t game_voxel_append_signed_coordinate(ft_string &target,
     int32_t coordinate) noexcept
 {
     char number_buffer[32];
-    int32_t absolute_value;
+    uint32_t absolute_value;
 
     if (coordinate < 0)
     {
         if (target.append('N') != FT_ERR_SUCCESS)
             return (target.get_error());
-        absolute_value = -coordinate;
+        if (coordinate == INT_MIN)
+            absolute_value = static_cast<uint32_t>(INT_MAX) + 1U;
+        else
+            absolute_value = static_cast<uint32_t>(-coordinate);
     }
     else
     {
         if (target.append('P') != FT_ERR_SUCCESS)
             return (target.get_error());
-        absolute_value = coordinate;
+        absolute_value = static_cast<uint32_t>(coordinate);
     }
-    if (pf_snprintf(number_buffer, sizeof(number_buffer), "%d",
+    if (pf_snprintf(number_buffer, sizeof(number_buffer), "%u",
             absolute_value) < 0)
         return (FT_ERR_INVALID_ARGUMENT);
     if (target.append(number_buffer) != FT_ERR_SUCCESS)
@@ -104,10 +107,40 @@ static int32_t game_voxel_write_file(FILE *file, const void *data,
 {
     if (size == 0)
         return (FT_ERR_SUCCESS);
-    if (std::fwrite(data, 1, static_cast<size_t>(size), file)
-        != static_cast<size_t>(size))
+    if (std::fwrite(data, 1, size, file) != size)
         return (FT_ERR_IO);
     return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_write_u32_le(FILE *file, uint32_t value) noexcept
+{
+    uint8_t bytes[4];
+
+    bytes[0] = static_cast<uint8_t>(value & 0xFFU);
+    bytes[1] = static_cast<uint8_t>((value >> 8) & 0xFFU);
+    bytes[2] = static_cast<uint8_t>((value >> 16) & 0xFFU);
+    bytes[3] = static_cast<uint8_t>((value >> 24) & 0xFFU);
+    return (game_voxel_write_file(file, bytes, sizeof(bytes)));
+}
+
+static int32_t game_voxel_write_i32_le(FILE *file, int32_t value) noexcept
+{
+    return (game_voxel_write_u32_le(file, static_cast<uint32_t>(value)));
+}
+
+static int32_t game_voxel_write_u64_le(FILE *file, uint64_t value) noexcept
+{
+    uint8_t bytes[8];
+
+    bytes[0] = static_cast<uint8_t>(value & 0xFFULL);
+    bytes[1] = static_cast<uint8_t>((value >> 8) & 0xFFULL);
+    bytes[2] = static_cast<uint8_t>((value >> 16) & 0xFFULL);
+    bytes[3] = static_cast<uint8_t>((value >> 24) & 0xFFULL);
+    bytes[4] = static_cast<uint8_t>((value >> 32) & 0xFFULL);
+    bytes[5] = static_cast<uint8_t>((value >> 40) & 0xFFULL);
+    bytes[6] = static_cast<uint8_t>((value >> 48) & 0xFFULL);
+    bytes[7] = static_cast<uint8_t>((value >> 56) & 0xFFULL);
+    return (game_voxel_write_file(file, bytes, sizeof(bytes)));
 }
 
 static int32_t game_voxel_read_file(FILE *file, void *data,
@@ -115,9 +148,104 @@ static int32_t game_voxel_read_file(FILE *file, void *data,
 {
     if (size == 0)
         return (FT_ERR_SUCCESS);
-    if (std::fread(data, 1, static_cast<size_t>(size), file)
-        != static_cast<size_t>(size))
+    if (std::fread(data, 1, size, file) != size)
         return (FT_ERR_IO);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_read_u32_le(FILE *file, uint32_t *value_out) noexcept
+{
+    uint8_t bytes[4];
+    int32_t error_code;
+
+    if (value_out == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    error_code = game_voxel_read_file(file, bytes, sizeof(bytes));
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    *value_out = static_cast<uint32_t>(bytes[0])
+        | (static_cast<uint32_t>(bytes[1]) << 8)
+        | (static_cast<uint32_t>(bytes[2]) << 16)
+        | (static_cast<uint32_t>(bytes[3]) << 24);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_read_i32_le(FILE *file, int32_t *value_out) noexcept
+{
+    uint32_t unsigned_value;
+    int32_t error_code;
+
+    if (value_out == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    error_code = game_voxel_read_u32_le(file, &unsigned_value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    *value_out = static_cast<int32_t>(unsigned_value);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_read_u64_le(FILE *file, uint64_t *value_out) noexcept
+{
+    uint8_t bytes[8];
+    int32_t error_code;
+
+    if (value_out == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    error_code = game_voxel_read_file(file, bytes, sizeof(bytes));
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    *value_out = static_cast<uint64_t>(bytes[0])
+        | (static_cast<uint64_t>(bytes[1]) << 8)
+        | (static_cast<uint64_t>(bytes[2]) << 16)
+        | (static_cast<uint64_t>(bytes[3]) << 24)
+        | (static_cast<uint64_t>(bytes[4]) << 32)
+        | (static_cast<uint64_t>(bytes[5]) << 40)
+        | (static_cast<uint64_t>(bytes[6]) << 48)
+        | (static_cast<uint64_t>(bytes[7]) << 56);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_read_region_table(FILE *file,
+    t_game_voxel_region_table_entry *table) noexcept
+{
+    uint16_t slot;
+    int32_t error_code;
+
+    if (table == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    slot = 0;
+    while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
+    {
+        error_code = game_voxel_read_u64_le(file, &table[slot].offset);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = game_voxel_read_u32_le(file, &table[slot].size);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        slot += 1;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t game_voxel_write_region_table(FILE *file,
+    const t_game_voxel_region_table_entry *table) noexcept
+{
+    uint16_t slot;
+    int32_t error_code;
+
+    if (table == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    slot = 0;
+    while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
+    {
+        error_code = game_voxel_write_u64_le(file, table[slot].offset);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = game_voxel_write_u32_le(file, table[slot].size);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        slot += 1;
+    }
     return (FT_ERR_SUCCESS);
 }
 
@@ -149,10 +277,7 @@ static int32_t game_voxel_region_validate_table(
     uint16_t slot;
     uint64_t header_size;
 
-    header_size = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(int32_t)
-        + sizeof(int32_t)
-        + (sizeof(t_game_voxel_region_table_entry)
-            * GAME_VOXEL_REGION_CHUNK_COUNT);
+    header_size = 16U + (12U * GAME_VOXEL_REGION_CHUNK_COUNT);
     if (file_size < header_size)
         return (FT_ERR_IO);
     slot = 0;
@@ -317,6 +442,7 @@ int32_t game_voxel_region::move(game_voxel_region &other) noexcept
 {
     uint16_t slot;
     int32_t error_code;
+    ft_string storage_path_copy;
 
     if (&other == this)
         return (this->set_error(FT_ERR_SUCCESS));
@@ -326,15 +452,47 @@ int32_t game_voxel_region::move(game_voxel_region &other) noexcept
             "game_voxel_region::move", "source object is uninitialised");
         return (this->set_error(FT_ERR_INVALID_STATE));
     }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+            (void)this->destroy();
+        this->_region_start_x = 0;
+        this->_region_start_z = 0;
+        this->_dirty = FT_FALSE;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(FT_ERR_SUCCESS));
+    }
+    error_code = storage_path_copy.initialize(other._storage_path);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)storage_path_copy.destroy();
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+            (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(error_code));
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
-    error_code = this->initialize();
+    if (this->_storage_path.is_initialised() == FT_FALSE)
+    {
+        error_code = this->_storage_path.initialize();
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            (void)storage_path_copy.destroy();
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            return (this->set_error(error_code));
+        }
+    }
+    error_code = this->_storage_path.move(storage_path_copy);
     if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)storage_path_copy.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (error_code);
+    }
     this->_region_start_x = other._region_start_x;
     this->_region_start_z = other._region_start_z;
     this->_dirty = other._dirty;
-    this->_storage_path = other._storage_path;
     slot = 0;
     while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
     {
@@ -344,6 +502,7 @@ int32_t game_voxel_region::move(game_voxel_region &other) noexcept
     }
     other._dirty = FT_FALSE;
     other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (this->set_error(FT_ERR_SUCCESS));
 }
 
@@ -475,17 +634,15 @@ int32_t game_voxel_region::load_region(int32_t world_x,
         this->_dirty = FT_FALSE;
         return (this->set_error(FT_ERR_SUCCESS));
     }
-    error_code = game_voxel_read_file(file, &magic, sizeof(magic));
+    error_code = game_voxel_read_u32_le(file, &magic);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_read_file(file, &version, sizeof(version));
+        error_code = game_voxel_read_u32_le(file, &version);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_read_file(file, &file_start_x,
-            sizeof(file_start_x));
+        error_code = game_voxel_read_i32_le(file, &file_start_x);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_read_file(file, &file_start_z,
-            sizeof(file_start_z));
+        error_code = game_voxel_read_i32_le(file, &file_start_z);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_read_file(file, table, sizeof(table));
+        error_code = game_voxel_read_region_table(file, table);
     if (error_code == FT_ERR_SUCCESS)
         error_code = game_voxel_region_file_size(file, &file_size);
     if (error_code == FT_ERR_SUCCESS)
@@ -571,8 +728,7 @@ int32_t game_voxel_region::save_region() noexcept
         table[slot].size = 0;
         slot += 1;
     }
-    offset = sizeof(magic) + sizeof(version) + sizeof(this->_region_start_x)
-        + sizeof(this->_region_start_z) + sizeof(table);
+    offset = 16U + (12U * GAME_VOXEL_REGION_CHUNK_COUNT);
     slot = 0;
     while (slot < GAME_VOXEL_REGION_CHUNK_COUNT)
     {
@@ -618,17 +774,15 @@ int32_t game_voxel_region::save_region() noexcept
     }
     magic = GAME_VOXEL_REGION_MAGIC;
     version = GAME_VOXEL_REGION_VERSION;
-    error_code = game_voxel_write_file(file, &magic, sizeof(magic));
+    error_code = game_voxel_write_u32_le(file, magic);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_write_file(file, &version, sizeof(version));
+        error_code = game_voxel_write_u32_le(file, version);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_write_file(file, &this->_region_start_x,
-            sizeof(this->_region_start_x));
+        error_code = game_voxel_write_i32_le(file, this->_region_start_x);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_write_file(file, &this->_region_start_z,
-            sizeof(this->_region_start_z));
+        error_code = game_voxel_write_i32_le(file, this->_region_start_z);
     if (error_code == FT_ERR_SUCCESS)
-        error_code = game_voxel_write_file(file, table, sizeof(table));
+        error_code = game_voxel_write_region_table(file, table);
     slot = 0;
     while (slot < GAME_VOXEL_REGION_CHUNK_COUNT
         && error_code == FT_ERR_SUCCESS)
@@ -727,8 +881,8 @@ int32_t game_voxel_region::read_block(int32_t world_x, int32_t world_y,
         *block_id = GAME_VOXEL_AIR_BLOCK;
         return (game_voxel_region::set_error(FT_ERR_SUCCESS));
     }
-    return (this->_chunks[slot]->read_block(local_x & 15, world_y,
-        local_z & 15, block_id));
+    return (this->set_error(this->_chunks[slot]->read_block(local_x & 15,
+            world_y, local_z & 15, block_id)));
 }
 
 int32_t game_voxel_region::write_block(int32_t world_x, int32_t world_y,

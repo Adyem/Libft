@@ -182,6 +182,15 @@ void game_voxel_chunk_section::collapse_if_uniform() noexcept
 uint32_t game_voxel_chunk_section::get_block(
     uint16_t local_index) const noexcept
 {
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "game_voxel_chunk_section::get_block");
+    if (local_index >= GAME_VOXEL_SECTION_BLOCKS)
+    {
+        errno_abort_lifecycle(this->_initialised_state,
+            "game_voxel_chunk_section::get_block",
+            "local index is out of range");
+        return (GAME_VOXEL_AIR_BLOCK);
+    }
     if (this->_indices == ft_nullptr || this->_palette == ft_nullptr)
         return (this->_uniform_block_id);
     return (this->_palette[this->_indices[local_index]]);
@@ -289,11 +298,25 @@ int32_t game_voxel_chunk_section::deserialize(
         return (error_code);
     error_code = buffer.read_u8(&section_type);
     if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
         return (this->set_error(error_code));
+    }
     if (section_type == 0)
-        return (this->set_error(buffer.read_u32_le(&this->_uniform_block_id)));
+    {
+        error_code = buffer.read_u32_le(&this->_uniform_block_id);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
+            return (this->set_error(error_code));
+        }
+        return (this->set_error(FT_ERR_SUCCESS));
+    }
     if (section_type != 1)
+    {
+        (void)this->destroy();
         return (this->set_error(FT_ERR_INVALID_ARGUMENT));
+    }
     this->_uniform_block_id = GAME_VOXEL_AIR_BLOCK;
     error_code = this->materialize(GAME_VOXEL_AIR_BLOCK);
     if (error_code != FT_ERR_SUCCESS)
@@ -301,23 +324,35 @@ int32_t game_voxel_chunk_section::deserialize(
     error_code = buffer.read_u16_le(&this->_palette_size);
     if (error_code != FT_ERR_SUCCESS || this->_palette_size == 0
         || this->_palette_size > 256)
+    {
+        (void)this->destroy();
         return (this->set_error(FT_ERR_IO));
+    }
     index = 0;
     while (index < this->_palette_size)
     {
         error_code = buffer.read_u32_le(&this->_palette[index]);
         if (error_code != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
             return (this->set_error(error_code));
+        }
         index += 1;
     }
     error_code = buffer.read(this->_indices, GAME_VOXEL_SECTION_BLOCKS);
     if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
         return (this->set_error(error_code));
+    }
     index = 0;
     while (index < GAME_VOXEL_SECTION_BLOCKS)
     {
         if (this->_indices[index] >= this->_palette_size)
+        {
+            (void)this->destroy();
             return (this->set_error(FT_ERR_IO));
+        }
         index += 1;
     }
     this->collapse_if_uniform();
@@ -429,6 +464,14 @@ int32_t game_voxel_chunk::move(game_voxel_chunk &other) noexcept
             "game_voxel_chunk::move", "source object is uninitialised");
         return (this->set_error(FT_ERR_INVALID_STATE));
     }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+            (void)this->destroy();
+        this->_dirty = FT_FALSE;
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(FT_ERR_SUCCESS));
+    }
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
     error_code = this->initialize();
@@ -505,12 +548,30 @@ void game_voxel_chunk::clear_dirty() noexcept
 game_voxel_chunk_section &game_voxel_chunk::get_section(
     uint8_t section_index) noexcept
 {
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "game_voxel_chunk::get_section");
+    if (section_index >= GAME_VOXEL_CHUNK_SECTION_COUNT)
+    {
+        errno_abort_lifecycle(this->_initialised_state,
+            "game_voxel_chunk::get_section",
+            "section index is out of range");
+        return (this->_sections[0]);
+    }
     return (this->_sections[section_index]);
 }
 
 const game_voxel_chunk_section &game_voxel_chunk::get_section(
     uint8_t section_index) const noexcept
 {
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "game_voxel_chunk::get_section const");
+    if (section_index >= GAME_VOXEL_CHUNK_SECTION_COUNT)
+    {
+        errno_abort_lifecycle(this->_initialised_state,
+            "game_voxel_chunk::get_section const",
+            "section index is out of range");
+        return (this->_sections[0]);
+    }
     return (this->_sections[section_index]);
 }
 
@@ -550,16 +611,25 @@ int32_t game_voxel_chunk::deserialize(ft_byte_buffer &buffer) noexcept
         return (error_code);
     if (buffer.read_u32_le(&magic) != FT_ERR_SUCCESS
         || buffer.read_u32_le(&version) != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
         return (this->set_error(FT_ERR_IO));
+    }
     if (magic != GAME_VOXEL_CHUNK_MAGIC
         || version != GAME_VOXEL_CHUNK_VERSION)
+    {
+        (void)this->destroy();
         return (this->set_error(FT_ERR_INVALID_ARGUMENT));
+    }
     section_index = 0;
     while (section_index < GAME_VOXEL_CHUNK_SECTION_COUNT)
     {
         error_code = this->_sections[section_index].deserialize(buffer);
         if (error_code != FT_ERR_SUCCESS)
+        {
+            (void)this->destroy();
             return (this->set_error(error_code));
+        }
         section_index += 1;
     }
     this->_dirty = FT_FALSE;
@@ -581,4 +651,3 @@ const char *game_voxel_chunk::get_error_str() const noexcept
             "game_voxel_chunk::get_error_str");
     return (ft_strerror(game_voxel_chunk::_last_error));
 }
-
