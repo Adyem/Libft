@@ -54,3 +54,18 @@ FT_TEST(test_cpp_class_string_plus_proxy_failure_converts_to_string)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result_value.destroy());
     return (1);
 }
+
+FT_TEST(test_cpp_class_string_substr_failure_returns_null)
+{
+    ft_string string_value;
+    ft_string *substring;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.initialize("01234567890123456789"));
+    cma_set_alloc_limit(1);
+    substring = string_value.substr(0, 10);
+    cma_set_alloc_limit(0);
+    FT_ASSERT(substring == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, string_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
+    return (1);
+}

@@ -176,7 +176,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
         }
     }
     message.assign(reinterpret_cast<const char *>(output_buffer.begin()), output_buffer.size());
-    if (ft_string::get_error() != FT_ERR_SUCCESS)
+    if (message.get_error() != FT_ERR_SUCCESS)
     {
         (void)output_buffer.destroy();
         (void)input_buffer.destroy();

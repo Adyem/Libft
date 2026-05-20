@@ -24,7 +24,7 @@ static int32_t filesystem_write_all(FILE *file_stream, const void *data,
         {
             return (FT_ERR_IO);
         }
-        written_total = written_total + static_cast<ft_size_t>(written_now);
+        written_total = written_total + written_now;
     }
     return (FT_ERR_SUCCESS);
 }

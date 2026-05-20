@@ -7,9 +7,6 @@
 #include "class_nullptr.hpp"
 #include <climits>
 
-thread_local int32_t ft_string::_last_error = FT_ERR_SUCCESS;
-thread_local uint8_t ft_string::_last_initialised_state = FT_CLASS_STATE_UNINITIALISED;
-
 void ft_string::sleep_backoff() noexcept
 {
     pt_thread_sleep(1);
@@ -19,60 +16,56 @@ void ft_string::sleep_backoff() noexcept
 int32_t ft_string::enable_thread_safety() noexcept
 {
     if (this->_mutex != ft_nullptr)
-        return (ft_string::set_error(FT_ERR_SUCCESS));
+        return (this->set_error(FT_ERR_SUCCESS));
     pt_recursive_mutex *mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
-        return (ft_string::set_error(FT_ERR_NO_MEMORY));
+        return (this->set_error(FT_ERR_NO_MEMORY));
     int32_t mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
-        return (ft_string::set_error(mutex_error));
+        return (this->set_error(mutex_error));
     }
     this->_mutex = mutex_pointer;
-    return (ft_string::set_error(FT_ERR_SUCCESS));
+    return (this->set_error(FT_ERR_SUCCESS));
 }
 
 int32_t ft_string::disable_thread_safety() noexcept
 {
     if (this->_mutex == ft_nullptr)
-        return (ft_string::set_error(FT_ERR_SUCCESS));
+        return (this->set_error(FT_ERR_SUCCESS));
     int32_t destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    return (ft_string::set_error(destroy_error));
+    return (this->set_error(destroy_error));
 }
 
 ft_bool ft_string::is_thread_safe() const noexcept
 {
-    ft_string::set_error(FT_ERR_SUCCESS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t ft_string::set_error(int32_t error_code) noexcept
+int32_t ft_string::set_error(int32_t error_code) const noexcept
 {
-    ft_string::_last_error = error_code;
+    this->_last_error = error_code;
     return (error_code);
 }
 
-int32_t ft_string::get_error() noexcept
+int32_t ft_string::get_error() const noexcept
 {
-    if (ft_string::_last_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_if_uninitialised(ft_string::_last_initialised_state,
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
             "ft_string::get_error");
-    }
-    return (ft_string::_last_error);
+    return (this->_last_error);
 }
 
-const char *ft_string::get_error_str() noexcept
+const char *ft_string::get_error_str() const noexcept
 {
-    if (ft_string::_last_initialised_state == FT_CLASS_STATE_UNINITIALISED)
-    {
-        errno_abort_if_uninitialised(ft_string::_last_initialised_state,
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_if_uninitialised(this->_initialised_state,
             "ft_string::get_error_str");
-    }
-    return (ft_strerror(ft_string::get_error()));
+    return (ft_strerror(this->get_error()));
 }
 
 
@@ -322,13 +315,13 @@ int32_t ft_string::resize(ft_size_t new_capacity) noexcept
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         int32_t result = this->resize_buffer(new_capacity);
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-        return (ft_string::set_error(result));
+        return (this->set_error(result));
     }
     int32_t result = this->resize_buffer(new_capacity);
-    return (ft_string::set_error(result));
+    return (this->set_error(result));
 }
 
 int32_t ft_string::append(char character) noexcept
@@ -338,13 +331,13 @@ int32_t ft_string::append(char character) noexcept
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         int32_t result = this->append_char_buffer(character);
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-        return (ft_string::set_error(result));
+        return (this->set_error(result));
     }
     int32_t result = this->append_char_buffer(character);
-    return (ft_string::set_error(result));
+    return (this->set_error(result));
 }
 
 int32_t ft_string::append(const ft_string& string) noexcept
@@ -352,7 +345,32 @@ int32_t ft_string::append(const ft_string& string) noexcept
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string::append(const ft_string &)");
     errno_abort_if_uninitialised_or_destroyed(string._initialised_state, "ft_string::append(const ft_string &)");
     if (string._length == 0)
-        return (ft_string::set_error(FT_ERR_SUCCESS));
+        return (this->set_error(FT_ERR_SUCCESS));
+    if (this == &string)
+    {
+        int32_t lock_error;
+        char *snapshot;
+        int32_t result;
+
+        if (this->_mutex != ft_nullptr)
+        {
+            lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+            if (lock_error != FT_ERR_SUCCESS)
+                return (this->set_error(lock_error));
+        }
+        snapshot = static_cast<char *>(cma_malloc(this->_length + 1));
+        if (snapshot == ft_nullptr)
+        {
+            if (this->_mutex != ft_nullptr)
+                (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+            return (this->set_error(FT_ERR_NO_MEMORY));
+        }
+        ft_memcpy(snapshot, this->_data, this->_length + 1);
+        result = this->append_buffer(snapshot, this->_length);
+        cma_free(snapshot);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (this->set_error(result));
+    }
     pt_recursive_mutex *self_mutex = this->_mutex;
     pt_recursive_mutex *other_mutex = string._mutex;
     ft_bool self_locked = FT_FALSE;
@@ -363,10 +381,10 @@ int32_t ft_string::append(const ft_string& string) noexcept
         {
             int32_t lock_error = pt_recursive_mutex_lock_if_not_null(self_mutex);
             if (lock_error != FT_ERR_SUCCESS)
-                return (ft_string::set_error(lock_error));
+                return (this->set_error(lock_error));
             int32_t result = this->append_buffer(string._data, string._length);
             (void)pt_recursive_mutex_unlock_if_not_null(self_mutex);
-            return (ft_string::set_error(result));
+            return (this->set_error(result));
         }
         pt_recursive_mutex *first = self_mutex;
         pt_recursive_mutex *second = other_mutex;
@@ -382,7 +400,7 @@ int32_t ft_string::append(const ft_string& string) noexcept
         }
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(first);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         if (first_is_self)
             self_locked = FT_TRUE;
         else
@@ -398,7 +416,7 @@ int32_t ft_string::append(const ft_string& string) noexcept
                 (void)pt_recursive_mutex_unlock_if_not_null(self_mutex);
             if (other_locked && other_mutex != self_mutex)
                 (void)pt_recursive_mutex_unlock_if_not_null(other_mutex);
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         }
         if (second_is_self)
             self_locked = FT_TRUE;
@@ -409,14 +427,14 @@ int32_t ft_string::append(const ft_string& string) noexcept
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(self_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         self_locked = FT_TRUE;
     }
     else if (other_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(other_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         other_locked = FT_TRUE;
     }
     int32_t result = this->append_buffer(string._data, string._length);
@@ -424,7 +442,7 @@ int32_t ft_string::append(const ft_string& string) noexcept
         (void)pt_recursive_mutex_unlock_if_not_null(other_mutex);
     if (self_locked)
         (void)pt_recursive_mutex_unlock_if_not_null(self_mutex);
-    return (ft_string::set_error(result));
+    return (this->set_error(result));
 }
 
 int32_t ft_string::append(const char *string) noexcept
@@ -637,13 +655,13 @@ int32_t ft_string::erase(ft_size_t index, ft_size_t count) noexcept
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         int32_t result = this->erase_buffer(index, count);
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-        return (ft_string::set_error(result));
+        return (this->set_error(result));
     }
     int32_t result = this->erase_buffer(index, count);
-    return (ft_string::set_error(result));
+    return (this->set_error(result));
 }
 
 int32_t ft_string::append(const char *string, ft_size_t length) noexcept
@@ -651,25 +669,25 @@ int32_t ft_string::append(const char *string, ft_size_t length) noexcept
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string::append(const char *, ft_size_t)");
     if (!string)
     {
-        ft_string::set_error(FT_ERR_INVALID_ARGUMENT);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     if (length == 0)
     {
-        ft_string::set_error(FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
     if (this->_mutex != ft_nullptr)
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         int32_t result = this->append_buffer(string, length);
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-        return (ft_string::set_error(result));
+        return (this->set_error(result));
     }
     int32_t result = this->append_buffer(string, length);
-    return (ft_string::set_error(result));
+    return (this->set_error(result));
 }
 
 int32_t ft_string::assign(ft_size_t count, char character) noexcept
@@ -679,13 +697,13 @@ int32_t ft_string::assign(ft_size_t count, char character) noexcept
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         int32_t result = this->assign_buffer(count, character);
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-        return (ft_string::set_error(result));
+        return (this->set_error(result));
     }
     int32_t result = this->assign_buffer(count, character);
-    return (ft_string::set_error(result));
+    return (this->set_error(result));
 }
 
 int32_t ft_string::assign(const char *string, ft_size_t length) noexcept
@@ -695,13 +713,13 @@ int32_t ft_string::assign(const char *string, ft_size_t length) noexcept
     {
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (ft_string::set_error(lock_error));
+            return (this->set_error(lock_error));
         int32_t result = this->assign_buffer(string, length);
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-        return (ft_string::set_error(result));
+        return (this->set_error(result));
     }
     int32_t result = this->assign_buffer(string, length);
-    return (ft_string::set_error(result));
+    return (this->set_error(result));
 }
 
 int32_t ft_string::resize_length(ft_size_t new_length) noexcept
@@ -812,6 +830,15 @@ ft_size_t ft_string::find(const ft_string &substring) const noexcept
     ft_bool other_locked = FT_FALSE;
     if (self_mutex != ft_nullptr && other_mutex != ft_nullptr)
     {
+        if (self_mutex == other_mutex)
+        {
+            int32_t lock_error = pt_recursive_mutex_lock_if_not_null(self_mutex);
+            if (lock_error != FT_ERR_SUCCESS)
+                return (ft_string::npos);
+            ft_size_t result = search_without_lock();
+            (void)pt_recursive_mutex_unlock_if_not_null(self_mutex);
+            return (result);
+        }
         pt_recursive_mutex *first = self_mutex;
         pt_recursive_mutex *second = other_mutex;
         ft_bool first_is_self = FT_TRUE;
@@ -879,13 +906,13 @@ ft_string *ft_string::substr(ft_size_t index, ft_size_t count) const noexcept
     substring = new (std::nothrow) ft_string();
     if (substring == ft_nullptr)
     {
-        ft_string::set_error(FT_ERR_NO_MEMORY);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     if (substring->initialize() != FT_ERR_SUCCESS)
     {
         delete substring;
-        ft_string::set_error(FT_ERR_INITIALIZATION_FAILED);
+        this->set_error(FT_ERR_INITIALIZATION_FAILED);
         return (ft_nullptr);
     }
     if (this->_mutex != ft_nullptr)
@@ -893,8 +920,10 @@ ft_string *ft_string::substr(ft_size_t index, ft_size_t count) const noexcept
         int32_t lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
         {
-            ft_string::set_error(lock_error);
-            return (substring);
+            this->set_error(lock_error);
+            (void)substring->destroy();
+            delete substring;
+            return (ft_nullptr);
         }
     }
     if (index > this->_length)
@@ -909,13 +938,15 @@ ft_string *ft_string::substr(ft_size_t index, ft_size_t count) const noexcept
         copy_length = available_length;
     if (copy_length > 0)
     {
-        if (substring->assign(this->_data + index, copy_length) != FT_ERR_SUCCESS)
+        int32_t assignment_error = substring->assign(this->_data + index, copy_length);
+        if (assignment_error != FT_ERR_SUCCESS)
         {
             if (this->_mutex != ft_nullptr)
                 (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-            substring->destroy();
-            ft_string::set_error(FT_ERR_NO_MEMORY);
-            return (substring);
+            (void)substring->destroy();
+            delete substring;
+            this->set_error(assignment_error);
+            return (ft_nullptr);
         }
     }
     if (this->_mutex != ft_nullptr)
@@ -933,21 +964,21 @@ ft_string &ft_string::operator+=(const ft_string &string) noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string::operator+=(const ft_string &)");
     errno_abort_if_uninitialised_or_destroyed(string._initialised_state, "ft_string::operator+=(const ft_string &) source");
-    ft_string::set_error(this->append(string));
+    this->set_error(this->append(string));
     return (*this);
 }
 
 ft_string &ft_string::operator+=(const char *string) noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string::operator+=(const char *)");
-    ft_string::set_error(this->append(string));
+    this->set_error(this->append(string));
     return (*this);
 }
 
 ft_string &ft_string::operator+=(char character) noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string::operator+=(char)");
-    ft_string::set_error(this->append(character));
+    this->set_error(this->append(character));
     return (*this);
 }
 
@@ -959,7 +990,7 @@ ft_bool ft_string::operator==(const ft_string &other) const noexcept
     errno_abort_if_uninitialised_or_destroyed(other._initialised_state, "ft_string::operator==(const ft_string &) source");
     if (this->_length != other._length)
     {
-        ft_string::set_error(FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_FALSE);
     }
     index = 0;
@@ -967,12 +998,12 @@ ft_bool ft_string::operator==(const ft_string &other) const noexcept
     {
         if (this->_data[index] != other._data[index])
         {
-            ft_string::set_error(FT_ERR_SUCCESS);
+            this->set_error(FT_ERR_SUCCESS);
             return (FT_FALSE);
         }
         index++;
     }
-    ft_string::set_error(FT_ERR_SUCCESS);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_TRUE);
 }
 
@@ -983,7 +1014,7 @@ ft_bool ft_string::operator==(const char *string) const noexcept
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string::operator==(const char *)");
     if (string == ft_nullptr)
     {
-        ft_string::set_error(FT_ERR_INVALID_ARGUMENT);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_FALSE);
     }
     index = 0;
@@ -991,17 +1022,17 @@ ft_bool ft_string::operator==(const char *string) const noexcept
     {
         if (this->_data[index] != string[index])
         {
-            ft_string::set_error(FT_ERR_SUCCESS);
+            this->set_error(FT_ERR_SUCCESS);
             return (FT_FALSE);
         }
         index++;
     }
     if (index != this->_length || string[index] != '\0')
     {
-        ft_string::set_error(FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_FALSE);
     }
-    ft_string::set_error(FT_ERR_SUCCESS);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_TRUE);
 }
 
@@ -1020,10 +1051,10 @@ char ft_string::operator[](ft_size_t index) const noexcept
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_string::operator[]");
     if (index >= this->_length)
     {
-        ft_string::set_error(FT_ERR_OUT_OF_RANGE);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return ('\0');
     }
-    ft_string::set_error(FT_ERR_SUCCESS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_data[index]);
 }
 
@@ -1040,7 +1071,6 @@ ft_string_proxy::ft_string_proxy() noexcept
         this->_last_error = initialization_error;
     if (this->_value.get_error() != FT_ERR_SUCCESS)
         this->_last_error = this->_value.get_error();
-    ft_string::set_error(this->_last_error);
     return ;
 }
 
@@ -1057,7 +1087,6 @@ ft_string_proxy::ft_string_proxy(int32_t error_code) noexcept
         this->_last_error = initialization_error;
     if (this->_value.get_error() != FT_ERR_SUCCESS)
         this->_last_error = this->_value.get_error();
-    ft_string::set_error(this->_last_error);
     return ;
 }
 
@@ -1071,7 +1100,6 @@ ft_string_proxy::ft_string_proxy(const ft_string &value, int32_t error_code) noe
         this->_last_error = this->_value.get_error();
     if (this->_value.get_error() != FT_ERR_SUCCESS)
         this->_last_error = this->_value.get_error();
-    ft_string::set_error(this->_last_error);
     return ;
 }
 
@@ -1085,7 +1113,6 @@ ft_string_proxy::ft_string_proxy(const ft_string_proxy &other) noexcept
         this->_last_error = this->_value.get_error();
     if (this->_value.get_error() != FT_ERR_SUCCESS)
         this->_last_error = this->_value.get_error();
-    ft_string::set_error(this->_last_error);
     return ;
 }
 
@@ -1101,7 +1128,6 @@ ft_string_proxy::ft_string_proxy(ft_string_proxy &&other) noexcept
     other._last_error = FT_ERR_SUCCESS;
     if (this->_value.get_error() != FT_ERR_SUCCESS)
         this->_last_error = this->_value.get_error();
-    ft_string::set_error(this->_last_error);
     return ;
 }
 
@@ -1120,8 +1146,6 @@ ft_string_proxy::error_restorer::error_restorer(
 
 ft_string_proxy::error_restorer::~error_restorer() noexcept
 {
-    if (this->_error_pointer != ft_nullptr)
-        ft_string::set_error(*this->_error_pointer);
     return ;
 }
 
@@ -1161,13 +1185,11 @@ ft_string_proxy::operator ft_string *() const noexcept
     result = new (std::nothrow) ft_string();
     if (result == ft_nullptr)
     {
-        ft_string::set_error(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     if (result->initialize(this->_value) != FT_ERR_SUCCESS)
     {
         delete result;
-        ft_string::set_error(FT_ERR_INITIALIZATION_FAILED);
         return (ft_nullptr);
     }
     return (result);
@@ -1188,23 +1210,23 @@ ft_string &ft_string::operator=(const ft_string_proxy &other) noexcept
         assignment_error = this->destroy();
         if (assignment_error != FT_ERR_SUCCESS)
         {
-            ft_string::set_error(assignment_error);
+            this->set_error(assignment_error);
             return (*this);
         }
-        ft_string::set_error(other.get_error());
+        this->set_error(other.get_error());
         return (*this);
     }
     other_value = static_cast<ft_string *>(other);
     if (other_value == ft_nullptr)
     {
-        ft_string::set_error(FT_ERR_NO_MEMORY);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (*this);
     }
     assignment_error = this->operator=(*other_value).get_error();
     (void)other_value->destroy();
     delete other_value;
     if (assignment_error != FT_ERR_SUCCESS)
-        ft_string::set_error(assignment_error);
+        this->set_error(assignment_error);
     return (*this);
 }
 

@@ -23,16 +23,11 @@ class ft_string
         ft_size_t                _capacity;
         mutable pt_recursive_mutex *_mutex;
         mutable uint8_t            _initialised_state;
-        static thread_local int32_t _last_error;
-        static thread_local uint8_t _last_initialised_state;
+        mutable int32_t            _last_error;
 
-        static int32_t set_error(int32_t error_code) noexcept;
+        int32_t set_error(int32_t error_code) const noexcept;
         friend class ft_string_proxy;
 
-
-        int32_t     enable_thread_safety(void) noexcept;
-        int32_t     disable_thread_safety(void) noexcept;
-        ft_bool        is_thread_safe(void) const noexcept;
 
         int32_t     resize(ft_size_t new_capacity) noexcept;
         static void sleep_backoff() noexcept;
@@ -77,6 +72,9 @@ class ft_string
         int32_t initialize(ft_string &&other) noexcept;
         int32_t destroy() noexcept;
 
+        int32_t     enable_thread_safety(void) noexcept;
+        int32_t     disable_thread_safety(void) noexcept;
+        ft_bool     is_thread_safe(void) const noexcept;
         int32_t      append(char character) noexcept;
         int32_t      append(const char *string) noexcept;
         int32_t      append(const char *string, ft_size_t length) noexcept;
@@ -103,8 +101,8 @@ class ft_string
         static ft_string *from_error(int32_t error_code) noexcept;
 
         static const ft_size_t npos = static_cast<ft_size_t>(-1);
-        static int32_t get_error() noexcept;
-        static const char  *get_error_str() noexcept;
+        int32_t get_error() const noexcept;
+        const char  *get_error_str() const noexcept;
 
 };
 

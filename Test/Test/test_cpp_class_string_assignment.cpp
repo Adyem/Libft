@@ -9,6 +9,7 @@ FT_TEST(test_cpp_class_string_assigns_from_literal)
 {
     ft_string target;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize());
     ft_string &result = (target = "hello");
     FT_ASSERT(&result == &target);
     FT_ASSERT(target == "hello");
@@ -50,5 +51,16 @@ FT_TEST(test_cpp_class_string_char_prefix_concatenation)
     prefixed = '!' + base;
     FT_ASSERT(prefixed == "!core");
     FT_ASSERT(base == "core");
+    return (1);
+}
+
+FT_TEST(test_cpp_class_string_self_append_preserves_source)
+{
+    ft_string target;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize("abcdefghijklmnop"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.append(target));
+    FT_ASSERT(target == "abcdefghijklmnopabcdefghijklmnop");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.destroy());
     return (1);
 }

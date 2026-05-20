@@ -186,6 +186,14 @@ static void string_call_move_assign_from_uninitialised(void)
     return ;
 }
 
+static void string_call_literal_assign_uninitialised(void)
+{
+    ft_string string_value;
+
+    string_value = "value";
+    return ;
+}
+
 FT_TEST(test_ft_string_uninitialised_destructor_noop)
 {
     FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialised(string_call_destructor_uninitialised));
@@ -243,5 +251,12 @@ FT_TEST(test_ft_string_move_assign_from_uninitialised_source_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
         string_call_move_assign_from_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_ft_string_literal_assign_uninitialised_destination_aborts)
+{
+    FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
+        string_call_literal_assign_uninitialised));
     return (1);
 }

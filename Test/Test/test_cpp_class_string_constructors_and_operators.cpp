@@ -22,6 +22,20 @@ FT_TEST(test_cpp_class_string_initialize_copy_move_paths)
     return (1);
 }
 
+FT_TEST(test_cpp_class_string_initialize_replaces_existing_destination)
+{
+    ft_string source_value;
+    ft_string destination_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("source"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.initialize("old"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.initialize(source_value));
+    FT_ASSERT_EQ(0, ft_strcmp("source", destination_value.c_str()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_value.destroy());
+    return (1);
+}
+
 FT_TEST(test_cpp_class_string_copy_and_move_assignment)
 {
     ft_string left_value;

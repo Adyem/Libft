@@ -29,3 +29,18 @@ FT_TEST(test_cpp_class_string_destroy_cleans_thread_safety_state)
     FT_ASSERT_EQ(FT_FALSE, string_value.is_thread_safe());
     return (1);
 }
+
+FT_TEST(test_cpp_class_string_find_self_unlocks_recursive_mutex)
+{
+    ft_string string_value;
+    ft_size_t found_index;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.initialize("abcabc"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.enable_thread_safety());
+    found_index = string_value.find(string_value);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), found_index);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.append("d"));
+    FT_ASSERT_EQ(0, ft_strcmp("abcabcd", string_value.c_str()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
+    return (1);
+}

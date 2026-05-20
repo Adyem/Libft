@@ -23,8 +23,10 @@ FT_TEST(test_rng_seed_override_from_environment)
     original_value = su_getenv(environment_name);
     if (original_value != ft_nullptr && *original_value != '\0')
     {
+        if (original_copy.initialize() != FT_ERR_SUCCESS)
+            return (0);
         original_copy = original_value;
-        if (ft_string::get_error() != FT_ERR_SUCCESS)
+        if (original_copy.get_error() != FT_ERR_SUCCESS)
             return (0);
         restore_original = true;
     }

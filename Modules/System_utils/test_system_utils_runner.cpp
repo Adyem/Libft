@@ -83,7 +83,7 @@ static int32_t ensure_test_capacity(int32_t required_capacity)
     }
     allocation_size = sizeof(s_test_case)
         * static_cast<ft_size_t>(new_capacity);
-    new_tests = std::realloc(*tests, static_cast<size_t>(allocation_size));
+    new_tests = std::realloc(*tests, allocation_size);
     if (new_tests == NULL)
         return (FT_ERR_NO_MEMORY);
     *tests = static_cast<s_test_case *>(new_tests);
