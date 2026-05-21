@@ -31,7 +31,7 @@ struct api_pooled_connection
     ft_bool negotiated_http2;
     int64_t idle_timestamp_ms;
 
-    static void *operator new(ft_size_t size) noexcept
+    static void *operator new(std::size_t size) noexcept
     {
         void *pointer;
 
@@ -39,7 +39,7 @@ struct api_pooled_connection
         return (pointer);
     }
 
-    static void *operator new(ft_size_t size, const std::nothrow_t&) noexcept
+    static void *operator new(std::size_t size, const std::nothrow_t&) noexcept
     {
         return (api_pooled_connection::operator new(size));
     }

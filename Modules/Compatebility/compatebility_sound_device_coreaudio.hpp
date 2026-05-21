@@ -26,8 +26,8 @@ class ft_sound_device_coreaudio : public ft_sound_device
 
     public:
         ft_sound_device_coreaudio(void);
-        ft_sound_device_coreaudio(const ft_sound_device_coreaudio &other);
-        ft_sound_device_coreaudio(ft_sound_device_coreaudio &&other);
+        ft_sound_device_coreaudio(const ft_sound_device_coreaudio &other) = delete;
+        ft_sound_device_coreaudio(ft_sound_device_coreaudio &&other) = delete;
         ft_sound_device_coreaudio &operator=(const ft_sound_device_coreaudio &other) = delete;
         ft_sound_device_coreaudio &operator=(ft_sound_device_coreaudio &&other) = delete;
         ~ft_sound_device_coreaudio(void);

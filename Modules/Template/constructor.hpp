@@ -7,8 +7,6 @@
 #include <utility>
 #include <new>
 
-constexpr auto* placement_new_ref = static_cast<void* (*)(ft_size_t, void*)>(&::operator new);
-
 template <typename T, typename... Args>
 constexpr T* construct_at(T* destination, Args&&... args)
 {

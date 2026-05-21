@@ -43,32 +43,6 @@ ft_sound_device_coreaudio::ft_sound_device_coreaudio(void)
     return ;
 }
 
-ft_sound_device_coreaudio::ft_sound_device_coreaudio(
-    const ft_sound_device_coreaudio &other)
-    : ft_sound_device(other)
-{
-    (void)other;
-    this->_audio_queue = ft_nullptr;
-    this->_is_running = FT_FALSE;
-    memset(&this->_spec, 0, sizeof(this->_spec));
-    this->_current_clip = ft_nullptr;
-    this->_playback_pos = 0;
-    return ;
-}
-
-ft_sound_device_coreaudio::ft_sound_device_coreaudio(
-    ft_sound_device_coreaudio &&other)
-    : ft_sound_device(static_cast<ft_sound_device &&>(other))
-{
-    (void)other;
-    this->_audio_queue = ft_nullptr;
-    this->_is_running = FT_FALSE;
-    memset(&this->_spec, 0, sizeof(this->_spec));
-    this->_current_clip = ft_nullptr;
-    this->_playback_pos = 0;
-    return ;
-}
-
 ft_sound_device_coreaudio::~ft_sound_device_coreaudio(void)
 {
     this->close();

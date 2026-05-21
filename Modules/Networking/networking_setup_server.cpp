@@ -18,6 +18,10 @@
 # include <sys/socket.h>
 #endif
 
+#if !defined(IPV6_ADD_MEMBERSHIP) && defined(IPV6_JOIN_GROUP)
+# define IPV6_ADD_MEMBERSHIP IPV6_JOIN_GROUP
+#endif
+
 #ifdef _WIN32
 static inline int32_t setsockopt_reuse(int32_t file_descriptor, int32_t option_value)
 {

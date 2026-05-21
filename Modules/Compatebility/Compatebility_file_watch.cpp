@@ -59,6 +59,7 @@ static int32_t cmp_file_watch_translate_error(void)
     return (error_code);
 }
 
+#if defined(__linux__)
 static file_watch_event_type cmp_file_watch_translate_inotify_mask(uint32_t mask)
 {
     if (mask & IN_CREATE)
@@ -67,17 +68,18 @@ static file_watch_event_type cmp_file_watch_translate_inotify_mask(uint32_t mask
         return (FILE_WATCH_EVENT_DELETE);
     return (FILE_WATCH_EVENT_MODIFY);
 }
+#endif
 
- #if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
 static file_watch_event_type cmp_file_watch_translate_bsd_flags(uint32_t flags)
 {
     if (flags & NOTE_DELETE)
         return (FILE_WATCH_EVENT_DELETE);
     return (FILE_WATCH_EVENT_MODIFY);
 }
- #endif
+#endif
 
- #if defined(_WIN32)
+#if defined(_WIN32)
 static file_watch_event_type cmp_file_watch_translate_windows_action(DWORD action)
 {
     if (action == FILE_ACTION_ADDED)
@@ -86,7 +88,7 @@ static file_watch_event_type cmp_file_watch_translate_windows_action(DWORD actio
         return (FILE_WATCH_EVENT_DELETE);
     return (FILE_WATCH_EVENT_MODIFY);
 }
- #endif
+#endif
 
 cmp_file_watch_context *cmp_file_watch_create(void)
 {

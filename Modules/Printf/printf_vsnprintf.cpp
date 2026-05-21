@@ -10,9 +10,14 @@ typedef FILE *(*t_pf_tmpfile_function)(void);
 typedef int32_t (*t_pf_fflush_function)(FILE *);
 typedef int64_t (*t_pf_ftell_function)(FILE *);
 
+static int64_t pf_default_ftell(FILE *stream)
+{
+    return (static_cast<int64_t>(ftell(stream)));
+}
+
 static t_pf_tmpfile_function g_pf_tmpfile_function = tmpfile;
 static t_pf_fflush_function g_pf_fflush_function = fflush;
-static t_pf_ftell_function g_pf_ftell_function = ftell;
+static t_pf_ftell_function g_pf_ftell_function = pf_default_ftell;
 
 void pf_set_tmpfile_function(t_pf_tmpfile_function function)
 {
@@ -66,7 +71,7 @@ int32_t pf_flush_stream(FILE *stream)
 void pf_set_ftell_function(t_pf_ftell_function function)
 {
     if (function == ft_nullptr)
-        g_pf_ftell_function = ftell;
+        g_pf_ftell_function = pf_default_ftell;
     else
         g_pf_ftell_function = function;
     return ;
@@ -74,7 +79,7 @@ void pf_set_ftell_function(t_pf_ftell_function function)
 
 void pf_reset_ftell_function(void)
 {
-    g_pf_ftell_function = ftell;
+    g_pf_ftell_function = pf_default_ftell;
     return ;
 }
 

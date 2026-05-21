@@ -21,7 +21,7 @@ int32_t kv_store::encrypt_value(const ft_string &plain_string, ft_string &encode
     uint8_t counter_block[16];
     ft_size_t counter_index;
     unsigned char *encoded_buffer;
-    ft_size_t encoded_size;
+    std::size_t encoded_size;
     ft_size_t output_index;
     ft_size_t byte_index;
     uint64_t block_counter;
@@ -98,7 +98,7 @@ int32_t kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plai
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::decrypt_value");
     unsigned char *decoded_buffer;
-    ft_size_t decoded_size;
+    std::size_t decoded_size;
     uint8_t header_plain[16];
     uint8_t expected_header[16];
     ft_size_t header_index;

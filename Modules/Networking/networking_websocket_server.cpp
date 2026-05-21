@@ -294,7 +294,7 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
 {
     unsigned char digest[20];
     unsigned char *encoded;
-    ft_size_t encoded_size;
+    std::size_t encoded_size;
     ft_string magic;
     int32_t initialize_error;
 

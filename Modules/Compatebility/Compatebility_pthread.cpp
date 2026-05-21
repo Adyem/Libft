@@ -95,6 +95,26 @@ struct cmp_wait_entry
 static pthread_mutex_t g_wait_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cmp_wait_entry *g_wait_list_head = ft_nullptr;
 
+static int32_t pt_pthread_mutex_lock_with_error(pthread_mutex_t *mutex) noexcept
+{
+    int32_t lock_result;
+
+    lock_result = pthread_mutex_lock(mutex);
+    if (lock_result != 0)
+        return (cmp_map_system_error_to_ft(lock_result));
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t pt_pthread_mutex_unlock_with_error(pthread_mutex_t *mutex) noexcept
+{
+    int32_t unlock_result;
+
+    unlock_result = pthread_mutex_unlock(mutex);
+    if (unlock_result != 0)
+        return (cmp_map_system_error_to_ft(unlock_result));
+    return (FT_ERR_SUCCESS);
+}
+
 static cmp_wait_entry *cmp_wait_lookup_entry(std::atomic<uint32_t> *address) noexcept
 {
     cmp_wait_entry *current_entry;

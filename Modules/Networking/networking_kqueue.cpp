@@ -1,5 +1,6 @@
 #include "networking.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <unistd.h>
 #include <sys/event.h>
@@ -24,7 +25,7 @@ int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
     kqueue_descriptor = kqueue();
     if (kqueue_descriptor == -1)
     {
-        (void)(ft_map_system_error(errno));
+        (void)(cmp_map_system_error_to_ft(errno));
         return (-1);
     }
     index = 0;
@@ -37,7 +38,7 @@ int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
 
             last_error = errno;
             close(kqueue_descriptor);
-            (void)(ft_map_system_error(last_error));
+            (void)(cmp_map_system_error_to_ft(last_error));
             return (-1);
         }
         index++;
@@ -52,7 +53,7 @@ int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
 
             last_error = errno;
             close(kqueue_descriptor);
-            (void)(ft_map_system_error(last_error));
+            (void)(cmp_map_system_error_to_ft(last_error));
             return (-1);
         }
         index++;
@@ -84,7 +85,7 @@ int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
         if (ready_descriptors == 0)
             (void)(FT_ERR_SUCCESS);
         else
-            (void)(ft_map_system_error(wait_error));
+            (void)(cmp_map_system_error_to_ft(wait_error));
         return (ready_descriptors);
     }
     ready_index = 0;

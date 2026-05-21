@@ -23,7 +23,7 @@ static bool compute_wait_deadline(const struct timespec &relative_time, struct t
         *error_code = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
-#if defined(CLOCK_MONOTONIC)
+#if defined(CLOCK_MONOTONIC) && !defined(__APPLE__)
     if (clock_gettime(CLOCK_MONOTONIC, &current_time) != 0)
 #else
     if (clock_gettime(CLOCK_REALTIME, &current_time) != 0)
@@ -85,7 +85,7 @@ int pt_condition_variable::ensure_native_sync_objects()
         this->_mutex_initialised = true;
         mutex_created = true;
     }
-#if defined(CLOCK_MONOTONIC)
+#if defined(CLOCK_MONOTONIC) && !defined(__APPLE__)
     pthread_condattr_t condition_attributes;
 
     native_error = pthread_condattr_init(&condition_attributes);

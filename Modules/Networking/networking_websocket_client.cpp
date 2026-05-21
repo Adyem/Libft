@@ -25,7 +25,7 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
 {
     unsigned char digest[20];
     unsigned char *encoded;
-    ft_size_t encoded_size;
+    std::size_t encoded_size;
     ft_string magic;
     int32_t initialize_error;
 
@@ -200,7 +200,7 @@ int32_t ft_websocket_client::perform_handshake_locked(const char *host, const ch
     ft_string accept_key;
     ft_string expected;
     unsigned char random_key[16];
-    ft_size_t encoded_size;
+    std::size_t encoded_size;
     unsigned char *encoded_key;
     int32_t socket_fd;
     const char *request_data;

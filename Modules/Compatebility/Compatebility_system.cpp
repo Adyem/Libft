@@ -929,7 +929,7 @@ uint32_t cmp_get_cpu_count(void)
     return (system_info.dwNumberOfProcessors);
 #elif defined(__APPLE__) && defined(__MACH__)
     int32_t cpu_count;
-    ft_size_t size;
+    size_t size;
 
     size = sizeof(cpu_count);
     errno = 0;
@@ -1002,7 +1002,7 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
     return (FT_ERR_SUCCESS);
 #elif defined(__APPLE__) && defined(__MACH__)
     uint64_t memory_size;
-    ft_size_t size;
+    size_t size;
 
     size = sizeof(memory_size);
     errno = 0;

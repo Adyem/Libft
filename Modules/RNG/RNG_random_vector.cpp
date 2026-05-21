@@ -1,7 +1,9 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
 #include <random>
-#include <immintrin.h>
+#if defined(__SSE__) || defined(__SSE2__)
+# include <immintrin.h>
+#endif
 
 static void ft_random_store_int_block(int32_t *output_values, const int32_t *generated_values) noexcept
 {
