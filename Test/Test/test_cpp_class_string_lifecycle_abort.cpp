@@ -115,6 +115,24 @@ static void string_call_append_uninitialised(ft_string &string_value)
     return ;
 }
 
+static void string_call_enable_thread_safety_uninitialised(ft_string &string_value)
+{
+    (void)string_value.enable_thread_safety();
+    return ;
+}
+
+static void string_call_disable_thread_safety_uninitialised(ft_string &string_value)
+{
+    (void)string_value.disable_thread_safety();
+    return ;
+}
+
+static void string_call_is_thread_safe_uninitialised(ft_string &string_value)
+{
+    (void)string_value.is_thread_safe();
+    return ;
+}
+
 static void string_call_initialize_twice(void)
 {
     ft_string string_value;
@@ -209,6 +227,27 @@ FT_TEST(test_ft_string_uninitialised_destroy_noop)
 FT_TEST(test_ft_string_uninitialised_append_aborts)
 {
     FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialised(string_call_append_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_ft_string_uninitialised_enable_thread_safety_aborts)
+{
+    FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialised(
+        string_call_enable_thread_safety_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_ft_string_uninitialised_disable_thread_safety_aborts)
+{
+    FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialised(
+        string_call_disable_thread_safety_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_ft_string_uninitialised_is_thread_safe_aborts)
+{
+    FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialised(
+        string_call_is_thread_safe_uninitialised));
     return (1);
 }
 

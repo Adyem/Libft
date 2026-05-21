@@ -12,7 +12,7 @@ typedef int64_t (*t_pf_ftell_function)(FILE *);
 
 static int64_t pf_default_ftell(FILE *stream)
 {
-    return (static_cast<int64_t>(ftell(stream)));
+    return (ftell(stream));
 }
 
 static t_pf_tmpfile_function g_pf_tmpfile_function = tmpfile;

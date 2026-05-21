@@ -15,6 +15,8 @@ void ft_string::sleep_backoff() noexcept
 
 int32_t ft_string::enable_thread_safety() noexcept
 {
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_string::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (this->set_error(FT_ERR_SUCCESS));
     pt_recursive_mutex *mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -32,6 +34,8 @@ int32_t ft_string::enable_thread_safety() noexcept
 
 int32_t ft_string::disable_thread_safety() noexcept
 {
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_string::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
         return (this->set_error(FT_ERR_SUCCESS));
     int32_t destroy_error = this->_mutex->destroy();
@@ -42,6 +46,8 @@ int32_t ft_string::disable_thread_safety() noexcept
 
 ft_bool ft_string::is_thread_safe() const noexcept
 {
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "ft_string::is_thread_safe");
     this->set_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
