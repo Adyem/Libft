@@ -32,6 +32,7 @@ int32_t game_state::initialize() noexcept
     int32_t characters_error;
     int32_t variables_error;
     int32_t hooks_error;
+    int32_t move_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -96,6 +97,17 @@ int32_t game_state::initialize() noexcept
         return (world->get_error());
     }
     this->_worlds.push_back(world);
+    if (this->_worlds.get_error() != FT_ERR_SUCCESS)
+    {
+        move_error = this->_worlds.get_error();
+        (void)this->_hooks.destroy();
+        (void)this->_worlds.destroy();
+        (void)this->_characters.destroy();
+        (void)this->_variables.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+        return (move_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -107,6 +119,7 @@ int32_t game_state::move(game_state &other) noexcept
     int32_t destroy_error;
     int32_t source_destroy_error;
     int32_t source_error;
+    int32_t move_error;
     ft_size_t index;
     ft_size_t count;
 
@@ -157,8 +170,12 @@ int32_t game_state::move(game_state &other) noexcept
         this->_worlds.push_back(other._worlds[index]);
         if (this->_worlds.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(this->_worlds.get_error());
-            return (this->_worlds.get_error());
+            move_error = this->_worlds.get_error();
+            this->set_error(move_error);
+            (void)this->destroy();
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            this->set_error(move_error);
+            return (move_error);
         }
         index++;
     }
@@ -170,22 +187,34 @@ int32_t game_state::move(game_state &other) noexcept
         this->_characters.push_back(other._characters[index]);
         if (this->_characters.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(this->_characters.get_error());
-            return (this->_characters.get_error());
+            move_error = this->_characters.get_error();
+            this->set_error(move_error);
+            (void)this->destroy();
+            this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+            this->set_error(move_error);
+            return (move_error);
         }
         index++;
     }
     this->_variables = other._variables;
     if (this->_variables.get_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(this->_variables.get_error());
-        return (this->_variables.get_error());
+        move_error = this->_variables.get_error();
+        this->set_error(move_error);
+        (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+        return (move_error);
     }
     this->_hooks = other._hooks;
     if (this->_hooks.get_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(this->_hooks.get_error());
-        return (this->_hooks.get_error());
+        move_error = this->_hooks.get_error();
+        this->set_error(move_error);
+        (void)this->destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+        return (move_error);
     }
     source_error = other.get_error();
     source_destroy_error = other.destroy();
@@ -308,9 +337,25 @@ void game_state::set_variable(const ft_string &key, const ft_string &value) noex
     }
     entry = this->_variables.find(key);
     if (entry != this->_variables.end())
+    {
         entry->value = value;
+        if (entry->value.get_error() != FT_ERR_SUCCESS)
+        {
+            this->set_error(entry->value.get_error());
+            this->unlock_internal(lock_acquired);
+            return ;
+        }
+    }
     else
+    {
         this->_variables.insert(key, value);
+        if (this->_variables.get_error() != FT_ERR_SUCCESS)
+        {
+            this->set_error(this->_variables.get_error());
+            this->unlock_internal(lock_acquired);
+            return ;
+        }
+    }
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
@@ -401,6 +446,12 @@ int32_t game_state::add_character(const ft_sharedptr<game_character> &character)
         return (this->get_error());
     }
     this->_characters.push_back(character);
+    if (this->_characters.get_error() != FT_ERR_SUCCESS)
+    {
+        this->set_error(this->_characters.get_error());
+        this->unlock_internal(lock_acquired);
+        return (this->get_error());
+    }
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (this->get_error());

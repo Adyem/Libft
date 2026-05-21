@@ -363,3 +363,52 @@ FT_TEST(test_game_event_scheduler_profile_counts_reschedules)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.last_error_code);
     return (1);
 }
+
+FT_TEST(test_game_event_scheduler_move_into_uninitialised_destination)
+{
+    game_event_scheduler source;
+    game_event_scheduler destination;
+    ft_sharedptr<game_event> event_pointer(new (std::nothrow) game_event());
+    ft_vector<ft_sharedptr<game_event> > moved_events;
+
+    FT_ASSERT(event_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event_pointer->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_events.initialize());
+    event_pointer->set_id(77);
+    event_pointer->set_duration(5);
+    source.schedule_event(event_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.move(source));
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, destination._initialised_state);
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source._initialised_state);
+    FT_ASSERT_EQ(FT_TRUE, destination.is_thread_safe());
+    destination.dump_events(moved_events);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(1), moved_events.size());
+    FT_ASSERT_EQ(77, moved_events[0]->get_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.disable_thread_safety());
+    return (1);
+}
+
+FT_TEST(test_game_event_scheduler_destroy_allows_reinitialize)
+{
+    game_event_scheduler scheduler;
+    ft_sharedptr<game_event> event_pointer(new (std::nothrow) game_event());
+    ft_vector<ft_sharedptr<game_event> > events;
+
+    FT_ASSERT(event_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event_pointer->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, events.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
+    event_pointer->set_id(88);
+    event_pointer->set_duration(4);
+    scheduler.schedule_event(event_pointer);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
+    scheduler.dump_events(events);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), events.size());
+    return (1);
+}

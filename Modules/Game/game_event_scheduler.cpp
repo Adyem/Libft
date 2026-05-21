@@ -217,29 +217,36 @@ int32_t game_event_scheduler::initialize() noexcept
 int32_t game_event_scheduler::destroy() noexcept
 {
     int32_t disable_error;
+    int32_t events_destroy_error;
+    int32_t ready_cache_destroy_error;
+    int32_t final_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    disable_error = this->disable_thread_safety();
     game_event_clear_queue(this->_events);
     game_event_clear_handle_vector(this->_ready_cache);
-    (void)this->_ready_cache.destroy();
+    events_destroy_error = this->_events.destroy();
+    ready_cache_destroy_error = this->_ready_cache.destroy();
     this->_profiling_enabled = FT_FALSE;
     event_scheduler_profile_reset_struct(this->_profile);
-    disable_error = this->disable_thread_safety();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    this->set_error(disable_error);
-    return (disable_error);
+    final_error = disable_error;
+    if (final_error == FT_ERR_SUCCESS && events_destroy_error != FT_ERR_SUCCESS)
+        final_error = events_destroy_error;
+    if (final_error == FT_ERR_SUCCESS && ready_cache_destroy_error != FT_ERR_SUCCESS)
+        final_error = ready_cache_destroy_error;
+    this->set_error(final_error);
+    return (final_error);
 }
 
 int32_t game_event_scheduler::move(game_event_scheduler &other) noexcept
 {
-    ft_sharedptr<game_event> *current_event;
-    ft_size_t index;
-    ft_size_t count;
     int32_t destroy_error;
+    int32_t move_error;
 
     if (&other == this)
         return (FT_ERR_SUCCESS);
@@ -261,22 +268,22 @@ int32_t game_event_scheduler::move(game_event_scheduler &other) noexcept
         this->set_error(other.get_error());
         return (FT_ERR_SUCCESS);
     }
-    game_event_clear_queue(this->_events);
-    while (!other._events.empty())
+    move_error = this->_events.move(other._events);
+    if (move_error != FT_ERR_SUCCESS)
     {
-        current_event = other._events.pop();
-        if (other._events.get_error() == FT_ERR_SUCCESS)
-            this->_events.push(current_event);
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+        return (move_error);
     }
-    game_event_clear_handle_vector(this->_ready_cache);
-    index = 0;
-    count = other._ready_cache.size();
-    while (index < count)
+    move_error = this->_ready_cache.move(other._ready_cache);
+    if (move_error != FT_ERR_SUCCESS)
     {
-        this->_ready_cache.push_back(other._ready_cache[index]);
-        index += 1;
+        game_event_clear_queue(this->_events);
+        (void)this->_events.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(move_error);
+        return (move_error);
     }
-    other._ready_cache.clear();
     this->_profiling_enabled = other._profiling_enabled;
     this->_profile = other._profile;
     this->_mutex = other._mutex;
@@ -744,6 +751,7 @@ int32_t game_event_scheduler::enable_thread_safety() noexcept
 
 int32_t game_event_scheduler::disable_thread_safety() noexcept
 {
+    pt_recursive_mutex *mutex_pointer;
     int32_t destroy_error;
 
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
@@ -756,9 +764,10 @@ int32_t game_event_scheduler::disable_thread_safety() noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    destroy_error = this->_mutex->destroy();
-    delete this->_mutex;
+    mutex_pointer = this->_mutex;
     this->_mutex = ft_nullptr;
+    destroy_error = mutex_pointer->destroy();
+    delete mutex_pointer;
     this->set_error(destroy_error);
     return (destroy_error);
 }

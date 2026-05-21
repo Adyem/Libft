@@ -4,6 +4,7 @@
 #include "../../Modules/Template/shared_ptr.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/CMA/CMA.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -91,5 +92,80 @@ FT_TEST(test_game_state_thread_safety_toggle)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(false, state.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
+    return (1);
+}
+
+FT_TEST(test_game_state_move_failure_destroys_destination)
+{
+    game_state source;
+    game_state destination;
+    ft_size_t world_index;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    world_index = 0;
+    while (world_index < 8)
+    {
+        ft_sharedptr<game_world> world_pointer(new (std::nothrow) game_world());
+
+        FT_ASSERT(world_pointer.get() != ft_nullptr);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, world_pointer->initialize());
+        source.get_worlds().push_back(world_pointer);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_worlds().get_error());
+        world_index += 1;
+    }
+    FT_ASSERT_EQ(static_cast<ft_size_t>(9), source.get_worlds().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(1));
+    FT_ASSERT_NE(FT_ERR_SUCCESS, destination.move(source));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(0));
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, destination._initialised_state);
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, source._initialised_state);
+    return (1);
+}
+
+FT_TEST(test_game_state_add_character_allocation_failure_reports_error)
+{
+    game_state state;
+    ft_sharedptr<game_character> characters[9];
+    ft_size_t character_index;
+    int32_t add_result;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
+    character_index = 0;
+    while (character_index < 9)
+    {
+        characters[character_index] = ft_sharedptr<game_character>(new (std::nothrow) game_character());
+        FT_ASSERT(characters[character_index].get() != ft_nullptr);
+        character_index += 1;
+    }
+    character_index = 0;
+    while (character_index < 8)
+    {
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, state.add_character(characters[character_index]));
+        character_index += 1;
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(1));
+    add_result = state.add_character(characters[8]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(0));
+    FT_ASSERT_NE(FT_ERR_SUCCESS, add_result);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(8), state.get_characters().size());
+    return (1);
+}
+
+FT_TEST(test_game_state_set_variable_insert_failure_reports_error)
+{
+    game_state state;
+    ft_string key;
+    ft_string value;
+    int32_t state_error;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, key.initialize("quest_stage_long_key"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize("active_stage_long_value"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(1));
+    state.set_variable(key, value);
+    state_error = state.get_error();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(0));
+    FT_ASSERT_NE(FT_ERR_SUCCESS, state_error);
+    FT_ASSERT(state.get_variable(key) == ft_nullptr);
     return (1);
 }

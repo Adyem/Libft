@@ -694,9 +694,12 @@ int32_t game_world::save_to_store(kv_store &store, const char *slot_key, const g
         return (this->get_error());
     }
     if (store.kv_set(slot_key, serialized_state) != 0)
-    {        cma_free(serialized_state);        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+    {
+        cma_free(serialized_state);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->get_error());
-    }    cma_free(serialized_state);
+    }
+    cma_free(serialized_state);
     if (store.kv_flush() != 0)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);

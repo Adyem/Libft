@@ -38,8 +38,6 @@ class game_server
         int32_t lock_internal(ft_bool *lock_acquired) const noexcept;
         int32_t unlock_internal(ft_bool lock_acquired) const noexcept;
         static int32_t set_error(int32_t error_code) noexcept;
-        int32_t get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 
     public:
         game_server() noexcept;
@@ -63,6 +61,8 @@ class game_server
 
         int32_t start(const char *ip, uint16_t port) noexcept;
         void run_once() noexcept;
+        int32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif
