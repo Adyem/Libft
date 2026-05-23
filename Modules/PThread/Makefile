@@ -30,12 +30,13 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_rwlock.cpp \
         pthread_task_scheduler.cpp \
         pthread_lock_tracking.cpp \
-        pthread_task_scheduler_tracing.cpp
+        pthread_task_scheduler_tracing.cpp \
+        pthread_concurrency.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp pthread_lock_tracking.hpp recursive_mutex.hpp
+HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp pthread_lock_tracking.hpp recursive_mutex.hpp concurrency.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

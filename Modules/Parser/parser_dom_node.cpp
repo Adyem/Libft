@@ -280,14 +280,18 @@ int32_t ft_dom_node::set_name(const ft_string &name) noexcept
 int32_t ft_dom_node::set_name(const char *name) noexcept
 {
     ft_string name_string;
+    int32_t string_error;
+    int32_t set_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_node::set_name(const char *)");
     if (name == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    name_string = name;
-    if (name_string.get_error() != FT_ERR_SUCCESS)
-        return (name_string.get_error());
-    return (this->set_name(name_string));
+    string_error = name_string.initialize(name);
+    if (string_error != FT_ERR_SUCCESS)
+        return (string_error);
+    set_error = this->set_name(name_string);
+    (void)name_string.destroy();
+    return (set_error);
 }
 
 const ft_string &ft_dom_node::get_name() const noexcept
@@ -316,14 +320,18 @@ int32_t ft_dom_node::set_value(const ft_string &value) noexcept
 int32_t ft_dom_node::set_value(const char *value) noexcept
 {
     ft_string value_string;
+    int32_t string_error;
+    int32_t set_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_node::set_value(const char *)");
     if (value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    value_string = value;
-    if (value_string.get_error() != FT_ERR_SUCCESS)
-        return (value_string.get_error());
-    return (this->set_value(value_string));
+    string_error = value_string.initialize(value);
+    if (string_error != FT_ERR_SUCCESS)
+        return (string_error);
+    set_error = this->set_value(value_string);
+    (void)value_string.destroy();
+    return (set_error);
 }
 
 const ft_string &ft_dom_node::get_value() const noexcept
@@ -394,17 +402,25 @@ int32_t ft_dom_node::add_attribute(const char *key, const char *value) noexcept
 {
     ft_string key_string;
     ft_string value_string;
+    int32_t string_error;
+    int32_t add_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_dom_node::add_attribute(const char *,const char *)");
     if (key == ft_nullptr || value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    key_string = key;
-    if (key_string.get_error() != FT_ERR_SUCCESS)
-        return (key_string.get_error());
-    value_string = value;
-    if (value_string.get_error() != FT_ERR_SUCCESS)
-        return (value_string.get_error());
-    return (this->add_attribute(key_string, value_string));
+    string_error = key_string.initialize(key);
+    if (string_error != FT_ERR_SUCCESS)
+        return (string_error);
+    string_error = value_string.initialize(value);
+    if (string_error != FT_ERR_SUCCESS)
+    {
+        (void)key_string.destroy();
+        return (string_error);
+    }
+    add_error = this->add_attribute(key_string, value_string);
+    (void)value_string.destroy();
+    (void)key_string.destroy();
+    return (add_error);
 }
 
 ft_bool ft_dom_node::has_attribute(const ft_string &key) const noexcept

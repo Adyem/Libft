@@ -7,6 +7,7 @@
 #endif
 #include "../Basic/basic.hpp"
 #include "../File/open_dir.hpp"
+#include "../File/file_utils.hpp"
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -79,15 +80,21 @@ int32_t cmp_directory_exists(const char *path, int32_t *exists_out,
     int32_t *error_code_out);
 char cmp_path_separator(void);
 void cmp_normalize_slashes(char *data);
+ft_bool cmp_path_equal(const char *path_left, const char *path_right) noexcept;
+int32_t cmp_file_error_to_errno(int32_t system_error) noexcept;
 int32_t cmp_file_exists(const char *path, int32_t *exists_out,
     int32_t *error_code_out);
 int32_t cmp_file_delete(const char *path, int32_t *error_code_out);
 int32_t cmp_file_move(const char *source_path, const char *destination_path, int32_t *error_code_out);
 int32_t cmp_file_copy(const char *source_path, const char *destination_path, int32_t *error_code_out);
 int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_code_out);
+int32_t cmp_file_get_type(const char *path, file_type *type_out, int32_t *error_code_out);
+int32_t cmp_file_get_size(const char *path, ft_size_t *size_out, int32_t *error_code_out);
 int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *error_code_out);
 int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
     int32_t group_permissions, int32_t other_permissions, int32_t *error_code_out);
+int32_t cmp_file_sync(int32_t file_descriptor, int32_t *error_code_out);
+int32_t cmp_file_sync_directory(const char *path, int32_t *error_code_out);
 int32_t cmp_storage_write_memory_mapped_file(const char *location,
     const char *buffer, ft_size_t length);
 int32_t cmp_storage_read_memory_mapped_file(const char *location,

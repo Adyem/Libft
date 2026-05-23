@@ -291,3 +291,33 @@ ft_string *file_path_stem_string(const char *path)
 {
     return (file_path_to_heap_string(file_path_stem(path)));
 }
+
+ft_bool file_path_equal(const char *path_left, const char *path_right)
+{
+    ft_string *normalized_left;
+    ft_string *normalized_right;
+    ft_bool equal_result;
+
+    if (path_left == ft_nullptr || path_right == ft_nullptr)
+        return (FT_FALSE);
+    normalized_left = file_path_normalize(path_left);
+    if (normalized_left == ft_nullptr)
+        return (FT_FALSE);
+    normalized_right = file_path_normalize(path_right);
+    if (normalized_right == ft_nullptr)
+    {
+        (void)normalized_left->destroy();
+        delete normalized_left;
+        return (FT_FALSE);
+    }
+    if (normalized_left->get_error() != FT_ERR_SUCCESS
+        || normalized_right->get_error() != FT_ERR_SUCCESS)
+        equal_result = FT_FALSE;
+    else
+        equal_result = cmp_path_equal(normalized_left->c_str(), normalized_right->c_str());
+    (void)normalized_left->destroy();
+    delete normalized_left;
+    (void)normalized_right->destroy();
+    delete normalized_right;
+    return (equal_result);
+}

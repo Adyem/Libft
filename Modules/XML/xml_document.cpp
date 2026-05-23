@@ -955,6 +955,12 @@ int32_t xml_document::load_from_backend(ft_document_source &source) noexcept
     int32_t read_result;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "xml_document::load_from_backend");
+    read_result = content.initialize();
+    if (read_result != FT_ERR_SUCCESS)
+    {
+        this->record_operation_error(read_result);
+        return (read_result);
+    }
     read_result = source.read_all(content);
     if (read_result != FT_ERR_SUCCESS)
     {

@@ -323,8 +323,13 @@ int32_t xml_document_from_dom(const ft_dom_document &dom, xml_document &document
     }
     ft_string serialized;
 
-    serialized = "";
-    int32_t string_error = xml_dom_check_string_error(serialized);
+    int32_t string_error = serialized.initialize("");
+    if (string_error != FT_ERR_SUCCESS)
+    {
+        document.set_manual_error(string_error);
+        return (FT_ERR_INTERNAL);
+    }
+    string_error = xml_dom_check_string_error(serialized);
     if (string_error != FT_ERR_SUCCESS)
     {
         document.set_manual_error(string_error);

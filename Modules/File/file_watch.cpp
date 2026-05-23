@@ -1,14 +1,16 @@
 #include "file_watch.hpp"
 #include "../Compatebility/compatebility_file_watch.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Template/move.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 
 ft_file_watch::ft_file_watch()
-    : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(),
-    _running(FT_FALSE), _stopped(FT_TRUE), _mutex(ft_nullptr), _state(ft_nullptr),
-      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+    : _path(), _callback(ft_nullptr), _typed_callback(ft_nullptr),
+    _user_data(ft_nullptr), _thread(), _running(FT_FALSE), _stopped(FT_TRUE),
+    _debounce_milliseconds(0), _mutex(ft_nullptr), _state(ft_nullptr),
+    _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
     return ;
 }
@@ -28,9 +30,11 @@ int32_t ft_file_watch::initialize()
     if (this->_path.initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_NO_MEMORY);
     this->_callback = ft_nullptr;
+    this->_typed_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
     this->_running = FT_FALSE;
     this->_stopped = FT_TRUE;
+    this->_debounce_milliseconds = 0;
     this->_state = cmp_file_watch_create();
     if (this->_state == ft_nullptr)
     {
@@ -59,7 +63,9 @@ int32_t ft_file_watch::initialize(const ft_file_watch &other)
     if (this->initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
     this->_callback = other._callback;
+    this->_typed_callback = other._typed_callback;
     this->_user_data = other._user_data;
+    this->_debounce_milliseconds = other._debounce_milliseconds;
     this->_path = other._path;
     return (FT_ERR_SUCCESS);
 }
@@ -82,10 +88,14 @@ int32_t ft_file_watch::initialize(ft_file_watch &&other)
     if (this->initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
     this->_callback = other._callback;
+    this->_typed_callback = other._typed_callback;
     this->_user_data = other._user_data;
+    this->_debounce_milliseconds = other._debounce_milliseconds;
     this->_path = other._path;
     other._callback = ft_nullptr;
+    other._typed_callback = ft_nullptr;
     other._user_data = ft_nullptr;
+    other._debounce_milliseconds = 0;
     other._path.clear();
     return (FT_ERR_SUCCESS);
 }
@@ -158,17 +168,62 @@ ft_bool ft_file_watch::is_thread_safe() const
     return (this->_mutex != ft_nullptr);
 }
 
+int32_t ft_file_watch::set_debounce_milliseconds(uint32_t debounce_milliseconds)
+{
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_file_watch::set_debounce_milliseconds");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    this->_debounce_milliseconds = debounce_milliseconds;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t ft_file_watch::get_debounce_milliseconds() const
+{
+    uint32_t debounce_milliseconds;
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_file_watch::get_debounce_milliseconds");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (0);
+    debounce_milliseconds = this->_debounce_milliseconds;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (debounce_milliseconds);
+}
+
 int32_t ft_file_watch::watch_directory(const char *path,
-    void (*callback)(const char *, int32_t, void *), void *user_data)
+    file_watch_legacy_callback callback, void *user_data)
+{
+    return (this->watch_directory_internal(path, callback, ft_nullptr, user_data));
+}
+
+int32_t ft_file_watch::watch_directory(const char *path,
+    file_watch_callback callback, void *user_data)
+{
+    return (this->watch_directory_internal(path, ft_nullptr, callback, user_data));
+}
+
+int32_t ft_file_watch::watch_directory_internal(const char *path,
+    file_watch_legacy_callback legacy_callback, file_watch_callback typed_callback,
+    void *user_data)
 {
     ft_thread new_thread;
     int32_t lock_error;
+    int32_t initialization_error;
+
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (FT_ERR_INVALID_STATE);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (path == ft_nullptr || callback == ft_nullptr)
+    if (path == ft_nullptr || (legacy_callback == ft_nullptr
+            && typed_callback == ft_nullptr))
     {
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_ERR_INVALID_ARGUMENT);
@@ -182,21 +237,24 @@ int32_t ft_file_watch::watch_directory(const char *path,
             return (lock_error);
     }
     this->_path.clear();
-    int32_t initialization_error =
-        this->_path.assign(path, static_cast<ft_size_t>(ft_strlen(path)));
+    initialization_error = this->_path.assign(path,
+            static_cast<ft_size_t>(ft_strlen(path)));
     if (initialization_error != FT_ERR_SUCCESS)
     {
         this->_callback = ft_nullptr;
+        this->_typed_callback = ft_nullptr;
         this->_user_data = ft_nullptr;
         this->_path.clear();
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (initialization_error);
     }
-    this->_callback = callback;
+    this->_callback = legacy_callback;
+    this->_typed_callback = typed_callback;
     this->_user_data = user_data;
     if (cmp_file_watch_start(this->_state, path) != FT_ERR_SUCCESS)
     {
         this->_callback = ft_nullptr;
+        this->_typed_callback = ft_nullptr;
         this->_user_data = ft_nullptr;
         this->_path.clear();
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
@@ -215,7 +273,8 @@ void ft_file_watch::stop()
     ft_thread thread_to_join;
     int32_t lock_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_file_watch::stop");
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_file_watch::stop");
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
@@ -230,6 +289,7 @@ void ft_file_watch::stop()
     thread_to_join = ft_move(this->_thread);
     this->_thread = ft_thread();
     this->_callback = ft_nullptr;
+    this->_typed_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
     this->_path.clear();
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
@@ -244,8 +304,9 @@ void ft_file_watch::close_handles_locked()
     return ;
 }
 
-ft_bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int32_t, void *),
-    void *&user_data, ft_string &path_snapshot) const
+ft_bool ft_file_watch::snapshot_callback(file_watch_legacy_callback *legacy_callback,
+    file_watch_callback *typed_callback, void *&user_data, ft_string &path_snapshot,
+    uint32_t *debounce_milliseconds) const
 {
     int32_t lock_error;
 
@@ -254,7 +315,9 @@ ft_bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int32_t
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (FT_FALSE);
-    *callback = ft_nullptr;
+    *legacy_callback = ft_nullptr;
+    *typed_callback = ft_nullptr;
+    *debounce_milliseconds = 0;
     user_data = ft_nullptr;
     path_snapshot.clear();
     if (!this->_running)
@@ -262,7 +325,9 @@ ft_bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int32_t
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (FT_FALSE);
     }
-    *callback = this->_callback;
+    *legacy_callback = this->_callback;
+    *typed_callback = this->_typed_callback;
+    *debounce_milliseconds = this->_debounce_milliseconds;
     user_data = this->_user_data;
     path_snapshot = this->_path;
     if (path_snapshot.get_error() != FT_ERR_SUCCESS)
@@ -273,28 +338,38 @@ ft_bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int32_t
 
 void ft_file_watch::event_loop()
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_file_watch::event_loop");
+    cmp_file_watch_event event;
+    file_watch_legacy_callback local_legacy_callback;
+    file_watch_callback local_typed_callback;
+    void *local_user_data;
+    ft_string path_snapshot;
+    const char *event_name;
+    uint32_t debounce_milliseconds;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_file_watch::event_loop");
     while (FT_TRUE)
     {
-        cmp_file_watch_event event;
         if (!cmp_file_watch_wait_event(this->_state, &event))
             break ;
-        void (*local_callback)(const char *, int32_t, void *);
-        void *local_user_data;
-        ft_string path_snapshot;
-
-        local_callback = ft_nullptr;
+        local_legacy_callback = ft_nullptr;
+        local_typed_callback = ft_nullptr;
         local_user_data = ft_nullptr;
-        if (!this->snapshot_callback(&local_callback, local_user_data, path_snapshot))
+        debounce_milliseconds = 0;
+        if (!this->snapshot_callback(&local_legacy_callback, &local_typed_callback,
+                local_user_data, path_snapshot, &debounce_milliseconds))
             continue ;
-        const char *event_name;
-
+        if (debounce_milliseconds > 0)
+            (void)cmp_thread_sleep(debounce_milliseconds);
         if (event.has_name)
             event_name = event.name;
         else
             event_name = path_snapshot.c_str();
-        if (local_callback != ft_nullptr)
-            local_callback(event_name, event.event_type, local_user_data);
+        if (local_typed_callback != ft_nullptr)
+            local_typed_callback(event_name, event.event_type, local_user_data);
+        else if (local_legacy_callback != ft_nullptr)
+            local_legacy_callback(event_name,
+                static_cast<int32_t>(event.event_type), local_user_data);
     }
     return ;
 }

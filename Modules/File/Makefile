@@ -9,6 +9,11 @@ SRCS := file_opendir.cpp \
         file_move.cpp \
         file_exists.cpp \
         file_delete.cpp \
+        file_status.cpp \
+        file_recursive.cpp \
+        file_read_write.cpp \
+        file_security.cpp \
+        file_list_directory.cpp \
         file_path_join.cpp \
         file_path_normalize.cpp \
         file_path_parts.cpp \

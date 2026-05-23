@@ -1,6 +1,7 @@
 #include "compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../File/file_utils.hpp"
 
 static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 {
@@ -18,6 +19,39 @@ static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
 static ft_bool global_force_cross_device_move = FT_FALSE;
+
+int32_t cmp_file_error_to_errno(int32_t system_error) noexcept
+{
+    if (system_error == ERROR_FILE_NOT_FOUND || system_error == ERROR_PATH_NOT_FOUND)
+        return (FT_ERR_NOT_FOUND);
+    if (system_error == ERROR_ACCESS_DENIED)
+        return (FT_ERR_PERMISSION_DENIED);
+    if (system_error == ERROR_ALREADY_EXISTS || system_error == ERROR_FILE_EXISTS)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (system_error == ERROR_INVALID_NAME || system_error == ERROR_INVALID_PARAMETER)
+        return (FT_ERR_INVALID_PATH);
+    if (system_error == ERROR_FILENAME_EXCED_RANGE)
+        return (FT_ERR_PATH_TOO_LONG);
+    if (system_error == ERROR_DISK_FULL || system_error == ERROR_HANDLE_DISK_FULL)
+        return (FT_ERR_DISK_FULL);
+    if (system_error == ENOENT)
+        return (FT_ERR_NOT_FOUND);
+    if (system_error == ENOTDIR)
+        return (FT_ERR_NOT_DIRECTORY);
+    if (system_error == EISDIR)
+        return (FT_ERR_IS_DIRECTORY);
+    if (system_error == EACCES || system_error == EPERM)
+        return (FT_ERR_PERMISSION_DENIED);
+    if (system_error == EEXIST)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (system_error == ENAMETOOLONG)
+        return (FT_ERR_PATH_TOO_LONG);
+    if (system_error == EINVAL)
+        return (FT_ERR_INVALID_PATH);
+    if (system_error == ENOSPC)
+        return (FT_ERR_DISK_FULL);
+    return (cmp_map_system_error_to_ft(system_error));
+}
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move)
 {
@@ -59,7 +93,7 @@ int32_t cmp_file_exists(const char *path, int32_t *exists_out,
     }
     last_error = GetLastError();
     if (last_error != 0)
-        error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
+        error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
     cmp_set_error_code(error_code_out, error_code);
@@ -84,7 +118,7 @@ int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
     }
     last_error = GetLastError();
     if (last_error != 0)
-        error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
+        error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
     cmp_set_error_code(error_code_out, error_code);
@@ -140,7 +174,7 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
         return (FT_ERR_INTERNAL);
     }
     else if (last_error != 0)
-        stored_error = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
+        stored_error = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
     else
         stored_error = FT_ERR_INVALID_ARGUMENT;
     if (stored_error == FT_ERR_SUCCESS)
@@ -167,7 +201,7 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
     }
     last_error = GetLastError();
     if (last_error != 0)
-        error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
+        error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
     cmp_set_error_code(error_code_out, error_code);
@@ -193,7 +227,80 @@ int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_
     }
     last_error = GetLastError();
     if (last_error != 0)
-        error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
+        error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
+    else
+        error_code = FT_ERR_INVALID_ARGUMENT;
+    cmp_set_error_code(error_code_out, error_code);
+    return (error_code);
+}
+
+int32_t cmp_file_get_type(const char *path, file_type *type_out,
+    int32_t *error_code_out)
+{
+    int32_t error_code;
+    DWORD file_attributes;
+    DWORD last_error;
+
+    if (type_out != ft_nullptr)
+        *type_out = FILE_TYPE_UNKNOWN;
+    if (path == ft_nullptr || type_out == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    file_attributes = GetFileAttributesA(path);
+    if (file_attributes == INVALID_FILE_ATTRIBUTES)
+    {
+        last_error = GetLastError();
+        if (last_error == ERROR_FILE_NOT_FOUND || last_error == ERROR_PATH_NOT_FOUND)
+        {
+            *type_out = FILE_TYPE_MISSING;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
+        }
+        error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
+        if (error_code == FT_ERR_NOT_FOUND)
+        {
+            *type_out = FILE_TYPE_MISSING;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
+        }
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if ((file_attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
+        *type_out = FILE_TYPE_SYMLINK;
+    else if ((file_attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+        *type_out = FILE_TYPE_DIRECTORY;
+    else
+        *type_out = FILE_TYPE_REGULAR;
+    cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cmp_file_get_size(const char *path, ft_size_t *size_out,
+    int32_t *error_code_out)
+{
+    int32_t error_code;
+    struct _stat file_info;
+
+    if (size_out != ft_nullptr)
+        *size_out = 0;
+    if (path == ft_nullptr || size_out == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (_stat(path, &file_info) == 0)
+    {
+        *size_out = static_cast<ft_size_t>(file_info.st_size);
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (errno != 0)
+        error_code = cmp_file_error_to_errno(errno);
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
     cmp_set_error_code(error_code_out, error_code);
@@ -218,7 +325,7 @@ int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *er
         return (FT_ERR_SUCCESS);
     }
     if (errno != 0)
-        error_code = cmp_map_system_error_to_ft(errno);
+        error_code = cmp_file_error_to_errno(errno);
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
     cmp_set_error_code(error_code_out, error_code);
@@ -258,7 +365,7 @@ int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
         return (FT_ERR_SUCCESS);
     }
     if (errno != 0)
-        error_code = cmp_map_system_error_to_ft(errno);
+        error_code = cmp_file_error_to_errno(errno);
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
     cmp_set_error_code(error_code_out, error_code);
@@ -276,6 +383,27 @@ int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
 static ft_bool global_force_cross_device_move = FT_FALSE;
+
+int32_t cmp_file_error_to_errno(int32_t system_error) noexcept
+{
+    if (system_error == ENOENT)
+        return (FT_ERR_NOT_FOUND);
+    if (system_error == ENOTDIR)
+        return (FT_ERR_NOT_DIRECTORY);
+    if (system_error == EISDIR)
+        return (FT_ERR_IS_DIRECTORY);
+    if (system_error == EACCES || system_error == EPERM)
+        return (FT_ERR_PERMISSION_DENIED);
+    if (system_error == EEXIST)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (system_error == ENAMETOOLONG)
+        return (FT_ERR_PATH_TOO_LONG);
+    if (system_error == EINVAL)
+        return (FT_ERR_INVALID_PATH);
+    if (system_error == ENOSPC)
+        return (FT_ERR_DISK_FULL);
+    return (cmp_map_system_error_to_ft(system_error));
+}
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move)
 {
@@ -313,7 +441,7 @@ int32_t cmp_file_exists(const char *path, int32_t *exists_out,
         cmp_set_error_code(error_code_out, error_code);
         return (error_code);
     }
-    error_code = cmp_map_system_error_to_ft(errno);
+    error_code = cmp_file_error_to_errno(errno);
     cmp_set_error_code(error_code_out, error_code);
     return (error_code);
 }
@@ -333,7 +461,7 @@ int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    error_code = cmp_map_system_error_to_ft(errno);
+    error_code = cmp_file_error_to_errno(errno);
     cmp_set_error_code(error_code_out, error_code);
     return (error_code);
 }
@@ -363,7 +491,7 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
             }
             if (errno != EXDEV)
             {
-                int32_t error_code = cmp_map_system_error_to_ft(errno);
+                int32_t error_code = cmp_file_error_to_errno(errno);
                 cmp_set_error_code(error_code_out, error_code);
                 return (error_code);
             }
@@ -478,7 +606,76 @@ int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    error_code = cmp_map_system_error_to_ft(errno);
+    error_code = cmp_file_error_to_errno(errno);
+    cmp_set_error_code(error_code_out, error_code);
+    return (error_code);
+}
+
+int32_t cmp_file_get_type(const char *path, file_type *type_out,
+    int32_t *error_code_out)
+{
+    int32_t error_code;
+    struct stat stat_buffer;
+
+    if (type_out != ft_nullptr)
+        *type_out = FILE_TYPE_UNKNOWN;
+    if (path == ft_nullptr || type_out == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (lstat(path, &stat_buffer) != 0)
+    {
+        if (errno == ENOENT || errno == ENOTDIR)
+        {
+            *type_out = FILE_TYPE_MISSING;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
+        }
+        error_code = cmp_file_error_to_errno(errno);
+        if (error_code == FT_ERR_NOT_FOUND)
+        {
+            *type_out = FILE_TYPE_MISSING;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
+        }
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (S_ISLNK(stat_buffer.st_mode))
+        *type_out = FILE_TYPE_SYMLINK;
+    else if (S_ISDIR(stat_buffer.st_mode))
+        *type_out = FILE_TYPE_DIRECTORY;
+    else if (S_ISREG(stat_buffer.st_mode))
+        *type_out = FILE_TYPE_REGULAR;
+    else
+        *type_out = FILE_TYPE_UNKNOWN;
+    cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cmp_file_get_size(const char *path, ft_size_t *size_out,
+    int32_t *error_code_out)
+{
+    int32_t error_code;
+    struct stat stat_buffer;
+
+    if (size_out != ft_nullptr)
+        *size_out = 0;
+    if (path == ft_nullptr || size_out == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (stat(path, &stat_buffer) == 0)
+    {
+        *size_out = static_cast<ft_size_t>(stat_buffer.st_size);
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    error_code = cmp_file_error_to_errno(errno);
     cmp_set_error_code(error_code_out, error_code);
     return (error_code);
 }
@@ -500,7 +697,7 @@ int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *er
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    error_code = cmp_map_system_error_to_ft(errno);
+    error_code = cmp_file_error_to_errno(errno);
     cmp_set_error_code(error_code_out, error_code);
     return (error_code);
 }
@@ -549,9 +746,87 @@ int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    error_code = cmp_map_system_error_to_ft(errno);
+    error_code = cmp_file_error_to_errno(errno);
     cmp_set_error_code(error_code_out, error_code);
     return (error_code);
 }
 
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+int32_t cmp_file_sync(int32_t file_descriptor, int32_t *error_code_out)
+{
+    HANDLE file_handle;
+    int32_t error_code;
+
+    file_handle = cmp_retrieve_handle(file_descriptor);
+    if (file_handle == INVALID_HANDLE_VALUE)
+    {
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_HANDLE);
+        return (FT_ERR_INVALID_HANDLE);
+    }
+    if (FlushFileBuffers(file_handle) == 0)
+    {
+        error_code = cmp_file_error_to_errno(static_cast<int32_t>(GetLastError()));
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cmp_file_sync_directory(const char *path, int32_t *error_code_out)
+{
+    (void)path;
+    cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+#else
+int32_t cmp_file_sync(int32_t file_descriptor, int32_t *error_code_out)
+{
+    int32_t error_code;
+
+    if (fsync(file_descriptor) == 0)
+    {
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    error_code = cmp_file_error_to_errno(errno);
+    cmp_set_error_code(error_code_out, error_code);
+    return (error_code);
+}
+
+int32_t cmp_file_sync_directory(const char *path, int32_t *error_code_out)
+{
+    int32_t directory_descriptor;
+    int32_t error_code;
+
+    if (path == ft_nullptr)
+    {
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
+    directory_descriptor = cmp_open(path, O_DIRECTORY | O_RDONLY, 0);
+    if (directory_descriptor < 0)
+    {
+        error_code = cmp_file_error_to_errno(errno);
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (fsync(directory_descriptor) != 0)
+    {
+        error_code = cmp_file_error_to_errno(errno);
+        (void)cmp_close(directory_descriptor);
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    error_code = cmp_close(directory_descriptor);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
 #endif

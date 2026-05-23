@@ -7,8 +7,35 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../Basic/basic.hpp"
+#include "../Observability/observability.hpp"
 #include <fcntl.h>
 #include <new>
+
+static void parser_observability_emit(const char *operation, const char *resource,
+    ft_observability_trace_phase phase, int32_t error_code,
+    ft_size_t bytes_read, ft_size_t bytes_written)
+{
+    ft_observability_trace_event event;
+    ft_bool success;
+
+    event.module = FT_OBSERVABILITY_MODULE_PARSER;
+    event.phase = phase;
+    event.operation = operation;
+    event.resource = resource;
+    event.error_code = error_code;
+    event.bytes_read = bytes_read;
+    event.bytes_written = bytes_written;
+    (void)observability_trace_emit(&event);
+    if (phase == FT_OBSERVABILITY_TRACE_FINISH)
+    {
+        success = FT_FALSE;
+        if (error_code == FT_ERR_SUCCESS)
+            success = FT_TRUE;
+        (void)observability_record_operation(FT_OBSERVABILITY_MODULE_PARSER,
+            success, bytes_read, bytes_written);
+    }
+    return ;
+}
 
 ft_document_source::ft_document_source() noexcept
     : _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -734,13 +761,26 @@ ft_size_t ft_memory_document_source::get_length() const noexcept
 
 int32_t ft_memory_document_source::read_all(ft_string &output)
 {
+    int32_t error_code;
+    ft_size_t bytes_read;
+
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_memory_document_source::read_all");
+    parser_observability_emit("memory_source_read_all", "memory",
+        FT_OBSERVABILITY_TRACE_START, FT_ERR_SUCCESS, 0, 0);
     if (this->_data_pointer == ft_nullptr && this->_data_length != 0)
+    {
+        parser_observability_emit("memory_source_read_all", "memory",
+            FT_OBSERVABILITY_TRACE_FINISH, FT_ERR_INVALID_ARGUMENT, 0, 0);
         return (FT_ERR_INVALID_ARGUMENT);
+    }
     output.assign(this->_data_pointer, this->_data_length);
-    if (output.get_error() != FT_ERR_SUCCESS)
-        return (output.get_error());
-    return (FT_ERR_SUCCESS);
+    error_code = output.get_error();
+    bytes_read = 0;
+    if (error_code == FT_ERR_SUCCESS)
+        bytes_read = this->_data_length;
+    parser_observability_emit("memory_source_read_all", "memory",
+        FT_OBSERVABILITY_TRACE_FINISH, error_code, bytes_read, 0);
+    return (error_code);
 }
 
 
@@ -878,15 +918,32 @@ ft_string *ft_memory_document_sink::get_storage() const noexcept
 
 int32_t ft_memory_document_sink::write_all(const char *data_pointer, ft_size_t data_length)
 {
+    int32_t error_code;
+    ft_size_t bytes_written;
+
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_memory_document_sink::write_all");
+    parser_observability_emit("memory_sink_write_all", "memory",
+        FT_OBSERVABILITY_TRACE_START, FT_ERR_SUCCESS, 0, 0);
     if (this->_storage_pointer == ft_nullptr)
+    {
+        parser_observability_emit("memory_sink_write_all", "memory",
+            FT_OBSERVABILITY_TRACE_FINISH, FT_ERR_INVALID_STATE, 0, 0);
         return (FT_ERR_INVALID_STATE);
+    }
     if (data_pointer == ft_nullptr && data_length != 0)
+    {
+        parser_observability_emit("memory_sink_write_all", "memory",
+            FT_OBSERVABILITY_TRACE_FINISH, FT_ERR_INVALID_ARGUMENT, 0, 0);
         return (FT_ERR_INVALID_ARGUMENT);
+    }
     this->_storage_pointer->assign(data_pointer, data_length);
-    if (this->_storage_pointer->get_error() != FT_ERR_SUCCESS)
-        return (this->_storage_pointer->get_error());
-    return (FT_ERR_SUCCESS);
+    error_code = this->_storage_pointer->get_error();
+    bytes_written = 0;
+    if (error_code == FT_ERR_SUCCESS)
+        bytes_written = data_length;
+    parser_observability_emit("memory_sink_write_all", "memory",
+        FT_OBSERVABILITY_TRACE_FINISH, error_code, 0, bytes_written);
+    return (error_code);
 }
 
 

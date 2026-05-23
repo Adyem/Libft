@@ -8,6 +8,10 @@
 #include "../Compatebility/compatebility_file_watch.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "file_watch_event.hpp"
+
+typedef void (*file_watch_callback)(const char *path, file_watch_event_type event_type, void *user_data);
+typedef void (*file_watch_legacy_callback)(const char *path, int32_t event_type, void *user_data);
 
 class ft_file_watch
 {
@@ -17,16 +21,22 @@ class ft_file_watch
     private:
 #endif
         ft_string _path;
-        void (*_callback)(const char *, int32_t, void *);
+        file_watch_legacy_callback _callback;
+        file_watch_callback _typed_callback;
         void *_user_data;
         ft_thread _thread;
         ft_bool _running;
         ft_bool _stopped;
+        uint32_t _debounce_milliseconds;
         mutable pt_recursive_mutex *_mutex;
         void event_loop();
         void close_handles_locked();
-        ft_bool snapshot_callback(void (**callback)(const char *, int32_t, void *),
-            void *&user_data, ft_string &path_snapshot) const;
+        int32_t watch_directory_internal(const char *path,
+            file_watch_legacy_callback legacy_callback,
+            file_watch_callback typed_callback, void *user_data);
+        ft_bool snapshot_callback(file_watch_legacy_callback *legacy_callback,
+            file_watch_callback *typed_callback, void *&user_data,
+            ft_string &path_snapshot, uint32_t *debounce_milliseconds) const;
         cmp_file_watch_context *_state;
         uint8_t _initialised_state;
 
@@ -47,7 +57,10 @@ class ft_file_watch
         int32_t enable_thread_safety();
         int32_t disable_thread_safety();
         ft_bool is_thread_safe() const;
-        int32_t watch_directory(const char *path, void (*callback)(const char *, int32_t, void *), void *user_data);
+        int32_t watch_directory(const char *path, file_watch_legacy_callback callback, void *user_data);
+        int32_t watch_directory(const char *path, file_watch_callback callback, void *user_data);
+        int32_t set_debounce_milliseconds(uint32_t debounce_milliseconds);
+        uint32_t get_debounce_milliseconds() const;
         void stop();
 };
 

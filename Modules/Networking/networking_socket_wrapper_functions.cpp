@@ -14,6 +14,7 @@
 #include "socket_class.hpp"
 #include "socket_handle.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Observability/observability.hpp"
 
 #ifdef _WIN32
 static inline int32_t bind_platform(int32_t socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
@@ -204,6 +205,32 @@ static inline ssize_t recvfrom_platform(int32_t socket_file_descriptor, void *bu
 }
 #endif
 
+static void networking_observability_emit(const char *operation,
+    ft_observability_trace_phase phase, int32_t error_code,
+    ft_size_t bytes_read, ft_size_t bytes_written)
+{
+    ft_observability_trace_event event;
+    ft_bool success;
+
+    event.module = FT_OBSERVABILITY_MODULE_NETWORKING;
+    event.phase = phase;
+    event.operation = operation;
+    event.resource = ft_nullptr;
+    event.error_code = error_code;
+    event.bytes_read = bytes_read;
+    event.bytes_written = bytes_written;
+    (void)observability_trace_emit(&event);
+    if (phase == FT_OBSERVABILITY_TRACE_FINISH)
+    {
+        success = FT_FALSE;
+        if (error_code == FT_ERR_SUCCESS)
+            success = FT_TRUE;
+        (void)observability_record_operation(FT_OBSERVABILITY_MODULE_NETWORKING,
+            success, bytes_read, bytes_written);
+    }
+    return ;
+}
+
 int32_t nw_bind(int32_t socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
     return (bind_platform(socket_file_descriptor, address_value, address_length));
@@ -218,9 +245,15 @@ int32_t nw_accept(int32_t socket_file_descriptor, struct sockaddr *address_value
 {
     int32_t accepted_file_descriptor;
 
+    networking_observability_emit("accept", FT_OBSERVABILITY_TRACE_START,
+        FT_ERR_SUCCESS, 0, 0);
     accepted_file_descriptor = accept_platform(socket_file_descriptor, address_value, address_length);
     if (accepted_file_descriptor < 0)
+    {
+        networking_observability_emit("accept", FT_OBSERVABILITY_TRACE_FINISH,
+            FT_ERR_SOCKET_ACCEPT_FAILED, 0, 0);
         return (-1);
+    }
 #ifdef _WIN32
     if (ft_socket_runtime_acquire() != FT_ERR_SUCCESS)
     {
@@ -228,6 +261,8 @@ int32_t nw_accept(int32_t socket_file_descriptor, struct sockaddr *address_value
         return (-1);
     }
 #endif
+    networking_observability_emit("accept", FT_OBSERVABILITY_TRACE_FINISH,
+        FT_ERR_SUCCESS, 0, 0);
     return (accepted_file_descriptor);
 }
 
@@ -246,34 +281,120 @@ void nw_set_socket_hook(t_nw_socket_hook hook)
 
 int32_t nw_socket(int32_t domain_value, int32_t type_value, int32_t protocol_value)
 {
-    return (g_nw_socket_hook(domain_value, type_value, protocol_value));
+    int32_t socket_file_descriptor;
+
+    networking_observability_emit("socket", FT_OBSERVABILITY_TRACE_START,
+        FT_ERR_SUCCESS, 0, 0);
+    socket_file_descriptor = g_nw_socket_hook(domain_value, type_value, protocol_value);
+    if (socket_file_descriptor < 0)
+    {
+        networking_observability_emit("socket", FT_OBSERVABILITY_TRACE_FINISH,
+            FT_ERR_SOCKET_CREATION_FAILED, 0, 0);
+        return (socket_file_descriptor);
+    }
+    networking_observability_emit("socket", FT_OBSERVABILITY_TRACE_FINISH,
+        FT_ERR_SUCCESS, 0, 0);
+    return (socket_file_descriptor);
 }
 
 int32_t nw_connect(int32_t socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
-    return (connect_platform(socket_file_descriptor, address_value, address_length));
+    int32_t connect_result;
+
+    networking_observability_emit("connect", FT_OBSERVABILITY_TRACE_START,
+        FT_ERR_SUCCESS, 0, 0);
+    connect_result = connect_platform(socket_file_descriptor, address_value, address_length);
+    if (connect_result != 0)
+    {
+        networking_observability_emit("connect", FT_OBSERVABILITY_TRACE_FINISH,
+            FT_ERR_SOCKET_CONNECT_FAILED, 0, 0);
+        return (connect_result);
+    }
+    networking_observability_emit("connect", FT_OBSERVABILITY_TRACE_FINISH,
+        FT_ERR_SUCCESS, 0, 0);
+    return (connect_result);
 }
 
 ssize_t nw_send(int32_t socket_file_descriptor, const void *buffer_value, ft_size_t buffer_length, int32_t send_flags)
 {
-    return (send_platform(socket_file_descriptor, buffer_value, buffer_length, send_flags));
+    ssize_t send_result;
+    ft_size_t bytes_written;
+
+    networking_observability_emit("send", FT_OBSERVABILITY_TRACE_START,
+        FT_ERR_SUCCESS, 0, 0);
+    send_result = send_platform(socket_file_descriptor, buffer_value, buffer_length, send_flags);
+    if (send_result < 0)
+    {
+        networking_observability_emit("send", FT_OBSERVABILITY_TRACE_FINISH,
+            FT_ERR_SOCKET_SEND_FAILED, 0, 0);
+        return (send_result);
+    }
+    bytes_written = static_cast<ft_size_t>(send_result);
+    networking_observability_emit("send", FT_OBSERVABILITY_TRACE_FINISH,
+        FT_ERR_SUCCESS, 0, bytes_written);
+    return (send_result);
 }
 
 ssize_t nw_recv(int32_t socket_file_descriptor, void *buffer_value, ft_size_t buffer_length, int32_t receive_flags)
 {
-    return (recv_platform(socket_file_descriptor, buffer_value, buffer_length, receive_flags));
+    ssize_t receive_result;
+    ft_size_t bytes_read;
+
+    networking_observability_emit("recv", FT_OBSERVABILITY_TRACE_START,
+        FT_ERR_SUCCESS, 0, 0);
+    receive_result = recv_platform(socket_file_descriptor, buffer_value, buffer_length, receive_flags);
+    if (receive_result < 0)
+    {
+        networking_observability_emit("recv", FT_OBSERVABILITY_TRACE_FINISH,
+            FT_ERR_SOCKET_RECEIVE_FAILED, 0, 0);
+        return (receive_result);
+    }
+    bytes_read = static_cast<ft_size_t>(receive_result);
+    networking_observability_emit("recv", FT_OBSERVABILITY_TRACE_FINISH,
+        FT_ERR_SUCCESS, bytes_read, 0);
+    return (receive_result);
 }
 
 ssize_t nw_sendto(int32_t socket_file_descriptor, const void *buffer_value, ft_size_t buffer_length, int32_t send_flags,
     const struct sockaddr *destination_address, socklen_t address_length)
 {
-    return (sendto_platform(socket_file_descriptor, buffer_value, buffer_length, send_flags, destination_address, address_length));
+    ssize_t send_result;
+    ft_size_t bytes_written;
+
+    networking_observability_emit("sendto", FT_OBSERVABILITY_TRACE_START,
+        FT_ERR_SUCCESS, 0, 0);
+    send_result = sendto_platform(socket_file_descriptor, buffer_value, buffer_length, send_flags, destination_address, address_length);
+    if (send_result < 0)
+    {
+        networking_observability_emit("sendto", FT_OBSERVABILITY_TRACE_FINISH,
+            FT_ERR_SOCKET_SEND_FAILED, 0, 0);
+        return (send_result);
+    }
+    bytes_written = static_cast<ft_size_t>(send_result);
+    networking_observability_emit("sendto", FT_OBSERVABILITY_TRACE_FINISH,
+        FT_ERR_SUCCESS, 0, bytes_written);
+    return (send_result);
 }
 
 ssize_t nw_recvfrom(int32_t socket_file_descriptor, void *buffer_value, ft_size_t buffer_length, int32_t receive_flags,
     struct sockaddr *source_address, socklen_t *address_length)
 {
-    return (recvfrom_platform(socket_file_descriptor, buffer_value, buffer_length, receive_flags, source_address, address_length));
+    ssize_t receive_result;
+    ft_size_t bytes_read;
+
+    networking_observability_emit("recvfrom", FT_OBSERVABILITY_TRACE_START,
+        FT_ERR_SUCCESS, 0, 0);
+    receive_result = recvfrom_platform(socket_file_descriptor, buffer_value, buffer_length, receive_flags, source_address, address_length);
+    if (receive_result < 0)
+    {
+        networking_observability_emit("recvfrom", FT_OBSERVABILITY_TRACE_FINISH,
+            FT_ERR_SOCKET_RECEIVE_FAILED, 0, 0);
+        return (receive_result);
+    }
+    bytes_read = static_cast<ft_size_t>(receive_result);
+    networking_observability_emit("recvfrom", FT_OBSERVABILITY_TRACE_FINISH,
+        FT_ERR_SUCCESS, bytes_read, 0);
+    return (receive_result);
 }
 
 int32_t nw_close(int32_t socket_file_descriptor)

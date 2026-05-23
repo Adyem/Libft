@@ -73,6 +73,7 @@ char            *ft_strstr(const char *haystack, const char *needle);
 int32_t         ft_strncmp(const char *string_1, const char *string_2,
                     ft_size_t maximum_length);
 int32_t         ft_memcmp(const void *pointer1, const void *pointer2, ft_size_t size);
+ft_bool         ft_constant_time_equal(const void *pointer1, const void *pointer2, ft_size_t size) noexcept;
 int32_t         ft_isdigit(int32_t character);
 int32_t         ft_isalpha(int32_t character);
 int32_t         ft_isalnum(int32_t character);
