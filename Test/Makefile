@@ -1,184 +1,5 @@
-include ../compiler_flags.mk
-TARGET := libft_tests
-DEBUG_TARGET := libft_tests_debug
-EFFICIENCY_TARGET := libft_efficiency_tests
-EFFICIENCY_OPT_LEVEL ?= 3
-LIBFT_ARCHIVE := Full_Libft_test.a
-LIBFT_DEBUG_ARCHIVE := Full_Libft_test_debug.a
-EFFICIENCY_LIBFT_ARCHIVE := Full_Libft.a
-
-EFF_SRCS := $(wildcard Efficiency/*.cpp)
-EFF_TOTAL_SRCS := $(words $(EFF_SRCS))
-
-ifneq ($(strip $(FILES)),)
-SRCS := main.cpp $(FILES)
-else
-SRCS := main.cpp $(wildcard Test/*.cpp) $(wildcard API/*.cpp)
-SRCS := $(filter-out Test/test_template.cpp,$(SRCS))
-endif
-
-BASIC_TEST_FILES := \
-	Test/test_basic_atoi.cpp \
-	Test/test_basic_atol.cpp \
-	Test/test_basic_additional_coverage.cpp \
-	Test/test_basic_bzero.cpp \
-	Test/test_basic_isalnum.cpp \
-	Test/test_basic_isalpha.cpp \
-	Test/test_basic_isdigit.cpp \
-	Test/test_basic_islower.cpp \
-	Test/test_basic_isprint.cpp \
-	Test/test_basic_isspace.cpp \
-	Test/test_basic_isupper.cpp \
-	Test/test_basic_memchr.cpp \
-	Test/test_basic_memcmp.cpp \
-	Test/test_basic_memcpy.cpp \
-	Test/test_basic_memcpy_s.cpp \
-	Test/test_basic_memmove.cpp \
-	Test/test_basic_memset.cpp \
-	Test/test_basic_strchr.cpp \
-	Test/test_basic_strcmp.cpp \
-	Test/test_basic_hash_string31.cpp \
-	Test/test_basic_strcpy_s.cpp \
-	Test/test_basic_striteri.cpp \
-	Test/test_basic_strlcat.cpp \
-	Test/test_basic_strlcpy.cpp \
-	Test/test_basic_strlen.cpp \
-	Test/test_basic_strmapi.cpp \
-	Test/test_basic_strncmp.cpp \
-	Test/test_basic_strncpy.cpp \
-	Test/test_basic_strnstr.cpp \
-	Test/test_basic_strrchr.cpp \
-	Test/test_basic_strstr.cpp \
-	Test/test_basic_strtok.cpp \
-	Test/test_basic_strtol.cpp \
-	Test/test_basic_strtoul.cpp \
-	Test/test_basic_tolower.cpp \
-	Test/test_basic_toupper.cpp \
-	Test/test_basic_utf8.cpp \
-	Test/test_basic_validate_int.cpp \
-	Test/test_basic_wstrlen.cpp
-
-CMA_TEST_FILES := \
-	Test/test_cma.cpp \
-	Test/test_cma_alloc.cpp \
-	Test/test_cma_arena.cpp \
-	Test/test_cma_backend.cpp \
-	Test/test_cma_block_size.cpp \
-	Test/test_cma_global_new.cpp \
-	Test/test_cma_limits.cpp \
-	Test/test_cma_metadata.cpp \
-	Test/test_cma_stats.cpp \
-	Test/test_cma_strings.cpp \
-	Test/test_scma_accessor.cpp \
-	Test/test_scma_accessor_lifecycle.cpp \
-	Test/test_scma_accessor_proxy_chain_errors.cpp \
-	Test/test_scma_accessor_uninitialized_abort.cpp \
-	Test/test_scma_lifecycle.cpp \
-	Test/test_scma_memory.cpp \
-	Test/test_scma_recursive_mutex.cpp \
-	Test/test_scma_thread_safety_controls.cpp \
-	Test/test_scma_resize.cpp
-
-GET_NEXT_LINE_TEST_FILES := \
-	Test/test_get_next_line.cpp \
-	Test/test_get_next_line_strjoin.cpp
-
-CXX       := g++
-
-HAS_OPENSSL_HEADERS := $(shell printf '#include <openssl/ssl.h>\n' | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
-ifneq ($(HAS_OPENSSL_HEADERS),1)
-SRCS := $(filter-out Test/test_api_tls_diagnostics.cpp \
-                    Test/test_encryption_aead.cpp \
-                    Test/test_encryption_aead_copy_move.cpp \
-                    Test/test_encryption_hash_algorithms.cpp,$(SRCS))
-endif
-
-ifeq ($(HAS_OPENSSL_HEADERS),1)
-OPENSSL_LIBS := -lssl -lcrypto
-else
-OPENSSL_LIBS :=
-endif
-
-HAS_SQLITE3_HEADERS := $(shell printf '#include <sqlite3.h>\n' | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
-ifeq ($(HAS_SQLITE3_HEADERS),1)
-SQLITE_LIBS := -lsqlite3
-else
-SQLITE_LIBS :=
-endif
-
-TOTAL_SRCS := $(words $(SRCS))
-
-MAKEFLAGS += --no-print-directory
-
-ifeq ($(OS),Windows_NT)
-    MKDIR = mkdir
-    RM    = del /F /Q
-else
-    MKDIR = mkdir -p
-    RM    = rm -f
-endif
-
-OPT_LEVEL ?= 0
-
-ifeq ($(OPT_LEVEL),0)
-OPT_FLAGS = -O0 -g
-else ifeq ($(OPT_LEVEL),1)
-OPT_FLAGS = -O1 \
-        -fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
-        -fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
-else ifeq ($(OPT_LEVEL),2)
-OPT_FLAGS = -O2 \
-        -fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
-        -fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
-else ifeq ($(OPT_LEVEL),3)
-OPT_FLAGS = -O3 \
-        -fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
-        -fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
-else
-$(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
-endif
-
-COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations -fcf-protection=none -DLIBFT_TEST_BUILD -DLIBFT_INTERNAL_HEADERS
-CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
-EFFICIENCY_COMPILE_FLAGS := $(filter-out -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)) -DFT_EFFICIENCY_BUILD
-EFFICIENCY_CFLAGS := $(EFFICIENCY_COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
-HAS_X11_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libX11.so" && echo 1 || echo 0)
-HAS_ASOUND_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libasound.so" && echo 1 || echo 0)
-ifeq ($(HAS_X11_LIB),1)
-X11_LIBS := -lX11
-else
-X11_LIBS :=
-endif
-HAS_XEXT_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXext.so" && echo 1 || echo 0)
-ifeq ($(HAS_ASOUND_LIB),1)
-ASOUND_LIBS := -lasound
-else
-ASOUND_LIBS :=
-endif
-ifeq ($(HAS_XEXT_LIB),1)
-XEXT_LIBS := -lXext
-else
-XEXT_LIBS :=
-endif
-LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(ASOUND_LIBS)
-export COMPILE_FLAGS
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR       := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR := objs_debug$(BUILD_OBJ_SUFFIX)
-EFFICIENCY_BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-EFFICIENCY_OBJDIR := objs_efficiency$(EFFICIENCY_BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-EFFICIENCY_OBJS := $(patsubst %.cpp,$(EFFICIENCY_OBJDIR)/%.o,$(EFF_SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-EFFICIENCY_DEPS := $(EFFICIENCY_OBJS:.o=.d)
+include ../mk/compiler_flags.mk
+include ../mk/test/config.mk
 
 all: $(TARGET)
 
@@ -422,14 +243,6 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-CLEAN_OBJS := $(shell find . -type f \( -name '*.o' -o -name '*.d' \) 2>/dev/null)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@echo "Cleaning test objects"
 	@status=0; \
@@ -466,7 +279,9 @@ fclean:
 	fi; \
 	echo "Full clean completed successfully"
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

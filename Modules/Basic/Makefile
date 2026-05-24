@@ -1,89 +1,5 @@
-include ../../compiler_flags.mk
-TARGET := Basic.a
-DEBUG_TARGET := Basic_debug.a
-
-SRCS := basic_atoi.cpp \
-    basic_bzero.cpp \
-    basic_memchr.cpp \
-    basic_memcmp.cpp \
-    basic_memcpy.cpp \
-    basic_memcpy_s.cpp \
-    basic_memmove.cpp \
-    basic_memmove_s.cpp \
-    basic_memset.cpp \
-    basic_strchr.cpp \
-    basic_strlcat.cpp \
-    basic_strlcpy.cpp \
-    basic_strnlen.cpp \
-    basic_strncmp.cpp \
-    basic_strnstr.cpp \
-    basic_strstr.cpp \
-    basic_strrchr.cpp \
-    basic_hash_string31.cpp \
-    basic_strtok.cpp \
-    basic_atol.cpp \
-    basic_strtol.cpp \
-    basic_strtoul.cpp \
-    basic_isdigit.cpp \
-    basic_isalpha.cpp \
-    basic_isalnum.cpp \
-    basic_isprint.cpp \
-    basic_islower.cpp \
-    basic_isupper.cpp \
-    basic_strcmp.cpp \
-    basic_toupper.cpp \
-    basic_tolower.cpp \
-    basic_strncpy.cpp \
-    basic_strcpy_s.cpp \
-    basic_strncpy_s.cpp \
-    basic_strcat_s.cpp \
-    basic_strncat_s.cpp \
-    basic_span_dup.cpp \
-    basic_locale_compare.cpp \
-    basic_wstrlen.cpp \
-    basic_strmapi.cpp \
-    basic_striteri.cpp \
-    basic_isspace.cpp \
-    basic_validate_int.cpp \
-    basic_utf8_case.cpp \
-    basic_utf8_decode.cpp \
-    basic_utf8_grapheme.cpp \
-    basic_utf8_length.cpp \
-    basic_constant_time_compare.cpp
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/Basic.mk
 
 all: $(TARGET)
 
@@ -111,16 +27,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
@@ -147,7 +53,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

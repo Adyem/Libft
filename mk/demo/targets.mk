@@ -1,0 +1,5 @@
+TARGET_DIR := build
+TARGET_NAME := demo_dumb_game
+TARGET := $(TARGET_DIR)/$(TARGET_NAME)
+LEGACY_TARGET := $(TARGET_NAME)
+MODULE_NAME := $(notdir $(CURDIR))

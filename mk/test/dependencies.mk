@@ -1,0 +1,41 @@
+HAS_OPENSSL_HEADERS := $(shell printf "#include <openssl/ssl.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
+ifneq ($(HAS_OPENSSL_HEADERS),1)
+SRCS := $(filter-out Test/test_api_tls_diagnostics.cpp \
+                    Test/test_encryption_aead.cpp \
+                    Test/test_encryption_aead_copy_move.cpp \
+                    Test/test_encryption_hash_algorithms.cpp,$(SRCS))
+endif
+
+ifeq ($(HAS_OPENSSL_HEADERS),1)
+OPENSSL_LIBS := -lssl -lcrypto
+else
+OPENSSL_LIBS :=
+endif
+
+HAS_SQLITE3_HEADERS := $(shell printf "#include <sqlite3.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
+ifeq ($(HAS_SQLITE3_HEADERS),1)
+SQLITE_LIBS := -lsqlite3
+else
+SQLITE_LIBS :=
+endif
+
+HAS_X11_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libX11.so" && echo 1 || echo 0)
+HAS_ASOUND_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libasound.so" && echo 1 || echo 0)
+ifeq ($(HAS_X11_LIB),1)
+X11_LIBS := -lX11
+else
+X11_LIBS :=
+endif
+
+HAS_XEXT_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXext.so" && echo 1 || echo 0)
+ifeq ($(HAS_ASOUND_LIB),1)
+ASOUND_LIBS := -lasound
+else
+ASOUND_LIBS :=
+endif
+
+ifeq ($(HAS_XEXT_LIB),1)
+XEXT_LIBS := -lXext
+else
+XEXT_LIBS :=
+endif

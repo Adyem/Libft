@@ -1,51 +1,5 @@
-include ../../compiler_flags.mk
-TARGET := dumb.a
-DEBUG_TARGET := dumb_debug.a
-
-SRCS := dumb_io.cpp \
-    dumb_controls.cpp \
-    dumb_sound.cpp \
-    dumb_render.cpp \
-    dumb_sound_clip.cpp \
-    dumb_console.cpp
-
-MODULE_NAME := $(notdir $(CURDIR))
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-CPP_OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
-DEBUG_CPP_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
-
-OBJS       := $(CPP_OBJS)
-DEBUG_OBJS := $(DEBUG_CPP_OBJS)
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
-
-TOTAL_SRCS := $(words $(SRCS))
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/DUMB.mk
 
 all: $(TARGET)
 
@@ -73,16 +27,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
@@ -109,7 +53,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

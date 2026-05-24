@@ -1,138 +1,5 @@
-include ../../compiler_flags.mk
-TARGET := Game.a
-DEBUG_TARGET := Game_debug.a
-
-SRCS := game_map3d.cpp \
-        game_character_constructor.cpp \
-        game_character_getters_setters.cpp \
-        game_character_add_remove.cpp \
-        game_character_misc.cpp \
-        game_character_metrics.cpp \
-        game_character_save_load.cpp \
-	game_quest.cpp \
-	game_achievement.cpp \
-	game_reputation.cpp \
-	game_buff.cpp \
-	game_debuff.cpp \
-	game_skill.cpp \
-	game_upgrade.cpp \
-        game_event.cpp \
-        game_event_scheduler.cpp \
-        game_event_scheduler_telemetry.cpp \
-        game_world.cpp \
-        game_voxel_chunk.cpp \
-        game_voxel_region.cpp \
-        game_world_replay.cpp \
-        game_server.cpp \
-        game_item.cpp \
-	game_inventory.cpp \
-	game_equipment.cpp \
-	game_save.cpp \
-	game_load.cpp \
-	game_experience_table.cpp \
-        game_resistance.cpp \
-        game_pathfinding.cpp \
-        game_crafting.cpp \
-        game_data_catalog.cpp \
-        game_dialogue_line.cpp \
-        game_dialogue_script.cpp \
-        game_dialogue_table.cpp \
-        game_behavior_action.cpp \
-        game_behavior_profile.cpp \
-        game_behavior_table.cpp \
-        game_region_definition.cpp \
-        game_world_region.cpp \
-        game_world_registry.cpp \
-        game_price_definition.cpp \
-        game_rarity_band.cpp \
-        game_vendor_profile.cpp \
-        game_currency_rate.cpp \
-        game_economy_table.cpp \
-        game_progress_tracker.cpp \
-        game_hooks.cpp \
-        game_state.cpp \
-        game_behavior_tree.cpp \
-        game_scripting_bridge.cpp
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-HEADERS := game_map3d.hpp \
-	game_character.hpp \
-	game_quest.hpp \
-	game_achievement.hpp \
-	game_reputation.hpp \
-	game_buff.hpp \
-	game_debuff.hpp \
-	game_skill.hpp \
-	game_upgrade.hpp \
-	game_event.hpp \
-        game_event_scheduler.hpp \
-        game_event_scheduler_telemetry.hpp \
-        game_world.hpp \
-        game_voxel_chunk.hpp \
-        game_voxel_region.hpp \
-        game_region_backend.hpp \
-        game_world_replay.hpp \
-        game_server.hpp \
-	game_item.hpp \
-	game_inventory.hpp \
-	game_equipment.hpp \
-        game_experience_table.hpp \
-        game_resistance.hpp \
-        game_pathfinding.hpp \
-        game_crafting.hpp \
-        game_data_catalog.hpp \
-        game_dialogue_line.hpp \
-        game_dialogue_script.hpp \
-        game_dialogue_table.hpp \
-        game_behavior_action.hpp \
-        game_behavior_profile.hpp \
-        game_behavior_table.hpp \
-        game_region_definition.hpp \
-        game_world_region.hpp \
-        game_world_registry.hpp \
-        game_price_definition.hpp \
-        game_rarity_band.hpp \
-        game_vendor_profile.hpp \
-        game_currency_rate.hpp \
-        game_economy_table.hpp \
-        game_progress_tracker.hpp \
-        game_hooks.hpp \
-        game_state.hpp \
-        game_behavior_tree.hpp \
-        game_scripting_bridge.hpp
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/Game.mk
 
 all: $(TARGET)
 
@@ -160,16 +27,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
@@ -196,7 +53,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 
