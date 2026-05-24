@@ -1,67 +1,5 @@
-include ../../compiler_flags.mk
-TARGET := Compatebility.a
-DEBUG_TARGET := Compatebility_debug.a
-
-SRCS := Compatebility_file_io.cpp Compatebility_file_ops.cpp Compatebility_file_watch.cpp Compatebility_file_dir.cpp Compatebility_file_path.cpp Compatebility_rng.cpp Compatebility_readline.cpp Compatebility_pthread.cpp Compatebility_system.cpp Compatebility_write.cpp Compatebility_syslog.cpp Compatebility_networking.cpp Compatebility_time.cpp Compatebility_cross_process_posix.cpp Compatebility_cross_process_windows.cpp Compatebility_cma_platform.cpp Compatebility_service.cpp Compatebility_storage_memory_mapped.cpp Compatebility_stack_trace.cpp
-MM_SRCS :=
-HEADERS := compatebility_internal.hpp \
-        compatebility_cma_platform.hpp \
-        compatebility_cross_process.hpp \
-        compatebility_stack_trace.hpp
-ifeq ($(OS),Windows_NT)
-MKDIR   = mkdir
-RM      = del /F /Q
-else
-MKDIR   = mkdir -p
-RM      = rm -f
-endif
-
-ifeq ($(OS),Windows_NT)
-SRCS += Compatebility_dumb_render_win32.cpp
-SRCS += Compatebility_dumb_controls_win32.cpp
-SRCS += Compatebility_dumb_sound_win32.cpp
-else
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-MM_SRCS += Compatebility_dumb_render_platform_macos.mm
-MM_SRCS += Compatebility_dumb_controls_platform_macos.mm
-MMFLAGS += -x objective-c++
-SRCS += Compatebility_dumb_sound_macos_coreaudio.cpp
-else
-SRCS += Compatebility_dumb_render_linux_x11.cpp
-SRCS += Compatebility_dumb_controls_linux_x11.cpp
-SRCS += Compatebility_dumb_sound_linux_alsa.cpp
-endif
-endif
-
-ifdef COMPILE_FLAGS
-CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX :=
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test
-	endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
-MMFLAGS  := $(CFLAGS)
-
-CPP_OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-MM_OBJS        := $(patsubst %.mm,$(OBJDIR)/%.o,$(MM_SRCS))
-OBJS           := $(CPP_OBJS) $(MM_OBJS)
-
-DEBUG_CPP_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEBUG_MM_OBJS  := $(patsubst %.mm,$(DEBUG_OBJDIR)/%.o,$(MM_SRCS))
-DEBUG_OBJS     := $(DEBUG_CPP_OBJS) $(DEBUG_MM_OBJS)
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/Compatebility.mk
 
 all: $(TARGET)
 
@@ -94,19 +32,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-ifeq ($(OS),Windows_NT)
-CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
     printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
@@ -133,7 +58,9 @@ fclean:
 	exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

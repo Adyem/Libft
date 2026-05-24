@@ -1,0 +1,32 @@
+TARGET         := time.a
+DEBUG_TARGET   := time_debug.a
+
+SRCS := time_now.cpp \
+        time_now_ms.cpp \
+        time_monotonic.cpp \
+        time_monotonic_point.cpp \
+        time_monotonic_point_thread_safety.cpp \
+        time_duration.cpp \
+        time_duration_thread_safety.cpp \
+        time_info_thread_safety.cpp \
+        time_local.cpp \
+        time_sleep.cpp \
+        time_sleep_ms.cpp \
+        time_sleep_async.cpp \
+        time_fps.cpp \
+        time_timer.cpp \
+        time_strftime.cpp \
+        time_format.cpp \
+        time_parse.cpp \
+        time_high_resolution.cpp \
+        time_monotonic_translate.cpp \
+        time_timezone.cpp \
+        time_benchmark.cpp \
+        time_trace.cpp \
+        time_basic.cpp
+
+HEADERS := time.hpp \
+           time_fps.hpp \
+           time_timer.hpp
+
+include $(dir $(lastword $(MAKEFILE_LIST)))common/module_defaults.mk

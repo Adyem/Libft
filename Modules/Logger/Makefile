@@ -1,79 +1,5 @@
-include ../../compiler_flags.mk
-TARGET := Logger.a
-DEBUG_TARGET := Logger_debug.a
-
-SRCS := \
-    logger_log_state.cpp \
-    logger_log_rotate.cpp \
-    logger_log_level_to_str.cpp \
-    logger_log_vwrite.cpp \
-    logger_log_set_level.cpp \
-    logger_log_set_file.cpp \
-    logger_log_set_rotation.cpp \
-    logger_log_add_sink.cpp \
-    logger_log_remove_sink.cpp \
-    logger_log_set_alloc_logging.cpp \
-    logger_log_get_alloc_logging.cpp \
-    logger_log_set_api_logging.cpp \
-    logger_log_get_api_logging.cpp \
-    logger_log_set_color.cpp \
-    logger_log_get_color.cpp \
-    logger_log_redaction.cpp \
-    logger_log_field_thread_safety.cpp \
-    logger_log_sink_thread_safety.cpp \
-    logger_file_sink_thread_safety.cpp \
-    logger_network_sink_thread_safety.cpp \
-    logger_log_close.cpp \
-    logger_log_health.cpp \
-    logger_lock_contention.cpp \
-    logger_log_async_metrics_thread_safety.cpp \
-    logger_log_debug.cpp \
-    logger_log_info.cpp \
-    logger_log_warn.cpp \
-    logger_log_error.cpp \
-    logger_log_context.cpp \
-    logger_log_context_guard.cpp \
-    logger_log_structured.cpp \
-    logger_log_async.cpp \
-    logger.cpp \
-    logger_syslog.cpp \
-    logger_network.cpp
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-HEADERS := logger.hpp logger_internal.hpp
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast -pthread
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/Logger.mk
 
 all: $(TARGET)
 
@@ -101,16 +27,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
@@ -137,7 +53,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

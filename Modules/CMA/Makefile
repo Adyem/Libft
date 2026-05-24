@@ -1,61 +1,12 @@
-include ../../compiler_flags.mk
-TARGET         := CustomMemoryAllocator.a
-DEBUG_TARGET   := CustomMemoryAllocator_debug.a
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/CMA.mk
 
-SRCS := cma_backend.cpp \
-        cma_arena.cpp \
-        cma_malloc.cpp \
-        cma_free.cpp \
-        cma_free_checked.cpp \
-        cma_realloc.cpp \
-        cma_aligned_alloc.cpp \
-        cma_alloc_size.cpp \
-        cma_free_double.cpp \
-        cma_globals.cpp \
-        cma_allocator_lock.cpp \
-        cma_metadata.cpp \
-        cma_debug.cpp \
-        cma_utils.cpp \
-        cma_global_overloads.cpp \
-        cma_set_alloc_limit.cpp \
-        cma_set_thread_safety.cpp
+all: $(TARGET)
 
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
+$(TARGET): $(OBJS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-HEADERS := CMA.hpp \
-           cma_internal.hpp
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
@@ -70,28 +21,12 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-all: $(TARGET)
-
-$(TARGET): $(OBJS)
-	@$(AR) $(ARFLAGS) $@ $^
-	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
-
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
-
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
 
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
@@ -119,7 +54,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

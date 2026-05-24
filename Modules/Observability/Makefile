@@ -1,48 +1,5 @@
-include ../../compiler_flags.mk
-TARGET := Observability.a
-DEBUG_TARGET := Observability_debug.a
-
-SRCS := observability_task_scheduler_bridge.cpp \
-        observability_networking_metrics.cpp \
-        observability_game_metrics.cpp
-
-HEADERS := observability_task_scheduler_bridge.hpp \
-           observability_networking_metrics.hpp \
-           observability_game_metrics.hpp
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/Observability.mk
 
 all: $(TARGET)
 
@@ -70,16 +27,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
@@ -106,7 +53,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

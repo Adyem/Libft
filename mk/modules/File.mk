@@ -1,0 +1,23 @@
+TARGET         := file.a
+DEBUG_TARGET   := file_debug.a
+
+SRCS := file_opendir.cpp \
+        file_check_directory.cpp \
+        file_mkdir.cpp \
+        file_copy.cpp \
+        file_move.cpp \
+        file_exists.cpp \
+        file_delete.cpp \
+        file_path_join.cpp \
+        file_path_normalize.cpp \
+        file_path_parts.cpp \
+        file_watch.cpp \
+        file_fopen.cpp \
+        file_fclose.cpp \
+        file_fgets.cpp
+
+HEADERS := open_dir.hpp \
+           file_utils.hpp \
+           file_watch.hpp
+
+include $(dir $(lastword $(MAKEFILE_LIST)))common/module_defaults.mk

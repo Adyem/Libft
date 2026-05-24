@@ -1,94 +1,5 @@
-include ../../compiler_flags.mk
-TARGET := networking.a
-DEBUG_TARGET := networking_debug.a
-
-SRCS := networking_socket_class.cpp \
-        networking_send_utils.cpp \
-        networking.cpp \
-        networking_dns_resolver.cpp \
-        networking_setup_server.cpp \
-        networking_setup_client.cpp \
-        networking_setup_udp.cpp \
-        networking_udp_event_loop.cpp \
-        networking_socket_wrapper_functions.cpp \
-        networking_socket_handle.cpp \
-        networking_ssl_wrapper.cpp \
-        networking_tls_aead.cpp \
-        networking_quic_experimental.cpp \
-        networking_nonblocking.cpp \
-        networking_event_loop.cpp \
-        networking_http_client.cpp \
-        networking_http2_client.cpp \
-        networking_http_server.cpp \
-        networking_websocket_client.cpp \
-        networking_websocket_server.cpp \
-        networking_socket_config_thread_safety.cpp
-
-ifeq ($(OS),Windows_NT)
-    SRCS += networking_select.cpp
-else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Linux)
-        SRCS += networking_epoll.cpp
-    else ifeq ($(UNAME_S),Darwin)
-        SRCS += networking_kqueue.cpp
-    else ifeq ($(UNAME_S),FreeBSD)
-        SRCS += networking_kqueue.cpp
-    else ifeq ($(UNAME_S),NetBSD)
-        SRCS += networking_kqueue.cpp
-    else ifeq ($(UNAME_S),OpenBSD)
-        SRCS += networking_kqueue.cpp
-    else
-        SRCS += networking_select.cpp
-    endif
-endif
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-HEADERS := socket_class.hpp \
-           networking.hpp \
-           udp_socket.hpp \
-           ssl_wrapper.hpp \
-           networking_tls_aead.hpp \
-           networking_quic_experimental.hpp \
-           http_client.hpp \
-           http2_client.hpp \
-           http_server.hpp \
-           websocket_client.hpp \
-           websocket_server.hpp \
-           socket_handle.hpp \
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/Networking.mk
 
 all: $(TARGET)
 
@@ -118,16 +29,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
 	@if $(RM) $(CLEAN_FILES); then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
@@ -154,7 +55,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

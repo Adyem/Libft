@@ -1,37 +1,5 @@
-DEMO_OPT_LEVEL ?= 3
-OPT_LEVEL ?= $(DEMO_OPT_LEVEL)
-
-include ../compiler_flags.mk
-
-TARGET_DIR := build
-TARGET_NAME := demo_dumb_game
-TARGET := $(TARGET_DIR)/$(TARGET_NAME)
-LEGACY_TARGET := $(TARGET_NAME)
-MODULE_NAME := $(notdir $(CURDIR))
-
-ifeq ($(OS),Windows_NT)
-    RM = del /F /Q
-else
-    RM = rm -f
-endif
-
-CXX := g++
-SRCS := demo_main.cpp \
-    demo_runtime.cpp \
-    demo_render.cpp \
-    demo_levels.cpp \
-    demo_leaderboard.cpp
-
-UNAME_S := $(shell uname -s)
-LINK_FLAGS :=
-
-ifeq ($(OS),Windows_NT)
-    LINK_FLAGS += -lgdi32 -luser32
-else ifeq ($(UNAME_S),Darwin)
-    LINK_FLAGS += -framework Cocoa -framework CoreGraphics -lobjc -lpthread
-else
-    LINK_FLAGS += -lX11 -lXext -lpthread
-endif
+include ../mk/compiler_flags.mk
+include ../mk/demo/config.mk
 
 all: FORCE $(TARGET) $(LEGACY_TARGET)
 
@@ -61,7 +29,9 @@ clean:
 fclean: clean
 	@printf '        [%s] fclean: success\n' "$(MODULE_NAME)"
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 .PHONY: all clean fclean re validate-levels FORCE
 
