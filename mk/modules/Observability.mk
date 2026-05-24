@@ -1,7 +1,8 @@
 TARGET := Observability.a
 DEBUG_TARGET := Observability_debug.a
 
-SRCS := observability_task_scheduler_bridge.cpp \
+SRCS := observability.cpp \
+        observability_task_scheduler_bridge.cpp \
         observability_networking_metrics.cpp \
         observability_game_metrics.cpp
 
