@@ -220,7 +220,7 @@ Page *create_page(ft_size_t size)
     ft_size_t page_size = determine_page_size(size);
     ft_bool use_heap = FT_TRUE;
 
-    if (page_list == ft_nullptr)
+    if (page_list == ft_nullptr && page_size <= PAGE_SIZE)
     {
         page_size = PAGE_SIZE;
         use_heap = FT_FALSE;
