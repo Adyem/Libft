@@ -43,6 +43,7 @@ SUBDIRS := Modules/Basic \
            Modules/Config \
            Modules/CrossProcess \
            Modules/Compression \
+           Modules/Debug \
            Modules/Encryption \
            Modules/Encoding \
            Modules/URI \
@@ -84,6 +85,7 @@ LIB_BASES := \
   Modules/Config/config \
   Modules/CrossProcess/CrossProcess \
   Modules/Compression/compression \
+  Modules/Debug/Debug \
   Modules/Encryption/encryption \
   Modules/Encoding/encoding \
   Modules/URI/uri \

@@ -47,6 +47,7 @@
 #include "Modules/Compression/compression_stream_test_hooks.hpp"
 #include "Modules/Config/config.hpp"
 #include "Modules/CrossProcess/cross_process.hpp"
+#include "Modules/Debug/debug.hpp"
 #include "Modules/DUMB/controls.hpp"
 #include "Modules/DUMB/dumb_console.hpp"
 #include "Modules/DUMB/dumb_controls_internal.hpp"
