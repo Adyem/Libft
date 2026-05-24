@@ -72,3 +72,4 @@ ft_bool cmp_path_equal(const char *path_left, const char *path_right) noexcept
         return (FT_FALSE);
     return (FT_TRUE);
 }
+

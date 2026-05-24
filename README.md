@@ -20,8 +20,14 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Each wrapper carefully translates the FullLibft naming/convention style into C++ idioms so consumers stay consistent.
   This module exists to let higher-level C++ projects build on the library without re-implementing their own bridging layers.
 
+- `CLI/`: Provides a small command-line parser for tools, demos, and service entry points.
+  It handles long and short options, boolean flags, typed option values, defaults, environment fallbacks, subcommands, and positional arguments.
+  Typed getters expose parsed bool, string, int64, uint64, and double values through `FT_ERR_*` return codes.
+  CLI/ also formats help text so command-line surfaces can stay consistent without duplicating usage strings.
+
 - `Compatebility/`: Keeps OS-specific code isolated so the library can stay portable across Linux, macOS, and Windows with minimal ifdefs.
   It provides consistent fallbacks and shims for filesystem details, locking primitives, and other APIs that vary between platforms.
+  Platform-dependent path behavior such as native separators and canonical path resolution is kept here so higher layers stay portable.
   Rather than scattering platform checks in every module, Compatebility/ encapsulates the behavior and exposes clean, stable helpers.
   The net result is that higher layers can call uniform helpers and trust the module to handle quirks like different error codes or required structs.
 
@@ -60,6 +66,11 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Modules that need wire-safe text representations can use Encoding/ without depending on compression, encryption, or networking internals.
   Keeping these helpers central avoids duplicated ad hoc encoders across API signing, storage, file parsing, and protocol code.
 
+- `URI/`: Parses, normalizes, and inspects URI and URL-style references for modules that exchange links or endpoint paths.
+  It exposes component parsing, URI normalization, percent-encoding/decoding for URI components, and query value lookup helpers.
+  URI/ uses explicit allocation ownership and `FT_ERR_*` reporting so callers can compose it with Networking, API, HTML, Config, and CLI code.
+  Keeping URI handling separate avoids each protocol or parser module inventing slightly different escaping and query parsing rules.
+
 - `Errno/`: Implements the shared global error stack, mutex wrappers, and the conventions that every class or module follows for reporting failure.
   It exposes helpers for pushing entries, querying depths, and mirroring results between the global and local stacks so errors stay consistent.
   Errno/ also documents the locking contract and operation ID generation that every consumer recreates when reporting issues.
@@ -67,8 +78,14 @@ Every module that allocates through this layer inherits the same mechanisms for 
 
 - `File/`: Wraps filesystem interactions, path utilities, and attribute queries into safer helpers built on top of the standard C APIs.
   It understands common patterns such as reading/writing safely, walking directories, and handling special file types with predictable behavior.
+  Low-level path helpers cover normalization, joining, basename/dirname, extension/stem extraction, and root containment checks.
   File/ ensures that the rest of the project does not repeat error handling for file descriptors or manual retries.
   By centralizing filesystem quirks, the module keeps higher layers focused on the data being stored rather than the underlying syscall dance.
+
+- `Filesystem/`: Provides higher-level filesystem path utilities on top of File/ and Compatebility/.
+  It exposes normalized joins, canonical paths for existing filesystem entries, basename/dirname/extension/stem helpers, and safe relative path checks.
+  The module includes root-containment validation and safe joining for workflows that accept user-provided relative paths.
+  Filesystem/ gives callers a compact path-focused API while keeping platform-specific canonicalization inside Compatebility/.
 
 - `Game/`: Contains game-specific data structures, simulation helpers, and server-side logic that model stateful interactions over shared primitives.
   It leverages core features like RNG, networking, and storage to deliver deterministic simulations and replay-friendly data formats.

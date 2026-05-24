@@ -45,6 +45,7 @@ SUBDIRS := Modules/Basic \
            Modules/Compression \
            Modules/Encryption \
            Modules/Encoding \
+           Modules/URI \
            Modules/RNG \
            Modules/JSon \
            Modules/YAML \
@@ -85,6 +86,7 @@ LIB_BASES := \
   Modules/Compression/compression \
   Modules/Encryption/encryption \
   Modules/Encoding/encoding \
+  Modules/URI/uri \
   Modules/RNG/RNG \
   Modules/JSon/JSon \
   Modules/YAML/YAML  \

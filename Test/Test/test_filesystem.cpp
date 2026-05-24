@@ -305,3 +305,4 @@ FT_TEST(test_filesystem_walk_recursive_rejects_null_callback)
     (void)file_delete(root_path.c_str());
     return (1);
 }
+

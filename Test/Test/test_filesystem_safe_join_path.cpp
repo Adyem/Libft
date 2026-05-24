@@ -1,0 +1,24 @@
+#include "../test_internal.hpp"
+#include "../../Modules/Filesystem/filesystem.hpp"
+#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_filesystem_safe_join_path_keeps_path_inside_root)
+{
+    ft_string *joined_path;
+    ft_string *escaped_path;
+
+    joined_path = filesystem_safe_join_path("root", "assets/../image.png");
+    FT_ASSERT(joined_path != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, joined_path->get_error());
+    FT_ASSERT_EQ(FT_TRUE, filesystem_is_inside_root("root",
+        joined_path->c_str()));
+    escaped_path = filesystem_safe_join_path("root", "../secret.txt");
+    FT_ASSERT(escaped_path == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, joined_path->destroy());
+    delete joined_path;
+    return (1);
+}

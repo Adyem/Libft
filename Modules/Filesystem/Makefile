@@ -3,6 +3,11 @@ TARGET         := filesystem.a
 DEBUG_TARGET   := filesystem_debug.a
 
 SRCS := filesystem_path.cpp \
+        filesystem_canonical_path.cpp \
+        filesystem_is_safe_relative_path.cpp \
+        filesystem_is_inside_root.cpp \
+        filesystem_validate_inside_root.cpp \
+        filesystem_safe_join_path.cpp \
         filesystem_temp.cpp \
         filesystem_atomic_write.cpp \
         filesystem_walk.cpp

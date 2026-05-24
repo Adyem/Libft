@@ -50,6 +50,16 @@ int32_t         cli_parse(cli_command *command, ft_size_t argument_count,
 cli_option   *cli_find_option(cli_command *command, const char *long_name);
 const cli_option *cli_find_option_const(const cli_command *command,
                     const char *long_name);
+int32_t         cli_get_bool(const cli_command *command, const char *long_name,
+                    ft_bool *value_out) noexcept;
+int32_t         cli_get_string(const cli_command *command, const char *long_name,
+                    const char **value_out) noexcept;
+int32_t         cli_get_int64(const cli_command *command, const char *long_name,
+                    int64_t *value_out) noexcept;
+int32_t         cli_get_uint64(const cli_command *command, const char *long_name,
+                    uint64_t *value_out) noexcept;
+int32_t         cli_get_double(const cli_command *command, const char *long_name,
+                    double *value_out) noexcept;
 int32_t         cli_format_help(const cli_command *command,
                     const char *program_name, char *buffer, ft_size_t buffer_size);
 

@@ -123,3 +123,4 @@ ft_bool filesystem_has_extension(const char *path, const char *extension) noexce
     cma_free(path_extension);
     return (result);
 }
+
