@@ -17,7 +17,7 @@ endif
 
 CXX ?= g++
 AR ?= ar
-ARFLAGS ?= rcs
+ARFLAGS := rcs
 
 BUILD_OBJ_SUFFIX ?= $(BUILD_OUTPUT_SUFFIX)
 ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
