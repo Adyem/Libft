@@ -148,8 +148,17 @@ $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
         if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
                 module_path="$$module_dir/$$module_target"; \
                 progress_index=$$(printf '%s\n' "$(LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
-                printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_LIBS)" "$$module_path"; \
-                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+                log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
+                { \
+                        printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_LIBS)" "$$module_path"; \
+                        $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+                } > "$$log_file" 2>&1; \
+                status=$$?; \
+                while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
+                cat "$$log_file"; \
+                rmdir .libft_output_lock; \
+                $(RM) "$$log_file"; \
+                if [ $$status -ne 0 ]; then exit $$status; fi; \
         fi
 
 %_debug.a: FORCE
@@ -169,8 +178,17 @@ $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
         if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
                 module_path="$$module_dir/$$module_target"; \
                 progress_index=$$(printf '%s\n' "$(DEBUG_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
-                printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
-                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+                log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
+                { \
+                        printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
+                        $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+                } > "$$log_file" 2>&1; \
+                status=$$?; \
+                while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
+                cat "$$log_file"; \
+                rmdir .libft_output_lock; \
+                $(RM) "$$log_file"; \
+                if [ $$status -ne 0 ]; then exit $$status; fi; \
         fi
 
 %_test.a: FORCE
@@ -190,8 +208,17 @@ $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
         if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
                 module_path="$$module_dir/$$module_target"; \
                 progress_index=$$(printf '%s\n' "$(TEST_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
-                printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
-                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
+                log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
+                { \
+                        printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
+                        $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
+                } > "$$log_file" 2>&1; \
+                status=$$?; \
+                while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
+                cat "$$log_file"; \
+                rmdir .libft_output_lock; \
+                $(RM) "$$log_file"; \
+                if [ $$status -ne 0 ]; then exit $$status; fi; \
         fi
 
 clean:
@@ -201,10 +228,16 @@ clean:
 			status=1; \
 		fi; \
 	done; \
-	if ! $(MAKE) -C Demo clean $(SUBMAKE_OVERRIDES); then \
+	if ! $(MAKE) -C Demo clean $(SUBMAKE_OVERRIDES) LIBFT_PARENT_CLEAN=1; then \
 		status=1; \
 	fi; \
-	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET); then \
+	if ! $(MAKE) -C Test clean $(SUBMAKE_OVERRIDES) LIBFT_PARENT_CLEAN=1; then \
+		status=1; \
+	fi; \
+	if ! $(RMDIR) $(TEMP_DIRS); then \
+		status=1; \
+	fi; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET) $(OUTPUT_LOGS); then \
 		status=1; \
 	fi; \
 	if [ $$status -eq 0 ]; then \
@@ -221,10 +254,16 @@ fclean:
 			status=1; \
 		fi; \
 	done; \
-	if ! $(MAKE) -C Demo fclean $(SUBMAKE_OVERRIDES); then \
+	if ! $(MAKE) -C Demo fclean $(SUBMAKE_OVERRIDES) LIBFT_PARENT_CLEAN=1; then \
 		status=1; \
 	fi; \
-	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET); then \
+	if ! $(MAKE) -C Test fclean $(SUBMAKE_OVERRIDES) LIBFT_PARENT_CLEAN=1; then \
+		status=1; \
+	fi; \
+	if ! $(RMDIR) $(TEMP_DIRS); then \
+		status=1; \
+	fi; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET) $(OUTPUT_LOGS); then \
 		status=1; \
 	fi; \
 	if [ $$status -eq 0 ]; then \

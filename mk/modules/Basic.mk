@@ -47,6 +47,7 @@ SRCS := basic_atoi.cpp \
     basic_utf8_case.cpp \
     basic_utf8_decode.cpp \
     basic_utf8_grapheme.cpp \
-    basic_utf8_length.cpp
+    basic_utf8_length.cpp \
+    basic_constant_time_compare.cpp
 
 include $(dir $(lastword $(MAKEFILE_LIST)))common/module_defaults.mk

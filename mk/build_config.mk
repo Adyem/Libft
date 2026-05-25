@@ -12,6 +12,9 @@ MAKEFLAGS      += --no-print-directory
 
 SUBMAKE_OVERRIDES ?=
 
+TEMP_DIRS := temp_objs temp_objs_test .libft_output_lock
+OUTPUT_LOGS := .libft_build_*.log
+
 ifeq ($(OS),Windows_NT)
     MKDIR  = mkdir
     RM     = del /F /Q
@@ -56,6 +59,7 @@ SUBDIRS := Modules/Basic \
            Modules/XML \
            Modules/Storage \
            Modules/Networking \
+           Modules/URI \
            Modules/API \
            Modules/Observability \
            Modules/Logger \
@@ -96,6 +100,7 @@ LIB_BASES := \
   Modules/XML/XMLParser \
   Modules/Storage/storage \
   Modules/Networking/networking \
+  Modules/URI/uri \
   Modules/API/API \
   Modules/Observability/Observability \
   Modules/Logger/Logger \

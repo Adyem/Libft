@@ -8,6 +8,7 @@ FORCE:
 	@true
 
 $(TARGET): FORCE $(OBJS) ../$(LIBFT_ARCHIVE)
+	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(TARGET))"
 	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../$(LIBFT_ARCHIVE) $(LDFLAGS)
 
@@ -52,15 +53,6 @@ build_tests: all
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	@total=$(TOTAL_SRCS); \
-	current=1; \
-	for src in $(SRCS); do \
-	        if [ "$$src" = "$<" ]; then \
-	                break; \
-	        fi; \
-	        current=$$((current + 1)); \
-	done; \
-	echo "Compiling test file $$current/$$total";
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
@@ -153,37 +145,21 @@ debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE)
+	@printf "Compiled debug test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
 	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE) $(LDFLAGS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	@total=$(TOTAL_SRCS); \
-	current=1; \
-	for src in $(SRCS); do \
-	        if [ "$$src" = "$<" ]; then \
-	                break; \
-	        fi; \
-	        current=$$((current + 1)); \
-	done; \
-	echo "Compiling test file $$current/$$total";
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
 $(EFFICIENCY_TARGET): FORCE $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
+	@printf "Compiled efficiency files (%d files)\n" $(EFF_TOTAL_SRCS)
 	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
 	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS)
 
 $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	@total=$(EFF_TOTAL_SRCS); \
-	current=1; \
-	for src in $(EFF_SRCS); do \
-	        if [ "$$src" = "$<" ]; then \
-	                break; \
-	        fi; \
-	        current=$$((current + 1)); \
-	done; \
-	echo "Compiling efficiency file $$current/$$total";
 	@$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
 
 ../$(EFFICIENCY_LIBFT_ARCHIVE): FORCE
@@ -249,7 +225,7 @@ clean:
 	if ! $(RM) $(CLEAN_FILES); then \
 	        status=1; \
 	fi; \
-	if ! $(MAKE) -s -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
+	if ! $(RMDIR) $(CLEAN_DIRS); then \
 	        status=1; \
 	fi; \
 	if [ $$status -ne 0 ]; then \
@@ -258,24 +234,20 @@ clean:
 	fi; \
 	echo "Clean completed successfully"
 
-fclean:
+fclean: clean
 	@echo "Removing test artifacts"
 	@status=0; \
-	if ! $(RM) $(CLEAN_FILES); then \
-	        status=1; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(EFFICIENCY_TARGET); then \
+		status=1; \
 	fi; \
-	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
-	        status=1; \
-	fi; \
-	if ! $(RM) $(EFFICIENCY_TARGET); then \
-	        status=1; \
-	fi; \
-	if ! $(MAKE) -s -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
-	        status=1; \
+	if [ -z "$(LIBFT_PARENT_CLEAN)" ]; then \
+		if ! $(MAKE) -C .. fclean; then \
+			status=1; \
+		fi; \
 	fi; \
 	if [ $$status -ne 0 ]; then \
-	        echo "Full clean failed"; \
-	        exit 1; \
+		echo "Full clean failed"; \
+		exit 1; \
 	fi; \
 	echo "Full clean completed successfully"
 

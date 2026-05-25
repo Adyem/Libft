@@ -4,9 +4,11 @@ TOTAL_SRCS ?= $(words $(SRCS))
 ifeq ($(OS),Windows_NT)
     MKDIR ?= mkdir
     RM ?= del /F /Q
+    RMDIR ?= rmdir /S /Q
 else
     MKDIR ?= mkdir -p
     RM ?= rm -f
+    RMDIR ?= rm -rf
 endif
 
 ifdef COMPILE_FLAGS
@@ -29,7 +31,9 @@ DEBUG_DEPS ?=
 
 CFLAGS ?= -Wall -Wextra -Werror -std=c++17
 
+CLEAN_DIRS ?= $(wildcard objs*)
 CLEAN_FILES ?= $(TARGET) $(OBJS) $(DEPS)
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES := $(subst /,\\,$(CLEAN_FILES))
+    CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
 endif

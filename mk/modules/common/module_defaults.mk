@@ -1,12 +1,14 @@
 MODULE_NAME ?= $(notdir $(CURDIR))
-TOTAL_SRCS ?= $(words $(SRCS))
+TOTAL_SRCS ?= $(words $(SRCS) $(MM_SRCS))
 
 ifeq ($(OS),Windows_NT)
     MKDIR ?= mkdir
     RM ?= del /F /Q
+    RMDIR ?= rmdir /S /Q
 else
     MKDIR ?= mkdir -p
     RM ?= rm -f
+    RMDIR ?= rm -rf
 endif
 
 ifdef COMPILE_FLAGS
@@ -15,7 +17,7 @@ endif
 
 CXX ?= g++
 AR ?= ar
-ARFLAGS ?= rcs
+ARFLAGS := rcs
 
 BUILD_OBJ_SUFFIX ?= $(BUILD_OUTPUT_SUFFIX)
 ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
@@ -39,12 +41,17 @@ MODULE_MMFLAGS_EXTRA ?=
 CFLAGS ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast $(MODULE_CFLAGS_EXTRA)
 MMFLAGS ?= $(CFLAGS) $(MODULE_MMFLAGS_EXTRA)
 
-CLEAN_OBJS ?= $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
+CLEAN_OBJS ?= $(shell find . -type f \( -name *.o -o -name *.d \
+	-o -name *.gcda -o -name *.gcno \) 2>/dev/null)
+CLEAN_DIRS ?= $(wildcard objs*)
 TEST_ARCHIVES ?= $(wildcard *_test.a) $(wildcard *_debug_test.a)
+GENERATED_FILES ?= compile_commands.json
 
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES ?= $(subst /,\\,$(CLEAN_OBJS))
+    CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
+    FCLEAN_FILES ?= $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
 else
     CLEAN_FILES ?= $(CLEAN_OBJS)
+    FCLEAN_FILES ?= $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
 endif

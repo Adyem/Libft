@@ -14,7 +14,12 @@ SRCS := file_opendir.cpp \
         file_watch.cpp \
         file_fopen.cpp \
         file_fclose.cpp \
-        file_fgets.cpp
+        file_fgets.cpp \
+        file_list_directory.cpp \
+        file_read_write.cpp \
+        file_recursive.cpp \
+        file_security.cpp \
+        file_status.cpp
 
 HEADERS := open_dir.hpp \
            file_utils.hpp \

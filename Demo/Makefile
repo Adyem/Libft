@@ -19,7 +19,14 @@ $(LEGACY_TARGET): FORCE $(TARGET)
 	@$(MAKE) -C .. Full_Libft.a OPT_LEVEL=$(OPT_LEVEL)
 
 clean:
-	@if $(RM) $(TARGET) $(LEGACY_TARGET); then \
+	@status=0; \
+	if ! $(RM) $(TARGET) $(LEGACY_TARGET); then \
+		status=1; \
+	fi; \
+	if ! $(RMDIR) $(TARGET_DIR); then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
 	else \
 		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
@@ -27,6 +34,9 @@ clean:
 	fi
 
 fclean: clean
+	@if [ -z "$(LIBFT_PARENT_CLEAN)" ]; then \
+		$(MAKE) -C .. fclean; \
+	fi
 	@printf '        [%s] fclean: success\n' "$(MODULE_NAME)"
 
 re:

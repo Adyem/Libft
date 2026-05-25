@@ -1,90 +1,47 @@
-include ../../compiler_flags.mk
-TARGET         := uri.a
-DEBUG_TARGET   := uri_debug.a
-
-SRCS := uri_internal.cpp \
-        uri_components_reset.cpp \
-        uri_components_destroy.cpp \
-        uri_parse.cpp \
-        uri_normalize.cpp \
-        uri_percent_encode_component.cpp \
-        uri_percent_decode_component.cpp \
-        uri_query_get_value.cpp
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-HEADERS := uri.hpp uri_internal.hpp
-
-ifeq ($(OS),Windows_NT)
-    MKDIR   = mkdir
-    RM      = del /F /Q
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+include ../../mk/compiler_flags.mk
+include ../../mk/modules/URI.mk
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
+	@current=0; \
+	for src in $(SRCS) $(MM_SRCS); do \
+		current=$$((current + 1)); \
+		printf '        [%s] Built file %s (%d/%d)\n' "$(MODULE_NAME)" "$$src" $$current $(TOTAL_SRCS); \
+	done
 	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
-	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
+	@current=0; \
+	for src in $(SRCS) $(MM_SRCS); do \
+		current=$$((current + 1)); \
+		printf '        [%s Debug] Built file %s (%d/%d)\n' "$(MODULE_NAME)" "$$src" $$current $(TOTAL_SRCS); \
+	done
 	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
-	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard objs*/*.o) \
-	$(wildcard objs*/*.d)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-endif
-
 clean:
-	@if $(RM) $(CLEAN_FILES); then \
+	@status=0; \
+	if ! $(RM) $(CLEAN_FILES); then \
+		status=1; \
+	fi; \
+	if ! $(RMDIR) $(CLEAN_DIRS); then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
 	else \
 		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
@@ -93,13 +50,10 @@ clean:
 
 fclean:
 	@status=0; \
-	if ! $(RM) $(CLEAN_FILES); then \
+	if ! $(RM) $(FCLEAN_FILES); then \
 		status=1; \
 	fi; \
-	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
-		status=1; \
-	fi; \
-	if ! $(RM) $(TEST_ARCHIVES); then \
+	if ! $(RMDIR) $(CLEAN_DIRS); then \
 		status=1; \
 	fi; \
 	if [ $$status -eq 0 ]; then \
@@ -109,7 +63,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

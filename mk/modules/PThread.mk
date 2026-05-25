@@ -27,10 +27,11 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_condition.cpp \
         pthread_condition_variable.cpp \
         pthread_rwlock.cpp \
+        pthread_concurrency.cpp \
         pthread_task_scheduler.cpp \
         pthread_lock_tracking.cpp \
         pthread_task_scheduler_tracing.cpp
 
-HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp pthread_lock_tracking.hpp recursive_mutex.hpp
+HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp pthread_lock_tracking.hpp recursive_mutex.hpp concurrency.hpp
 
 include $(dir $(lastword $(MAKEFILE_LIST)))common/module_defaults.mk
