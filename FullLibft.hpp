@@ -111,6 +111,8 @@
 #include "Modules/Game/game_world_region.hpp"
 #include "Modules/Game/game_world_registry.hpp"
 #include "Modules/Game/game_world_replay.hpp"
+#include "Modules/Terrain/chunk_mesh.hpp"
+#include "Modules/Terrain/terrain_generator.hpp"
 #include "Modules/Geometry/aabb.hpp"
 #include "Modules/Geometry/circle.hpp"
 #include "Modules/Geometry/geometry.hpp"

@@ -368,6 +368,15 @@ Update README.md only when the change is important for the end user, such as imp
 
 Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatibility module. Platform-specific means the code cannot run on all of Linux, Windows, and macOS.
 
+## Test file organization
+
+Prefer multiple focused test files over one large mixed-purpose test file.
+Each test file name must make the tested class, module, or function family clear
+from the filename. For example, tests for `chunk_mesh` belong in a
+`test_chunk_mesh.cpp` file, while tests for `terrain_generate_chunk` belong in a
+`test_terrain_generator.cpp` file. Keep unrelated class/function tests split so
+the purpose of each file is obvious from its naming convention.
+
 ## Testing-only rules
 
 - For testing builds only, all class private members must be exposed as `public` under `#ifdef LIBFT_TEST_BUILD` so tests can validate expected internal state and behavior directly. This must never be exposed in production builds.

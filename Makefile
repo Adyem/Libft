@@ -74,62 +74,30 @@ re:
 $(TARGET): $(LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
 	@$(RM) $@
-	@$(RMDIR) temp_objs
-	@$(MKDIR) temp_objs
-	@temp_index=0; \
-	for lib in $(LIBS); do \
-		temp_index=$$((temp_index + 1)); \
-		$(MKDIR) temp_objs/$$temp_index; \
-		cd temp_objs/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-	done
-	@find temp_objs -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
-	@find temp_objs -mindepth 1 -exec rm -rf {} +
-	@$(RMDIR) temp_objs
+	@{ printf 'CREATE %s\n' "$@"; \
+	   for lib in $(LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+	   printf 'SAVE\nEND\n'; } | $(AR) -M
 
 $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
-	@$(RMDIR) temp_objs
-	@$(MKDIR) temp_objs
-	@temp_index=0; \
-	for lib in $(DEBUG_LIBS); do \
-		temp_index=$$((temp_index + 1)); \
-		$(MKDIR) temp_objs/$$temp_index; \
-		cd temp_objs/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-	done
-	@find temp_objs -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
-	@find temp_objs -mindepth 1 -exec rm -rf {} +
-	@$(RMDIR) temp_objs
+	@{ printf 'CREATE %s\n' "$@"; \
+	   for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+	   printf 'SAVE\nEND\n'; } | $(AR) -M
 
 $(TEST_TARGET): $(TEST_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_TEST_LIBS) $@
 	@$(RM) $@
-	@$(RMDIR) temp_objs_test
-	@$(MKDIR) temp_objs_test
-	@temp_index=0; \
-	for lib in $(TEST_LIBS); do \
-		temp_index=$$((temp_index + 1)); \
-		$(MKDIR) temp_objs_test/$$temp_index; \
-		cd temp_objs_test/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-	done
-	@find temp_objs_test -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
-	@find temp_objs_test -mindepth 1 -exec rm -rf {} +
-	@$(RMDIR) temp_objs_test
+	@{ printf 'CREATE %s\n' "$@"; \
+	   for lib in $(TEST_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+	   printf 'SAVE\nEND\n'; } | $(AR) -M
 
 $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
-	@$(RMDIR) temp_objs_test
-	@$(MKDIR) temp_objs_test
-	@temp_index=0; \
-	for lib in $(DEBUG_LIBS); do \
-		temp_index=$$((temp_index + 1)); \
-		$(MKDIR) temp_objs_test/$$temp_index; \
-		cd temp_objs_test/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-	done
-	@find temp_objs_test -type f -name '*.o' -exec $(AR) $(ARFLAGS) $@ {} +
-	@find temp_objs_test -mindepth 1 -exec rm -rf {} +
-	@$(RMDIR) temp_objs_test
+	@{ printf 'CREATE %s\n' "$@"; \
+	   for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+	   printf 'SAVE\nEND\n'; } | $(AR) -M
 
 %.a: FORCE
 	@module_dir="$(patsubst %/,%,$(dir $@))"; \
