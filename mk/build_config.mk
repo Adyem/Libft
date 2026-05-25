@@ -60,7 +60,8 @@ SUBDIRS := Modules/Basic \
            Modules/Observability \
            Modules/Logger \
            Modules/Parser \
-           Modules/Game
+           Modules/Game \
+           Modules/Terrain
 
 LIB_BASES := \
   Modules/Basic/Basic \
@@ -100,7 +101,8 @@ LIB_BASES := \
   Modules/Observability/Observability \
   Modules/Logger/Logger \
   Modules/Parser/parser \
-  Modules/Game/Game
+  Modules/Game/Game \
+  Modules/Terrain/Terrain
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
