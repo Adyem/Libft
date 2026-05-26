@@ -1,0 +1,88 @@
+# Game
+
+The `Game` module contains gameplay-domain lifecycle classes for characters, items, inventory, equipment, skills, upgrades, buffs/debuffs, economy, crafting, dialogue, events, behavior trees, worlds, regions, voxels, scripting, hooks, data catalogs, and telemetry. Most classes follow the shared lifecycle pattern: construct, `initialize`, use, then `destroy`; mutable classes usually expose optional thread-safety helpers and object-local error accessors.
+
+## Characters, Items, Inventory, and Equipment
+
+- `game_character` - Character record with identity, stats, inventory/equipment integration, save/load helpers, getters/setters, add/remove operations, metrics, lifecycle, error accessors, and optional thread safety.
+- `game_item_modifier` - Item modifier id/value pair with lifecycle, getters/setters, error accessors, and optional thread safety.
+- `game_item` - Stackable item with id, size, rarity, dimensions, four modifiers, stack operations, modifier accessors, lifecycle, error accessors, and optional thread safety.
+- `game_inventory` - Inventory container for item stacks with add/remove/query behavior, lifecycle, error accessors, and optional thread safety.
+- `game_equipment_slot` - Equipment slot enum.
+- `game_equipment` - Equipment loadout by slot with equip/unequip/query behavior, lifecycle, error accessors, and optional thread safety.
+- `game_item_definition`, `game_loadout_entry`, `game_loadout_blueprint`, and `game_recipe_blueprint` - Catalog records used to define items, starting loadouts, and crafting recipes.
+
+## Progression, Effects, and Economy
+
+- `game_skill` - Skill level/experience-style record with upgrade behavior, lifecycle, getters/setters, error accessors, and optional thread safety.
+- `game_upgrade` - Upgrade definition/state with cost/effect data and lifecycle helpers.
+- `game_experience_table` - Level-to-experience table with lookup and mutation helpers.
+- `game_progress_tracker` - Tracks named progress counters and completion state.
+- `game_achievement` and `game_goal` - Achievement state with goal/progress maps and completion checks.
+- `game_buff` and `game_debuff` - Timed positive/negative effects with magnitude/duration/state accessors.
+- `game_resistance` - Damage/type resistance record with value accessors.
+- `game_reputation` - Reputation value and threshold tracking.
+- `game_currency_rate`, `game_price_definition`, `game_rarity_band`, `game_vendor_profile`, and `game_economy_table` - Economy records and tables for pricing, conversion, rarity bands, vendor behavior, and lookups.
+
+## Crafting, Dialogue, Quests, and Events
+
+- `game_crafting_ingredient` - Recipe ingredient struct.
+- `game_crafting` - Crafting system that validates ingredients and produces recipe outputs.
+- `game_dialogue_line` - One dialogue line with id, speaker/text, conditions, and lifecycle/error handling.
+- `game_dialogue_script` - Ordered dialogue script.
+- `game_dialogue_table` - Dialogue repository/table with register/fetch behavior.
+- `game_quest` - Quest state and objectives.
+- `game_event` - Scheduled or emitted event payload.
+- `game_event_scheduler` - Priority/timed event scheduler with register, cancel, run, telemetry, lifecycle, and optional thread safety.
+- `game_event_compare_ptr`, `s_event_scheduler_profile`, and `game_event_scheduler_telemetry_state` - Scheduler ordering, profiling, and telemetry structs.
+
+## Behavior and AI
+
+- `game_behavior_action` - Weighted/cooldown action definition.
+- `game_behavior_profile` - Profile containing behavior weights and actions.
+- `game_behavior_table` - Registry of behavior profiles.
+- `game_behavior_context` - Runtime context carrying a character pointer and user data.
+- `game_behavior_node` - Abstract behavior-tree node with `tick`.
+- `game_behavior_composite` - Base composite node with child management.
+- `game_behavior_selector` and `game_behavior_sequence` - Standard behavior-tree composites.
+- `game_behavior_tree_action` - Leaf node wrapping an action callback.
+- `game_behavior_tree` - Owns and ticks a behavior-tree root.
+
+## World, Map, Regions, and Voxels
+
+- `game_state` - Top-level game state container.
+- `game_server` - Server lifecycle class for running game systems.
+- `game_world` - World container with regions, registry, events, serialization/save/load/replay integration, lifecycle, error accessors, and optional thread safety.
+- `game_world_region` - Region record inside a world.
+- `game_world_registry` - Registry for world records and component-style data.
+- `game_world_replay_session` - Replay capture/playback session.
+- `game_region_definition` - Region metadata and configuration.
+- `game_region_backend` - Backend abstraction for region storage.
+- `game_map3d` - 3D map/grid helper.
+- `game_path_step` and `game_pathfinding` - Path step record and pathfinding system. `game_path_step_test_helper` exposes test-oriented construction/access.
+- `game_voxel_chunk_section`, `game_voxel_chunk`, and `game_voxel_region` - Voxel storage for chunks, sections, and regions when the voxel backend is enabled.
+
+## Hooks, Scripting, and Catalogs
+
+- `ft_game_hook_context` - Hook invocation context.
+- `ft_game_hook_metadata` - Hook metadata record.
+- `ft_game_hook_listener_entry` - Registered listener entry.
+- `game_hooks` - Hook registry/dispatcher with add/remove/emit behavior.
+- `game_script_context` - Script execution context and user data.
+- `game_script_bridge` - Bridge for registering and invoking script callbacks.
+- `game_data_catalog` - Registry for item definitions, recipes, loadouts, and other static catalog records.
+
+## Serialization and Persistence
+
+Several classes provide save/load or serialization helpers in their `.hpp` surface and corresponding `.cpp` implementations. These methods serialize gameplay state, restore records, and report errors through the module's lifecycle/error conventions.
+
+## Common Method Groups
+
+Across this module, public lifecycle classes consistently expose some or all of:
+
+- Constructors/destructors plus deleted copy/move constructors and assignments.
+- `initialize()`, `initialize(const T &)`, `initialize(T &&)`, `destroy()`, and `move(T &other)`.
+- `enable_thread_safety()`, `disable_thread_safety()`, and `is_thread_safe()`.
+- `lock(...)` / `unlock(...)` on classes that expose explicit lock helpers.
+- Domain getters/setters for ids, names, values, tables, children, records, counters, and timestamps.
+- `get_error()` and `get_error_str()` on classes with object-local error reporting.

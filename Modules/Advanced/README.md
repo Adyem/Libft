@@ -1,0 +1,34 @@
+# Advanced
+
+The `Advanced` module contains allocation-returning convenience helpers built on top of `Basic`, `CPP_class`, and CMA-style ownership. Functions that return `char *`, `void *`, `int32_t *`, or `ft_string *` allocate a new result; callers own the returned pointer and must release it with the matching project allocator or object lifecycle.
+
+## String and Number Conversion
+
+- `adv_to_string(int64_t number)` - Allocates an `ft_string` containing a signed 64-bit decimal representation.
+- `adv_to_string(uint64_t number)` - Allocates an `ft_string` containing an unsigned 64-bit decimal representation.
+- `adv_to_string(double number)` - Allocates an `ft_string` containing a decimal representation of a `double`.
+- `adv_to_string(int32_t number)` - Allocates an `ft_string` containing a signed 32-bit decimal representation.
+- `adv_to_string(uint32_t number)` - Allocates an `ft_string` containing an unsigned 32-bit decimal representation.
+- `adv_to_string(float number)` - Allocates an `ft_string` containing a decimal representation of a `float`.
+- `adv_atoi(const char *string)` - Parses a C string into an allocated `int32_t` result.
+- `adv_itoa(int32_t number)` - Allocates a decimal C string for an integer.
+- `adv_itoa_base(int32_t number, int32_t base)` - Allocates a C string for an integer in the requested numeric base.
+
+## Text Helpers
+
+- `adv_utf16_to_utf8(const char16_t *input, ft_size_t input_length)` - Converts a UTF-16 span into an allocated UTF-8 `ft_string`.
+- `adv_utf32_to_utf8(const char32_t *input, ft_size_t input_length)` - Converts a UTF-32 span into an allocated UTF-8 `ft_string`.
+- `adv_locale_casefold(const char *input, const char *locale_name)` - Allocates a locale-aware folded string for comparisons.
+- `adv_span_to_string(const char *buffer, ft_size_t length)` - Copies a byte span into an allocated `ft_string`.
+- `adv_strdup(const char *string)` - Duplicates a null-terminated C string.
+- `adv_strndup(const char *string, ft_size_t maximum_length)` - Duplicates at most `maximum_length` bytes from a C string.
+- `adv_strjoin(char const *string_1, char const *string_2)` - Allocates the concatenation of two C strings.
+- `adv_strjoin_multiple(int32_t count, ...)` - Allocates the concatenation of `count` C strings from varargs.
+- `adv_substr(const char *source, uint32_t start, ft_size_t length)` - Allocates a substring beginning at `start`.
+- `adv_strtrim(const char *input_string, const char *set)` - Allocates a copy with characters from `set` trimmed from both ends.
+- `adv_split(char const *string, char delimiter)` - Splits a string by delimiter into a null-terminated array of allocated strings.
+
+## Memory Helpers
+
+- `adv_memdup(const void *source, ft_size_t size)` - Allocates and copies `size` bytes from `source`.
+- `adv_calloc(ft_size_t count, ft_size_t size)` - Allocates zero-initialized storage for `count * size` bytes.

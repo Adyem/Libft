@@ -364,7 +364,8 @@ Concrete examples:
 - Generic module-wide `.hpp` filenames: `Errno/errno.hpp`, `Math/math.hpp`, `Networking/api.hpp`
 - Class header filenames: `String/string.hpp`, `Socket/socket_handle.hpp`, `Containers/class_vector.hpp`
 
-Update README.md only when the change is important for the end user, such as improved functionality or unavoidable undefined behavior. Bug fixes alone do not require README updates.
+Update documentation when public functionality is added or changed. When a module gets new public functionality, update that module's `README.md` with the new functions, classes, structs, methods, and a short explanation. Bug fixes alone do not require README updates unless they introduce unavoidable behavior or contract changes that users must know about.
+When adding a new module, add that module to the root `README.md` and create the module's own `README.md` documenting its public-facing functions, classes, structs, methods, and purpose.
 
 Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatibility module. Platform-specific means the code cannot run on all of Linux, Windows, and macOS.
 

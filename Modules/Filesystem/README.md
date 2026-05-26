@@ -1,0 +1,36 @@
+# Filesystem
+
+The `Filesystem` module provides path manipulation, safety checks, atomic writes, and recursive walking helpers. Functions returning `ft_string *` allocate a lifecycle string that the caller owns.
+
+## Types
+
+- `filesystem_walk_callback` - Callback used by recursive walking. It receives the path, whether the path is a directory, and caller context.
+
+## Path Construction and Normalization
+
+- `filesystem_normalize_path(const char *path)` - Returns a normalized copy of a path with redundant separators and path components cleaned up.
+- `filesystem_join_path(const char *path_left, const char *path_right)` - Joins two path fragments into one allocated path string.
+- `filesystem_safe_join_path(const char *root_path, const char *relative_path)` - Joins a root with a relative path while rejecting traversal outside the root.
+- `filesystem_canonical_path(const char *path)` - Resolves a path to its canonical form where the platform can provide one.
+
+## Path Components
+
+- `filesystem_basename(const char *path)` - Returns the final filename component.
+- `filesystem_dirname(const char *path)` - Returns the parent directory component.
+- `filesystem_extension(const char *path)` - Returns the extension portion of the final path component.
+- `filesystem_stem(const char *path)` - Returns the final path component without its extension.
+
+## Path Checks
+
+- `filesystem_is_absolute(const char *path)` - Reports whether a path is absolute.
+- `filesystem_is_relative(const char *path)` - Reports whether a path is relative.
+- `filesystem_is_safe_relative_path(const char *path)` - Reports whether a relative path avoids absolute roots and parent traversal.
+- `filesystem_is_inside_root(const char *root_path, const char *candidate_path)` - Reports whether a candidate path stays inside a root directory.
+- `filesystem_validate_inside_root(const char *root_path, const char *candidate_path)` - Returns an error code if a candidate path escapes the root.
+- `filesystem_has_extension(const char *path, const char *extension)` - Checks whether a path ends with the requested extension.
+
+## File Operations
+
+- `filesystem_temp_path(const char *prefix, const char *extension, ft_string *output)` - Creates a temporary path string in `output`.
+- `filesystem_atomic_write(const char *path, const void *data, ft_size_t size)` - Writes data through a temporary file and replaces the target atomically where supported.
+- `filesystem_walk_recursive(const char *root_path, filesystem_walk_callback callback, void *user_context)` - Visits files and directories under a root and calls the callback for each entry.
