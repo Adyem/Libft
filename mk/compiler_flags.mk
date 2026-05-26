@@ -38,10 +38,17 @@ endif
 BUILD_OUTPUT_SUFFIX := _opt$(OPT_LEVEL)$(SANITIZER_SUFFIX)
 
 COMPILE_FLAGS ?= -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations \
-                -Wold-style-cast -Wshadow -Wconversion -Wformat=2 -Wundef \
-                -Wfloat-equal -Wodr -Wuseless-cast -Wzero-as-null-pointer-constant \
-                -Wmaybe-uninitialized -DLIBFT_INTERNAL_HEADERS \
+                -Wshadow -Wformat=2 -Wundef \
+                -Wfloat-equal -Wodr \
+                -DLIBFT_INTERNAL_HEADERS \
                 $(OPT_FLAGS) $(SANITIZER_FLAGS)
+
+ifneq ($(shell uname -s 2>/dev/null),Darwin)
+    COMPILE_FLAGS += -Wold-style-cast -Wconversion -Wuseless-cast \
+        -Wzero-as-null-pointer-constant -Wmaybe-uninitialized
+else
+    COMPILE_FLAGS += -Wno-format-nonliteral -Wno-tautological-compare
+endif
 
 export BUILD_OUTPUT_SUFFIX
 export COMPILE_FLAGS

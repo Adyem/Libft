@@ -16,6 +16,7 @@ struct ft_render_macos_state
     int32_t         height;
 
     uint32_t        *pixels;
+    uint32_t        *display_pixels;
 
     ft_bool         is_fullscreen;
     ft_bool         should_close;
@@ -116,6 +117,14 @@ ft_render_platform_result ft_render_platform_create_window(
         free(state);
         return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
     }
+    state->display_pixels = (uint32_t *)malloc((size_t)(
+        state->width * state->height * 4));
+    if (state->display_pixels == NULL)
+    {
+        free(state->pixels);
+        free(state);
+        return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
+    }
 
     rect = NSMakeRect(100, 100, desc.width, desc.height);
     state->window = [[NSWindow alloc]
@@ -127,6 +136,7 @@ ft_render_platform_result ft_render_platform_create_window(
 
     if (state->window == nil)
     {
+        free(state->display_pixels);
         free(state->pixels);
         free(state);
         return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
@@ -137,6 +147,7 @@ ft_render_platform_result ft_render_platform_create_window(
     if (state->window_delegate == nil)
     {
         [state->window close];
+        free(state->display_pixels);
         free(state->pixels);
         free(state);
         return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
@@ -186,6 +197,11 @@ ft_render_platform_result ft_render_platform_destroy_window(
     {
         free(state->pixels);
         state->pixels = NULL;
+    }
+    if (state->display_pixels != NULL)
+    {
+        free(state->display_pixels);
+        state->display_pixels = NULL;
     }
 
     free(state);
@@ -261,6 +277,8 @@ ft_render_platform_result ft_render_platform_present(
     CGImageRef image;
     NSView *view;
     size_t bytes_per_row;
+    size_t pixel_count;
+    size_t index;
 
     (void)depth_buffer;
 
@@ -271,17 +289,32 @@ ft_render_platform_result ft_render_platform_present(
 
     state = (ft_render_macos_state *)platform_state;
 
+    if (framebuffer->pixels == NULL
+        || framebuffer->width != state->width
+        || framebuffer->height != state->height
+        || state->display_pixels == NULL)
+    {
+        return ((ft_render_platform_result){ FT_ERR_INVALID_STATE, 0 });
+    }
+    pixel_count = (size_t)framebuffer->width * (size_t)framebuffer->height;
+    index = 0;
+    while (index < pixel_count)
+    {
+        state->display_pixels[index] = 0xFF000000U
+            | (framebuffer->pixels[index] & 0x00FFFFFFU);
+        index = index + 1;
+    }
     bytes_per_row = (size_t)(framebuffer->width * 4);
     color_space = CGColorSpaceCreateDeviceRGB();
 
     context = CGBitmapContextCreate(
-        framebuffer->pixels,
+        state->display_pixels,
         (size_t)framebuffer->width,
         (size_t)framebuffer->height,
         8,
         bytes_per_row,
         color_space,
-        kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big
+        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little
     );
 
     if (context == NULL)

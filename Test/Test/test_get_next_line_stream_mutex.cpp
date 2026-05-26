@@ -7,7 +7,8 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static ssize_t gnl_stream_mutex_callback_success(void *, char *buffer, size_t max_size) noexcept
+static int64_t gnl_stream_mutex_callback_success(void *, char *buffer,
+    ft_size_t max_size) noexcept
 {
     if (buffer == ft_nullptr || max_size == 0)
         return (-1);
@@ -15,7 +16,8 @@ static ssize_t gnl_stream_mutex_callback_success(void *, char *buffer, size_t ma
     return (1);
 }
 
-static ssize_t gnl_stream_mutex_callback_failure(void *, char *, size_t) noexcept
+static int64_t gnl_stream_mutex_callback_failure(void *, char *,
+    ft_size_t) noexcept
 {
     return (-1);
 }

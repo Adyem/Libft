@@ -6,7 +6,8 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static ssize_t gnl_stream_lifecycle_callback(void *, char *buffer, size_t max_size) noexcept
+static int64_t gnl_stream_lifecycle_callback(void *, char *buffer,
+    ft_size_t max_size) noexcept
 {
     if (buffer == ft_nullptr || max_size == 0)
         return (-1);

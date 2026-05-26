@@ -16,7 +16,7 @@
 # include <io.h>
 #endif
 
-typedef int (*t_pf_snprintf_plain)(char *, size_t, const char *, ...);
+typedef int (*t_pf_snprintf_plain)(char *, ft_size_t, const char *, ...);
 typedef int (*t_pf_printf_fd_plain)(int, const char *, ...);
 
 static int create_pipe(int pipe_fds[2])

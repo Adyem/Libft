@@ -2,6 +2,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdio>
+#include <inttypes.h>
 
 static ft_string *create_string_from_buffer(const char *buffer)
 {
@@ -22,7 +23,8 @@ static ft_string *format_signed_long(int64_t number)
     char buffer[64];
     int32_t conversion_result;
 
-    conversion_result = std::snprintf(buffer, sizeof(buffer), "%ld", number);
+    conversion_result = std::snprintf(buffer, sizeof(buffer), "%" PRId64,
+        number);
     if (conversion_result < 0)
         return (ft_nullptr);
     if (static_cast<ft_size_t>(conversion_result) >= sizeof(buffer))
@@ -35,7 +37,8 @@ static ft_string *format_unsigned_long(uint64_t number)
     char buffer[64];
     int32_t conversion_result;
 
-    conversion_result = std::snprintf(buffer, sizeof(buffer), "%lu", number);
+    conversion_result = std::snprintf(buffer, sizeof(buffer), "%" PRIu64,
+        number);
     if (conversion_result < 0)
         return (ft_nullptr);
     if (static_cast<ft_size_t>(conversion_result) >= sizeof(buffer))

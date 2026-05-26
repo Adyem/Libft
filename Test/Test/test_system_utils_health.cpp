@@ -36,7 +36,7 @@ static int su_test_health_failure(void *context, ft_string &detail)
 FT_TEST(test_su_health_register_and_run_success)
 {
     t_su_health_check_result results[1];
-    size_t                   count;
+    ft_size_t               count;
 
     su_health_clear_checks();
     if (su_health_register_check("ready", &su_test_health_success, ft_nullptr) != 0)
@@ -61,7 +61,7 @@ FT_TEST(test_su_health_register_and_run_success)
 FT_TEST(test_su_health_run_checks_reports_failure)
 {
     t_su_health_check_result results[1];
-    size_t                   count;
+    ft_size_t               count;
     int                      failure_counter;
 
     su_health_clear_checks();

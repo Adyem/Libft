@@ -13,8 +13,8 @@
 typedef struct memory_stream
 {
     const char *data;
-    size_t length;
-    size_t offset;
+    ft_size_t length;
+    ft_size_t offset;
 } memory_stream;
 
 typedef struct captured_event
@@ -24,11 +24,12 @@ typedef struct captured_event
     bool bool_value;
 } captured_event;
 
-static size_t memory_stream_reader(void *user_data, char *buffer, size_t max_size)
+static ft_size_t memory_stream_reader(void *user_data, char *buffer,
+    ft_size_t max_size)
 {
     memory_stream *stream;
-    size_t remaining;
-    size_t index;
+    ft_size_t remaining;
+    ft_size_t index;
 
     if (!user_data || !buffer || max_size == 0)
         return (0);
@@ -88,7 +89,8 @@ static int gather_events(const char *json_text, ft_vector<captured_event> &event
     return (status);
 }
 
-static size_t string_sink_write(void *user_data, const char *buffer, size_t size)
+static ft_size_t string_sink_write(void *user_data, const char *buffer,
+    ft_size_t size)
 {
     ft_string *output;
 

@@ -15,7 +15,7 @@
 
 typedef int (*t_pf_printf_fd_plain)(int, const char *, ...);
 typedef int (*t_pf_printf_plain)(const char *, ...);
-typedef int (*t_pf_snprintf_plain)(char *, size_t, const char *, ...);
+typedef int (*t_pf_snprintf_plain)(char *, ft_size_t, const char *, ...);
 
 static int pf_vsnprintf_wrapper(char *string, size_t size, const char *format, ...)
 {
@@ -40,7 +40,7 @@ static int pf_fflush_failure(FILE *stream)
     return (-1);
 }
 
-static long pf_ftell_failure(FILE *stream)
+static int64_t pf_ftell_failure(FILE *stream)
 {
     (void)stream;
     errno = EIO;

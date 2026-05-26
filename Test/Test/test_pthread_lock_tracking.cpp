@@ -1080,7 +1080,7 @@ FT_TEST(test_pt_lock_tracking_query_apis_do_not_mutate_registry_on_miss)
     FT_ASSERT_EQ(0, pt_thread_create(&worker_thread, ft_nullptr,
         thread_id_capture_worker, &capture_state));
     FT_ASSERT(wait_for_stage(&capture_state.stage, 1));
-    FT_ASSERT_NEQ(0, capture_state.thread_identifier.load());
+    FT_ASSERT(capture_state.thread_identifier.load() != pt_thread_id_type());
     FT_ASSERT_EQ(0, pt_thread_join(worker_thread, ft_nullptr));
     error_code = FT_ERR_SUCCESS;
     thread_infos = pt_lock_tracking::get_thread_infos(&error_code);
@@ -1128,7 +1128,7 @@ FT_TEST(test_pt_lock_tracking_owner_index_tracks_acquire_release)
     FT_ASSERT_EQ(0, pt_thread_create(&worker_thread, ft_nullptr,
         thread_id_capture_worker, &capture_state));
     FT_ASSERT(wait_for_stage(&capture_state.stage, 1));
-    FT_ASSERT_NEQ(0, capture_state.thread_identifier.load());
+    FT_ASSERT(capture_state.thread_identifier.load() != pt_thread_id_type());
     FT_ASSERT_EQ(0, pt_thread_join(worker_thread, ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_acquired(
         capture_state.thread_identifier.load(),
@@ -1155,7 +1155,7 @@ FT_TEST(test_pt_lock_tracking_owner_index_tracks_acquire_release)
     snapshot_index = find_wait_snapshot_index(snapshot,
         static_cast<const void *>(&mutex_object), THREAD_ID);
     FT_ASSERT_NEQ(snapshot.size, snapshot_index);
-    FT_ASSERT_EQ(0, snapshot.data[snapshot_index].owner_thread);
+    FT_ASSERT_EQ(pt_thread_id_type(), snapshot.data[snapshot_index].owner_thread);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pt_lock_tracking::notify_thread_exit(THREAD_ID));
     pt_buffer_destroy(snapshot);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_object.destroy());

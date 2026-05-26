@@ -23,12 +23,13 @@ typedef struct json_stream_test_state
     size_t offset;
 } json_stream_test_state;
 
-static size_t test_chunk_callback(void *user_data, char *buffer, size_t max_size)
+static ft_size_t test_chunk_callback(void *user_data, char *buffer,
+    ft_size_t max_size)
 {
     if (!user_data || !buffer || max_size == 0)
         return (0);
     json_stream_test_state *state = static_cast<json_stream_test_state *>(user_data);
-    size_t written = 0;
+    ft_size_t written = 0;
     while (written < max_size && state->index < state->count)
     {
         const char *chunk = state->chunks[state->index];
@@ -40,8 +41,8 @@ static size_t test_chunk_callback(void *user_data, char *buffer, size_t max_size
             continue;
         }
         size_t remaining = chunk_size - state->offset;
-        size_t available = max_size - written;
-        size_t to_copy = remaining;
+        ft_size_t available = max_size - written;
+        ft_size_t to_copy = remaining;
         if (to_copy > available)
             to_copy = available;
         ft_memcpy(buffer + written, chunk + state->offset, to_copy);

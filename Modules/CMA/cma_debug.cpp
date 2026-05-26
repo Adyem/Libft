@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstring>
+#include <inttypes.h>
 #include <limits>
 #include "cma_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
@@ -333,7 +334,8 @@ int32_t cma_report_leaks(void)
         }
         page = page->next;
     }
-    std::printf("[cma] leak summary: live_blocks=%zu live_bytes=%zu ignored_blocks=%zu ignored_bytes=%zu\n",
+    std::printf("[cma] leak summary: live_blocks=%" PRIu64 " live_bytes=%" PRIu64
+        " ignored_blocks=%" PRIu64 " ignored_bytes=%" PRIu64 "\n",
         summary.live_block_count, summary.live_bytes,
         summary.ignored_block_count, summary.ignored_bytes);
     page = page_list;
@@ -346,7 +348,7 @@ int32_t cma_report_leaks(void)
         {
             if (block->leak_ignored == FT_FALSE)
             {
-                std::printf("  [leak] pointer=%p size=%zu\n",
+                std::printf("  [leak] pointer=%p size=%" PRIu64 "\n",
                     cma_block_user_pointer(block), cma_block_user_size(block));
                 cmp_stack_trace_print(stdout, block->leak_stack_frames,
                     block->leak_stack_frame_count);

@@ -73,6 +73,54 @@ int32_t     math_convolution(const ft_vector<double> &first,
                 const ft_vector<double> &second,
                 ft_vector<double> &result) noexcept;
 
+#ifdef __APPLE__
+inline int64_t math_abs(long number)
+{
+    return (math_abs(static_cast<int64_t>(number)));
+}
+
+inline int64_t math_gcd(long first_number, long second_number)
+{
+    return (math_gcd(static_cast<int64_t>(first_number),
+        static_cast<int64_t>(second_number)));
+}
+
+inline int64_t math_lcm(long first_number, long second_number)
+{
+    return (math_lcm(static_cast<int64_t>(first_number),
+        static_cast<int64_t>(second_number)));
+}
+
+inline int64_t math_max(long first_number, long second_number)
+{
+    return (math_max(static_cast<int64_t>(first_number),
+        static_cast<int64_t>(second_number)));
+}
+
+inline int64_t math_min(long first_number, long second_number)
+{
+    return (math_min(static_cast<int64_t>(first_number),
+        static_cast<int64_t>(second_number)));
+}
+
+inline int64_t math_factorial(long number)
+{
+    return (math_factorial(static_cast<int64_t>(number)));
+}
+
+inline int64_t math_absdiff(long first_number, long second_number)
+{
+    return (math_absdiff(static_cast<int64_t>(first_number),
+        static_cast<int64_t>(second_number)));
+}
+
+inline int64_t math_average(long first_number, long second_number)
+{
+    return (math_average(static_cast<int64_t>(first_number),
+        static_cast<int64_t>(second_number)));
+}
+#endif
+
 #include "linear_algebra.hpp"
 
 #endif

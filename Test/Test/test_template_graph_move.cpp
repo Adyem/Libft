@@ -38,7 +38,7 @@ static void graph_get_error_str_uninitialised_operation(void)
 FT_TEST(test_ft_graph_move_constructor_recreates_mutex)
 {
     ft_graph<int> source_graph;
-    ft_vector<size_t> neighbor_vector;
+    ft_vector<ft_size_t> neighbor_vector;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.initialize());
@@ -69,7 +69,7 @@ FT_TEST(test_ft_graph_move_assignment_resets_source_mutex)
 {
     ft_graph<int> destination_graph;
     ft_graph<int> source_graph;
-    ft_vector<size_t> neighbor_vector;
+    ft_vector<ft_size_t> neighbor_vector;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_graph.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.initialize());
@@ -104,7 +104,7 @@ FT_TEST(test_ft_graph_move_allows_reuse_after_transfer)
 {
     ft_graph<int> source_graph;
     ft_graph<int> destination_graph;
-    ft_vector<size_t> neighbor_vector;
+    ft_vector<ft_size_t> neighbor_vector;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_graph.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, neighbor_vector.initialize());

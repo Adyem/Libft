@@ -40,14 +40,14 @@ static int read_pipe_into_buffer(int read_fd, char *buffer, size_t buffer_size, 
 FT_TEST(test_ft_putchar_fd_writes_character)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[2];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_putchar_fd('Z', pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(1), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(1), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, 1, &bytes_read));
     FT_ASSERT_EQ(static_cast<ssize_t>(1), bytes_read);
@@ -75,14 +75,14 @@ FT_TEST(test_ft_putchar_fd_ignores_null_count)
 FT_TEST(test_ft_putnbr_fd_writes_negative_number)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[32];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_putnbr_fd(-12345, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(6), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(6), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -95,7 +95,7 @@ FT_TEST(test_ft_putnbr_fd_writes_negative_number)
 FT_TEST(test_ft_putnbr_fd_handles_long_min)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[64];
     char expected[64];
@@ -108,7 +108,7 @@ FT_TEST(test_ft_putnbr_fd_handles_long_min)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putnbr_fd(value, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -121,14 +121,14 @@ FT_TEST(test_ft_putnbr_fd_handles_long_min)
 FT_TEST(test_ft_puthex_fd_respects_uppercase_flag)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[32];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_puthex_fd(0x1FAB, pipe_fds[1], true, &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(4), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(4), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -141,14 +141,14 @@ FT_TEST(test_ft_puthex_fd_respects_uppercase_flag)
 FT_TEST(test_ft_puthex_fd_lowercase_output)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[32];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_puthex_fd(0xBEEF, pipe_fds[1], false, &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(4), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(4), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -161,14 +161,14 @@ FT_TEST(test_ft_puthex_fd_lowercase_output)
 FT_TEST(test_ft_puthex_fd_zero_value)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[8];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_puthex_fd(0, pipe_fds[1], false, &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(1), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(1), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -181,7 +181,7 @@ FT_TEST(test_ft_puthex_fd_zero_value)
 FT_TEST(test_ft_putfloat_fd_matches_snprintf)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[64];
     char expected[64];
@@ -192,7 +192,7 @@ FT_TEST(test_ft_putfloat_fd_matches_snprintf)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putfloat_fd(3.14159, pipe_fds[1], &write_count, 3);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -205,7 +205,7 @@ FT_TEST(test_ft_putfloat_fd_matches_snprintf)
 FT_TEST(test_ft_putgeneral_fd_uppercase)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[64];
     char expected[64];
@@ -218,7 +218,7 @@ FT_TEST(test_ft_putgeneral_fd_uppercase)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putgeneral_fd(value, true, pipe_fds[1], &write_count, 4);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -231,14 +231,14 @@ FT_TEST(test_ft_putgeneral_fd_uppercase)
 FT_TEST(test_ft_putstr_fd_writes_string)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[32];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_putstr_fd("hello", pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(5), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(5), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -251,14 +251,14 @@ FT_TEST(test_ft_putstr_fd_writes_string)
 FT_TEST(test_ft_putstr_fd_null_pointer_writes_literal)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[32];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_putstr_fd(ft_nullptr, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(6), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(6), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -271,7 +271,7 @@ FT_TEST(test_ft_putstr_fd_null_pointer_writes_literal)
 FT_TEST(test_ft_putunsigned_fd_prints_decimal)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[64];
     char expected[64];
@@ -282,7 +282,7 @@ FT_TEST(test_ft_putunsigned_fd_prints_decimal)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putunsigned_fd(1234567890, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -295,7 +295,7 @@ FT_TEST(test_ft_putunsigned_fd_prints_decimal)
 FT_TEST(test_ft_putunsigned_fd_uintmax_max)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[128];
     char expected[128];
@@ -308,7 +308,7 @@ FT_TEST(test_ft_putunsigned_fd_uintmax_max)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putunsigned_fd(value, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -321,14 +321,14 @@ FT_TEST(test_ft_putunsigned_fd_uintmax_max)
 FT_TEST(test_ft_putunsigned_fd_zero_value)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[8];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_putunsigned_fd(0, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(1), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(1), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -341,7 +341,7 @@ FT_TEST(test_ft_putunsigned_fd_zero_value)
 FT_TEST(test_ft_putoctal_fd_outputs_octal_digits)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[32];
     char expected[32];
@@ -352,7 +352,7 @@ FT_TEST(test_ft_putoctal_fd_outputs_octal_digits)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putoctal_fd(0754321, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -365,7 +365,7 @@ FT_TEST(test_ft_putoctal_fd_outputs_octal_digits)
 FT_TEST(test_ft_putptr_fd_formats_address)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[64];
     char expected[64];
@@ -380,7 +380,7 @@ FT_TEST(test_ft_putptr_fd_formats_address)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putptr_fd(&sample_value, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -393,14 +393,14 @@ FT_TEST(test_ft_putptr_fd_formats_address)
 FT_TEST(test_ft_putptr_fd_null_pointer)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[16];
 
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = 0;
     ft_putptr_fd(ft_nullptr, pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(3), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(3), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -413,7 +413,7 @@ FT_TEST(test_ft_putptr_fd_null_pointer)
 FT_TEST(test_ft_putscientific_fd_lowercase)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[64];
     char expected[64];
@@ -426,7 +426,7 @@ FT_TEST(test_ft_putscientific_fd_lowercase)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putscientific_fd(value, false, pipe_fds[1], &write_count, 5);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -439,7 +439,7 @@ FT_TEST(test_ft_putscientific_fd_lowercase)
 FT_TEST(test_ft_putscientific_fd_uppercase)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[64];
     char expected[64];
@@ -452,7 +452,7 @@ FT_TEST(test_ft_putscientific_fd_uppercase)
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putscientific_fd(value, true, pipe_fds[1], &write_count, 3);
-    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT(bytes_read >= 0);
@@ -465,7 +465,7 @@ FT_TEST(test_ft_putscientific_fd_uppercase)
 FT_TEST(test_ft_putstr_fd_skips_when_count_in_error)
 {
     int pipe_fds[2];
-    size_t write_count;
+    ft_size_t write_count;
     ssize_t bytes_read;
     char buffer[8];
 
@@ -482,7 +482,7 @@ FT_TEST(test_ft_putstr_fd_skips_when_count_in_error)
 
 FT_TEST(test_ft_putnbr_fd_marks_error_on_failed_write)
 {
-    size_t write_count;
+    ft_size_t write_count;
 
     write_count = 0;
     ft_putnbr_fd(42, -1, &write_count);

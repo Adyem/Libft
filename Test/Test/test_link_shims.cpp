@@ -2,6 +2,7 @@
 #include "../../Modules/PThread/condition.hpp"
 #include "../../Modules/PThread/mutex.hpp"
 
+#ifndef __APPLE__
 int pt_condition_variable::wait(pt_mutex &mutex)
 {
     struct timespec wait_duration;
@@ -10,3 +11,4 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     wait_duration.tv_nsec = 0;
     return (this->wait_for(mutex, wait_duration));
 }
+#endif

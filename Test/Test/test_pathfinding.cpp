@@ -49,7 +49,7 @@ FT_TEST(test_dijkstra_simple)
     graph.add_edge(2, 3);
     game_pathfinding finder;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, finder.initialize());
-    ft_vector<size_t> path;
+    ft_vector<ft_size_t> path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, path.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, finder.dijkstra_graph(graph, 0, 3, path));
     FT_ASSERT_EQ(4u, path.size());

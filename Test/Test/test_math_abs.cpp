@@ -26,10 +26,10 @@ FT_TEST(test_math_abs_negative_value_returns_positive)
 
 FT_TEST(test_math_abs_long_min_value_clamps_to_max)
 {
-    long result;
+    int64_t result;
 
-    result = math_abs(static_cast<long>(FT_LLONG_MIN));
-    FT_ASSERT_EQ(static_cast<long>(FT_LLONG_MAX), result);
+    result = math_abs(static_cast<int64_t>(FT_LLONG_MIN));
+    FT_ASSERT_EQ(static_cast<int64_t>(FT_LLONG_MAX), result);
     return (1);
 }
 

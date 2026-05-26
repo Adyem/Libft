@@ -231,7 +231,7 @@ FT_TEST(test_su_health_run_check_reports_missing_name)
 
 FT_TEST(test_su_health_run_checks_zero_checks_reports_zero_count)
 {
-    size_t count;
+    ft_size_t count;
 
     su_health_clear_checks();
     count = 99;
@@ -243,7 +243,7 @@ FT_TEST(test_su_health_run_checks_zero_checks_reports_zero_count)
 FT_TEST(test_su_health_run_checks_surfaces_failing_callback)
 {
     t_su_health_check_result result_buffer[1];
-    size_t count;
+    ft_size_t count;
 
     su_health_clear_checks();
     FT_ASSERT_EQ(0, su_health_register_check("health_fail", system_utils_additional_health_fail, ft_nullptr));

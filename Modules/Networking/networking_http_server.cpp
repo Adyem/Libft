@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cerrno>
 #include <new>
+#include <inttypes.h>
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -609,7 +610,8 @@ int32_t ft_http_server::run_once_locked()
             should_keep_alive = FT_FALSE;
         if (is_post && !body.empty())
         {
-            std::snprintf(buffer, sizeof(buffer), "%zu", body.size());
+            std::snprintf(buffer, sizeof(buffer), "%" PRIu64,
+                static_cast<uint64_t>(body.size()));
             response.append("HTTP/1.1 200 OK\r\nContent-Length: ");
             response.append(buffer);
             if (should_keep_alive != FT_FALSE)

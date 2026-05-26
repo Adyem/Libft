@@ -32,7 +32,7 @@ static void gnl_stream_call_init_from_file(gnl_stream_type &stream_instance)
     return ;
 }
 
-static ssize_t gnl_stream_noop_callback(void *, char *, size_t) noexcept
+static int64_t gnl_stream_noop_callback(void *, char *, ft_size_t) noexcept
 {
     return (0);
 }

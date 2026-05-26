@@ -1,4 +1,4 @@
-HAS_OPENSSL_HEADERS := $(shell printf "#include <openssl/ssl.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
+HAS_OPENSSL_HEADERS := $(shell printf "\#include <openssl/ssl.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
 ifneq ($(HAS_OPENSSL_HEADERS),1)
 SRCS := $(filter-out Test/test_api_tls_diagnostics.cpp \
                     Test/test_encryption_aead.cpp \
@@ -12,7 +12,7 @@ else
 OPENSSL_LIBS :=
 endif
 
-HAS_SQLITE3_HEADERS := $(shell printf "#include <sqlite3.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
+HAS_SQLITE3_HEADERS := $(shell printf "\#include <sqlite3.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
 ifeq ($(HAS_SQLITE3_HEADERS),1)
 SQLITE_LIBS := -lsqlite3
 else

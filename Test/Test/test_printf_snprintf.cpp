@@ -49,7 +49,7 @@ static int pf_fflush_failure(FILE *stream)
     return (-1);
 }
 
-static long pf_ftell_failure(FILE *stream)
+static int64_t pf_ftell_failure(FILE *stream)
 {
     (void)stream;
     errno = EIO;
@@ -87,7 +87,7 @@ FT_TEST(test_pf_snprintf_null_string_zero_size)
 FT_TEST(test_pf_snprintf_null_format)
 {
     char buffer[8];
-    typedef int (*t_pf_snprintf_plain)(char *, size_t, const char *, ...);
+    typedef int (*t_pf_snprintf_plain)(char *, ft_size_t, const char *, ...);
     t_pf_snprintf_plain call_pf_snprintf;
 
     buffer[0] = 'X';
