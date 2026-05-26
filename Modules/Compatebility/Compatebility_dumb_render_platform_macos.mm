@@ -11,6 +11,8 @@ struct ft_render_macos_state
 {
     NSWindow        *window;
     NSObject        *window_delegate;
+    NSRect          windowed_frame;
+    NSUInteger      windowed_style_mask;
 
     int32_t         width;
     int32_t         height;
@@ -21,6 +23,11 @@ struct ft_render_macos_state
     ft_bool         is_fullscreen;
     ft_bool         should_close;
 };
+
+static uint32_t ft_render_macos_to_bgra(uint32_t source_color)
+{
+    return (0xFF000000U | (source_color & 0x00FFFFFFU));
+}
 
 @interface FtRenderMacOSWindowDelegate : NSObject <NSWindowDelegate>
 {
@@ -127,9 +134,12 @@ ft_render_platform_result ft_render_platform_create_window(
     }
 
     rect = NSMakeRect(100, 100, desc.width, desc.height);
+    state->windowed_frame = rect;
+    state->windowed_style_mask = (NSWindowStyleMaskTitled
+        | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
     state->window = [[NSWindow alloc]
         initWithContentRect:rect
-        styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable)
+        styleMask:state->windowed_style_mask
         backing:NSBackingStoreBuffered
         defer:NO
     ];
@@ -158,6 +168,10 @@ ft_render_platform_result ft_render_platform_create_window(
     [[[state->window contentView] layer] setContentsGravity:kCAGravityResize];
     [state->window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
+    if ((desc.flags & FT_RENDER_WINDOW_FLAG_FULLSCREEN) != 0)
+    {
+        (void)ft_render_platform_set_fullscreen(state, FT_TRUE);
+    }
 
     out_framebuffer->width = state->width;
     out_framebuffer->height = state->height;
@@ -300,8 +314,8 @@ ft_render_platform_result ft_render_platform_present(
     index = 0;
     while (index < pixel_count)
     {
-        state->display_pixels[index] = 0xFF000000U
-            | (framebuffer->pixels[index] & 0x00FFFFFFU);
+        state->display_pixels[index] = ft_render_macos_to_bgra(
+            framebuffer->pixels[index]);
         index = index + 1;
     }
     bytes_per_row = (size_t)(framebuffer->width * 4);
@@ -357,12 +371,33 @@ ft_render_platform_result ft_render_platform_set_fullscreen(
 
     if (enabled == FT_TRUE && state->is_fullscreen == FT_FALSE)
     {
-        [state->window toggleFullScreen:nil];
+        NSScreen *screen;
+        NSRect screen_frame;
+
+        screen = [state->window screen];
+        if (screen == nil)
+        {
+            screen = [NSScreen mainScreen];
+        }
+        if (screen == nil)
+        {
+            return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, 0 });
+        }
+        state->windowed_frame = [state->window frame];
+        state->windowed_style_mask = [state->window styleMask];
+        screen_frame = [screen frame];
+        [state->window setStyleMask:NSWindowStyleMaskBorderless];
+        [state->window setFrame:screen_frame display:YES animate:NO];
+        [state->window setLevel:NSMainMenuWindowLevel + 1];
+        [state->window makeKeyAndOrderFront:nil];
         state->is_fullscreen = FT_TRUE;
     }
     else if (enabled == FT_FALSE && state->is_fullscreen == FT_TRUE)
     {
-        [state->window toggleFullScreen:nil];
+        [state->window setLevel:NSNormalWindowLevel];
+        [state->window setStyleMask:state->windowed_style_mask];
+        [state->window setFrame:state->windowed_frame display:YES animate:NO];
+        [state->window makeKeyAndOrderFront:nil];
         state->is_fullscreen = FT_FALSE;
     }
 

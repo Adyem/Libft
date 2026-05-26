@@ -7,7 +7,7 @@ all: $(TARGET)
 FORCE:
 	@true
 
-$(TARGET): FORCE $(OBJS) ../$(LIBFT_ARCHIVE)
+$(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
 	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(TARGET))"
 	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../$(LIBFT_ARCHIVE) $(LDFLAGS)
@@ -153,7 +153,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
-$(EFFICIENCY_TARGET): FORCE $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
+$(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
 	@printf "Compiled efficiency files (%d files)\n" $(EFF_TOTAL_SRCS)
 	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
 	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS)
@@ -162,7 +162,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
 	@$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
 
-../$(EFFICIENCY_LIBFT_ARCHIVE): FORCE
+../$(EFFICIENCY_LIBFT_ARCHIVE):
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL); then \
@@ -181,7 +181,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-../$(LIBFT_ARCHIVE): FORCE
+../$(LIBFT_ARCHIVE):
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL); then \
@@ -200,7 +200,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-../$(LIBFT_DEBUG_ARCHIVE): FORCE
+../$(LIBFT_DEBUG_ARCHIVE):
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL); then \

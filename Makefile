@@ -75,16 +75,7 @@ $(TARGET): $(LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
-		$(RMDIR) temp_objs; \
-		$(MKDIR) temp_objs; \
-		temp_index=0; \
-		for lib in $(LIBS); do \
-			temp_index=$$((temp_index + 1)); \
-			$(MKDIR) temp_objs/$$temp_index; \
-			cd temp_objs/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-		done; \
-		find temp_objs -type f -name '*.o' -exec $(AR) $(ARFLAGS) "$@" {} +; \
-		$(RMDIR) temp_objs; \
+		libtool -static -o "$@" $(LIBS); \
 	else \
 		{ printf 'CREATE %s\n' "$@"; \
 		  for lib in $(LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
@@ -95,16 +86,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
-		$(RMDIR) temp_objs; \
-		$(MKDIR) temp_objs; \
-		temp_index=0; \
-		for lib in $(DEBUG_LIBS); do \
-			temp_index=$$((temp_index + 1)); \
-			$(MKDIR) temp_objs/$$temp_index; \
-			cd temp_objs/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-		done; \
-		find temp_objs -type f -name '*.o' -exec $(AR) $(ARFLAGS) "$@" {} +; \
-		$(RMDIR) temp_objs; \
+		libtool -static -o "$@" $(DEBUG_LIBS); \
 	else \
 		{ printf 'CREATE %s\n' "$@"; \
 		  for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
@@ -115,16 +97,7 @@ $(TEST_TARGET): $(TEST_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_TEST_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
-		$(RMDIR) temp_objs_test; \
-		$(MKDIR) temp_objs_test; \
-		temp_index=0; \
-		for lib in $(TEST_LIBS); do \
-			temp_index=$$((temp_index + 1)); \
-			$(MKDIR) temp_objs_test/$$temp_index; \
-			cd temp_objs_test/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-		done; \
-		find temp_objs_test -type f -name '*.o' -exec $(AR) $(ARFLAGS) "$@" {} +; \
-		$(RMDIR) temp_objs_test; \
+		libtool -static -o "$@" $(TEST_LIBS); \
 	else \
 		{ printf 'CREATE %s\n' "$@"; \
 		  for lib in $(TEST_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
@@ -135,16 +108,7 @@ $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
-		$(RMDIR) temp_objs_test; \
-		$(MKDIR) temp_objs_test; \
-		temp_index=0; \
-		for lib in $(DEBUG_LIBS); do \
-			temp_index=$$((temp_index + 1)); \
-			$(MKDIR) temp_objs_test/$$temp_index; \
-			cd temp_objs_test/$$temp_index && $(AR) x ../../$$lib && cd ../..; \
-		done; \
-		find temp_objs_test -type f -name '*.o' -exec $(AR) $(ARFLAGS) "$@" {} +; \
-		$(RMDIR) temp_objs_test; \
+		libtool -static -o "$@" $(DEBUG_LIBS); \
 	else \
 		{ printf 'CREATE %s\n' "$@"; \
 		  for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
