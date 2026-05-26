@@ -20,14 +20,14 @@ FT_TEST(test_math_absdiff_int_symmetry)
 
 FT_TEST(test_math_absdiff_long_precision)
 {
-    long first_number;
-    long second_number;
-    long difference;
+    int64_t first_number;
+    int64_t second_number;
+    int64_t difference;
 
-    first_number = 123456789L;
-    second_number = -98765432L;
+    first_number = 123456789LL;
+    second_number = -98765432LL;
     difference = math_absdiff(first_number, second_number);
-    FT_ASSERT_EQ(222222221L, difference);
+    FT_ASSERT_EQ(222222221LL, difference);
     return (1);
 }
 
@@ -64,7 +64,7 @@ FT_TEST(test_math_absdiff_extreme_integers)
             static_cast<int64_t>(FT_LLONG_MAX));
     long_long_difference = math_absdiff(FT_LLONG_MIN, FT_LLONG_MAX);
     FT_ASSERT_EQ(FT_INT32_MAX, int_difference);
-    FT_ASSERT_EQ(static_cast<long>(FT_LLONG_MAX), long_difference);
+    FT_ASSERT_EQ(static_cast<int64_t>(FT_LLONG_MAX), long_difference);
     FT_ASSERT_EQ(FT_LLONG_MAX, long_long_difference);
     return (1);
 }
@@ -72,11 +72,12 @@ FT_TEST(test_math_absdiff_extreme_integers)
 FT_TEST(test_math_absdiff_zero_inputs)
 {
     int int_difference;
-    long long_difference;
+    int64_t long_difference;
 
     int_difference = math_absdiff(0, 0);
-    long_difference = math_absdiff(-12345L, -12345L);
+    long_difference = math_absdiff(static_cast<int64_t>(-12345),
+            static_cast<int64_t>(-12345));
     FT_ASSERT_EQ(0, int_difference);
-    FT_ASSERT_EQ(0L, long_difference);
+    FT_ASSERT_EQ(static_cast<int64_t>(0), long_difference);
     return (1);
 }

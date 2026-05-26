@@ -224,7 +224,8 @@ int32_t scma_report_leaks(void)
         }
         entry_index += 1;
     }
-    std::printf("[scma] leak summary: live_blocks=%zu live_bytes=%zu ignored_blocks=%zu ignored_bytes=%zu\n",
+    std::printf("[scma] leak summary: live_blocks=%" PRIu64 " live_bytes=%" PRIu64
+        " ignored_blocks=%" PRIu64 " ignored_bytes=%" PRIu64 "\n",
         summary.live_block_count, summary.live_bytes,
         summary.ignored_block_count, summary.ignored_bytes);
     entry_index = 0;
@@ -235,7 +236,8 @@ int32_t scma_report_leaks(void)
         block = &span.data[entry_index];
         if (block->in_use && block->leak_ignored == FT_FALSE)
         {
-            std::printf("  [leak] handle={index=%zu,generation=%zu} offset=%zu size=%zu\n",
+            std::printf("  [leak] handle={index=%" PRIu64 ",generation=%" PRIu64
+                "} offset=%" PRIu64 " size=%" PRIu64 "\n",
                 entry_index, block->generation, block->offset, block->size);
             cmp_stack_trace_print(stdout, block->leak_stack_frames,
                 block->leak_stack_frame_count);

@@ -13,7 +13,7 @@
 FT_TEST(test_ft_graph_enable_thread_safety_controls)
 {
     ft_graph<int> graph_instance;
-    ft_vector<size_t> neighbor_list;
+    ft_vector<ft_size_t> neighbor_list;
     size_t vertex_a;
     size_t vertex_b;
     ft_bool lock_acquired;

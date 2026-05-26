@@ -324,7 +324,7 @@ static void api_request_stream_headers_callback(int status_code,
 }
 
 static ft_bool api_request_stream_body_callback(const char *chunk_data,
-    size_t chunk_size, ft_bool is_final_chunk, void *user_data)
+    ft_size_t chunk_size, ft_bool is_final_chunk, void *user_data)
 {
     api_stream_test_context *context;
 

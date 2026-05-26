@@ -623,9 +623,9 @@ ft_bool ft_future<ValueType>::valid() const
     return (is_valid);
 }
 
-thread_local int32_t ft_future<void>::_last_error = FT_ERR_SUCCESS;
+inline thread_local int32_t ft_future<void>::_last_error = FT_ERR_SUCCESS;
 
-int32_t ft_future<void>::set_error(int32_t error_code) noexcept
+inline int32_t ft_future<void>::set_error(int32_t error_code) noexcept
 {
     ft_future<void>::_last_error = error_code;
     return (error_code);

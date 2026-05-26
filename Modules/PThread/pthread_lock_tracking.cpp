@@ -3,6 +3,7 @@
 #include "../Time/time.hpp"
 #include "pthread.hpp"
 #include <pthread.h>
+#include <new>
 
 static thread_local bool g_registry_mutex_owned = false;
 
@@ -23,26 +24,41 @@ typedef pt_buffer<s_pt_mutex_owner_info> pt_mutex_owner_vector;
 
 int pt_lock_tracking::lock_registry_mutex(void)
 {
-    pt_lock_tracking::get_registry_mutex()->lock();
+    std::mutex *registry_mutex;
+
+    registry_mutex = pt_lock_tracking::get_registry_mutex();
+    if (registry_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    registry_mutex->lock();
     return (FT_ERR_SUCCESS);
 }
 
 int pt_lock_tracking::unlock_registry_mutex(void)
 {
-    pt_lock_tracking::get_registry_mutex()->unlock();
+    std::mutex *registry_mutex;
+
+    registry_mutex = pt_lock_tracking::get_registry_mutex();
+    if (registry_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    registry_mutex->unlock();
     return (FT_ERR_SUCCESS);
 }
 
 std::mutex *pt_lock_tracking::get_registry_mutex(void)
 {
-    static std::mutex registry_mutex;
+    static std::mutex *registry_mutex = new (std::nothrow) std::mutex();
 
-    return (&registry_mutex);
+    return (registry_mutex);
 }
 
 bool pt_lock_tracking::ensure_registry_mutex_initialised(int *error_code)
 {
-    pt_lock_tracking::get_registry_mutex();
+    if (pt_lock_tracking::get_registry_mutex() == ft_nullptr)
+    {
+        if (error_code)
+            *error_code = FT_ERR_NO_MEMORY;
+        return (false);
+    }
     if (error_code)
         *error_code = FT_ERR_SUCCESS;
     return (true);

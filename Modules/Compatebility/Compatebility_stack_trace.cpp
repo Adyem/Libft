@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdint>
+#include <inttypes.h>
 #include "compatebility_stack_trace.hpp"
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -171,7 +172,8 @@ void    cmp_stack_trace_print(FILE *output_file, void *const *frames,
         frame_index = 0;
         while (frame_index < frame_count)
         {
-            std::fprintf(output_file, "    #%zu %p\n", frame_index,
+            std::fprintf(output_file, "    #%" PRIu64 " %p\n",
+                static_cast<uint64_t>(frame_index),
                 frames[frame_index]);
             frame_index += 1;
         }
@@ -180,7 +182,8 @@ void    cmp_stack_trace_print(FILE *output_file, void *const *frames,
     frame_index = 0;
     while (frame_index < frame_count)
     {
-        std::fprintf(output_file, "    #%zu %s\n", frame_index,
+        std::fprintf(output_file, "    #%" PRIu64 " %s\n",
+            static_cast<uint64_t>(frame_index),
             symbols[frame_index]);
         frame_index += 1;
     }

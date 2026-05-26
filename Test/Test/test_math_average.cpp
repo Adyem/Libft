@@ -27,12 +27,14 @@ FT_TEST(test_math_average_odd_ints_truncate)
 
 FT_TEST(test_math_average_long_values)
 {
-    long result;
+    int64_t result;
 
-    result = math_average(2147483646L, 2147483647L);
-    FT_ASSERT_EQ(2147483646L, result);
-    result = math_average(-2147483647L, -2147483648L);
-    FT_ASSERT_EQ(-2147483647L, result);
+    result = math_average(static_cast<int64_t>(2147483646),
+            static_cast<int64_t>(2147483647));
+    FT_ASSERT_EQ(static_cast<int64_t>(2147483646), result);
+    result = math_average(static_cast<int64_t>(-2147483647),
+            static_cast<int64_t>(-2147483648));
+    FT_ASSERT_EQ(static_cast<int64_t>(-2147483647), result);
     return (1);
 }
 
@@ -48,11 +50,12 @@ FT_TEST(test_math_average_double_values)
 FT_TEST(test_math_average_balances_large_opposites)
 {
     int result_int;
-    long result_long;
+    int64_t result_long;
 
     result_int = math_average(1000000000, -1000000000);
-    result_long = math_average(5000000000L, -5000000000L);
+    result_long = math_average(static_cast<int64_t>(5000000000LL),
+            static_cast<int64_t>(-5000000000LL));
     FT_ASSERT_EQ(0, result_int);
-    FT_ASSERT_EQ(0L, result_long);
+    FT_ASSERT_EQ(static_cast<int64_t>(0), result_long);
     return (1);
 }

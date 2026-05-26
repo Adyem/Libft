@@ -27,7 +27,8 @@ static void create_system_io_test_file(void)
 
 static int  g_su_write_hook_calls = 0;
 
-static ssize_t   su_write_zero_progress_hook(int file_descriptor, const void *buffer, size_t count)
+static int64_t   su_write_zero_progress_hook(int file_descriptor,
+    const void *buffer, ft_size_t count)
 {
     (void)file_descriptor;
     (void)buffer;

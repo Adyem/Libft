@@ -14,7 +14,7 @@
 #endif
 
 typedef int (*t_pf_printf_fd_plain)(int, const char *, ...);
-typedef int (*t_pf_snprintf_plain)(char *, size_t, const char *, ...);
+typedef int (*t_pf_snprintf_plain)(char *, ft_size_t, const char *, ...);
 typedef int (*t_ft_fprintf_plain)(FILE *, const char *, ...);
 
 struct t_pf_stress_context

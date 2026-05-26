@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <cstdio>
+#include <inttypes.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -41,11 +42,11 @@ FT_TEST(test_adv_to_string_extreme_values)
     int expected_length;
 
     zero_string = adv_to_string(static_cast<int64_t>(0));
-    minimum_string = adv_to_string(std::numeric_limits<long>::min());
+    minimum_string = adv_to_string(std::numeric_limits<int64_t>::min());
     FT_ASSERT(zero_string != ft_nullptr);
     FT_ASSERT(minimum_string != ft_nullptr);
     expected_length = std::snprintf(expected_buffer, sizeof(expected_buffer),
-            "%ld", std::numeric_limits<long>::min());
+            "%" PRId64, std::numeric_limits<int64_t>::min());
     FT_ASSERT(expected_length > 0);
     FT_ASSERT(std::string(zero_string->c_str()) == "0");
     FT_ASSERT(std::string(minimum_string->c_str()) == std::string(expected_buffer));
@@ -79,9 +80,9 @@ FT_TEST(test_adv_to_string_unsigned_long)
     char expected_buffer[64];
     int expected_length;
 
-    input_value = std::numeric_limits<unsigned long>::max();
+    input_value = std::numeric_limits<uint64_t>::max();
     expected_length = std::snprintf(expected_buffer, sizeof(expected_buffer),
-            "%lu", input_value);
+            "%" PRIu64, input_value);
     FT_ASSERT(expected_length > 0);
     converted_value = adv_to_string(input_value);
     FT_ASSERT(converted_value != ft_nullptr);

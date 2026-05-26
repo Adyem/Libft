@@ -8,10 +8,11 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static ssize_t gnl_stream_test_callback(void *, char *buffer, size_t max_size) noexcept
+static int64_t gnl_stream_test_callback(void *, char *buffer,
+    ft_size_t max_size) noexcept
 {
     (void)buffer;
-    return (static_cast<ssize_t>(max_size));
+    return (static_cast<int64_t>(max_size));
 }
 
 #define GNL_STREAM_PREPARE(stream) \

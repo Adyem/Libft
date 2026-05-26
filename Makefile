@@ -74,30 +74,63 @@ re:
 $(TARGET): $(LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
 	@$(RM) $@
-	@{ printf 'CREATE %s\n' "$@"; \
-	   for lib in $(LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
-	   printf 'SAVE\nEND\n'; } | $(AR) -M
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		libtool -static -o "$@" $(LIBS); \
+	else \
+		{ printf 'CREATE %s\n' "$@"; \
+		  for lib in $(LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+		  printf 'SAVE\nEND\n'; } | $(AR) -M; \
+	fi
 
 $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
-	@{ printf 'CREATE %s\n' "$@"; \
-	   for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
-	   printf 'SAVE\nEND\n'; } | $(AR) -M
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		libtool -static -o "$@" $(DEBUG_LIBS); \
+	else \
+		{ printf 'CREATE %s\n' "$@"; \
+		  for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+		  printf 'SAVE\nEND\n'; } | $(AR) -M; \
+	fi
 
 $(TEST_TARGET): $(TEST_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_TEST_LIBS) $@
 	@$(RM) $@
-	@{ printf 'CREATE %s\n' "$@"; \
-	   for lib in $(TEST_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
-	   printf 'SAVE\nEND\n'; } | $(AR) -M
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		libtool -static -o "$@" $(TEST_LIBS); \
+	else \
+		{ printf 'CREATE %s\n' "$@"; \
+		  for lib in $(TEST_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+		  printf 'SAVE\nEND\n'; } | $(AR) -M; \
+	fi
 
 $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
-	@{ printf 'CREATE %s\n' "$@"; \
-	   for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
-	   printf 'SAVE\nEND\n'; } | $(AR) -M
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		libtool -static -o "$@" $(DEBUG_LIBS); \
+	else \
+		{ printf 'CREATE %s\n' "$@"; \
+		  for lib in $(DEBUG_LIBS); do printf 'ADDLIB %s\n' "$$lib"; done; \
+		  printf 'SAVE\nEND\n'; } | $(AR) -M; \
+	fi
+
+%_test.a: FORCE
+	@module_dir="$(patsubst %/,%,$(dir $@))"; \
+	module_target="$(notdir $@)"; \
+	module_path="$$module_dir/$$module_target"; \
+	progress_index=$$(printf '%s\n' "$(TEST_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
+	log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
+	{ \
+		printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
+		$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
+	} > "$$log_file" 2>&1; \
+	status=$$?; \
+	while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
+	cat "$$log_file"; \
+	rmdir .libft_output_lock; \
+	$(RM) "$$log_file"; \
+	if [ $$status -ne 0 ]; then exit $$status; fi
 
 %.a: FORCE
 	@module_dir="$(patsubst %/,%,$(dir $@))"; \
@@ -150,36 +183,6 @@ $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
                 { \
                         printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
                         $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
-                } > "$$log_file" 2>&1; \
-                status=$$?; \
-                while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
-                cat "$$log_file"; \
-                rmdir .libft_output_lock; \
-                $(RM) "$$log_file"; \
-                if [ $$status -ne 0 ]; then exit $$status; fi; \
-        fi
-
-%_test.a: FORCE
-	@module_dir="$(patsubst %/,%,$(dir $@))"; \
-	module_target="$(notdir $@)"; \
-	need_build=0; \
-	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; then \
-	        :; \
-	else \
-	        status=$$?; \
-	        if [ $$status -eq 1 ]; then \
-	                need_build=1; \
-	        else \
-	                exit $$status; \
-	        fi; \
-	fi; \
-        if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-                module_path="$$module_dir/$$module_target"; \
-                progress_index=$$(printf '%s\n' "$(TEST_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
-                log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
-                { \
-                        printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
-                        $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
                 } > "$$log_file" 2>&1; \
                 status=$$?; \
                 while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \

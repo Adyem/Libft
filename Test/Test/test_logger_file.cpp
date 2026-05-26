@@ -23,10 +23,11 @@
 
 static int  g_file_sink_hook_calls = 0;
 
-static ssize_t    logger_partial_write_hook(int file_descriptor, const void *buffer, size_t count)
+static int64_t    logger_partial_write_hook(int file_descriptor,
+    const void *buffer, ft_size_t count)
 {
-    size_t  chunk_size;
-    ssize_t write_result;
+    ft_size_t  chunk_size;
+    int64_t    write_result;
 
     g_file_sink_hook_calls += 1;
     chunk_size = 4;
@@ -299,8 +300,8 @@ FT_TEST(test_logger_rotation_getter_reports_config)
 {
     char            template_path[] = "/tmp/libft_logger_get_rotation_XXXXXX";
     int             temp_fd;
-    size_t          max_size;
-    size_t          retention_count;
+    ft_size_t       max_size;
+    ft_size_t       retention_count;
     unsigned int    max_age_seconds;
 
     temp_fd = mkstemp(template_path);
@@ -313,8 +314,8 @@ FT_TEST(test_logger_rotation_getter_reports_config)
     retention_count = 0;
     max_age_seconds = 0;
     FT_ASSERT_EQ(0, ft_log_get_rotation(&max_size, &retention_count, &max_age_seconds));
-    FT_ASSERT_EQ(static_cast<size_t>(128), max_size);
-    FT_ASSERT_EQ(static_cast<size_t>(3), retention_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(128), max_size);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(3), retention_count);
     FT_ASSERT_EQ(static_cast<unsigned int>(42), max_age_seconds);
     ft_log_close();
     unlink(template_path);

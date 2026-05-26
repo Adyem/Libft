@@ -24,8 +24,6 @@ int pt_thread_join(pthread_t thread, void **retval)
 int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
 {
     int return_value;
-    struct timespec absolute_timeout;
-    long additional_nanoseconds;
 
     if (!thread)
     {
@@ -38,6 +36,9 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
         return (return_value);
     }
 #ifdef __linux__
+    struct timespec absolute_timeout;
+    long additional_nanoseconds;
+
     return_value = clock_gettime(CLOCK_REALTIME, &absolute_timeout);
     if (return_value != 0)
     {

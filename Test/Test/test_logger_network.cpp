@@ -23,7 +23,8 @@ static mock_network_send_state g_mock_network_send_state = {"", 0, 0, 0, false};
 
 static s_network_sink *g_sink_to_remove = ft_nullptr;
 
-static ssize_t mock_partial_send(int socket_fd, const void *buffer, size_t length, int flags)
+static ssize_t mock_partial_send(int socket_fd, const void *buffer,
+    ft_size_t length, int flags)
 {
     (void)socket_fd;
     (void)flags;
@@ -126,7 +127,8 @@ FT_TEST(test_logger_network_sink_lock_blocks_until_release)
     return (1);
 }
 
-static ssize_t mock_send_remove_sink(int socket_fd, const void *buffer, size_t length, int flags)
+static ssize_t mock_send_remove_sink(int socket_fd, const void *buffer,
+    ft_size_t length, int flags)
 {
     (void)socket_fd;
     (void)buffer;
@@ -145,7 +147,8 @@ static ssize_t mock_send_remove_sink(int socket_fd, const void *buffer, size_t l
     return (-1);
 }
 
-static ssize_t mock_successful_send(int socket_fd, const void *buffer, size_t length, int flags)
+static ssize_t mock_successful_send(int socket_fd, const void *buffer,
+    ft_size_t length, int flags)
 {
     (void)socket_fd;
     (void)buffer;
@@ -228,7 +231,7 @@ FT_TEST(test_logger_remote_health_probe_records_success)
 {
     s_network_sink *sink;
     s_log_remote_health status;
-    size_t status_count;
+    ft_size_t status_count;
 
     reset_mock_network_send_state();
     g_mock_network_send_state.chunk_size = 8;
@@ -244,7 +247,7 @@ FT_TEST(test_logger_remote_health_probe_records_success)
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
     status_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
-    FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(1), status_count);
     FT_ASSERT(status.reachable);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, status.last_error);
     FT_ASSERT(status.host != ft_nullptr);
@@ -257,7 +260,7 @@ FT_TEST(test_logger_remote_health_probe_records_success)
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
     status_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(ft_nullptr, 0, &status_count));
-    FT_ASSERT_EQ(static_cast<size_t>(0), status_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), status_count);
     return (1);
 }
 
@@ -265,7 +268,7 @@ FT_TEST(test_logger_remote_health_probe_records_failure)
 {
     s_network_sink *sink;
     s_log_remote_health status;
-    size_t status_count;
+    ft_size_t status_count;
 
     reset_mock_network_send_state();
     g_mock_network_send_state.chunk_size = 6;
@@ -283,7 +286,7 @@ FT_TEST(test_logger_remote_health_probe_records_failure)
     FT_ASSERT_EQ(-1, probe_result);
     status_count = 0;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_log_get_remote_health(&status, 1, &status_count));
-    FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(1), status_count);
     FT_ASSERT(!status.reachable);
     FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, status.last_error);
     FT_ASSERT(status.last_check != 0);
@@ -300,7 +303,7 @@ FT_TEST(test_logger_remote_health_probe_handles_removed_sink)
 {
     s_network_sink *sink;
     s_log_remote_health status;
-    size_t status_count;
+    ft_size_t status_count;
 
     reset_mock_network_send_state();
     sink = new s_network_sink();
@@ -315,7 +318,7 @@ FT_TEST(test_logger_remote_health_probe_handles_removed_sink)
     FT_ASSERT_EQ(-1, ft_log_probe_remote_health());
     status_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
-    FT_ASSERT_EQ(static_cast<size_t>(0), status_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), status_count);
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
     return (1);
 }
@@ -325,7 +328,7 @@ FT_TEST(test_logger_remote_health_probe_keeps_other_sinks_intact)
     s_network_sink *removed_sink;
     s_network_sink *healthy_sink;
     s_log_remote_health status;
-    size_t status_count;
+    ft_size_t status_count;
 
     reset_mock_network_send_state();
     removed_sink = new s_network_sink();
@@ -349,7 +352,7 @@ FT_TEST(test_logger_remote_health_probe_keeps_other_sinks_intact)
     FT_ASSERT_EQ(-1, ft_log_probe_remote_health());
     status_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
-    FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(1), status_count);
     FT_ASSERT(status.host != ft_nullptr);
     FT_ASSERT(ft_strcmp(status.host, "healthy.example.com") == 0);
     FT_ASSERT_EQ(8888, status.port);
@@ -389,8 +392,8 @@ FT_TEST(test_logger_remote_health_get_requires_capacity)
     s_network_sink *first_sink;
     s_network_sink *second_sink;
     s_log_remote_health statuses[1];
-    size_t status_count;
-    size_t peek_count;
+    ft_size_t status_count;
+    ft_size_t peek_count;
 
     reset_mock_network_send_state();
     first_sink = new s_network_sink();
@@ -421,7 +424,7 @@ FT_TEST(test_logger_remote_health_get_requires_capacity)
 
     get_result = ft_log_get_remote_health(statuses, 1, &status_count);
     FT_ASSERT_EQ(FT_ERR_INTERNAL, get_result);
-    FT_ASSERT(status_count >= static_cast<size_t>(2));
+    FT_ASSERT(status_count >= static_cast<ft_size_t>(2));
     FT_ASSERT(statuses[0].host != ft_nullptr);
     FT_ASSERT(ft_strcmp(statuses[0].host, "retain") == 0);
     FT_ASSERT_EQ(static_cast<unsigned short>(9999), statuses[0].port);
@@ -429,7 +432,7 @@ FT_TEST(test_logger_remote_health_get_requires_capacity)
     FT_ASSERT(statuses[0].reachable);
     peek_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(ft_nullptr, 0, &peek_count));
-    FT_ASSERT_EQ(static_cast<size_t>(2), peek_count);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(2), peek_count);
     ft_log_remove_sink(ft_network_sink, first_sink);
     ft_log_remove_sink(ft_network_sink, second_sink);
     delete first_sink;

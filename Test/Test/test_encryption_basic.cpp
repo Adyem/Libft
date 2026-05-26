@@ -17,7 +17,8 @@ static int mock_open_failure(const char *path_name, int flags, mode_t mode)
     return (-1);
 }
 
-static ssize_t mock_write_failure(int file_descriptor, const void *buffer, size_t count)
+static int64_t mock_write_failure(int file_descriptor, const void *buffer,
+    ft_size_t count)
 {
     (void)file_descriptor;
     (void)buffer;

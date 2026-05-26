@@ -9,6 +9,7 @@
 #include <cerrno>
 #include <cstring>
 #include <cstdio>
+#include <inttypes.h>
 
 const char *cmp_service_null_device_path(void)
 {
@@ -26,10 +27,11 @@ int32_t cmp_service_format_pid_line(char *buffer, ft_size_t buffer_size,
         return (FT_ERR_INVALID_ARGUMENT);
 #if defined(_WIN32) || defined(_WIN64)
     uint64_t pid_value = static_cast<uint64_t>(_getpid());
-    int32_t formatted = std::snprintf(buffer, buffer_size, "%lu\n", pid_value);
+    int32_t formatted = std::snprintf(buffer, buffer_size, "%" PRIu64 "\n",
+        pid_value);
 #else
     pid_t pid_value = getpid();
-    int32_t formatted = std::snprintf(buffer, buffer_size, "%ld\n",
+    int32_t formatted = std::snprintf(buffer, buffer_size, "%" PRId64 "\n",
         static_cast<int64_t>(pid_value));
 #endif
     if (formatted < 0 || static_cast<ft_size_t>(formatted) >= buffer_size)

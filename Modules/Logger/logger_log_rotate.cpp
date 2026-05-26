@@ -7,13 +7,15 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 static int32_t logger_build_rotation_path(const ft_string &rotation_base,
     ft_size_t entry_index, ft_string &path)
 {
     char index_buffer[32];
 
-    std::snprintf(index_buffer, sizeof(index_buffer), "%zu", entry_index);
+    std::snprintf(index_buffer, sizeof(index_buffer), "%" PRIu64,
+        static_cast<uint64_t>(entry_index));
     path = rotation_base + index_buffer;
     if (path.get_error() != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);

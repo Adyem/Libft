@@ -36,8 +36,8 @@ FT_TEST(test_chunk_mesh_generate_hides_shared_faces)
         TERRAIN_GENERATOR_STONE_BLOCK));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_initialize(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
-    FT_ASSERT_EQ(40, mesh.vertices.size());
-    FT_ASSERT_EQ(60, mesh.indices.size());
+    FT_ASSERT_EQ(24, mesh.vertices.size());
+    FT_ASSERT_EQ(36, mesh.indices.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_destroy(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
     return (1);
@@ -85,6 +85,54 @@ FT_TEST(test_chunk_mesh_generate_hides_vertical_shared_faces)
         TERRAIN_GENERATOR_STONE_BLOCK));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.write_block(1, 2, 1,
         TERRAIN_GENERATOR_STONE_BLOCK));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_initialize(mesh));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
+    FT_ASSERT_EQ(24, mesh.vertices.size());
+    FT_ASSERT_EQ(36, mesh.indices.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_destroy(mesh));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_chunk_mesh_generate_merges_same_block_floor_faces)
+{
+    game_voxel_chunk chunk;
+    chunk_mesh mesh;
+    int32_t local_x;
+    int32_t local_z;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
+    local_z = 0;
+    while (local_z < 4)
+    {
+        local_x = 0;
+        while (local_x < 4)
+        {
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.write_block(local_x, 0,
+                local_z, TERRAIN_GENERATOR_STONE_BLOCK));
+            local_x += 1;
+        }
+        local_z += 1;
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_initialize(mesh));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
+    FT_ASSERT_EQ(24, mesh.vertices.size());
+    FT_ASSERT_EQ(36, mesh.indices.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_destroy(mesh));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_chunk_mesh_generate_keeps_block_type_boundaries)
+{
+    game_voxel_chunk chunk;
+    chunk_mesh mesh;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.write_block(0, 0, 0,
+        TERRAIN_GENERATOR_STONE_BLOCK));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.write_block(1, 0, 0,
+        TERRAIN_GENERATOR_DIRT_BLOCK));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_initialize(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
     FT_ASSERT_EQ(40, mesh.vertices.size());
@@ -165,8 +213,8 @@ FT_TEST(test_chunk_mesh_generate_flat_chunk_expected_surface_counts)
         "terrain-test-seed"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_initialize(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
-    FT_ASSERT_EQ(21760, mesh.vertices.size());
-    FT_ASSERT_EQ(32640, mesh.indices.size());
+    FT_ASSERT_EQ(56, mesh.vertices.size());
+    FT_ASSERT_EQ(84, mesh.indices.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_destroy(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
     return (1);
