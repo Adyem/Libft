@@ -22,28 +22,12 @@ static ft_size_t compute_offset(uint64_t pointer_value, uint64_t base_value)
 
 static int32_t open_file_backing(const cross_process_message &message)
 {
-    int32_t file_descriptor;
-    char fallback_path[512];
-
     if (message.shared_memory_name[0] == '\0')
     {
         errno = EINVAL;
         return (-1);
     }
-    file_descriptor = ::open(message.shared_memory_name, O_RDWR, 0600);
-    if (file_descriptor >= 0)
-        return (file_descriptor);
-    if (message.shared_memory_name[0] == '/')
-    {
-        if (std::strncmp(message.shared_memory_name, "/tmp/", 5) != 0)
-        {
-            std::snprintf(fallback_path, sizeof(fallback_path), "/tmp/%s",
-                message.shared_memory_name + 1);
-            file_descriptor = ::open(fallback_path, O_RDWR, 0600);
-            if (file_descriptor >= 0)
-                return (file_descriptor);
-        }
-    }
+    errno = ENOENT;
     return (-1);
 }
 
@@ -114,7 +98,10 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
     {
         shared_memory_fd = open_file_backing(message);
         if (shared_memory_fd < 0)
+        {
+            errno = ENOENT;
             return (cmp_map_system_error_to_ft(errno));
+        }
     }
     mapping_pointer = mmap(ft_nullptr, message.remote_memory_size, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_fd, 0);
     ::close(shared_memory_fd);

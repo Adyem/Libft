@@ -4,6 +4,7 @@ DEBUG_TARGET := Basic_debug.a
 SRCS := basic_atoi.cpp \
     basic_bzero.cpp \
     basic_memchr.cpp \
+    basic_memrchr.cpp \
     basic_memcmp.cpp \
     basic_memcpy.cpp \
     basic_memcpy_s.cpp \

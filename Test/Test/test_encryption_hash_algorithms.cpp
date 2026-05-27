@@ -1,10 +1,13 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Encryption/encryption.hpp"
+#include "../../Modules/Networking/openssl_support.hpp"
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
+
+#if NETWORKING_HAS_OPENSSL
 
 static int assert_digest_matches(const unsigned char *actual,
     const unsigned char *expected, size_t length)
@@ -491,3 +494,5 @@ FT_TEST(test_hmac_sha256_streaming_matches_single_shot)
     assert_digest_matches(streaming_digest, expected_digest, 32);
     return (1);
 }
+
+#endif

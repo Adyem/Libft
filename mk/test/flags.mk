@@ -30,6 +30,6 @@ EFFICIENCY_CFLAGS := $(EFFICIENCY_COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
 ifeq ($(UNAME_S),Darwin)
 LDFLAGS := -lz -framework Cocoa -framework CoreGraphics -framework QuartzCore -framework AudioToolbox -lobjc -lpthread $(OPENSSL_LIBS) $(SQLITE_LIBS)
 else
-LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(ASOUND_LIBS)
+LDFLAGS := -Wl,--allow-multiple-definition -rdynamic -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(ASOUND_LIBS)
 endif
 export COMPILE_FLAGS

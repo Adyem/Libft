@@ -22,6 +22,11 @@ int32_t default_string_serializer(const ElementType &value, ft_string &output) n
 {
     if constexpr (std::is_same<ElementType, ft_string>::value)
     {
+        if (!output.is_initialised())
+        {
+            if (output.initialize() != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_ARGUMENT);
+        }
         output = value;
         if (output.get_error() != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_ARGUMENT);
@@ -88,6 +93,11 @@ int32_t default_string_deserializer(const char *value_string, ElementType &outpu
         return (FT_ERR_INVALID_ARGUMENT);
     if constexpr (std::is_same<ElementType, ft_string>::value)
     {
+        if (!output.is_initialised())
+        {
+            if (output.initialize() != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_ARGUMENT);
+        }
         output = value_string;
         if (output.get_error() != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_ARGUMENT);
@@ -189,7 +199,11 @@ int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
                 json_free_groups(group);
                 return (FT_ERR_INVALID_ARGUMENT);
             }
-            index_string = index_buffer;
+            if (index_string.initialize(index_buffer) != FT_ERR_SUCCESS)
+            {
+                json_free_groups(group);
+                return (FT_ERR_INVALID_ARGUMENT);
+            }
         }
         if (index_string.get_error() != FT_ERR_SUCCESS)
         {
@@ -279,7 +293,8 @@ int32_t ft_vector_deserialize_json(json_group *group,
                     "%" FT_PRIu64, index);
             if (format_result <= 0)
                 return (FT_ERR_INVALID_ARGUMENT);
-            index_string = index_buffer;
+            if (index_string.initialize(index_buffer) != FT_ERR_SUCCESS)
+                return (FT_ERR_INVALID_ARGUMENT);
         }
         if (index_string.get_error() != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_ARGUMENT);
@@ -336,6 +351,11 @@ int32_t ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         yaml_value *entry;
         ft_string serialized_value;
 
+        if (serialized_value.initialize() != FT_ERR_SUCCESS)
+        {
+            yaml_free(list_value);
+            return (FT_ERR_INVALID_ARGUMENT);
+        }
         entry = new (std::nothrow) yaml_value();
         if (entry == ft_nullptr)
         {
@@ -399,6 +419,14 @@ int32_t ft_vector_deserialize_yaml(const yaml_value &value,
         if (child->get_type() != YAML_SCALAR)
             return (FT_ERR_INVALID_ARGUMENT);
         const ft_string &scalar = child->get_scalar();
+        if constexpr (std::is_same<ElementType, ft_string>::value)
+        {
+            if (!element.is_initialised())
+            {
+                if (element.initialize() != FT_ERR_SUCCESS)
+                    return (FT_ERR_INVALID_ARGUMENT);
+            }
+        }
         if (deserializer(scalar.c_str(), element) != 0)
             return (FT_ERR_INVALID_ARGUMENT);
         parsed.push_back(element);

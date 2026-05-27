@@ -144,7 +144,7 @@ $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
 	                need_build=1; \
 	        else \
 	                exit $$status; \
-	        fi; \
+        fi; \
 	fi; \
         if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
                 module_path="$$module_dir/$$module_target"; \

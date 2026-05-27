@@ -26,6 +26,9 @@
 #ifdef _WIN32
 # include <windows.h>
 #else
+# include <arpa/inet.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
 # include <unistd.h>
 #endif
 
@@ -353,6 +356,7 @@ static std::atomic<bool> g_api_request_stream_chunked_server_ready(false);
 static std::atomic<int> g_api_request_stream_chunked_server_start_error(FT_ERR_SUCCESS);
 static std::atomic<bool> g_api_request_send_failure_server_ready(false);
 static std::atomic<int> g_api_request_send_failure_server_start_error(FT_ERR_SUCCESS);
+static std::atomic<int> g_api_request_send_failure_server_port(0);
 static std::atomic<bool> g_api_request_retry_success_server_ready(false);
 static std::atomic<int> g_api_request_retry_success_server_start_error(FT_ERR_SUCCESS);
 
@@ -372,6 +376,7 @@ static void api_request_send_failure_server(void)
     socklen_t address_length;
     int client_fd;
     int config_error;
+    int server_port;
 
     config_error = server_configuration.initialize();
     if (config_error != FT_ERR_SUCCESS)
@@ -381,18 +386,42 @@ static void api_request_send_failure_server(void)
     }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
-    server_configuration._port = 54337;
+    server_configuration._port = 0;
     ft_socket server_socket;
-    int enable_error = server_socket.enable_thread_safety();
-    if (enable_error != FT_ERR_SUCCESS)
+    int initialize_error = server_socket.initialize(server_configuration);
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        api_request_send_failure_server_signal_ready(enable_error);
+        api_request_send_failure_server_signal_ready(initialize_error);
         return ;
     }
-    int initialize_error = server_socket.initialize(server_configuration);
-    api_request_send_failure_server_signal_ready(initialize_error);
-    if (initialize_error != FT_ERR_SUCCESS)
+    address_length = sizeof(address_storage);
+    if (getsockname(server_socket.get_file_descriptor(),
+            reinterpret_cast<struct sockaddr *>(&address_storage), &address_length) != 0)
+    {
+        api_request_send_failure_server_signal_ready(cmp_map_system_error_to_ft(errno));
         return ;
+    }
+    if (address_storage.ss_family == AF_INET)
+    {
+        const struct sockaddr_in *address_ipv4;
+
+        address_ipv4 = reinterpret_cast<const struct sockaddr_in *>(&address_storage);
+        server_port = ntohs(address_ipv4->sin_port);
+    }
+    else if (address_storage.ss_family == AF_INET6)
+    {
+        const struct sockaddr_in6 *address_ipv6;
+
+        address_ipv6 = reinterpret_cast<const struct sockaddr_in6 *>(&address_storage);
+        server_port = ntohs(address_ipv6->sin6_port);
+    }
+    else
+    {
+        api_request_send_failure_server_signal_ready(FT_ERR_INVALID_ARGUMENT);
+        return ;
+    }
+    g_api_request_send_failure_server_port.store(server_port, std::memory_order_release);
+    api_request_send_failure_server_signal_ready(initialize_error);
     if (server_socket.get_file_descriptor() < 0)
         return ;
     address_length = sizeof(address_storage);
@@ -423,6 +452,7 @@ static void api_request_send_failure_server_reset_state(void)
 {
     g_api_request_send_failure_server_ready.store(false, std::memory_order_relaxed);
     g_api_request_send_failure_server_start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
+    g_api_request_send_failure_server_port.store(0, std::memory_order_relaxed);
 }
 
 static void api_request_send_failure_server_signal_ready(int error_code)
@@ -1435,7 +1465,9 @@ FT_TEST(test_api_request_send_failure_sets_errno)
     FT_ASSERT(server_thread.joinable());
     api_request_small_delay();
     FT_ASSERT(api_request_send_failure_server_wait_until_ready());
-    result = api_request_string("127.0.0.1", 54337, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
+    result = api_request_string("127.0.0.1",
+            g_api_request_send_failure_server_port.load(std::memory_order_acquire),
+            "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     server_thread.join();
     FT_ASSERT(result == ft_nullptr);
     return (1);
@@ -1822,7 +1854,8 @@ FT_TEST(test_api_request_formats_large_content_length)
 
     payload_size = static_cast<size_t>(static_cast<unsigned long long>(INT_MAX)) + 42;
     time_sleep_ms(6000);
-    request = "POST /resource HTTP/1.1";
+    if (request.initialize("POST /resource HTTP/1.1") != FT_ERR_SUCCESS)
+        return (0);
     append_result = api_append_content_length_header(request, payload_size);
     if (!append_result)
         return (0);
@@ -1831,7 +1864,8 @@ FT_TEST(test_api_request_formats_large_content_length)
         return (0);
     if (static_cast<size_t>(expected_length) >= sizeof(expected_buffer))
         return (0);
-    expected_header = "\r\nContent-Length: ";
+    if (expected_header.initialize("\r\nContent-Length: ") != FT_ERR_SUCCESS)
+        return (0);
     expected_header += expected_buffer;
     header_pointer = ft_strstr(request.c_str(), expected_header.c_str());
     if (header_pointer == ft_nullptr)

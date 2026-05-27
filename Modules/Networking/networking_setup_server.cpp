@@ -156,7 +156,12 @@ int32_t ft_socket::configure_address(const SocketConfig &config)
     int32_t resolver_status;
 
     ft_memset(&this->_address, 0, sizeof(this->_address));
-    host_copy = config._ip;
+    if (host_copy.initialize(config._ip) != FT_ERR_SUCCESS)
+    {
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
+        return (FT_ERR_NO_MEMORY);
+    }
     if (host_copy.get_error() != FT_ERR_SUCCESS)
     {
         (void)nw_close(this->_socket_file_descriptor);

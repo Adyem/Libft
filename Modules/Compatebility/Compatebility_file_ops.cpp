@@ -23,7 +23,7 @@ static ft_bool global_force_cross_device_move = FT_FALSE;
 int32_t cmp_file_error_to_errno(int32_t system_error) noexcept
 {
     if (system_error == ERROR_FILE_NOT_FOUND || system_error == ERROR_PATH_NOT_FOUND)
-        return (FT_ERR_NOT_FOUND);
+        return (FT_ERR_IO);
     if (system_error == ERROR_ACCESS_DENIED)
         return (FT_ERR_PERMISSION_DENIED);
     if (system_error == ERROR_ALREADY_EXISTS || system_error == ERROR_FILE_EXISTS)
@@ -35,11 +35,11 @@ int32_t cmp_file_error_to_errno(int32_t system_error) noexcept
     if (system_error == ERROR_DISK_FULL || system_error == ERROR_HANDLE_DISK_FULL)
         return (FT_ERR_DISK_FULL);
     if (system_error == ENOENT)
-        return (FT_ERR_NOT_FOUND);
+        return (FT_ERR_IO);
     if (system_error == ENOTDIR)
-        return (FT_ERR_NOT_DIRECTORY);
+        return (FT_ERR_IO);
     if (system_error == EISDIR)
-        return (FT_ERR_IS_DIRECTORY);
+        return (FT_ERR_INVALID_OPERATION);
     if (system_error == EACCES || system_error == EPERM)
         return (FT_ERR_PERMISSION_DENIED);
     if (system_error == EEXIST)
@@ -387,11 +387,11 @@ static ft_bool global_force_cross_device_move = FT_FALSE;
 int32_t cmp_file_error_to_errno(int32_t system_error) noexcept
 {
     if (system_error == ENOENT)
-        return (FT_ERR_NOT_FOUND);
+        return (FT_ERR_IO);
     if (system_error == ENOTDIR)
-        return (FT_ERR_NOT_DIRECTORY);
+        return (FT_ERR_IO);
     if (system_error == EISDIR)
-        return (FT_ERR_IS_DIRECTORY);
+        return (FT_ERR_INVALID_OPERATION);
     if (system_error == EACCES || system_error == EPERM)
         return (FT_ERR_PERMISSION_DENIED);
     if (system_error == EEXIST)

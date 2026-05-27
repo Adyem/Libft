@@ -7,12 +7,15 @@
 #include "../../Modules/Encryption/encryption.hpp"
 #undef private
 #undef protected
+#include "../../Modules/Networking/openssl_support.hpp"
 #include "../../Modules/Template/move.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>
+
+#if NETWORKING_HAS_OPENSSL
 
 static void fill_sequence(unsigned char *buffer, size_t length)
 {
@@ -129,3 +132,5 @@ FT_TEST(test_encryption_aead_thread_safety_toggle_round_trip)
     FT_ASSERT_EQ(static_cast<size_t>(6), output_length);
     return (1);
 }
+
+#endif

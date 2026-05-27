@@ -57,6 +57,7 @@ int32_t         ft_atoi(const char *string);
 int32_t         ft_validate_int(const char *input);
 void            ft_bzero(void *string, ft_size_t size);
 void            *ft_memchr(const void *pointer, int32_t character, ft_size_t size);
+void            *ft_memrchr(const void *pointer, int32_t character, ft_size_t size);
 void            *ft_memcpy(void *destination, const void *source, ft_size_t size);
 int32_t         ft_memcpy_s(void *destination, ft_size_t destination_size,
                     const void *source, ft_size_t number_of_bytes);

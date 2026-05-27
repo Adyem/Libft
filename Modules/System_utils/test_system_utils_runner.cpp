@@ -182,11 +182,11 @@ static void test_runner_crash_signal_handler(int signal_number,
     test_runner_write_literal(output_descriptor,
         "libft tests: stack trace:\n");
     frame_count = backtrace(frames, 64);
-    if (frame_count > 0)
-        backtrace_symbols_fd(frames, frame_count, output_descriptor);
-    else
+    if (frame_count <= 0)
         test_runner_write_literal(output_descriptor,
             "    <stack trace unavailable>\n");
+    else
+        backtrace_symbols_fd(frames, frame_count, output_descriptor);
     std::memset(&default_action, 0, sizeof(default_action));
     default_action.sa_handler = SIG_DFL;
     (void)sigemptyset(&default_action.sa_mask);

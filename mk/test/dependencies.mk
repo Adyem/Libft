@@ -6,14 +6,16 @@ SRCS := $(filter-out Test/test_api_tls_diagnostics.cpp \
                     Test/test_encryption_hash_algorithms.cpp,$(SRCS))
 endif
 
-ifeq ($(HAS_OPENSSL_HEADERS),1)
+HAS_OPENSSL_LIBS := $(shell printf 'int main(void){return 0;}\n' | $(CXX) -x c++ -o /tmp/libft_test_openssl_check_$$$$_tmp -lssl -lcrypto >/dev/null 2>&1 && echo 1 || echo 0)
+ifeq ($(and $(HAS_OPENSSL_HEADERS),$(HAS_OPENSSL_LIBS)),1)
 OPENSSL_LIBS := -lssl -lcrypto
 else
 OPENSSL_LIBS :=
 endif
 
 HAS_SQLITE3_HEADERS := $(shell printf "\#include <sqlite3.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
-ifeq ($(HAS_SQLITE3_HEADERS),1)
+HAS_SQLITE3_LIBS := $(shell printf 'int main(void){return 0;}\n' | $(CXX) -x c++ -o /tmp/libft_test_sqlite3_check_$$$$_tmp -lsqlite3 >/dev/null 2>&1 && echo 1 || echo 0)
+ifeq ($(and $(HAS_SQLITE3_HEADERS),$(HAS_SQLITE3_LIBS)),1)
 SQLITE_LIBS := -lsqlite3
 else
 SQLITE_LIBS :=

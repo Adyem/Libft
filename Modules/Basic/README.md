@@ -51,6 +51,7 @@ The `Basic` module provides C-style memory, string, character, numeric parsing, 
 - `ft_memmove(void *destination, const void *source, ft_size_t size)` - Copies memory safely when ranges overlap.
 - `ft_memmove_s(void *destination, ft_size_t destination_size, const void *source, ft_size_t number_of_bytes)` - Bounds-checked overlap-safe memory copy.
 - `ft_memchr(const void *pointer, int32_t character, ft_size_t size)` - Searches memory for a byte value.
+- `ft_memrchr(const void *pointer, int32_t character, ft_size_t size)` - Searches memory for the last matching byte value.
 - `ft_memcmp(const void *pointer1, const void *pointer2, ft_size_t size)` - Compares two memory ranges.
 - `ft_constant_time_equal(const void *pointer1, const void *pointer2, ft_size_t size)` - Compares two memory ranges without early exit for timing-sensitive checks.
 

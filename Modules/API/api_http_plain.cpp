@@ -359,7 +359,7 @@ static char *api_http_finalize_downgrade_response(
     char *result_body;
     ft_string decoded_body;
 
-    if (decoded_body.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    if (decoded_body.is_initialised() == FT_FALSE)
     {
         if (decoded_body.initialize() != FT_ERR_SUCCESS)
         {
@@ -532,7 +532,7 @@ static ft_bool api_http_prepare_request(const char *method, const char *path,
 {
     ft_size_t payload_length;
 
-    if (request.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    if (request.is_initialised() == FT_FALSE)
     {
         if (request.initialize() != FT_ERR_SUCCESS)
         {
@@ -858,7 +858,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
     use_prefetched = FT_FALSE;
     if (prefetched_response)
         use_prefetched = FT_TRUE;
-    if (response.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    if (response.is_initialised() == FT_FALSE)
     {
         if (response.initialize() != FT_ERR_SUCCESS)
         {
@@ -866,7 +866,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             return (FT_FALSE);
         }
     }
-    if (header_storage.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    if (header_storage.is_initialised() == FT_FALSE)
     {
         if (header_storage.initialize() != FT_ERR_SUCCESS)
         {
@@ -874,7 +874,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             return (FT_FALSE);
         }
     }
-    if (streaming_body_buffer.is_initialised() != FT_CLASS_STATE_INITIALISED)
+    if (streaming_body_buffer.is_initialised() == FT_FALSE)
     {
         if (streaming_body_buffer.initialize() != FT_ERR_SUCCESS)
         {

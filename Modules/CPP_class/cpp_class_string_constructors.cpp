@@ -328,8 +328,18 @@ ft_string &ft_string::operator=(const char *string) noexcept
 {
     int32_t assignment_error;
 
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
-        "ft_string::operator=(const char *)");
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        if (string == ft_nullptr)
+            assignment_error = this->initialize();
+        else
+            assignment_error = this->initialize(string);
+        if (assignment_error != FT_ERR_SUCCESS)
+            this->set_error(assignment_error);
+        else
+            this->set_error(FT_ERR_SUCCESS);
+        return (*this);
+    }
     if (string == ft_nullptr)
         assignment_error = this->clear();
     else

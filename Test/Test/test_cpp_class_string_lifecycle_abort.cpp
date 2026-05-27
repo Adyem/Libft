@@ -293,9 +293,9 @@ FT_TEST(test_ft_string_move_assign_from_uninitialised_source_aborts)
     return (1);
 }
 
-FT_TEST(test_ft_string_literal_assign_uninitialised_destination_aborts)
+FT_TEST(test_ft_string_literal_assign_uninitialised_destination_initializes)
 {
-    FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
+    FT_ASSERT_EQ(0, string_expect_sigabrt_signal_handler(
         string_call_literal_assign_uninitialised));
     return (1);
 }

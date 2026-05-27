@@ -508,6 +508,21 @@ static ft_bool api_https_receive_response(SSL *ssl_session, ft_string &response,
     header_status_code = -1;
     chunk_stream_remaining = -1;
     chunk_stream_trailers = FT_FALSE;
+    if (response.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = response.get_error();
+        return (FT_FALSE);
+    }
+    if (header_storage.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = header_storage.get_error();
+        return (FT_FALSE);
+    }
+    if (streaming_body_buffer.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = streaming_body_buffer.get_error();
+        return (FT_FALSE);
+    }
     response.clear();
     header_length = 0;
     connection_close = FT_FALSE;
