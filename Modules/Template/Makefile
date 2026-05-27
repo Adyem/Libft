@@ -52,7 +52,7 @@ re:
 	@$(MAKE) all
 
 
-%_test.a:
+%_test.a: FORCE
 	@$(MAKE) TARGET="$@" $(SUBMAKE_OVERRIDES) COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD" all
 
 -include $(DEPS) $(DEBUG_DEPS)

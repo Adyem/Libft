@@ -123,7 +123,7 @@ re: fclean all
 both: all debug
 
 
-%_test.a:
+%_test.a: FORCE
 	@$(MAKE) TARGET="$@" $(SUBMAKE_OVERRIDES) COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD" all
 
 -include $(DEPS) $(DEBUG_DEPS)

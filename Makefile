@@ -71,7 +71,7 @@ re:
 	@$(MAKE) fclean
 	@$(MAKE) all
 
-$(TARGET): $(LIBS)
+$(TARGET): FORCE $(LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -82,7 +82,7 @@ $(TARGET): $(LIBS)
 		  printf 'SAVE\nEND\n'; } | $(AR) -M; \
 	fi
 
-$(DEBUG_TARGET): $(DEBUG_LIBS)
+$(DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -93,7 +93,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 		  printf 'SAVE\nEND\n'; } | $(AR) -M; \
 	fi
 
-$(TEST_TARGET): $(TEST_LIBS)
+$(TEST_TARGET): FORCE $(TEST_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_TEST_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -104,7 +104,7 @@ $(TEST_TARGET): $(TEST_LIBS)
 		  printf 'SAVE\nEND\n'; } | $(AR) -M; \
 	fi
 
-$(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
+$(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \

@@ -47,6 +47,9 @@ CLEAN_DIRS ?= $(wildcard objs*)
 TEST_ARCHIVES ?= $(wildcard *_test.a) $(wildcard *_debug_test.a)
 GENERATED_FILES ?= compile_commands.json
 
+.PHONY: FORCE
+FORCE:
+
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES ?= $(subst /,\\,$(CLEAN_OBJS))
     CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))

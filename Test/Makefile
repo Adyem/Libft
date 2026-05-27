@@ -162,7 +162,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
 	@$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
 
-../$(EFFICIENCY_LIBFT_ARCHIVE):
+../$(EFFICIENCY_LIBFT_ARCHIVE): FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL); then \
@@ -181,7 +181,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-../$(LIBFT_ARCHIVE):
+../$(LIBFT_ARCHIVE): FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL); then \
@@ -200,7 +200,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-../$(LIBFT_DEBUG_ARCHIVE):
+../$(LIBFT_DEBUG_ARCHIVE): FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL); then \
