@@ -4,6 +4,7 @@
 #ifdef GAME_USE_VOXEL_REGION_BACKEND
 
 # include "../Game/game_voxel_chunk.hpp"
+# include "../Geometry/geometry.hpp"
 # include "../Template/vector.hpp"
 # include <stdint.h>
 
@@ -50,6 +51,9 @@ int32_t chunk_mesh_destroy(chunk_mesh &mesh) noexcept;
 int32_t chunk_mesh_clear(chunk_mesh &mesh) noexcept;
 int32_t chunk_mesh_generate_from_chunk(chunk_mesh &mesh,
     const game_voxel_chunk &chunk) noexcept;
+ft_bool chunk_mesh_intersects_frustum(const geometry_frustum &frustum,
+    int32_t world_origin_x, int32_t world_origin_y,
+    int32_t world_origin_z) noexcept;
 
 #endif
 

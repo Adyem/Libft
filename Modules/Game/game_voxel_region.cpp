@@ -948,6 +948,28 @@ ft_bool game_voxel_region::is_chunk_loaded(int32_t world_chunk_x,
     return (FT_TRUE);
 }
 
+ft_bool game_voxel_region::is_chunk_visible(int32_t world_chunk_x,
+    int32_t world_chunk_z, const geometry_frustum &frustum) const noexcept
+{
+    geometry_aabb3 chunk_box;
+    int32_t chunk_origin_x;
+    int32_t chunk_origin_z;
+
+    if (this->is_chunk_loaded(world_chunk_x, world_chunk_z) == FT_FALSE)
+        return (FT_FALSE);
+    chunk_origin_x = world_chunk_x * GAME_VOXEL_CHUNK_WIDTH;
+    chunk_origin_z = world_chunk_z * GAME_VOXEL_CHUNK_DEPTH;
+    if (chunk_box.minimum.initialize(static_cast<double>(chunk_origin_x), 0.0,
+            static_cast<double>(chunk_origin_z)) != FT_ERR_SUCCESS)
+        return (FT_FALSE);
+    if (chunk_box.maximum.initialize(static_cast<double>(chunk_origin_x
+            + GAME_VOXEL_CHUNK_WIDTH), static_cast<double>(
+            GAME_VOXEL_CHUNK_HEIGHT), static_cast<double>(chunk_origin_z
+            + GAME_VOXEL_CHUNK_DEPTH)) != FT_ERR_SUCCESS)
+        return (FT_FALSE);
+    return (geometry_frustum_intersect_aabb3(frustum, chunk_box));
+}
+
 int32_t game_voxel_region::get_region_start_x() const noexcept
 {
     return (this->_region_start_x);

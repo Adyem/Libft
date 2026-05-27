@@ -4,6 +4,44 @@
 
 #include "../Errno/errno.hpp"
 
+static ft_bool chunk_mesh_intersect_chunk_box(const geometry_frustum &frustum,
+    double minimum_x, double minimum_y, double minimum_z,
+    double maximum_x, double maximum_y, double maximum_z) noexcept
+{
+    int32_t plane_index;
+    double normal_x;
+    double normal_y;
+    double normal_z;
+    double vertex_x;
+    double vertex_y;
+    double vertex_z;
+    double signed_distance;
+
+    plane_index = 0;
+    while (plane_index < 6)
+    {
+        normal_x = frustum.planes[plane_index].normal.get_x();
+        normal_y = frustum.planes[plane_index].normal.get_y();
+        normal_z = frustum.planes[plane_index].normal.get_z();
+        vertex_x = minimum_x;
+        vertex_y = minimum_y;
+        vertex_z = minimum_z;
+        if (normal_x >= 0.0)
+            vertex_x = maximum_x;
+        if (normal_y >= 0.0)
+            vertex_y = maximum_y;
+        if (normal_z >= 0.0)
+            vertex_z = maximum_z;
+        signed_distance = (vertex_x * normal_x) + (vertex_y * normal_y)
+            + (vertex_z * normal_z)
+            + frustum.planes[plane_index].distance;
+        if (signed_distance < 0.0)
+            return (FT_FALSE);
+        plane_index += 1;
+    }
+    return (FT_TRUE);
+}
+
 static void chunk_mesh_reset_bounds(chunk_mesh &mesh) noexcept
 {
     mesh.bounds.minimum_x = 0;
@@ -675,6 +713,27 @@ int32_t chunk_mesh_generate_from_chunk(chunk_mesh &mesh,
     if (mesh.indices.get_error() != FT_ERR_SUCCESS)
         return (mesh.indices.get_error());
     return (chunk_mesh_emit_visible_faces(mesh, chunk));
+}
+
+ft_bool chunk_mesh_intersects_frustum(const geometry_frustum &frustum,
+    int32_t world_origin_x, int32_t world_origin_y,
+    int32_t world_origin_z) noexcept
+{
+    double minimum_x;
+    double minimum_y;
+    double minimum_z;
+    double maximum_x;
+    double maximum_y;
+    double maximum_z;
+
+    minimum_x = static_cast<double>(world_origin_x);
+    minimum_y = static_cast<double>(world_origin_y);
+    minimum_z = static_cast<double>(world_origin_z);
+    maximum_x = static_cast<double>(world_origin_x + GAME_VOXEL_CHUNK_WIDTH);
+    maximum_y = static_cast<double>(world_origin_y + GAME_VOXEL_CHUNK_HEIGHT);
+    maximum_z = static_cast<double>(world_origin_z + GAME_VOXEL_CHUNK_DEPTH);
+    return (chunk_mesh_intersect_chunk_box(frustum, minimum_x, minimum_y,
+        minimum_z, maximum_x, maximum_y, maximum_z));
 }
 
 #endif

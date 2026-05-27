@@ -13,6 +13,10 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#if defined(__linux__) || defined(__APPLE__)
+# include <execinfo.h>
+# include <signal.h>
+#endif
 #include "../Errno/errno.hpp"
 
 #ifndef FT_TEST_RUNNER_INITIAL_CAPACITY
@@ -117,6 +121,107 @@ static void set_last_failure_message(const char *message)
     (void)std::snprintf(last_failure_message, 2048, "%s", message);
     return ;
 }
+
+#if defined(__linux__) || defined(__APPLE__)
+static int32_t g_test_runner_crash_output_descriptor = STDERR_FILENO;
+
+static const char *test_runner_signal_name(int32_t signal_number)
+{
+    if (signal_number == SIGABRT)
+        return ("SIGABRT");
+    if (signal_number == SIGBUS)
+        return ("SIGBUS");
+    if (signal_number == SIGFPE)
+        return ("SIGFPE");
+    if (signal_number == SIGILL)
+        return ("SIGILL");
+    if (signal_number == SIGSEGV)
+        return ("SIGSEGV");
+    if (signal_number == SIGTERM)
+        return ("SIGTERM");
+    return ("signal");
+}
+
+static int32_t test_runner_crash_output_descriptor(void)
+{
+    if (g_test_runner_crash_output_descriptor >= 0)
+        return (g_test_runner_crash_output_descriptor);
+    return (STDERR_FILENO);
+}
+
+static void test_runner_write_literal(int32_t file_descriptor,
+    const char *message)
+{
+    ft_size_t message_length;
+
+    if (message == NULL)
+        return ;
+    message_length = std::strlen(message);
+    if (message_length == 0)
+        return ;
+    (void)write(file_descriptor, message, message_length);
+    return ;
+}
+
+static void test_runner_crash_signal_handler(int signal_number,
+    siginfo_t *signal_information, void *context_pointer)
+{
+    void *frames[64];
+    int32_t frame_count;
+    int32_t output_descriptor;
+    struct sigaction default_action;
+
+    (void)signal_information;
+    (void)context_pointer;
+    output_descriptor = test_runner_crash_output_descriptor();
+    test_runner_write_literal(output_descriptor,
+        "\nlibft tests: crash caught (");
+    test_runner_write_literal(output_descriptor,
+        test_runner_signal_name(signal_number));
+    test_runner_write_literal(output_descriptor, ")\n");
+    test_runner_write_literal(output_descriptor,
+        "libft tests: stack trace:\n");
+    frame_count = backtrace(frames, 64);
+    if (frame_count > 0)
+        backtrace_symbols_fd(frames, frame_count, output_descriptor);
+    else
+        test_runner_write_literal(output_descriptor,
+            "    <stack trace unavailable>\n");
+    std::memset(&default_action, 0, sizeof(default_action));
+    default_action.sa_handler = SIG_DFL;
+    (void)sigemptyset(&default_action.sa_mask);
+    (void)sigaction(signal_number, &default_action, NULL);
+    (void)raise(signal_number);
+    _exit(128 + signal_number);
+}
+
+static void test_runner_enable_crash_stack_traces(void)
+{
+    struct sigaction action;
+
+    std::memset(&action, 0, sizeof(action));
+    action.sa_sigaction = test_runner_crash_signal_handler;
+    action.sa_flags = SA_SIGINFO;
+    (void)sigemptyset(&action.sa_mask);
+    (void)sigaction(SIGABRT, &action, NULL);
+    (void)sigaction(SIGBUS, &action, NULL);
+    (void)sigaction(SIGFPE, &action, NULL);
+    (void)sigaction(SIGILL, &action, NULL);
+    (void)sigaction(SIGSEGV, &action, NULL);
+    (void)sigaction(SIGTERM, &action, NULL);
+# ifdef SIGIOT
+    if (SIGIOT != SIGABRT)
+        (void)sigaction(SIGIOT, &action, NULL);
+# endif
+    return ;
+}
+
+static void test_runner_set_crash_output_descriptor(int32_t file_descriptor)
+{
+    g_test_runner_crash_output_descriptor = file_descriptor;
+    return ;
+}
+#endif
 
 static void swap_test_cases(s_test_case *left, s_test_case *right)
 {
@@ -658,6 +763,9 @@ int32_t ft_run_registered_tests(void)
     baseline_stdin_descriptor = dup(STDIN_FILENO);
     baseline_stdout_descriptor = dup(STDOUT_FILENO);
     baseline_stderr_descriptor = dup(STDERR_FILENO);
+#if defined(__linux__) || defined(__APPLE__)
+    test_runner_set_crash_output_descriptor(baseline_stderr_descriptor);
+#endif
     total_tests = *test_count;
     selected_tests = 0;
     hide_successful_tests = hide_successful_tests_enabled();
@@ -677,6 +785,9 @@ int32_t ft_run_registered_tests(void)
             (void)dup2(baseline_stdout_descriptor, STDOUT_FILENO);
         if (baseline_stderr_descriptor >= 0)
             (void)dup2(baseline_stderr_descriptor, STDERR_FILENO);
+#if defined(__linux__) || defined(__APPLE__)
+        test_runner_enable_crash_stack_traces();
+#endif
         selected_tests++;
         current_test = tests[index];
         show_running_line = 1;

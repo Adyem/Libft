@@ -15,7 +15,7 @@ static int32_t logger_build_rotation_path(const ft_string &rotation_base,
     char index_buffer[32];
 
     std::snprintf(index_buffer, sizeof(index_buffer), "%" PRIu64,
-        static_cast<uint64_t>(entry_index));
+        entry_index);
     path = rotation_base + index_buffer;
     if (path.get_error() != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);

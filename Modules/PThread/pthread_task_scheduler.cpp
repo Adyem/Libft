@@ -1621,8 +1621,7 @@ void ft_task_scheduler::trace_emit_event(e_ft_task_trace_phase phase, unsigned l
     event.label = label;
     event.timestamp = time_monotonic_point_now();
     thread_identifier = ft_this_thread_get_id();
-    event.thread_id = static_cast<unsigned long long>(
-        reinterpret_cast<uintptr_t>(thread_identifier.native_id));
+    event.thread_id = static_cast<unsigned long long>(thread_identifier.native_id);
     event.queue_depth = -1;
     event.scheduled_depth = -1;
     event.worker_active_count = -1;

@@ -57,6 +57,30 @@ static int32_t test_voxel_write_unique_blocks(game_voxel_chunk &chunk,
     return (FT_ERR_SUCCESS);
 }
 
+static int32_t test_voxel_initialize_unit_cube_frustum(
+    geometry_frustum &frustum) noexcept
+{
+    if (frustum.planes[0].normal.initialize(1.0, 0.0, 0.0) != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    frustum.planes[0].distance = 1.0;
+    if (frustum.planes[1].normal.initialize(-1.0, 0.0, 0.0) != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    frustum.planes[1].distance = 1.0;
+    if (frustum.planes[2].normal.initialize(0.0, 1.0, 0.0) != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    frustum.planes[2].distance = 1.0;
+    if (frustum.planes[3].normal.initialize(0.0, -1.0, 0.0) != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    frustum.planes[3].distance = 1.0;
+    if (frustum.planes[4].normal.initialize(0.0, 0.0, 1.0) != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    frustum.planes[4].distance = 1.0;
+    if (frustum.planes[5].normal.initialize(0.0, 0.0, -1.0) != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    frustum.planes[5].distance = 1.0;
+    return (FT_ERR_SUCCESS);
+}
+
 static void test_voxel_chunk_get_section_out_of_range_operation(void)
 {
     game_voxel_chunk chunk;
@@ -616,6 +640,70 @@ FT_TEST(test_game_voxel_region_load_chunk_creates_empty_chunk)
     FT_ASSERT_EQ(FT_TRUE, region.has_chunk(4, 5));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk->read_block(0, 0, 0, &block_id));
     FT_ASSERT_EQ(GAME_VOXEL_AIR_BLOCK, block_id);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.destroy());
+    test_voxel_cleanup_region_dir(directory_path);
+    return (1);
+}
+
+FT_TEST(test_game_voxel_region_chunk_visibility_uses_frustum)
+{
+    char directory_path[256];
+    game_voxel_region region;
+    game_voxel_chunk *chunk;
+    geometry_frustum frustum;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
+        sizeof(directory_path)));
+    test_voxel_cleanup_region_dir(directory_path);
+    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_initialize_unit_cube_frustum(
+        frustum));
+    chunk = ft_nullptr;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.load_chunk(0, 0, &chunk));
+    FT_ASSERT_EQ(FT_TRUE, region.is_chunk_visible(0, 0, frustum));
+    FT_ASSERT_EQ(FT_FALSE, region.is_chunk_visible(4, 4, frustum));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.destroy());
+    test_voxel_cleanup_region_dir(directory_path);
+    return (1);
+}
+
+FT_TEST(test_game_voxel_region_chunk_visibility_rejects_unloaded_chunk)
+{
+    char directory_path[256];
+    game_voxel_region region;
+    geometry_frustum frustum;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
+        sizeof(directory_path)));
+    test_voxel_cleanup_region_dir(directory_path);
+    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_initialize_unit_cube_frustum(
+        frustum));
+    FT_ASSERT_EQ(FT_FALSE, region.is_chunk_visible(0, 0, frustum));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.destroy());
+    test_voxel_cleanup_region_dir(directory_path);
+    return (1);
+}
+
+FT_TEST(test_game_voxel_region_chunk_visibility_keeps_edge_chunk_visible)
+{
+    char directory_path[256];
+    game_voxel_region region;
+    geometry_frustum frustum;
+    game_voxel_chunk *chunk;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
+        sizeof(directory_path)));
+    test_voxel_cleanup_region_dir(directory_path);
+    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_initialize_unit_cube_frustum(
+        frustum));
+    chunk = ft_nullptr;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.load_chunk(0, 0, &chunk));
+    FT_ASSERT_EQ(FT_TRUE, region.is_chunk_visible(0, 0, frustum));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.destroy());
     test_voxel_cleanup_region_dir(directory_path);
     return (1);

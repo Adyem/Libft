@@ -5,18 +5,800 @@
 #include "../Errno/errno.hpp"
 #include "../RNG/rng.hpp"
 
-static uint32_t terrain_generator_block_for_height(int32_t block_y) noexcept
+static const int32_t TERRAIN_HEIGHTMAP_LARGE_SCALE = 32;
+static const int32_t TERRAIN_HEIGHTMAP_DETAIL_SCALE = 8;
+static const uint64_t TERRAIN_FEATURE_SHRUB_SALT = UINT64_C(0x2D9C1F4E8B3A6071);
+static const int32_t TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET = 1;
+static const uint64_t TERRAIN_FEATURE_SHRUB_THRESHOLD = 6U;
+static const uint64_t TERRAIN_FEATURE_TREE_SALT = UINT64_C(0x4F1E2D3C5B6A7980);
+
+static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS[] =
 {
-    if (block_y > TERRAIN_GENERATOR_SURFACE_HEIGHT)
-        return (GAME_VOXEL_AIR_BLOCK);
-    if (block_y == TERRAIN_GENERATOR_SURFACE_HEIGHT)
-        return (TERRAIN_GENERATOR_GRASS_BLOCK);
-    if (block_y >= TERRAIN_GENERATOR_SURFACE_HEIGHT - 3)
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-1, 2, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 2, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 2, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 2, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 2, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 2, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 2, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 2, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_PINE_TREE_BLOCKS[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-1, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 6, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_CACTUS_TREE_BLOCKS[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_CACTUS_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_LARGE_OAK_TREE_BLOCKS[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-2, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -2, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 2, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {2, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 6, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_LARGE_OAK_TREE_BLOCKS_VARIANT_1[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-2, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -2, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 2, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {2, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 6, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_LARGE_PINE_TREE_BLOCKS[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 6, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 6, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 6, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 6, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 6, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 7, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_LARGE_PINE_TREE_BLOCKS_VARIANT_1[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-1, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 6, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 7, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 8, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template TERRAIN_SMALL_OAK_TREE_TEMPLATE =
+{
+    TERRAIN_SMALL_OAK_TREE_BLOCKS,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_OAK_TREE_BLOCKS)
+        / sizeof(TERRAIN_SMALL_OAK_TREE_BLOCKS[0]))
+};
+
+static const terrain_tree_template TERRAIN_SMALL_PINE_TREE_TEMPLATE =
+{
+    TERRAIN_SMALL_PINE_TREE_BLOCKS,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_PINE_TREE_BLOCKS)
+        / sizeof(TERRAIN_SMALL_PINE_TREE_BLOCKS[0]))
+};
+
+static const terrain_tree_template TERRAIN_SMALL_CACTUS_TREE_TEMPLATE =
+{
+    TERRAIN_SMALL_CACTUS_TREE_BLOCKS,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS)
+        / sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS[0]))
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_1[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-2, 2, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 2, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 2, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 2, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 2, -2, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 2, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 2, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 2, 2, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 2, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 2, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 2, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {2, 2, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_2[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-1, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_1[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 3, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 3, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_2[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 4, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {0, 5, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
+    {-1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {1, 4, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, -1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 4, 1, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK},
+    {0, 6, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_1[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {1, 2, 0, TERRAIN_GENERATOR_CACTUS_BLOCK}
+};
+
+static const terrain_tree_template_block TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_2[] =
+{
+    {0, 0, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 1, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 2, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {0, 3, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {-1, 1, 0, TERRAIN_GENERATOR_CACTUS_BLOCK},
+    {1, 2, 0, TERRAIN_GENERATOR_CACTUS_BLOCK}
+};
+
+static const terrain_tree_template TERRAIN_SMALL_OAK_TREE_TEMPLATE_VARIANT_1 =
+{
+    TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_1,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_1)
+        / sizeof(TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_1[0]))
+};
+
+static const terrain_tree_template TERRAIN_SMALL_OAK_TREE_TEMPLATE_VARIANT_2 =
+{
+    TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_2,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_2)
+        / sizeof(TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_2[0]))
+};
+
+static const terrain_tree_template TERRAIN_SMALL_PINE_TREE_TEMPLATE_VARIANT_1 =
+{
+    TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_1,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_1)
+        / sizeof(TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_1[0]))
+};
+
+static const terrain_tree_template TERRAIN_SMALL_PINE_TREE_TEMPLATE_VARIANT_2 =
+{
+    TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_2,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_2)
+        / sizeof(TERRAIN_SMALL_PINE_TREE_BLOCKS_VARIANT_2[0]))
+};
+
+static const terrain_tree_template TERRAIN_SMALL_CACTUS_TREE_TEMPLATE_VARIANT_1 =
+{
+    TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_1,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_1)
+        / sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_1[0]))
+};
+
+static const terrain_tree_template TERRAIN_SMALL_CACTUS_TREE_TEMPLATE_VARIANT_2 =
+{
+    TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_2,
+    static_cast<uint32_t>(sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_2)
+        / sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS_VARIANT_2[0]))
+};
+
+static int32_t terrain_floor_div(int32_t value, int32_t divisor) noexcept
+{
+    int32_t quotient;
+    int32_t remainder;
+
+    quotient = value / divisor;
+    remainder = value % divisor;
+    if (remainder < 0)
+        quotient -= 1;
+    return (quotient);
+}
+
+static uint64_t terrain_mix_u64(uint64_t value) noexcept
+{
+    value ^= value >> 30;
+    value *= UINT64_C(0xBF58476D1CE4E5B9);
+    value ^= value >> 27;
+    value *= UINT64_C(0x94D049BB133111EB);
+    value ^= value >> 31;
+    return (value);
+}
+
+static double terrain_lerp(double left_value, double right_value,
+    double factor) noexcept
+{
+    return (left_value + ((right_value - left_value) * factor));
+}
+
+static double terrain_smooth_factor(double factor) noexcept
+{
+    return (factor * factor * (3.0 - (2.0 * factor)));
+}
+
+static uint64_t terrain_seed_value(const char *seed_string) noexcept
+{
+    return (static_cast<uint64_t>(rng_seed_value(seed_string)));
+}
+
+static uint64_t terrain_feature_seed(uint64_t seed_value, int32_t world_block_x,
+    int32_t world_block_z, uint64_t salt) noexcept
+{
+    uint64_t feature_seed;
+
+    feature_seed = terrain_mix_u64(seed_value ^ salt
+        ^ (static_cast<uint64_t>(static_cast<int64_t>(world_block_x))
+            * UINT64_C(0x9E3779B97F4A7C15))
+        ^ (static_cast<uint64_t>(static_cast<int64_t>(world_block_z))
+            * UINT64_C(0xBF58476D1CE4E5B9)));
+    return (feature_seed);
+}
+
+static double terrain_signed_unit_noise(uint64_t seed_value, int32_t grid_x,
+    int32_t grid_z) noexcept
+{
+    uint64_t mixed_value;
+
+    mixed_value = terrain_mix_u64(seed_value
+        ^ (static_cast<uint64_t>(static_cast<int64_t>(grid_x))
+            * UINT64_C(0x9E3779B97F4A7C15))
+        ^ (static_cast<uint64_t>(static_cast<int64_t>(grid_z))
+            * UINT64_C(0xBF58476D1CE4E5B9)));
+    mixed_value = terrain_mix_u64(mixed_value);
+    return (static_cast<double>(mixed_value >> 11)
+        * (1.0 / 9007199254740992.0) * 2.0 - 1.0);
+}
+
+static double terrain_value_noise(uint64_t seed_value, int32_t world_block_x,
+    int32_t world_block_z, int32_t scale) noexcept
+{
+    int32_t grid_x0;
+    int32_t grid_z0;
+    int32_t grid_x1;
+    int32_t grid_z1;
+    int32_t local_x;
+    int32_t local_z;
+    double factor_x;
+    double factor_z;
+    double smooth_x;
+    double smooth_z;
+    double noise_top;
+    double noise_bottom;
+    double noise_left;
+    double noise_right;
+    double noise_value;
+
+    grid_x0 = terrain_floor_div(world_block_x, scale);
+    grid_z0 = terrain_floor_div(world_block_z, scale);
+    grid_x1 = grid_x0 + 1;
+    grid_z1 = grid_z0 + 1;
+    local_x = world_block_x - (grid_x0 * scale);
+    local_z = world_block_z - (grid_z0 * scale);
+    factor_x = static_cast<double>(local_x) / static_cast<double>(scale);
+    factor_z = static_cast<double>(local_z) / static_cast<double>(scale);
+    smooth_x = terrain_smooth_factor(factor_x);
+    smooth_z = terrain_smooth_factor(factor_z);
+    noise_left = terrain_signed_unit_noise(seed_value, grid_x0, grid_z0);
+    noise_right = terrain_signed_unit_noise(seed_value, grid_x1, grid_z0);
+    noise_top = terrain_lerp(noise_left, noise_right, smooth_x);
+    noise_left = terrain_signed_unit_noise(seed_value, grid_x0, grid_z1);
+    noise_right = terrain_signed_unit_noise(seed_value, grid_x1, grid_z1);
+    noise_bottom = terrain_lerp(noise_left, noise_right, smooth_x);
+    noise_value = terrain_lerp(noise_top, noise_bottom, smooth_z);
+    return (noise_value);
+}
+
+static terrain_biome terrain_pick_biome(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_z) noexcept
+{
+    int32_t biome_zone_x;
+    int32_t biome_zone_z;
+    int64_t biome_selector;
+
+    biome_zone_x = terrain_floor_div(world_block_x, TERRAIN_BIOME_ZONE_WIDTH);
+    biome_zone_z = terrain_floor_div(world_block_z, TERRAIN_BIOME_ZONE_WIDTH);
+    biome_selector = static_cast<int64_t>(seed_value % 5U)
+        + static_cast<int64_t>(biome_zone_x)
+        + static_cast<int64_t>(biome_zone_z);
+    biome_selector %= 5;
+    if (biome_selector < 0)
+        biome_selector += 5;
+    if (biome_selector == 0)
+        return (TERRAIN_BIOME_PLAINS);
+    if (biome_selector == 1)
+        return (TERRAIN_BIOME_HILLS);
+    if (biome_selector == 2)
+        return (TERRAIN_BIOME_DESERT);
+    if (biome_selector == 3)
+        return (TERRAIN_BIOME_SNOW);
+    return (TERRAIN_BIOME_MOUNTAINS);
+}
+
+uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept
+{
+    if (biome == TERRAIN_BIOME_DESERT)
         return (TERRAIN_GENERATOR_DIRT_BLOCK);
-    return (TERRAIN_GENERATOR_STONE_BLOCK);
+    if (biome == TERRAIN_BIOME_MOUNTAINS)
+        return (TERRAIN_GENERATOR_STONE_BLOCK);
+    return (TERRAIN_GENERATOR_GRASS_BLOCK);
+}
+
+ft_bool terrain_biome_has_shrubs(terrain_biome biome) noexcept
+{
+    if (biome == TERRAIN_BIOME_PLAINS)
+        return (FT_TRUE);
+    if (biome == TERRAIN_BIOME_HILLS)
+        return (FT_TRUE);
+    if (biome == TERRAIN_BIOME_DESERT)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+ft_bool terrain_biome_has_trees(terrain_biome biome) noexcept
+{
+    if (biome == TERRAIN_BIOME_PLAINS)
+        return (FT_TRUE);
+    if (biome == TERRAIN_BIOME_HILLS)
+        return (FT_TRUE);
+    if (biome == TERRAIN_BIOME_DESERT)
+        return (FT_TRUE);
+    if (biome == TERRAIN_BIOME_SNOW)
+        return (FT_TRUE);
+    if (biome == TERRAIN_BIOME_MOUNTAINS)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+static uint32_t terrain_normalise_tree_variant(uint32_t variant_index,
+    uint32_t variant_count) noexcept
+{
+    if (variant_count == 0U)
+        return (0U);
+    return (variant_index % variant_count);
+}
+
+const terrain_tree_template &terrain_small_oak_tree_template_variant(
+    uint32_t variant_index) noexcept
+{
+    variant_index = terrain_normalise_tree_variant(variant_index, 3U);
+    if (variant_index == 1U)
+        return (TERRAIN_SMALL_OAK_TREE_TEMPLATE_VARIANT_1);
+    if (variant_index == 2U)
+        return (TERRAIN_SMALL_OAK_TREE_TEMPLATE_VARIANT_2);
+    return (TERRAIN_SMALL_OAK_TREE_TEMPLATE);
+}
+
+const terrain_tree_template &terrain_small_pine_tree_template_variant(
+    uint32_t variant_index) noexcept
+{
+    variant_index = terrain_normalise_tree_variant(variant_index, 3U);
+    if (variant_index == 1U)
+        return (TERRAIN_SMALL_PINE_TREE_TEMPLATE_VARIANT_1);
+    if (variant_index == 2U)
+        return (TERRAIN_SMALL_PINE_TREE_TEMPLATE_VARIANT_2);
+    return (TERRAIN_SMALL_PINE_TREE_TEMPLATE);
+}
+
+const terrain_tree_template &terrain_small_cactus_tree_template_variant(
+    uint32_t variant_index) noexcept
+{
+    variant_index = terrain_normalise_tree_variant(variant_index, 3U);
+    if (variant_index == 1U)
+        return (TERRAIN_SMALL_CACTUS_TREE_TEMPLATE_VARIANT_1);
+    if (variant_index == 2U)
+        return (TERRAIN_SMALL_CACTUS_TREE_TEMPLATE_VARIANT_2);
+    return (TERRAIN_SMALL_CACTUS_TREE_TEMPLATE);
+}
+
+const terrain_tree_template &terrain_small_oak_tree_template(
+    uint32_t variant_index) noexcept
+{
+    return (terrain_small_oak_tree_template_variant(variant_index));
+}
+
+const terrain_tree_template &terrain_small_pine_tree_template(
+    uint32_t variant_index) noexcept
+{
+    return (terrain_small_pine_tree_template_variant(variant_index));
+}
+
+const terrain_tree_template &terrain_small_cactus_tree_template(
+    uint32_t variant_index) noexcept
+{
+    return (terrain_small_cactus_tree_template_variant(variant_index));
+}
+
+const terrain_tree_template &terrain_large_oak_tree_template(
+    uint32_t variant_index) noexcept
+{
+    return (terrain_large_oak_tree_template_variant(variant_index));
+}
+
+const terrain_tree_template &terrain_large_pine_tree_template(
+    uint32_t variant_index) noexcept
+{
+    return (terrain_large_pine_tree_template_variant(variant_index));
+}
+
+const terrain_tree_template &terrain_large_oak_tree_template_variant(
+    uint32_t variant_index) noexcept
+{
+    variant_index = terrain_normalise_tree_variant(variant_index, 2U);
+    if (variant_index == 1U)
+        return (TERRAIN_LARGE_OAK_TREE_TEMPLATE_VARIANT_1);
+    return (TERRAIN_LARGE_OAK_TREE_TEMPLATE);
+}
+
+const terrain_tree_template &terrain_large_pine_tree_template_variant(
+    uint32_t variant_index) noexcept
+{
+    variant_index = terrain_normalise_tree_variant(variant_index, 2U);
+    if (variant_index == 1U)
+        return (TERRAIN_LARGE_PINE_TREE_TEMPLATE_VARIANT_1);
+    return (TERRAIN_LARGE_PINE_TREE_TEMPLATE);
+}
+
+const terrain_tree_template &terrain_tree_template_for_biome(
+    terrain_biome biome) noexcept
+{
+    return (terrain_tree_template_for_biome(biome, 0U));
+}
+
+const terrain_tree_template &terrain_tree_template_for_biome(
+    terrain_biome biome, uint64_t seed_value) noexcept
+{
+    uint32_t variant_index;
+
+    variant_index = static_cast<uint32_t>(seed_value % 5U);
+    if (biome == TERRAIN_BIOME_DESERT)
+        return (terrain_small_cactus_tree_template(variant_index));
+    if (biome == TERRAIN_BIOME_SNOW)
+    {
+        if (variant_index < 3U)
+            return (terrain_small_pine_tree_template(variant_index));
+        return (terrain_large_pine_tree_template(variant_index - 3U));
+    }
+    if (biome == TERRAIN_BIOME_MOUNTAINS)
+    {
+        if (variant_index < 3U)
+            return (terrain_small_pine_tree_template(variant_index));
+        return (terrain_large_pine_tree_template(variant_index - 3U));
+    }
+    if (biome == TERRAIN_BIOME_HILLS)
+    {
+        if (variant_index < 3U)
+            return (terrain_small_oak_tree_template(variant_index));
+        return (terrain_large_oak_tree_template(variant_index - 3U));
+    }
+    if (variant_index < 3U)
+        return (terrain_small_oak_tree_template(variant_index));
+    return (terrain_large_oak_tree_template(variant_index - 3U));
+}
+
+terrain_biome terrain_get_biome(int32_t world_block_x, int32_t world_block_z,
+    const char *seed_string) noexcept
+{
+    return (terrain_pick_biome(terrain_seed_value(seed_string), world_block_x,
+        world_block_z));
+}
+
+terrain_biome_profile terrain_get_biome_profile(terrain_biome biome) noexcept
+{
+    terrain_biome_profile biome_profile;
+
+    if (biome == TERRAIN_BIOME_HILLS)
+    {
+        biome_profile.surface_height = 80;
+        biome_profile.height_variation = 8;
+        biome_profile.topsoil_depth = 4;
+        return (biome_profile);
+    }
+    if (biome == TERRAIN_BIOME_DESERT)
+    {
+        biome_profile.surface_height = 70;
+        biome_profile.height_variation = 3;
+        biome_profile.topsoil_depth = 5;
+        return (biome_profile);
+    }
+    if (biome == TERRAIN_BIOME_SNOW)
+    {
+        biome_profile.surface_height = 84;
+        biome_profile.height_variation = 6;
+        biome_profile.topsoil_depth = 4;
+        return (biome_profile);
+    }
+    if (biome == TERRAIN_BIOME_MOUNTAINS)
+    {
+        biome_profile.surface_height = 100;
+        biome_profile.height_variation = 14;
+        biome_profile.topsoil_depth = 2;
+        return (biome_profile);
+    }
+    biome_profile.surface_height = TERRAIN_GENERATOR_SURFACE_HEIGHT;
+    biome_profile.height_variation = 2;
+    biome_profile.topsoil_depth = 3;
+    return (biome_profile);
+}
+
+static int32_t terrain_column_height(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_z,
+    const terrain_biome_profile &biome_profile) noexcept
+{
+    double large_noise;
+    double detail_noise;
+    double total_noise;
+    int32_t surface_height;
+    int32_t variation;
+
+    large_noise = terrain_value_noise(seed_value, world_block_x, world_block_z,
+        TERRAIN_HEIGHTMAP_LARGE_SCALE);
+    detail_noise = terrain_value_noise(seed_value ^ UINT64_C(0xA5A5A5A5A5A5A5A5),
+        world_block_x, world_block_z, TERRAIN_HEIGHTMAP_DETAIL_SCALE);
+    variation = biome_profile.height_variation;
+    total_noise = (large_noise * static_cast<double>(variation))
+        + (detail_noise * static_cast<double>(variation / 2));
+    surface_height = biome_profile.surface_height
+        + static_cast<int32_t>(total_noise);
+    return (surface_height);
+}
+
+static ft_bool terrain_should_place_feature(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_z, uint64_t salt,
+    uint64_t threshold) noexcept
+{
+    uint64_t feature_seed;
+
+    feature_seed = terrain_feature_seed(seed_value, world_block_x,
+        world_block_z, salt);
+    if ((feature_seed % 100U) < threshold)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+static uint64_t terrain_tree_threshold(terrain_biome biome) noexcept
+{
+    if (biome == TERRAIN_BIOME_DESERT)
+        return (18U);
+    if (biome == TERRAIN_BIOME_SNOW)
+        return (14U);
+    if (biome == TERRAIN_BIOME_MOUNTAINS)
+        return (12U);
+    if (biome == TERRAIN_BIOME_HILLS)
+        return (20U);
+    return (18U);
+}
+
+ft_bool terrain_can_place_tree_template(game_voxel_chunk &chunk,
+    int32_t local_origin_x, int32_t local_origin_y, int32_t local_origin_z,
+    const terrain_tree_template &tree_template) noexcept
+{
+    uint32_t block_index;
+    int32_t target_x;
+    int32_t target_y;
+    int32_t target_z;
+    uint32_t block_id;
+
+    if (tree_template.blocks == ft_nullptr)
+        return (FT_FALSE);
+    block_index = 0;
+    while (block_index < tree_template.block_count)
+    {
+        target_x = local_origin_x + tree_template.blocks[block_index].offset_x;
+        target_y = local_origin_y + tree_template.blocks[block_index].offset_y;
+        target_z = local_origin_z + tree_template.blocks[block_index].offset_z;
+        if (target_x < 0 || target_x >= GAME_VOXEL_CHUNK_WIDTH
+            || target_y < 0 || target_y >= GAME_VOXEL_CHUNK_HEIGHT
+            || target_z < 0 || target_z >= GAME_VOXEL_CHUNK_DEPTH)
+            return (FT_FALSE);
+        if (chunk.read_block(target_x, target_y, target_z, &block_id)
+            != FT_ERR_SUCCESS)
+            return (FT_FALSE);
+        if (block_id != GAME_VOXEL_AIR_BLOCK)
+            return (FT_FALSE);
+        block_index += 1;
+    }
+    return (FT_TRUE);
+}
+
+int32_t terrain_place_tree_template(game_voxel_chunk &chunk,
+    int32_t local_origin_x, int32_t local_origin_y, int32_t local_origin_z,
+    const terrain_tree_template &tree_template) noexcept
+{
+    if (terrain_can_place_tree_template(chunk, local_origin_x, local_origin_y,
+            local_origin_z, tree_template) == FT_FALSE)
+        return (FT_ERR_INVALID_OPERATION);
+    uint32_t block_index;
+    int32_t target_x;
+    int32_t target_y;
+    int32_t target_z;
+    int32_t error_code;
+
+    if (tree_template.blocks == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    block_index = 0;
+    while (block_index < tree_template.block_count)
+    {
+        target_x = local_origin_x + tree_template.blocks[block_index].offset_x;
+        target_y = local_origin_y + tree_template.blocks[block_index].offset_y;
+        target_z = local_origin_z + tree_template.blocks[block_index].offset_z;
+        if (target_x >= 0 && target_x < GAME_VOXEL_CHUNK_WIDTH
+            && target_y >= 0 && target_y < GAME_VOXEL_CHUNK_HEIGHT
+            && target_z >= 0 && target_z < GAME_VOXEL_CHUNK_DEPTH)
+        {
+            error_code = chunk.write_block(target_x, target_y, target_z,
+                tree_template.blocks[block_index].block_id);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+        }
+        block_index += 1;
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
+    const char *seed_string) noexcept
+{
+    return (terrain_generate_chunk(chunk, 0, 0, seed_string));
+}
+
+int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
+    int32_t world_block_origin_x, int32_t world_block_origin_z,
     const char *seed_string) noexcept
 {
     int32_t local_x;
@@ -24,29 +806,105 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     int32_t local_z;
     uint32_t block_id;
     int32_t error_code;
-    int64_t seed_value;
+    int32_t column_height;
+    int32_t world_block_x;
+    int32_t world_block_z;
+    terrain_biome biome;
+    terrain_biome_profile biome_profile;
+    uint32_t surface_block_id;
+    uint64_t seed_value;
+    ft_bool place_shrub;
+    const terrain_tree_template *tree_template;
+    uint64_t tree_feature_seed;
 
-    seed_value = rng_seed_value(seed_string);
-    (void)seed_value;
-    local_y = 0;
-    while (local_y < GAME_VOXEL_CHUNK_HEIGHT)
+    seed_value = terrain_seed_value(seed_string);
+    local_z = 0;
+    while (local_z < GAME_VOXEL_CHUNK_DEPTH)
     {
-        block_id = terrain_generator_block_for_height(local_y);
-        local_z = 0;
-        while (local_z < GAME_VOXEL_CHUNK_DEPTH)
+        world_block_z = world_block_origin_z + local_z;
+        local_x = 0;
+        while (local_x < GAME_VOXEL_CHUNK_WIDTH)
         {
-            local_x = 0;
-            while (local_x < GAME_VOXEL_CHUNK_WIDTH)
+            world_block_x = world_block_origin_x + local_x;
+            biome = terrain_pick_biome(seed_value, world_block_x,
+                world_block_z);
+            biome_profile = terrain_get_biome_profile(biome);
+            column_height = terrain_column_height(seed_value, world_block_x,
+                world_block_z, biome_profile);
+            surface_block_id = terrain_surface_block_for_biome(biome);
+            place_shrub = terrain_biome_has_shrubs(biome);
+            if (column_height < 0)
+                column_height = 0;
+            if (column_height >= GAME_VOXEL_CHUNK_HEIGHT)
+                column_height = GAME_VOXEL_CHUNK_HEIGHT - 1;
+            local_y = 0;
+            while (local_y < GAME_VOXEL_CHUNK_HEIGHT)
             {
+                if (local_y > column_height)
+                    block_id = GAME_VOXEL_AIR_BLOCK;
+                else if (local_y == column_height)
+                    block_id = surface_block_id;
+                else if (local_y >= column_height - biome_profile.topsoil_depth)
+                    block_id = TERRAIN_GENERATOR_DIRT_BLOCK;
+                else
+                    block_id = TERRAIN_GENERATOR_STONE_BLOCK;
                 error_code = chunk.write_block(local_x, local_y, local_z,
                     block_id);
                 if (error_code != FT_ERR_SUCCESS)
                     return (error_code);
-                local_x += 1;
+                local_y += 1;
             }
-            local_z += 1;
+            if (column_height + TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET
+                < GAME_VOXEL_CHUNK_HEIGHT
+                && place_shrub == FT_TRUE
+                && terrain_should_place_feature(seed_value, world_block_x,
+                    world_block_z, TERRAIN_FEATURE_SHRUB_SALT,
+                    TERRAIN_FEATURE_SHRUB_THRESHOLD) == FT_TRUE)
+            {
+                error_code = chunk.write_block(local_x,
+                    column_height + TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET,
+                    local_z, TERRAIN_GENERATOR_SHRUB_BLOCK);
+                if (error_code != FT_ERR_SUCCESS)
+                    return (error_code);
+            }
+            local_x += 1;
         }
-        local_y += 1;
+        local_z += 1;
+    }
+    local_z = 2;
+    while (local_z + 2 < GAME_VOXEL_CHUNK_DEPTH)
+    {
+        world_block_z = world_block_origin_z + local_z;
+        local_x = 2;
+        while (local_x + 2 < GAME_VOXEL_CHUNK_WIDTH)
+        {
+            world_block_x = world_block_origin_x + local_x;
+            biome = terrain_pick_biome(seed_value, world_block_x,
+                world_block_z);
+            if (terrain_biome_has_trees(biome) == FT_TRUE
+                && terrain_should_place_feature(seed_value, world_block_x,
+                    world_block_z, TERRAIN_FEATURE_TREE_SALT,
+                    terrain_tree_threshold(biome)) == FT_TRUE)
+            {
+                tree_feature_seed = terrain_feature_seed(seed_value,
+                    world_block_x, world_block_z, TERRAIN_FEATURE_TREE_SALT);
+                tree_template = &terrain_tree_template_for_biome(biome,
+                    tree_feature_seed);
+                column_height = terrain_column_height(seed_value, world_block_x,
+                    world_block_z, terrain_get_biome_profile(biome));
+                if (terrain_can_place_tree_template(chunk, local_x,
+                        column_height + 1, local_z, *tree_template)
+                    == FT_TRUE)
+                {
+                    error_code = terrain_place_tree_template(chunk, local_x,
+                        column_height + 1, local_z, *tree_template);
+                    if (error_code != FT_ERR_SUCCESS)
+                        return (error_code);
+                }
+            }
+            local_x += 4;
+        }
+        local_z += 4;
     }
     chunk.clear_dirty();
     return (FT_ERR_SUCCESS);

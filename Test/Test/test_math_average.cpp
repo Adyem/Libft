@@ -33,7 +33,7 @@ FT_TEST(test_math_average_long_values)
             static_cast<int64_t>(2147483647));
     FT_ASSERT_EQ(static_cast<int64_t>(2147483646), result);
     result = math_average(static_cast<int64_t>(-2147483647),
-            static_cast<int64_t>(-2147483648));
+            -2147483648);
     FT_ASSERT_EQ(static_cast<int64_t>(-2147483647), result);
     return (1);
 }

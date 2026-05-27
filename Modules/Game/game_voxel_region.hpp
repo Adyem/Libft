@@ -3,6 +3,7 @@
 
 #include "game_voxel_chunk.hpp"
 #include "../CPP_class/class_string.hpp"
+#include "../Geometry/geometry.hpp"
 #include "../Errno/errno.hpp"
 #include <stdint.h>
 
@@ -63,6 +64,8 @@ class game_voxel_region
             int32_t world_chunk_z) const noexcept;
         ft_bool is_chunk_loaded(int32_t world_chunk_x,
             int32_t world_chunk_z) const noexcept;
+        ft_bool is_chunk_visible(int32_t world_chunk_x,
+            int32_t world_chunk_z, const geometry_frustum &frustum) const noexcept;
         int32_t get_region_start_x() const noexcept;
         int32_t get_region_start_z() const noexcept;
         int32_t get_error() const noexcept;
