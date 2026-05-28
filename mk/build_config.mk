@@ -47,6 +47,7 @@ SUBDIRS := Modules/Basic \
            Modules/Config \
            Modules/CrossProcess \
            Modules/Compression \
+           Modules/CSV \
            Modules/Encryption \
            Modules/Encoding \
            Modules/RNG \
@@ -89,6 +90,7 @@ LIB_BASES := \
   Modules/Config/config \
   Modules/CrossProcess/CrossProcess \
   Modules/Compression/compression \
+  Modules/CSV/CSV \
   Modules/Encryption/encryption \
   Modules/Encoding/encoding \
   Modules/RNG/RNG \

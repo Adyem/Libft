@@ -45,6 +45,7 @@
 #include "Modules/Compatebility/sqlite_support.hpp"
 #include "Modules/Compression/compression.hpp"
 #include "Modules/Compression/compression_stream_test_hooks.hpp"
+#include "Modules/CSV/csv.hpp"
 #include "Modules/Config/config.hpp"
 #include "Modules/CrossProcess/cross_process.hpp"
 #include "Modules/DUMB/controls.hpp"

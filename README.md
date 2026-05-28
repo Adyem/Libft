@@ -36,6 +36,11 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Modules that ship data, store logs, or build snapshots rely on Compression/ to encapsulate detail about algorithm choice, streaming, and chunking.
   It exists to keep the rest of the project focused on data semantics instead of the mechanics of compressing or expanding byte streams.
 
+- `CSV/`: Provides a lightweight CSV document wrapper plus field escaping and row parsing helpers for tabular text data.
+  It handles quoted fields, custom delimiters, header metadata, and serialization back to strings, files, or document backends.
+  CSV/ sits between raw text utilities and the heavier structured formats already present in the tree.
+  The module is useful for imports, exports, spreadsheets, logs, and other simple table-shaped data.
+
 - `Config/`: Loads and interprets configuration files, environment overrides, and runtime knobs that control FullLibft behavior.
   It understands different formats, merges defaults with overrides, and exposes typed accessors for modules to read settings safely.
   The module tracks modification timestamps and validation rules so configuration errors surface early in startup paths.
