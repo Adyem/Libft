@@ -48,13 +48,20 @@ ft_cancellation_state::~ft_cancellation_state() noexcept
 
 int32_t ft_cancellation_state::initialize() noexcept
 {
+    int32_t callbacks_initialize_error;
+
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         errno_abort_lifecycle(this->_initialised_state, "ft_cancellation_state::initialize", "called while object is already initialised");
         return (FT_ERR_INVALID_STATE);
     }
     this->_cancelled.store(FT_FALSE);
-    this->_callbacks.clear();
+    callbacks_initialize_error = this->_callbacks.initialize();
+    if (callbacks_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (callbacks_initialize_error);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -63,6 +70,8 @@ int32_t ft_cancellation_state::destroy() noexcept
 {
     ft_bool lock_acquired;
     int32_t lock_error;
+    int32_t disable_error;
+    int32_t callbacks_destroy_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
@@ -70,16 +79,22 @@ int32_t ft_cancellation_state::destroy() noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
     }
+    disable_error = this->disable_thread_safety();
+    callbacks_destroy_error = FT_ERR_SUCCESS;
     lock_acquired = FT_FALSE;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error == FT_ERR_SUCCESS)
     {
-        this->_callbacks.clear();
+        callbacks_destroy_error = this->_callbacks.destroy();
         this->_cancelled.store(FT_FALSE);
     }
     (void)this->unlock_internal(lock_acquired);
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
-    return (lock_error);
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    return (callbacks_destroy_error);
 }
 
 int32_t ft_cancellation_state::move(ft_cancellation_state &other) noexcept
@@ -134,16 +149,53 @@ int32_t ft_cancellation_state::move(ft_cancellation_state &other) noexcept
 
 int32_t ft_cancellation_state::register_callback(const ft_function<void()> &callback) noexcept
 {
+    ft_bool lock_acquired;
+    int32_t lock_error;
+    int32_t callback_error;
+
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_state::register_callback");
     if (!callback)
         return (FT_ERR_INVALID_ARGUMENT);
-    return (this->_callbacks.push_back(callback));
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (this->_cancelled.load() == FT_TRUE)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        callback();
+        return (FT_ERR_SUCCESS);
+    }
+    callback_error = this->_callbacks.push_back(callback);
+    (void)this->unlock_internal(lock_acquired);
+    return (callback_error);
 }
 
 int32_t ft_cancellation_state::request_cancel() noexcept
 {
+    ft_bool lock_acquired;
+    ft_size_t index;
+    int32_t lock_error;
+
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_cancellation_state::request_cancel");
+    lock_acquired = FT_FALSE;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (this->_cancelled.load() == FT_TRUE)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        return (FT_ERR_SUCCESS);
+    }
     this->_cancelled.store(FT_TRUE);
+    index = 0;
+    while (index < this->_callbacks.size())
+    {
+        this->_callbacks[index]();
+        index += 1;
+    }
+    this->_callbacks.clear();
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
@@ -186,14 +238,14 @@ int32_t ft_cancellation_state::disable_thread_safety() noexcept
 
 int32_t ft_cancellation_state::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_cancellation_state::get_error");
     return (_last_error);
 }
 
 const char *ft_cancellation_state::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_cancellation_state::get_error_str");
     return (ft_strerror(_last_error));
 }
@@ -346,14 +398,14 @@ ft_bool ft_cancellation_source::is_cancellation_requested() const noexcept
 
 int32_t ft_cancellation_source::get_error() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_cancellation_source::get_error");
     return (_last_error);
 }
 
 const char *ft_cancellation_source::get_error_str() const noexcept
 {
-    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+    errno_abort_if_uninitialised(this->_initialised_state,
         "ft_cancellation_source::get_error_str");
     return (ft_strerror(_last_error));
 }

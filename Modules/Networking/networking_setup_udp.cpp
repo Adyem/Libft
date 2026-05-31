@@ -3,7 +3,6 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <new>

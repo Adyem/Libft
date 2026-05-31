@@ -88,7 +88,7 @@ int32_t ft_http_server::destroy() noexcept
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
-    this->_server_socket.close_socket();
+    (void)this->_server_socket.destroy();
     this->_non_blocking = FT_FALSE;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (FT_ERR_SUCCESS);
@@ -152,7 +152,10 @@ int32_t ft_http_server::start(const char *ip_address, uint16_t port, int32_t add
     ft_strncpy(configuration._ip, ip_address, sizeof(configuration._ip) - 1);
     configuration._ip[sizeof(configuration._ip) - 1] = '\0';
     configuration._port = port;
+    configuration._backlog = 10;
+    configuration._protocol = IPPROTO_TCP;
     configuration._address_family = address_family;
+    configuration._reuse_address = FT_TRUE;
     configuration._non_blocking = non_blocking;
     configuration._recv_timeout = 5000;
     configuration._send_timeout = 5000;

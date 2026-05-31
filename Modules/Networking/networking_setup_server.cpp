@@ -2,7 +2,6 @@
 #include "socket_class.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno_internal.hpp"
-#include <cerrno>
 #include <cstdio>
 #include <fcntl.h>
 
@@ -335,27 +334,43 @@ int32_t ft_socket::setup_server(const SocketConfig &config)
 
     setup_error = this->create_socket(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     setup_error = this->set_reuse_address(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     setup_error = this->set_non_blocking(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     setup_error = this->set_timeouts(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     setup_error = this->configure_address(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     setup_error = this->bind_socket(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     setup_error = this->listen_socket(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     setup_error = this->join_multicast_group(config);
     if (setup_error != FT_ERR_SUCCESS)
+    {
         return (setup_error);
+    }
     return (FT_ERR_SUCCESS);
 }
