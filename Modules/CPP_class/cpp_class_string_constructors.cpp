@@ -3,7 +3,10 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_string::ft_string() noexcept
     : _data(ft_nullptr)

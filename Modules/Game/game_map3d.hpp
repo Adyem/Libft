@@ -3,8 +3,9 @@
 
 #include <cstddef>
 #include <stdint.h>
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 

@@ -1,4 +1,7 @@
 #include "pthread.hpp"
+#include "../Basic/limits.hpp"
+#include "mutex.hpp"
+#include "recursive_mutex.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 

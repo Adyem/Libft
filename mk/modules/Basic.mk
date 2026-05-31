@@ -2,6 +2,7 @@ TARGET := Basic.a
 DEBUG_TARGET := Basic_debug.a
 
 SRCS := basic_atoi.cpp \
+    basic_nullptr.cpp \
     basic_bzero.cpp \
     basic_memchr.cpp \
     basic_memrchr.cpp \
@@ -19,7 +20,6 @@ SRCS := basic_atoi.cpp \
     basic_strnstr.cpp \
     basic_strstr.cpp \
     basic_strrchr.cpp \
-    basic_hash_string31.cpp \
     basic_strtok.cpp \
     basic_atol.cpp \
     basic_strtol.cpp \
@@ -38,16 +38,13 @@ SRCS := basic_atoi.cpp \
     basic_strncpy_s.cpp \
     basic_strcat_s.cpp \
     basic_strncat_s.cpp \
-    basic_span_dup.cpp \
     basic_locale_compare.cpp \
     basic_wstrlen.cpp \
-    basic_strmapi.cpp \
     basic_striteri.cpp \
     basic_isspace.cpp \
     basic_validate_int.cpp \
-    basic_utf8_case.cpp \
     basic_utf8_decode.cpp \
-    basic_utf8_grapheme.cpp \
+    basic_utf8_encode.cpp \
     basic_utf8_length.cpp \
     basic_constant_time_compare.cpp
 

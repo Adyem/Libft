@@ -1,7 +1,7 @@
 #include "websocket_server.hpp"
 #include "networking.hpp"
 #include "socket_class.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Compression/compression.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Encryption/encryption.hpp"

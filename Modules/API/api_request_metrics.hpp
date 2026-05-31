@@ -1,11 +1,14 @@
 #ifndef API_REQUEST_METRICS_HPP
 #define API_REQUEST_METRICS_HPP
 
+#include "../Basic/limits.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Observability/observability_networking_metrics.hpp"
 #include "../Time/time.hpp"
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"

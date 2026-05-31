@@ -1,8 +1,11 @@
 #include "class_stringbuf.hpp"
-#include "class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t ft_stringbuf::_last_error = FT_ERR_SUCCESS;
 

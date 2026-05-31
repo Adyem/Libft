@@ -3,6 +3,7 @@
 #include "../Time/time.hpp"
 #include "../Printf/printf.hpp"
 #include "../Basic/basic.hpp"
+#include "../Sink/sink.hpp"
 
 static int32_t logger_append_quoted_token(ft_string &buffer, const char *value)
 {
@@ -189,6 +190,7 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
     if (logger_build_standard_message(level, message_text, context_fragment,
             final_message) != 0)
         return ;
+    (void)sink_record_message(static_cast<int32_t>(level), final_message.c_str());
     if (sink_count == 0)
     {
         ssize_t    write_result;

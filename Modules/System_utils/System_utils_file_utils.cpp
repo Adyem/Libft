@@ -1,10 +1,13 @@
 #include "system_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Errno/errno.hpp"
 #include "../File/open_dir.hpp"
 #include <fcntl.h>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool su_should_skip_directory_entry(const char *entry_name)
 {

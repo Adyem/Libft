@@ -121,7 +121,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `ft_istringstream`
 
-## CPP_class/class_nullptr.hpp
+## Basic/class_nullptr.hpp
 
 - `ft_nullptr_t`
 
@@ -684,7 +684,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `pt_condition_variable`
 
-## PThread/lock_guard.hpp
+## Threading/lock_guard.hpp
 
 - `ft_lock_guard`
 - `ft_recursive_lock_guard`
@@ -705,7 +705,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `timespec`
 
-## PThread/pthread_errno_guard.hpp
+## Threading/errno_guard.hpp
 
 - `pt_errno_guard`
 
@@ -722,7 +722,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `pt_recursive_mutex`
 
-## PThread/task_scheduler.hpp
+## Threading/task_scheduler.hpp
 
 - `ft_blocking_queue`
 - `ft_scheduled_task_handle`
@@ -731,16 +731,16 @@ Each entry lists the class or struct name introduced in that translation unit.
 - `scheduled_task`
 - `task_queue_entry`
 
-## PThread/task_scheduler_tracing.hpp
+## Threading/task_scheduler_tracing.hpp
 
 - `ft_task_trace_event`
 
-## PThread/thread.hpp
+## Threading/thread.hpp
 
 - `ft_thread`
 - `start_payload`
 
-## PThread/unique_lock.hpp
+## Threading/unique_lock.hpp
 
 - `ft_unique_lock`
 
@@ -858,7 +858,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `ft_bitset`
 
-## CPP_class/cancellation.hpp
+## Threading/cancellation.hpp
 
 - `ft_cancellation_source`
 - `ft_cancellation_state`
@@ -968,7 +968,7 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `ft_string_view`
 
-## CPP_class/thread_pool.hpp
+## Threading/thread_pool.hpp
 
 - `ft_thread_pool`
 

@@ -1,7 +1,8 @@
 #include <cstdlib>
 
 #include "logger_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../CMA/CMA.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
@@ -296,6 +297,7 @@ void ft_logger::set_alloc_logging(ft_bool enable) noexcept
     if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_alloc_logging = enable;
+    cma_set_alloc_logging(enable);
     this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return ;
@@ -309,7 +311,7 @@ ft_bool ft_logger::get_alloc_logging() const noexcept
     lock_acquired = FT_FALSE;
     if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (FT_FALSE);
-    alloc_logging = this->_alloc_logging;
+    alloc_logging = cma_get_alloc_logging();
     const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (alloc_logging);

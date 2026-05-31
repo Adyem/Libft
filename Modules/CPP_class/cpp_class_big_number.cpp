@@ -1,7 +1,7 @@
 #include "class_big_number.hpp"
 #include "class_string.hpp"
 #include "../Errno/errno.hpp"
-#include "class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
@@ -9,6 +9,10 @@
 #include "../Template/move.hpp"
 #include <limits>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t ft_big_number::_last_error = FT_ERR_SUCCESS;
 thread_local uint8_t ft_big_number::_last_initialised_state = FT_CLASS_STATE_UNINITIALISED;

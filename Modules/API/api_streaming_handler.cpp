@@ -3,6 +3,9 @@
 #include "../Template/move.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 api_streaming_handler::api_streaming_handler() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED),

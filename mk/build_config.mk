@@ -39,6 +39,7 @@ SUBDIRS := Modules/Basic \
            Modules/Printf \
            Modules/ReadLine \
            Modules/PThread \
+           Modules/Threading \
            Modules/CPP_class \
            Modules/Template \
            Modules/Buffer \
@@ -63,10 +64,11 @@ SUBDIRS := Modules/Basic \
            Modules/URI \
            Modules/API \
            Modules/Observability \
+           Modules/Sink \
            Modules/Logger \
            Modules/Parser \
            Modules/Game \
-           Modules/Terrain
+           Modules/Voxel
 
 LIB_BASES := \
   Modules/Basic/Basic \
@@ -83,6 +85,7 @@ LIB_BASES := \
   Modules/Printf/Printf \
   Modules/ReadLine/ReadLine \
   Modules/PThread/PThread \
+  Modules/Threading/Threading \
   Modules/CPP_class/CPP_class \
   Modules/Buffer/buffer \
   Modules/CLI/cli \
@@ -106,10 +109,11 @@ LIB_BASES := \
   Modules/URI/uri \
   Modules/API/API \
   Modules/Observability/Observability \
+  Modules/Sink/Sink \
   Modules/Logger/Logger \
   Modules/Parser/parser \
   Modules/Game/Game \
-  Modules/Terrain/Terrain
+  Modules/Voxel/Voxel
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))

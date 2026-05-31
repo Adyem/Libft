@@ -4,7 +4,7 @@
 #include "../../Modules/JSon/json_dom_bridge.hpp"
 #include "../../Modules/JSon/json.hpp"
 #include "../../Modules/CPP_class/class_big_number.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/XML/xml.hpp"

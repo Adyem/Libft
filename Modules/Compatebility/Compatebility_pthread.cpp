@@ -82,7 +82,7 @@ int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
 #  include <sys/syscall.h>
 # else
 #  include "../CMA/CMA.hpp"
-#  include "../CPP_class/class_nullptr.hpp"
+#  include "../Basic/class_nullptr.hpp"
 
 struct cmp_wait_entry
 {

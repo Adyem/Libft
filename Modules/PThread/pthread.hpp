@@ -8,7 +8,8 @@
 #ifndef _WIN32
     #include <pthread.h>
 #endif
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
 #include <atomic>
 #include <cstddef>
 #ifdef _WIN32

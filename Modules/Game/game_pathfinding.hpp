@@ -5,6 +5,7 @@
 #include "../Template/vector.hpp"
 #include "../Template/graph.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/mutex.hpp"

@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Modules/PThread/task_scheduler.hpp"
+#include "../../Modules/Threading/task_scheduler.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Time/time.hpp"

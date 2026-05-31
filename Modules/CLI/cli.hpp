@@ -1,8 +1,10 @@
 #ifndef CLI_HPP
 #define CLI_HPP
 
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+
+class ft_string;
 
 enum cli_option_type : uint8_t
 {
@@ -24,6 +26,7 @@ struct cli_option
     const char          *default_value;
     ft_bool             present;
     const char          *value_string;
+    ft_string           *value_string_storage;
     ft_bool             value_bool;
     int64_t             value_int64;
     uint64_t            value_uint64;
@@ -47,6 +50,7 @@ struct cli_command
 
 int32_t         cli_parse(cli_command *command, ft_size_t argument_count,
                     const char *const *argument_values);
+int32_t         cli_validate(const cli_command *command);
 cli_option   *cli_find_option(cli_command *command, const char *long_name);
 const cli_option *cli_find_option_const(const cli_command *command,
                     const char *long_name);
@@ -62,5 +66,9 @@ int32_t         cli_get_double(const cli_command *command, const char *long_name
                     double *value_out) noexcept;
 int32_t         cli_format_help(const cli_command *command,
                     const char *program_name, char *buffer, ft_size_t buffer_size);
+int32_t         cli_generate_completion_script(const cli_command *command,
+                    const char *program_name, char *buffer, ft_size_t buffer_size);
+int32_t         cli_merge_config_text(cli_command *command, const char *config_text);
+int32_t         cli_merge_config_file(cli_command *command, const char *path);
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "../test_internal.hpp"
 #include "../../Modules/CPP_class/class_string.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include <csetjmp>
 #include <csignal>
 #include <cstring>

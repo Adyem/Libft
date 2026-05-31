@@ -2,7 +2,7 @@
 
 #include "../CPP_class/class_file.hpp"
 #include "../CPP_class/class_file_stream.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)

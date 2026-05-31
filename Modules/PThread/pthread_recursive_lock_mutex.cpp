@@ -1,8 +1,10 @@
 #include <atomic>
 #include <system_error>
+#include "../Basic/limits.hpp"
 #include "../Errno/errno.hpp"
 #include "../System_utils/system_utils.hpp"
 
+#include "mutex.hpp"
 #ifdef LIBFT_TEST_BUILD
 std::atomic<int> pt_recursive_mutex_lock_override_error_code(FT_ERR_SUCCESS);
 #endif

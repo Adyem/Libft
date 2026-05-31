@@ -2,6 +2,9 @@
 #include "../Errno/errno.hpp"
 #include <errno.h>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>

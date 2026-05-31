@@ -5,7 +5,7 @@
 #include <openssl/core_names.h>
 #include <openssl/params.h>
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "encryption.hpp"
 
 static void hmac_sha256_stream_reset_state(hmac_sha256_stream &stream)

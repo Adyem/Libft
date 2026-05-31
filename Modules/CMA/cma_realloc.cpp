@@ -7,7 +7,7 @@
 #include "cma_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/limits.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 
 static ft_bool reallocate_block(void *memory_pointer, ft_size_t aligned_size, ft_size_t user_size)

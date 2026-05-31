@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/CLI/cli.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
@@ -16,6 +16,7 @@ static void reset_option(cli_option *option, const char *long_name, char short_n
     option->default_value = ft_nullptr;
     option->present = FT_FALSE;
     option->value_string = ft_nullptr;
+    option->value_string_storage = ft_nullptr;
     option->value_bool = FT_FALSE;
     option->value_int64 = 0;
     option->value_uint64 = 0U;

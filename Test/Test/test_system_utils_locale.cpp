@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/system_utils.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/CPP_class/class_string.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Errno/errno.hpp"

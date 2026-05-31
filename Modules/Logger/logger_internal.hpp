@@ -9,7 +9,7 @@
 #include <pthread.h>
 #include "../Template/vector.hpp"
 #include "../CPP_class/class_string.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "logger.hpp"

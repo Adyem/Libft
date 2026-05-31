@@ -1,5 +1,8 @@
 #include "api.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 struct api_transport_hooks_state
 {

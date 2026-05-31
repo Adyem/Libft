@@ -1,5 +1,5 @@
 #include "command.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 static ft_bool command_action_is_valid(const command_action *action)
 {

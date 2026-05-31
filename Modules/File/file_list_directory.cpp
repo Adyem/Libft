@@ -1,6 +1,6 @@
 #include "file_utils.hpp"
 #include "open_dir.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 static ft_bool file_list_is_dot_entry(const char *name) noexcept

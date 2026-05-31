@@ -3,6 +3,7 @@
 #include "recursive_mutex.hpp"
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
+#include "mutex.hpp"
 
 int pt_recursive_mutex::unlock() const
 {

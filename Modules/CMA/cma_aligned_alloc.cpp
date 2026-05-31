@@ -4,8 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
-#include "../Logger/logger.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 
 static ft_bool normalize_alignment_padding(ft_size_t *padding)
@@ -147,8 +146,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     else
         *error_target = FT_ERR_NO_MEMORY;
 #endif
-    if (ft_log_get_alloc_logging())
-        ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
+    cma_record_allocation_log("cma_aligned_alloc %lu (alignment %lu) -> %p",
             allocation_size, alignment, pointer);
     return (pointer);
 }
@@ -212,9 +210,8 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
         cma_unlock_allocator(lock_acquired);
-        if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
-                    request_size, alignment, arena_pointer);
+        cma_record_allocation_log("cma_aligned_alloc %lu (alignment %lu) -> %p",
+                request_size, alignment, arena_pointer);
         return (arena_pointer);
     }
     ft_size_t padding = 0;
@@ -270,8 +267,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     cma_debug_prepare_allocation(block, request_size);
     void *result = static_cast<void *>(cma_block_user_pointer(block));
     cma_unlock_allocator(lock_acquired);
-    if (ft_log_get_alloc_logging())
-        ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
-                request_size, alignment, result);
+    cma_record_allocation_log("cma_aligned_alloc %lu (alignment %lu) -> %p",
+            request_size, alignment, result);
     return (result);
 }

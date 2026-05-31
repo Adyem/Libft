@@ -1,7 +1,7 @@
 #ifndef BYTE_BUFFER_HPP
 # define BYTE_BUFFER_HPP
 
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <cstdint>

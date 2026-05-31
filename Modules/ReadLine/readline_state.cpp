@@ -19,6 +19,7 @@ s_readline_state::s_readline_state(void)
     while (index < MAX_SUGGESTIONS)
     {
         this->current_matches[index] = ft_nullptr;
+        this->current_match_scores[index] = 0;
         index++;
     }
     this->mutex = ft_nullptr;
@@ -27,6 +28,8 @@ s_readline_state::s_readline_state(void)
 
 s_readline_state::~s_readline_state(void)
 {
+    int32_t index;
+
     this->buffer = ft_nullptr;
     this->buffer_size = 0;
     this->position = 0;
@@ -38,6 +41,13 @@ s_readline_state::~s_readline_state(void)
     this->current_match_count = 0;
     this->current_match_index = 0;
     this->word_start = 0;
+    index = 0;
+    while (index < MAX_SUGGESTIONS)
+    {
+        this->current_matches[index] = ft_nullptr;
+        this->current_match_scores[index] = 0;
+        index++;
+    }
     this->mutex = ft_nullptr;
     return ;
 }

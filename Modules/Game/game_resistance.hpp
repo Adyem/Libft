@@ -1,6 +1,7 @@
 #ifndef GAME_RESISTANCE_HPP
 # define GAME_RESISTANCE_HPP
 
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 

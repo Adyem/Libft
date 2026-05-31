@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdarg>
 #include "../Time/time.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../PThread/pthread.hpp"
 
 class pt_recursive_mutex;

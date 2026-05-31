@@ -17,6 +17,8 @@ SRCS := time_now.cpp \
         time_timer.cpp \
         time_strftime.cpp \
         time_format.cpp \
+        time_relative.cpp \
+        time_interval.cpp \
         time_parse.cpp \
         time_high_resolution.cpp \
         time_monotonic_translate.cpp \

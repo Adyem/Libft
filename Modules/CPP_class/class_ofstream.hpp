@@ -4,6 +4,7 @@
 #include "class_file.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <cstdint>
 

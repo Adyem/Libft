@@ -6,7 +6,7 @@
 #endif
 #include "../Advanced/advanced.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CPP_class/class_file.hpp"
 #include "../Errno/errno.hpp"
 #include "../GetNextLine/get_next_line.hpp"

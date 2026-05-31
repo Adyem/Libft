@@ -9,7 +9,7 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Compatebility/compatebility_internal.hpp"
 #include "compatebility_system_test_hooks.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <cstring>

@@ -1,4 +1,8 @@
 #include "bitset.hpp"
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t ft_bitset::set_error(int32_t error_code)
 {

@@ -6,7 +6,7 @@
 
 #include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 class gnl_stream
 {

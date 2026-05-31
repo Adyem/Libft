@@ -1,6 +1,6 @@
 # ReadLine
 
-The `ReadLine` module provides an interactive prompt with history, suggestions, key bindings, completion callbacks, editable line state, and pluggable history storage.
+The `ReadLine` module provides an interactive prompt with history, reverse incremental search, suggestions, key bindings, completion callbacks, editable line state, and pluggable history storage.
 
 ## Callback Types
 
@@ -18,6 +18,7 @@ The `ReadLine` module provides an interactive prompt with history, suggestions, 
 - `rl_history_enable_auto_save(ft_bool enabled)` - Enables or disables automatic history saves.
 - `rl_history_load()` / `rl_history_save()` - Loads or saves history through the configured backend.
 - `rl_history_search(...)` - Searches history forward or backward from a start index.
+- Reverse incremental search is built into `rl_readline(...)` on `Ctrl-R` and reuses the history search engine to step through earlier matches.
 
 ## Key Binding and State Editing
 
@@ -33,4 +34,5 @@ The `ReadLine` module provides an interactive prompt with history, suggestions, 
 
 - `rl_set_completion_callback(...)` - Installs a completion provider.
 - `rl_completion_add_candidate(const char *candidate)` - Adds one completion candidate.
+- Tab completion ranks prefix matches first and falls back to fuzzy subsequence matches when no exact prefix match is available.
 - `rl_readline(const char *prompt)` - Displays a prompt and returns an allocated input line.

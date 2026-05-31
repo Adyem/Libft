@@ -5,9 +5,12 @@
 #ifndef LIBFT_INTERNAL_HEADERS
 # error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
 #endif
+#include "../Basic/limits.hpp"
 #include "api_internal.hpp"
 #include "api.hpp"
 #include "../JSon/json.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include <limits.h>
 
 class ft_string;

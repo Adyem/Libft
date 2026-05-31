@@ -1,6 +1,6 @@
 #include "advanced.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 int32_t *adv_atoi(const char *string)

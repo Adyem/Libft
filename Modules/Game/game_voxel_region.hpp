@@ -4,6 +4,7 @@
 #include "game_voxel_chunk.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Geometry/geometry.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include <stdint.h>
 

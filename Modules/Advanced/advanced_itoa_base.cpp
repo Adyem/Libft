@@ -1,7 +1,7 @@
 #include <cstddef>
 #include "advanced.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 static int32_t calculate_length(int32_t number, int32_t base)
 {

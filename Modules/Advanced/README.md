@@ -16,6 +16,10 @@ The `Advanced` module contains allocation-returning convenience helpers built on
 
 ## Text Helpers
 
+- `ft_hash_string31(const char *string)` - Computes the module's 31-based hash for a C string.
+- `ft_hash_string31(const ft_string &string)` - Computes the same 31-based hash for an `ft_string`.
+- `ft_span_dup(const char *buffer, ft_size_t length)` - Allocates and copies a non-null-terminated character span.
+- `ft_strmapi(const char *string, char (*function)(uint32_t, char))` - Allocates a mapped copy of a string using an index-aware callback.
 - `adv_utf16_to_utf8(const char16_t *input, ft_size_t input_length)` - Converts a UTF-16 span into an allocated UTF-8 `ft_string`.
 - `adv_utf32_to_utf8(const char32_t *input, ft_size_t input_length)` - Converts a UTF-32 span into an allocated UTF-8 `ft_string`.
 - `adv_locale_casefold(const char *input, const char *locale_name)` - Allocates a locale-aware folded string for comparisons.
@@ -27,6 +31,16 @@ The `Advanced` module contains allocation-returning convenience helpers built on
 - `adv_substr(const char *source, uint32_t start, ft_size_t length)` - Allocates a substring beginning at `start`.
 - `adv_strtrim(const char *input_string, const char *set)` - Allocates a copy with characters from `set` trimmed from both ends.
 - `adv_split(char const *string, char delimiter)` - Splits a string by delimiter into a null-terminated array of allocated strings.
+
+## UTF Helpers
+
+- `ft_utf8_case_ascii_lower(uint32_t code_point)` - Lowercases ASCII code points and leaves others unchanged.
+- `ft_utf8_case_ascii_upper(uint32_t code_point)` - Uppercases ASCII code points and leaves others unchanged.
+- `ft_utf8_is_combining_code_point(uint32_t code_point)` - Reports whether a code point is a combining mark handled by this module.
+- `ft_utf8_transform(const char *input, ft_size_t input_length, char *output_buffer, ft_size_t output_buffer_size, ft_utf8_case_hook case_hook)` - Applies a code-point transform into a caller-owned buffer.
+- `ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook)` - Allocates a transformed UTF-8 string.
+- `ft_utf8_next_grapheme(const char *string, ft_size_t string_length, ft_size_t *index_pointer, ft_size_t *grapheme_length_pointer)` - Finds the next grapheme span and advances the index.
+- `ft_utf8_duplicate_grapheme(const char *string, ft_size_t string_length, ft_size_t *index_pointer, char **grapheme_pointer)` - Allocates a copy of the next grapheme and advances the index.
 
 ## Memory Helpers
 

@@ -1,7 +1,7 @@
 #include "game_event_scheduler_telemetry.hpp"
 #include "../Observability/observability_game_metrics.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <limits>
 
 static const int64_t g_event_scheduler_ns_per_second = 1000000000LL;

@@ -46,8 +46,28 @@ enum file_list_flags : uint32_t
     FILE_LIST_FOLLOW_SYMLINKS = 8U,
     FILE_LIST_INCLUDE_ALL = FILE_LIST_INCLUDE_FILES | FILE_LIST_INCLUDE_DIRECTORIES | FILE_LIST_INCLUDE_HIDDEN
 };
+
+typedef ft_bool (*file_path_filter_callback)(const char *path,
+    ft_bool is_directory, void *user_context);
+
+enum file_metadata_diff_flags : uint32_t
+{
+    FILE_METADATA_DIFF_NONE = 0U,
+    FILE_METADATA_DIFF_TYPE = 1U,
+    FILE_METADATA_DIFF_SIZE = 2U,
+    FILE_METADATA_DIFF_PERMISSIONS = 4U,
+    FILE_METADATA_DIFF_MISSING = 8U
+};
+
 int32_t       file_list_directory(const char *path, ft_vector<ft_string> &entries, uint32_t flags);
 int32_t       file_list_directory_recursive(const char *path, ft_vector<ft_string> &entries, uint32_t flags);
+int32_t       file_copy_directory_filtered(const char *source_path, const char *destination_path,
+                file_path_filter_callback filter_callback, void *user_context);
+int32_t       file_move_directory_filtered(const char *source_path, const char *destination_path,
+                file_path_filter_callback filter_callback, void *user_context);
+int32_t       file_hash_sha1(const char *path, uint8_t digest[20]);
+int32_t       file_hash_sha256(const char *path, uint8_t digest[32]);
+int32_t       file_metadata_diff(const char *left_path, const char *right_path, uint32_t *difference_out);
 ft_string *file_path_join(const char *path_left, const char *path_right);
 ft_string *file_path_normalize(const char *path);
 ft_bool   file_path_is_absolute(const char *path) noexcept;

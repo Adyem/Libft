@@ -1,7 +1,8 @@
 #include "cross_process.hpp"
 
+#include <cerrno>
 #include <cstring>
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Compatebility/compatebility_cross_process.hpp"
 
@@ -70,6 +71,7 @@ int32_t cp_receive_memory(int32_t socket_file_descriptor,
     data_offset = compute_offset(message.remote_memory_address, message.stack_base_address);
     if (data_offset >= message.remote_memory_size)
     {
+        errno = EINVAL;
         return (cleanup_and_fail(FT_ERR_INVALID_ARGUMENT));
     }
     payload_length = message.remote_memory_size - data_offset;
@@ -85,7 +87,10 @@ int32_t cp_receive_memory(int32_t socket_file_descriptor,
 
         error_offset = compute_offset(message.error_memory_address, message.stack_base_address);
         if (error_offset + sizeof(int32_t) > message.remote_memory_size)
+        {
+            errno = EINVAL;
             return (cleanup_and_fail(FT_ERR_INVALID_ARGUMENT));
+        }
         std::memset(mapping.mapping_address + error_offset, 0, sizeof(int32_t));
     }
     std::memset(mapping.mapping_address + data_offset, 0, payload_length);

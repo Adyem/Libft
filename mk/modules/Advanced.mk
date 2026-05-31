@@ -2,6 +2,8 @@ TARGET := Advanced.a
 DEBUG_TARGET := Advanced_debug.a
 
 SRCS := advanced_to_string.cpp \
+    advanced_string.cpp \
+    advanced_utf8.cpp \
     advanced_wide.cpp \
     advanced_locale_casefold.cpp \
     advanced_span_to_string.cpp \

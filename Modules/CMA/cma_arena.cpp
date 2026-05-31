@@ -1,7 +1,7 @@
 #include "cma_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/limits.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstdlib>
 

@@ -1,7 +1,8 @@
 #include "readline_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/utf8.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Advanced/advanced.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstddef>
 #include <cstdint>

@@ -1,8 +1,11 @@
 #include "class_file_stream.hpp"
 
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <climits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_size_t ft_file_default_buffer_size(void) noexcept
 {

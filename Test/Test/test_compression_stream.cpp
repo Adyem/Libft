@@ -3,7 +3,7 @@
 #include "../../Modules/Compression/compression_stream_test_hooks.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Basic/basic.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/system_utils.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"

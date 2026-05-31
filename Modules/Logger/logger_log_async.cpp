@@ -1,5 +1,6 @@
 #include "logger_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Sink/sink.hpp"
 #include "../Template/queue.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/condition.hpp"
@@ -330,6 +331,7 @@ void ft_log_enqueue(t_log_level level, const char *format_string, va_list argume
     {
         return ;
     }
+    (void)sink_record_message(static_cast<int32_t>(level), final_message.c_str());
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
         return ;

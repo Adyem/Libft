@@ -1,6 +1,6 @@
 #include "readline.hpp"
 #include "readline_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 

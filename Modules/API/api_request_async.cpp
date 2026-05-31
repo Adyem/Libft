@@ -7,12 +7,15 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
-#include "../PThread/thread.hpp"
+#include "../Threading/thread.hpp"
 #include "../Time/time.hpp"
 #include <atomic>
 #include <errno.h>
 #include <limits.h>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>

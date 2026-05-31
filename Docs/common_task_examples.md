@@ -120,7 +120,7 @@ periodic callback, poll `get_error()` for diagnostics, and cancel it when the
 application shuts down.
 
 ```cpp
-#include "../Modules/PThread/task_scheduler.hpp"
+#include "../Modules/Threading/task_scheduler.hpp"
 #include "../Modules/Errno/errno.hpp"
 #include <atomic>
 #include <cstdio>
@@ -171,7 +171,7 @@ Key points:
   `ft_errno` whenever allocation, synchronization, or timer operations fail.
 - Handles returned from `schedule_every` surface cancellation issues through
   `get_error()`/`get_error_str()`, allowing centralized logging and recovery
-  flows.【F:PThread/task_scheduler.hpp†L89-L119】【F:PThread/task_scheduler.hpp†L136-L199】
+  flows.【F:Threading/task_scheduler.hpp†L89-L119】【F:Threading/task_scheduler.hpp†L136-L199】
 
 ## Working with the examples
 

@@ -1,5 +1,8 @@
-#include "cli.hpp"
+#include "cli_internal.hpp"
+#include "../CPP_class/class_string.hpp"
 #include <cstdlib>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_size_t cli_strlen(const char *string)
 {
@@ -190,12 +193,15 @@ static ft_bool cli_double_from_string(const char *value, double *result)
     return (FT_TRUE);
 }
 
-static int32_t cli_apply_option_value(cli_option *option, const char *value)
+int32_t cli_apply_option_value(cli_option *option, const char *value) noexcept
 {
+    ft_string *old_storage;
+
     if (option == ft_nullptr)
     {
         return (FT_ERR_INVALID_POINTER);
     }
+    old_storage = option->value_string_storage;
     if (option->type == CLI_OPTION_BOOL)
     {
         if (value == ft_nullptr)
@@ -203,6 +209,12 @@ static int32_t cli_apply_option_value(cli_option *option, const char *value)
             option->value_bool = FT_TRUE;
             option->value_string = "true";
             option->present = FT_TRUE;
+            if (old_storage != ft_nullptr)
+            {
+                (void)old_storage->destroy();
+                delete old_storage;
+            }
+            option->value_string_storage = ft_nullptr;
             return (FT_ERR_SUCCESS);
         }
         if (cli_bool_from_string(value, &option->value_bool) == FT_FALSE)
@@ -216,6 +228,15 @@ static int32_t cli_apply_option_value(cli_option *option, const char *value)
         {
             return (FT_ERR_INVALID_ARGUMENT);
         }
+        option->value_string = value;
+        option->present = FT_TRUE;
+        if (old_storage != ft_nullptr)
+        {
+            (void)old_storage->destroy();
+            delete old_storage;
+        }
+        option->value_string_storage = ft_nullptr;
+        return (FT_ERR_SUCCESS);
     }
     else if (option->type == CLI_OPTION_INT64)
     {
@@ -244,6 +265,12 @@ static int32_t cli_apply_option_value(cli_option *option, const char *value)
     }
     option->value_string = value;
     option->present = FT_TRUE;
+    if (old_storage != ft_nullptr)
+    {
+        (void)old_storage->destroy();
+        delete old_storage;
+    }
+    option->value_string_storage = ft_nullptr;
     return (FT_ERR_SUCCESS);
 }
 
@@ -261,6 +288,12 @@ static void cli_reset_command(cli_command *command)
     index = 0;
     while (index < command->option_count)
     {
+        if (command->options[index].value_string_storage != ft_nullptr)
+        {
+            (void)command->options[index].value_string_storage->destroy();
+            delete command->options[index].value_string_storage;
+            command->options[index].value_string_storage = ft_nullptr;
+        }
         command->options[index].present = FT_FALSE;
         command->options[index].value_string = ft_nullptr;
         command->options[index].value_bool = FT_FALSE;
@@ -376,7 +409,28 @@ static cli_option *cli_find_long_option_with_length(cli_command *command,
     return (ft_nullptr);
 }
 
-static cli_command *cli_find_subcommand(cli_command *command, const char *name)
+cli_command *cli_find_subcommand(cli_command *command, const char *name) noexcept
+{
+    ft_size_t index;
+
+    if (command == ft_nullptr || name == ft_nullptr)
+    {
+        return (ft_nullptr);
+    }
+    index = 0;
+    while (index < command->subcommand_count)
+    {
+        if (cli_streq(command->subcommands[index].name, name) == FT_TRUE)
+        {
+            return (command->subcommands + index);
+        }
+        index++;
+    }
+    return (ft_nullptr);
+}
+
+const cli_command *cli_find_subcommand(const cli_command *command,
+    const char *name) noexcept
 {
     ft_size_t index;
 
@@ -435,6 +489,30 @@ static int32_t cli_apply_defaults(cli_command *command)
             return (FT_ERR_INVALID_ARGUMENT);
         }
         index++;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t cli_apply_defaults_recursive(cli_command *command) noexcept
+{
+    int32_t error_code;
+
+    if (command == ft_nullptr)
+    {
+        return (FT_ERR_INVALID_POINTER);
+    }
+    error_code = cli_apply_defaults(command);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    if (command->selected_subcommand != ft_nullptr)
+    {
+        error_code = cli_apply_defaults_recursive(command->selected_subcommand);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
     }
     return (FT_ERR_SUCCESS);
 }
@@ -554,6 +632,11 @@ int32_t cli_parse(cli_command *command, ft_size_t argument_count,
     {
         return (FT_ERR_INVALID_POINTER);
     }
+    error_code = cli_validate(command);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
     cli_reset_command(command);
     current_command = command;
     argument_index = 1;
@@ -582,12 +665,13 @@ int32_t cli_parse(cli_command *command, ft_size_t argument_count,
                 return (error_code);
             }
         }
-        else if (current_command == command)
+        else
         {
-            subcommand = cli_find_subcommand(command, argument_values[argument_index]);
+            subcommand = cli_find_subcommand(current_command,
+                    argument_values[argument_index]);
             if (subcommand != ft_nullptr)
             {
-                command->selected_subcommand = subcommand;
+                current_command->selected_subcommand = subcommand;
                 current_command = subcommand;
             }
             else
@@ -600,28 +684,12 @@ int32_t cli_parse(cli_command *command, ft_size_t argument_count,
                 }
             }
         }
-        else
-        {
-            error_code = cli_store_positional(current_command, argument_values[argument_index]);
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-        }
         argument_index++;
     }
-    error_code = cli_apply_defaults(command);
+    error_code = cli_apply_defaults_recursive(command);
     if (error_code != FT_ERR_SUCCESS)
     {
         return (error_code);
-    }
-    if (command->selected_subcommand != ft_nullptr)
-    {
-        error_code = cli_apply_defaults(command->selected_subcommand);
-        if (error_code != FT_ERR_SUCCESS)
-        {
-            return (error_code);
-        }
     }
     return (FT_ERR_SUCCESS);
 }
@@ -661,6 +729,239 @@ static int32_t cli_append_optional_raw(char *buffer, ft_size_t buffer_size,
     return (cli_append_raw(buffer, buffer_size, used, string));
 }
 
+static int32_t cli_append_indent(char *buffer, ft_size_t buffer_size,
+    ft_size_t *used, ft_size_t indent_level)
+{
+    ft_size_t index;
+    int32_t error_code;
+
+    index = 0;
+    while (index < indent_level)
+    {
+        error_code = cli_append_raw(buffer, buffer_size, used, "  ");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        index++;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t cli_append_option_type_label(char *buffer, ft_size_t buffer_size,
+    ft_size_t *used, uint8_t type)
+{
+    if (type == CLI_OPTION_BOOL)
+    {
+        return (cli_append_raw(buffer, buffer_size, used, "bool"));
+    }
+    if (type == CLI_OPTION_STRING)
+    {
+        return (cli_append_raw(buffer, buffer_size, used, "string"));
+    }
+    if (type == CLI_OPTION_INT64)
+    {
+        return (cli_append_raw(buffer, buffer_size, used, "int64"));
+    }
+    if (type == CLI_OPTION_UINT64)
+    {
+        return (cli_append_raw(buffer, buffer_size, used, "uint64"));
+    }
+    if (type == CLI_OPTION_DOUBLE)
+    {
+        return (cli_append_raw(buffer, buffer_size, used, "double"));
+    }
+    return (cli_append_raw(buffer, buffer_size, used, "unknown"));
+}
+
+static int32_t cli_append_option_detail_line(char *buffer, ft_size_t buffer_size,
+    ft_size_t *used, const cli_option *option)
+{
+    int32_t error_code;
+
+    if (option == ft_nullptr)
+    {
+        return (FT_ERR_INVALID_POINTER);
+    }
+    error_code = cli_append_indent(buffer, buffer_size, used, 1);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    if (option->short_name != '\0')
+    {
+        error_code = cli_append_raw(buffer, buffer_size, used, "-");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        if (*used + 1 >= buffer_size)
+        {
+            buffer[*used] = '\0';
+            return (FT_ERR_OUT_OF_RANGE);
+        }
+        buffer[*used] = option->short_name;
+        *used = *used + 1;
+        buffer[*used] = '\0';
+        error_code = cli_append_raw(buffer, buffer_size, used, ", ");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+    }
+    error_code = cli_append_raw(buffer, buffer_size, used, "--");
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    error_code = cli_append_raw(buffer, buffer_size, used, option->long_name);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    error_code = cli_append_raw(buffer, buffer_size, used, " [");
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    error_code = cli_append_option_type_label(buffer, buffer_size, used, option->type);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    error_code = cli_append_raw(buffer, buffer_size, used, "]");
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    if (option->required == FT_TRUE)
+    {
+        error_code = cli_append_raw(buffer, buffer_size, used, " [required]");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+    }
+    if (option->env_name != ft_nullptr && option->env_name[0] != '\0')
+    {
+        error_code = cli_append_raw(buffer, buffer_size, used, " [env: ");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_raw(buffer, buffer_size, used, option->env_name);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_raw(buffer, buffer_size, used, "]");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+    }
+    if (option->default_value != ft_nullptr && option->default_value[0] != '\0')
+    {
+        error_code = cli_append_raw(buffer, buffer_size, used, " [default: ");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_raw(buffer, buffer_size, used, option->default_value);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_raw(buffer, buffer_size, used, "]");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+    }
+    if (option->help != ft_nullptr && option->help[0] != '\0')
+    {
+        error_code = cli_append_raw(buffer, buffer_size, used, " - ");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_raw(buffer, buffer_size, used, option->help);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+    }
+    error_code = cli_append_raw(buffer, buffer_size, used, "\n");
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t cli_append_command_tree_recursive(const cli_command *command,
+    char *buffer, ft_size_t buffer_size, ft_size_t *used, ft_size_t depth)
+{
+    ft_size_t index;
+    int32_t error_code;
+
+    if (command == ft_nullptr)
+    {
+        return (FT_ERR_INVALID_POINTER);
+    }
+    index = 0;
+    while (index < command->subcommand_count)
+    {
+        error_code = cli_append_indent(buffer, buffer_size, used, depth);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_raw(buffer, buffer_size, used, "- ");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_optional_raw(buffer, buffer_size, used,
+                command->subcommands[index].name);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        if (command->subcommands[index].description != ft_nullptr
+            && command->subcommands[index].description[0] != '\0')
+        {
+            error_code = cli_append_raw(buffer, buffer_size, used, " - ");
+            if (error_code != FT_ERR_SUCCESS)
+            {
+                return (error_code);
+            }
+            error_code = cli_append_raw(buffer, buffer_size, used,
+                    command->subcommands[index].description);
+            if (error_code != FT_ERR_SUCCESS)
+            {
+                return (error_code);
+            }
+        }
+        error_code = cli_append_raw(buffer, buffer_size, used, "\n");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        if (command->subcommands[index].subcommand_count > 0)
+        {
+            error_code = cli_append_command_tree_recursive(command->subcommands + index,
+                    buffer, buffer_size, used, depth + 1);
+            if (error_code != FT_ERR_SUCCESS)
+            {
+                return (error_code);
+            }
+        }
+        index++;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
 int32_t cli_format_help(const cli_command *command, const char *program_name,
     char *buffer, ft_size_t buffer_size)
 {
@@ -671,6 +972,11 @@ int32_t cli_format_help(const cli_command *command, const char *program_name,
     if (command == ft_nullptr || buffer == ft_nullptr || buffer_size == 0)
     {
         return (FT_ERR_INVALID_POINTER);
+    }
+    error_code = cli_validate(command);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
     }
     used = 0;
     buffer[0] = '\0';
@@ -683,6 +989,20 @@ int32_t cli_format_help(const cli_command *command, const char *program_name,
     if (error_code != FT_ERR_SUCCESS)
     {
         return (error_code);
+    }
+    if (command->name != ft_nullptr && command->name[0] != '\0'
+        && (program_name == ft_nullptr || cli_streq(program_name, command->name) == FT_FALSE))
+    {
+        error_code = cli_append_raw(buffer, buffer_size, &used, " ");
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
+        error_code = cli_append_raw(buffer, buffer_size, &used, command->name);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            return (error_code);
+        }
     }
     if (command->subcommand_count > 0)
     {
@@ -697,7 +1017,7 @@ int32_t cli_format_help(const cli_command *command, const char *program_name,
     {
         return (error_code);
     }
-    if (command->description != ft_nullptr)
+    if (command->description != ft_nullptr && command->description[0] != '\0')
     {
         error_code = cli_append_raw(buffer, buffer_size, &used, "\n");
         if (error_code != FT_ERR_SUCCESS)
@@ -722,37 +1042,11 @@ int32_t cli_format_help(const cli_command *command, const char *program_name,
         {
             return (error_code);
         }
-        index = 0;
-        while (index < command->subcommand_count)
+        error_code = cli_append_command_tree_recursive(command, buffer, buffer_size,
+                &used, 1);
+        if (error_code != FT_ERR_SUCCESS)
         {
-            error_code = cli_append_raw(buffer, buffer_size, &used, "  ");
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_optional_raw(buffer, buffer_size, &used,
-                    command->subcommands[index].name);
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_raw(buffer, buffer_size, &used, "\t");
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_optional_raw(buffer, buffer_size, &used,
-                    command->subcommands[index].description);
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_raw(buffer, buffer_size, &used, "\n");
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            index++;
+            return (error_code);
         }
     }
     if (command->option_count > 0)
@@ -765,29 +1059,8 @@ int32_t cli_format_help(const cli_command *command, const char *program_name,
         index = 0;
         while (index < command->option_count)
         {
-            error_code = cli_append_raw(buffer, buffer_size, &used, "  --");
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_optional_raw(buffer, buffer_size, &used,
-                    command->options[index].long_name);
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_raw(buffer, buffer_size, &used, "\t");
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_optional_raw(buffer, buffer_size, &used,
-                    command->options[index].help);
-            if (error_code != FT_ERR_SUCCESS)
-            {
-                return (error_code);
-            }
-            error_code = cli_append_raw(buffer, buffer_size, &used, "\n");
+            error_code = cli_append_option_detail_line(buffer, buffer_size, &used,
+                    command->options + index);
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (error_code);

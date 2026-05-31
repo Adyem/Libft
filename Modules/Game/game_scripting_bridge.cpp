@@ -4,7 +4,7 @@
 #include "../Template/move.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"

@@ -6,7 +6,7 @@
 # error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
 #endif
 #include "../CPP_class/class_file.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <unistd.h>
 #include <stdlib.h>
@@ -18,6 +18,7 @@
 #define MAX_HISTORY 1000
 #define MAX_SUGGESTIONS 1000
 #define INITIAL_BUFFER_SIZE 1024
+#define RL_KEY_CTRL_R 18
 
 extern struct termios orig_termios;
 
@@ -56,6 +57,7 @@ struct s_readline_state
     int32_t            current_match_index;
     int32_t            word_start;
     char        *current_matches[MAX_SUGGESTIONS];
+    int32_t            current_match_scores[MAX_SUGGESTIONS];
     ft_file        error_file;
     pt_recursive_mutex    *mutex;
 };
@@ -78,6 +80,7 @@ int32_t        rl_handle_escape_sequence(readline_state_t *state, const char *pr
 int32_t        rl_handle_backspace(readline_state_t *state, const char *prompt);
 int32_t        rl_handle_tab_completion(readline_state_t *state, const char *prompt);
 int32_t        rl_handle_printable_char(readline_state_t *state, char character, const char *prompt);
+int32_t        rl_handle_reverse_history_search_key(readline_state_t *state, const char *prompt, void *user_data);
 int32_t        rl_update_display_metrics(readline_state_t *state);
 int32_t        rl_utf8_compute_columns(const char *string, int32_t *columns);
 int32_t        rl_utf8_find_previous_grapheme(const char *buffer, int32_t cursor_pos,

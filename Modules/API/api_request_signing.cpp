@@ -8,6 +8,10 @@
 #include <vector>
 #include <cstring>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 #if NETWORKING_HAS_OPENSSL
 namespace
 {

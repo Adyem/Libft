@@ -1,6 +1,6 @@
 #include "game_character.hpp"
 #include "../Observability/observability_game_metrics.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 void game_character::emit_game_metric(const char *event_name, const char *attribute,

@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Basic/basic.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "utils.hpp"
 
 #ifndef LIBFT_TEST_BUILD

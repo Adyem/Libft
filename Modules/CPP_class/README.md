@@ -1,6 +1,6 @@
 # CPP_class
 
-The `CPP_class` module contains lifecycle-managed C++ utility classes used across the library: strings, big numbers, files/streams, byte buffers, bitsets, cancellation, thread pools, and the project null pointer stand-in.
+The `CPP_class` module contains lifecycle-managed C++ utility classes used across the library: strings, big numbers, files/streams, byte buffers, and bitsets.
 
 ## Strings
 
@@ -28,13 +28,4 @@ The `CPP_class` module contains lifecycle-managed C++ utility classes used acros
 - `DataBuffer` - Lifecycle serialization buffer backed by `ft_vector<uint8_t>`. It exposes `clear`, `size`, `data`, `tell`, `seek`, `good`, `bad`, stream-style `operator<<`/`operator>>`, error accessors, and optional thread safety.
 - `data_buffer_proxy` - Error-propagating proxy for chained `DataBuffer` stream operators.
 - `ft_bitset` - Lifecycle dynamic bitset with `set`, `reset`, `flip`, `test`, `size`, `clear`, error accessors, lock helpers, and optional thread safety.
-- `ft_nullptr_t` / `ft_nullptr` - Project null-pointer literal stand-in assignable to pointer types.
-
-## Cancellation and Thread Pool
-
-- `ft_cancellation_state` - Lifecycle shared cancellation state with callback registration, cancel request, cancellation query, error accessors, and optional thread safety.
-- `ft_cancellation_source` - Lifecycle object that owns or references cancellation state and can issue cancellation requests.
-- `ft_cancellation_token` - Copyable token that checks cancellation and registers callbacks.
-- `ft_thread_pool` - Lifecycle pool for submitting work, controlling worker threads, waiting/shutdown, cancellation-aware execution, error accessors, and optional thread safety.
-
 All lifecycle classes in this module use explicit `initialize`/`destroy` flows and expose `move(...)` instead of returning lifecycle objects by value.

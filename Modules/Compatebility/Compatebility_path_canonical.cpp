@@ -1,6 +1,6 @@
 #include "compatebility_internal.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #if !defined(_WIN32) && !defined(_WIN64)
 # include <cstdlib>
 #endif

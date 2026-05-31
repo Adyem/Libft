@@ -4,7 +4,7 @@
 #include <csignal>
 #include <cstring>
 #include <type_traits>
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

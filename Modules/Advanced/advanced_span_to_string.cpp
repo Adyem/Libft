@@ -1,6 +1,6 @@
 #include "advanced.hpp"
 #include "../CPP_class/class_string.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <new>
 
 ft_string *adv_span_to_string(const char *buffer, ft_size_t length)

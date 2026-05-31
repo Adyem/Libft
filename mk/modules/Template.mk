@@ -3,7 +3,6 @@ SRCS := template_basic_types.cpp \
         template_variant.cpp \
         template_compile_algorithm.cpp \
         template_compile_bitset.cpp \
-        template_compile_cancellation.cpp \
         template_compile_circular_buffer.cpp \
         template_compile_deque.cpp \
         template_compile_event_emitter.cpp \
@@ -24,7 +23,6 @@ SRCS := template_basic_types.cpp \
         template_compile_shared_ptr.cpp \
         template_compile_stack.cpp \
         template_compile_string_view.cpp \
-        template_compile_thread_pool.cpp \
         template_compile_trie.cpp \
         template_compile_tuple.cpp \
         template_compile_unique_ptr.cpp \

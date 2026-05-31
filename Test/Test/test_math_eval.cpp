@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Math/roll.hpp"
 #include "../../Modules/CMA/CMA.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

@@ -2,10 +2,12 @@
 #define FT_SET_HPP
 
 #include "constructor.hpp"
+#include "../Basic/limits.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "move.hpp"

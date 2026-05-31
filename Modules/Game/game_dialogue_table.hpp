@@ -4,6 +4,7 @@
 #include "game_dialogue_line.hpp"
 #include "game_dialogue_script.hpp"
 #include "../Template/map.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Template/shared_ptr.hpp"

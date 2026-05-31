@@ -1,7 +1,7 @@
 #include "json.hpp"
 #include "json_schema.hpp"
 #include "../Basic/basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../PThread/pthread_internal.hpp"
 
 static ft_bool json_is_number(const char *string)

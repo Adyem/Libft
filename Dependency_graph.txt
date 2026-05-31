@@ -1,0 +1,4 @@
+Legacy dependency graph report
+
+The maintained, structured version of this graph lives in `Docs/module_dependency_graph.md`.
+Keep that markdown file current when module dependencies change.

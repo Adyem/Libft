@@ -1,6 +1,9 @@
 #ifndef API_PROMISE_HPP
 #define API_PROMISE_HPP
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../Template/promise.hpp"
 #include "api.hpp"
 

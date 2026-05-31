@@ -2,6 +2,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <cerrno>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t su_open(const char *path_name)
 {

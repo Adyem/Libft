@@ -1,5 +1,5 @@
 #include "rng_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <atomic>

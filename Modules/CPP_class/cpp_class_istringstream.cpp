@@ -1,6 +1,8 @@
 #include "class_istringstream.hpp"
 #include "../Basic/basic.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_istringstream::ft_istringstream() noexcept
 : ft_istream(), _buffer()

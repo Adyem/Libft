@@ -8,6 +8,7 @@
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../CPP_class/class_string.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 

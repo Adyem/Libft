@@ -1,6 +1,6 @@
 # Time
 
-The `Time` module provides wall-clock time, monotonic time, duration structs, timezone conversion, parsing/formatting, async sleep state, benchmarking, trace events, FPS pacing, and countdown timers.
+The `Time` module provides wall-clock time, monotonic time, duration structs, timezone conversion, parsing/formatting, relative fixed-span and calendar-aware helpers, async sleep state, benchmarking, trace events, FPS pacing, and countdown timers.
 
 ## Core Types
 
@@ -36,8 +36,22 @@ The `Time` module provides wall-clock time, monotonic time, duration structs, ti
 - `time_strftime(...)` - Formats `t_time_info` with a strftime-compatible format.
 - `time_format_iso8601(...)` - Allocates an ISO-8601 UTC/local timestamp string.
 - `time_format_iso8601_with_offset(...)` - Allocates an ISO-8601 string with explicit offset minutes.
+- `time_format_timezone_offset(...)` - Formats a timezone offset as `+HH:MM` into a caller buffer.
+- `time_format_rfc3339(...)` / `time_format_rfc3339_with_offset(...)` - Allocates RFC 3339 timestamp strings with `Z` or explicit offsets.
+- `time_format_duration(...)` - Allocates an ISO-8601 duration string with day/hour/minute/second granularity and millisecond precision.
+- `time_format_interval(...)` - Allocates an RFC 3339 interval string in `start/end` form.
+- `time_add_seconds(...)` / `time_add_minutes(...)` / `time_add_hours(...)` / `time_add_weeks(...)` - Add fixed time spans to a `t_time` value with clamping at the timestamp bounds.
+- `time_add_days(...)` - Adds whole days to a `t_time` value with clamping at the timestamp bounds.
+- `time_add_months(...)` / `time_add_quarters(...)` - Add calendar months or quarters in UTC, clamping month-end days like January 31 -> February 28/29.
+- `time_add_years(...)` - Adds calendar years in UTC, clamping leap-day dates like February 29 -> February 28 when needed.
+- `time_floor_to_second(...)` / `time_floor_to_minute(...)` / `time_floor_to_hour(...)` / `time_floor_to_day(...)` / `time_floor_to_week(...)` / `time_floor_to_month(...)` / `time_floor_to_quarter(...)` - Round timestamps down to the start of the requested unit, including for negative timestamps. Month and quarter flooring are UTC calendar-aware.
+- `time_ceiling_to_second(...)` / `time_ceiling_to_minute(...)` / `time_ceiling_to_hour(...)` / `time_ceiling_to_day(...)` / `time_ceiling_to_week(...)` / `time_ceiling_to_month(...)` / `time_ceiling_to_quarter(...)` - Round timestamps up to the end of the requested unit, including for negative timestamps. Month and quarter ceiling are UTC calendar-aware.
 - `time_parse_iso8601(...)` - Parses ISO-8601 text into `std::tm` and timestamp outputs.
+- `time_parse_rfc3339(...)` - Parses RFC 3339 timestamps with `Z` or `+HH:MM` offsets.
 - `time_parse_custom(...)` - Parses text with a caller format, optionally interpreting it as UTC.
+- `time_parse_timezone_offset(...)` - Parses `Z` or `+HH:MM` timezone offsets into signed minutes.
+- `time_parse_duration(...)` - Parses ISO-8601 duration text into `t_duration_milliseconds` using days, hours, minutes, seconds, and optional fractional seconds.
+- `time_parse_interval(...)` - Parses RFC 3339 interval text in `start/end`, `start/duration`, or `duration/end` form. Duration-based forms require whole-second durations.
 - `time_high_resolution_now(...)` - Captures a high-resolution timestamp.
 - `time_high_resolution_diff_ns(...)` / `time_high_resolution_diff_seconds(...)` - Compute high-resolution elapsed time.
 - `time_get_local_offset(...)` - Gets local UTC offset and daylight-saving flag.

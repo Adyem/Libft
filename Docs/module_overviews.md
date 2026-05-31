@@ -60,9 +60,20 @@ Libft exposes a large surface area with many cooperating modules. This document 
   - Allocator-aware code paths accept CMA allocators without relying on implicit global state.
 - **Error reporting:** Template helpers favor returning lightweight result objects that store success/failure flags alongside `_error_code`. When a helper cannot update `_error_code`, it sets `ft_errno` directly.
 
+## Voxel
+- **Design goals:** Generate biome-aware voxel terrain and chunk meshes behind the `GAME_USE_VOXEL_REGION_BACKEND` gate without making the rest of the game stack care about the implementation details.
+- **Key invariants:**
+  - Biome selection and heightmap generation are deterministic for a given seed and world origin.
+  - Tree templates are reusable presets and are checked for footprint safety before placement.
+  - Mesh generation must preserve visible-face correctness while remaining greedy enough to keep chunk meshes compact.
+- **Error reporting:** Terrain generation and chunk mesh helpers return `FT_ERR_*` codes for allocation or chunk I/O failures, and public helpers avoid leaking partially generated state when an operation aborts.
+
 ## Observability guidance
 Each module integrates with the canonical error-code registry. When adding new functionality:
 - Prefer reusing existing codes so cross-module tooling can reason about outcomes.
 - Document any module-specific invariants or synchronization requirements in this file to keep callers aligned.
 - Update relevant tests or add new ones to demonstrate the documented behaviour, especially when invariants are enforced through runtime checks.
 
+## Layering reference
+For a coarse architecture map that groups modules by responsibility, see [Docs/module_layering.md](module_layering.md).
+For the exact direct dependency graph, see [Docs/module_dependency_graph.md](module_dependency_graph.md).

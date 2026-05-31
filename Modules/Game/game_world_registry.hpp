@@ -4,6 +4,7 @@
 #include "game_region_definition.hpp"
 #include "game_world_region.hpp"
 #include "../Template/map.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <stdint.h>

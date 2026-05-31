@@ -12,7 +12,7 @@
 #include <chrono>
 
 #ifndef _WIN32
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/mman.h>
@@ -29,7 +29,7 @@ namespace
 
         if (::unlink(shared_memory_name) == 0)
             return (0);
-        if (errno == ENOENT)
+        if (errno == ENOENT || errno == EROFS)
         {
             if (shared_memory_name[0] == '/' && std::strncmp(shared_memory_name, "/tmp/", 5) != 0)
             {
@@ -37,7 +37,7 @@ namespace
                     shared_memory_name + 1);
                 if (::unlink(fallback_shared_memory_name) == 0)
                     return (0);
-                if (errno == ENOENT)
+                if (errno == ENOENT || errno == EROFS)
                     return (0);
             }
             else

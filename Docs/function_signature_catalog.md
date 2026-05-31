@@ -832,7 +832,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `protected: std::size_t do_read(char *buffer, std::size_t count);`
 - `public: ft_istringstream(const ft_string &string) noexcept;`
 
-### CPP_class/class_nullptr.hpp
+### Basic/class_nullptr.hpp
 
 - `public: ft_nullptr_t() noexcept;`
 
@@ -4539,11 +4539,17 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int json_write_to_backend(ft_document_sink &sink, json_group *groups)`
 - `int json_write_to_file(const char *file_path, json_group *groups)`
 
+### Advanced/advanced_string.cpp
+
+- `char *ft_hash_string31(const char *string);`
+- `char *ft_hash_string31(const ft_string &string);`
+- `char *ft_span_dup(const char *buffer, size_t length);`
+- `char *ft_strmapi(const char *string, char (*function)(unsigned int, char));`
+
 ### Basic/basic.hpp
 
 - `char *ft_fgets(char *string, int size, FILE *stream);`
 - `char *ft_strchr(const char *string, int char_to_find);`
-- `char *ft_strmapi(const char *string, char (*function)(unsigned int, char));`
 - `char *ft_strncpy(char *destination, const char *source, size_t number_of_characters);`
 - `char *ft_strnstr(const char *haystack, const char *needle, size_t maximum_length);`
 - `char *ft_strrchr(const char *string, int char_to_find);`
@@ -4670,33 +4676,38 @@ The catalog lists the function declarations and definitions that appear in the C
 ### Basic/basic_utf8.hpp
 
 - `int ft_utf8_count(const char *string, size_t *code_point_count_pointer);`
-- `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer);`
 - `int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size, size_t *encoded_length_pointer);`
-- `int ft_utf8_is_combining_code_point(uint32_t code_point);`
 - `int ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer, uint32_t *code_point_pointer, size_t *sequence_length_pointer);`
+
+### Advanced/advanced.hpp
+
+- `char *ft_hash_string31(const char *string);`
+- `char *ft_hash_string31(const ft_string &string);`
+- `char *ft_span_dup(const char *buffer, size_t length);`
+- `char *ft_strmapi(const char *string, char (*function)(unsigned int, char));`
+- `typedef uint32_t (*ft_utf8_case_hook)(uint32_t code_point);`
+- `uint32_t ft_utf8_case_ascii_lower(uint32_t code_point);`
+- `uint32_t ft_utf8_case_ascii_upper(uint32_t code_point);`
+- `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer);`
+- `int ft_utf8_is_combining_code_point(uint32_t code_point);`
 - `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer);`
 - `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook);`
 - `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook);`
+
+### Advanced/advanced_utf8.cpp
+
 - `uint32_t ft_utf8_case_ascii_lower(uint32_t code_point);`
 - `uint32_t ft_utf8_case_ascii_upper(uint32_t code_point);`
-
-### Basic/basic_utf8_case.cpp
-
-- `int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size, size_t *encoded_length_pointer)`
-- `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook)`
-- `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook)`
-- `uint32_t ft_utf8_case_ascii_upper(uint32_t code_point)`
+- `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer);`
+- `int ft_utf8_is_combining_code_point(uint32_t code_point);`
+- `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer);`
+- `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook);`
+- `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook);`
 
 ### Basic/basic_utf8_decode.cpp
 
 - `int ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer, uint32_t *code_point_pointer, size_t *sequence_length_pointer)`
 - `static int ft_utf8_detect_sequence(unsigned char first_byte, size_t *expected_length, uint32_t *initial_value, uint32_t *minimum_value)`
-
-### Basic/basic_utf8_grapheme.cpp
-
-- `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
-- `int ft_utf8_is_combining_code_point(uint32_t code_point)`
-- `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer)`
 
 ### Basic/basic_wide.cpp
 
@@ -6537,7 +6548,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void teardown_thread_safety();`
 - `void unlock_state(bool lock_acquired) const;`
 
-### PThread/task_scheduler.hpp
+### Threading/task_scheduler.hpp
 
 - `static int pt_mutex_capture_error(const pt_mutex *mutex, int operation_result)`
 - `static int pt_mutex_pop_error(const pt_mutex *mutex)`
@@ -6574,7 +6585,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename Rep, typename Period, typename FunctionType, typename... Args> auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay, FunctionType function, Args... args) -> Pair<ft_future<typename std::invoke_result<FunctionType, Args...>::type>, ft_scheduled_task_handle>`
 - `template <typename Rep, typename Period, typename FunctionType, typename... Args> ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interval, FunctionType function, Args... args)`
 
-### PThread/task_scheduler_tracing.hpp
+### Threading/task_scheduler_tracing.hpp
 
 - `int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink);`
 - `int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink);`
@@ -7749,7 +7760,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void unlock(bool lock_acquired) const;`
 - `void unlock_internal(bool lock_acquired) const;`
 
-### CPP_class/cancellation.hpp
+### Threading/cancellation.hpp
 
 - `inline bool ft_cancellation_source::is_cancellation_requested() const noexcept`
 - `inline bool ft_cancellation_token::is_cancellation_requested() const noexcept`
@@ -8722,7 +8733,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename CharType> void ft_string_view<CharType>::sleep_backoff() noexcept`
 - `void set_error(int error) const;`
 
-### CPP_class/thread_pool.hpp
+### Threading/thread_pool.hpp
 
 - `bool is_thread_safe() const;`
 - `const char* get_error_str() const;`
@@ -10558,7 +10569,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_istringstream(const ft_istringstream &) = delete;`
 - `ft_istringstream(const ft_string &string) noexcept;`
 
-### CPP_class/class_nullptr.hpp
+### Basic/class_nullptr.hpp
 
 - `ft_nullptr_t() noexcept;`
 - `ft_nullptr_t(const ft_nullptr_t &other) noexcept;`
@@ -11610,14 +11621,14 @@ The catalog lists the function declarations and definitions that appear in the C
 - `pt_recursive_mutex(const pt_recursive_mutex&) = delete;`
 - `pt_recursive_mutex(pt_recursive_mutex&&) = delete;`
 
-### PThread/task_scheduler.hpp
+### Threading/task_scheduler.hpp
 
 - `ft_blocking_queue() : _mutex(), _condition(), _shutdown(false), _storage(), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_blocking_queue() {`
 - `ft_blocking_queue();`
 - `ft_blocking_queue(const ft_blocking_queue&) = delete;`
 
-### PThread/thread.hpp
+### Threading/thread.hpp
 
 - `ft_thread();`
 - `ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
@@ -11725,7 +11736,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `inline ft_bitset::ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
-### CPP_class/cancellation.hpp
+### Threading/cancellation.hpp
 
 - `ft_cancellation_state() noexcept;`
 - `ft_cancellation_state(const ft_cancellation_state&) = delete;`
@@ -11971,7 +11982,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_string_view(const ft_string_view& other);`
 
-### CPP_class/thread_pool.hpp
+### Threading/thread_pool.hpp
 
 - `ft_thread_pool() {`
 - `ft_thread_pool();`
@@ -12536,7 +12547,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `inline ft_bitset::~ft_bitset()`
 
-### CPP_class/cancellation.hpp
+### Threading/cancellation.hpp
 
 - `inline ft_cancellation_source::~ft_cancellation_source() noexcept`
 - `inline ft_cancellation_token::~ft_cancellation_token() noexcept`
@@ -12545,7 +12556,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `template<typename T> Pool<T>::Object::~Object() noexcept`
 
-### CPP_class/thread_pool.hpp
+### Threading/thread_pool.hpp
 
 - `inline ft_thread_pool::~ft_thread_pool()`
 
@@ -12660,7 +12671,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_istringstream &operator>>(ft_istringstream &input, ft_string &value);`
 - `ft_istringstream &operator>>(ft_istringstream &input, int &value);`
 
-### CPP_class/class_nullptr.hpp
+### Basic/class_nullptr.hpp
 
 - `private: void operator&() const;`
 - `template <typename ClassType, typename MemberType> inline ft_nullptr_t::operator MemberType ClassType::*() const noexcept`
@@ -13137,7 +13148,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept`
 
-### CPP_class/cancellation.hpp
+### Threading/cancellation.hpp
 
 - `inline ft_cancellation_source &ft_cancellation_source::operator=(const ft_cancellation_source &other) noexcept`
 - `inline ft_cancellation_source &ft_cancellation_source::operator=(ft_cancellation_source &&other) noexcept`

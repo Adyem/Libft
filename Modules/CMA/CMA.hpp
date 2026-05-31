@@ -45,6 +45,8 @@ int32_t     cma_checked_block_size(const void *memory_pointer,
 ft_size_t   cma_alloc_size(const void *memory_pointer)
                 __attribute__ ((warn_unused_result, hot));
 int32_t     cma_set_alloc_limit(ft_size_t limit);
+void        cma_set_alloc_logging(ft_bool enable);
+ft_bool     cma_get_alloc_logging(void);
 int32_t     cma_set_thread_safety(ft_bool enable);
 int32_t     cma_enable_thread_safety(void);
 int32_t     cma_disable_thread_safety(void);

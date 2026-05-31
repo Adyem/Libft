@@ -1,7 +1,10 @@
 #include "system_utils.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 uint32_t    su_get_cpu_count(void)
 {

@@ -5,6 +5,7 @@
 #ifndef LIBFT_INTERNAL_HEADERS
 # error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
 #endif
+#include "../Errno/errno.hpp"
 #include "mutex.hpp"
 #include "recursive_mutex.hpp"
 

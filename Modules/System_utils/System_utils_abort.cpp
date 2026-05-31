@@ -1,8 +1,11 @@
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Compatebility/compatebility_stack_trace.hpp"
 #include "system_utils.hpp"
 #include <cstdlib>
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 const char  *su_internal_take_abort_reason(void);
 

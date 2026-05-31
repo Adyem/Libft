@@ -1,7 +1,7 @@
 #include "time.hpp"
 #include "time_timer.hpp"
 
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"

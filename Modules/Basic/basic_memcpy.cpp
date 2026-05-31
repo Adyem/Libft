@@ -1,5 +1,5 @@
 #include "basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 void* ft_memcpy(void* destination, const void* source, ft_size_t size)
 {

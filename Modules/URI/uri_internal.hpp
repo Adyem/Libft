@@ -2,7 +2,7 @@
 # define URI_INTERNAL_HPP
 
 #include "uri.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 int32_t     uri_set_error(int32_t error_code) noexcept;
 ft_bool     uri_mul_overflows(ft_size_t left, ft_size_t right) noexcept;

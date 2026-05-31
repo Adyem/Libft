@@ -1,6 +1,7 @@
 #ifndef JSON_SCHEMA_HPP
 #define JSON_SCHEMA_HPP
 
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 struct json_group;

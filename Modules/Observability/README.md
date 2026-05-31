@@ -1,6 +1,6 @@
 # Observability
 
-The `Observability` module records structured errors, trace events, counters, game metrics, networking metrics, and task-scheduler span metrics.
+The `Observability` module records structured errors, trace events, counters, game metrics, networking metrics, and task-scheduler span metrics. Its task scheduler bridge consumes the separate `Threading` module for trace events and span timing.
 
 ## Core Observability
 

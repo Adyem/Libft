@@ -1,7 +1,7 @@
 #include <cstddef>
 #include <cstdarg>
 #include "advanced.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
 static ft_size_t safe_strlen(const char *string)

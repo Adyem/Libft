@@ -4,8 +4,12 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <climits>
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void ft_string::sleep_backoff() noexcept
 {

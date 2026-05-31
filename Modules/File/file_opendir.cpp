@@ -1,6 +1,6 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "open_dir.hpp"
 
 file_dir *file_opendir(const char *directory_path)

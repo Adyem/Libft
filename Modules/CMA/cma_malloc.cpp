@@ -9,8 +9,7 @@
 #include "cma_internal.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
-#include "../Logger/logger.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Basic/limits.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -41,8 +40,7 @@ void* cma_malloc(ft_size_t size)
         }
         else
             return (ft_nullptr);
-        if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_malloc %llu -> %p", size, result);
+        cma_record_allocation_log("cma_malloc %lu -> %p", size, result);
         return (result);
     }
     if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
@@ -58,8 +56,7 @@ void* cma_malloc(ft_size_t size)
             g_cma_peak_bytes = g_cma_current_bytes;
         cma_unlock_allocator(lock_acquired);
         lock_acquired = FT_FALSE;
-        if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_malloc %llu -> %p", size, result);
+        cma_record_allocation_log("cma_malloc %lu -> %p", size, result);
         return (result);
     }
     instrumented_size = cma_debug_allocation_size(size);
@@ -105,14 +102,11 @@ void* cma_malloc(ft_size_t size)
     result = static_cast<void *>(cma_block_user_pointer(block));
     cma_unlock_allocator(lock_acquired);
     lock_acquired = FT_FALSE;
-    if (ft_log_get_alloc_logging())
-    {
-        if (request_size == size)
-            ft_log_debug("cma_malloc %llu -> %p", aligned_size, result);
-        else
-            ft_log_debug("cma_malloc %llu (rounded to %llu) -> %p",
-                request_size, aligned_size, result);
-    }
+    if (request_size == size)
+        cma_record_allocation_log("cma_malloc %lu -> %p", aligned_size, result);
+    else
+        cma_record_allocation_log("cma_malloc %lu (rounded to %lu) -> %p",
+            request_size, aligned_size, result);
     if (lock_acquired)
         cma_unlock_allocator(lock_acquired);
     return (result);

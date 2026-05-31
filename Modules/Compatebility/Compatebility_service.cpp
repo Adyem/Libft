@@ -1,5 +1,5 @@
 #include "compatebility_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <cerrno>
 #include <csignal>
 #include <cstring>

@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Modules/PThread/task_scheduler.hpp"
-#include "../../Modules/PThread/task_scheduler_tracing.hpp"
+#include "../../Modules/Threading/task_scheduler.hpp"
+#include "../../Modules/Threading/task_scheduler_tracing.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <vector>
 #include <mutex>

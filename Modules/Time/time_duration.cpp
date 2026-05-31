@@ -1,5 +1,5 @@
 #include "time.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 t_duration_milliseconds  time_duration_ms_create(int64_t milliseconds)
 {

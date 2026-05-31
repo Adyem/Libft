@@ -5,7 +5,7 @@
 #include "../../Modules/Template/stack.hpp"
 #include "../../Modules/Template/shared_ptr.hpp"
 #include "../../Modules/Template/unique_ptr.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/JSon/document.hpp"
 #include "../../Modules/CMA/CMA.hpp"

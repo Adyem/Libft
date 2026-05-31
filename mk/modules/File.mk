@@ -18,6 +18,8 @@ SRCS := file_opendir.cpp \
         file_list_directory.cpp \
         file_read_write.cpp \
         file_recursive.cpp \
+        file_hash.cpp \
+        file_metadata.cpp \
         file_security.cpp \
         file_status.cpp
 

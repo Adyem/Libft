@@ -1,5 +1,5 @@
 #include "CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 void    cma_free_double(char **content)
 {

@@ -5,6 +5,7 @@
 #ifndef LIBFT_INTERNAL_HEADERS
 # error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
 #endif
+#include "../Basic/basic.hpp"
 #include <atomic>
 #include <cstdint>
 #include <random>

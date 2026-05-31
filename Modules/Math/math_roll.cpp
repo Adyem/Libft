@@ -3,7 +3,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Printf/printf.hpp"
 #include "../GetNextLine/get_next_line.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 

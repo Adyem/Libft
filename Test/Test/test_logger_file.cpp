@@ -3,7 +3,7 @@
 #include "../../Modules/Logger/logger_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Basic/basic.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/System_utils/system_utils.hpp"
 #include "../../Modules/Compatebility/compatebility_internal.hpp"
 #include <atomic>

@@ -28,6 +28,92 @@ static int32_t rl_find_word_start_and_prefix(readline_state_t *state, char *pref
     return (FT_ERR_SUCCESS);
 }
 
+static int32_t rl_completion_score_prefix_match(const char *candidate, const char *prefix, int32_t prefix_len)
+{
+    ft_size_t candidate_length;
+
+    if (candidate == ft_nullptr || prefix == ft_nullptr)
+        return (-1);
+    if (prefix_len <= 0)
+        return (-1);
+    if (ft_strncmp(candidate, prefix, prefix_len) != FT_ERR_SUCCESS)
+        return (-1);
+    candidate_length = ft_strlen(candidate);
+    if (candidate_length > static_cast<ft_size_t>(FT_INT32_MAX))
+        return (-1);
+    return (100000 - static_cast<int32_t>(candidate_length));
+}
+
+static int32_t rl_completion_score_fuzzy_match(const char *candidate, const char *prefix, int32_t prefix_len)
+{
+    int32_t candidate_index;
+    int32_t prefix_index;
+    int32_t previous_match_index;
+    int32_t gap_penalty;
+    ft_size_t candidate_length;
+
+    if (candidate == ft_nullptr || prefix == ft_nullptr)
+        return (-1);
+    if (prefix_len <= 0)
+        return (-1);
+    candidate_index = 0;
+    prefix_index = 0;
+    previous_match_index = -1;
+    gap_penalty = 0;
+    while (candidate[candidate_index] != '\0' && prefix_index < prefix_len)
+    {
+        if (candidate[candidate_index] == prefix[prefix_index])
+        {
+            if (previous_match_index >= 0)
+                gap_penalty += candidate_index - previous_match_index - 1;
+            previous_match_index = candidate_index;
+            prefix_index += 1;
+        }
+        candidate_index += 1;
+    }
+    if (prefix_index != prefix_len)
+        return (-1);
+    candidate_length = ft_strlen(candidate);
+    if (candidate_length > static_cast<ft_size_t>(FT_INT32_MAX))
+        return (-1);
+    return (50000 - gap_penalty - static_cast<int32_t>(candidate_length));
+}
+
+static int32_t rl_completion_insert_scored_match(readline_state_t *state, char *candidate, int32_t score)
+{
+    int32_t insert_index;
+
+    if (state == ft_nullptr || candidate == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (state->current_match_count >= MAX_SUGGESTIONS)
+        return (FT_ERR_OUT_OF_RANGE);
+    insert_index = state->current_match_count;
+    while (insert_index > 0)
+    {
+        int32_t previous_index;
+        int32_t previous_score;
+        int32_t name_compare;
+
+        previous_index = insert_index - 1;
+        previous_score = state->current_match_scores[previous_index];
+        if (score < previous_score)
+            break ;
+        if (score == previous_score)
+        {
+            name_compare = ft_strcmp(candidate, state->current_matches[previous_index]);
+            if (name_compare >= 0)
+                break ;
+        }
+        state->current_matches[insert_index] = state->current_matches[previous_index];
+        state->current_match_scores[insert_index] = state->current_match_scores[previous_index];
+        insert_index -= 1;
+    }
+    state->current_matches[insert_index] = candidate;
+    state->current_match_scores[insert_index] = score;
+    state->current_match_count += 1;
+    return (FT_ERR_SUCCESS);
+}
+
 static int32_t rl_gather_matching_suggestions(readline_state_t *state, const char *prefix, int32_t prefix_len)
 {
     int32_t dynamic_count;
@@ -41,22 +127,45 @@ static int32_t rl_gather_matching_suggestions(readline_state_t *state, const cha
     while (dynamic_index < dynamic_count)
     {
         char *candidate;
+        int32_t score;
 
         candidate = rl_completion_get_dynamic_match(dynamic_index);
-        if (candidate != ft_nullptr && ft_strncmp(candidate, prefix, prefix_len) == FT_ERR_SUCCESS)
+        score = rl_completion_score_prefix_match(candidate, prefix, prefix_len);
+        if (score >= 0)
         {
-            state->current_matches[state->current_match_count] = candidate;
-            state->current_match_count += 1;
+            if (rl_completion_insert_scored_match(state, candidate, score) != FT_ERR_SUCCESS)
+                return (FT_ERR_INTERNAL);
+        }
+        else
+        {
+            score = rl_completion_score_fuzzy_match(candidate, prefix, prefix_len);
+            if (score >= 0)
+            {
+                if (rl_completion_insert_scored_match(state, candidate, score) != FT_ERR_SUCCESS)
+                    return (FT_ERR_INTERNAL);
+            }
         }
         dynamic_index++;
     }
     index = 0;
     while (index < suggestion_count)
     {
-        if (ft_strncmp(suggestions[index], prefix, prefix_len) == FT_ERR_SUCCESS)
+        int32_t score;
+
+        score = rl_completion_score_prefix_match(suggestions[index], prefix, prefix_len);
+        if (score >= 0)
         {
-            state->current_matches[state->current_match_count] = suggestions[index];
-            state->current_match_count += 1;
+            if (rl_completion_insert_scored_match(state, suggestions[index], score) != FT_ERR_SUCCESS)
+                return (FT_ERR_INTERNAL);
+        }
+        else
+        {
+            score = rl_completion_score_fuzzy_match(suggestions[index], prefix, prefix_len);
+            if (score >= 0)
+            {
+                if (rl_completion_insert_scored_match(state, suggestions[index], score) != FT_ERR_SUCCESS)
+                    return (FT_ERR_INTERNAL);
+            }
         }
         index++;
     }

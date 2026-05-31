@@ -1,6 +1,11 @@
 #include "class_data_buffer.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 thread_local int32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
 

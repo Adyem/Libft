@@ -5,7 +5,7 @@
 #include "../../Modules/Networking/socket_class.hpp"
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/Networking/http2_client.hpp"
-#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/Threading/thread.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"

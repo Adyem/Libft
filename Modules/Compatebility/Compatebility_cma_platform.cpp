@@ -1,5 +1,5 @@
 #include "compatebility_cma_platform.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 

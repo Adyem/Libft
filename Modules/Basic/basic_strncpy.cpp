@@ -1,5 +1,5 @@
 #include "basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 char *ft_strncpy(char *destination, const char *source, ft_size_t number_of_characters)
 {

@@ -1,6 +1,6 @@
 #include <cstddef>
 #include "advanced.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
 static ft_size_t count_words(const char *string, char delimiter)

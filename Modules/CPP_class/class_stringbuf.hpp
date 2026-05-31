@@ -2,6 +2,7 @@
 #define FT_STRINGBUF_HPP
 
 #include "class_string.hpp"
+#include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <cstdint>

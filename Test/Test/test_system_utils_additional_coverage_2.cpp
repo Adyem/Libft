@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Basic/basic.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/CPP_class/class_string.hpp"
 #include "../../Modules/Template/move.hpp"
 #include "../../Modules/System_utils/system_utils.hpp"

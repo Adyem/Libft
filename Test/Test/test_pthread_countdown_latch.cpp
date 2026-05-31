@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
-#include "../../Modules/PThread/concurrency.hpp"
-#include "../../Modules/CPP_class/cancellation.hpp"
+#include "../../Modules/Threading/concurrency.hpp"
+#include "../../Modules/Threading/cancellation.hpp"
 #include "../../Modules/Errno/errno.hpp"
 
 FT_TEST(test_pthread_countdown_latch_releases_after_countdown)

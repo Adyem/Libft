@@ -2,7 +2,7 @@
 #include <new>
 
 #include "time.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"

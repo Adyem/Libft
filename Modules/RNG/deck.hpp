@@ -1,7 +1,7 @@
 #ifndef RNG_DECK_HPP
 #define RNG_DECK_HPP
 
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/swap.hpp"
 #include "../Template/pair.hpp"

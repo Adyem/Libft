@@ -4,9 +4,40 @@
 #include <cstring>
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../Logger/logger.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Sink/sink.hpp"
+#include <cstdarg>
+#include <cstdio>
+
+void cma_set_alloc_logging(ft_bool enable)
+{
+    g_cma_alloc_logging = enable;
+    return ;
+}
+
+ft_bool cma_get_alloc_logging(void)
+{
+    return (g_cma_alloc_logging);
+}
+
+void cma_record_allocation_log(const char *format_string, ...)
+{
+    char message_buffer[256];
+    va_list argument_list;
+    int32_t formatted_length;
+
+    if (format_string == ft_nullptr || g_cma_alloc_logging == FT_FALSE)
+        return ;
+    va_start(argument_list, format_string);
+    formatted_length = std::vsnprintf(message_buffer, sizeof(message_buffer),
+            format_string, argument_list);
+    va_end(argument_list);
+    if (formatted_length < 0)
+        return ;
+    (void)sink_record_message(0, message_buffer);
+    return ;
+}
 #include "../Errno/errno.hpp"
 
 static ft_size_t determine_page_size(ft_size_t size)

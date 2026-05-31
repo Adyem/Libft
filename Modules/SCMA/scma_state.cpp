@@ -2,7 +2,7 @@
 #include <cstring>
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Basic/limits.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"

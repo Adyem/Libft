@@ -1,6 +1,6 @@
 #include "../Basic/config.hpp"
 #include "file_utils.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <cstdio>
 
 FILE *ft_fopen(const char *filename, const char *mode)

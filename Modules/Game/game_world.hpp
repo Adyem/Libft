@@ -3,6 +3,7 @@
 
 #include "game_event_scheduler.hpp"
 #include "../Template/shared_ptr.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "game_pathfinding.hpp"
 #include "../CPP_class/class_string.hpp"

@@ -1,7 +1,7 @@
 #include "../PThread/pthread_internal.hpp"
 #include "game_experience_table.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>

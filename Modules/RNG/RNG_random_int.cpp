@@ -1,5 +1,6 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
+#include "../Errno/errno.hpp"
 #include <limits>
 #include <random>
 

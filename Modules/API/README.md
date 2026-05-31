@@ -1,6 +1,6 @@
 # API
 
-The `API` module provides HTTP/HTTPS request helpers over the Networking and JSON modules. It supports callbacks, promises, streaming responses, retry policy configuration, transport hooks for tests/adapters, request signing, metrics guards, TLS diagnostics, and connection-pool tuning.
+The `API` module provides HTTP/HTTPS request helpers over the Networking and JSON modules. It supports callbacks, promises, streaming responses, retry policy configuration, transport hooks for tests/adapters, request signing, metrics guards, TLS diagnostics, connection-pool tuning, and async request helpers built on the separate `Threading` module.
 
 ## Callback and Hook Types
 

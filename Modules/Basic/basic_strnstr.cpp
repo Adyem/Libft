@@ -1,5 +1,5 @@
 #include "basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 char    *ft_strnstr(const char *haystack, const char *needle, ft_size_t maximum_length)
 {

@@ -5,8 +5,7 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../PThread/pthread.hpp"
-#include "../CPP_class/class_nullptr.hpp"
-#include "../Logger/logger.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 
 void cma_free(void* memory_pointer)
@@ -17,8 +16,7 @@ void cma_free(void* memory_pointer)
     {
         std::free(memory_pointer);
         g_cma_free_count++;
-        if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_free %p", memory_pointer);
+        cma_record_allocation_log("cma_free %p", memory_pointer);
         return ;
     }
     if (!memory_pointer)
@@ -35,8 +33,7 @@ void cma_free(void* memory_pointer)
         (void)cma_small_arena_deallocate_locked(memory_pointer);
         cma_unlock_allocator(lock_acquired);
         lock_acquired = FT_FALSE;
-        if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_free %p", memory_pointer);
+        cma_record_allocation_log("cma_free %p", memory_pointer);
         return ;
     }
     Block* block = cma_find_block_for_pointer(memory_pointer);
@@ -72,7 +69,6 @@ void cma_free(void* memory_pointer)
     g_cma_free_count++;
     cma_unlock_allocator(lock_acquired);
     lock_acquired = FT_FALSE;
-    if (ft_log_get_alloc_logging())
-        ft_log_debug("cma_free %p", memory_pointer);
+    cma_record_allocation_log("cma_free %p", memory_pointer);
     return ;
 }

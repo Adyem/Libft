@@ -1,8 +1,11 @@
 #include "pthread.hpp"
+#include "../Basic/limits.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <atomic>
 #include <errno.h>
+#include "mutex.hpp"
+#include "recursive_mutex.hpp"
 
 int pt_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
 {

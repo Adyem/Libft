@@ -1,7 +1,8 @@
 #include "cross_process.hpp"
 
+#include <cerrno>
 #include <cstring>
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Compatebility/compatebility_cross_process.hpp"
 
@@ -32,11 +33,13 @@ int32_t cp_write_memory(const cross_process_message &message,
 
     if (payload == ft_nullptr && payload_length != 0)
     {
+        errno = EINVAL;
         return (FT_ERR_INVALID_ARGUMENT);
     }
     data_offset = compute_offset(message.remote_memory_address, message.stack_base_address);
     if (data_offset >= message.remote_memory_size)
     {
+        errno = EINVAL;
         return (FT_ERR_INVALID_ARGUMENT);
     }
     full_capacity = message.remote_memory_size - data_offset;
@@ -56,6 +59,7 @@ int32_t cp_write_memory(const cross_process_message &message,
         {
             has_failure = FT_TRUE;
             failure_error = FT_ERR_INVALID_ARGUMENT;
+            errno = EINVAL;
         }
         else
         {

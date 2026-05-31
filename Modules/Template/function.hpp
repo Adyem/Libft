@@ -1,7 +1,8 @@
 #ifndef TEMPLATE_FUNCTION_HPP
 #define TEMPLATE_FUNCTION_HPP
 
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Basic/basic.hpp"
 #include "move.hpp"
 
 #include <new>

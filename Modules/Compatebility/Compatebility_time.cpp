@@ -1,5 +1,5 @@
 #include "compatebility_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/mutex.hpp"
@@ -65,6 +65,51 @@ int32_t cmp_localtime(const std::time_t *time_value, std::tm *output)
     return (FT_ERR_INVALID_ARGUMENT);
 # else
     return (cmp_localtime_from_shared_state(time_value, output));
+# endif
+#endif
+}
+
+int32_t cmp_gmtime(const std::time_t *time_value, std::tm *output)
+{
+    if (time_value == ft_nullptr || output == ft_nullptr)
+    {
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    errno_t error_code;
+
+    error_code = gmtime_s(output, time_value);
+    if (error_code == 0)
+    {
+        return (FT_ERR_SUCCESS);
+    }
+    return (cmp_map_system_error_to_ft(static_cast<int32_t>(error_code)));
+#else
+# if defined(_POSIX_VERSION)
+    if (gmtime_r(time_value, output) != ft_nullptr)
+    {
+        return (FT_ERR_SUCCESS);
+    }
+    if (errno != 0)
+        return (cmp_map_system_error_to_ft(errno));
+    return (FT_ERR_INVALID_ARGUMENT);
+# else
+    static pt_mutex gmtime_mutex;
+    std::tm *shared_result;
+
+    if (pt_mutex_lock_if_not_null(&gmtime_mutex) != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    shared_result = std::gmtime(time_value);
+    if (shared_result == ft_nullptr)
+    {
+        (void)pt_mutex_unlock_if_not_null(&gmtime_mutex);
+        if (errno != 0)
+            return (cmp_map_system_error_to_ft(errno));
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
+    *output = *shared_result;
+    (void)pt_mutex_unlock_if_not_null(&gmtime_mutex);
+    return (FT_ERR_SUCCESS);
 # endif
 #endif
 }

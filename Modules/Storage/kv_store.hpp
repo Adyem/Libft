@@ -2,7 +2,7 @@
 #define KV_STORE_HPP
 
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../JSon/json.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Template/map.hpp"
@@ -10,7 +10,7 @@
 #include "../Parser/document_backend.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/thread.hpp"
+#include "../Threading/thread.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Compatebility/sqlite_support.hpp"
 #include <cstdint>

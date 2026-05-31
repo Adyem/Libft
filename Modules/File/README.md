@@ -1,6 +1,6 @@
 # File
 
-The `File` module provides filesystem operations, directory iteration, path helpers, safe replacement helpers, and file watching.
+The `File` module provides filesystem operations, directory iteration, path helpers, safe replacement helpers, recursive copy/move helpers with filters, hash helpers, metadata comparison helpers, and file watching. The watcher uses the separate `Threading` module for its background worker.
 
 ## File Types and Directory Entries
 
@@ -22,7 +22,11 @@ The `File` module provides filesystem operations, directory iteration, path help
 - `file_create_directory(...)` / `file_create_directories(...)` - Creates one directory or a directory tree.
 - `file_delete_recursive(...)` - Recursively deletes a directory tree.
 - `file_copy_directory(...)` - Recursively copies a directory tree.
+- `file_copy_directory_filtered(...)` - Recursively copies a directory tree while calling a filter for each entry.
+- `file_move_directory_filtered(...)` - Recursively moves selected entries from a directory tree while preserving skipped entries in place.
 - `file_read_all(...)` - Reads a file into an `ft_string`.
+- `file_hash_sha1(...)` / `file_hash_sha256(...)` - Hash a file's contents into a raw digest buffer.
+- `file_metadata_diff(...)` - Compares file type, size, permissions, and missing-state metadata into a bitmask.
 - `file_write_all(...)` - Writes a full buffer to a file.
 - `file_write_all_atomic(...)` - Writes data through a temporary file and replaces the target.
 - `file_secure_temp_file(...)` - Creates a temporary file and returns both path and descriptor.

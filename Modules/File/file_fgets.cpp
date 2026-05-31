@@ -1,6 +1,6 @@
 #include "../Basic/config.hpp"
 #include "file_utils.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <cstdio>
 
 char *ft_fgets(char *string, int32_t size, FILE *stream)

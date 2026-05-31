@@ -1,7 +1,7 @@
 #include <pthread.h>
 #include "condition.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes)
 {

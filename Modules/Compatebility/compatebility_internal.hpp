@@ -129,6 +129,7 @@ char *cmp_get_home_directory(void);
 uint32_t cmp_get_cpu_count(void);
 int32_t cmp_get_total_memory(uint64_t *total_memory);
 std::time_t cmp_timegm(std::tm *time_pointer);
+int32_t cmp_gmtime(const std::time_t *time_value, std::tm *output);
 int32_t cmp_localtime(const std::time_t *time_value, std::tm *output);
 int32_t cmp_time_get_time_of_day(struct timeval *time_value);
 int32_t cmp_high_resolution_time(int64_t *nanoseconds_out);

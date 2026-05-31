@@ -1,5 +1,6 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
+#include "../Errno/errno.hpp"
 #include <random>
 #if defined(__SSE__) || defined(__SSE2__)
 # include <immintrin.h>

@@ -2,6 +2,8 @@
 #define API_REQUEST_SIGNING_HPP
 
 #include <cstddef>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Networking/openssl_support.hpp"
 

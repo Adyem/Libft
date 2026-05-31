@@ -9,6 +9,7 @@ SRCS := filesystem_path.cpp \
         filesystem_is_inside_root.cpp \
         filesystem_is_safe_relative_path.cpp \
         filesystem_safe_join_path.cpp \
+        filesystem_glob.cpp \
         filesystem_validate_inside_root.cpp
 
 HEADERS := filesystem.hpp

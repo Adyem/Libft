@@ -7,11 +7,15 @@
 #include "../System_utils/system_utils.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/pthread_internal.hpp"
-#include "class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <cerrno>
 #include <cstdarg>
 #include <new>
 #include <unistd.h>
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t ft_file::_last_error = FT_ERR_SUCCESS;
 

@@ -1,6 +1,8 @@
 #include "class_big_number.hpp"
 #include "class_string.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_string *big_number_to_hex_string(const ft_big_number& number) noexcept
 {

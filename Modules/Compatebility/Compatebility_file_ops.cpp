@@ -1,6 +1,6 @@
 #include "compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../File/file_utils.hpp"
 
 static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)

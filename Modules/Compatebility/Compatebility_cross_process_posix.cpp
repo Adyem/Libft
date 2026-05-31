@@ -2,7 +2,7 @@
 
 #include "compatebility_cross_process.hpp"
 #include "compatebility_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 #include <cerrno>
@@ -22,13 +22,20 @@ static ft_size_t compute_offset(uint64_t pointer_value, uint64_t base_value)
 
 static int32_t open_file_backing(const cross_process_message &message)
 {
+    int32_t file_descriptor;
+
     if (message.shared_memory_name[0] == '\0')
     {
         errno = EINVAL;
         return (-1);
     }
-    errno = ENOENT;
-    return (-1);
+    file_descriptor = open(message.shared_memory_name, O_RDWR);
+    if (file_descriptor < 0)
+    {
+        errno = ENOENT;
+        return (-1);
+    }
+    return (file_descriptor);
 }
 
 int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const cross_process_message &message)
@@ -106,7 +113,10 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
     mapping_pointer = mmap(ft_nullptr, message.remote_memory_size, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_fd, 0);
     ::close(shared_memory_fd);
     if (mapping_pointer == MAP_FAILED)
+    {
+        errno = ENOENT;
         return (cmp_map_system_error_to_ft(errno));
+    }
     mapping->mapping_address = reinterpret_cast<unsigned char *>(mapping_pointer);
     mapping->mapping_length = message.remote_memory_size;
     mapping->platform_handle = ft_nullptr;

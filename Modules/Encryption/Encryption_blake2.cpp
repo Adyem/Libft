@@ -3,7 +3,7 @@
 #if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "encryption.hpp"
 
 static int32_t blake2_hash_internal(const EVP_MD *algorithm, const void *data,

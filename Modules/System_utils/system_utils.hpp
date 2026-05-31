@@ -1,9 +1,13 @@
 #ifndef SYSTEM_UTILS_HPP
 # define SYSTEM_UTILS_HPP
 
+#include "../Basic/basic.hpp"
+#include "../Basic/limits.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Template/vector.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class pt_mutex;
 

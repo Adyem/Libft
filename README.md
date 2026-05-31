@@ -10,6 +10,11 @@ Each module below has a short purpose statement to clarify its role in the tree.
   It documents typical data flows such as accepting a request, parsing headers, and delivering structured responses reliably.
   API/ exists so other modules can mount services without re-implementing the repeating plumbing and error handling that networking requires.
 
+- `Advanced/`: Collects allocation-returning convenience helpers such as string duplication, string mapping, text hashing, and higher-level UTF helpers.
+  The module sits above `Basic/` and reuses the allocator and C++ object layers when results need ownership transfer.
+  Advanced/ keeps richer text conversion utilities away from the lower-level primitive layer so callers can choose the API tier they need.
+  It exists as the shared home for helpers that are convenient but not primitive enough to stay in `Basic/`.
+
 - `CMA/`: Supplies a unified custom memory allocator layer that tracks statistics, enforces limits, and reports errors consistently across the tree.
 Every module that allocates through this layer inherits the same mechanisms for throttling and alignment rules.
   CMA/ centralizes backend selection so switching between allocators or enabling debug instrumentation happens in one place.
@@ -21,7 +26,7 @@ Every module that allocates through this layer inherits the same mechanisms for 
   This module exists to let higher-level C++ projects build on the library without re-implementing their own bridging layers.
 
 - `CLI/`: Provides a small command-line parser for tools, demos, and service entry points.
-  It handles long and short options, boolean flags, typed option values, defaults, environment fallbacks, subcommands, and positional arguments.
+  It handles long and short options, boolean flags, typed option values, defaults, environment fallbacks, recursive subcommands, positional arguments, config merging, completion generation, and richer help output.
   Typed getters expose parsed bool, string, int64, uint64, and double values through `FT_ERR_*` return codes.
   CLI/ also formats help text so command-line surfaces can stay consistent without duplicating usage strings.
 
@@ -59,6 +64,8 @@ Every module that allocates through this layer inherits the same mechanisms for 
 - `Docs/`: Captures design notes, module overviews, and user-facing documentation, keeping the project story aligned with the implementation.
   It includes notes on behavior guarantees, module interactions, and architecture diagrams that help contributors understand why each component exists.
   Docs/ ensures that knowledge does not live only inside source comments but is accessible through markdown that mirrors the code layout.
+  The current module-to-module dependency map lives in [Docs/module_dependency_graph.md](Docs/module_dependency_graph.md).
+  The coarse layer map lives in [Docs/module_layering.md](Docs/module_layering.md).
   Updating Docs/ keeps onboarding smoother and gives module authors a place to explain trade-offs or future directions.
 
 - `Encryption/`: Supplies hashing, cryptographic primitives, and key handling utilities so security-sensitive modules share consistent implementations.
@@ -83,19 +90,24 @@ Every module that allocates through this layer inherits the same mechanisms for 
 
 - `File/`: Wraps filesystem interactions, path utilities, and attribute queries into safer helpers built on top of the standard C APIs.
   It understands common patterns such as reading/writing safely, walking directories, and handling special file types with predictable behavior.
-  Low-level path helpers cover normalization, joining, basename/dirname, extension/stem extraction, and root containment checks.
+  Low-level path helpers cover normalization, joining, basename/dirname, extension/stem extraction, root containment checks, filtered recursive copy/move, file hashing, and metadata diff helpers.
   File/ ensures that the rest of the project does not repeat error handling for file descriptors or manual retries.
   By centralizing filesystem quirks, the module keeps higher layers focused on the data being stored rather than the underlying syscall dance.
 
 - `Filesystem/`: Provides higher-level filesystem path utilities on top of File/ and Compatebility/.
-  It exposes normalized joins, canonical paths for existing filesystem entries, basename/dirname/extension/stem helpers, and safe relative path checks.
-  The module includes root-containment validation and safe joining for workflows that accept user-provided relative paths.
+  It exposes normalized joins, canonical paths for existing filesystem entries, basename/dirname/extension/stem helpers, safe relative path checks, glob matching, and wildcard inspection.
+  The module includes root-containment validation, safe joining for workflows that accept user-provided relative paths, and temporary-path/atomic-write helpers for portable staging flows.
   Filesystem/ gives callers a compact path-focused API while keeping platform-specific canonicalization inside Compatebility/.
 
 - `Game/`: Contains game-specific data structures, simulation helpers, and server-side logic that model stateful interactions over shared primitives.
   It leverages core features like RNG, networking, and storage to deliver deterministic simulations and replay-friendly data formats.
   The module organizes rules, event queues, and validation routines so the flagship game projects have a stable foundation.
   Game/ exists to namespace game logic away from the engine utilities while still permitting reuse of general-purpose helpers.
+
+- `Voxel/`: Generates biome-aware voxel terrain and greedy chunk meshes when the voxel region backend is enabled.
+  It owns the seeded heightmap logic, biome selection, tree templates, and frustum-aware mesh generation for chunked voxel worlds.
+  Voxel/ sits beside Game/ so domain code can build on the same voxel primitives without carrying the implementation details everywhere.
+  The module exists as the shared terrain generator and meshing layer for voxel-based worlds.
 
 - `Geometry/`: Offers vector math, shape handling, and transform helpers for building spatial reasoning layers on top of the library.
   It defines data structures for points, planes, and matrices along with functions for intersections, projections, and conversions.
@@ -117,14 +129,18 @@ Every module that allocates through this layer inherits the same mechanisms for 
   JSon/ lets callers define schemas and reuse typed accessors while leaving format details to the shared utilities.
   The module exists because the project routinely exchanges structured data and needs a single trusted implementation.
 
-- `Basic/`: Provides the classic set of string, memory, and utility helpers inspired by the original Libft curriculum but expanded for modern C++.
-  It includes normalized naming, allocator hooks, and consistent error reporting so every module can rely on the same baseline.
-  Core helpers such as string duplication, memory comparison, and list splitting live here and underpin the rest of the codebase.
+- `Basic/`: Provides the classic set of string, memory, character, numeric parsing, and low-level UTF-8 decode/encode helpers inspired by the original Libft curriculum.
+  It includes normalized naming and the project `ft_nullptr` stand-in so every module can rely on the same baseline.
+  Core helpers such as comparison, length, parsing, and primitive UTF code-point decoding live here and underpin the rest of the codebase.
   Basic/ exists to anchor the project with a collection of well-known helpers that maintainers already understand and trust.
 
-- `Logger/`: Implements logging sinks, formatting helpers, and routing logic so runtime events can be emitted in a consistent, configurable manner.
-  It supports multiple log levels, structured contexts, and the ability to redirect output to files or other sinks.
-  Logger/ funnels messages through the same error handling as other modules so log emission never surprises downstream observers.
+- `Sink/`: Stores formatted log records in a small in-memory sink so low-level and high-level modules can capture messages without depending on the full logger stack.
+  It keeps the record store simple and dependency-light so other modules can write into it without pulling in formatting or transport code.
+  Sink/ exists to give the logging stack a clean destination layer that can be reused without dragging in the rest of the logging machinery.
+
+- `Logger/`: Implements logging formatting, routing logic, and higher-level policy so runtime events can be emitted in a consistent, configurable manner.
+  It supports multiple log levels, structured contexts, and the ability to forward output to files, sinks, or remote destinations.
+  Logger/ now records formatted messages into Sink/ as part of its dispatch path so downstream code can inspect captured logs without coupling to the formatter.
   The module exists to centralize what would otherwise be a fragmented mess of printf and fprintf calls scattered across the tree.
 
 - `Math/`: Supplies general math helpers, statistical routines, and linear algebra primitives used by computation-heavy modules.
@@ -142,10 +158,14 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Observability/ keeps samples and events in sync with the rest of the tree so instrumentation never feels like an afterthought.
   It exists to let service authors wire up telemetry without per-module experimentation, ensuring consistent visibility across deployments.
 
-- `PThread/`: Wraps threading and synchronization primitives such as mutexes, condition variables, and thread creation helpers.
-  Every helper normalizes platform differences and integrates with the error stack so concurrent modules share consistent safety practices.
+- `PThread/`: Wraps the low-level threading and synchronization primitives such as mutexes, condition variables, rwlocks, and native thread helpers.
+  Every helper normalizes platform differences and integrates with the error/runtime conventions so concurrent modules share consistent safety practices.
   PThread/ exists to hide the raw pthread or platform APIs while letting callers still express locking intent directly.
   It ensures concurrency tools follow the same naming and lock/unlock rules mandated throughout the project.
+- `Threading/`: Builds the higher-level thread, cancellation, queue, barrier, latch, and scheduler helpers on top of `PThread/`.
+  The module keeps orchestration separate from primitives so the dependency graph stays cleaner.
+  Threading/ is where callable-based thread wrappers, thread pools, and task scheduling live.
+  It exists to provide reusable concurrency workflows without pushing that complexity into the primitive layer.
 
 - `Parser/`: Offers reusable parsing utilities, tokenizers, and grammar helpers that are consumed by format-specific modules.
   Parsers in this module expose consistent error reporting, lookahead strategies, and backtracking helpers for complex formats.
@@ -162,9 +182,9 @@ Every module that allocates through this layer inherits the same mechanisms for 
   It exists to keep simulations, games, and protocol flows synchronized with repeatable randomness without copy-pasting the same helper code.
   The module also exposes diagnostics to verify generator health when reproducing issues.
 
-- `ReadLine/`: Implements readline-style interactive input helpers, command history, and suggestion helpers for terminal tooling.
+- `ReadLine/`: Implements readline-style interactive input helpers, command history, reverse incremental search, and suggestion helpers for terminal tooling.
   Its goal is to offer a predictable line-editing experience that integrates with the shared allocator, logging, and error stack rules.
-  ReadLine/ handles character-by-character input, history persistence, and hooks for autocompletion so other modules can build REPLs.
+  ReadLine/ handles character-by-character input, history persistence, Ctrl-R search, and ranked/fuzzy autocompletion so other modules can build REPLs.
   By centralizing the interface, the rest of the project avoids duplicating interactive input handling while still enjoying consistent behavior.
 
 - `SCMA/`: Manages shared and secure memory allocation for scenarios where control over lifetime, growth, and instrumentation matters most.
@@ -192,10 +212,10 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Test/ exists to ensure every release candidate is exercised consistently with the rest of the project's configuration.
   The module also documents how to add new tests and interpret failure outputs so contributors can expand coverage confidently.
 
-- `Time/`: Includes time and date helpers for scheduling, formatting, and measuring durations consistently.
-  It wraps platform differences, exposes monotonic clocks, and formats timestamps following the library's conventions.
-  Time/ exists to keep time-aware logic synchronized across modules that need consistent scheduling or logging semantics.
-  The helpers prevent modules from duplicating conversions or misusing stopwatch-style timers.
+- `Time/`: Includes time and date helpers for scheduling, formatting, measuring durations, and performing relative calendar arithmetic consistently.
+  It wraps platform differences, exposes monotonic clocks, and now includes fixed-span and calendar-aware add/floor/ceiling helpers for month, quarter, and year boundaries alongside timestamp formatting.
+  Time/ exists to keep time-aware logic synchronized across modules that need consistent scheduling, logging semantics, and calendar-safe adjustments.
+  The helpers prevent modules from duplicating conversions, misusing stopwatch-style timers, or reinventing month, quarter, and year rollover rules.
 
 - `XML/`: Provides XML parsing, document modeling, and serialization helpers focused on structured markup handling.
   This module outlines canonical parsing paths, namespace handling, and validation helpers for consistent tree manipulation.

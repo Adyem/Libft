@@ -107,8 +107,8 @@ Modules/Game/game_world.hpp
 Modules/Game/game_world_region.hpp
 Modules/Game/game_world_registry.hpp
 Modules/Game/game_world_replay.hpp
-Modules/Terrain/chunk_mesh.hpp
-Modules/Terrain/terrain_generator.hpp
+Modules/Voxel/voxel_mesh.hpp
+Modules/Voxel/voxel.hpp
 Modules/Geometry/aabb.hpp
 Modules/Geometry/circle.hpp
 Modules/Geometry/geometry.hpp

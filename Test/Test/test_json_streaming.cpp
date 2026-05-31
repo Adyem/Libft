@@ -4,7 +4,7 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/CPP_class/class_string.hpp"
 #include "../../Modules/Template/vector.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/basic.hpp"
 
 #ifndef LIBFT_TEST_BUILD

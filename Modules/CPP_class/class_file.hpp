@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <cstddef>
+#include "../Basic/basic.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 

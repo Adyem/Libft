@@ -1213,7 +1213,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_istringstream &operator>>(ft_istringstream &input, ft_string &value)`
 - Defines: _None_
 
-### CPP_class/class_nullptr.hpp
+### Basic/class_nullptr.hpp
 
 - Declares:
   - `void operator&() const`
@@ -6566,14 +6566,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_strncpy_s(char *destination, size_t destination_size, const char *source, size_t maximum_copy_length)`
   - `int ft_strcat_s(char *destination, size_t destination_size, const char *source)`
   - `int ft_strncat_s(char *destination, size_t destination_size, const char *source, size_t maximum_append_length)`
-  - `char *ft_span_dup(const char *buffer, size_t length)`
   - `ft_string ft_span_to_string(const char *buffer, size_t length)`
   - `char *ft_strtok(char *string, const char *delimiters)`
   - `int ft_locale_compare(const char *left, const char *right, const char *locale_name)`
   - `ft_string ft_locale_casefold(const char *input, const char *locale_name)`
   - `void *ft_memset(void *destination, int value, size_t number_of_bytes)`
   - `int ft_isspace(int character)`
-  - `char *ft_strmapi(const char *string, char (*function)(unsigned int, char))`
   - `void ft_striteri(char *string, void (*function)(unsigned int, char *))`
   - `char *ft_getenv(const char *name)`
   - `int ft_setenv(const char *name, const char *value, int overwrite)`
@@ -6765,7 +6763,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `char *ft_span_dup(const char *buffer, size_t length)`
   - `ft_string ft_span_to_string(const char *buffer, size_t length)`
 
 ### Basic/basic_strcat_s.cpp
@@ -6812,10 +6809,13 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size)`
 
-### Basic/basic_strmapi.cpp
+### Advanced/advanced_string.cpp
 
 - Declares: _None_
 - Defines:
+  - `char *ft_hash_string31(const char *string)`
+  - `char *ft_hash_string31(const ft_string &string)`
+  - `char *ft_span_dup(const char *buffer, size_t length)`
   - `char *ft_strmapi(const char *string, char (*function)(unsigned int, char))`
 
 ### Basic/basic_strncat_s.cpp
@@ -6930,28 +6930,40 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `#if defined(_WIN32) || defined(_WIN64) # include <winsock2.h> #endif #include #include #include #include <cstdlib> #include <cerrno> int ft_unsetenv(const char *name)`
 
+### Advanced/advanced.hpp
+
+- Declares:
+  - `typedef uint32_t (*ft_utf8_case_hook)(uint32_t code_point)`
+  - `char *ft_hash_string31(const char *string)`
+  - `char *ft_hash_string31(const ft_string &string)`
+  - `char *ft_span_dup(const char *buffer, size_t length)`
+  - `char *ft_strmapi(const char *string, char (*function)(unsigned int, char))`
+  - `int ft_utf8_case_ascii_lower(uint32_t code_point)`
+  - `int ft_utf8_case_ascii_upper(uint32_t code_point)`
+  - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
+  - `int ft_utf8_is_combining_code_point(uint32_t code_point)`
+  - `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer)`
+  - `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook)`
+  - `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook)`
+- Defines: _None_
+
 ### Basic/basic_utf8.hpp
 
 - Declares:
   - `int ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer, uint32_t *code_point_pointer, size_t *sequence_length_pointer)`
   - `int ft_utf8_count(const char *string, size_t *code_point_count_pointer)`
   - `int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size, size_t *encoded_length_pointer)`
-  - `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook)`
-  - `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook)`
-  - `uint32_t ft_utf8_case_ascii_lower(uint32_t code_point)`
-  - `uint32_t ft_utf8_case_ascii_upper(uint32_t code_point)`
-  - `int ft_utf8_is_combining_code_point(uint32_t code_point)`
-  - `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer)`
-  - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
 - Defines: _None_
 
-### Basic/basic_utf8_case.cpp
+### Advanced/advanced_utf8.cpp
 
 - Declares: _None_
 - Defines:
   - `uint32_t ft_utf8_case_ascii_lower(uint32_t code_point)`
   - `uint32_t ft_utf8_case_ascii_upper(uint32_t code_point)`
-  - `int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size, size_t *encoded_length_pointer)`
+  - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
+  - `int ft_utf8_is_combining_code_point(uint32_t code_point)`
+  - `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer)`
   - `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook)`
   - `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook)`
 
@@ -6962,15 +6974,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static int ft_utf8_is_trailing_byte(unsigned char byte_value)`
   - `static int ft_utf8_detect_sequence(unsigned char first_byte, size_t *expected_length, uint32_t *initial_value, uint32_t *minimum_value)`
   - `int ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer, uint32_t *code_point_pointer, size_t *sequence_length_pointer)`
-
-### Basic/basic_utf8_grapheme.cpp
-
-- Declares: _None_
-- Defines:
-  - `static int ft_utf8_code_point_in_range(uint32_t code_point, uint32_t start_value, uint32_t end_value)`
-  - `int ft_utf8_is_combining_code_point(uint32_t code_point)`
-  - `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer)`
-  - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
 
 ### Basic/basic_utf8_length.cpp
 
@@ -9290,7 +9293,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *get_error_str() const`
 - Defines: _None_
 
-### PThread/lock_guard.hpp
+### Threading/lock_guard.hpp
 
 - Declares:
   - `void set_error(int error) const`
@@ -9438,7 +9441,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int pt_condition_variable::get_error() const`
   - `const char *pt_condition_variable::get_error_str() const`
 
-### PThread/pthread_errno_guard.hpp
+### Threading/errno_guard.hpp
 
 - Declares:
   - `void dismiss() noexcept`
@@ -9850,7 +9853,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *operation_error_last_error_str() const`
 - Defines: _None_
 
-### PThread/task_scheduler.hpp
+### Threading/task_scheduler.hpp
 
 - Declares:
   - `void record_operation_error(int error_code) const noexcept`
@@ -9944,7 +9947,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay, FunctionType function, Args... args) -> Pair<ft_future<typename std::invoke_result<FunctionType, Args...>::type>, ft_scheduled_task_handle>`
   - `ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interval, FunctionType function, Args... args)`
 
-### PThread/task_scheduler_tracing.hpp
+### Threading/task_scheduler_tracing.hpp
 
 - Declares:
   - `int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)`
@@ -9956,7 +9959,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void task_scheduler_trace_pop_span(unsigned long long previous_span)`
 - Defines: _None_
 
-### PThread/thread.hpp
+### Threading/thread.hpp
 
 - Declares:
   - `static void *start_routine(void *data)`
@@ -9978,7 +9981,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `ft_thread::ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
-### PThread/unique_lock.hpp
+### Threading/unique_lock.hpp
 
 - Declares:
   - `void record_error(int error, bool push_global = true) const noexcept`
@@ -11691,7 +11694,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `inline void ft_bitset::teardown_thread_safety()`
   - `inline void ft_bitset::reset_storage(size_t size) noexcept`
 
-### CPP_class/cancellation.hpp
+### Threading/cancellation.hpp
 
 - Declares:
   - `void set_error(int error_code) const`
@@ -12794,7 +12797,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `#if defined(__cpp_concepts) && __cpp_concepts >= 201907L #include <concepts> #define FT_TEMPLATE_HAS_CONCEPTS 1 #else #define FT_TEMPLATE_HAS_CONCEPTS 0 #endif #if FT_TEMPLATE_HAS_CONCEPTS #include <type_traits> template <typename ConstructibleType, typename... ConstructArgs> concept ft_constructible_from = std::is_constructible_v<ConstructibleType, ConstructArgs...>`
 - Defines: _None_
 
-### CPP_class/thread_pool.hpp
+### Threading/thread_pool.hpp
 
 - Declares:
   - `void set_error(int error) const`

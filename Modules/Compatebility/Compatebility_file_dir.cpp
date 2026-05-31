@@ -2,7 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 {
@@ -12,7 +12,7 @@ static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 }
 
 #if defined(_WIN32) || defined(_WIN64)
-# include "../CPP_class/class_nullptr.hpp"
+# include "../Basic/class_nullptr.hpp"
 # include <windows.h>
 # include <errno.h>
 # ifndef DT_DIR
@@ -235,7 +235,7 @@ int32_t cmp_directory_exists(const char *path, int32_t *exists_out,
 }
 
 #else
-# include "../CPP_class/class_nullptr.hpp"
+# include "../Basic/class_nullptr.hpp"
 # include <dirent.h>
 # include <errno.h>
 # include <sys/syscall.h>

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 #include "../Basic/basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/limits.hpp"

@@ -5,9 +5,11 @@
 #ifndef LIBFT_INTERNAL_HEADERS
 # error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
 #endif
+#include "../Basic/limits.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/openssl_support.hpp"
+#include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <cstddef>
 #include <cstdint>

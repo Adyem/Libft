@@ -1,5 +1,5 @@
 #include "yaml.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 static void yaml_serializer_delete_string(ft_string *string) noexcept

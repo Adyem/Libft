@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Modules/JSon/json.hpp"
 #include "../../Modules/JSon/document.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/CPP_class/class_big_number.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Basic/basic.hpp"

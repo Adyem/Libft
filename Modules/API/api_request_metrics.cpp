@@ -1,5 +1,8 @@
 #include "api_request_metrics.hpp"
 #include "../Template/move.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void api_request_metrics_guard::abort_lifecycle_error(const char *method_name,
     const char *reason) const noexcept

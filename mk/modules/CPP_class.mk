@@ -14,12 +14,10 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_ofstream.cpp \
          cpp_class_big_number.cpp \
          cpp_class_big_number_serialization.cpp \
-         cpp_class_bitset.cpp \
-         cpp_class_cancellation.cpp \
-         cpp_class_thread_pool.cpp
+         cpp_class_bitset.cpp
 
 HEADERS := class_string.hpp \
-          class_nullptr.hpp \
+          ../Basic/class_nullptr.hpp \
           class_file.hpp \
           class_file_stream.hpp \
           class_data_buffer.hpp \
@@ -29,8 +27,6 @@ HEADERS := class_string.hpp \
           class_istringstream.hpp \
           class_ofstream.hpp \
           class_big_number.hpp \
-          bitset.hpp \
-          cancellation.hpp \
-          thread_pool.hpp
+          bitset.hpp
 
 include $(dir $(lastword $(MAKEFILE_LIST)))common/module_defaults.mk

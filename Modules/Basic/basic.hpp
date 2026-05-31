@@ -24,6 +24,7 @@ typedef uint8_t ft_bool;
 #include <stdint.h>
 #include <stdarg.h>
 #include "limits.hpp"
+#include "class_nullptr.hpp"
 
 class ft_string;
 static constexpr ft_size_t ft_strlen_raw(const char *string)
@@ -82,8 +83,6 @@ int32_t         ft_isprint(int32_t character);
 int32_t         ft_islower(int32_t character);
 int32_t         ft_isupper(int32_t character);
 int64_t         ft_atol(const char *string);
-int64_t         ft_hash_string31(const char *string);
-int64_t         ft_hash_string31(const ft_string &string);
 int64_t         ft_strtol(const char *input_string, char **end_pointer,
                     int32_t numeric_base);
 uint64_t        ft_strtoul(const char *input_string,
@@ -102,13 +101,11 @@ int32_t         ft_strcat_s(char *destination, ft_size_t destination_size,
                     const char *source);
 int32_t         ft_strncat_s(char *destination, ft_size_t destination_size,
                     const char *source, ft_size_t maximum_append_length);
-char            *ft_span_dup(const char *buffer, ft_size_t length);
 char            *ft_strtok(char *string, const char *delimiters);
 int32_t         ft_locale_compare(const char *left, const char *right,
                     const char *locale_name);
 void            *ft_memset(void *destination, int32_t value, ft_size_t number_of_bytes);
 int32_t         ft_isspace(int32_t character);
-char            *ft_strmapi(const char *string, char (*function)(uint32_t, char));
 void            ft_striteri(char *string, void (*function)(uint32_t, char *));
 ft_size_t          ft_wstrlen(const wchar_t *string);
 char16_t        *ft_utf8_to_utf16(const char *input, ft_size_t input_length,

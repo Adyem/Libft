@@ -5,7 +5,7 @@
 #include "../Basic/basic.hpp"
 #include "pthread_lock_tracking.hpp"
 #include <system_error>
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 pt_mutex::pt_mutex()
     : _owner(0), _lock(false), _native_mutex(ft_nullptr), _initialised_state(pt_mutex::_state_uninitialised),

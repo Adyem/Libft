@@ -3,7 +3,7 @@
 
 #include "ssl_wrapper.hpp"
 #include "networking_tls_aead.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Template/vector.hpp"
 #include "../Basic/basic.hpp"
 #include "../Encryption/encryption.hpp"

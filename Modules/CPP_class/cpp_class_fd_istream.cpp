@@ -1,8 +1,12 @@
 #include "class_fd_istream.hpp"
-#include "class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t ft_fd_istream::enable_thread_safety(void) noexcept
 {

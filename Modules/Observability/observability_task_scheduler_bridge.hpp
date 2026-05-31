@@ -1,8 +1,8 @@
 #ifndef OBSERVABILITY_TASK_SCHEDULER_BRIDGE_HPP
 #define OBSERVABILITY_TASK_SCHEDULER_BRIDGE_HPP
 
-#include "../CPP_class/class_nullptr.hpp"
-#include "../PThread/task_scheduler_tracing.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Threading/task_scheduler_tracing.hpp"
 #include "../Time/time.hpp"
 #include "../Errno/errno.hpp"
 

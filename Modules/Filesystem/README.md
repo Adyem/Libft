@@ -1,6 +1,6 @@
 # Filesystem
 
-The `Filesystem` module provides path manipulation, safety checks, atomic writes, and recursive walking helpers. Functions returning `ft_string *` allocate a lifecycle string that the caller owns.
+The `Filesystem` module provides path manipulation, safety checks, glob matching, atomic writes, temporary-path helpers, and recursive walking helpers. Functions returning `ft_string *` allocate a lifecycle string that the caller owns.
 
 ## Types
 
@@ -28,6 +28,8 @@ The `Filesystem` module provides path manipulation, safety checks, atomic writes
 - `filesystem_is_inside_root(const char *root_path, const char *candidate_path)` - Reports whether a candidate path stays inside a root directory.
 - `filesystem_validate_inside_root(const char *root_path, const char *candidate_path)` - Returns an error code if a candidate path escapes the root.
 - `filesystem_has_extension(const char *path, const char *extension)` - Checks whether a path ends with the requested extension.
+- `filesystem_path_has_wildcards(const char *path)` - Reports whether a path contains `*` or `?`.
+- `filesystem_match_glob(const char *pattern, const char *path)` - Matches a path against wildcard syntax with `*`, `?`, and `**`.
 
 ## File Operations
 

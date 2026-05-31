@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include "../RNG/rng.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "encryption.hpp"
 #include "../Compatebility/compatebility_internal.hpp"

@@ -42,9 +42,41 @@ get_next_line:
 	@echo "Building get_next_line test executable ($(TARGET))"
 	@$(MAKE) FILES="$(GET_NEXT_LINE_TEST_FILES)" all
 
+File:
+	@echo "Building file test executable ($(TARGET))"
+	@$(MAKE) FILES="$(FILE_TEST_FILES)" all
+
+Filesystem:
+	@echo "Building filesystem test executable ($(TARGET))"
+	@$(MAKE) FILES="$(FILESYSTEM_TEST_FILES)" all
+
+Voxel:
+	@echo "Building Voxel test executable ($(TARGET))"
+	@$(MAKE) FILES="$(VOXEL_TEST_FILES)" all
+
+CLI:
+	@echo "Building CLI test executable ($(TARGET))"
+	@$(MAKE) FILES="$(CLI_TEST_FILES)" all
+
+Logger:
+	@echo "Building Logger test executable ($(TARGET))"
+	@$(MAKE) FILES="$(LOGGER_TEST_FILES)" all
+
+Sink:
+	@echo "Building Sink test executable ($(TARGET))"
+	@$(MAKE) FILES="$(SINK_TEST_FILES)" all
+
 re_get_next_line: fclean get_next_line
 
 re_Basic: fclean Basic
+
+re_CLI: fclean CLI
+
+re_Logger: fclean Logger
+
+re_Sink: fclean Sink
+
+re_Voxel: fclean Voxel
 
 re_CMA: fclean CMA
 
@@ -97,9 +129,14 @@ $(OBJDIR)/Test/test_basic_utf8.o $(OBJDIR)/Test/test_basic_validate_int.o \
 $(OBJDIR)/Test/test_basic_additional_coverage.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Basic\"
 $(OBJDIR)/Test/test_networking.o $(OBJDIR)/Test/test_http_server.o $(OBJDIR)/Test/test_websocket.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_networking_quic.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
-$(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async.o $(OBJDIR)/Test/test_logger_network.o \
-$(OBJDIR)/Test/test_logger_file.o $(OBJDIR)/Test/test_logger_control.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Logger\"
+$(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async_logging.o $(OBJDIR)/Test/test_logger_network.o \
+$(OBJDIR)/Test/test_logger_file.o $(OBJDIR)/Test/test_logger_control.o $(OBJDIR)/Test/test_logger_sink.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Logger\"
 $(OBJDIR)/Test/test_json_validate.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"JSon\"
+$(OBJDIR)/Test/test_cli.o $(OBJDIR)/Test/test_cli_completion.o \
+$(OBJDIR)/Test/test_cli_config.o $(OBJDIR)/Test/test_cli_get_bool.o \
+$(OBJDIR)/Test/test_cli_get_double.o $(OBJDIR)/Test/test_cli_get_int64.o \
+$(OBJDIR)/Test/test_cli_get_string.o $(OBJDIR)/Test/test_cli_get_uint64.o \
+$(OBJDIR)/Test/test_cli_help.o $(OBJDIR)/Test/test_cli_tree.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"CLI\"
 $(OBJDIR)/Test/test_yaml.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"YAML\"
 $(OBJDIR)/Test/test_rng.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"RNG\"
 $(OBJDIR)/Test/test_rng_statistical_quality.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"RNG\"

@@ -1,9 +1,12 @@
 #include "system_utils.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <mutex>
 #include <new>
 #include <vector>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 typedef struct s_su_health_check_entry
 {

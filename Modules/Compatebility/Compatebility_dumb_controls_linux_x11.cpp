@@ -2,7 +2,7 @@
 
 #include "compatebility_dumb_controls_internal.hpp"
 
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <cstring>

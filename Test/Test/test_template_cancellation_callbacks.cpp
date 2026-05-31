@@ -1,5 +1,5 @@
 #include "../test_internal.hpp"
-#include "../../Modules/CPP_class/cancellation.hpp"
+#include "../../Modules/Threading/cancellation.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <atomic>
 

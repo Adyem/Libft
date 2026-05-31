@@ -1,7 +1,7 @@
 #include "config.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/pthread_internal.hpp"

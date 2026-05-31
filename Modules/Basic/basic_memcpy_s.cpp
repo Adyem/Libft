@@ -3,7 +3,7 @@
 #if LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS
 #include "basic.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 static void zero_buffer(void *buffer, ft_size_t buffer_size)
 {

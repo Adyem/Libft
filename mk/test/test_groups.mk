@@ -63,3 +63,42 @@ CMA_TEST_FILES := \
 GET_NEXT_LINE_TEST_FILES := \
 	Test/test_get_next_line.cpp \
 	Test/test_get_next_line_strjoin.cpp
+
+FILE_TEST_FILES := \
+	Test/test_file_copy.cpp \
+	Test/test_file_copy_directory.cpp \
+	Test/test_file_directory_filters.cpp \
+	Test/test_file_hash_metadata.cpp \
+	Test/test_file_secure_temp_file.cpp \
+	Test/test_file_utils.cpp
+
+FILESYSTEM_TEST_FILES := \
+	Test/test_filesystem.cpp \
+	Test/test_filesystem_glob.cpp
+
+VOXEL_TEST_FILES := \
+	Test/test_voxel_generator.cpp \
+	Test/test_voxel_mesh.cpp
+
+CLI_TEST_FILES := \
+	Test/test_cli.cpp \
+	Test/test_cli_completion.cpp \
+	Test/test_cli_config.cpp \
+	Test/test_cli_get_bool.cpp \
+	Test/test_cli_get_double.cpp \
+	Test/test_cli_get_int64.cpp \
+	Test/test_cli_get_string.cpp \
+	Test/test_cli_get_uint64.cpp \
+	Test/test_cli_help.cpp \
+	Test/test_cli_tree.cpp
+
+LOGGER_TEST_FILES := \
+	Test/test_logger.cpp \
+	Test/test_logger_async_logging.cpp \
+	Test/test_logger_network.cpp \
+	Test/test_logger_file.cpp \
+	Test/test_logger_control.cpp \
+	Test/test_logger_sink.cpp
+
+SINK_TEST_FILES := \
+	Test/test_sink.cpp

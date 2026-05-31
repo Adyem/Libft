@@ -6,7 +6,7 @@
 # error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
 #endif
 #include "../Basic/basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Compatebility/compatebility_stack_trace.hpp"
 #include <cstdint>
 #include <stdint.h>
@@ -40,6 +40,7 @@
 #endif
 
 extern ft_size_t    g_cma_alloc_limit;
+extern ft_bool    g_cma_alloc_logging;
 extern ft_size_t    g_cma_allocation_count;
 extern ft_size_t    g_cma_free_count;
 extern ft_size_t    g_cma_current_bytes;
@@ -101,6 +102,10 @@ int32_t cma_unlock_allocator(ft_bool lock_acquired);
 int32_t cma_enable_thread_safety(void);
 int32_t cma_disable_thread_safety(void);
 ft_bool cma_is_thread_safe_enabled(void);
+void cma_set_alloc_logging(ft_bool enable);
+ft_bool cma_get_alloc_logging(void);
+void cma_record_allocation_log(const char *format_string, ...)
+            __attribute__ ((format (printf, 1, 2)));
 ft_bool cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
 ft_bool cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));

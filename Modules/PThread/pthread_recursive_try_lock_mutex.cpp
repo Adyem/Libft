@@ -1,10 +1,12 @@
 #include <system_error>
+#include "../Basic/limits.hpp"
 
 #include "pthread.hpp"
 #include "recursive_mutex.hpp"
 #include "pthread_lock_tracking.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
+#include "mutex.hpp"
 
 static const uint32_t PT_RECURSIVE_MUTEX_TRY_LOCK_ATTEMPTS = 2U;
 

@@ -1,5 +1,8 @@
 #include "api_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_bool api_append_content_length_header(ft_string &request, ft_size_t content_length)
 {

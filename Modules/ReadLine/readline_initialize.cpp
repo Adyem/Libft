@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
@@ -78,7 +78,17 @@ int32_t rl_initialize_state(readline_state_t *state)
     while (index < MAX_SUGGESTIONS)
     {
         state->current_matches[index] = ft_nullptr;
+        state->current_match_scores[index] = 0;
         index++;
+    }
+    result = rl_bind_key(RL_KEY_CTRL_R, rl_handle_reverse_history_search_key, ft_nullptr);
+    if (result != FT_ERR_SUCCESS)
+    {
+        rl_state_unlock(state, lock_acquired);
+        rl_disable_raw_mode();
+        if (thread_safety_created == FT_TRUE)
+            rl_state_teardown_thread_safety(state);
+        return (result);
     }
     rl_open_log_file(state);
     rl_state_unlock(state, lock_acquired);

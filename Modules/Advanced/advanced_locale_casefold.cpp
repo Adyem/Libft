@@ -1,7 +1,7 @@
 #include "advanced.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_string.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <new>
 

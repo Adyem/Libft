@@ -8,7 +8,7 @@
 #include "../YAML/yaml.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/move.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CPP_class/class_string.hpp"
 #include <type_traits>
 #include <limits>

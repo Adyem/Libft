@@ -1,8 +1,8 @@
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
-#include "../../Modules/PThread/concurrency.hpp"
+#include "../../Modules/Threading/concurrency.hpp"
 #include "../../Modules/Template/promise.hpp"
-#include "../../Modules/CPP_class/cancellation.hpp"
+#include "../../Modules/Threading/cancellation.hpp"
 #include "../../Modules/Errno/errno.hpp"
 
 FT_TEST(test_pthread_async_returns_terminated_for_precancelled_token)

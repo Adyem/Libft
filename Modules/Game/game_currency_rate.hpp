@@ -2,6 +2,7 @@
 # define FT_CURRENCY_RATE_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <stdint.h>

@@ -1,7 +1,7 @@
 #include <pthread.h>
 #include "pthread.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 
 static int pt_rwlock_report_result(int return_value)

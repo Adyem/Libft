@@ -4,6 +4,9 @@
 #include "../CPP_class/class_big_number.hpp"
 #include <cstddef>
 #include <climits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 char api_http_to_lower(char character)
 {

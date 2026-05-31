@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Config/config.hpp"
 #include "../../Modules/Advanced/advanced.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/Basic/basic.hpp"

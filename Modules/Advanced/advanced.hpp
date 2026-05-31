@@ -7,6 +7,25 @@
 
 class ft_string;
 
+typedef uint32_t (*ft_utf8_case_hook)(uint32_t code_point);
+
+int64_t         ft_hash_string31(const char *string);
+int64_t         ft_hash_string31(const ft_string &string);
+char            *ft_span_dup(const char *buffer, ft_size_t length);
+char            *ft_strmapi(const char *string, char (*function)(uint32_t, char));
+uint32_t        ft_utf8_case_ascii_lower(uint32_t code_point);
+uint32_t        ft_utf8_case_ascii_upper(uint32_t code_point);
+int32_t         ft_utf8_is_combining_code_point(uint32_t code_point);
+int32_t         ft_utf8_transform(const char *input, ft_size_t input_length,
+                    char *output_buffer, ft_size_t output_buffer_size,
+                    ft_utf8_case_hook case_hook);
+int32_t         ft_utf8_transform_alloc(const char *input, char **output_pointer,
+                    ft_utf8_case_hook case_hook);
+int32_t         ft_utf8_next_grapheme(const char *string, ft_size_t string_length,
+                    ft_size_t *index_pointer, ft_size_t *grapheme_length_pointer);
+int32_t         ft_utf8_duplicate_grapheme(const char *string, ft_size_t string_length,
+                    ft_size_t *index_pointer, char **grapheme_pointer);
+
 ft_string *adv_to_string(int64_t number);
 ft_string *adv_to_string(uint64_t number);
 ft_string *adv_to_string(double number);

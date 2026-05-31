@@ -365,6 +365,7 @@ Concrete examples:
 - Class header filenames: `String/string.hpp`, `Socket/socket_handle.hpp`, `Containers/class_vector.hpp`
 
 Update documentation when public functionality is added or changed. When a module gets new public functionality, update that module's `README.md` with the new functions, classes, structs, methods, and a short explanation. Bug fixes alone do not require README updates unless they introduce unavoidable behavior or contract changes that users must know about.
+When a module is added or a module change adds, removes, or reroutes inter-module dependencies, update `Docs/module_dependency_graph.md` in the same change set so the tracked dependency graph stays current.
 When adding a new module, add that module to the root `README.md` and create the module's own `README.md` documenting its public-facing functions, classes, structs, methods, and purpose.
 
 Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatibility module. Platform-specific means the code cannot run on all of Linux, Windows, and macOS.

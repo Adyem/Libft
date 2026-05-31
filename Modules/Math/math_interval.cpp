@@ -1,7 +1,7 @@
 #include "math_interval.hpp"
 
 #include <cmath>
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 static ft_interval ft_interval_error(int32_t error_code)
 {

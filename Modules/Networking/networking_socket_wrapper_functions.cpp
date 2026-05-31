@@ -13,7 +13,7 @@
 #endif
 #include "socket_class.hpp"
 #include "socket_handle.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Observability/observability.hpp"
 
 #ifdef _WIN32

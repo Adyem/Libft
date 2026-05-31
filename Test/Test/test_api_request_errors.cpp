@@ -7,7 +7,7 @@
 #include "../../Modules/Networking/socket_class.hpp"
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/Networking/openssl_support.hpp"
-#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/Threading/thread.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

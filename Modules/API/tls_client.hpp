@@ -2,9 +2,11 @@
 #define API_TLS_CLIENT_HPP
 
 #include "../JSon/json.hpp"
+#include "../Basic/limits.hpp"
 #include "../CPP_class/class_string.hpp"
-#include "../CPP_class/class_nullptr.hpp"
-#include "../PThread/thread.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../PThread/mutex.hpp"
+#include "../Threading/thread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
 #include "../Networking/openssl_support.hpp"

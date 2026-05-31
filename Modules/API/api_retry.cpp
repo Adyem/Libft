@@ -9,6 +9,9 @@
 #include "../System_utils/system_utils.hpp"
 #include <new>
 #include <climits>
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 struct api_circuit_state
 {

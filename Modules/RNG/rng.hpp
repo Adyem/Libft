@@ -9,8 +9,8 @@
 #include <cstdlib>
 #include <cstddef>
 #include <cstdint>
-#include "../Basic/basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Advanced/advanced.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "rng_stream.hpp"
 
 int32_t ft_random_int(void);

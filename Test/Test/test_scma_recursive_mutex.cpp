@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "test_scma_shared.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

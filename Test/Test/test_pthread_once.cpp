@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
-#include "../../Modules/PThread/concurrency.hpp"
+#include "../../Modules/Threading/concurrency.hpp"
 #include "../../Modules/Errno/errno.hpp"
 
 static int32_t pthread_once_increment_counter(int32_t *counter)

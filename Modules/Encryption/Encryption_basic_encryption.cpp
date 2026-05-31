@@ -6,7 +6,7 @@
 #include "../CMA/CMA.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "encryption.hpp"
 

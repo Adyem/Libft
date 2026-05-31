@@ -2,6 +2,7 @@
 # define GAME_VOXEL_CHUNK_HPP
 
 #include "../Buffer/byte_buffer.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include <stdint.h>
 

@@ -71,7 +71,7 @@ those calls in a guard removes the need for manual shutdown calls when control
 flows exit early.
 
 ```cpp
-#include "Modules/PThread/task_scheduler.hpp"
+#include "Modules/Threading/task_scheduler.hpp"
 
 class scoped_task_scheduler
 {

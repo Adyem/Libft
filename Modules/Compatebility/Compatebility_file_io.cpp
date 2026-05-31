@@ -4,7 +4,7 @@
 #include <cerrno>
 
 #if defined(_WIN32) || defined(_WIN64)
-# include "../CPP_class/class_nullptr.hpp"
+# include "../Basic/class_nullptr.hpp"
 # include "../PThread/mutex.hpp"
 # include "../PThread/pthread_internal.hpp"
 # include "../Basic/basic.hpp"
@@ -296,7 +296,7 @@ void cmp_initialize_standard_file_descriptors()
 }
 
 #else
-# include "../CPP_class/class_nullptr.hpp"
+# include "../Basic/class_nullptr.hpp"
 # include "../Basic/basic.hpp"
 # include <fcntl.h>
 # include <unistd.h>

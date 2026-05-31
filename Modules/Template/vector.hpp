@@ -1,7 +1,8 @@
 #ifndef FT_VECTOR_HPP
 #define FT_VECTOR_HPP
 
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../CMA/CMA.hpp"
@@ -10,6 +11,7 @@
 #include <type_traits>
 #include <cstdint>
 #include <new>
+#include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 

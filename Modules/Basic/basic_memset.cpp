@@ -1,5 +1,5 @@
 #include "basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 void *ft_memset(void *destination, int32_t value, ft_size_t number_of_bytes)
 {

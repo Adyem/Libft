@@ -8,7 +8,7 @@
 #include <type_traits>
 
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 typedef int32_t (*t_test_func)(void);
 #ifndef TEST_MODULE

@@ -15,6 +15,12 @@
 #include <utility>
 #include "../Template/move.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/vector.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>

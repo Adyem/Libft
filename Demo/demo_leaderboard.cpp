@@ -1,7 +1,7 @@
 #include "demo_game.hpp"
 
 #include "../Modules/CMA/CMA.hpp"
-#include "../Modules/CPP_class/class_nullptr.hpp"
+#include "../Modules/Basic/class_nullptr.hpp"
 #include "../Modules/DUMB/dumb_io.hpp"
 #include <cstdio>
 #include <cstring>

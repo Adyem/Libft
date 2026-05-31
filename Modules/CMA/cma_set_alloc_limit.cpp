@@ -1,5 +1,6 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
+#include "../Errno/errno.hpp"
 
 int32_t cma_set_alloc_limit(ft_size_t limit)
 {

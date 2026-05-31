@@ -1,6 +1,6 @@
 #include "encryption.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 

@@ -1,5 +1,5 @@
 #include "basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 int32_t    ft_memcmp(const void *pointer1, const void *pointer2, ft_size_t size)
 {

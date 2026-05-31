@@ -1,12 +1,17 @@
 #include "system_utils.hpp"
 #include "../Basic/basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Template/move.hpp"
 #include <cerrno>
 #include <cstdlib>
 #include <utility>
+#include "../Basic/limits.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static pthread_mutex_t *g_env_mutex = ft_nullptr;
 

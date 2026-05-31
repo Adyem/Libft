@@ -7,11 +7,10 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <new>

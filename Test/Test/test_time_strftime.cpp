@@ -3,7 +3,7 @@
 #include "../../Modules/Time/time.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/Basic/basic.hpp"
-#include "../../Modules/CPP_class/class_nullptr.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

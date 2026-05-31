@@ -2,7 +2,9 @@
 # define PTHREAD_BUFFER_HPP
 
 # include <cstdlib>
-# include "../CPP_class/class_nullptr.hpp"
+# include "../Basic/limits.hpp"
+# include "../Basic/class_nullptr.hpp"
+# include "../Errno/errno.hpp"
 
 template <typename t_type>
 struct pt_buffer

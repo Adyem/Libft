@@ -7,7 +7,7 @@
 #include "game_pathfinding.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../CPP_class/class_string.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/function.hpp"
 #include <stdint.h>

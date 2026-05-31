@@ -1,6 +1,6 @@
 # Storage
 
-The `Storage` module provides `kv_store`, a lifecycle key/value database with JSON, JSON-lines, SQLite when available, and memory-mapped backends. It supports TTL expiration, optional encryption, snapshots, background compaction, metrics, and replication callbacks.
+The `Storage` module provides `kv_store`, a lifecycle key/value database with JSON, JSON-lines, SQLite when available, and memory-mapped backends. It supports TTL expiration, optional encryption, snapshots, background compaction, metrics, and replication callbacks. Its background workers use the separate `Threading` module.
 
 ## Types
 

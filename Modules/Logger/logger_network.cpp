@@ -1,7 +1,7 @@
 #include "logger_internal.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../System_utils/system_utils.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 #include <new>
 

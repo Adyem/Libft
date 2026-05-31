@@ -1,6 +1,7 @@
 # Logger
 
 The `Logger` module provides global and object-oriented logging with levels, file rotation, structured fields, sinks, syslog/remote sinks, redaction, async queues, remote health checks, context stacks, and lock-contention sampling.
+Formatted messages are also recorded into the separate `Sink` module so log history can be inspected without depending on the full logger stack.
 
 ## Types
 
@@ -20,7 +21,7 @@ The `Logger` module provides global and object-oriented logging with levels, fil
 - `ft_log_set_file(...)` - Logs to a file with a maximum size.
 - `ft_log_set_rotation(...)` / `ft_log_get_rotation(...)` - Configure or read log rotation limits.
 - `ft_log_close()` - Closes configured log output.
-- `ft_log_set_alloc_logging(...)` / `ft_log_get_alloc_logging()` - Toggle allocator logging.
+- `ft_log_set_alloc_logging(...)` / `ft_log_get_alloc_logging()` - Toggle allocator logging; the underlying allocator flag is mirrored through `CMA` and its messages are recorded into `Sink`.
 - `ft_log_set_api_logging(...)` / `ft_log_get_api_logging()` - Toggle API logging.
 - `ft_log_set_color(...)` / `ft_log_get_color()` - Toggle colored terminal output.
 - `ft_log_add_sink(...)` / `ft_log_remove_sink(...)` - Manage custom sinks.

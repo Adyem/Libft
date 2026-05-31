@@ -3,6 +3,7 @@
 
 #include "../Errno/errno.hpp"
 #include "../Template/vector.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include "game_behavior_action.hpp"

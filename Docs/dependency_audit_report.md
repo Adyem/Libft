@@ -36,4 +36,5 @@ this section with expected fix versions and owners.
 - Schedule automated execution of `tools/run_dependency_audits.sh` in the continuous integration environment on a weekly cadence.
 - Re-run the audits whenever new third-party components are introduced.
 - Expand the script with additional ecosystem checks as the project grows (e.g., Go `go.mod`, Java `pom.xml`).
-
+- Use `tools/audit_direct_includes.py` when you want to audit C++ translation units for headers that are only pulled in transitively and should be included directly.
+- Pass `--scan-headers` to audit header files as well; this is useful for catching direct-include gaps in public `.hpp` files that otherwise rely on transitive coverage from their `.cpp` companions.

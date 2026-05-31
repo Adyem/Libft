@@ -1,6 +1,8 @@
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
 #include "../Time/time.hpp"
+#include "mutex.hpp"
+#include "recursive_mutex.hpp"
 #include "pthread.hpp"
 #include <pthread.h>
 #include <new>

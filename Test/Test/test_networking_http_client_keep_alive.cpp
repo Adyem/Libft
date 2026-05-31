@@ -3,7 +3,7 @@
 #include "../../Modules/Networking/http_server.hpp"
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
-#include "../../Modules/PThread/thread.hpp"
+#include "../../Modules/Threading/thread.hpp"
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Errno/errno.hpp"
 

@@ -1,5 +1,5 @@
 #include "basic.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 ft_size_t ft_strlcat(char *destination, const char *source, ft_size_t buffer_size)
 {

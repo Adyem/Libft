@@ -1,6 +1,7 @@
 #ifndef GAME_EXPERIENCE_TABLE_HPP
 # define GAME_EXPERIENCE_TABLE_HPP
 
+#include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <cstdint>

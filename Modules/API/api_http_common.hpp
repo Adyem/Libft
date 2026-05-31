@@ -1,8 +1,11 @@
 #ifndef API_HTTP_COMMON_HPP
 #define API_HTTP_COMMON_HPP
 
+#include "../Basic/limits.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../JSon/json.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include <cstddef>
 
 char api_http_to_lower(char character);

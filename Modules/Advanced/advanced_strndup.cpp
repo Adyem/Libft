@@ -1,6 +1,6 @@
 #include "advanced.hpp"
 #include <cstddef>
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
 char *adv_strndup(const char *string, ft_size_t maximum_length)

@@ -24,6 +24,8 @@ ft_bool     filesystem_is_inside_root(const char *root_path,
 int32_t     filesystem_validate_inside_root(const char *root_path,
                 const char *candidate_path);
 ft_bool     filesystem_has_extension(const char *path, const char *extension) noexcept;
+ft_bool     filesystem_path_has_wildcards(const char *path) noexcept;
+ft_bool     filesystem_match_glob(const char *pattern, const char *path) noexcept;
 int32_t     filesystem_temp_path(const char *prefix, const char *extension,
                 ft_string *output);
 int32_t     filesystem_atomic_write(const char *path, const void *data,

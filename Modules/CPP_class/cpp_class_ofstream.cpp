@@ -1,9 +1,12 @@
 #include "class_ofstream.hpp"
-#include "class_nullptr.hpp"
+#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <fcntl.h>
 #include <new>
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t ft_ofstream::_last_error = FT_ERR_SUCCESS;
 
