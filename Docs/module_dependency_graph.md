@@ -19,7 +19,7 @@ These modules sit closest to the shared foundation and are depended on by most h
 | `Basic` | `Errno` |
 | `CMA` | `Basic`, `CPP_class`, `Compatebility`, `Errno`, `PThread`, `Sink`, `System_utils` |
 | `CPP_class` | `Advanced`, `Basic`, `CMA`, `Errno`, `PThread`, `Printf`, `System_utils`, `Template` |
-| `Errno` | `CPP_class`, `Compatebility`, `Printf`, `System_utils` |
+| `Errno` | `Basic`, `Compatebility` |
 | `GetNextLine` | `Basic`, `CMA`, `CPP_class`, `Compatebility`, `Errno`, `PThread`, `Template` |
 | `PThread` | `Basic`, `Compatebility`, `Errno`, `System_utils`, `Time` |
 | `Parser` | `Basic`, `CMA`, `CPP_class`, `Errno`, `PThread`, `Printf`, `System_utils`, `Template` |
@@ -76,6 +76,7 @@ These modules combine the shared lower layers into user-facing features and appl
 These relationships are stated in README files or architecture notes and are useful when reading the graph as a system map.
 
 Note: `Basic --> Errno` is currently a constants-only dependency. `Basic` uses `Errno` for `FT_ERR_*` values, but it does not depend on `Errno` helper APIs or lifecycle utilities.
+`Errno --> Basic` is the current `ft_nullptr` utility dependency, not a `CPP_class` dependency.
 
 | Module | Documented dependencies |
 | --- | --- |
@@ -99,7 +100,6 @@ graph TD
     Advanced --> System_utils
     CMA --> CPP_class
     CPP_class --> PThread
-    Errno --> CPP_class
     PThread --> Time
     Threading --> PThread
     Threading --> Template

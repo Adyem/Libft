@@ -1,11 +1,23 @@
+#include "errno_internal.hpp"
 #include "errno.hpp"
-#include "../Printf/printf.hpp"
+#include "../Basic/class_nullptr.hpp"
 
 void    ft_perror(const char *error_msg, int32_t error_code)
 {
-    if (!error_msg)
-        pf_printf_fd(2, "%s\n", ft_strerror(error_code));
-    else
-        pf_printf_fd(2, "%s: %s\n", error_msg, ft_strerror(error_code));
+    if (error_msg == ft_nullptr)
+    {
+        errno_write_stderr(ft_strerror(error_code));
+        errno_write_stderr("\n");
+        return ;
+    }
+    errno_write_stderr(error_msg);
+    if (error_code == FT_ERR_SUCCESS)
+    {
+        errno_write_stderr("\n");
+        return ;
+    }
+    errno_write_stderr(": ");
+    errno_write_stderr(ft_strerror(error_code));
+    errno_write_stderr("\n");
     return ;
 }
