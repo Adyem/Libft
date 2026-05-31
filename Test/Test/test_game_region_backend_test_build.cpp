@@ -1,0 +1,14 @@
+#include "../test_internal.hpp"
+#include "../../Modules/Game/game_region_backend.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+
+#ifdef LIBFT_TEST_BUILD
+
+FT_TEST(test_game_region_backend_test_build_exposes_both_backends)
+{
+    FT_ASSERT_EQ(sizeof(game_world_region), sizeof(game_world_region_backend));
+    FT_ASSERT_EQ(sizeof(game_voxel_region), sizeof(game_voxel_region_backend));
+    return (1);
+}
+
+#endif

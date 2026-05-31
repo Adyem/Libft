@@ -5,7 +5,7 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../PThread/pthread.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include "../System_utils/system_utils.hpp"
 
 void cma_free(void* memory_pointer)

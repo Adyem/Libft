@@ -27,8 +27,16 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - `TERRAIN_BIOME_ZONE_WIDTH` - Width in world blocks used to group biome zones.
 - `terrain_biome` - Biome selector enum for plains, hills, desert, snow, and mountains.
 - `terrain_biome_profile` - Surface height, variation, and topsoil depth profile for a biome.
+- `terrain_block_metadata` - Registry entry that describes whether a block is solid, transparent, liquid, replaceable, light-emitting, and how hard it is.
 - `terrain_tree_template_block` - Relative block entry used by tree templates.
 - `terrain_tree_template` - Block list wrapper for reusable tree presets.
+- `terrain_get_block_metadata(block_id)` - Looks up the metadata entry for a block id and falls back to air for unknown ids.
+- `terrain_block_is_solid(block_id)` - Returns whether a block is treated as a solid collision block.
+- `terrain_block_is_transparent(block_id)` - Returns whether a block should be treated as visually transparent.
+- `terrain_block_is_liquid(block_id)` - Returns whether a block behaves like a liquid.
+- `terrain_block_is_replaceable(block_id)` - Returns whether a block can be overwritten by tree placement and similar terrain passes.
+- `terrain_block_emits_light(block_id)` - Returns whether a block emits light.
+- `terrain_block_hardness(block_id)` - Returns the block hardness value from the registry.
 - `terrain_get_biome(world_block_x, world_block_z, seed_string)` - Picks a biome for a world block position and optional seed.
 - `terrain_get_biome_profile(biome)` - Returns the height profile for a biome.
 - `terrain_surface_block_for_biome(biome)` - Returns the surface block used for a biome.
@@ -52,8 +60,10 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - Height is driven by smooth noise instead of a flat cutoff, which produces hills and terrain variation within each biome.
 - Biome profiles control baseline elevation, height variation, and topsoil depth, which makes it easy to tune different terrain regions independently.
 - Surface blocks now vary by biome, and post-passes place shrubs plus reusable tree templates on suitable surfaces.
+- The block registry records collision, transparency, replaceability, and hardness so terrain code can make local decisions without hardcoding block ids everywhere.
 - Small oak trees are used for plains and hills, small pine trees are used for snow and mountains, and small cactus templates are used for desert regions.
 - Oak and pine now have both small and large reusable presets, while cactus remains small only.
 - Tree species and variants are selected from the world seed plus the tree's world position, so the same seed reproduces the same trees in the same places.
 - Tree placement is preflight-checked against the target footprint, so generation skips blocked locations instead of overwriting existing blocks.
+- Replaceable blocks do not block tree placement, which lets shrubs and similar decorative terrain be overwritten cleanly.
 - Chunk rendering can now frustum-cull whole chunk bounds before drawing, which is the next layer above greedy meshing.

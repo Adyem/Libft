@@ -4,7 +4,7 @@
 #include <cstring>
 #include "cma_internal.hpp"
 #include "../Compatebility/compatebility_cma_platform.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include "../Errno/errno.hpp"
 
 struct cma_metadata_chunk
@@ -16,8 +16,8 @@ struct cma_metadata_chunk
     cma_metadata_chunk    *next;
 };
 
-static cma_metadata_chunk    *g_cma_metadata_chunks = ft_nullptr;
-static Block    *g_cma_metadata_free_list = ft_nullptr;
+static cma_metadata_chunk    *g_cma_metadata_chunks = nullptr;
+static Block    *g_cma_metadata_free_list = nullptr;
 static ft_size_t    g_cma_metadata_stride = 0;
 static ft_size_t    g_cma_metadata_page_size = 0;
 
@@ -68,11 +68,11 @@ static ft_bool cma_metadata_add_chunk(void)
         chunk_stride_count = 1;
     chunk_size = chunk_stride_count * stride;
     chunk = static_cast<cma_metadata_chunk *>(std::malloc(sizeof(cma_metadata_chunk)));
-    if (chunk == ft_nullptr)
+    if (chunk == nullptr)
         return (FT_FALSE);
     chunk->memory = static_cast<unsigned char *>(
             cmp_cma_memory_map_read_write(chunk_size));
-    if (chunk->memory == ft_nullptr)
+    if (chunk->memory == nullptr)
     {
         std::free(chunk);
         return (FT_FALSE);
@@ -103,7 +103,7 @@ static int32_t cma_metadata_apply_protection(ft_bool make_inaccessible)
     chunk = g_cma_metadata_chunks;
     while (chunk)
     {
-        if (chunk->memory == ft_nullptr)
+        if (chunk->memory == nullptr)
         {
             chunk = chunk->next;
             continue ;
@@ -141,7 +141,7 @@ static int32_t cma_metadata_apply_protection(ft_bool make_inaccessible)
 
 int32_t cma_metadata_make_writable(void)
 {
-    if (g_cma_metadata_chunks == ft_nullptr)
+    if (g_cma_metadata_chunks == nullptr)
     {
         if (!cma_metadata_add_chunk())
         {
@@ -174,7 +174,7 @@ int32_t cma_metadata_make_writable(void)
 
 void cma_metadata_make_inaccessible(void)
 {
-    if (g_cma_metadata_chunks == ft_nullptr)
+    if (g_cma_metadata_chunks == nullptr)
         return ;
     cma_metadata_apply_protection(FT_TRUE);
     return ;
@@ -231,19 +231,19 @@ Block    *cma_metadata_allocate_block(void)
     ft_size_t            stride;
 
     if (cma_metadata_make_writable() != FT_ERR_SUCCESS)
-        return (ft_nullptr);
-    if (g_cma_metadata_free_list != ft_nullptr)
+        return (nullptr);
+    if (g_cma_metadata_free_list != nullptr)
     {
         block = g_cma_metadata_free_list;
         g_cma_metadata_free_list = block->next;
         std::memset(block, 0, sizeof(Block));
         return (block);
     }
-    if (g_cma_metadata_chunks == ft_nullptr)
+    if (g_cma_metadata_chunks == nullptr)
     {
         if (!cma_metadata_add_chunk())
         {
-            return (ft_nullptr);
+            return (nullptr);
         }
     }
     stride = cma_metadata_compute_stride();
@@ -257,32 +257,32 @@ Block    *cma_metadata_allocate_block(void)
             std::memset(block, 0, sizeof(Block));
             return (block);
         }
-        if (chunk->next == ft_nullptr)
+        if (chunk->next == nullptr)
         {
             if (!cma_metadata_add_chunk())
             {
-                return (ft_nullptr);
+                return (nullptr);
             }
             chunk = g_cma_metadata_chunks;
             continue ;
         }
         chunk = chunk->next;
     }
-    return (ft_nullptr);
+    return (nullptr);
 }
 
 void    cma_metadata_release_block(Block *block)
 {
-    if (block == ft_nullptr)
+    if (block == nullptr)
         return ;
     if (cma_metadata_make_writable() != FT_ERR_SUCCESS)
         return ;
     block->next = g_cma_metadata_free_list;
-    block->prev = ft_nullptr;
+    block->prev = nullptr;
     block->size = 0;
-    block->payload = ft_nullptr;
+    block->payload = nullptr;
 #if DEBUG
-    block->debug_base_pointer = ft_nullptr;
+    block->debug_base_pointer = nullptr;
     block->debug_user_size = 0;
 #endif
     g_cma_metadata_free_list = block;
@@ -299,13 +299,13 @@ void    cma_metadata_reset(void)
         cma_metadata_chunk    *next_chunk;
 
         next_chunk = chunk->next;
-        if (chunk->memory != ft_nullptr && chunk->size != 0)
+        if (chunk->memory != nullptr && chunk->size != 0)
             (void)cmp_cma_memory_unmap(chunk->memory, chunk->size);
         std::free(chunk);
         chunk = next_chunk;
     }
-    g_cma_metadata_chunks = ft_nullptr;
-    g_cma_metadata_free_list = ft_nullptr;
+    g_cma_metadata_chunks = nullptr;
+    g_cma_metadata_free_list = nullptr;
     g_cma_metadata_stride = 0;
     g_cma_metadata_page_size = 0;
     return ;

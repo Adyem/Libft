@@ -2,6 +2,7 @@
 
 #ifdef GAME_USE_VOXEL_REGION_BACKEND
 
+#include "voxel.hpp"
 #include "../Errno/errno.hpp"
 
 static void chunk_mesh_reset_bounds(chunk_mesh &mesh) noexcept
@@ -102,7 +103,7 @@ static int32_t chunk_mesh_face_is_visible(const game_voxel_chunk &chunk,
         neighbor_z, &neighbor_block_id);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
-    if (neighbor_block_id == GAME_VOXEL_AIR_BLOCK)
+    if (terrain_block_is_transparent(neighbor_block_id) == FT_TRUE)
         *visible = FT_TRUE;
     else
         *visible = FT_FALSE;

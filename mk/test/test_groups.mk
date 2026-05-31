@@ -77,6 +77,7 @@ FILESYSTEM_TEST_FILES := \
 	Test/test_filesystem_glob.cpp
 
 VOXEL_TEST_FILES := \
+	Test/test_voxel_block_metadata.cpp \
 	Test/test_voxel_generator.cpp \
 	Test/test_voxel_mesh.cpp
 
@@ -91,6 +92,9 @@ CLI_TEST_FILES := \
 	Test/test_cli_get_uint64.cpp \
 	Test/test_cli_help.cpp \
 	Test/test_cli_tree.cpp
+
+APPLICATION_TEST_FILES := \
+	Test/test_application_auth_service.cpp
 
 LOGGER_TEST_FILES := \
 	Test/test_logger.cpp \

@@ -1,7 +1,7 @@
 #include "cma_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/limits.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include "../Errno/errno.hpp"
 #include <cstdlib>
 
@@ -15,7 +15,7 @@ struct cma_arena_allocation_header
     ft_size_t   size;
 };
 
-static cma_arena g_cma_small_arena = {ft_nullptr, 0, 0, FT_FALSE,
+static cma_arena g_cma_small_arena = {nullptr, 0, 0, FT_FALSE,
     FT_CLASS_STATE_UNINITIALISED};
 static ft_size_t g_cma_small_arena_live_count = 0;
 
@@ -35,20 +35,20 @@ static ft_size_t cma_arena_align(ft_size_t value, ft_size_t alignment)
 
 static ft_bool cma_arena_is_initialised(const cma_arena *arena)
 {
-    if (arena == ft_nullptr)
+    if (arena == nullptr)
         return (FT_FALSE);
     if (arena->_initialised_state != FT_CLASS_STATE_INITIALISED)
         return (FT_FALSE);
-    if (arena->buffer == ft_nullptr)
+    if (arena->buffer == nullptr)
         return (FT_FALSE);
     return (FT_TRUE);
 }
 
 static void cma_arena_zero(cma_arena *arena)
 {
-    if (arena == ft_nullptr)
+    if (arena == nullptr)
         return ;
-    arena->buffer = ft_nullptr;
+    arena->buffer = nullptr;
     arena->capacity = 0;
     arena->offset = 0;
     arena->owns_buffer = FT_FALSE;
@@ -60,12 +60,12 @@ static int32_t cma_arena_initialize(cma_arena *arena, ft_size_t capacity)
 {
     uint8_t *buffer;
 
-    if (arena == ft_nullptr || capacity == 0)
+    if (arena == nullptr || capacity == 0)
         return (FT_ERR_INVALID_ARGUMENT);
     if (arena->_initialised_state == FT_CLASS_STATE_INITIALISED)
         return (FT_ERR_ALREADY_INITIALISED);
     buffer = static_cast<uint8_t *>(std::malloc(capacity));
-    if (buffer == ft_nullptr)
+    if (buffer == nullptr)
     {
         cma_arena_zero(arena);
         arena->_initialised_state = FT_CLASS_STATE_DESTROYED;
@@ -92,8 +92,8 @@ static cma_arena_allocation_header *cma_arena_header_from_pointer(
 {
     uint8_t *payload;
 
-    if (memory_pointer == ft_nullptr)
-        return (ft_nullptr);
+    if (memory_pointer == nullptr)
+        return (nullptr);
     payload = static_cast<uint8_t *>(const_cast<void *>(memory_pointer));
     return (reinterpret_cast<cma_arena_allocation_header *>(payload)
         - static_cast<ft_size_t>(1));
@@ -109,7 +109,7 @@ static ft_bool cma_arena_owns_allocation(const void *memory_pointer,
     arena = static_cast<cma_arena *>(user_data);
     if (cma_arena_is_initialised(arena) == FT_FALSE)
         return (FT_FALSE);
-    if (memory_pointer == ft_nullptr)
+    if (memory_pointer == nullptr)
         return (FT_FALSE);
     byte_pointer = static_cast<const uint8_t *>(memory_pointer);
     if (byte_pointer < arena->buffer
@@ -147,31 +147,31 @@ static void *cma_arena_allocate_aligned(ft_size_t alignment, ft_size_t size,
 
     arena = static_cast<cma_arena *>(user_data);
     if (cma_arena_is_initialised(arena) == FT_FALSE)
-        return (ft_nullptr);
+        return (nullptr);
     if (size == 0)
         size = 1;
     if (alignment < 16)
         alignment = 16;
     if (alignment % 16 != 0)
-        return (ft_nullptr);
+        return (nullptr);
     if (size > FT_SYSTEM_SIZE_MAX - sizeof(cma_arena_allocation_header))
-        return (ft_nullptr);
+        return (nullptr);
     base_address = reinterpret_cast<uintptr_t>(arena->buffer);
     payload_address = base_address + arena->offset
         + sizeof(cma_arena_allocation_header);
     payload_address = cma_arena_align(payload_address, alignment);
     if (payload_address < base_address)
-        return (ft_nullptr);
+        return (nullptr);
     payload_offset = payload_address - base_address;
     if (payload_offset == FT_SYSTEM_SIZE_MAX
         || payload_offset < sizeof(cma_arena_allocation_header))
-        return (ft_nullptr);
+        return (nullptr);
     header_offset = payload_offset - sizeof(cma_arena_allocation_header);
     if (payload_offset > FT_SYSTEM_SIZE_MAX - size)
-        return (ft_nullptr);
+        return (nullptr);
     required_offset = payload_offset + size;
     if (required_offset > arena->capacity)
-        return (ft_nullptr);
+        return (nullptr);
     header = reinterpret_cast<cma_arena_allocation_header *>(
             arena->buffer + header_offset);
     header->magic = CMA_ARENA_ALLOCATION_MAGIC;
@@ -202,7 +202,7 @@ static void cma_arena_deallocate(void *memory_pointer, void *user_data)
 
     (void)user_data;
     header = cma_arena_header_from_pointer(memory_pointer);
-    if (header == ft_nullptr)
+    if (header == nullptr)
         return ;
     if (header->magic == CMA_ARENA_ALLOCATION_MAGIC)
         header->magic = 0;
@@ -222,19 +222,19 @@ static void *cma_arena_reallocate(void *memory_pointer, ft_size_t size,
     ft_size_t copy_size;
     void *new_pointer;
 
-    if (memory_pointer == ft_nullptr)
+    if (memory_pointer == nullptr)
         return (cma_arena_allocate(size, user_data));
     if (size == 0)
     {
         cma_arena_deallocate(memory_pointer, user_data);
-        return (ft_nullptr);
+        return (nullptr);
     }
     previous_size = cma_arena_get_allocation_size(memory_pointer, user_data);
     if (previous_size == 0)
-        return (ft_nullptr);
+        return (nullptr);
     new_pointer = cma_arena_allocate(size, user_data);
-    if (new_pointer == ft_nullptr)
-        return (ft_nullptr);
+    if (new_pointer == nullptr)
+        return (nullptr);
     copy_size = previous_size;
     if (copy_size > size)
         copy_size = size;
@@ -271,18 +271,18 @@ void *cma_small_arena_allocate_locked(ft_size_t size)
     void *memory_pointer;
 
     if (cma_small_arena_size_is_supported(size) == FT_FALSE)
-        return (ft_nullptr);
+        return (nullptr);
     if (cma_small_arena_prepare_locked() == FT_FALSE)
-        return (ft_nullptr);
+        return (nullptr);
     memory_pointer = cma_arena_alloc(&g_cma_small_arena, size);
-    if (memory_pointer == ft_nullptr && g_cma_small_arena_live_count == 0)
+    if (memory_pointer == nullptr && g_cma_small_arena_live_count == 0)
     {
         if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
-            return (ft_nullptr);
+            return (nullptr);
         memory_pointer = cma_arena_alloc(&g_cma_small_arena, size);
     }
-    if (memory_pointer == ft_nullptr)
-        return (ft_nullptr);
+    if (memory_pointer == nullptr)
+        return (nullptr);
     g_cma_small_arena_live_count++;
     return (memory_pointer);
 }
@@ -293,22 +293,22 @@ void *cma_small_arena_aligned_allocate_locked(ft_size_t alignment,
     void *memory_pointer;
 
     if (cma_small_arena_size_is_supported(size) == FT_FALSE)
-        return (ft_nullptr);
+        return (nullptr);
     if (alignment > CMA_SMALL_ARENA_MAX_ALLOCATION)
-        return (ft_nullptr);
+        return (nullptr);
     if (cma_small_arena_prepare_locked() == FT_FALSE)
-        return (ft_nullptr);
+        return (nullptr);
     memory_pointer = cma_arena_aligned_alloc(&g_cma_small_arena, alignment,
             size);
-    if (memory_pointer == ft_nullptr && g_cma_small_arena_live_count == 0)
+    if (memory_pointer == nullptr && g_cma_small_arena_live_count == 0)
     {
         if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
-            return (ft_nullptr);
+            return (nullptr);
         memory_pointer = cma_arena_aligned_alloc(&g_cma_small_arena,
                 alignment, size);
     }
-    if (memory_pointer == ft_nullptr)
-        return (ft_nullptr);
+    if (memory_pointer == nullptr)
+        return (nullptr);
     g_cma_small_arena_live_count++;
     return (memory_pointer);
 }
@@ -348,12 +348,12 @@ void *cma_small_arena_reallocate_locked(void *memory_pointer, ft_size_t size)
     void *new_pointer;
 
     if (cma_small_arena_owns_pointer_locked(memory_pointer) == FT_FALSE)
-        return (ft_nullptr);
+        return (nullptr);
     if (size > CMA_SMALL_ARENA_MAX_ALLOCATION)
-        return (ft_nullptr);
+        return (nullptr);
     new_pointer = cma_arena_reallocate(memory_pointer, size,
             &g_cma_small_arena);
-    if (new_pointer == ft_nullptr)
-        return (ft_nullptr);
+    if (new_pointer == nullptr)
+        return (nullptr);
     return (new_pointer);
 }

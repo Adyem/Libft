@@ -33,6 +33,16 @@ struct terrain_biome_profile
     int32_t topsoil_depth;
 };
 
+struct terrain_block_metadata
+{
+    ft_bool solid;
+    ft_bool transparent;
+    ft_bool liquid;
+    ft_bool replaceable;
+    ft_bool light_emitting;
+    uint32_t hardness;
+};
+
 struct terrain_tree_template_block
 {
     int32_t offset_x;
@@ -50,6 +60,14 @@ struct terrain_tree_template
 terrain_biome terrain_get_biome(int32_t world_block_x, int32_t world_block_z,
     const char *seed_string = ft_nullptr) noexcept;
 terrain_biome_profile terrain_get_biome_profile(terrain_biome biome) noexcept;
+const terrain_block_metadata &terrain_get_block_metadata(
+    uint32_t block_id) noexcept;
+ft_bool terrain_block_is_solid(uint32_t block_id) noexcept;
+ft_bool terrain_block_is_transparent(uint32_t block_id) noexcept;
+ft_bool terrain_block_is_liquid(uint32_t block_id) noexcept;
+ft_bool terrain_block_is_replaceable(uint32_t block_id) noexcept;
+ft_bool terrain_block_emits_light(uint32_t block_id) noexcept;
+uint32_t terrain_block_hardness(uint32_t block_id) noexcept;
 uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept;
 ft_bool terrain_biome_has_shrubs(terrain_biome biome) noexcept;
 ft_bool terrain_biome_has_trees(terrain_biome biome) noexcept;

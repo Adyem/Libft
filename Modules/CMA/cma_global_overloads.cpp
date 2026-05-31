@@ -1,14 +1,13 @@
 #include <cstddef>
 #include <new>
 #include "../CMA/CMA.hpp"
-#include "../Basic/class_nullptr.hpp"
 
 void* operator new(std::size_t size)
 {
     void *pointer;
 
     pointer = cma_malloc(size);
-    if (pointer == ft_nullptr)
+    if (pointer == nullptr)
         throw std::bad_alloc();
     return (pointer);
 }
@@ -44,7 +43,7 @@ void* operator new[](std::size_t size)
     void *pointer;
 
     pointer = cma_malloc(size);
-    if (pointer == ft_nullptr)
+    if (pointer == nullptr)
         throw std::bad_alloc();
     return (pointer);
 }
@@ -81,7 +80,7 @@ void* operator new(std::size_t size, std::align_val_t alignment)
 
     pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
             size);
-    if (pointer == ft_nullptr)
+    if (pointer == nullptr)
         throw std::bad_alloc();
     return (pointer);
 }
@@ -117,7 +116,7 @@ void* operator new[](std::size_t size, std::align_val_t alignment)
 
     pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
             size);
-    if (pointer == ft_nullptr)
+    if (pointer == nullptr)
         throw std::bad_alloc();
     return (pointer);
 }

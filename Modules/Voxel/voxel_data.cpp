@@ -13,6 +13,18 @@ static const int32_t TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET = 1;
 static const uint64_t TERRAIN_FEATURE_SHRUB_THRESHOLD = 6U;
 static const uint64_t TERRAIN_FEATURE_TREE_SALT = UINT64_C(0x4F1E2D3C5B6A7980);
 
+static const terrain_block_metadata TERRAIN_BLOCK_REGISTRY[] =
+{
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, 0U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 1U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 2U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 4U},
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, 1U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 3U},
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, 1U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 2U}
+};
+
 static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS[] =
 {
     {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK},
@@ -204,6 +216,34 @@ static const terrain_tree_template TERRAIN_SMALL_CACTUS_TREE_TEMPLATE =
     TERRAIN_SMALL_CACTUS_TREE_BLOCKS,
     static_cast<uint32_t>(sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS)
         / sizeof(TERRAIN_SMALL_CACTUS_TREE_BLOCKS[0]))
+};
+
+static const terrain_tree_template TERRAIN_LARGE_OAK_TREE_TEMPLATE =
+{
+    TERRAIN_LARGE_OAK_TREE_BLOCKS,
+    static_cast<uint32_t>(sizeof(TERRAIN_LARGE_OAK_TREE_BLOCKS)
+        / sizeof(TERRAIN_LARGE_OAK_TREE_BLOCKS[0]))
+};
+
+static const terrain_tree_template TERRAIN_LARGE_OAK_TREE_TEMPLATE_VARIANT_1 =
+{
+    TERRAIN_LARGE_OAK_TREE_BLOCKS_VARIANT_1,
+    static_cast<uint32_t>(sizeof(TERRAIN_LARGE_OAK_TREE_BLOCKS_VARIANT_1)
+        / sizeof(TERRAIN_LARGE_OAK_TREE_BLOCKS_VARIANT_1[0]))
+};
+
+static const terrain_tree_template TERRAIN_LARGE_PINE_TREE_TEMPLATE =
+{
+    TERRAIN_LARGE_PINE_TREE_BLOCKS,
+    static_cast<uint32_t>(sizeof(TERRAIN_LARGE_PINE_TREE_BLOCKS)
+        / sizeof(TERRAIN_LARGE_PINE_TREE_BLOCKS[0]))
+};
+
+static const terrain_tree_template TERRAIN_LARGE_PINE_TREE_TEMPLATE_VARIANT_1 =
+{
+    TERRAIN_LARGE_PINE_TREE_BLOCKS_VARIANT_1,
+    static_cast<uint32_t>(sizeof(TERRAIN_LARGE_PINE_TREE_BLOCKS_VARIANT_1)
+        / sizeof(TERRAIN_LARGE_PINE_TREE_BLOCKS_VARIANT_1[0]))
 };
 
 static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS_VARIANT_1[] =
@@ -514,6 +554,45 @@ static uint32_t terrain_normalise_tree_variant(uint32_t variant_index,
     return (variant_index % variant_count);
 }
 
+const terrain_block_metadata &terrain_get_block_metadata(uint32_t block_id)
+    noexcept
+{
+    if (block_id >= static_cast<uint32_t>(sizeof(TERRAIN_BLOCK_REGISTRY)
+            / sizeof(TERRAIN_BLOCK_REGISTRY[0])))
+        return (TERRAIN_BLOCK_REGISTRY[GAME_VOXEL_AIR_BLOCK]);
+    return (TERRAIN_BLOCK_REGISTRY[block_id]);
+}
+
+ft_bool terrain_block_is_solid(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).solid);
+}
+
+ft_bool terrain_block_is_transparent(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).transparent);
+}
+
+ft_bool terrain_block_is_liquid(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).liquid);
+}
+
+ft_bool terrain_block_is_replaceable(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).replaceable);
+}
+
+ft_bool terrain_block_emits_light(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).light_emitting);
+}
+
+uint32_t terrain_block_hardness(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).hardness);
+}
+
 const terrain_tree_template &terrain_small_oak_tree_template_variant(
     uint32_t variant_index) noexcept
 {
@@ -702,7 +781,7 @@ ft_bool terrain_can_place_tree_template(game_voxel_chunk &chunk,
         if (chunk.read_block(target_x, target_y, target_z, &block_id)
             != FT_ERR_SUCCESS)
             return (FT_FALSE);
-        if (block_id != GAME_VOXEL_AIR_BLOCK)
+        if (terrain_block_is_replaceable(block_id) == FT_FALSE)
             return (FT_FALSE);
         block_index += 1;
     }

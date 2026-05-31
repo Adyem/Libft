@@ -1,7 +1,7 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../Errno/errno.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include <cstdlib>
 
 int32_t cma_checked_free(void* memory_pointer)

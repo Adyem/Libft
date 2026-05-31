@@ -12,4 +12,9 @@ typedef game_world_region game_active_region_backend;
 # define GAME_ACTIVE_REGION_BACKEND_VOXEL 0
 #endif
 
+#ifdef LIBFT_TEST_BUILD
+typedef game_world_region game_world_region_backend;
+typedef game_voxel_region game_voxel_region_backend;
+#endif
+
 #endif

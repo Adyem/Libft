@@ -1,9 +1,8 @@
 #include "CMA.hpp"
-#include "../Basic/class_nullptr.hpp"
 
 void    cma_free_double(char **content)
 {
-    if (content == ft_nullptr)
+    if (content == nullptr)
         return ;
     ft_size_t index = 0;
     ft_size_t pointer_capacity = cma_alloc_size(content);

@@ -1,7 +1,6 @@
 #include "cma_internal.hpp"
-#include "../Basic/class_nullptr.hpp"
 
-Page *page_list = ft_nullptr;
+Page *page_list = nullptr;
 ft_size_t    g_cma_alloc_limit = 0;
 ft_bool    g_cma_alloc_logging = FT_FALSE;
 ft_size_t    g_cma_allocation_count = 0;

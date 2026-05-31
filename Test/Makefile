@@ -58,6 +58,10 @@ CLI:
 	@echo "Building CLI test executable ($(TARGET))"
 	@$(MAKE) FILES="$(CLI_TEST_FILES)" all
 
+Application:
+	@echo "Building Application test executable ($(TARGET))"
+	@$(MAKE) FILES="$(APPLICATION_TEST_FILES)" all
+
 Logger:
 	@echo "Building Logger test executable ($(TARGET))"
 	@$(MAKE) FILES="$(LOGGER_TEST_FILES)" all
@@ -71,6 +75,8 @@ re_get_next_line: fclean get_next_line
 re_Basic: fclean Basic
 
 re_CLI: fclean CLI
+
+re_Application: fclean Application
 
 re_Logger: fclean Logger
 
@@ -137,6 +143,7 @@ $(OBJDIR)/Test/test_cli_config.o $(OBJDIR)/Test/test_cli_get_bool.o \
 $(OBJDIR)/Test/test_cli_get_double.o $(OBJDIR)/Test/test_cli_get_int64.o \
 $(OBJDIR)/Test/test_cli_get_string.o $(OBJDIR)/Test/test_cli_get_uint64.o \
 $(OBJDIR)/Test/test_cli_help.o $(OBJDIR)/Test/test_cli_tree.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"CLI\"
+$(OBJDIR)/Test/test_application_auth_service.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Application\"
 $(OBJDIR)/Test/test_yaml.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"YAML\"
 $(OBJDIR)/Test/test_rng.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"RNG\"
 $(OBJDIR)/Test/test_rng_statistical_quality.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"RNG\"

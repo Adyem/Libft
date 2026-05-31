@@ -1,18 +1,18 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include <cstdlib>
 #include <cstring>
 
-static cma_backend_hooks g_cma_backend_hooks = {ft_nullptr, ft_nullptr,
-    ft_nullptr, ft_nullptr, ft_nullptr, ft_nullptr, ft_nullptr};
+static cma_backend_hooks g_cma_backend_hooks = {nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr};
 static ft_bool g_cma_backend_enabled = FT_FALSE;
 
 static void cma_backend_set_error(int32_t *error_code, int32_t value)
 {
-    if (error_code != ft_nullptr)
+    if (error_code != nullptr)
         *error_code = value;
     return ;
 }
@@ -110,12 +110,12 @@ void *cma_backend_allocate(ft_size_t size, int32_t *error_code)
     if (!g_cma_backend_enabled)
     {
         cma_backend_set_error(error_code, FT_ERR_INVALID_STATE);
-        return (ft_nullptr);
+        return (nullptr);
     }
     if (!g_cma_backend_hooks.allocate)
     {
         cma_backend_set_error(error_code, FT_ERR_INVALID_STATE);
-        return (ft_nullptr);
+        return (nullptr);
     }
     if (size == 0)
         size = 1;
@@ -124,7 +124,7 @@ void *cma_backend_allocate(ft_size_t size, int32_t *error_code)
     if (!memory_pointer)
     {
         cma_backend_set_error(error_code, FT_ERR_NO_MEMORY);
-        return (ft_nullptr);
+        return (nullptr);
     }
     ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
     cma_backend_track_allocation(allocation_size);
@@ -152,7 +152,7 @@ void *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size,
     if (!g_cma_backend_enabled)
     {
         cma_backend_set_error(error_code, FT_ERR_INVALID_STATE);
-        return (ft_nullptr);
+        return (nullptr);
     }
     if (g_cma_backend_hooks.aligned_allocate)
     {
@@ -161,7 +161,7 @@ void *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size,
         if (!memory_pointer)
         {
             cma_backend_set_error(error_code, FT_ERR_NO_MEMORY);
-            return (ft_nullptr);
+            return (nullptr);
         }
         ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
         cma_backend_track_allocation(allocation_size);
@@ -202,14 +202,14 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
     if (!g_cma_backend_enabled)
     {
         cma_backend_set_error(error_code, FT_ERR_INVALID_STATE);
-        return (ft_nullptr);
+        return (nullptr);
     }
     if (!memory_pointer)
         return (cma_backend_allocate(size, error_code));
     if (size == 0)
     {
         cma_backend_set_error(error_code, cma_backend_deallocate(memory_pointer));
-        return (ft_nullptr);
+        return (nullptr);
     }
     ft_size_t previous_size = cma_backend_query_size(memory_pointer);
     if (g_cma_backend_hooks.reallocate)
@@ -219,7 +219,7 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
         if (!new_pointer)
         {
             cma_backend_set_error(error_code, FT_ERR_NO_MEMORY);
-            return (ft_nullptr);
+            return (nullptr);
         }
         ft_size_t new_size_value = cma_backend_query_size(new_pointer);
         cma_backend_update_stats_for_resize(previous_size, new_size_value);
@@ -228,7 +228,7 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
     }
     void *new_pointer = cma_backend_allocate(size, error_code);
     if (!new_pointer)
-        return (ft_nullptr);
+        return (nullptr);
     ft_size_t copy_size = previous_size;
     if (copy_size > size)
         copy_size = size;

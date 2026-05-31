@@ -9,27 +9,27 @@
 #include "cma_internal.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include "../Basic/limits.hpp"
 #include "../System_utils/system_utils.hpp"
 
 void* cma_malloc(ft_size_t size)
 {
-    void *result = ft_nullptr;
+    void *result = nullptr;
     ft_bool lock_acquired = FT_FALSE;
     ft_size_t request_size = size;
     ft_size_t instrumented_size = 0;
     ft_size_t aligned_size = 0;
-    Block *block = ft_nullptr;
+    Block *block = nullptr;
 
     if (size > FT_SYSTEM_SIZE_MAX)
-        return (ft_nullptr);
+        return (nullptr);
     if (size == 0)
         size = 1;
     if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
-        return (ft_nullptr);
+        return (nullptr);
     if (cma_backend_is_enabled())
-        return (cma_backend_allocate(size, ft_nullptr));
+        return (cma_backend_allocate(size, nullptr));
     if (OFFSWITCH == 1)
     {
         result = malloc(size);
@@ -39,14 +39,14 @@ void* cma_malloc(ft_size_t size)
             g_cma_allocation_count++;
         }
         else
-            return (ft_nullptr);
+            return (nullptr);
         cma_record_allocation_log("cma_malloc %lu -> %p", size, result);
         return (result);
     }
     if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
-        return (ft_nullptr);
+        return (nullptr);
     result = cma_small_arena_allocate_locked(size);
-    if (result != ft_nullptr)
+    if (result != nullptr)
     {
         ft_size_t arena_size = cma_small_arena_block_size_locked(result);
 
@@ -64,7 +64,7 @@ void* cma_malloc(ft_size_t size)
     {
         if (lock_acquired)
             cma_unlock_allocator(lock_acquired);
-        return (ft_nullptr);
+        return (nullptr);
     }
     aligned_size = align16(instrumented_size);
     block = find_free_block(aligned_size);
@@ -76,11 +76,11 @@ void* cma_malloc(ft_size_t size)
         {
             if (lock_acquired)
                 cma_unlock_allocator(lock_acquired);
-            return (ft_nullptr);
+            return (nullptr);
         }
         block = page->blocks;
     }
-    cma_validate_block(block, "cma_malloc", ft_nullptr);
+    cma_validate_block(block, "cma_malloc", nullptr);
     if (!cma_block_is_free(block))
     {
         cma_unlock_allocator(lock_acquired);
@@ -88,7 +88,7 @@ void* cma_malloc(ft_size_t size)
         su_sigabrt();
     }
     block = split_block(block, aligned_size);
-    cma_validate_block(block, "cma_malloc split", ft_nullptr);
+    cma_validate_block(block, "cma_malloc split", nullptr);
     cma_mark_block_allocated(block);
 #ifdef LIBFT_TEST_BUILD
     block->leak_ignored = FT_FALSE;

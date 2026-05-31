@@ -58,6 +58,7 @@ The `Game` module contains gameplay-domain lifecycle classes for characters, ite
 - `game_world_replay_session` - Replay capture/playback session.
 - `game_region_definition` - Region metadata and configuration.
 - `game_region_backend` - Backend abstraction for region storage.
+- When `LIBFT_TEST_BUILD` is defined, `game_region_backend` also exposes `game_world_region_backend` and `game_voxel_region_backend` aliases so tests can exercise both concrete region implementations in one build.
 - `game_map3d` - 3D map/grid helper.
 - `game_path_step` and `game_pathfinding` - Path step record and pathfinding system. `game_path_step_test_helper` exposes test-oriented construction/access.
 - `game_voxel_chunk_section`, `game_voxel_chunk`, and `game_voxel_region` - Voxel storage for chunks, sections, and regions when the voxel backend is enabled.

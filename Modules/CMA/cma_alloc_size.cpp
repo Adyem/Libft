@@ -1,5 +1,4 @@
 #include <cstddef>
-#include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "CMA.hpp"
@@ -9,7 +8,7 @@ ft_size_t cma_block_size(const void *memory_pointer)
 {
     ft_size_t block_size = 0;
 
-    if (memory_pointer == ft_nullptr)
+    if (memory_pointer == nullptr)
         return (0);
     if (cma_backend_is_enabled())
         return (0);
@@ -20,10 +19,10 @@ ft_size_t cma_block_size(const void *memory_pointer)
 
 int32_t cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
 {
-    if (block_size == ft_nullptr)
+    if (block_size == nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *block_size = 0;
-    if (memory_pointer == ft_nullptr)
+    if (memory_pointer == nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
         return (cma_backend_checked_block_size(memory_pointer, block_size));
@@ -43,7 +42,7 @@ int32_t cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size
         return (FT_ERR_SUCCESS);
     }
     Block *block = cma_find_block_for_pointer(memory_pointer);
-    if (block == ft_nullptr
+    if (block == nullptr
         || block->magic != MAGIC_NUMBER_ALLOCATED
         || cma_block_is_free(block))
     {

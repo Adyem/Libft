@@ -6,7 +6,7 @@
 # error "This is a libft internal header. Define LIBFT_INTERNAL_HEADERS only when building libft internals."
 #endif
 #include "../Basic/basic.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include "../Compatebility/compatebility_stack_trace.hpp"
 #include <cstdint>
 #include <stdint.h>
@@ -168,7 +168,7 @@ inline ft_size_t cma_debug_allocation_size(ft_size_t requested_size)
 inline void cma_debug_initialize_block(Block *block)
 {
 #ifdef LIBFT_TEST_BUILD
-    if (block != ft_nullptr)
+    if (block != nullptr)
     {
         block->leak_ignored = FT_FALSE;
         block->leak_stack_frame_count = 0;
@@ -197,7 +197,7 @@ inline void cma_debug_release_allocation(Block *block, const char *context,
 inline unsigned char *cma_debug_user_pointer(const Block *block)
 {
     if (!block)
-        return (ft_nullptr);
+        return (nullptr);
     return (block->payload);
 }
 

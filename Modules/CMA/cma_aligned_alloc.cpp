@@ -4,14 +4,14 @@
 #include "../Errno/errno.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../Basic/class_nullptr.hpp"
+
 #include "../System_utils/system_utils.hpp"
 
 static ft_bool normalize_alignment_padding(ft_size_t *padding)
 {
     ft_size_t    aligned_padding;
 
-    if (padding == ft_nullptr)
+    if (padding == nullptr)
         return (FT_FALSE);
     if (*padding == 0)
         return (FT_TRUE);
@@ -29,7 +29,7 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     uintptr_t    remainder;
     ft_size_t    padding;
 
-    if (block == ft_nullptr)
+    if (block == nullptr)
         return (0);
     payload_address = reinterpret_cast<uintptr_t>(block->payload);
     payload_address += cma_debug_guard_size();
@@ -84,7 +84,7 @@ static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignm
         current_block = current_page->blocks;
         while (current_block)
         {
-            cma_validate_block(current_block, "cma_aligned_alloc search", ft_nullptr);
+            cma_validate_block(current_block, "cma_aligned_alloc search", nullptr);
             if (cma_block_is_free(current_block))
             {
                 ft_size_t   local_padding;
@@ -100,7 +100,7 @@ static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignm
         }
         current_page = current_page->next;
     }
-    return (ft_nullptr);
+    return (nullptr);
 }
 
 static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_size,
@@ -115,7 +115,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
 
     local_error_code = FT_ERR_SUCCESS;
     error_target = error_code;
-    if (error_target == ft_nullptr)
+    if (error_target == nullptr)
         error_target = &local_error_code;
     alignment_value = alignment;
     allocation_size = request_size;
@@ -126,7 +126,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
         allocation_size += alignment_value - remainder;
     if (allocation_size == 0)
         allocation_size = alignment_value;
-    pointer = ft_nullptr;
+    pointer = nullptr;
 #ifdef _WIN32
     pointer = std::aligned_alloc(alignment_value, allocation_size);
     if (pointer)
@@ -167,9 +167,9 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
 {
     if ((alignment & (alignment - 1)) != 0
         || alignment < sizeof(void *))
-        return (ft_nullptr);
+        return (nullptr);
     if (alignment > FT_SYSTEM_SIZE_MAX || size > FT_SYSTEM_SIZE_MAX)
-        return (ft_nullptr);
+        return (nullptr);
     ft_size_t request_size;
 
     if (size == 0)
@@ -178,30 +178,30 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         request_size = size;
     ft_size_t backend_aligned_size = align16(request_size);
     if (backend_aligned_size < request_size)
-        return (ft_nullptr);
+        return (nullptr);
     ft_size_t backend_limit_check_size = backend_aligned_size;
     if (alignment > backend_limit_check_size)
         backend_limit_check_size = alignment;
     if (g_cma_alloc_limit != 0 && backend_limit_check_size > g_cma_alloc_limit)
-        return (ft_nullptr);
+        return (nullptr);
     if (cma_backend_is_enabled())
         return (cma_backend_aligned_allocate(alignment,
-                backend_aligned_size, ft_nullptr));
+                backend_aligned_size, nullptr));
     ft_size_t instrumented_size = cma_debug_allocation_size(request_size);
     if (instrumented_size < request_size)
-        return (ft_nullptr);
+        return (nullptr);
     ft_size_t aligned_size = align16(instrumented_size);
     if (aligned_size < instrumented_size)
-        return (ft_nullptr);
+        return (nullptr);
     if (OFFSWITCH == 1)
-        return (aligned_alloc_offswitch(alignment, request_size, ft_nullptr));
+        return (aligned_alloc_offswitch(alignment, request_size, nullptr));
     ft_bool lock_acquired = FT_FALSE;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (ft_nullptr);
+        return (nullptr);
     void *arena_pointer = cma_small_arena_aligned_allocate_locked(alignment,
             request_size);
-    if (arena_pointer != ft_nullptr)
+    if (arena_pointer != nullptr)
     {
         ft_size_t arena_size = cma_small_arena_block_size_locked(arena_pointer);
 
@@ -223,37 +223,37 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         if (page_request == 0)
         {
             cma_unlock_allocator(lock_acquired);
-            return (ft_nullptr);
+            return (nullptr);
         }
         Page *page = create_page(page_request);
         if (!page)
         {
             cma_unlock_allocator(lock_acquired);
-            return (ft_nullptr);
+            return (nullptr);
         }
         block = page->blocks;
-        cma_validate_block(block, "cma_aligned_alloc new page", ft_nullptr);
+        cma_validate_block(block, "cma_aligned_alloc new page", nullptr);
         padding = calculate_alignment_padding(block, alignment);
     }
     if (normalize_alignment_padding(&padding) == FT_FALSE)
     {
         cma_unlock_allocator(lock_acquired);
-        return (ft_nullptr);
+        return (nullptr);
     }
     if (padding > 0)
     {
         Block *prefix_block = split_block(block, padding);
-        cma_validate_block(prefix_block, "cma_aligned_alloc prefix", ft_nullptr);
+        cma_validate_block(prefix_block, "cma_aligned_alloc prefix", nullptr);
         block = prefix_block->next;
         if (!block)
         {
             cma_unlock_allocator(lock_acquired);
-            return (ft_nullptr);
+            return (nullptr);
         }
-        cma_validate_block(block, "cma_aligned_alloc aligned", ft_nullptr);
+        cma_validate_block(block, "cma_aligned_alloc aligned", nullptr);
     }
     block = split_block(block, aligned_size);
-    cma_validate_block(block, "cma_aligned_alloc split", ft_nullptr);
+    cma_validate_block(block, "cma_aligned_alloc split", nullptr);
     if (!cma_block_is_free(block))
     {
         cma_unlock_allocator(lock_acquired);

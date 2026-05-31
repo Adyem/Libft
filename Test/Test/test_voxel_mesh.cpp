@@ -1,3 +1,5 @@
+#define GAME_USE_VOXEL_REGION_BACKEND 1
+
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 

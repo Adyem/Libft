@@ -10,6 +10,11 @@ Each module below has a short purpose statement to clarify its role in the tree.
   It documents typical data flows such as accepting a request, parsing headers, and delivering structured responses reliably.
   API/ exists so other modules can mount services without re-implementing the repeating plumbing and error handling that networking requires.
 
+- `Application/`: Provides the first application-services layer for login and credential workflows on top of storage and encryption.
+  It keeps username/password persistence and verification in one place so later services can add sessions, roles, resets, and audit hooks without redesigning the credential path.
+  The module is intentionally small at first and uses the existing database and encryption primitives instead of inventing a parallel identity stack.
+  Application/ exists as the home for higher-level service orchestration that is specific to FullLibft applications rather than the reusable engine layers.
+
 - `Advanced/`: Collects allocation-returning convenience helpers such as string duplication, string mapping, text hashing, and higher-level UTF helpers.
   The module sits above `Basic/` and reuses the allocator and C++ object layers when results need ownership transfer.
   Advanced/ keeps richer text conversion utilities away from the lower-level primitive layer so callers can choose the API tier they need.

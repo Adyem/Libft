@@ -17,7 +17,7 @@ These modules sit closest to the shared foundation and are depended on by most h
 | --- | --- |
 | `Advanced` | `Basic`, `CPP_class`, `CMA`, `Errno`, `System_utils` |
 | `Basic` | `Errno` |
-| `CMA` | `Basic`, `CPP_class`, `Compatebility`, `Errno`, `PThread`, `Sink`, `System_utils` |
+| `CMA` | `Basic`, `Compatebility`, `Errno`, `PThread`, `Sink`, `System_utils` |
 | `CPP_class` | `Advanced`, `Basic`, `CMA`, `Errno`, `PThread`, `Printf`, `System_utils`, `Template` |
 | `Errno` | `Basic`, `Compatebility` |
 | `GetNextLine` | `Basic`, `CMA`, `CPP_class`, `Compatebility`, `Errno`, `PThread`, `Template` |
@@ -69,6 +69,7 @@ These modules combine the shared lower layers into user-facing features and appl
 | Module | Direct dependencies |
 | --- | --- |
 | `API` | `Basic`, `CMA`, `CPP_class`, `Compression`, `Encryption`, `Errno`, `JSon`, `Logger`, `Networking`, `Observability`, `PThread`, `Printf`, `System_utils`, `Template`, `Time`, `Threading` |
+| `Application` | `Basic`, `CMA`, `Encoding`, `Encryption`, `Errno`, `Storage` |
 | `CSV` | `CMA`, `CPP_class`, `Errno`, `File`, `Parser`, `Template` |
 | `Game` | `Basic`, `Buffer`, `CMA`, `CPP_class`, `Errno`, `File`, `Geometry`, `JSon`, `Networking`, `Observability`, `PThread`, `Printf`, `Storage`, `System_utils`, `Template`, `Time` |
 
@@ -98,7 +99,6 @@ graph TD
     Advanced --> CMA
     Advanced --> Errno
     Advanced --> System_utils
-    CMA --> CPP_class
     CPP_class --> PThread
     PThread --> Time
     Threading --> PThread
@@ -107,6 +107,9 @@ graph TD
     Time --> Compatebility
     Configuration[Config] --> File
     API --> Threading
+    Application --> Storage
+    Application --> Encryption
+    Application --> Encoding
     File --> Threading
     Filesystem --> File
     Filesystem --> Time
@@ -119,6 +122,12 @@ graph TD
     API --> Networking
     API --> Observability
     API --> Time
+    Application --> Basic
+    Application --> CMA
+    Application --> Errno
+    Application --> Encoding
+    Application --> Encryption
+    Application --> Storage
     Observability --> Threading
     Logger --> Sink
     CMA --> Sink

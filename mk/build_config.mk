@@ -63,6 +63,7 @@ SUBDIRS := Modules/Basic \
            Modules/Networking \
            Modules/URI \
            Modules/API \
+           Modules/Application \
            Modules/Observability \
            Modules/Sink \
            Modules/Logger \
@@ -108,6 +109,7 @@ LIB_BASES := \
   Modules/Networking/networking \
   Modules/URI/uri \
   Modules/API/API \
+  Modules/Application/Application \
   Modules/Observability/Observability \
   Modules/Sink/Sink \
   Modules/Logger/Logger \

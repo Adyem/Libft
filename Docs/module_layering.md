@@ -74,6 +74,7 @@ These modules are the most domain-specific surfaces built from the shared layers
 
 - `Game`
 - `Voxel`
+- `Application`
 - `DUMB`
 - `CLI`
 
