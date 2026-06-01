@@ -21,6 +21,7 @@ class application_settings
         ft_bool _manual_login_approval_enabled;
         int32_t _login_signal_output_file_descriptor;
         int64_t _login_signal_token_timeout_seconds;
+        int64_t _login_session_timeout_seconds;
 
         int32_t initialize_from_copy(const application_settings &other) noexcept;
         int32_t initialize_from_move(application_settings &other) noexcept;
@@ -58,6 +59,8 @@ class application_settings
         int32_t get_login_signal_output_file_descriptor(int32_t &file_descriptor) const noexcept;
         int32_t set_login_signal_token_timeout_seconds(int64_t timeout_seconds) noexcept;
         int32_t get_login_signal_token_timeout_seconds(int64_t &timeout_seconds) const noexcept;
+        int32_t set_login_session_timeout_seconds(int64_t timeout_seconds) noexcept;
+        int32_t get_login_session_timeout_seconds(int64_t &timeout_seconds) const noexcept;
 };
 
 #endif

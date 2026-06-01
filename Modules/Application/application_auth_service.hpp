@@ -8,6 +8,7 @@
 #include "../Storage/kv_store.hpp"
 #include "../Encryption/encryption.hpp"
 #include "../Encoding/encoding.hpp"
+#include "../Template/vector.hpp"
 
 class application_auth_service
 {
@@ -28,15 +29,31 @@ class application_auth_service
         int32_t build_user_approval_requirement_key(const char *username, ft_string &key_output) const noexcept;
         int32_t build_manual_login_approval_setting_key(ft_string &key_output) const noexcept;
         int32_t build_login_signal_one_time_password_key(const char *username, ft_string &key_output) const noexcept;
+        int32_t build_login_session_key(const char *username, ft_string &key_output) const noexcept;
+        int32_t build_user_stat_key(const char *key_prefix, const char *username, ft_string &key_output) const noexcept;
+        int32_t store_integer_value(const char *key, int64_t value) const noexcept;
+        int32_t load_integer_value(const char *key, int64_t &value, ft_bool *found = ft_nullptr) const noexcept;
+        int32_t store_string_value(const char *key, const char *value) const noexcept;
+        int32_t load_string_value(const char *key, ft_string &value, ft_bool *found = ft_nullptr) const noexcept;
         int32_t generate_salt_hex(ft_string &salt_hex) const noexcept;
         int32_t generate_login_signal_one_time_password(ft_string &one_time_password_output) const noexcept;
+        int32_t generate_login_session_token(ft_string &session_token_output) const noexcept;
         int32_t build_login_signal_one_time_password_hash(const char *one_time_password, ft_string &hash_hex) const noexcept;
         int32_t write_login_signal_one_time_password(const char *username, const char *one_time_password) const noexcept;
+        int32_t build_login_session_value(const char *session_token, const char *client_ip_address,
+            int64_t login_timestamp, ft_string &value_output) const noexcept;
+        int32_t parse_login_session_value(const char *value, ft_string &session_token_output,
+            ft_string &client_ip_address_output, int64_t &login_timestamp_output) const noexcept;
         int32_t build_password_hash(const char *password, const ft_string &salt_hex, ft_string &hash_hex) const noexcept;
         int32_t build_credential_record(const char *password, ft_string &record_output) const noexcept;
         int32_t parse_credential_record(const char *record_string, ft_string &salt_hex, ft_string &hash_hex) const noexcept;
         int32_t load_manual_login_approval_enabled(ft_bool &enabled) const noexcept;
         int32_t load_user_login_approval_required(const char *username, ft_bool &required) const noexcept;
+        int32_t record_login_failure(const char *username, const char *client_ip_address) noexcept;
+        int32_t record_login_success(const char *username, const char *client_ip_address) noexcept;
+        int32_t get_session_username_from_key(const char *session_key, ft_string &username_output) const noexcept;
+        int32_t load_user_session_value(const char *username, ft_string &session_value, ft_bool *found = ft_nullptr) const noexcept;
+        int32_t collect_logged_in_usernames(ft_vector<ft_string> &usernames) const noexcept;
 
     public:
         application_auth_service() noexcept;
@@ -71,6 +88,25 @@ class application_auth_service
         int32_t get_login_signal_output_file_descriptor(int32_t &file_descriptor) const noexcept;
         int32_t set_login_signal_token_timeout_seconds(int64_t timeout_seconds) noexcept;
         int32_t get_login_signal_token_timeout_seconds(int64_t &timeout_seconds) const noexcept;
+        int32_t set_login_session_timeout_seconds(int64_t timeout_seconds) noexcept;
+        int32_t get_login_session_timeout_seconds(int64_t &timeout_seconds) const noexcept;
+        int32_t login_user(const char *username, const char *password, const char *client_ip_address,
+            ft_string &session_token_output, ft_bool &authenticated) noexcept;
+        int32_t login_with_signal(const char *username, const char *one_time_password, const char *client_ip_address,
+            ft_string &session_token_output, ft_bool &authenticated) noexcept;
+        int32_t begin_user_session(const char *username, const char *client_ip_address,
+            ft_string &session_token_output) noexcept;
+        int32_t end_user_session(const char *username) noexcept;
+        int32_t is_user_logged_in(const char *username, ft_bool &logged_in) const noexcept;
+        int32_t get_logged_in_usernames(ft_vector<ft_string> &usernames) const noexcept;
+        int32_t get_failed_login_count(const char *username, int64_t &failed_login_count) const noexcept;
+        int32_t get_consecutive_failed_login_count(const char *username, int64_t &failed_login_count) const noexcept;
+        int32_t get_last_failed_login_ip_address(const char *username, ft_string &client_ip_address) const noexcept;
+        int32_t get_last_failed_login_timestamp(const char *username, int64_t &timestamp) const noexcept;
+        int32_t get_last_successful_login_ip_address(const char *username, ft_string &client_ip_address) const noexcept;
+        int32_t get_last_successful_login_timestamp(const char *username, int64_t &timestamp) const noexcept;
+        int32_t get_login_session_client_ip_address(const char *username, ft_string &client_ip_address) const noexcept;
+        int32_t get_login_session_timestamp(const char *username, int64_t &timestamp) const noexcept;
         int32_t request_login_signal_one_time_password(const char *username) noexcept;
         int32_t authenticate_login_signal_one_time_password(const char *username, const char *one_time_password, ft_bool &authenticated) noexcept;
 };

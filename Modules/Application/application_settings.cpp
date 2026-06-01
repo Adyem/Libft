@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 static const int64_t application_settings_default_login_signal_token_timeout_seconds = 300LL;
+static const int64_t application_settings_default_login_session_timeout_seconds = 28800LL;
 
 application_settings::application_settings() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
@@ -14,6 +15,7 @@ application_settings::application_settings() noexcept
     , _manual_login_approval_enabled(FT_FALSE)
     , _login_signal_output_file_descriptor(STDOUT_FILENO)
     , _login_signal_token_timeout_seconds(application_settings_default_login_signal_token_timeout_seconds)
+    , _login_session_timeout_seconds(application_settings_default_login_session_timeout_seconds)
 {
     return ;
 }
@@ -51,6 +53,7 @@ int32_t application_settings::destroy() noexcept
     this->_manual_login_approval_enabled = FT_FALSE;
     this->_login_signal_output_file_descriptor = STDOUT_FILENO;
     this->_login_signal_token_timeout_seconds = application_settings_default_login_signal_token_timeout_seconds;
+    this->_login_session_timeout_seconds = application_settings_default_login_session_timeout_seconds;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (error_code);
 }
@@ -104,6 +107,7 @@ int32_t application_settings::initialize_from_copy(const application_settings &o
     this->_manual_login_approval_enabled = other._manual_login_approval_enabled;
     this->_login_signal_output_file_descriptor = other._login_signal_output_file_descriptor;
     this->_login_signal_token_timeout_seconds = other._login_signal_token_timeout_seconds;
+    this->_login_session_timeout_seconds = other._login_session_timeout_seconds;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -158,6 +162,7 @@ int32_t application_settings::initialize() noexcept
     this->_manual_login_approval_enabled = FT_FALSE;
     this->_login_signal_output_file_descriptor = STDOUT_FILENO;
     this->_login_signal_token_timeout_seconds = application_settings_default_login_signal_token_timeout_seconds;
+    this->_login_session_timeout_seconds = application_settings_default_login_session_timeout_seconds;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -350,5 +355,21 @@ int32_t application_settings::get_login_signal_token_timeout_seconds(int64_t &ti
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_settings::get_login_signal_token_timeout_seconds");
     timeout_seconds = this->_login_signal_token_timeout_seconds;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_settings::set_login_session_timeout_seconds(int64_t timeout_seconds) noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_settings::set_login_session_timeout_seconds");
+    if (timeout_seconds <= 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->_login_session_timeout_seconds = timeout_seconds;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_settings::get_login_session_timeout_seconds(int64_t &timeout_seconds) const noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_settings::get_login_session_timeout_seconds");
+    timeout_seconds = this->_login_session_timeout_seconds;
     return (FT_ERR_SUCCESS);
 }

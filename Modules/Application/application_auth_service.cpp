@@ -3,7 +3,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Time/time.hpp"
 #include <unistd.h>
 
 static const char *application_auth_user_key_prefix = "application/auth/users/";
@@ -11,6 +13,13 @@ static const char *application_auth_login_approval_key_prefix = "application/aut
 static const char *application_auth_login_approval_requirement_key_prefix = "application/auth/settings/approval_required/";
 static const char *application_auth_manual_login_approval_setting_key = "application/auth/settings/manual_login_approval";
 static const char *application_auth_login_signal_one_time_password_key_prefix = "application/auth/login_signal/";
+static const char *application_auth_login_session_key_prefix = "application/auth/sessions/";
+static const char *application_auth_failed_login_count_key_prefix = "application/auth/audit/failed_count/";
+static const char *application_auth_consecutive_failed_login_count_key_prefix = "application/auth/audit/consecutive_failed_count/";
+static const char *application_auth_last_failed_login_ip_key_prefix = "application/auth/audit/last_failed_ip/";
+static const char *application_auth_last_failed_login_timestamp_key_prefix = "application/auth/audit/last_failed_timestamp/";
+static const char *application_auth_last_successful_login_ip_key_prefix = "application/auth/audit/last_successful_ip/";
+static const char *application_auth_last_successful_login_timestamp_key_prefix = "application/auth/audit/last_successful_timestamp/";
 static const ft_size_t application_auth_salt_length = 16U;
 static const ft_size_t application_auth_digest_length = 32U;
 static const ft_size_t application_auth_login_signal_one_time_password_length = 16U;
@@ -43,6 +52,32 @@ static int32_t application_auth_build_database_path(const char *database_root_pa
     (void)joined_path->destroy();
     delete joined_path;
     return (error_code);
+}
+
+static int32_t application_auth_write_integer_value(int64_t value, ft_string &output)
+{
+    char value_buffer[64];
+    int32_t written_length;
+
+    written_length = pf_snprintf(value_buffer, sizeof(value_buffer), "%ld", static_cast<long>(value));
+    if (written_length < 0 || written_length >= static_cast<int32_t>(sizeof(value_buffer)))
+        return (FT_ERR_INVALID_OPERATION);
+    (void)output.destroy();
+    return (output.initialize(value_buffer));
+}
+
+static int32_t application_auth_parse_integer_value(const char *value_string, int64_t &value)
+{
+    char *end_pointer;
+    int64_t parsed_value;
+
+    if (value_string == ft_nullptr || value_string[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    parsed_value = ft_strtol(value_string, &end_pointer, 10);
+    if (end_pointer == value_string || *end_pointer != '\0')
+        return (FT_ERR_CONFIGURATION);
+    value = parsed_value;
+    return (FT_ERR_SUCCESS);
 }
 
 static int32_t application_auth_write_descriptor(int32_t file_descriptor, const char *buffer, ft_size_t length)
@@ -333,6 +368,91 @@ int32_t application_auth_service::build_login_signal_one_time_password_key(const
     return (FT_ERR_SUCCESS);
 }
 
+int32_t application_auth_service::build_login_session_key(const char *username, ft_string &key_output) const noexcept
+{
+    return (this->build_user_stat_key(application_auth_login_session_key_prefix, username, key_output));
+}
+
+int32_t application_auth_service::build_user_stat_key(const char *key_prefix, const char *username, ft_string &key_output) const noexcept
+{
+    int32_t error_code;
+
+    if (key_prefix == ft_nullptr || key_prefix[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (username == ft_nullptr || username[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    (void)key_output.destroy();
+    error_code = key_output.initialize(key_prefix);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = key_output.append(username);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)key_output.destroy();
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::store_integer_value(const char *key, int64_t value) const noexcept
+{
+    ft_string value_string;
+    int32_t error_code;
+
+    error_code = application_auth_write_integer_value(value, value_string);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (this->_credential_store.kv_set(key, value_string.c_str()));
+}
+
+int32_t application_auth_service::load_integer_value(const char *key, int64_t &value, ft_bool *found) const noexcept
+{
+    const char *value_string;
+    int32_t error_code;
+
+    value_string = this->_credential_store.kv_get(key);
+    if (value_string == ft_nullptr)
+    {
+        if (found != ft_nullptr)
+            *found = FT_FALSE;
+        value = 0;
+        return (FT_ERR_SUCCESS);
+    }
+    if (found != ft_nullptr)
+        *found = FT_TRUE;
+    error_code = application_auth_parse_integer_value(value_string, value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::store_string_value(const char *key, const char *value) const noexcept
+{
+    if (value == ft_nullptr)
+        value = "";
+    return (this->_credential_store.kv_set(key, value));
+}
+
+int32_t application_auth_service::load_string_value(const char *key, ft_string &value, ft_bool *found) const noexcept
+{
+    const char *value_string;
+    int32_t error_code;
+
+    value_string = this->_credential_store.kv_get(key);
+    if (value_string == ft_nullptr)
+    {
+        if (found != ft_nullptr)
+            *found = FT_FALSE;
+        (void)value.destroy();
+        return (FT_ERR_SUCCESS);
+    }
+    if (found != ft_nullptr)
+        *found = FT_TRUE;
+    (void)value.destroy();
+    error_code = value.initialize(value_string);
+    return (error_code);
+}
+
 int32_t application_auth_service::generate_salt_hex(ft_string &salt_hex) const noexcept
 {
     uint8_t salt_buffer[application_auth_salt_length];
@@ -355,6 +475,17 @@ int32_t application_auth_service::generate_login_signal_one_time_password(ft_str
     return (application_auth_encode_hex(password_buffer, application_auth_login_signal_one_time_password_length, one_time_password_output));
 }
 
+int32_t application_auth_service::generate_login_session_token(ft_string &session_token_output) const noexcept
+{
+    uint8_t token_buffer[application_auth_login_signal_one_time_password_length];
+    int32_t error_code;
+
+    error_code = encryption_fill_secure_buffer(token_buffer, application_auth_login_signal_one_time_password_length);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (application_auth_encode_hex(token_buffer, application_auth_login_signal_one_time_password_length, session_token_output));
+}
+
 int32_t application_auth_service::build_login_signal_one_time_password_hash(const char *one_time_password, ft_string &hash_hex) const noexcept
 {
     uint8_t digest_buffer[application_auth_digest_length];
@@ -363,6 +494,141 @@ int32_t application_auth_service::build_login_signal_one_time_password_hash(cons
         return (FT_ERR_INVALID_ARGUMENT);
     sha256_hash(one_time_password, ft_strlen(one_time_password), digest_buffer);
     return (application_auth_encode_hex(digest_buffer, application_auth_digest_length, hash_hex));
+}
+
+int32_t application_auth_service::build_login_session_value(const char *session_token, const char *client_ip_address,
+    int64_t login_timestamp, ft_string &value_output) const noexcept
+{
+    ft_string timestamp_string;
+    int32_t error_code;
+
+    if (session_token == ft_nullptr || session_token[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    error_code = application_auth_write_integer_value(login_timestamp, timestamp_string);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    (void)value_output.destroy();
+    error_code = value_output.initialize(session_token);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = value_output.append('|');
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)value_output.destroy();
+        return (error_code);
+    }
+    if (client_ip_address != ft_nullptr && client_ip_address[0] != '\0')
+        error_code = value_output.append(client_ip_address);
+    else
+        error_code = FT_ERR_SUCCESS;
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)value_output.destroy();
+        return (error_code);
+    }
+    error_code = value_output.append('|');
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)value_output.destroy();
+        return (error_code);
+    }
+    error_code = value_output.append(timestamp_string);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)value_output.destroy();
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::parse_login_session_value(const char *value, ft_string &session_token_output,
+    ft_string &client_ip_address_output, int64_t &login_timestamp_output) const noexcept
+{
+    ft_string session_value;
+    ft_string *session_token;
+    ft_string *client_ip_address;
+    ft_string *timestamp_string;
+    const char *first_separator;
+    const char *second_separator;
+    int32_t error_code;
+
+    if (value == ft_nullptr || value[0] == '\0')
+        return (FT_ERR_CONFIGURATION);
+    error_code = session_value.initialize(value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    first_separator = ft_strchr(session_value.c_str(), '|');
+    if (first_separator == ft_nullptr)
+    {
+        (void)session_value.destroy();
+        return (FT_ERR_CONFIGURATION);
+    }
+    second_separator = ft_strchr(first_separator + 1, '|');
+    if (second_separator == ft_nullptr || second_separator <= first_separator)
+    {
+        (void)session_value.destroy();
+        return (FT_ERR_CONFIGURATION);
+    }
+    session_token = session_value.substr(0, static_cast<ft_size_t>(first_separator - session_value.c_str()));
+    if (session_token == ft_nullptr)
+    {
+        (void)session_value.destroy();
+        return (FT_ERR_NO_MEMORY);
+    }
+    client_ip_address = session_value.substr(static_cast<ft_size_t>(first_separator - session_value.c_str()) + 1,
+        static_cast<ft_size_t>(second_separator - first_separator - 1));
+    if (client_ip_address == ft_nullptr)
+    {
+        (void)session_token->destroy();
+        delete session_token;
+        (void)session_value.destroy();
+        return (FT_ERR_NO_MEMORY);
+    }
+    timestamp_string = session_value.substr(static_cast<ft_size_t>(second_separator - session_value.c_str()) + 1);
+    if (timestamp_string == ft_nullptr)
+    {
+        (void)session_token->destroy();
+        delete session_token;
+        (void)client_ip_address->destroy();
+        delete client_ip_address;
+        (void)session_value.destroy();
+        return (FT_ERR_NO_MEMORY);
+    }
+    (void)session_token_output.destroy();
+    error_code = session_token_output.initialize(*session_token);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)session_token->destroy();
+        delete session_token;
+        (void)client_ip_address->destroy();
+        delete client_ip_address;
+        (void)timestamp_string->destroy();
+        delete timestamp_string;
+        (void)session_value.destroy();
+        return (error_code);
+    }
+    (void)client_ip_address_output.destroy();
+    error_code = client_ip_address_output.initialize(*client_ip_address);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)session_token->destroy();
+        delete session_token;
+        (void)client_ip_address->destroy();
+        delete client_ip_address;
+        (void)timestamp_string->destroy();
+        delete timestamp_string;
+        (void)session_value.destroy();
+        return (error_code);
+    }
+    error_code = application_auth_parse_integer_value(timestamp_string->c_str(), login_timestamp_output);
+    (void)session_token->destroy();
+    delete session_token;
+    (void)client_ip_address->destroy();
+    delete client_ip_address;
+    (void)timestamp_string->destroy();
+    delete timestamp_string;
+    (void)session_value.destroy();
+    return (error_code);
 }
 
 int32_t application_auth_service::write_login_signal_one_time_password(const char *username, const char *one_time_password) const noexcept
@@ -545,6 +811,158 @@ int32_t application_auth_service::load_user_login_approval_required(const char *
     return (FT_ERR_CONFIGURATION);
 }
 
+int32_t application_auth_service::get_session_username_from_key(const char *session_key, ft_string &username_output) const noexcept
+{
+    ft_size_t prefix_length;
+    int32_t error_code;
+
+    if (session_key == ft_nullptr || session_key[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    prefix_length = ft_strlen_size_t(application_auth_login_session_key_prefix);
+    if (ft_strncmp(session_key, application_auth_login_session_key_prefix, prefix_length) != FT_ERR_SUCCESS)
+        return (FT_ERR_CONFIGURATION);
+    if (session_key[prefix_length] == '\0')
+        return (FT_ERR_CONFIGURATION);
+    (void)username_output.destroy();
+    error_code = username_output.initialize(session_key + prefix_length);
+    return (error_code);
+}
+
+int32_t application_auth_service::load_user_session_value(const char *username, ft_string &session_value, ft_bool *found) const noexcept
+{
+    ft_string session_key;
+    const char *stored_session_value;
+    int32_t error_code;
+
+    error_code = this->build_login_session_key(username, session_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    stored_session_value = this->_credential_store.kv_get(session_key.c_str());
+    if (stored_session_value == ft_nullptr)
+    {
+        if (found != ft_nullptr)
+            *found = FT_FALSE;
+        (void)session_value.destroy();
+        return (FT_ERR_SUCCESS);
+    }
+    if (found != ft_nullptr)
+        *found = FT_TRUE;
+    (void)session_value.destroy();
+    error_code = session_value.initialize(stored_session_value);
+    return (error_code);
+}
+
+int32_t application_auth_service::collect_logged_in_usernames(ft_vector<ft_string> &usernames) const noexcept
+{
+    ft_vector<kv_store_snapshot_entry> snapshot_entries;
+    ft_size_t prefix_length;
+    ft_size_t entry_index;
+    int32_t error_code;
+
+    error_code = snapshot_entries.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->_credential_store.export_snapshot(snapshot_entries);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    prefix_length = ft_strlen_size_t(application_auth_login_session_key_prefix);
+    usernames.clear();
+    entry_index = 0;
+    while (entry_index < snapshot_entries.size())
+    {
+        const kv_store_snapshot_entry &snapshot_entry = snapshot_entries[entry_index];
+
+        if (snapshot_entry.key.size() > prefix_length
+            && ft_strncmp(snapshot_entry.key.c_str(), application_auth_login_session_key_prefix, prefix_length) == FT_ERR_SUCCESS)
+        {
+            ft_string username_output;
+            error_code = username_output.initialize(snapshot_entry.key.c_str() + prefix_length);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            error_code = usernames.push_back(ft_move(username_output));
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+        }
+        entry_index++;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::record_login_failure(const char *username, const char *client_ip_address) noexcept
+{
+    ft_string failed_count_key;
+    ft_string consecutive_failed_count_key;
+    ft_string last_failed_ip_key;
+    ft_string last_failed_timestamp_key;
+    int64_t failed_count;
+    int64_t consecutive_failed_count;
+    int64_t current_time;
+    int32_t error_code;
+
+    error_code = this->build_user_stat_key(application_auth_failed_login_count_key_prefix, username, failed_count_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_consecutive_failed_login_count_key_prefix, username, consecutive_failed_count_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_failed_login_ip_key_prefix, username, last_failed_ip_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_failed_login_timestamp_key_prefix, username, last_failed_timestamp_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->load_integer_value(failed_count_key.c_str(), failed_count, ft_nullptr);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->load_integer_value(consecutive_failed_count_key.c_str(), consecutive_failed_count, ft_nullptr);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    failed_count++;
+    consecutive_failed_count++;
+    error_code = this->store_integer_value(failed_count_key.c_str(), failed_count);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->store_integer_value(consecutive_failed_count_key.c_str(), consecutive_failed_count);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->store_string_value(last_failed_ip_key.c_str(), client_ip_address);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    current_time = time_now();
+    if (current_time < 0)
+        return (FT_ERR_IO);
+    return (this->store_integer_value(last_failed_timestamp_key.c_str(), current_time));
+}
+
+int32_t application_auth_service::record_login_success(const char *username, const char *client_ip_address) noexcept
+{
+    ft_string consecutive_failed_count_key;
+    ft_string last_successful_login_ip_key;
+    ft_string last_successful_login_timestamp_key;
+    int64_t current_time;
+    int32_t error_code;
+
+    error_code = this->build_user_stat_key(application_auth_consecutive_failed_login_count_key_prefix, username, consecutive_failed_count_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_successful_login_ip_key_prefix, username, last_successful_login_ip_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_successful_login_timestamp_key_prefix, username, last_successful_login_timestamp_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->store_integer_value(consecutive_failed_count_key.c_str(), 0);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->store_string_value(last_successful_login_ip_key.c_str(), client_ip_address);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    current_time = time_now();
+    if (current_time < 0)
+        return (FT_ERR_IO);
+    return (this->store_integer_value(last_successful_login_timestamp_key.c_str(), current_time));
+}
+
 int32_t application_auth_service::register_user(const char *username, const char *password) noexcept
 {
     ft_string user_key;
@@ -655,6 +1073,13 @@ int32_t application_auth_service::remove_user(const char *username) noexcept
     ft_string approval_key;
     ft_string approval_requirement_key;
     ft_string login_signal_key;
+    ft_string login_session_key;
+    ft_string failed_count_key;
+    ft_string consecutive_failed_count_key;
+    ft_string last_failed_ip_key;
+    ft_string last_failed_timestamp_key;
+    ft_string last_successful_login_ip_key;
+    ft_string last_successful_login_timestamp_key;
     int32_t error_code;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::remove_user");
@@ -670,9 +1095,37 @@ int32_t application_auth_service::remove_user(const char *username) noexcept
     error_code = this->build_login_signal_one_time_password_key(username, login_signal_key);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
+    error_code = this->build_login_session_key(username, login_session_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_failed_login_count_key_prefix, username, failed_count_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_consecutive_failed_login_count_key_prefix, username, consecutive_failed_count_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_failed_login_ip_key_prefix, username, last_failed_ip_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_failed_login_timestamp_key_prefix, username, last_failed_timestamp_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_successful_login_ip_key_prefix, username, last_successful_login_ip_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_user_stat_key(application_auth_last_successful_login_timestamp_key_prefix, username, last_successful_login_timestamp_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     (void)this->_credential_store.kv_delete(approval_key.c_str());
     (void)this->_credential_store.kv_delete(approval_requirement_key.c_str());
     (void)this->_credential_store.kv_delete(login_signal_key.c_str());
+    (void)this->_credential_store.kv_delete(login_session_key.c_str());
+    (void)this->_credential_store.kv_delete(failed_count_key.c_str());
+    (void)this->_credential_store.kv_delete(consecutive_failed_count_key.c_str());
+    (void)this->_credential_store.kv_delete(last_failed_ip_key.c_str());
+    (void)this->_credential_store.kv_delete(last_failed_timestamp_key.c_str());
+    (void)this->_credential_store.kv_delete(last_successful_login_ip_key.c_str());
+    (void)this->_credential_store.kv_delete(last_successful_login_timestamp_key.c_str());
     return (this->_credential_store.kv_delete(user_key.c_str()));
 }
 
@@ -833,6 +1286,334 @@ int32_t application_auth_service::get_login_signal_token_timeout_seconds(int64_t
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_login_signal_token_timeout_seconds");
     return (this->_settings.get_login_signal_token_timeout_seconds(timeout_seconds));
+}
+
+int32_t application_auth_service::set_login_session_timeout_seconds(int64_t timeout_seconds) noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::set_login_session_timeout_seconds");
+    return (this->_settings.set_login_session_timeout_seconds(timeout_seconds));
+}
+
+int32_t application_auth_service::get_login_session_timeout_seconds(int64_t &timeout_seconds) const noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_login_session_timeout_seconds");
+    return (this->_settings.get_login_session_timeout_seconds(timeout_seconds));
+}
+
+int32_t application_auth_service::begin_user_session(const char *username, const char *client_ip_address, ft_string &session_token_output) noexcept
+{
+    ft_string user_key;
+    ft_string session_key;
+    ft_string session_token;
+    ft_string session_value;
+    ft_bool user_exists;
+    int64_t session_timeout_seconds;
+    int64_t current_time;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::begin_user_session");
+    error_code = this->build_user_key(username, user_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    user_exists = FT_FALSE;
+    if (this->_credential_store.kv_get(user_key.c_str()) != ft_nullptr)
+        user_exists = FT_TRUE;
+    if (user_exists == FT_FALSE)
+        return (FT_ERR_NOT_FOUND);
+    error_code = this->generate_login_session_token(session_token);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    (void)session_token_output.destroy();
+    error_code = session_token_output.initialize(session_token);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    current_time = time_now();
+    if (current_time < 0)
+    {
+        (void)session_token_output.destroy();
+        return (FT_ERR_IO);
+    }
+    error_code = this->build_login_session_key(username, session_key);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)session_token_output.destroy();
+        return (error_code);
+    }
+    error_code = this->build_login_session_value(session_token_output.c_str(), client_ip_address, current_time, session_value);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)session_token_output.destroy();
+        return (error_code);
+    }
+    error_code = this->_settings.get_login_session_timeout_seconds(session_timeout_seconds);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)session_token_output.destroy();
+        return (error_code);
+    }
+    error_code = this->_credential_store.kv_set(session_key.c_str(), session_value.c_str(), session_timeout_seconds);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)session_token_output.destroy();
+        return (error_code);
+    }
+    error_code = this->record_login_success(username, client_ip_address);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->_credential_store.kv_delete(session_key.c_str());
+        (void)session_token_output.destroy();
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::end_user_session(const char *username) noexcept
+{
+    ft_string session_key;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::end_user_session");
+    error_code = this->build_login_session_key(username, session_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->_credential_store.kv_delete(session_key.c_str());
+    if (error_code == FT_ERR_NOT_FOUND)
+        return (FT_ERR_SUCCESS);
+    return (error_code);
+}
+
+int32_t application_auth_service::is_user_logged_in(const char *username, ft_bool &logged_in) const noexcept
+{
+    ft_string session_key;
+    const char *session_value;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::is_user_logged_in");
+    error_code = this->build_login_session_key(username, session_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    session_value = this->_credential_store.kv_get(session_key.c_str());
+    if (session_value == ft_nullptr)
+        logged_in = FT_FALSE;
+    else
+        logged_in = FT_TRUE;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_logged_in_usernames(ft_vector<ft_string> &usernames) const noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_logged_in_usernames");
+    return (this->collect_logged_in_usernames(usernames));
+}
+
+int32_t application_auth_service::get_failed_login_count(const char *username, int64_t &failed_login_count) const noexcept
+{
+    ft_string failed_login_count_key;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_failed_login_count");
+    error_code = this->build_user_stat_key(application_auth_failed_login_count_key_prefix, username, failed_login_count_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    found = FT_FALSE;
+    error_code = this->load_integer_value(failed_login_count_key.c_str(), failed_login_count, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_consecutive_failed_login_count(const char *username, int64_t &failed_login_count) const noexcept
+{
+    ft_string consecutive_failed_login_count_key;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_consecutive_failed_login_count");
+    error_code = this->build_user_stat_key(application_auth_consecutive_failed_login_count_key_prefix, username, consecutive_failed_login_count_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    found = FT_FALSE;
+    error_code = this->load_integer_value(consecutive_failed_login_count_key.c_str(), failed_login_count, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_last_failed_login_ip_address(const char *username, ft_string &client_ip_address) const noexcept
+{
+    ft_string last_failed_ip_key;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_last_failed_login_ip_address");
+    error_code = this->build_user_stat_key(application_auth_last_failed_login_ip_key_prefix, username, last_failed_ip_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    found = FT_FALSE;
+    error_code = this->load_string_value(last_failed_ip_key.c_str(), client_ip_address, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (found == FT_FALSE)
+        return (FT_ERR_NOT_FOUND);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_last_failed_login_timestamp(const char *username, int64_t &timestamp) const noexcept
+{
+    ft_string last_failed_timestamp_key;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_last_failed_login_timestamp");
+    error_code = this->build_user_stat_key(application_auth_last_failed_login_timestamp_key_prefix, username, last_failed_timestamp_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    found = FT_FALSE;
+    error_code = this->load_integer_value(last_failed_timestamp_key.c_str(), timestamp, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (found == FT_FALSE)
+        return (FT_ERR_NOT_FOUND);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_last_successful_login_ip_address(const char *username, ft_string &client_ip_address) const noexcept
+{
+    ft_string last_successful_ip_key;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_last_successful_login_ip_address");
+    error_code = this->build_user_stat_key(application_auth_last_successful_login_ip_key_prefix, username, last_successful_ip_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    found = FT_FALSE;
+    error_code = this->load_string_value(last_successful_ip_key.c_str(), client_ip_address, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (found == FT_FALSE)
+        return (FT_ERR_NOT_FOUND);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_last_successful_login_timestamp(const char *username, int64_t &timestamp) const noexcept
+{
+    ft_string last_successful_timestamp_key;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_last_successful_login_timestamp");
+    error_code = this->build_user_stat_key(application_auth_last_successful_login_timestamp_key_prefix, username, last_successful_timestamp_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    found = FT_FALSE;
+    error_code = this->load_integer_value(last_successful_timestamp_key.c_str(), timestamp, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (found == FT_FALSE)
+        return (FT_ERR_NOT_FOUND);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_login_session_client_ip_address(const char *username, ft_string &client_ip_address) const noexcept
+{
+    ft_string session_value;
+    ft_string session_token;
+    int64_t login_timestamp;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_login_session_client_ip_address");
+    found = FT_FALSE;
+    error_code = this->load_user_session_value(username, session_value, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (found == FT_FALSE)
+        return (FT_ERR_NOT_FOUND);
+    error_code = this->parse_login_session_value(session_value.c_str(), session_token, client_ip_address, login_timestamp);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::get_login_session_timestamp(const char *username, int64_t &timestamp) const noexcept
+{
+    ft_string session_value;
+    ft_string session_token;
+    ft_string client_ip_address;
+    ft_bool found;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_login_session_timestamp");
+    found = FT_FALSE;
+    error_code = this->load_user_session_value(username, session_value, &found);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (found == FT_FALSE)
+        return (FT_ERR_NOT_FOUND);
+    error_code = this->parse_login_session_value(session_value.c_str(), session_token, client_ip_address, timestamp);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::login_user(const char *username, const char *password, const char *client_ip_address,
+    ft_string &session_token_output, ft_bool &authenticated) noexcept
+{
+    int32_t error_code;
+    ft_bool user_exists;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::login_user");
+    authenticated = FT_FALSE;
+    error_code = this->authenticate_user(username, password, authenticated);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        if (error_code == FT_ERR_INVALID_ARGUMENT)
+            return (error_code);
+        user_exists = FT_FALSE;
+        if (this->user_exists(username, user_exists) != FT_ERR_SUCCESS || user_exists == FT_FALSE)
+            return (error_code);
+        if (this->record_login_failure(username, client_ip_address) != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_OPERATION);
+        return (error_code);
+    }
+    error_code = this->begin_user_session(username, client_ip_address, session_token_output);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        authenticated = FT_FALSE;
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::login_with_signal(const char *username, const char *one_time_password, const char *client_ip_address,
+    ft_string &session_token_output, ft_bool &authenticated) noexcept
+{
+    int32_t error_code;
+    ft_bool user_exists;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::login_with_signal");
+    authenticated = FT_FALSE;
+    error_code = this->authenticate_login_signal_one_time_password(username, one_time_password, authenticated);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        if (error_code == FT_ERR_INVALID_ARGUMENT)
+            return (error_code);
+        user_exists = FT_FALSE;
+        if (this->user_exists(username, user_exists) != FT_ERR_SUCCESS || user_exists == FT_FALSE)
+            return (error_code);
+        if (this->record_login_failure(username, client_ip_address) != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_OPERATION);
+        return (error_code);
+    }
+    error_code = this->begin_user_session(username, client_ip_address, session_token_output);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        authenticated = FT_FALSE;
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t application_auth_service::request_login_signal_one_time_password(const char *username) noexcept

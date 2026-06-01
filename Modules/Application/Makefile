@@ -6,7 +6,7 @@ DEBUG_TARGET := Application_debug.a
 
 SRCS := application_settings.cpp application_auth_service.cpp
 
-HEADERS := application.hpp application_settings.hpp application_auth_service.hpp ../CPP_class/class_string.hpp ../Filesystem/filesystem.hpp ../System_utils/system_utils.hpp
+HEADERS := application.hpp application_settings.hpp application_auth_service.hpp ../CPP_class/class_string.hpp ../Filesystem/filesystem.hpp ../System_utils/system_utils.hpp ../Time/time.hpp ../Printf/printf.hpp ../Template/vector.hpp
 
 all: $(TARGET)
 

@@ -14,6 +14,7 @@ service-specific behavior without forcing higher layers to reassemble the same p
 - `set_manual_login_approval_enabled(...)` / `is_manual_login_approval_enabled(...)` - Stores the global manual-approval override.
 - `set_login_signal_output_file_descriptor(...)` / `get_login_signal_output_file_descriptor(...)` - Stores the descriptor used to print login-signal one-time passwords.
 - `set_login_signal_token_timeout_seconds(...)` / `get_login_signal_token_timeout_seconds(...)` - Stores the login-signal one-time-password lifetime.
+- `set_login_session_timeout_seconds(...)` / `get_login_session_timeout_seconds(...)` - Stores the default login-session lifetime.
 - The settings object is intended to be configured before sharing across threads; callers must synchronize concurrent reads and writes themselves.
 
 ## `application_auth_service`
@@ -33,6 +34,14 @@ service-specific behavior without forcing higher layers to reassemble the same p
 - `is_login_approved(...)` - Reads whether a user currently has manual approval.
 - `set_login_signal_output_file_descriptor(...)` / `get_login_signal_output_file_descriptor(...)` - Selects the file descriptor used to print login-signal one-time passwords.
 - `set_login_signal_token_timeout_seconds(...)` / `get_login_signal_token_timeout_seconds(...)` - Configures the one-time-password lifetime.
+- `set_login_session_timeout_seconds(...)` / `get_login_session_timeout_seconds(...)` - Configures the login-session lifetime.
+- `login_user(...)` / `login_with_signal(...)` - Authenticates a user, records login audit metadata, and opens an active session token on success.
+- `begin_user_session(...)` / `end_user_session(...)` - Creates or clears the stored active session record for one user.
+- `is_user_logged_in(...)` / `get_logged_in_usernames(...)` - Queries active session state. `get_logged_in_usernames(...)` expects an already initialized `ft_vector<ft_string>` out-parameter.
+- `get_failed_login_count(...)` / `get_consecutive_failed_login_count(...)` - Reports total and consecutive failed-login counters.
+- `get_last_failed_login_ip_address(...)` / `get_last_failed_login_timestamp(...)` - Reports the most recent failed-login source and time.
+- `get_last_successful_login_ip_address(...)` / `get_last_successful_login_timestamp(...)` - Reports the most recent successful-login source and time.
+- `get_login_session_client_ip_address(...)` / `get_login_session_timestamp(...)` - Reads the current active-session source IP and creation time for a user.
 - `request_login_signal_one_time_password(...)` - Generates a one-time password for a user, stores a hashed copy with TTL, and prints the cleartext token to the configured descriptor.
 - `authenticate_login_signal_one_time_password(...)` - Validates and consumes a previously issued one-time password.
 
@@ -56,6 +65,8 @@ service-specific behavior without forcing higher layers to reassemble the same p
 | `application_settings::get_login_signal_output_file_descriptor(file_descriptor)` | Reads the descriptor used when printing issued one-time passwords. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
 | `application_settings::set_login_signal_token_timeout_seconds(timeout_seconds)` | Stores the one-time-password lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
 | `application_settings::get_login_signal_token_timeout_seconds(timeout_seconds)` | Reads the one-time-password lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
+| `application_settings::set_login_session_timeout_seconds(timeout_seconds)` | Stores the default login-session lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
+| `application_settings::get_login_session_timeout_seconds(timeout_seconds)` | Reads the default login-session lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
 | `initialize(settings)` | Boots the auth service from an already configured settings object. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_INVALID_PATH`, `FT_ERR_IO`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage or encoding helpers |
 | `initialize(database_root_path, database_relative_path, encryption_key, enable_encryption, encryption_algorithm_name)` | Requires a non-empty root path and a non-empty relative database path. Rejects absolute paths and traversal outside the root. Creates the store path with `Filesystem::filesystem_safe_join_path(...)` before opening `kv_store`. The selected algorithm name is passed through to the credential store so the instance can be reconfigured independently. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_INVALID_PATH`, `FT_ERR_IO`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage or encoding helpers |
 | `register_user(username, password)` | Fails if the user already exists. Stores a salted SHA-256 credential record. | `FT_ERR_SUCCESS`, `FT_ERR_ALREADY_EXISTS`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_*` from storage or encoding helpers |
@@ -73,8 +84,24 @@ service-specific behavior without forcing higher layers to reassemble the same p
 | `get_login_signal_output_file_descriptor(file_descriptor)` | Reads the current descriptor used for one-time-password output. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
 | `set_login_signal_token_timeout_seconds(timeout_seconds)` | Updates the one-time-password lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
 | `get_login_signal_token_timeout_seconds(timeout_seconds)` | Reads the current one-time-password lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
+| `set_login_session_timeout_seconds(timeout_seconds)` | Updates the default session lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
+| `get_login_session_timeout_seconds(timeout_seconds)` | Reads the default session lifetime in seconds. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT` |
 | `request_login_signal_one_time_password(username)` | Generates a random one-time password, stores only its hash with TTL, and prints the cleartext token to the configured descriptor. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_IO`, `FT_ERR_*` from storage, encoding, or secure-random helpers |
 | `authenticate_login_signal_one_time_password(username, one_time_password, authenticated)` | Verifies the token hash, consumes the stored token on success, and sets `authenticated` accordingly. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_PERMISSION_DENIED`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage or encoding helpers |
+| `login_user(username, password, client_ip_address, session_token_output, authenticated)` | Verifies the password, records login audit metadata, and creates a new active session token on success. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_PERMISSION_DENIED`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_IO`, `FT_ERR_*` from storage, encoding, or time helpers |
+| `login_with_signal(username, one_time_password, client_ip_address, session_token_output, authenticated)` | Validates a one-time password, records login audit metadata, and creates a new active session token on success. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_PERMISSION_DENIED`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_IO`, `FT_ERR_*` from storage, encoding, or time helpers |
+| `begin_user_session(username, client_ip_address, session_token_output)` | Creates or replaces the active session record for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_IO`, `FT_ERR_*` from storage, encoding, or time helpers |
+| `end_user_session(username)` | Deletes the active session record for one user. Missing sessions are treated as success. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_*` from storage helpers |
+| `is_user_logged_in(username, logged_in)` | Reports whether an active session exists for one user. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_*` from storage helpers |
+| `get_logged_in_usernames(usernames)` | Collects all usernames that currently have active session records. The caller must initialize `usernames` before calling. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_INVALID_STATE`, `FT_ERR_*` from storage or vector helpers |
+| `get_failed_login_count(username, failed_login_count)` | Reads the cumulative failed-login counter for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage helpers |
+| `get_consecutive_failed_login_count(username, failed_login_count)` | Reads the consecutive failed-login counter for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage helpers |
+| `get_last_failed_login_ip_address(username, client_ip_address)` | Reads the most recent failed-login source IP for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage helpers |
+| `get_last_failed_login_timestamp(username, timestamp)` | Reads the most recent failed-login timestamp for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage, encoding, or time helpers |
+| `get_last_successful_login_ip_address(username, client_ip_address)` | Reads the most recent successful-login source IP for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage helpers |
+| `get_last_successful_login_timestamp(username, timestamp)` | Reads the most recent successful-login timestamp for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage, encoding, or time helpers |
+| `get_login_session_client_ip_address(username, client_ip_address)` | Reads the client IP stored with the active session for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage helpers |
+| `get_login_session_timestamp(username, timestamp)` | Reads the creation timestamp stored with the active session for one user. | `FT_ERR_SUCCESS`, `FT_ERR_NOT_FOUND`, `FT_ERR_INVALID_ARGUMENT`, `FT_ERR_CONFIGURATION`, `FT_ERR_*` from storage, encoding, or time helpers |
 
 ## Storage format
 
@@ -97,6 +124,13 @@ roles, password resets, audit logging, or external identity providers.
 - `application/auth/settings/approval_required/<username>` - Per-user approval requirement flag.
 - `application/auth/settings/manual_login_approval` - Global approval override flag.
 - `application/auth/login_signal/<username>` - Hashed one-time password issued for a login signal.
+- `application/auth/sessions/<username>` - Active session token, client IP address, and login timestamp for a logged-in user.
+- `application/auth/audit/failed_count/<username>` - Cumulative failed-login counter.
+- `application/auth/audit/consecutive_failed_count/<username>` - Consecutive failed-login counter.
+- `application/auth/audit/last_failed_ip/<username>` - Most recent failed-login source IP.
+- `application/auth/audit/last_failed_timestamp/<username>` - Most recent failed-login timestamp.
+- `application/auth/audit/last_successful_ip/<username>` - Most recent successful-login source IP.
+- `application/auth/audit/last_successful_timestamp/<username>` - Most recent successful-login timestamp.
 
 ## Approval Rules
 
@@ -113,3 +147,11 @@ roles, password resets, audit logging, or external identity providers.
 - The default one-time-password timeout is 300 seconds, which is roughly 5 minutes.
 - A token is consumed after a successful authentication attempt.
 - The configured file descriptor and timeout live in `application_settings` so they can be adjusted in one place.
+
+## Session and Audit Data
+
+- Successful logins create a per-user session record with a random session token, the client IP address, and a creation timestamp.
+- The default session timeout is 28,800 seconds, which is 8 hours.
+- Failed logins update cumulative and consecutive failure counters.
+- Failed and successful login attempts store the most recent source IP and timestamp for later inspection.
+- `get_logged_in_usernames(...)` returns the current active-session usernames using the caller-provided vector container.
