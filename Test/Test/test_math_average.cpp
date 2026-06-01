@@ -27,14 +27,16 @@ FT_TEST(test_math_average_odd_ints_truncate)
 
 FT_TEST(test_math_average_long_values)
 {
+    const int64_t positive_low = 2147483646LL;
+    const int64_t positive_high = 2147483647LL;
+    const int64_t negative_high = -2147483647LL;
+    const int64_t negative_low = -2147483647LL - 1LL;
     int64_t result;
 
-    result = math_average(static_cast<int64_t>(2147483646),
-            static_cast<int64_t>(2147483647));
-    FT_ASSERT_EQ(static_cast<int64_t>(2147483646), result);
-    result = math_average(static_cast<int64_t>(-2147483647),
-            -2147483648);
-    FT_ASSERT_EQ(static_cast<int64_t>(-2147483647), result);
+    result = math_average(positive_low, positive_high);
+    FT_ASSERT_EQ(positive_low, result);
+    result = math_average(negative_high, negative_low);
+    FT_ASSERT_EQ(negative_high, result);
     return (1);
 }
 

@@ -613,8 +613,7 @@ int32_t ft_http_server::run_once_locked()
             should_keep_alive = FT_FALSE;
         if (is_post && !body.empty())
         {
-            std::snprintf(buffer, sizeof(buffer), "%" PRIu64,
-                body.size());
+            std::snprintf(buffer, sizeof(buffer), "%zu", body.size());
             response.append("HTTP/1.1 200 OK\r\nContent-Length: ");
             response.append(buffer);
             if (should_keep_alive != FT_FALSE)
