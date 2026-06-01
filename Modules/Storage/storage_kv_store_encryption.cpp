@@ -186,15 +186,21 @@ int32_t kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plai
     return (FT_ERR_SUCCESS);
 }
 
-int32_t kv_store::configure_encryption(const char *encryption_key, ft_bool enable_encryption)
+int32_t kv_store::configure_encryption(const char *encryption_key, ft_bool enable_encryption,
+    const char *encryption_algorithm_name)
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "kv_store::configure_encryption");
+    if (encryption_algorithm_name == ft_nullptr)
+        encryption_algorithm_name = "aes-128-ecb-base64";
     if (enable_encryption)
     {
         if (encryption_key == ft_nullptr)
             return (FT_ERR_INVALID_ARGUMENT);
         this->_encryption_key = encryption_key;
         if (this->_encryption_key.size() != 16)
+            return (FT_ERR_INVALID_ARGUMENT);
+        this->_encryption_algorithm_name = encryption_algorithm_name;
+        if (this->_encryption_algorithm_name.size() == 0)
             return (FT_ERR_INVALID_ARGUMENT);
         this->_encryption_enabled = FT_TRUE;
         return (FT_ERR_SUCCESS);
@@ -204,5 +210,6 @@ int32_t kv_store::configure_encryption(const char *encryption_key, ft_bool enabl
         this->_encryption_key.clear();
     else
         this->_encryption_key = encryption_key;
+    this->_encryption_algorithm_name = encryption_algorithm_name;
     return (FT_ERR_SUCCESS);
 }

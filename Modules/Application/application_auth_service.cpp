@@ -3,13 +3,18 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <unistd.h>
 
 static const char *application_auth_user_key_prefix = "application/auth/users/";
 static const char *application_auth_login_approval_key_prefix = "application/auth/approvals/";
 static const char *application_auth_login_approval_requirement_key_prefix = "application/auth/settings/approval_required/";
 static const char *application_auth_manual_login_approval_setting_key = "application/auth/settings/manual_login_approval";
+static const char *application_auth_login_signal_one_time_password_key_prefix = "application/auth/login_signal/";
 static const ft_size_t application_auth_salt_length = 16U;
 static const ft_size_t application_auth_digest_length = 32U;
+static const ft_size_t application_auth_login_signal_one_time_password_length = 16U;
+static const int64_t application_auth_login_signal_default_timeout_seconds = 300LL;
 
 static int32_t application_auth_encode_hex(const uint8_t *buffer, ft_size_t buffer_size, ft_string &output)
 {
@@ -40,15 +45,23 @@ static int32_t application_auth_build_database_path(const char *database_root_pa
     return (error_code);
 }
 
+static int32_t application_auth_write_descriptor(int32_t file_descriptor, const char *buffer, ft_size_t length)
+{
+    int64_t write_result;
+
+    write_result = su_write(file_descriptor, buffer, length);
+    if (write_result < 0)
+        return (FT_ERR_IO);
+    if (write_result != static_cast<int64_t>(length))
+        return (FT_ERR_IO);
+    return (FT_ERR_SUCCESS);
+}
+
 application_auth_service::application_auth_service() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _credential_store()
-    , _database_root_path()
-    , _database_relative_path()
+    , _settings()
     , _database_path()
-    , _encryption_key()
-    , _encryption_enabled(FT_FALSE)
-    , _manual_login_approval_enabled(FT_FALSE)
 {
     return ;
 }
@@ -74,71 +87,89 @@ int32_t application_auth_service::destroy() noexcept
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
         return (FT_ERR_SUCCESS);
     error_code = this->_credential_store.destroy();
-    if (this->_database_root_path.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
-        error_code = FT_ERR_INVALID_OPERATION;
-    if (this->_database_relative_path.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
+    if (this->_settings.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_INVALID_OPERATION;
     if (this->_database_path.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_INVALID_OPERATION;
-    if (this->_encryption_key.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
-        error_code = FT_ERR_INVALID_OPERATION;
-    this->_encryption_enabled = FT_FALSE;
-    this->_manual_login_approval_enabled = FT_FALSE;
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (error_code);
 }
 
-int32_t application_auth_service::initialize(const char *database_root_path, const char *database_relative_path, const char *encryption_key, ft_bool enable_encryption) noexcept
+int32_t application_auth_service::initialize(const application_settings &settings) noexcept
 {
+    ft_string database_root_path;
+    ft_string database_relative_path;
+    ft_string encryption_key;
+    ft_string encryption_algorithm_name;
     int32_t error_code;
+    ft_bool encryption_enabled;
+    ft_bool manual_login_approval_enabled;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "application_auth_service::initialize", "initialize called on initialised instance");
-    if (database_root_path == ft_nullptr || database_root_path[0] == '\0')
-        return (FT_ERR_INVALID_ARGUMENT);
-    if (database_relative_path == ft_nullptr || database_relative_path[0] == '\0')
-        return (FT_ERR_INVALID_ARGUMENT);
-    if (enable_encryption == FT_TRUE && (encryption_key == ft_nullptr || encryption_key[0] == '\0'))
-        return (FT_ERR_INVALID_ARGUMENT);
-    error_code = this->_database_root_path.initialize(database_root_path);
+    if (settings.is_initialised() != FT_TRUE)
+        errno_abort_lifecycle(FT_CLASS_STATE_UNINITIALISED, "application_auth_service::initialize(settings)", "source settings are uninitialised");
+    error_code = settings.get_database_root_path(database_root_path);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
-    error_code = this->_database_relative_path.initialize(database_relative_path);
+    error_code = settings.get_database_relative_path(database_relative_path);
     if (error_code != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
         return (error_code);
-    }
-    error_code = application_auth_build_database_path(database_root_path, database_relative_path, this->_database_path);
+    error_code = settings.get_encryption_key(encryption_key);
     if (error_code != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
         return (error_code);
-    }
-    if (encryption_key == ft_nullptr)
-        error_code = this->_encryption_key.initialize("");
-    else
-        error_code = this->_encryption_key.initialize(encryption_key);
+    error_code = settings.get_encryption_algorithm_name(encryption_algorithm_name);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = settings.is_encryption_enabled(encryption_enabled);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = application_auth_build_database_path(database_root_path.c_str(), database_relative_path.c_str(), this->_database_path);
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         return (error_code);
     }
-    error_code = this->_credential_store.initialize(this->_database_path.c_str(), encryption_key, enable_encryption);
+    error_code = this->_credential_store.initialize(this->_database_path.c_str(),
+        encryption_key.c_str(), encryption_enabled, encryption_algorithm_name.c_str());
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         return (error_code);
     }
-    error_code = this->load_manual_login_approval_enabled(this->_manual_login_approval_enabled);
+    error_code = this->_settings.initialize(settings);
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         return (error_code);
     }
-    this->_encryption_enabled = enable_encryption;
+    error_code = this->load_manual_login_approval_enabled(manual_login_approval_enabled);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (error_code);
+    }
+    error_code = this->_settings.set_manual_login_approval_enabled(manual_login_approval_enabled);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (error_code);
+    }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::initialize(const char *database_root_path, const char *database_relative_path,
+    const char *encryption_key, ft_bool enable_encryption, const char *encryption_algorithm_name) noexcept
+{
+    application_settings settings;
+    int32_t error_code;
+
+    error_code = settings.initialize(database_root_path, database_relative_path, encryption_key,
+        enable_encryption, encryption_algorithm_name);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (this->initialize(settings));
 }
 
 int32_t application_auth_service::initialize_from_copy(const application_auth_service &other) noexcept
@@ -162,25 +193,13 @@ int32_t application_auth_service::initialize_from_copy(const application_auth_se
         if (error_code != FT_ERR_SUCCESS)
             return (error_code);
     }
+    error_code = this->_settings.initialize(other._settings);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (error_code);
+    }
     error_code = this->_database_path.initialize(other._database_path);
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        return (error_code);
-    }
-    error_code = this->_database_root_path.initialize(other._database_root_path);
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        return (error_code);
-    }
-    error_code = this->_database_relative_path.initialize(other._database_relative_path);
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        return (error_code);
-    }
-    error_code = this->_encryption_key.initialize(other._encryption_key);
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -192,8 +211,6 @@ int32_t application_auth_service::initialize_from_copy(const application_auth_se
         (void)this->destroy();
         return (error_code);
     }
-    this->_manual_login_approval_enabled = other._manual_login_approval_enabled;
-    this->_encryption_enabled = other._encryption_enabled;
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -297,6 +314,25 @@ int32_t application_auth_service::build_manual_login_approval_setting_key(ft_str
     return (FT_ERR_SUCCESS);
 }
 
+int32_t application_auth_service::build_login_signal_one_time_password_key(const char *username, ft_string &key_output) const noexcept
+{
+    int32_t error_code;
+
+    if (username == ft_nullptr || username[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    (void)key_output.destroy();
+    error_code = key_output.initialize(application_auth_login_signal_one_time_password_key_prefix);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = key_output.append(username);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)key_output.destroy();
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
 int32_t application_auth_service::generate_salt_hex(ft_string &salt_hex) const noexcept
 {
     uint8_t salt_buffer[application_auth_salt_length];
@@ -306,6 +342,71 @@ int32_t application_auth_service::generate_salt_hex(ft_string &salt_hex) const n
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     return (application_auth_encode_hex(salt_buffer, application_auth_salt_length, salt_hex));
+}
+
+int32_t application_auth_service::generate_login_signal_one_time_password(ft_string &one_time_password_output) const noexcept
+{
+    uint8_t password_buffer[application_auth_login_signal_one_time_password_length];
+    int32_t error_code;
+
+    error_code = encryption_fill_secure_buffer(password_buffer, application_auth_login_signal_one_time_password_length);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    return (application_auth_encode_hex(password_buffer, application_auth_login_signal_one_time_password_length, one_time_password_output));
+}
+
+int32_t application_auth_service::build_login_signal_one_time_password_hash(const char *one_time_password, ft_string &hash_hex) const noexcept
+{
+    uint8_t digest_buffer[application_auth_digest_length];
+
+    if (one_time_password == ft_nullptr || one_time_password[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    sha256_hash(one_time_password, ft_strlen(one_time_password), digest_buffer);
+    return (application_auth_encode_hex(digest_buffer, application_auth_digest_length, hash_hex));
+}
+
+int32_t application_auth_service::write_login_signal_one_time_password(const char *username, const char *one_time_password) const noexcept
+{
+    ft_string message;
+    int32_t error_code;
+
+    if (username == ft_nullptr || one_time_password == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    error_code = message.initialize(username);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = message.append(": ");
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)message.destroy();
+        return (error_code);
+    }
+    error_code = message.append(one_time_password);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)message.destroy();
+        return (error_code);
+    }
+    error_code = message.append('\n');
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)message.destroy();
+        return (error_code);
+    }
+    {
+        int32_t login_signal_output_file_descriptor;
+
+        error_code = this->_settings.get_login_signal_output_file_descriptor(login_signal_output_file_descriptor);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            (void)message.destroy();
+            return (error_code);
+        }
+        error_code = application_auth_write_descriptor(login_signal_output_file_descriptor,
+            message.c_str(), message.size());
+    }
+    (void)message.destroy();
+    return (error_code);
 }
 
 int32_t application_auth_service::build_password_hash(const char *password, const ft_string &salt_hex, ft_string &hash_hex) const noexcept
@@ -489,34 +590,41 @@ int32_t application_auth_service::authenticate_user(const char *username, const 
         return (error_code);
     if (ft_strcmp(stored_hash_hex.c_str(), computed_hash_hex.c_str()) != 0)
         return (FT_ERR_PERMISSION_DENIED);
-    if (this->_manual_login_approval_enabled == FT_TRUE)
     {
-        ft_bool approved;
+        ft_bool manual_login_approval_enabled;
 
-        approved = FT_FALSE;
-        error_code = this->is_login_approved(username, approved);
+        error_code = this->_settings.is_manual_login_approval_enabled(manual_login_approval_enabled);
         if (error_code != FT_ERR_SUCCESS)
             return (error_code);
-        if (approved == FT_FALSE)
-            return (FT_ERR_PERMISSION_DENIED);
-    }
-    else
-    {
-        ft_bool approval_required;
-        ft_bool approved;
-
-        approval_required = FT_FALSE;
-        error_code = this->load_user_login_approval_required(username, approval_required);
-        if (error_code != FT_ERR_SUCCESS)
-            return (error_code);
-        if (approval_required == FT_TRUE)
+        if (manual_login_approval_enabled == FT_TRUE)
         {
+            ft_bool approved;
+
             approved = FT_FALSE;
             error_code = this->is_login_approved(username, approved);
             if (error_code != FT_ERR_SUCCESS)
                 return (error_code);
             if (approved == FT_FALSE)
                 return (FT_ERR_PERMISSION_DENIED);
+        }
+        else
+        {
+            ft_bool approval_required;
+            ft_bool approved;
+
+            approval_required = FT_FALSE;
+            error_code = this->load_user_login_approval_required(username, approval_required);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            if (approval_required == FT_TRUE)
+            {
+                approved = FT_FALSE;
+                error_code = this->is_login_approved(username, approved);
+                if (error_code != FT_ERR_SUCCESS)
+                    return (error_code);
+                if (approved == FT_FALSE)
+                    return (FT_ERR_PERMISSION_DENIED);
+            }
         }
     }
     authenticated = FT_TRUE;
@@ -546,6 +654,7 @@ int32_t application_auth_service::remove_user(const char *username) noexcept
     ft_string user_key;
     ft_string approval_key;
     ft_string approval_requirement_key;
+    ft_string login_signal_key;
     int32_t error_code;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::remove_user");
@@ -558,8 +667,12 @@ int32_t application_auth_service::remove_user(const char *username) noexcept
     error_code = this->build_user_approval_requirement_key(username, approval_requirement_key);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
+    error_code = this->build_login_signal_one_time_password_key(username, login_signal_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     (void)this->_credential_store.kv_delete(approval_key.c_str());
     (void)this->_credential_store.kv_delete(approval_requirement_key.c_str());
+    (void)this->_credential_store.kv_delete(login_signal_key.c_str());
     return (this->_credential_store.kv_delete(user_key.c_str()));
 }
 
@@ -578,15 +691,16 @@ int32_t application_auth_service::set_manual_login_approval_enabled(ft_bool enab
         error_code = this->_credential_store.kv_set(setting_key.c_str(), "0");
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
-    this->_manual_login_approval_enabled = enabled;
+    error_code = this->_settings.set_manual_login_approval_enabled(enabled);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     return (FT_ERR_SUCCESS);
 }
 
 int32_t application_auth_service::is_manual_login_approval_enabled(ft_bool &enabled) const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::is_manual_login_approval_enabled");
-    enabled = this->_manual_login_approval_enabled;
-    return (FT_ERR_SUCCESS);
+    return (this->_settings.is_manual_login_approval_enabled(enabled));
 }
 
 int32_t application_auth_service::set_login_approval_required_for_user(const char *username, ft_bool enabled) noexcept
@@ -694,5 +808,101 @@ int32_t application_auth_service::is_login_approved(const char *username, ft_boo
         return (FT_ERR_SUCCESS);
     }
     approved = FT_TRUE;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::set_login_signal_output_file_descriptor(int32_t file_descriptor) noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::set_login_signal_output_file_descriptor");
+    return (this->_settings.set_login_signal_output_file_descriptor(file_descriptor));
+}
+
+int32_t application_auth_service::get_login_signal_output_file_descriptor(int32_t &file_descriptor) const noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_login_signal_output_file_descriptor");
+    return (this->_settings.get_login_signal_output_file_descriptor(file_descriptor));
+}
+
+int32_t application_auth_service::set_login_signal_token_timeout_seconds(int64_t timeout_seconds) noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::set_login_signal_token_timeout_seconds");
+    return (this->_settings.set_login_signal_token_timeout_seconds(timeout_seconds));
+}
+
+int32_t application_auth_service::get_login_signal_token_timeout_seconds(int64_t &timeout_seconds) const noexcept
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::get_login_signal_token_timeout_seconds");
+    return (this->_settings.get_login_signal_token_timeout_seconds(timeout_seconds));
+}
+
+int32_t application_auth_service::request_login_signal_one_time_password(const char *username) noexcept
+{
+    ft_string user_key;
+    ft_string login_signal_key;
+    ft_string one_time_password;
+    ft_string one_time_password_hash;
+    const char *existing_record;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::request_login_signal_one_time_password");
+    error_code = this->build_user_key(username, user_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    existing_record = this->_credential_store.kv_get(user_key.c_str());
+    if (existing_record == ft_nullptr)
+        return (FT_ERR_NOT_FOUND);
+    error_code = this->build_login_signal_one_time_password_key(username, login_signal_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->generate_login_signal_one_time_password(one_time_password);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->build_login_signal_one_time_password_hash(one_time_password.c_str(), one_time_password_hash);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    {
+        int64_t login_signal_token_timeout_seconds;
+
+        error_code = this->_settings.get_login_signal_token_timeout_seconds(login_signal_token_timeout_seconds);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = this->_credential_store.kv_set(login_signal_key.c_str(), one_time_password_hash.c_str(),
+            login_signal_token_timeout_seconds);
+    }
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = this->write_login_signal_one_time_password(username, one_time_password.c_str());
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->_credential_store.kv_delete(login_signal_key.c_str());
+        return (error_code);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t application_auth_service::authenticate_login_signal_one_time_password(const char *username, const char *one_time_password, ft_bool &authenticated) noexcept
+{
+    ft_string login_signal_key;
+    ft_string provided_hash;
+    const char *stored_hash;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::authenticate_login_signal_one_time_password");
+    authenticated = FT_FALSE;
+    error_code = this->build_login_signal_one_time_password_key(username, login_signal_key);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    stored_hash = this->_credential_store.kv_get(login_signal_key.c_str());
+    if (stored_hash == ft_nullptr)
+        return (FT_ERR_NOT_FOUND);
+    error_code = this->build_login_signal_one_time_password_hash(one_time_password, provided_hash);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (ft_strcmp(stored_hash, provided_hash.c_str()) != FT_ERR_SUCCESS)
+        return (FT_ERR_PERMISSION_DENIED);
+    error_code = this->_credential_store.kv_delete(login_signal_key.c_str());
+    if (error_code != FT_ERR_SUCCESS && error_code != FT_ERR_NOT_FOUND)
+        return (error_code);
+    authenticated = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }

@@ -76,6 +76,11 @@ FILESYSTEM_TEST_FILES := \
 	Test/test_filesystem.cpp \
 	Test/test_filesystem_glob.cpp
 
+STORAGE_TEST_FILES := \
+	Test/test_storage_kv_store.cpp \
+	Test/test_storage_kv_store_entry.cpp \
+	Test/test_storage_kv_store_block_cipher_metadata.cpp
+
 VOXEL_TEST_FILES := \
 	Test/test_voxel_block_metadata.cpp \
 	Test/test_voxel_generator.cpp \
@@ -96,7 +101,22 @@ CLI_TEST_FILES := \
 APPLICATION_TEST_FILES := \
 	Test/test_application_auth_service.cpp \
 	Test/test_application_auth_service_path_safety.cpp \
-	Test/test_application_auth_service_approval_rules.cpp
+	Test/test_application_auth_service_approval_rules.cpp \
+	Test/test_application_auth_service_login_signal.cpp \
+	Test/test_application_settings.cpp
+
+ENCRYPTION_TEST_FILES := \
+	Test/test_encryption_basic.cpp \
+	Test/test_encryption_block_hooks.cpp \
+	Test/test_encryption_hash_algorithms.cpp \
+	Test/test_encryption_hardware_acceleration.cpp \
+	Test/test_encryption_key.cpp \
+	Test/test_encryption_key_management.cpp \
+	Test/test_encryption_rsa.cpp \
+	Test/test_encryption_secure_wipe.cpp \
+	Test/test_encryption_vectors.cpp \
+	Test/test_encryption_aead.cpp \
+	Test/test_encryption_aead_copy_move.cpp
 
 LOGGER_TEST_FILES := \
 	Test/test_logger.cpp \

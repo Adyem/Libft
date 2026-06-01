@@ -132,6 +132,7 @@ class kv_store
         ft_map<ft_string, kv_store_entry> _data;
         ft_string _file_path;
         ft_string _encryption_key;
+        ft_string _encryption_algorithm_name;
         ft_bool _encryption_enabled;
         kv_store_backend_type _backend_type;
         ft_bool _background_thread_active;
@@ -183,11 +184,16 @@ class kv_store
         int32_t flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
         int32_t load_backend_entries(kv_store_backend_type backend_type, const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
         int32_t assign_backend_location(const char *location);
+        int32_t get_active_encryption_algorithm_name(ft_string &algorithm_name) const;
         int32_t lock_replication(ft_bool *lock_acquired) const noexcept;
         int32_t notify_replication_listeners(const ft_vector<kv_store_operation> &operations) const;
         int32_t dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const;
         int32_t cleanup_partial_initialization(ft_bool data_initialised, ft_bool file_path_initialised,
-            ft_bool encryption_key_initialised, ft_bool replication_sinks_initialised, int32_t error_code) noexcept;
+            ft_bool encryption_key_initialised, ft_bool encryption_algorithm_name_initialised,
+            ft_bool replication_sinks_initialised, int32_t error_code) noexcept;
+        int32_t cleanup_partial_initialization(ft_bool data_initialised, ft_bool file_path_initialised,
+            ft_bool encryption_key_initialised, ft_bool replication_sinks_initialised,
+            int32_t error_code) noexcept;
 
     public:
         kv_store() noexcept;
@@ -202,7 +208,7 @@ class kv_store
         ft_bool is_thread_safe() const noexcept;
         int32_t initialize(const kv_store &other) noexcept;
         int32_t initialize(kv_store &&other) noexcept;
-        int32_t initialize(const char *file_path, const char *encryption_key = ft_nullptr, ft_bool enable_encryption = FT_FALSE);
+        int32_t initialize(const char *file_path, const char *encryption_key = ft_nullptr, ft_bool enable_encryption = FT_FALSE, const char *encryption_algorithm_name = ft_nullptr);
         int32_t destroy();
 
         int32_t prune_expired();
@@ -210,7 +216,7 @@ class kv_store
         const char *kv_get(const char *key_string) const;
         int32_t kv_delete(const char *key_string);
         int32_t kv_flush() const;
-        int32_t configure_encryption(const char *encryption_key, ft_bool enable_encryption);
+        int32_t configure_encryption(const char *encryption_key, ft_bool enable_encryption, const char *encryption_algorithm_name = ft_nullptr);
         int32_t set_backend(kv_store_backend_type backend_type, const char *location);
         kv_store_backend_type get_backend() const;
         int32_t kv_apply(const ft_vector<kv_store_operation> &operations);

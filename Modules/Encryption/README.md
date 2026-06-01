@@ -1,10 +1,10 @@
 # Encryption
 
-The `Encryption` module provides AES block operations, save-game encryption helpers, secure key/IV generation, secure wiping, hashes, HMAC, demonstration RSA helpers, optional hardware AES hooks, and OpenSSL-backed AEAD helpers.
+The `Encryption` module provides AES block operations, save-game encryption helpers, secure key/IV generation, secure wiping, hashes, HMAC, demonstration RSA helpers, runtime-swappable block-cipher hooks, and OpenSSL-backed AEAD helpers.
 
 ## AES and Save-Game Helpers
 
-- `aes_encrypt(...)` / `aes_decrypt(...)` - Encrypt or decrypt one AES block, using hardware hooks when available.
+- `aes_encrypt(...)` / `aes_decrypt(...)` - Encrypt or decrypt one AES block, using the currently registered block-cipher hook when available and falling back to software AES otherwise.
 - `aes_encrypt_software(...)` / `aes_decrypt_software(...)` - Force the software AES implementation for one block.
 - `t_be_open_function` / `t_be_write_function` - File IO hooks used by save-game helpers.
 - `be_save_game(...)` - Encrypts and writes save-game data.
@@ -33,14 +33,16 @@ The `Encryption` module provides AES block operations, save-game encryption help
 - `rsa_encrypt(...)` / `rsa_decrypt(...)` - Perform RSA modular exponentiation for small integer payloads.
 - `rsa_set_force_mod_inverse_failure(ft_bool enable)` - Test hook for RSA inverse-failure paths.
 
-## Hardware Hooks
+## Block-Cipher Hooks
 
-- `t_encryption_aes_block_function` - AES block hook type.
-- `s_encryption_hardware_hooks` - Hardware AES encrypt/decrypt hook table.
-- `encryption_register_hardware_hooks(...)` - Installs hardware AES hooks.
-- `encryption_clear_hardware_hooks()` - Clears installed hardware hooks.
-- `encryption_get_hardware_hooks(...)` - Copies the current hook table.
-- `encryption_try_hardware_aes_encrypt(...)` / `encryption_try_hardware_aes_decrypt(...)` - Attempts one hardware AES block operation.
+- `t_encryption_block_function` - Generic block-cipher encrypt/decrypt hook type.
+- `s_encryption_block_hooks` - Generic block-cipher encrypt/decrypt hook table.
+- `encryption_register_block_hooks(..., algorithm_name)` - Installs the current block-cipher implementation used by `aes_encrypt(...)` and `aes_decrypt(...)` and records the active algorithm name for persistence layers.
+- `encryption_clear_block_hooks()` - Clears the registered block-cipher implementation.
+- `encryption_get_block_hooks(...)` - Copies the current block-cipher hook table.
+- `encryption_get_block_cipher_name(...)` - Writes the active algorithm name associated with the current block-cipher hooks into an initialized `ft_string`.
+- `encryption_try_block_encrypt(...)` / `encryption_try_block_decrypt(...)` - Attempts one block operation through the registered implementation.
+- `t_encryption_aes_block_function`, `s_encryption_hardware_hooks`, and the `encryption_register_hardware_hooks(...)` family remain as compatibility aliases for the same hook table.
 
 ## AEAD
 

@@ -15,6 +15,7 @@ kv_store::kv_store() noexcept
     , _data()
     , _file_path()
     , _encryption_key()
+    , _encryption_algorithm_name()
     , _encryption_enabled(FT_FALSE)
     , _backend_type(KV_STORE_BACKEND_JSON)
     , _background_thread_active(FT_FALSE)
@@ -58,7 +59,8 @@ int32_t kv_store::initialize(const kv_store &other) noexcept
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
     }
-    return (this->initialize(other._file_path.c_str(), other._encryption_key.c_str(), other._encryption_enabled));
+    return (this->initialize(other._file_path.c_str(), other._encryption_key.c_str(),
+        other._encryption_enabled, other._encryption_algorithm_name.c_str()));
 }
 
 int32_t kv_store::initialize(kv_store &&other) noexcept
@@ -112,7 +114,8 @@ int32_t kv_store::move(kv_store &other) noexcept
             return (destroy_error);
     }
     initialize_error = this->initialize(other._file_path.c_str(),
-        other._encryption_key.c_str(), other._encryption_enabled);
+        other._encryption_key.c_str(), other._encryption_enabled,
+        other._encryption_algorithm_name.c_str());
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
     (void)other.destroy();
@@ -218,7 +221,8 @@ ft_bool kv_store::is_thread_safe() const noexcept
     return (this->_mutex != ft_nullptr);
 }
 
-int32_t kv_store::initialize(const char *file_path, const char *encryption_key, ft_bool enable_encryption)
+int32_t kv_store::initialize(const char *file_path, const char *encryption_key,
+    ft_bool enable_encryption, const char *encryption_algorithm_name)
 {
     json_group *group_head;
     json_group *store_group;
@@ -229,6 +233,7 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
     ft_bool data_initialised = FT_FALSE;
     ft_bool file_path_initialised = FT_FALSE;
     ft_bool encryption_key_initialised = FT_FALSE;
+    ft_bool encryption_algorithm_name_initialised = FT_FALSE;
     ft_bool replication_sinks_initialised = FT_FALSE;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
@@ -248,19 +253,26 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
         return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
             FT_FALSE, FT_FALSE, member_error));
     encryption_key_initialised = FT_TRUE;
-    member_error = this->_replication_sinks.initialize();
+    member_error = this->_encryption_algorithm_name.initialize();
     if (member_error != FT_ERR_SUCCESS)
         return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
             encryption_key_initialised, FT_FALSE, member_error));
+    encryption_algorithm_name_initialised = FT_TRUE;
+    member_error = this->_replication_sinks.initialize();
+    if (member_error != FT_ERR_SUCCESS)
+        return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
+            encryption_key_initialised, encryption_algorithm_name_initialised, member_error));
     replication_sinks_initialised = FT_TRUE;
     member_error = ttl_metadata.initialize();
     if (member_error != FT_ERR_SUCCESS)
         return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
-            encryption_key_initialised, replication_sinks_initialised, member_error));
+            encryption_key_initialised, encryption_algorithm_name_initialised,
+            replication_sinks_initialised, member_error));
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     this->_data.clear();
     this->_file_path.clear();
     this->_encryption_key.clear();
+    this->_encryption_algorithm_name.clear();
     this->_backend_type = KV_STORE_BACKEND_JSON;
     this->_encryption_enabled = FT_FALSE;
     this->_background_thread_active = FT_FALSE;
@@ -279,7 +291,8 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
     {
         this->_file_path.clear();
         return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
-            encryption_key_initialised, replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
+            encryption_key_initialised, encryption_algorithm_name_initialised,
+            replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
     }
     this->_file_path = file_path;
     if (enable_encryption)
@@ -287,13 +300,25 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
         if (encryption_key == ft_nullptr)
         {
             return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
-                encryption_key_initialised, replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
+                encryption_key_initialised, encryption_algorithm_name_initialised,
+                replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
         }
         this->_encryption_key = encryption_key;
         if (this->_encryption_key.size() != 16)
         {
             return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
-                encryption_key_initialised, replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
+                encryption_key_initialised, encryption_algorithm_name_initialised,
+                replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
+        }
+        if (encryption_algorithm_name == ft_nullptr)
+            this->_encryption_algorithm_name = "aes-128-ecb-base64";
+        else
+            this->_encryption_algorithm_name = encryption_algorithm_name;
+        if (this->_encryption_algorithm_name.size() == 0)
+        {
+            return (this->cleanup_partial_initialization(data_initialised, file_path_initialised,
+                encryption_key_initialised, encryption_algorithm_name_initialised,
+                replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
         }
         this->_encryption_enabled = FT_TRUE;
     }
@@ -306,6 +331,10 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
         }
         else
             this->_encryption_key.clear();
+        if (encryption_algorithm_name == ft_nullptr)
+            this->_encryption_algorithm_name = "aes-128-ecb-base64";
+        else
+            this->_encryption_algorithm_name = encryption_algorithm_name;
     }
 
     group_head = json_read_from_file(file_path);
@@ -327,23 +356,23 @@ int32_t kv_store::initialize(const char *file_path, const char *encryption_key, 
     {
         if (ft_strcmp(item_pointer->key, "__encryption__") == 0)
         {
-                if (ft_strcmp(item_pointer->value, "aes-128-ecb-base64") == 0)
-                {
-                    if (this->_encryption_enabled == FT_FALSE)
-                    {
-                        json_free_groups(group_head);
-                        return (this->cleanup_partial_initialization(data_initialised,
-                            file_path_initialised, encryption_key_initialised,
-                            replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
-                    }
-                }
-                else
+            if (ft_strcmp(item_pointer->value, this->_encryption_algorithm_name.c_str()) == 0)
+            {
+                if (this->_encryption_enabled == FT_FALSE)
                 {
                     json_free_groups(group_head);
                     return (this->cleanup_partial_initialization(data_initialised,
                         file_path_initialised, encryption_key_initialised,
                         replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
                 }
+            }
+            else
+            {
+                json_free_groups(group_head);
+                return (this->cleanup_partial_initialization(data_initialised,
+                    file_path_initialised, encryption_key_initialised,
+                    replication_sinks_initialised, FT_ERR_INVALID_ARGUMENT));
+            }
             item_pointer = item_pointer->next;
             continue;
         }
@@ -509,6 +538,7 @@ int32_t kv_store::destroy()
     this->_replication_sinks.clear();
     this->_file_path.clear();
     this->_encryption_key.clear();
+    this->_encryption_algorithm_name.clear();
     this->_encryption_enabled = FT_FALSE;
     this->_background_thread_active = FT_FALSE;
     this->_background_stop_requested = FT_FALSE;
@@ -526,18 +556,32 @@ int32_t kv_store::destroy()
 }
 
 int32_t kv_store::cleanup_partial_initialization(ft_bool data_initialised, ft_bool file_path_initialised,
-    ft_bool encryption_key_initialised, ft_bool replication_sinks_initialised, int32_t error_code) noexcept
+    ft_bool encryption_key_initialised, ft_bool encryption_algorithm_name_initialised,
+    ft_bool replication_sinks_initialised, int32_t error_code) noexcept
 {
     if (replication_sinks_initialised)
         (void)this->_replication_sinks.destroy();
     if (encryption_key_initialised)
         (void)this->_encryption_key.destroy();
+    if (encryption_algorithm_name_initialised)
+        (void)this->_encryption_algorithm_name.destroy();
     if (file_path_initialised)
         (void)this->_file_path.destroy();
     if (data_initialised)
         (void)this->_data.destroy();
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     return (error_code);
+}
+
+int32_t kv_store::cleanup_partial_initialization(ft_bool data_initialised, ft_bool file_path_initialised,
+    ft_bool encryption_key_initialised, ft_bool replication_sinks_initialised, int32_t error_code) noexcept
+{
+    int32_t cleanup_error;
+
+    cleanup_error = this->cleanup_partial_initialization(data_initialised, file_path_initialised,
+        encryption_key_initialised, FT_FALSE, replication_sinks_initialised, error_code);
+    (void)this->_encryption_algorithm_name.destroy();
+    return (cleanup_error);
 }
 
 kv_store::~kv_store() noexcept

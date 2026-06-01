@@ -26,13 +26,14 @@ The `Storage` module provides `kv_store`, a lifecycle key/value database with JS
 ## `kv_store`
 
 - Lifecycle and thread-safety methods - constructor, destructor, `initialize`, copy/move initialization, `destroy`, `move`, `enable_thread_safety`, `disable_thread_safety`, and `is_thread_safe`.
-- `initialize(const char *file_path, const char *encryption_key, ft_bool enable_encryption)` - Opens or creates the store at a location.
+- `initialize(const char *file_path, const char *encryption_key, ft_bool enable_encryption, const char *encryption_algorithm_name)` - Opens or creates the store at a location and records the selected block-cipher name alongside the key.
 - `kv_set(...)` - Stores a key/value pair with optional TTL seconds.
 - `kv_get(...)` - Returns a stored value pointer or null on miss.
 - `kv_delete(...)` - Deletes a key.
 - `kv_flush()` - Writes current data to the configured backend.
 - `prune_expired()` - Removes expired entries.
-- `configure_encryption(...)` - Updates encryption key and enable flag.
+- `configure_encryption(...)` - Updates encryption key, enable flag, and selected block-cipher name.
+- Encrypted snapshots and JSON metadata record the store's configured encryption algorithm name, so each `kv_store` instance can keep its own encryption choice instead of sharing a global selection.
 - `set_backend(...)` / `get_backend()` - Configure or inspect the active backend.
 - `kv_apply(const ft_vector<kv_store_operation> &operations)` - Applies a batch of set/delete operations.
 - `kv_compare_and_swap(...)` - Replaces a value only when the current value matches an expected value.

@@ -288,7 +288,7 @@ static void key_expansion(const uint8_t *key, uint8_t *round_keys)
 
 void aes_encrypt(uint8_t *block, const uint8_t *key)
 {
-    if (encryption_try_hardware_aes_encrypt(block, key))
+    if (encryption_try_block_encrypt(block, key))
         return ;
     aes_encrypt_software(block, key);
     return ;
@@ -296,7 +296,7 @@ void aes_encrypt(uint8_t *block, const uint8_t *key)
 
 void aes_decrypt(uint8_t *block, const uint8_t *key)
 {
-    if (encryption_try_hardware_aes_decrypt(block, key))
+    if (encryption_try_block_decrypt(block, key))
         return ;
     aes_decrypt_software(block, key);
     return ;

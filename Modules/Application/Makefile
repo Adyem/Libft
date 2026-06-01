@@ -4,9 +4,9 @@ include ../../mk/modules/common/module_defaults.mk
 TARGET := Application.a
 DEBUG_TARGET := Application_debug.a
 
-SRCS := application_auth_service.cpp
+SRCS := application_settings.cpp application_auth_service.cpp
 
-HEADERS := application.hpp application_auth_service.hpp ../Filesystem/filesystem.hpp
+HEADERS := application.hpp application_settings.hpp application_auth_service.hpp ../CPP_class/class_string.hpp ../Filesystem/filesystem.hpp ../System_utils/system_utils.hpp
 
 all: $(TARGET)
 

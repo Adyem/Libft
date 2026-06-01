@@ -48,17 +48,41 @@ uint64_t rsa_encrypt(uint64_t message, uint64_t public_key, uint64_t modulus);
 uint64_t rsa_decrypt(uint64_t cipher, uint64_t private_key, uint64_t modulus);
 void rsa_set_force_mod_inverse_failure(ft_bool enable);
 
-typedef void (*t_encryption_aes_block_function)(uint8_t *block_buffer,
+typedef void (*t_encryption_block_function)(uint8_t *block_buffer,
     const uint8_t *key_buffer);
+typedef t_encryption_block_function t_encryption_aes_block_function;
 
-struct s_encryption_hardware_hooks
+struct s_encryption_block_hooks
 {
-    t_encryption_aes_block_function aes_encrypt;
-    t_encryption_aes_block_function aes_decrypt;
+    union
+    {
+        t_encryption_block_function encrypt;
+        t_encryption_block_function aes_encrypt;
+    };
+    union
+    {
+        t_encryption_block_function decrypt;
+        t_encryption_block_function aes_decrypt;
+    };
 };
 
+typedef s_encryption_block_hooks s_encryption_hardware_hooks;
+
+int32_t encryption_register_block_hooks(
+    const s_encryption_block_hooks &block_hooks,
+    const char *algorithm_name = ft_nullptr);
+void    encryption_clear_block_hooks(void);
+void    encryption_get_block_hooks(
+    s_encryption_block_hooks &block_hooks_output);
+int32_t encryption_get_block_cipher_name(ft_string &algorithm_name_output);
+ft_bool encryption_try_block_encrypt(uint8_t *block_buffer,
+    const uint8_t *key_buffer);
+ft_bool encryption_try_block_decrypt(uint8_t *block_buffer,
+    const uint8_t *key_buffer);
+
 int32_t encryption_register_hardware_hooks(
-    const s_encryption_hardware_hooks &hardware_hooks);
+    const s_encryption_hardware_hooks &hardware_hooks,
+    const char *algorithm_name = ft_nullptr);
 void    encryption_clear_hardware_hooks(void);
 void    encryption_get_hardware_hooks(
     s_encryption_hardware_hooks &hardware_hooks_output);

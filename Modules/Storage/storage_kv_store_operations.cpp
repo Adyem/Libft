@@ -15,6 +15,7 @@
 
 #include "../Basic/basic.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Encryption/encryption.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"
@@ -51,6 +52,20 @@ static int32_t storage_kv_write_newline(su_file *stream) noexcept
     ft_size_t newline_written = su_fwrite(&newline_character, 1, 1, stream);
     if (newline_written != 1)
         return (FT_ERR_IO);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t kv_store::get_active_encryption_algorithm_name(ft_string &algorithm_name) const
+{
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "kv_store::get_active_encryption_algorithm_name");
+    (void)algorithm_name.destroy();
+    if (this->_encryption_algorithm_name.size() == 0)
+        algorithm_name = "aes-128-ecb-base64";
+    else
+        algorithm_name = this->_encryption_algorithm_name;
+    if (algorithm_name.c_str() == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
     return (FT_ERR_SUCCESS);
 }
 
@@ -329,7 +344,13 @@ int32_t kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_s
     {
         if (ft_strcmp(item_pointer->key, "__encryption__") == 0)
         {
-            if (ft_strcmp(item_pointer->value, "aes-128-ecb-base64") == 0)
+            ft_string active_algorithm_name;
+
+            if (this->get_active_encryption_algorithm_name(active_algorithm_name) != FT_ERR_SUCCESS)
+            {
+                return (FT_ERR_INVALID_OPERATION);
+            }
+            if (ft_strcmp(item_pointer->value, active_algorithm_name.c_str()) == 0)
             {
                 if (this->_encryption_enabled == FT_FALSE)
                 {
@@ -501,8 +522,14 @@ int32_t kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &e
     if (this->_encryption_enabled)
     {
         json_item *metadata_item;
+        ft_string active_algorithm_name;
 
-        metadata_item = json_create_item("__encryption__", "aes-128-ecb-base64");
+        if (this->get_active_encryption_algorithm_name(active_algorithm_name) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(store_group);
+            return (FT_ERR_INVALID_OPERATION);
+        }
+        metadata_item = json_create_item("__encryption__", active_algorithm_name.c_str());
         if (metadata_item == ft_nullptr)
         {
             json_free_groups(store_group);
@@ -645,6 +672,7 @@ int32_t kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_ent
         json_item *encryption_item;
         char *serialized_line;
         ft_size_t written_length;
+        ft_string active_algorithm_name;
 
         metadata_group = json_create_json_group("metadata");
         if (metadata_group == ft_nullptr)
@@ -652,7 +680,13 @@ int32_t kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_ent
             su_fclose(file_handle);
             return (FT_ERR_INVALID_OPERATION);
         }
-        encryption_item = json_create_item("encryption", "aes-128-ecb-base64");
+        if (this->get_active_encryption_algorithm_name(active_algorithm_name) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(metadata_group);
+            su_fclose(file_handle);
+            return (FT_ERR_INVALID_OPERATION);
+        }
+        encryption_item = json_create_item("encryption", active_algorithm_name.c_str());
         if (encryption_item == ft_nullptr)
         {
             json_free_groups(metadata_group);
@@ -892,13 +926,19 @@ int32_t kv_store::load_json_lines_entries(const char *location, ft_vector<kv_sto
         if (metadata_group != ft_nullptr)
         {
             json_item *encryption_item;
+            ft_string active_algorithm_name;
 
             encryption_item = metadata_group->items;
+            if (this->get_active_encryption_algorithm_name(active_algorithm_name) != FT_ERR_SUCCESS)
+            {
+                json_free_groups(line_groups);
+                return (FT_ERR_INVALID_OPERATION);
+            }
             while (encryption_item != ft_nullptr)
             {
                 if (ft_strcmp(encryption_item->key, "encryption") == 0)
                 {
-                    if (ft_strcmp(encryption_item->value, "aes-128-ecb-base64") != 0)
+                    if (ft_strcmp(encryption_item->value, active_algorithm_name.c_str()) != 0)
                     {
                         json_free_groups(line_groups);
                         return (FT_ERR_INVALID_OPERATION);
@@ -1437,8 +1477,14 @@ int32_t kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_
     if (this->_encryption_enabled)
     {
         json_item *metadata_item;
+        ft_string active_algorithm_name;
 
-        metadata_item = json_create_item("__encryption__", "aes-128-ecb-base64");
+        if (this->get_active_encryption_algorithm_name(active_algorithm_name) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(store_group);
+            return (FT_ERR_INVALID_OPERATION);
+        }
+        metadata_item = json_create_item("__encryption__", active_algorithm_name.c_str());
         if (metadata_item == ft_nullptr)
         {
             json_free_groups(store_group);
@@ -1734,8 +1780,14 @@ int32_t kv_store::write_snapshot(ft_document_sink &sink) const
     if (this->_encryption_enabled)
     {
         json_item *metadata_item;
+        ft_string active_algorithm_name;
 
-        metadata_item = json_create_item("__encryption__", "aes-128-ecb-base64");
+        if (this->get_active_encryption_algorithm_name(active_algorithm_name) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(store_group);
+            return (FT_ERR_INVALID_OPERATION);
+        }
+        metadata_item = json_create_item("__encryption__", active_algorithm_name.c_str());
         if (metadata_item == ft_nullptr)
         {
             json_free_groups(store_group);

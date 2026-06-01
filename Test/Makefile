@@ -50,6 +50,10 @@ Filesystem:
 	@echo "Building filesystem test executable ($(TARGET))"
 	@$(MAKE) FILES="$(FILESYSTEM_TEST_FILES)" all
 
+Storage:
+	@echo "Building Storage test executable ($(TARGET))"
+	@$(MAKE) FILES="$(STORAGE_TEST_FILES)" all
+
 Voxel:
 	@echo "Building Voxel test executable ($(TARGET))"
 	@$(MAKE) FILES="$(VOXEL_TEST_FILES)" all
@@ -79,6 +83,8 @@ re_CLI: fclean CLI
 re_Application: fclean Application
 
 re_Logger: fclean Logger
+
+re_Storage: fclean Storage
 
 re_Sink: fclean Sink
 
@@ -143,6 +149,8 @@ $(OBJDIR)/Test/test_cli_config.o $(OBJDIR)/Test/test_cli_get_bool.o \
 $(OBJDIR)/Test/test_cli_get_double.o $(OBJDIR)/Test/test_cli_get_int64.o \
 $(OBJDIR)/Test/test_cli_get_string.o $(OBJDIR)/Test/test_cli_get_uint64.o \
 $(OBJDIR)/Test/test_cli_help.o $(OBJDIR)/Test/test_cli_tree.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"CLI\"
+$(OBJDIR)/Test/test_storage_kv_store.o $(OBJDIR)/Test/test_storage_kv_store_entry.o \
+$(OBJDIR)/Test/test_storage_kv_store_block_cipher_metadata.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Storage\"
 $(OBJDIR)/Test/test_application_auth_service.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Application\"
 $(OBJDIR)/Test/test_yaml.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"YAML\"
 $(OBJDIR)/Test/test_rng.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"RNG\"
@@ -183,6 +191,7 @@ $(OBJDIR)/Test/test_encryption_key.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\
 $(OBJDIR)/Test/test_encryption_secure_wipe.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
 $(OBJDIR)/Test/test_encryption_key_management.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
 $(OBJDIR)/Test/test_encryption_aead_copy_move.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
+$(OBJDIR)/Test/test_encryption_block_hooks.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
 $(OBJDIR)/Test/test_xml_copy_move_deleted.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"XML\"
 
 debug: CXXFLAGS += -DDEBUG=1
