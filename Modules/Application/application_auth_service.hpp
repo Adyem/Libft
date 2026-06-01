@@ -2,6 +2,7 @@
 #define APPLICATION_AUTH_SERVICE_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Filesystem/filesystem.hpp"
 #include "../Storage/kv_store.hpp"
 #include "../Encryption/encryption.hpp"
 #include "../Encoding/encoding.hpp"
@@ -15,6 +16,8 @@ class application_auth_service
 #endif
         uint8_t _initialised_state;
         kv_store _credential_store;
+        ft_string _database_root_path;
+        ft_string _database_relative_path;
         ft_string _database_path;
         ft_string _encryption_key;
         ft_bool _encryption_enabled;
@@ -42,7 +45,7 @@ class application_auth_service
         application_auth_service &operator=(const application_auth_service &other) noexcept = delete;
         application_auth_service &operator=(application_auth_service &&other) noexcept = delete;
 
-        int32_t initialize(const char *database_path, const char *encryption_key = ft_nullptr, ft_bool enable_encryption = FT_FALSE) noexcept;
+        int32_t initialize(const char *database_root_path, const char *database_relative_path, const char *encryption_key = ft_nullptr, ft_bool enable_encryption = FT_FALSE) noexcept;
         int32_t initialize(const application_auth_service &other) noexcept;
         int32_t initialize(application_auth_service &&other) noexcept;
         int32_t destroy() noexcept;

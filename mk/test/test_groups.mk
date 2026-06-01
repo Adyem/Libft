@@ -94,7 +94,9 @@ CLI_TEST_FILES := \
 	Test/test_cli_tree.cpp
 
 APPLICATION_TEST_FILES := \
-	Test/test_application_auth_service.cpp
+	Test/test_application_auth_service.cpp \
+	Test/test_application_auth_service_path_safety.cpp \
+	Test/test_application_auth_service_approval_rules.cpp
 
 LOGGER_TEST_FILES := \
 	Test/test_logger.cpp \

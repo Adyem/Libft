@@ -1,16 +1,16 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Application/application.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static void cleanup_application_database(const char *file_path)
+static int32_t cleanup_application_database(const char *file_path)
 {
-    std::remove(file_path);
-    return ;
+    return (std::remove(file_path));
 }
 
 static void create_application_database(const char *file_path)
@@ -27,25 +27,41 @@ static void create_application_database(const char *file_path)
 
 FT_TEST(test_application_auth_service_register_and_authenticate)
 {
+    application_auth_service invalid_service;
     application_auth_service service;
     ft_bool authenticated;
     ft_bool exists;
     ft_bool approval_enabled;
     ft_bool approval_required;
-    char file_template[] = "/tmp/libft_application_auth_XXXXXX";
-    int file_descriptor;
+    ft_string *database_file_path;
+    char root_template[] = "/tmp/libft_application_root_XXXXXX";
+    char database_relative_path[] = "auth_db.json";
+    char database_escape_path[] = "../escape.json";
+    char *database_root_path;
     int32_t error_code;
 
-    file_descriptor = mkstemp(file_template);
-    FT_ASSERT(file_descriptor >= 0);
-    if (file_descriptor >= 0)
-        close(file_descriptor);
-    create_application_database(file_template);
-    error_code = service.initialize(file_template, "app-auth-key-123", FT_TRUE);
+    database_root_path = mkdtemp(root_template);
+    FT_ASSERT(database_root_path != ft_nullptr);
+    if (database_root_path == ft_nullptr)
+        return (1);
+    database_file_path = filesystem_safe_join_path(database_root_path, database_relative_path);
+    FT_ASSERT(database_file_path != ft_nullptr);
+    if (database_file_path == ft_nullptr)
+    {
+        rmdir(database_root_path);
+        return (1);
+    }
+    create_application_database(database_file_path->c_str());
+    error_code = invalid_service.initialize(database_root_path, database_escape_path, "app-auth-key-123", FT_TRUE);
+    FT_ASSERT_EQ(FT_ERR_INVALID_PATH, error_code);
+    error_code = service.initialize(database_root_path, database_relative_path, "app-auth-key-123", FT_TRUE);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
     if (error_code != FT_ERR_SUCCESS)
     {
-        cleanup_application_database(file_template);
+        FT_ASSERT_EQ(0, cleanup_application_database(database_file_path->c_str()));
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, database_file_path->destroy());
+        delete database_file_path;
+        FT_ASSERT_EQ(0, rmdir(database_root_path));
         return (1);
     }
     FT_ASSERT_EQ(FT_TRUE, service.is_initialised());
@@ -110,6 +126,9 @@ FT_TEST(test_application_auth_service_register_and_authenticate)
     FT_ASSERT_EQ(FT_FALSE, exists);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, service.authenticate_user("alice", "s3cret", authenticated));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, service.destroy());
-    cleanup_application_database(file_template);
+    FT_ASSERT_EQ(0, cleanup_application_database(database_file_path->c_str()));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, database_file_path->destroy());
+    delete database_file_path;
+    FT_ASSERT_EQ(0, rmdir(database_root_path));
     return (1);
 }

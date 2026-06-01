@@ -69,7 +69,7 @@ These modules combine the shared lower layers into user-facing features and appl
 | Module | Direct dependencies |
 | --- | --- |
 | `API` | `Basic`, `CMA`, `CPP_class`, `Compression`, `Encryption`, `Errno`, `JSon`, `Logger`, `Networking`, `Observability`, `PThread`, `Printf`, `System_utils`, `Template`, `Time`, `Threading` |
-| `Application` | `Basic`, `CMA`, `Encoding`, `Encryption`, `Errno`, `Storage` |
+| `Application` | `Basic`, `CMA`, `Encoding`, `Encryption`, `Errno`, `Filesystem`, `Storage` |
 | `CSV` | `CMA`, `CPP_class`, `Errno`, `File`, `Parser`, `Template` |
 | `Game` | `Basic`, `Buffer`, `CMA`, `CPP_class`, `Errno`, `File`, `Geometry`, `JSon`, `Networking`, `Observability`, `PThread`, `Printf`, `Storage`, `System_utils`, `Template`, `Time` |
 
@@ -127,6 +127,7 @@ graph TD
     Application --> Errno
     Application --> Encoding
     Application --> Encryption
+    Application --> Filesystem
     Application --> Storage
     Observability --> Threading
     Logger --> Sink

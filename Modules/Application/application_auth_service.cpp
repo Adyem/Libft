@@ -25,9 +25,26 @@ static int32_t application_auth_encode_hex(const uint8_t *buffer, ft_size_t buff
     return (error_code);
 }
 
+static int32_t application_auth_build_database_path(const char *database_root_path, const char *database_relative_path, ft_string &database_path)
+{
+    ft_string *joined_path;
+    int32_t error_code;
+
+    joined_path = filesystem_safe_join_path(database_root_path, database_relative_path);
+    if (joined_path == ft_nullptr)
+        return (FT_ERR_INVALID_PATH);
+    (void)database_path.destroy();
+    error_code = database_path.initialize(joined_path->c_str());
+    (void)joined_path->destroy();
+    delete joined_path;
+    return (error_code);
+}
+
 application_auth_service::application_auth_service() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _credential_store()
+    , _database_root_path()
+    , _database_relative_path()
     , _database_path()
     , _encryption_key()
     , _encryption_enabled(FT_FALSE)
@@ -57,6 +74,10 @@ int32_t application_auth_service::destroy() noexcept
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
         return (FT_ERR_SUCCESS);
     error_code = this->_credential_store.destroy();
+    if (this->_database_root_path.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
+        error_code = FT_ERR_INVALID_OPERATION;
+    if (this->_database_relative_path.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
+        error_code = FT_ERR_INVALID_OPERATION;
     if (this->_database_path.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_INVALID_OPERATION;
     if (this->_encryption_key.destroy() != FT_ERR_SUCCESS && error_code == FT_ERR_SUCCESS)
@@ -67,19 +88,33 @@ int32_t application_auth_service::destroy() noexcept
     return (error_code);
 }
 
-int32_t application_auth_service::initialize(const char *database_path, const char *encryption_key, ft_bool enable_encryption) noexcept
+int32_t application_auth_service::initialize(const char *database_root_path, const char *database_relative_path, const char *encryption_key, ft_bool enable_encryption) noexcept
 {
     int32_t error_code;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         errno_abort_lifecycle(this->_initialised_state, "application_auth_service::initialize", "initialize called on initialised instance");
-    if (database_path == ft_nullptr || database_path[0] == '\0')
+    if (database_root_path == ft_nullptr || database_root_path[0] == '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (database_relative_path == ft_nullptr || database_relative_path[0] == '\0')
         return (FT_ERR_INVALID_ARGUMENT);
     if (enable_encryption == FT_TRUE && (encryption_key == ft_nullptr || encryption_key[0] == '\0'))
         return (FT_ERR_INVALID_ARGUMENT);
-    error_code = this->_database_path.initialize(database_path);
+    error_code = this->_database_root_path.initialize(database_root_path);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
+    error_code = this->_database_relative_path.initialize(database_relative_path);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (error_code);
+    }
+    error_code = application_auth_build_database_path(database_root_path, database_relative_path, this->_database_path);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (error_code);
+    }
     if (encryption_key == ft_nullptr)
         error_code = this->_encryption_key.initialize("");
     else
@@ -89,7 +124,7 @@ int32_t application_auth_service::initialize(const char *database_path, const ch
         (void)this->destroy();
         return (error_code);
     }
-    error_code = this->_credential_store.initialize(database_path, encryption_key, enable_encryption);
+    error_code = this->_credential_store.initialize(this->_database_path.c_str(), encryption_key, enable_encryption);
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -128,6 +163,18 @@ int32_t application_auth_service::initialize_from_copy(const application_auth_se
             return (error_code);
     }
     error_code = this->_database_path.initialize(other._database_path);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (error_code);
+    }
+    error_code = this->_database_root_path.initialize(other._database_root_path);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (error_code);
+    }
+    error_code = this->_database_relative_path.initialize(other._database_relative_path);
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)this->destroy();

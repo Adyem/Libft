@@ -2,6 +2,23 @@
 
 The `Game` module contains gameplay-domain lifecycle classes for characters, items, inventory, equipment, skills, upgrades, buffs/debuffs, economy, crafting, dialogue, events, behavior trees, worlds, regions, voxels, scripting, hooks, data catalogs, and telemetry. Most classes follow the shared lifecycle pattern: construct, `initialize`, use, then `destroy`; mutable classes usually expose optional thread-safety helpers and object-local error accessors.
 
+## Public Contract
+
+The classes below are the main orchestration surfaces in the module. Their lower-level record types mostly follow the same lifecycle and error patterns, but these four are the ones that coordinate the larger subsystems.
+
+| Class | Primary behavior | Return codes |
+| --- | --- | --- |
+| `game_state` | Owns the world and character collections, game variables, and hook dispatch. It is the broad state container used by higher-level game code. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_STATE`, `FT_ERR_NOT_FOUND`, `FT_ERR_NO_MEMORY`, `FT_ERR_GAME_GENERAL_ERROR`, `FT_ERR_*` from nested helpers |
+| `game_world` | Owns the event scheduler, world registry, replay state, economy/crafting/dialogue tables, quest/vendor/upgrade records, persistence helpers, and route planning. It is the main world orchestration object. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_STATE`, `FT_ERR_NOT_FOUND`, `FT_ERR_IO`, `FT_ERR_NO_MEMORY`, `FT_ERR_CONFIGURATION`, `FT_ERR_PERMISSION_DENIED`, `FT_ERR_GAME_GENERAL_ERROR`, `FT_ERR_*` from nested helpers |
+| `game_server` | Owns the websocket server bridge, connected clients, and the active world reference. It starts and runs the server loop. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_STATE`, `FT_ERR_NOT_FOUND`, `FT_ERR_IO`, `FT_ERR_NO_MEMORY`, `FT_ERR_CONFIGURATION`, `FT_ERR_PERMISSION_DENIED`, `FT_ERR_GAME_GENERAL_ERROR`, `FT_ERR_*` from nested helpers |
+| `game_event_scheduler` | Queues, cancels, reschedules, and processes game events. It also exposes optional profiling and snapshot helpers. | `FT_ERR_SUCCESS`, `FT_ERR_INVALID_STATE`, `FT_ERR_NOT_FOUND`, `FT_ERR_NO_MEMORY`, `FT_ERR_CONFIGURATION`, `FT_ERR_GAME_GENERAL_ERROR`, `FT_ERR_*` from nested helpers |
+
+General rules for these orchestration classes:
+- `initialize()` prepares the object for use and may fail if a required sub-object cannot be created.
+- `destroy()` is expected to be idempotent and to keep cleaning up even after intermediate failures.
+- `move(...)` transfers state from a source object and leaves the source destroyed.
+- `get_error()` and `get_error_str()` report the object-local failure state after initialization; uninitialised access follows the shared lifecycle abort contract.
+
 ## Characters, Items, Inventory, and Equipment
 
 - `game_character` - Character record with identity, stats, inventory/equipment integration, save/load helpers, getters/setters, add/remove operations, metrics, lifecycle, error accessors, and optional thread safety.
