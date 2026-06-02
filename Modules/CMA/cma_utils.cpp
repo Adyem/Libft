@@ -9,6 +9,9 @@
 #include "../Sink/sink.hpp"
 #include <cstdarg>
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void cma_set_alloc_logging(ft_bool enable)
 {

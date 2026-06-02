@@ -1,6 +1,8 @@
 #include "time.hpp"
 #include "../Errno/errno.hpp"
 #include <climits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t event_loop_run(event_loop *loop, int32_t timeout_milliseconds);
 

@@ -5,6 +5,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # include <fcntl.h>
 # define FILE_BINARY_FLAG O_BINARY

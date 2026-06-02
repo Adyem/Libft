@@ -1,6 +1,11 @@
 #include "game_behavior_tree.hpp"
 #include "../Template/move.hpp"
 #include "../Basic/basic.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
 
 thread_local int32_t game_behavior_node::_last_error = FT_ERR_SUCCESS;
 thread_local int32_t game_behavior_tree::_last_error = FT_ERR_SUCCESS;

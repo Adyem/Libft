@@ -7,6 +7,8 @@
 
 #include <atomic>
 #include <string>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static std::atomic<t_encryption_block_function> g_block_encrypt_hook;
 static std::atomic<t_encryption_block_function> g_block_decrypt_hook;

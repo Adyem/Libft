@@ -7,6 +7,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void time_monotonic_point_disable_thread_safety_internal(t_monotonic_time_point *time_point)
 {

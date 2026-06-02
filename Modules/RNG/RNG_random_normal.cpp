@@ -1,6 +1,11 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
 #include "../Math/math.hpp"
+#include "../Basic/limits.hpp"
+#include "../Math/math_interval.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 float ft_random_normal(void)
 {

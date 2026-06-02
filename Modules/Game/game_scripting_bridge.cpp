@@ -10,6 +10,33 @@
 #include "../Errno/errno_internal.hpp"
 #include <cstdio>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
+#include "game_achievement.hpp"
+#include "game_buff.hpp"
+#include "game_crafting.hpp"
+#include "game_currency_rate.hpp"
+#include "game_debuff.hpp"
+#include "game_dialogue_line.hpp"
+#include "game_dialogue_script.hpp"
+#include "game_dialogue_table.hpp"
+#include "game_economy_table.hpp"
+#include "game_pathfinding.hpp"
+#include "game_price_definition.hpp"
+#include "game_quest.hpp"
+#include "game_rarity_band.hpp"
+#include "game_region_definition.hpp"
+#include "game_skill.hpp"
+#include "game_state.hpp"
+#include "game_upgrade.hpp"
+#include "game_vendor_profile.hpp"
+#include "game_world_region.hpp"
+#include "game_world_registry.hpp"
+#include "game_world_replay.hpp"
 
 static void trim_whitespace(ft_string &target) noexcept
 {

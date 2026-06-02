@@ -10,6 +10,15 @@
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "game_achievement.hpp"
+#include "game_buff.hpp"
+#include "game_debuff.hpp"
+#include "game_skill.hpp"
+#include "game_upgrade.hpp"
 
 json_group *serialize_character(const game_character &character);
 json_group *serialize_inventory(const game_inventory &inventory);

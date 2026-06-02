@@ -4,6 +4,7 @@
 #include "../Advanced/advanced.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
 
 static int32_t normalize_selector_value(char *value_string)
 {

@@ -1,6 +1,11 @@
 #include "yaml.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/vector.hpp"
 
 ft_size_t yaml_find_char(const ft_string &string, char character) noexcept
 {

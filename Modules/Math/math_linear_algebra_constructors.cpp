@@ -2,6 +2,10 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 thread_local int32_t vector2::_last_error = FT_ERR_SUCCESS;
 thread_local int32_t vector3::_last_error = FT_ERR_SUCCESS;

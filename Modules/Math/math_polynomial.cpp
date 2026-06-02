@@ -8,6 +8,9 @@
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
 #include "../Template/move.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../Template/vector.hpp"
 static void math_polynomial_copy_vector(const ft_vector<double> &source,
     ft_vector<double> &destination,
     ft_size_t count,

@@ -3,6 +3,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t xml_serializer_store_string(
     ft_string &output, const char *serialized_content) noexcept

@@ -1,5 +1,16 @@
 #include "game_character.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "game_achievement.hpp"
+#include "game_buff.hpp"
+#include "game_debuff.hpp"
+#include "game_quest.hpp"
+#include "game_skill.hpp"
+#include "game_upgrade.hpp"
 
 void game_character::restore_physical_armor() noexcept
 {

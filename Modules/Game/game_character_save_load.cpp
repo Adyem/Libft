@@ -5,6 +5,17 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Printf/printf.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "game_achievement.hpp"
+#include "game_buff.hpp"
+#include "game_debuff.hpp"
+#include "game_quest.hpp"
+#include "game_skill.hpp"
+#include "game_upgrade.hpp"
 
 static int32_t game_character_build_skill_key(const ft_string &prefix,
     const char *suffix, ft_string &key) noexcept

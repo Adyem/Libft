@@ -3,6 +3,8 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Errno/errno.hpp"
 #include <limits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void time_interval_delete_string(ft_string *string) noexcept
 {

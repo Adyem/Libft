@@ -3,6 +3,9 @@
 #include "../Basic/basic.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool json_is_number(const char *string)
 {

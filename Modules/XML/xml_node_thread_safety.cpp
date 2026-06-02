@@ -5,6 +5,8 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
 
 int32_t xml_node_prepare_thread_safety(xml_node *node) noexcept
 {

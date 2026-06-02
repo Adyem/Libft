@@ -7,6 +7,9 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t math_check_value_roll(const char *string_pointer)
 {

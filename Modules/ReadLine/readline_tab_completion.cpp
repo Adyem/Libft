@@ -7,6 +7,8 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, int32_t *prefix_len, int32_t prefix_capacity)
 {

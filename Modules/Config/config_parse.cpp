@@ -10,6 +10,8 @@
 #include "../PThread/pthread_internal.hpp"
 #include <new>
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t config_mutex_lock(pt_mutex *mutex, ft_bool *lock_acquired)
 {

@@ -1,6 +1,9 @@
 #include "rng.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_string.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int64_t rng_seed_value(const char *seed_string)
 {

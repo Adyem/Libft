@@ -10,6 +10,8 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Template/move.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_logger *g_logger = ft_nullptr;
 

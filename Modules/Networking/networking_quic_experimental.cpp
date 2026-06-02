@@ -2,6 +2,11 @@
 #include "openssl_support.hpp"
 #include "../Errno/errno_internal.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
+#include "networking_tls_aead.hpp"
 #if NETWORKING_HAS_OPENSSL
 
 #include <atomic>

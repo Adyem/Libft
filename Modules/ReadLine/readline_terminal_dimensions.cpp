@@ -7,6 +7,8 @@
 #include "../Compatebility/compatebility_internal.hpp"
 
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
 
 static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
 {

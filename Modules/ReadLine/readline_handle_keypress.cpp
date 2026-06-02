@@ -7,6 +7,9 @@
 #include "../Printf/printf.hpp"
 #include "../Basic/basic.hpp"
 #include "readline_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t rl_handle_backspace(readline_state_t *state, const char *prompt)
 {

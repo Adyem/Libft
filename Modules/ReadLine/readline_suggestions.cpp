@@ -8,6 +8,9 @@
 #include "../Printf/printf.hpp"
 #include "readline_internal.hpp"
 #include "readline.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void rl_add_suggestion(const char *word)
 {

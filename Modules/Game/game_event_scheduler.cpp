@@ -7,6 +7,13 @@
 #include "../Template/move.hpp"
 #include <cstdio>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/priority_queue.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
+#include "game_event.hpp"
 
 thread_local int32_t game_event_scheduler::_last_error = FT_ERR_SUCCESS;
 static void event_scheduler_profile_reset_struct(t_event_scheduler_profile &profile)

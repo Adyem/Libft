@@ -1,4 +1,8 @@
 #include "math.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 int32_t math_clamp(int32_t value, int32_t minimum, int32_t maximum)
 {

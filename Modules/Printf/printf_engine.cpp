@@ -12,6 +12,9 @@
 #include <cerrno>
 #include <new>
 #include <type_traits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 typedef typename std::make_signed<ft_size_t>::type pf_signed_size_t;
 typedef uint64_t pf_unsigned_ptrdiff_t;

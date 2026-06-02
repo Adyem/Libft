@@ -6,6 +6,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 typedef int32_t (*roll_execute_func)(char *, int32_t *, int32_t);
 

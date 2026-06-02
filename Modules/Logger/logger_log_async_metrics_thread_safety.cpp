@@ -4,6 +4,8 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
 {

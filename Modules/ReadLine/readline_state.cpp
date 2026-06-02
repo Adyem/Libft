@@ -1,4 +1,6 @@
 #include "readline_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 s_readline_state::s_readline_state(void)
 {

@@ -5,6 +5,10 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "document.hpp"
 
 static void json_dom_delete_node(ft_dom_node *node) noexcept
 {

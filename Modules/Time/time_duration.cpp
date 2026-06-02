@@ -1,5 +1,7 @@
 #include "time.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 t_duration_milliseconds  time_duration_ms_create(int64_t milliseconds)
 {

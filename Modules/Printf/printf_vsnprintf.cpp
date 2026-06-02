@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <errno.h>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 typedef FILE *(*t_pf_tmpfile_function)(void);
 typedef int32_t (*t_pf_fflush_function)(FILE *);

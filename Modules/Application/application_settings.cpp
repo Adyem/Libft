@@ -4,6 +4,8 @@
 #include "../Errno/errno_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <unistd.h>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static const int64_t application_settings_default_login_signal_token_timeout_seconds = 300LL;
 static const int64_t application_settings_default_login_session_timeout_seconds = 28800LL;

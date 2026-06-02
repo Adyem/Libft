@@ -6,6 +6,8 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void event_loop_init(event_loop *loop)
 {

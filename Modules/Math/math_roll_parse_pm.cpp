@@ -1,6 +1,8 @@
 #include "roll.hpp"
 #include "math_internal.hpp"
 #include "../Printf/printf.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t math_roll_excecute_pm(char *string, int32_t *index, int32_t string_boundary)
 {

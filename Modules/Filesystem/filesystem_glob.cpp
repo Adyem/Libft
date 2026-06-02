@@ -1,5 +1,7 @@
 #include "filesystem.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool filesystem_glob_is_separator(char character) noexcept
 {

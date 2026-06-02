@@ -3,6 +3,10 @@
 #include "../PThread/pthread.hpp"
 #include "../Time/time.hpp"
 #include "../Networking/networking.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 struct s_log_remote_health_state
 {

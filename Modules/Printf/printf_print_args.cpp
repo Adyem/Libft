@@ -10,6 +10,9 @@
 #include <limits.h>
 #include <stddef.h>
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static const char G_DECIMAL_PAIRS[200] =
 {

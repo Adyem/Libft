@@ -1,6 +1,10 @@
 #include "logger_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static thread_local ft_vector<s_log_context_entry> g_log_context_entries;
 

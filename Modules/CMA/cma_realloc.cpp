@@ -9,6 +9,8 @@
 #include "../Basic/limits.hpp"
 
 #include "../System_utils/system_utils.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool reallocate_block(void *memory_pointer, ft_size_t aligned_size, ft_size_t user_size)
 {

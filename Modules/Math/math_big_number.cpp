@@ -1,5 +1,9 @@
 #include "math.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 static ft_big_number *math_big_allocate_result(int32_t *error_code)
 {

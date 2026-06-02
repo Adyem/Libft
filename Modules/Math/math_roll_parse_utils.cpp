@@ -3,6 +3,8 @@
 #include "../Printf/printf.hpp"
 #include <climits>
 #include <cassert>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void math_print_overflow_error(int32_t error_code)
 {

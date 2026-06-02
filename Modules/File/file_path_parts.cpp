@@ -4,6 +4,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "file_utils.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static char *file_path_duplicate_span(const char *source, ft_size_t length)
 {

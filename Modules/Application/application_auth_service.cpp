@@ -15,6 +15,9 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/move.hpp"
 #include "../Template/vector.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static const char *application_auth_user_key_prefix = "application/auth/users/";
 static const char *application_auth_login_approval_key_prefix = "application/auth/approvals/";

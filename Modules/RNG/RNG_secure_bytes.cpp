@@ -1,6 +1,10 @@
 #include "rng.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t rng_secure_bytes(unsigned char *buffer, ft_size_t length)
 {

@@ -10,6 +10,8 @@
 #include <ctime>
 #include <cstdio>
 #include <limits>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_string *time_format_failure(int32_t error_code) noexcept
 {

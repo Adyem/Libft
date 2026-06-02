@@ -2,6 +2,9 @@
 #include "file_utils.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 char *ft_fgets(char *string, int32_t size, FILE *stream)
 {

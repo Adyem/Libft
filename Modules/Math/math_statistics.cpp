@@ -1,5 +1,9 @@
 #include "math.hpp"
 #include <cfloat>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 static void copy_array(double *destination, const double *source,
     int32_t array_size)

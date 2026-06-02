@@ -1,5 +1,8 @@
 #include "udp_socket.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t udp_event_loop_wait_internal(event_loop *loop, udp_socket &socket,
                                         ft_bool is_write, int32_t timeout_milliseconds)

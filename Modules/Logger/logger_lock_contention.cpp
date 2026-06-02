@@ -2,6 +2,10 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread_lock_tracking.hpp"
 #include "../Time/time.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static pthread_mutex_t g_lock_contention_mutex;
 static pthread_once_t g_lock_contention_once = PTHREAD_ONCE_INIT;

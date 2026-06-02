@@ -6,6 +6,8 @@
 #include "../PThread/pthread.hpp"
 #include <ctime>
 #include <limits>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
 {

@@ -3,6 +3,11 @@
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
 
 thread_local int32_t game_quest::_last_error = FT_ERR_SUCCESS;
 

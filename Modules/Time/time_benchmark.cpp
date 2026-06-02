@@ -3,6 +3,8 @@
 #include "../Errno/errno.hpp"
 #include <cmath>
 #include <limits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void time_benchmark_set_error(t_time_benchmark *benchmark, int32_t error_code)
 {

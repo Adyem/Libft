@@ -2,6 +2,7 @@
 #include "advanced.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 static ft_size_t count_words(const char *string, char delimiter)
 {

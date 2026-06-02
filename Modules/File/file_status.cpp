@@ -1,6 +1,9 @@
 #include "file_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 file_type file_get_type(const char *path) noexcept
 {

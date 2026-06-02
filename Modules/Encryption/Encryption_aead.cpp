@@ -6,6 +6,8 @@
 #include "../PThread/pthread_internal.hpp"
 #include <new>
 
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if NETWORKING_HAS_OPENSSL
 
 static const EVP_CIPHER *encryption_aead_select_cipher(ft_size_t key_length)

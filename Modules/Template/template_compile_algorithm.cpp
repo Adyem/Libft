@@ -9,6 +9,11 @@
 #include "static_cast.hpp"
 #include "string_view.hpp"
 #include "swap.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../RNG/rng.hpp"
+#include "pair.hpp"
 
 static int32_t instantiate_free_functions()
 {

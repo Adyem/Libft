@@ -2,6 +2,7 @@
 #include <cstddef>
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 void* adv_memdup(const void* source, ft_size_t size)
 {

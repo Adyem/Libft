@@ -1,4 +1,6 @@
 #include "geometry.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_bool    intersect_aabb(const aabb &first, const aabb &second)
 {

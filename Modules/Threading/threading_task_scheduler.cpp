@@ -6,6 +6,13 @@
 #include "../System_utils/system_utils.hpp"
 #include <new>
 #include <utility>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/queue.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
 
 
 ft_task_scheduler::scheduled_task::scheduled_task()

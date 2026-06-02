@@ -6,6 +6,9 @@
 #include "cma_internal.hpp"
 
 #include "../System_utils/system_utils.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool normalize_alignment_padding(ft_size_t *padding)
 {

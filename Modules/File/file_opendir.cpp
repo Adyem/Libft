@@ -2,6 +2,9 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "open_dir.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 file_dir *file_opendir(const char *directory_path)
 {

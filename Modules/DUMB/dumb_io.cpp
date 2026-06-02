@@ -5,6 +5,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include <errno.h>
 #include <stdio.h>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t ft_read_file(const char *path, char **out_buffer, ft_size_t *out_size)
 {

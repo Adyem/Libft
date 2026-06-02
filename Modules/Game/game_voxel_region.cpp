@@ -8,6 +8,9 @@
 #include <cstdio>
 #include <new>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #define GAME_VOXEL_REGION_MAGIC 0x474D5247U
 #define GAME_VOXEL_REGION_VERSION 1U
 

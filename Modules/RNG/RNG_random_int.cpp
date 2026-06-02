@@ -3,6 +3,9 @@
 #include "../Errno/errno.hpp"
 #include <limits>
 #include <random>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t ft_random_int(void)
 {

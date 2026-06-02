@@ -7,6 +7,9 @@
 #include "../PThread/pthread.hpp"
 
 #include "../System_utils/system_utils.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void cma_free(void* memory_pointer)
 {

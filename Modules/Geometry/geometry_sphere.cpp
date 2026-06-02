@@ -4,6 +4,8 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 sphere::sphere() noexcept
     : _center_x(0.0)

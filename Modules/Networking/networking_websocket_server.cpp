@@ -13,6 +13,12 @@
 #include <cerrno>
 #include <new>
 #include <zlib.h>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/vector.hpp"
 
 static char websocket_ascii_lower(char character)
 {

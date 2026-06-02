@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <new>
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 void* operator new(std::size_t size)
 {

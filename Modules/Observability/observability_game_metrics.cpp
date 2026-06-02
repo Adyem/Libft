@@ -4,6 +4,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../Basic/basic.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static pt_mutex *g_observability_game_mutex = ft_nullptr;
 static ft_bool g_observability_game_initialised = FT_FALSE;

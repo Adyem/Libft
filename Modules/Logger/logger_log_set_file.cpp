@@ -6,6 +6,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t ft_file_sink(const char *message, void *user_data)
 {

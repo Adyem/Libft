@@ -1,5 +1,8 @@
 #include "rng.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 void ft_generate_uuid(char output_buffer[37])
 {

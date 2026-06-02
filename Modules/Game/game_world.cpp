@@ -22,6 +22,22 @@
 #include <new>
 #include "../Template/move.hpp"
 #include "../Storage/kv_store.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "game_achievement.hpp"
+#include "game_buff.hpp"
+#include "game_currency_rate.hpp"
+#include "game_debuff.hpp"
+#include "game_dialogue_line.hpp"
+#include "game_dialogue_script.hpp"
+#include "game_pathfinding.hpp"
+#include "game_price_definition.hpp"
+#include "game_rarity_band.hpp"
+#include "game_region_definition.hpp"
+#include "game_skill.hpp"
 
 json_group *serialize_character(const game_character &character);
 int32_t deserialize_character(game_character &character, json_group *group);

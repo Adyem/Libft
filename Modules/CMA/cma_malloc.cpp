@@ -12,6 +12,8 @@
 
 #include "../Basic/limits.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void* cma_malloc(ft_size_t size)
 {

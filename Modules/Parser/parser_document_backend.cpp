@@ -10,6 +10,8 @@
 #include "../Observability/observability.hpp"
 #include <fcntl.h>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void parser_observability_emit(const char *operation, const char *resource,
     ft_observability_trace_phase phase, int32_t error_code,

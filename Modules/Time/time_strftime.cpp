@@ -1,6 +1,8 @@
 #include "time.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_size_t   format_time_component(char *destination, ft_size_t destination_size, int32_t value, int32_t minimum_width)
 {

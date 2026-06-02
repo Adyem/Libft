@@ -7,6 +7,9 @@
 #include "gnl_stream.hpp"
 #include <new>
 #include <unistd.h>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool map_has_new_error(ft_unordered_map<int32_t, char*> &map, int32_t previous_error, int32_t *current_error)
 {

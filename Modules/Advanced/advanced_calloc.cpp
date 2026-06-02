@@ -2,6 +2,7 @@
 #include "advanced.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 void    *adv_calloc(ft_size_t count, ft_size_t size)
 {

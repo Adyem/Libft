@@ -3,6 +3,9 @@
 #include "compatebility_internal.hpp"
 #include <cstdint>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 # include <wincrypt.h>

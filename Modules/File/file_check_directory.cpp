@@ -2,6 +2,9 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "open_dir.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t normalize_path(ft_string &path) noexcept
 {

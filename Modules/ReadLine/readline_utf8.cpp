@@ -6,6 +6,8 @@
 #include "../Errno/errno.hpp"
 #include <cstddef>
 #include <cstdint>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t rl_utf8_code_point_width(uint32_t code_point)
 {

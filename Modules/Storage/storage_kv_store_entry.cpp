@@ -5,6 +5,10 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t s_kv_store_snapshot_entry::initialize(
     const s_kv_store_snapshot_entry &other) noexcept

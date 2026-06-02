@@ -3,6 +3,8 @@
 #include "../Basic/class_nullptr.hpp"
 #include <cstdio>
 #include <inttypes.h>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_string *create_string_from_buffer(const char *buffer)
 {

@@ -7,6 +7,12 @@
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "math_interval.hpp"
+#include "matrix2.hpp"
+#include "matrix3.hpp"
+#include "matrix4.hpp"
 #if defined(__SSE2__)
 # include <immintrin.h>
 #endif

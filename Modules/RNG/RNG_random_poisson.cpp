@@ -2,6 +2,11 @@
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Math/math.hpp"
+#include "../Basic/limits.hpp"
+#include "../Math/math_interval.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t ft_random_poisson(double lambda_value)
 {

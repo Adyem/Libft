@@ -3,6 +3,9 @@
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t ft_dice_roll(int32_t number, int32_t faces)
 {

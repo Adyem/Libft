@@ -2,6 +2,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t file_move(const char *source_path, const char *destination_path)
 {

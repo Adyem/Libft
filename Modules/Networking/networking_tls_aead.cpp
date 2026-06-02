@@ -3,6 +3,10 @@
 #include "../Basic/basic.hpp"
 #include "openssl_support.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 #if NETWORKING_HAS_OPENSSL
 
 static const EVP_CIPHER *networking_tls_resolve_cipher(const SSL_CIPHER *cipher)

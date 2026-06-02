@@ -2,6 +2,8 @@
 #include "game_rarity_band.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t game_rarity_band::_last_error = FT_ERR_SUCCESS;
 

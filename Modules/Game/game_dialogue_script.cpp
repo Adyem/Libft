@@ -4,6 +4,12 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
+#include "game_dialogue_line.hpp"
 
 thread_local int32_t game_dialogue_script::_last_error = FT_ERR_SUCCESS;
 

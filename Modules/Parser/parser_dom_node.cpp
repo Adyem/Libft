@@ -8,6 +8,9 @@
 #include "../Errno/errno_internal.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 ft_dom_node::ft_dom_node() noexcept
     : _type(FT_DOM_NODE_NULL), _name(), _value(), _children(),

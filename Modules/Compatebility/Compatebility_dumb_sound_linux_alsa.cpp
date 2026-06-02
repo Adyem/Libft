@@ -1,3 +1,7 @@
+#include "../Basic/limits.hpp"
+#include "../DUMB/sound_device.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if !defined(_WIN32) && !defined(__APPLE__)
 
 #include "compatebility_internal.hpp"

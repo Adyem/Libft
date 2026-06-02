@@ -4,6 +4,11 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "compression.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/vector.hpp"
 
 static const unsigned char g_compression_empty_input = 0;
 

@@ -6,6 +6,9 @@
 #include <cerrno>
 #include <cstring>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if defined(__linux__)
 # include <sys/inotify.h>
 # include <unistd.h>

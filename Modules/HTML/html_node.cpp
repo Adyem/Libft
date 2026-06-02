@@ -6,6 +6,7 @@
 #include "../Advanced/advanced.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
 
 static void html_release_string(char *string)
 {

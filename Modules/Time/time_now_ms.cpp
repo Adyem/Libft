@@ -3,6 +3,8 @@
 #include "../Errno/errno.hpp"
 #include <chrono>
 #include <climits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static t_time_clock_now_hook    g_time_now_ms_hook = ft_nullptr;
 

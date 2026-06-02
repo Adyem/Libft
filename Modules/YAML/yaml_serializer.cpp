@@ -1,6 +1,10 @@
 #include "yaml.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static void yaml_serializer_delete_string(ft_string *string) noexcept
 {

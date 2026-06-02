@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <new>
+#include "../PThread/mutex.hpp"
 
 time_fps::time_fps(void) noexcept
 {

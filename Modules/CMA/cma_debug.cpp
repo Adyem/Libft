@@ -7,6 +7,9 @@
 #include "../Errno/errno.hpp"
 #include "../System_utils/system_utils.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if DEBUG
 
 static const unsigned char g_cma_guard_pattern = 0xA5;

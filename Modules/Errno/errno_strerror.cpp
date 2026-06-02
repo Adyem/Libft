@@ -1,6 +1,9 @@
 #include "errno.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 typedef struct s_ft_error_string
 {

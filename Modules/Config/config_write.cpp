@@ -5,9 +5,10 @@
 #include "../Printf/printf.hpp"
 #include "../File/file_utils.hpp"
 #include "../JSon/json.hpp"
-#include <cstddef>
-#include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t config_lock_if_enabled(const config_data *config,
     ft_bool *lock_acquired)

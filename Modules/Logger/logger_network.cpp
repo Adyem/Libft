@@ -4,6 +4,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t ft_log_set_remote_sink(const char *host, uint16_t port, ft_bool use_tcp)
 {

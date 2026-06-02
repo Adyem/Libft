@@ -3,6 +3,9 @@
 #include "../Printf/printf.hpp"
 #include "../RNG/rng.hpp"
 #include <climits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static int32_t math_handle_dice_roll(char *string, int32_t *index, int32_t *next_number_index, int32_t *error)
 {

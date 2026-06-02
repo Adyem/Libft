@@ -4,6 +4,9 @@
 #include "../Errno/errno_internal.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Template/move.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_log_context_guard::ft_log_context_guard() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED),

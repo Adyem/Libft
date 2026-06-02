@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <new>
 #include "../Basic/basic.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_size_t ft_utf16_effective_length(const char16_t *input,
                                                 ft_size_t input_length)

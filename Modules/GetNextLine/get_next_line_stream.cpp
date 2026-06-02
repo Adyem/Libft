@@ -3,6 +3,9 @@
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int64_t gnl_stream_default_fd_read(void *user_data, char *buffer, ft_size_t max_size,
     int32_t *error_code)

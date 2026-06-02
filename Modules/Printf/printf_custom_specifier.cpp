@@ -5,6 +5,7 @@
 #include "../PThread/recursive_mutex.hpp"
 #include <climits>
 #include <new>
+#include "../PThread/mutex.hpp"
 
 static pt_recursive_mutex *g_pf_custom_specifiers_mutex = ft_nullptr;
 

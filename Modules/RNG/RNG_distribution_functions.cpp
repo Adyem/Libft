@@ -2,6 +2,9 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 struct rng_gamma_context
 {

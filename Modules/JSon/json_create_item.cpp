@@ -10,6 +10,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../CPP_class/class_big_number.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 json_item* json_create_item(const char *key, const char *value)
 {

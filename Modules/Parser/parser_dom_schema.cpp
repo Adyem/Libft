@@ -8,6 +8,9 @@
 #include "../Errno/errno_internal.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 thread_local int32_t ft_dom_schema::_last_error = FT_ERR_SUCCESS;
 

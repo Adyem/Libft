@@ -8,6 +8,9 @@
 #include "../PThread/pthread_internal.hpp"
 
 #include <cctype>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static thread_local int32_t g_json_stream_last_error = FT_ERR_SUCCESS;
 

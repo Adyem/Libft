@@ -4,6 +4,8 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 uint32_t aabb::lock_pair(const aabb &other, const aabb *&lower,
     const aabb *&upper) const

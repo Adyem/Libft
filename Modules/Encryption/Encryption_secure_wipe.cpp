@@ -3,6 +3,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t encryption_secure_wipe(void *buffer, ft_size_t buffer_size)
 {

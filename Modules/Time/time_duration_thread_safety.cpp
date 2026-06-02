@@ -7,6 +7,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void time_duration_ms_disable_thread_safety_internal(t_duration_milliseconds *duration)
 {

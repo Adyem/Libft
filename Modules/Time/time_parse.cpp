@@ -7,6 +7,9 @@
 #include <sstream>
 #include <iomanip>
 #include <limits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool is_leap_year(int32_t year)
 {

@@ -6,6 +6,9 @@
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "math_interval.hpp"
 
 thread_local int32_t quaternion::_last_error = FT_ERR_SUCCESS;
 

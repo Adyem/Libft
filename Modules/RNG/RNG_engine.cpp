@@ -5,6 +5,8 @@
 #include <atomic>
 #include <new>
 #include <random>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 std::mt19937 g_random_engine;
 std::atomic<ft_bool> g_random_engine_seeded(FT_FALSE);

@@ -7,6 +7,9 @@
 #include "../PThread/pthread_internal.hpp"
 #include <string.h>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
 {

@@ -2,6 +2,9 @@
 #include "game_equipment.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/shared_ptr.hpp"
 
 thread_local int32_t game_equipment::_last_error = FT_ERR_SUCCESS;
 

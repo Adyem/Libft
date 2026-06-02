@@ -1,6 +1,7 @@
 #include "uri_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 static char *uri_normalize_percent_text(const char *input, ft_size_t input_size,
     ft_bool keep_slash)

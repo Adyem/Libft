@@ -8,6 +8,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const
 {

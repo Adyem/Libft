@@ -3,6 +3,9 @@
 #include "queue.hpp"
 #include "stack.hpp"
 #include "vector.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t build_types()
 {

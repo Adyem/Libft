@@ -3,6 +3,9 @@
 #include "../CPP_class/class_string.hpp"
 #include "../GetNextLine/get_next_line.hpp"
 #include <iostream>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void ft_print_char(char character)
 {

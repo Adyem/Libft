@@ -4,6 +4,10 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static ft_size_t distance_component(ft_size_t left_value, ft_size_t right_value)
 {

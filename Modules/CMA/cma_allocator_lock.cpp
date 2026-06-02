@@ -4,6 +4,7 @@
 #include "cma_internal.hpp"
 #include <cstdlib>
 #include <new>
+#include "../PThread/mutex.hpp"
 
 static pt_recursive_mutex *g_cma_allocator_mutex = nullptr;
 

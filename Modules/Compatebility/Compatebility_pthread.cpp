@@ -3,6 +3,9 @@
 #include <atomic>
 #include "../PThread/pthread.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 # include <synchapi.h>

@@ -6,6 +6,10 @@
 #include <fcntl.h>
 #include <cstdlib>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # define FILE_SECURITY_BINARY_FLAG O_BINARY
 #else

@@ -1,5 +1,8 @@
 #include "../CPP_class/bitset.hpp"
 #include <cstdint>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t compile_bitset_usage()
 {

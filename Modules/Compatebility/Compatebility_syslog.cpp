@@ -1,5 +1,8 @@
 #include "compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 int32_t cmp_syslog_open(const char *identifier)
 {

@@ -3,6 +3,10 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static void yaml_dom_delete_node(ft_dom_node *node) noexcept
 {

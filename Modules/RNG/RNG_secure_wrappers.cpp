@@ -2,6 +2,9 @@
 #include "../Errno/errno.hpp"
 #include <random>
 #include <exception>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static int32_t rng_fill_from_random_device(unsigned char *buffer, ft_size_t length)
 {

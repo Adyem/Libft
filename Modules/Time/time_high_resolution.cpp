@@ -3,6 +3,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include <climits>
 #include <cstdint>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_bool    time_high_resolution_now(t_high_resolution_time_point *time_point)
 {

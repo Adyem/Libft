@@ -4,6 +4,13 @@
 #include "../Errno/errno_internal.hpp"
 #include "game_crafting.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
 
 thread_local int32_t game_crafting_ingredient::_last_error = FT_ERR_SUCCESS;
 thread_local int32_t game_crafting::_last_error = FT_ERR_SUCCESS;

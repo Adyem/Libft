@@ -1,6 +1,9 @@
 #include "file_utils.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t file_metadata_compare_permissions(const char *left_path,
     const char *right_path, uint32_t *difference_value)

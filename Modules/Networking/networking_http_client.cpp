@@ -5,6 +5,9 @@
 #include "ssl_wrapper.hpp"
 #include "openssl_support.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../Template/pair.hpp"
 #if NETWORKING_HAS_OPENSSL
 #include <cstring>
 #include <cstdio>

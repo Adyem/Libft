@@ -5,6 +5,7 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
 
 static thread_local int32_t g_json_stream_writer_last_error = FT_ERR_SUCCESS;
 

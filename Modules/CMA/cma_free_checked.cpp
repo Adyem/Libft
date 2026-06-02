@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 
 #include <cstdlib>
+#include "../Basic/limits.hpp"
 
 int32_t cma_checked_free(void* memory_pointer)
 {

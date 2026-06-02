@@ -1,4 +1,8 @@
 #include "cancellation.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 int32_t ft_cancellation_state::set_error(int32_t error_code) noexcept
 {

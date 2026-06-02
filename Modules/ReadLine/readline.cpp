@@ -9,6 +9,9 @@
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 #include "readline.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 char    *history[MAX_HISTORY];
 int32_t        history_count = 0;

@@ -2,6 +2,8 @@
 #include "game_currency_rate.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t game_currency_rate::_last_error = FT_ERR_SUCCESS;
 

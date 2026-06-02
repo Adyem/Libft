@@ -4,6 +4,8 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 uint32_t circle::lock_pair(const circle &other, const circle *&lower,
     const circle *&upper) const

@@ -2,6 +2,15 @@
 #include "game_economy_table.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "game_currency_rate.hpp"
+#include "game_price_definition.hpp"
+#include "game_rarity_band.hpp"
+#include "game_vendor_profile.hpp"
 
 thread_local int32_t game_economy_table::_last_error = FT_ERR_SUCCESS;
 

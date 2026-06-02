@@ -1,4 +1,5 @@
 #include "uri_internal.hpp"
+#include "uri.hpp"
 
 static ft_bool uri_has_scheme(const char *input, ft_size_t input_size,
     ft_size_t *scheme_end) noexcept

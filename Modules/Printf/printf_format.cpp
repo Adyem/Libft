@@ -4,6 +4,9 @@
 #include "../System_utils/system_utils.hpp"
 #include <cstdarg>
 #include <climits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 struct pf_fd_writer_context
 {

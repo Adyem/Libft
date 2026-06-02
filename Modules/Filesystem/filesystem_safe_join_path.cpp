@@ -1,5 +1,7 @@
 #include "filesystem.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_string *filesystem_safe_join_path(const char *root_path,
     const char *relative_path)

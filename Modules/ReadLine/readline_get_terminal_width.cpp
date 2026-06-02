@@ -1,5 +1,8 @@
 #include "readline_internal.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t rl_get_terminal_width(int32_t *terminal_width)
 {

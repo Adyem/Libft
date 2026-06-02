@@ -5,6 +5,8 @@
 #include "../Errno/errno.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t    scma_get_stats(scma_stats *out_stats)
 {

@@ -2,6 +2,10 @@
 #include "game_dialogue_line.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static void game_dialogue_copy_int_vector(const ft_vector<int32_t> &source,
     ft_vector<int32_t> &destination)

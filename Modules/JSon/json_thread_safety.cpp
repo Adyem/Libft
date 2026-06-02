@@ -5,6 +5,8 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
 
 static thread_local int32_t g_json_thread_error = FT_ERR_SUCCESS;
 static pt_recursive_mutex *g_json_group_list_mutex = ft_nullptr;

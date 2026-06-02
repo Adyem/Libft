@@ -3,6 +3,10 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
+#include "../File/open_dir.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 {

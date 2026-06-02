@@ -2,6 +2,8 @@
 
 #include "../Errno/errno.hpp"
 #include "../Compatebility/compatebility_cross_process.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t cp_receive_descriptor(int32_t socket_file_descriptor,
     cross_process_message &message)

@@ -2,6 +2,7 @@
 #include "advanced.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
 
 static int32_t calculate_length(int32_t number, int32_t base)
 {

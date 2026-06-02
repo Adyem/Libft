@@ -1,5 +1,8 @@
 #include "../Networking/openssl_support.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
 #include "../Errno/errno.hpp"

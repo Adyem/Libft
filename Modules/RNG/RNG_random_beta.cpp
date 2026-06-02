@@ -2,6 +2,9 @@
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <random>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 float ft_random_beta(float alpha, float beta)
 {

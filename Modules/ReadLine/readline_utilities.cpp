@@ -8,6 +8,9 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t rl_resize_buffer(char **buffer_pointer, int32_t *current_size_pointer, int32_t new_size)
 {

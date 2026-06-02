@@ -3,6 +3,9 @@
 #include "../System_utils/system_utils.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_size_t cma_block_size(const void *memory_pointer)
 {

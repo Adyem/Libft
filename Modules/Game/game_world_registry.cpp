@@ -4,6 +4,13 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "game_region_definition.hpp"
+#include "game_world_region.hpp"
 
 thread_local int32_t game_world_registry::_last_error = FT_ERR_SUCCESS;
 

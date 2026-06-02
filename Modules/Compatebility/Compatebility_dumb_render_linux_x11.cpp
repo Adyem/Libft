@@ -1,3 +1,5 @@
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if !defined(_WIN32) && !defined(__APPLE__)
 
 #include "../DUMB/dumb_render_internal.hpp"

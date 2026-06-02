@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <new>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #define GAME_VOXEL_CHUNK_MAGIC 0x474D4348U
 #define GAME_VOXEL_CHUNK_VERSION 1U
 

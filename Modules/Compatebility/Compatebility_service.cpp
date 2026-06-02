@@ -4,6 +4,9 @@
 #include <csignal>
 #include <cstring>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 # include <process.h>

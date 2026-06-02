@@ -4,6 +4,10 @@
 #include "../Printf/printf.hpp"
 #include "../Basic/basic.hpp"
 #include "../Sink/sink.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static int32_t logger_append_quoted_token(ft_string &buffer, const char *value)
 {

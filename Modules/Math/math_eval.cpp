@@ -2,6 +2,8 @@
 #include "../Printf/printf.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t    *math_eval(const char *expression)
 {

@@ -8,6 +8,8 @@
 #include <new>
 #include <cstring>
 #include <cstddef>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 typedef struct s_time_trace_frame
 {

@@ -2,6 +2,8 @@
 #include "../Basic/class_nullptr.hpp"
 #include <new>
 #include <stdarg.h>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t pf_snprintf(char *string, ft_size_t size, const char *format, ...)
 {

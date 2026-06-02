@@ -3,6 +3,10 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include <limits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "game_event.hpp"
 
 static const int64_t g_event_scheduler_ns_per_second = 1000000000LL;
 

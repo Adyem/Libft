@@ -2,6 +2,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../File/file_utils.hpp"
 #include "../File/open_dir.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool filesystem_is_dot_entry(const char *name) noexcept
 {

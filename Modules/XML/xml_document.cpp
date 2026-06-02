@@ -10,6 +10,10 @@
 #include <cstdio>
 #include <cerrno>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../Template/unordered_map.hpp"
+#include "../Template/vector.hpp"
 
 struct xml_namespace_entry
 {

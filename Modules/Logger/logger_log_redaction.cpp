@@ -1,5 +1,9 @@
 #include "logger_internal.hpp"
 #include "../Basic/basic.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 ft_vector<s_redaction_rule> g_redaction_rules;
 

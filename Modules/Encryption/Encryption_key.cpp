@@ -7,6 +7,10 @@
 #include "../Errno/errno.hpp"
 #include "encryption.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 const char *be_get_encryption_key(void)
 {

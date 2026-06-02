@@ -3,6 +3,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../File/file_utils.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_string *filesystem_empty_string(void)
 {

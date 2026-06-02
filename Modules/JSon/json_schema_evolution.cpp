@@ -5,6 +5,9 @@
 #include "../Template/vector.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/mutex.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 struct json_schema_migration_step
 {

@@ -2,6 +2,11 @@
 #include "game_behavior_profile.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
+#include "game_behavior_action.hpp"
 
 thread_local int32_t game_behavior_profile::_last_error = FT_ERR_SUCCESS;
 static int32_t game_behavior_copy_action_vector(

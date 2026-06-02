@@ -1,6 +1,10 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 #include <cfloat>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 double math_pow(double base_value, int32_t exponent)
 {

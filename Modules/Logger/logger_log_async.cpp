@@ -8,6 +8,10 @@
 #include <unistd.h>
 #include <cerrno>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 ft_bool g_async_running = FT_FALSE;
 static ft_size_t g_async_queue_limit = 1024;

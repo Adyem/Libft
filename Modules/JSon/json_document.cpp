@@ -10,6 +10,9 @@
 
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static thread_local int32_t g_json_document_last_error = FT_ERR_SUCCESS;
 static thread_local pt_recursive_mutex *g_json_document_locked_mutex = ft_nullptr;

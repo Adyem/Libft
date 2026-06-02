@@ -4,6 +4,9 @@
 #include "../Template/vector.hpp"
 #include <atomic>
 #include <mutex>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_vector<task_scheduler_trace_sink> g_task_scheduler_trace_sinks(4);
 static std::mutex g_task_scheduler_trace_mutex;

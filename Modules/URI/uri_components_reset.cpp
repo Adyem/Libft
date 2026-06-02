@@ -1,4 +1,5 @@
 #include "uri_internal.hpp"
+#include "uri.hpp"
 
 void uri_components_reset(uri_components *components) noexcept
 {

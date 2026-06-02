@@ -2,6 +2,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include <cerrno>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int64_t ft_time_ms(void)
 {

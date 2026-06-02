@@ -6,6 +6,9 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "html_parser.hpp"
 
 thread_local int32_t html_document::_last_error = FT_ERR_SUCCESS;
 

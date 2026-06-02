@@ -1,6 +1,10 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 #include <climits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 int32_t math_factorial(int32_t number)
 {

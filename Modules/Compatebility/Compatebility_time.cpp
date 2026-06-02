@@ -9,6 +9,8 @@
 #include <ctime>
 #include <climits>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if !defined(_WIN32) && !defined(_WIN64)
 # include <unistd.h>
 # include <sys/time.h>

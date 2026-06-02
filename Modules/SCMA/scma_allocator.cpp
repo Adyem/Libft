@@ -6,6 +6,8 @@
 #include "../Basic/limits.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t    scma_initialize(ft_size_t initial_capacity)
 {

@@ -2,6 +2,10 @@
 
 #include <cmath>
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static const double FFT_PI = 3.141592653589793238462643383279502884;
 

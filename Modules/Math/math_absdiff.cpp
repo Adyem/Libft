@@ -1,5 +1,8 @@
 #include "math.hpp"
 #include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 static uint64_t get_absolute_difference(int64_t first_number,
     int64_t second_number)

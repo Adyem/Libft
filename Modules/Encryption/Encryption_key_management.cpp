@@ -4,6 +4,10 @@
 #include "../Errno/errno.hpp"
 #include "../RNG/rng.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static int32_t encryption_fill_secure_buffer_internal(uint8_t *buffer,
     ft_size_t buffer_length)

@@ -4,10 +4,11 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../Advanced/advanced.hpp"
-#include <cstddef>
 #include <cstdint>
-#include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t config_lock_if_enabled(const config_data *config,
     ft_bool *lock_acquired)

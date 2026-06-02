@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stddef.h>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t pf_printf_fd(int32_t file_descriptor, const char *format, ...)
 {

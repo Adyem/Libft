@@ -4,6 +4,9 @@
 #include "../Errno/errno.hpp"
 #include "../Observability/observability.hpp"
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void file_observability_emit(const char *operation, const char *path,
     ft_observability_trace_phase phase, int32_t error_code,

@@ -2,6 +2,9 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t ft_random_geometric(double success_probability)
 {

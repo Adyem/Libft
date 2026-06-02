@@ -1,5 +1,7 @@
 #include "uri_internal.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
+#include "uri.hpp"
 
 void uri_components_destroy(uri_components *components) noexcept
 {

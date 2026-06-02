@@ -1,4 +1,5 @@
 #include "CMA.hpp"
+#include "../Basic/limits.hpp"
 
 void    cma_free_double(char **content)
 {

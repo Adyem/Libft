@@ -6,6 +6,9 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static thread_local int32_t g_json_utils_last_error = FT_ERR_SUCCESS;
 

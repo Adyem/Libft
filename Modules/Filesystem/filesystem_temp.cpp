@@ -3,6 +3,9 @@
 #include "../File/file_utils.hpp"
 #include "../Time/time.hpp"
 #include <cstdlib>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static thread_local uint64_t g_filesystem_temp_counter = 0U;
 

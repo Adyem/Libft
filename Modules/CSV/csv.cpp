@@ -5,6 +5,10 @@
 #include "../Errno/errno_internal.hpp"
 #include <cstring>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static char *csv_duplicate_c_string(const char *string)
 {

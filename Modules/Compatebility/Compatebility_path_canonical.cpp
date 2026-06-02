@@ -1,6 +1,9 @@
 #include "compatebility_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if !defined(_WIN32) && !defined(_WIN64)
 # include <cstdlib>
 #endif

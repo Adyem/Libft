@@ -3,6 +3,8 @@
 #include "../Errno/errno.hpp"
 #include <cerrno>
 
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # include "../Basic/class_nullptr.hpp"
 # include "../PThread/mutex.hpp"

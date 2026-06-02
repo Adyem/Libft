@@ -1,6 +1,8 @@
 #include "time.hpp"
 #include "../PThread/pthread.hpp"
 #include <climits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void    time_sleep(uint32_t seconds)
 {

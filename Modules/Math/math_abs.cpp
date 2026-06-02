@@ -1,5 +1,8 @@
 #include "math.hpp"
 #include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 int32_t math_abs(int32_t number)
 {

@@ -5,6 +5,8 @@
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t create_recursive_mutex(pt_recursive_mutex **mutex_pointer)
 {

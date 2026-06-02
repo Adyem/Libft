@@ -3,6 +3,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include <unistd.h>
 #include <sys/epoll.h>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
             int32_t *write_file_descriptors, int32_t write_count,

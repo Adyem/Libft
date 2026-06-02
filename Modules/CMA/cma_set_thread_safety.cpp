@@ -1,5 +1,6 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
+#include "../Basic/limits.hpp"
 
 int32_t cma_set_thread_safety(ft_bool enable)
 {

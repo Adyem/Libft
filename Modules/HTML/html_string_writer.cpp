@@ -1,6 +1,7 @@
 #include "html_parser.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
 
 struct html_string_builder
 {

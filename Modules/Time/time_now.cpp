@@ -3,6 +3,8 @@
 #include "../Errno/errno.hpp"
 #include <ctime>
 #include <cerrno>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 t_time  time_now(void)
 {

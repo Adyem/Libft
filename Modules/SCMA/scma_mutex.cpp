@@ -5,6 +5,7 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "SCMA.hpp"
+#include "../PThread/mutex.hpp"
 
 static pt_recursive_mutex    *g_scma_mutex = ft_nullptr;
 static pt_recursive_mutex    *g_scma_mutex_control = ft_nullptr;

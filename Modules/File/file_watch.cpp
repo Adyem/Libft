@@ -5,6 +5,10 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "file_watch_event.hpp"
 
 ft_file_watch::ft_file_watch()
     : _path(), _callback(ft_nullptr), _typed_callback(ft_nullptr),

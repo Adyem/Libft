@@ -4,6 +4,7 @@
 #include "../Basic/utf8.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
 
 static int32_t ft_utf8_code_point_in_range(uint32_t code_point, uint32_t start_value,
         uint32_t end_value)

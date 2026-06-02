@@ -4,6 +4,8 @@
 #include "../Template/unordered_map.hpp"
 #include "../PThread/mutex.hpp"
 #include <pthread.h>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 struct ft_otel_span_state
 {

@@ -1,5 +1,6 @@
 #include "uri_internal.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 char *uri_percent_encode_component(const uint8_t *input, ft_size_t input_size,
     ft_bool keep_slash)

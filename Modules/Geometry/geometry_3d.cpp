@@ -1,6 +1,8 @@
 #include "geometry.hpp"
 
 #include <cmath>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static const double GEOMETRY_EPSILON = 0.0000001;
 

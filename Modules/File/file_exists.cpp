@@ -1,5 +1,8 @@
 #include "file_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t file_exists(const char *path)
 {

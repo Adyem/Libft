@@ -1,4 +1,8 @@
 #include "logger_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static void logger_append_literal(ft_string &buffer, const char *literal,
     int32_t &error_code_value)

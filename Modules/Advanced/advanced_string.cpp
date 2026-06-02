@@ -2,6 +2,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int64_t ft_hash_string31(const char *string)
 {

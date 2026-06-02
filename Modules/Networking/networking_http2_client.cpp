@@ -6,6 +6,12 @@
 #include "../System_utils/system_utils.hpp"
 #include "openssl_support.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/vector.hpp"
 #if NETWORKING_HAS_OPENSSL
 #include <openssl/ssl.h>
 #include <cstdlib>

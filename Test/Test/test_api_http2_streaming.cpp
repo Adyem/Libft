@@ -290,7 +290,13 @@ static int http2_test_server(http2_test_server_state *state)
     server_configuration._reuse_address = true;
     ft_socket server_socket;
     int initialize_error = server_socket.initialize(server_configuration);
-    state->start_error.store(initialize_error, std::memory_order_relaxed);
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        state->start_error.store(initialize_error, std::memory_order_relaxed);
+        state->ready.store(true, std::memory_order_release);
+        return (initialize_error);
+    }
+    state->start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     state->ready.store(true, std::memory_order_release);
     if (server_socket.get_file_descriptor() < 0)
     {
@@ -298,7 +304,6 @@ static int http2_test_server(http2_test_server_state *state)
             std::memory_order_relaxed);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    state->start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_file_descriptor(),
         reinterpret_cast<struct sockaddr*>(&address_storage),

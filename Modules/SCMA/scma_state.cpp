@@ -6,6 +6,8 @@
 #include "../Basic/limits.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static unsigned char *g_scma_heap_data = ft_nullptr;
 static ft_size_t g_scma_heap_capacity = 0;

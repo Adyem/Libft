@@ -3,6 +3,11 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/unordered_map.hpp"
+#include "../Template/vector.hpp"
 
 static int32_t xml_dom_report_error(int32_t error_code) noexcept
 {

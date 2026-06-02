@@ -6,6 +6,14 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/vector.hpp"
+#include "game_crafting.hpp"
 
 thread_local int32_t game_item_definition::_last_error = FT_ERR_SUCCESS;
 

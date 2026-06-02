@@ -2,6 +2,10 @@
 #include "open_dir.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static ft_bool file_list_is_dot_entry(const char *name) noexcept
 {

@@ -1,6 +1,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "../Compatebility/sqlite_support.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
 #if SQLITE3_AVAILABLE
 # include <sqlite3.h>
 #endif

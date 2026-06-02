@@ -8,6 +8,8 @@
 #include <new>
 #include <random>
 #include <vector>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 struct s_geometry_wait_record
 {

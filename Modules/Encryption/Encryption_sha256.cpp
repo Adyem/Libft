@@ -3,6 +3,9 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "encryption.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static uint32_t rotate_right(uint32_t value, uint32_t bits)
 {

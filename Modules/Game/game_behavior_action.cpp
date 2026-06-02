@@ -4,6 +4,8 @@
 #include "../PThread/pthread.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t game_behavior_action::_last_error = FT_ERR_SUCCESS;
 int32_t game_behavior_action::lock_pair(const game_behavior_action &first, const game_behavior_action &second,

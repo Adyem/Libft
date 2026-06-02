@@ -5,6 +5,14 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "game_dialogue_line.hpp"
+#include "game_dialogue_script.hpp"
 
 thread_local int32_t game_dialogue_table::_last_error = FT_ERR_SUCCESS;
 

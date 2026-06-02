@@ -1,6 +1,7 @@
 #include "uri_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 static ft_bool uri_query_key_matches(const char *query, ft_size_t key_start,
     ft_size_t key_end, const char *key, ft_size_t key_size)

@@ -5,6 +5,9 @@
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 thread_local int32_t game_experience_table::_last_error = FT_ERR_SUCCESS;
 

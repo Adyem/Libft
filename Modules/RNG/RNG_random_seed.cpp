@@ -1,6 +1,9 @@
 #include "rng.hpp"
 #include <cstdint>
 #include <random>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 uint32_t ft_random_seed(const char *seed_string)
 {

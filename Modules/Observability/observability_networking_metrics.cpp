@@ -4,6 +4,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../PThread/recursive_mutex.hpp"
 
 static pt_mutex *g_observability_networking_mutex = ft_nullptr;
 static ft_bool g_observability_networking_initialised = FT_FALSE;

@@ -1,6 +1,8 @@
 #include "roll.hpp"
 #include "math_internal.hpp"
 #include "../Printf/printf.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t    math_roll_check_arg(char *string)
 {

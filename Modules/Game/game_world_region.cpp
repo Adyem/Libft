@@ -2,6 +2,10 @@
 #include "game_world_region.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 thread_local int32_t game_world_region::_last_error = FT_ERR_SUCCESS;
 

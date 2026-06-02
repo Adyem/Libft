@@ -1,6 +1,9 @@
 #include "file_utils.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Encryption/encryption.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t file_hash_file_contents(const char *path, ft_string *contents)
 {

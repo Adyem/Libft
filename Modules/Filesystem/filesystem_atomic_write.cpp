@@ -2,6 +2,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../File/file_utils.hpp"
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t filesystem_write_all(FILE *file_stream, const void *data,
     ft_size_t size)

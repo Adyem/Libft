@@ -1,11 +1,10 @@
 #include "config.hpp"
-#include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/pthread.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t config_entry_prepare_thread_safety(config_entry *entry)
 {

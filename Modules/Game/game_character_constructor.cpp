@@ -3,6 +3,18 @@
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "game_achievement.hpp"
+#include "game_buff.hpp"
+#include "game_debuff.hpp"
+#include "game_quest.hpp"
+#include "game_skill.hpp"
+#include "game_upgrade.hpp"
 
 thread_local int32_t game_character::_last_error = FT_ERR_SUCCESS;
 

@@ -3,19 +3,20 @@
 #include <cstddef>
 #include <cerrno>
 #include <climits>
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <cstring>
 
 #include "../Compatebility/sqlite_support.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/vector.hpp"
 #if SQLITE3_AVAILABLE
 # include <sqlite3.h>
 #endif
 
 #include "../Basic/basic.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
-#include "../Encryption/encryption.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"

@@ -7,6 +7,9 @@
 #include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../Template/vector.hpp"
 
 thread_local int32_t ft_dual_number::_last_error = FT_ERR_SUCCESS;
 

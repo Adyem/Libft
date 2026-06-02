@@ -1,6 +1,9 @@
 #include "concurrency.hpp"
 #include "../Errno/errno.hpp"
 #include <chrono>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_once::ft_once() noexcept
     : _mutex(), _called(FT_FALSE), _initialised_state(FT_CLASS_STATE_UNINITIALISED)

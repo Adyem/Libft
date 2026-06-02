@@ -8,6 +8,10 @@
 #include "../Template/move.hpp"
 
 #include <cerrno>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/vector.hpp"
 
 static int32_t append_line_to_vector(ft_vector<ft_string> &lines, char *line_buffer)
 {

@@ -4,6 +4,9 @@
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static void html_write_attrs(int32_t file_descriptor, html_attr *attribute)
 {

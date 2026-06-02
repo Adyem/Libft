@@ -3,6 +3,9 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_string *filesystem_string_from_owned_c_string(char *value)
 {

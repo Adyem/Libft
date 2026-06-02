@@ -4,6 +4,7 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 static void release_html_string(char *string)
 {

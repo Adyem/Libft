@@ -8,6 +8,9 @@
 #include <climits>
 #include <cerrno>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 struct pf_stream_writer_context
 {

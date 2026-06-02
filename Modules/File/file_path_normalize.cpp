@@ -3,6 +3,9 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "file_utils.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t file_string_error(const ft_string &string_value) noexcept
 {

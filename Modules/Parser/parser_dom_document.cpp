@@ -8,6 +8,8 @@
 #include "../Errno/errno_internal.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_dom_document::ft_dom_document() noexcept
     : _root(ft_nullptr), _mutex(ft_nullptr),

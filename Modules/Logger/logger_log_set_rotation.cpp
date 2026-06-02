@@ -1,4 +1,7 @@
 #include "logger_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static int32_t log_rotation_report(int32_t return_value)
 {

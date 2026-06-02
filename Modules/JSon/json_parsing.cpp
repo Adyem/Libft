@@ -6,6 +6,9 @@
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_big_number.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static ft_bool json_string_is_integral(const char *value)
 {

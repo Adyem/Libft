@@ -2,6 +2,8 @@
 #include "../Basic/class_nullptr.hpp"
 #include <chrono>
 #include <climits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 t_monotonic_time_point   time_monotonic_point_now(void)
 {

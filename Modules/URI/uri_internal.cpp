@@ -1,6 +1,8 @@
 #include "uri_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
+#include "uri.hpp"
 
 static thread_local int32_t g_uri_error = FT_ERR_SUCCESS;
 

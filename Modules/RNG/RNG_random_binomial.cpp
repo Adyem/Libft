@@ -3,6 +3,9 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 int32_t ft_random_binomial(int32_t trial_count, double success_probability)
 {

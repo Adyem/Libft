@@ -10,6 +10,11 @@
 #include <climits>
 #include <limits>
 #include <new>
+#include "../Basic/limits.hpp"
+#include "../Math/math_interval.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static int32_t rng_stream_capture_math_error(ft_size_t previous_depth)
 {

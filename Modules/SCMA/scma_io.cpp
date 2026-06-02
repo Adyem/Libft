@@ -3,6 +3,8 @@
 #include "../Errno/errno.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t    scma_write(scma_handle handle, ft_size_t offset,
                 const void *source, ft_size_t size)

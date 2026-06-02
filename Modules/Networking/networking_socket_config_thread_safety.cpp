@@ -1,5 +1,8 @@
 #include "networking.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t socket_config_prepare_thread_safety(SocketConfig *config)
 {

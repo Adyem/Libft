@@ -10,6 +10,9 @@
 #include <cstring>
 #include <cstdio>
 #include <inttypes.h>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 const char *cmp_service_null_device_path(void)
 {

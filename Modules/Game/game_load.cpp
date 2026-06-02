@@ -8,6 +8,16 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/shared_ptr.hpp"
 #include <cstdio>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
+#include "../Template/vector.hpp"
+#include "game_achievement.hpp"
+#include "game_buff.hpp"
+#include "game_debuff.hpp"
+#include "game_skill.hpp"
+#include "game_upgrade.hpp"
 
 int32_t deserialize_character(game_character &character, json_group *group);
 int32_t deserialize_inventory(game_inventory &inventory, json_group *group);

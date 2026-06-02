@@ -1,6 +1,10 @@
 #include "../Errno/errno.hpp"
 #include "../RNG/rng.hpp"
 #include "encryption.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static ft_bool g_force_mod_inverse_failure = FT_FALSE;
 

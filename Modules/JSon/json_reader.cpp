@@ -8,6 +8,9 @@
 #include "../System_utils/system_utils.hpp"
 #include <cstdio>
 #include <limits>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 static thread_local int32_t g_json_reader_last_error = FT_ERR_SUCCESS;
 

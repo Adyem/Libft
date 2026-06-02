@@ -2,6 +2,8 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include <new>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_string *adv_span_to_string(const char *buffer, ft_size_t length)
 {

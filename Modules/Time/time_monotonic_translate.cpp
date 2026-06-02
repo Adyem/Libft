@@ -1,6 +1,8 @@
 #include "time.hpp"
 #include "../Errno/errno.hpp"
 #include <climits>
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 ft_bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
             int64_t &anchor_wall_ms)

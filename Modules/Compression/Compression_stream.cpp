@@ -11,6 +11,10 @@
 #include "../Printf/printf.hpp"
 #include "compression.hpp"
 #include "compression_stream_test_hooks.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 static const std::size_t   g_compress_stream_default_buffer_size = 4096;
 static const std::size_t   g_compress_stream_speed_buffer_size = 16384;

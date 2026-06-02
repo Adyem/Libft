@@ -3,6 +3,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cerrno>
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t cmp_su_write(int32_t file_descriptor, const char *buffer,
     ft_size_t length, int64_t *bytes_written_out)

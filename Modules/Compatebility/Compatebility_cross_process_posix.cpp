@@ -1,3 +1,6 @@
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #ifndef _WIN32
 
 #include "compatebility_cross_process.hpp"

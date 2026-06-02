@@ -1,6 +1,7 @@
 #include "advanced.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Basic/limits.hpp"
 
 
 char    *adv_strdup(const char *string)

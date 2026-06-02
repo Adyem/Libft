@@ -1,6 +1,9 @@
 #include "open_dir.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 int32_t file_create_directory(const char *path, mode_t mode)
 {

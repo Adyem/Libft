@@ -1,5 +1,9 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "math_interval.hpp"
 
 static int32_t math_is_infinite_internal(double number)
 {

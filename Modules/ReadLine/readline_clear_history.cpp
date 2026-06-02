@@ -3,6 +3,9 @@
 #include "../Basic/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 void rl_clear_history()
 {

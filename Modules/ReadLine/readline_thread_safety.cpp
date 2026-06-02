@@ -5,6 +5,8 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
 
 int32_t rl_state_prepare_thread_safety(readline_state_t *state)
 {

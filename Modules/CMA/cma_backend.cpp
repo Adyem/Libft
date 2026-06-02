@@ -5,6 +5,7 @@
 #include "../Basic/basic.hpp"
 #include <cstdlib>
 #include <cstring>
+#include "../Basic/limits.hpp"
 
 static cma_backend_hooks g_cma_backend_hooks = {nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr, nullptr};
