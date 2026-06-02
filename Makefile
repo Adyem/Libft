@@ -1,6 +1,18 @@
 include mk/compiler_flags.mk
 include mk/build_config.mk
 
+define PRINT_ORDERED_LOGS
+	@if [ "$(LIBFT_BATCH_OUTPUT)" = "1" ]; then \
+		for lib in $(1); do \
+			log_file=".libft_build_$$(printf '%s' "$$lib" | tr '/.' '__').log"; \
+			if [ -f "$$log_file" ]; then \
+				cat "$$log_file"; \
+				$(RM) "$$log_file"; \
+			fi; \
+		done; \
+	fi
+endef
+
 all: $(TARGET) template
 
 debug: $(DEBUG_TARGET)
@@ -33,6 +45,12 @@ tests:
 		printf '\033[1;35m[LIBFT BUILD] Updating test suite\033[0m\n'; \
 		$(MAKE) -C Test all $(SUBMAKE_OVERRIDES); \
 	fi
+
+print-build-mode:
+	@printf "MAKEFLAGS=%s\n" "$(MAKEFLAGS)"
+	@printf "LIBFT_PARALLEL_JOBS=%s\n" "$(LIBFT_PARALLEL_JOBS)"
+	@printf "LIBFT_JOBSERVER=%s\n" "$(LIBFT_JOBSERVER)"
+	@printf "LIBFT_BATCH_OUTPUT=%s\n" "$(LIBFT_BATCH_OUTPUT)"
 
 format:
 	@if ! command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
@@ -72,6 +90,7 @@ re:
 	@$(MAKE) all
 
 $(TARGET): FORCE $(LIBS)
+	@mk/progress.sh finish
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -83,6 +102,7 @@ $(TARGET): FORCE $(LIBS)
 	fi
 
 $(DEBUG_TARGET): FORCE $(DEBUG_LIBS)
+	@mk/progress.sh finish
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -94,6 +114,7 @@ $(DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	fi
 
 $(TEST_TARGET): FORCE $(TEST_LIBS)
+	@mk/progress.sh finish
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_TEST_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -105,6 +126,7 @@ $(TEST_TARGET): FORCE $(TEST_LIBS)
 	fi
 
 $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
+	@mk/progress.sh finish
 	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
 	@$(RM) $@
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -121,19 +143,12 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	module_path="$$module_dir/$$module_target"; \
 	progress_index=$$(printf '%s\n' "$(TEST_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
 	if [ "$(LIBFT_BATCH_OUTPUT)" = "1" ]; then \
-		log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
-		{ \
-			printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
-			$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
-		} > "$$log_file" 2>&1; \
+		log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__').log"; \
+		LIBFT_PROGRESS_MODULES="$(TEST_LIBS)" mk/run_module_build.sh "$(TOTAL_TEST_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
 		status=$$?; \
-		while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
-		cat "$$log_file"; \
-		rmdir .libft_output_lock; \
-		$(RM) "$$log_file"; \
 	else \
 		printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
-		$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
+		env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
 		status=$$?; \
 	fi; \
 	if [ $$status -ne 0 ]; then exit $$status; fi
@@ -150,25 +165,18 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	                need_build=1; \
 	        else \
 	                exit $$status; \
-        fi; \
+	        fi; \
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
 		module_path="$$module_dir/$$module_target"; \
 		progress_index=$$(printf '%s\n' "$(LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
 		if [ "$(LIBFT_BATCH_OUTPUT)" = "1" ]; then \
-			log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
-			{ \
-				printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_LIBS)" "$$module_path"; \
-				$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
-			} > "$$log_file" 2>&1; \
+			log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__').log"; \
+			LIBFT_PROGRESS_MODULES="$(LIBS)" mk/run_module_build.sh "$(TOTAL_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
-			while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
-			cat "$$log_file"; \
-			rmdir .libft_output_lock; \
-			$(RM) "$$log_file"; \
 		else \
 			printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_LIBS)" "$$module_path"; \
-			$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+			env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
 		fi; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
@@ -192,19 +200,12 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 		module_path="$$module_dir/$$module_target"; \
 		progress_index=$$(printf '%s\n' "$(DEBUG_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
 		if [ "$(LIBFT_BATCH_OUTPUT)" = "1" ]; then \
-			log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__')_$$$$.log"; \
-			{ \
-				printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
-				$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
-			} > "$$log_file" 2>&1; \
+			log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__').log"; \
+			LIBFT_PROGRESS_MODULES="$(DEBUG_LIBS)" mk/run_module_build.sh "$(TOTAL_DEBUG_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
-			while ! mkdir .libft_output_lock 2>/dev/null; do sleep 0.02; done; \
-			cat "$$log_file"; \
-			rmdir .libft_output_lock; \
-			$(RM) "$$log_file"; \
 		else \
 			printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
-			$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+			env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
 		fi; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
@@ -262,7 +263,7 @@ fclean:
 		exit 1; \
 	fi
 
-.PHONY: all debug both template demo re clean fclean tests format sanitize-clean \
+.PHONY: all debug both template demo re clean fclean tests print-build-mode format sanitize-clean \
         asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests FORCE
 
 FORCE:

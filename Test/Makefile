@@ -5,7 +5,7 @@ all: $(TARGET)
 
 .PHONY: FORCE
 FORCE:
-	@true
+	@false
 
 $(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
 	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
@@ -96,8 +96,26 @@ build_tests: all
 	@echo "Test executable ready; run ./$(TARGET) manually if desired."
 
 $(OBJDIR)/%.o: %.cpp
-	@$(MKDIR) $(dir $@)
-	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
+		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
+		{ \
+			$(MKDIR) $(dir $@); \
+			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+			built=$$(find $(OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+			printf '        [Test] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+		} > "$$log_file" 2>&1; \
+		status=$$?; \
+		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
+		cat "$$log_file"; \
+		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
+		$(RM) "$$log_file"; \
+		if [ $$status -ne 0 ]; then exit $$status; fi; \
+	else \
+		$(MKDIR) $(dir $@); \
+		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+		built=$$(find $(OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+		printf '        [Test] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+	fi
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
@@ -203,8 +221,26 @@ $(DEBUG_TARGET): $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE)
 	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE) $(LDFLAGS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
-	@$(MKDIR) $(dir $@)
-	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
+		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
+		{ \
+			$(MKDIR) $(dir $@); \
+			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+			built=$$(find $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+			printf '        [Test Debug] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+		} > "$$log_file" 2>&1; \
+		status=$$?; \
+		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
+		cat "$$log_file"; \
+		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
+		$(RM) "$$log_file"; \
+		if [ $$status -ne 0 ]; then exit $$status; fi; \
+	else \
+		$(MKDIR) $(dir $@); \
+		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+		built=$$(find $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+		printf '        [Test Debug] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+	fi
 
 $(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
 	@printf "Compiled efficiency files (%d files)\n" $(EFF_TOTAL_SRCS)
@@ -212,8 +248,26 @@ $(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
 	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS)
 
 $(EFFICIENCY_OBJDIR)/%.o: %.cpp
-	@$(MKDIR) $(dir $@)
-	@$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
+	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
+		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
+		{ \
+			$(MKDIR) $(dir $@); \
+			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
+			built=$$(find $(EFFICIENCY_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+			printf '        [Test Efficiency] Building file %s (%d/%d)\n' "$<" $$built $(EFF_TOTAL_SRCS); \
+		} > "$$log_file" 2>&1; \
+		status=$$?; \
+		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
+		cat "$$log_file"; \
+		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
+		$(RM) "$$log_file"; \
+		if [ $$status -ne 0 ]; then exit $$status; fi; \
+	else \
+		$(MKDIR) $(dir $@); \
+		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
+		built=$$(find $(EFFICIENCY_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+		printf '        [Test Efficiency] Building file %s (%d/%d)\n' "$<" $$built $(EFF_TOTAL_SRCS); \
+	fi
 
 ../$(EFFICIENCY_LIBFT_ARCHIVE): FORCE
 	@need_build=0; \
@@ -275,10 +329,10 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 clean:
 	@echo "Cleaning test objects"
 	@status=0; \
-	if ! $(RM) $(CLEAN_FILES); then \
+	if ! $(RM) $(CLEAN_FILES) $(LIBFT_TEST_OUTPUT_LOGS); then \
 	        status=1; \
 	fi; \
-	if ! $(RMDIR) $(CLEAN_DIRS); then \
+	if ! $(RMDIR) $(CLEAN_DIRS) $(LIBFT_TEST_OUTPUT_LOCK); then \
 	        status=1; \
 	fi; \
 	if [ $$status -ne 0 ]; then \
