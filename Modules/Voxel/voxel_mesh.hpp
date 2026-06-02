@@ -3,10 +3,12 @@
 
 #ifdef GAME_USE_VOXEL_REGION_BACKEND
 
-# include "../Game/game_voxel_chunk.hpp"
-# include "../Geometry/geometry.hpp"
 # include "../Template/vector.hpp"
+# include "../Errno/errno.hpp"
 # include <stdint.h>
+
+class game_voxel_chunk;
+struct geometry_frustum;
 
 enum chunk_mesh_face
 {
@@ -44,6 +46,8 @@ struct chunk_mesh
     ft_vector<chunk_mesh_vertex> vertices;
     ft_vector<uint32_t>          indices;
     chunk_mesh_bounds            bounds;
+    chunk_mesh_bounds            occupied_bounds;
+    ft_bool                      has_occupied_bounds;
 };
 
 int32_t chunk_mesh_initialize(chunk_mesh &mesh) noexcept;
@@ -53,6 +57,9 @@ int32_t chunk_mesh_generate_from_chunk(chunk_mesh &mesh,
     const game_voxel_chunk &chunk) noexcept;
 ft_bool chunk_mesh_intersects_frustum(const geometry_frustum &frustum,
     int32_t world_origin_x, int32_t world_origin_y,
+    int32_t world_origin_z) noexcept;
+ft_bool chunk_mesh_intersects_frustum(const geometry_frustum &frustum,
+    const chunk_mesh &mesh, int32_t world_origin_x, int32_t world_origin_y,
     int32_t world_origin_z) noexcept;
 
 #endif

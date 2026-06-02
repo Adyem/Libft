@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Application/application.hpp"
+#include "../../Modules/Filesystem/filesystem.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstdlib>
 #include <cstdio>

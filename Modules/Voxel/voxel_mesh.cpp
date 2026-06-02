@@ -4,6 +4,8 @@
 
 #include "voxel.hpp"
 #include "../Errno/errno.hpp"
+#include "../Game/game_voxel_chunk.hpp"
+#include "../Template/vector.hpp"
 
 static void chunk_mesh_reset_bounds(chunk_mesh &mesh) noexcept
 {
@@ -13,6 +15,65 @@ static void chunk_mesh_reset_bounds(chunk_mesh &mesh) noexcept
     mesh.bounds.maximum_x = GAME_VOXEL_CHUNK_WIDTH;
     mesh.bounds.maximum_y = GAME_VOXEL_CHUNK_HEIGHT;
     mesh.bounds.maximum_z = GAME_VOXEL_CHUNK_DEPTH;
+    return ;
+}
+
+static void chunk_mesh_reset_occupied_bounds(chunk_mesh &mesh) noexcept
+{
+    mesh.occupied_bounds.minimum_x = 0;
+    mesh.occupied_bounds.minimum_y = 0;
+    mesh.occupied_bounds.minimum_z = 0;
+    mesh.occupied_bounds.maximum_x = 0;
+    mesh.occupied_bounds.maximum_y = 0;
+    mesh.occupied_bounds.maximum_z = 0;
+    mesh.has_occupied_bounds = FT_FALSE;
+    return ;
+}
+
+static void chunk_mesh_update_occupied_bounds(chunk_mesh &mesh,
+    const chunk_mesh_vertex vertices[4]) noexcept
+{
+    int32_t vertex_index;
+    int32_t coordinate_x;
+    int32_t coordinate_y;
+    int32_t coordinate_z;
+
+    vertex_index = 0;
+    while (vertex_index < 4)
+    {
+        coordinate_x = static_cast<int32_t>(
+            vertices[vertex_index].coordinate_x);
+        coordinate_y = static_cast<int32_t>(
+            vertices[vertex_index].coordinate_y);
+        coordinate_z = static_cast<int32_t>(
+            vertices[vertex_index].coordinate_z);
+        if (mesh.has_occupied_bounds == FT_FALSE)
+        {
+            mesh.occupied_bounds.minimum_x = coordinate_x;
+            mesh.occupied_bounds.minimum_y = coordinate_y;
+            mesh.occupied_bounds.minimum_z = coordinate_z;
+            mesh.occupied_bounds.maximum_x = coordinate_x;
+            mesh.occupied_bounds.maximum_y = coordinate_y;
+            mesh.occupied_bounds.maximum_z = coordinate_z;
+            mesh.has_occupied_bounds = FT_TRUE;
+        }
+        else
+        {
+            if (coordinate_x < mesh.occupied_bounds.minimum_x)
+                mesh.occupied_bounds.minimum_x = coordinate_x;
+            if (coordinate_y < mesh.occupied_bounds.minimum_y)
+                mesh.occupied_bounds.minimum_y = coordinate_y;
+            if (coordinate_z < mesh.occupied_bounds.minimum_z)
+                mesh.occupied_bounds.minimum_z = coordinate_z;
+            if (coordinate_x > mesh.occupied_bounds.maximum_x)
+                mesh.occupied_bounds.maximum_x = coordinate_x;
+            if (coordinate_y > mesh.occupied_bounds.maximum_y)
+                mesh.occupied_bounds.maximum_y = coordinate_y;
+            if (coordinate_z > mesh.occupied_bounds.maximum_z)
+                mesh.occupied_bounds.maximum_z = coordinate_z;
+        }
+        vertex_index += 1;
+    }
     return ;
 }
 
@@ -30,6 +91,7 @@ int32_t chunk_mesh_initialize(chunk_mesh &mesh) noexcept
         return (error_code);
     }
     chunk_mesh_reset_bounds(mesh);
+    chunk_mesh_reset_occupied_bounds(mesh);
     return (FT_ERR_SUCCESS);
 }
 
@@ -45,6 +107,7 @@ int32_t chunk_mesh_destroy(chunk_mesh &mesh) noexcept
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     chunk_mesh_reset_bounds(mesh);
+    chunk_mesh_reset_occupied_bounds(mesh);
     return (FT_ERR_SUCCESS);
 }
 
@@ -57,6 +120,7 @@ int32_t chunk_mesh_clear(chunk_mesh &mesh) noexcept
     if (mesh.indices.get_error() != FT_ERR_SUCCESS)
         return (mesh.indices.get_error());
     chunk_mesh_reset_bounds(mesh);
+    chunk_mesh_reset_occupied_bounds(mesh);
     return (FT_ERR_SUCCESS);
 }
 
@@ -103,7 +167,7 @@ static int32_t chunk_mesh_face_is_visible(const game_voxel_chunk &chunk,
         neighbor_z, &neighbor_block_id);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
-    if (terrain_block_is_transparent(neighbor_block_id) == FT_TRUE)
+    if (terrain_block_occludes_faces(neighbor_block_id) == FT_FALSE)
         *visible = FT_TRUE;
     else
         *visible = FT_FALSE;
@@ -343,6 +407,7 @@ static int32_t chunk_mesh_emit_rectangle(chunk_mesh &mesh, int32_t axis_value,
     base_vertex = static_cast<uint32_t>(mesh.vertices.size());
     chunk_mesh_make_rectangle_vertices(vertices, axis_value, minimum_column,
         minimum_row, maximum_column, maximum_row, block_id, face);
+    chunk_mesh_update_occupied_bounds(mesh, vertices);
     error_code = mesh.vertices.push_back(vertices[0]);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
@@ -675,6 +740,7 @@ int32_t chunk_mesh_generate_from_chunk(chunk_mesh &mesh,
     mesh.indices.reserve(face_count * 6U);
     if (mesh.indices.get_error() != FT_ERR_SUCCESS)
         return (mesh.indices.get_error());
+    chunk_mesh_reset_occupied_bounds(mesh);
     return (chunk_mesh_emit_visible_faces(mesh, chunk));
 }
 

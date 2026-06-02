@@ -1,5 +1,3 @@
-#define GAME_USE_VOXEL_REGION_BACKEND 1
-
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
@@ -25,6 +23,7 @@ FT_TEST(test_terrain_block_metadata_registry_reports_expected_properties)
     FT_ASSERT_EQ(FT_TRUE, air_metadata.transparent);
     FT_ASSERT_EQ(FT_TRUE, air_metadata.replaceable);
     FT_ASSERT_EQ(0U, air_metadata.hardness);
+    FT_ASSERT_EQ(FT_FALSE, air_metadata.occludes_faces);
     FT_ASSERT_EQ(FT_TRUE, terrain_block_is_transparent(
         GAME_VOXEL_AIR_BLOCK));
     FT_ASSERT_EQ(FT_TRUE, terrain_block_is_replaceable(
@@ -38,22 +37,23 @@ FT_TEST(test_terrain_block_metadata_registry_reports_expected_properties)
     FT_ASSERT_EQ(FT_TRUE, shrub_metadata.replaceable);
     FT_ASSERT_EQ(FT_FALSE, shrub_metadata.liquid);
     FT_ASSERT_EQ(1U, shrub_metadata.hardness);
+    FT_ASSERT_EQ(FT_TRUE, shrub_metadata.occludes_faces);
     FT_ASSERT_EQ(FT_FALSE, leaf_metadata.solid);
     FT_ASSERT_EQ(FT_TRUE, leaf_metadata.transparent);
     FT_ASSERT_EQ(FT_TRUE, leaf_metadata.replaceable);
     FT_ASSERT_EQ(FT_FALSE, leaf_metadata.liquid);
     FT_ASSERT_EQ(1U, leaf_metadata.hardness);
+    FT_ASSERT_EQ(FT_TRUE, leaf_metadata.occludes_faces);
     FT_ASSERT_EQ(FT_TRUE, stone_metadata.solid);
     FT_ASSERT_EQ(FT_FALSE, stone_metadata.transparent);
     FT_ASSERT_EQ(FT_FALSE, stone_metadata.replaceable);
     FT_ASSERT_EQ(4U, stone_metadata.hardness);
+    FT_ASSERT_EQ(FT_TRUE, stone_metadata.occludes_faces);
     FT_ASSERT_EQ(FT_FALSE, terrain_block_is_liquid(
         TERRAIN_GENERATOR_STONE_BLOCK));
     FT_ASSERT_EQ(FT_FALSE, terrain_block_emits_light(
         TERRAIN_GENERATOR_STONE_BLOCK));
-    FT_ASSERT_EQ(0U, terrain_block_hardness(9999U));
-    FT_ASSERT_EQ(FT_TRUE, terrain_block_is_replaceable(9999U));
-    FT_ASSERT_EQ(FT_FALSE, terrain_block_is_solid(9999U));
+    FT_ASSERT_EQ(FT_FALSE, terrain_block_is_known(9999U));
     return (1);
 }
 
@@ -69,8 +69,8 @@ FT_TEST(test_chunk_mesh_respects_transparent_neighbors)
         TERRAIN_GENERATOR_SHRUB_BLOCK));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_initialize(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
-    FT_ASSERT_EQ(44, mesh.vertices.size());
-    FT_ASSERT_EQ(66, mesh.indices.size());
+    FT_ASSERT_EQ(40, mesh.vertices.size());
+    FT_ASSERT_EQ(60, mesh.indices.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_destroy(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
     return (1);

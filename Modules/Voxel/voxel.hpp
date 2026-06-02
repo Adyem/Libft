@@ -40,6 +40,7 @@ struct terrain_block_metadata
     ft_bool liquid;
     ft_bool replaceable;
     ft_bool light_emitting;
+    ft_bool occludes_faces;
     uint32_t hardness;
 };
 
@@ -62,11 +63,13 @@ terrain_biome terrain_get_biome(int32_t world_block_x, int32_t world_block_z,
 terrain_biome_profile terrain_get_biome_profile(terrain_biome biome) noexcept;
 const terrain_block_metadata &terrain_get_block_metadata(
     uint32_t block_id) noexcept;
+ft_bool terrain_block_is_known(uint32_t block_id) noexcept;
 ft_bool terrain_block_is_solid(uint32_t block_id) noexcept;
 ft_bool terrain_block_is_transparent(uint32_t block_id) noexcept;
 ft_bool terrain_block_is_liquid(uint32_t block_id) noexcept;
 ft_bool terrain_block_is_replaceable(uint32_t block_id) noexcept;
 ft_bool terrain_block_emits_light(uint32_t block_id) noexcept;
+ft_bool terrain_block_occludes_faces(uint32_t block_id) noexcept;
 uint32_t terrain_block_hardness(uint32_t block_id) noexcept;
 uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept;
 ft_bool terrain_biome_has_shrubs(terrain_biome biome) noexcept;

@@ -1,12 +1,20 @@
 #include "application_auth_service.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Encoding/encoding.hpp"
+#include "../Encryption/encryption.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
+#include "../Filesystem/filesystem.hpp"
 #include "../Printf/printf.hpp"
+#include "../Storage/kv_store.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Time/time.hpp"
-#include <unistd.h>
+#include "../CPP_class/class_string.hpp"
+#include "../Template/move.hpp"
+#include "../Template/vector.hpp"
 
 static const char *application_auth_user_key_prefix = "application/auth/users/";
 static const char *application_auth_login_approval_key_prefix = "application/auth/approvals/";
@@ -83,12 +91,20 @@ static int32_t application_auth_parse_integer_value(const char *value_string, in
 static int32_t application_auth_write_descriptor(int32_t file_descriptor, const char *buffer, ft_size_t length)
 {
     int64_t write_result;
+    ft_size_t written_length;
 
-    write_result = su_write(file_descriptor, buffer, length);
-    if (write_result < 0)
-        return (FT_ERR_IO);
-    if (write_result != static_cast<int64_t>(length))
-        return (FT_ERR_IO);
+    written_length = 0;
+    while (written_length < length)
+    {
+        write_result = su_write(file_descriptor, buffer + written_length, length - written_length);
+        if (write_result < 0)
+            return (FT_ERR_IO);
+        if (write_result == 0)
+            return (FT_ERR_IO);
+        if (write_result > static_cast<int64_t>(length - written_length))
+            return (FT_ERR_IO);
+        written_length += static_cast<ft_size_t>(write_result);
+    }
     return (FT_ERR_SUCCESS);
 }
 
@@ -394,7 +410,7 @@ int32_t application_auth_service::build_user_stat_key(const char *key_prefix, co
     return (FT_ERR_SUCCESS);
 }
 
-int32_t application_auth_service::store_integer_value(const char *key, int64_t value) const noexcept
+int32_t application_auth_service::store_integer_value(const char *key, int64_t value) noexcept
 {
     ft_string value_string;
     int32_t error_code;
@@ -426,7 +442,7 @@ int32_t application_auth_service::load_integer_value(const char *key, int64_t &v
     return (FT_ERR_SUCCESS);
 }
 
-int32_t application_auth_service::store_string_value(const char *key, const char *value) const noexcept
+int32_t application_auth_service::store_string_value(const char *key, const char *value) noexcept
 {
     if (value == ft_nullptr)
         value = "";
@@ -629,6 +645,43 @@ int32_t application_auth_service::parse_login_session_value(const char *value, f
     delete timestamp_string;
     (void)session_value.destroy();
     return (error_code);
+}
+
+int32_t application_auth_service::is_login_access_allowed(const char *username) const noexcept
+{
+    ft_bool manual_login_approval_enabled;
+    ft_bool approval_required;
+    ft_bool approved;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::is_login_access_allowed");
+    error_code = this->_settings.is_manual_login_approval_enabled(manual_login_approval_enabled);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (manual_login_approval_enabled == FT_TRUE)
+    {
+        approved = FT_FALSE;
+        error_code = this->is_login_approved(username, approved);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        if (approved == FT_FALSE)
+            return (FT_ERR_PERMISSION_DENIED);
+        return (FT_ERR_SUCCESS);
+    }
+    approval_required = FT_FALSE;
+    error_code = this->load_user_login_approval_required(username, approval_required);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (approval_required == FT_TRUE)
+    {
+        approved = FT_FALSE;
+        error_code = this->is_login_approved(username, approved);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        if (approved == FT_FALSE)
+            return (FT_ERR_PERMISSION_DENIED);
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t application_auth_service::write_login_signal_one_time_password(const char *username, const char *one_time_password) const noexcept
@@ -1008,43 +1061,9 @@ int32_t application_auth_service::authenticate_user(const char *username, const 
         return (error_code);
     if (ft_strcmp(stored_hash_hex.c_str(), computed_hash_hex.c_str()) != 0)
         return (FT_ERR_PERMISSION_DENIED);
-    {
-        ft_bool manual_login_approval_enabled;
-
-        error_code = this->_settings.is_manual_login_approval_enabled(manual_login_approval_enabled);
-        if (error_code != FT_ERR_SUCCESS)
-            return (error_code);
-        if (manual_login_approval_enabled == FT_TRUE)
-        {
-            ft_bool approved;
-
-            approved = FT_FALSE;
-            error_code = this->is_login_approved(username, approved);
-            if (error_code != FT_ERR_SUCCESS)
-                return (error_code);
-            if (approved == FT_FALSE)
-                return (FT_ERR_PERMISSION_DENIED);
-        }
-        else
-        {
-            ft_bool approval_required;
-            ft_bool approved;
-
-            approval_required = FT_FALSE;
-            error_code = this->load_user_login_approval_required(username, approval_required);
-            if (error_code != FT_ERR_SUCCESS)
-                return (error_code);
-            if (approval_required == FT_TRUE)
-            {
-                approved = FT_FALSE;
-                error_code = this->is_login_approved(username, approved);
-                if (error_code != FT_ERR_SUCCESS)
-                    return (error_code);
-                if (approved == FT_FALSE)
-                    return (FT_ERR_PERMISSION_DENIED);
-            }
-        }
-    }
+    error_code = this->is_login_access_allowed(username);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     authenticated = FT_TRUE;
     return (FT_ERR_SUCCESS);
 }
@@ -1578,6 +1597,9 @@ int32_t application_auth_service::login_user(const char *username, const char *p
             return (FT_ERR_INVALID_OPERATION);
         return (error_code);
     }
+    error_code = this->is_login_access_allowed(username);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
     error_code = this->begin_user_session(username, client_ip_address, session_token_output);
     if (error_code != FT_ERR_SUCCESS)
     {
@@ -1595,6 +1617,18 @@ int32_t application_auth_service::login_with_signal(const char *username, const 
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "application_auth_service::login_with_signal");
     authenticated = FT_FALSE;
+    error_code = this->is_login_access_allowed(username);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        if (error_code == FT_ERR_INVALID_ARGUMENT)
+            return (error_code);
+        user_exists = FT_FALSE;
+        if (this->user_exists(username, user_exists) != FT_ERR_SUCCESS || user_exists == FT_FALSE)
+            return (error_code);
+        if (this->record_login_failure(username, client_ip_address) != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_OPERATION);
+        return (error_code);
+    }
     error_code = this->authenticate_login_signal_one_time_password(username, one_time_password, authenticated);
     if (error_code != FT_ERR_SUCCESS)
     {

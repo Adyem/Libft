@@ -1,5 +1,3 @@
-#define GAME_USE_VOXEL_REGION_BACKEND 1
-
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
@@ -122,6 +120,33 @@ FT_TEST(test_chunk_mesh_generate_boundary_block_visible_faces)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
     FT_ASSERT_EQ(24, mesh.vertices.size());
     FT_ASSERT_EQ(36, mesh.indices.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_destroy(mesh));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_chunk_mesh_intersects_frustum_uses_occupied_bounds)
+{
+    geometry_frustum frustum;
+    game_voxel_chunk chunk;
+    chunk_mesh mesh;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_unit_cube_frustum_or_fail(frustum));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.write_block(15, 0, 0,
+        TERRAIN_GENERATOR_STONE_BLOCK));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_initialize(mesh));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_generate_from_chunk(mesh, chunk));
+    FT_ASSERT_EQ(FT_TRUE, mesh.has_occupied_bounds);
+    FT_ASSERT_EQ(15, mesh.occupied_bounds.minimum_x);
+    FT_ASSERT_EQ(0, mesh.occupied_bounds.minimum_y);
+    FT_ASSERT_EQ(0, mesh.occupied_bounds.minimum_z);
+    FT_ASSERT_EQ(16, mesh.occupied_bounds.maximum_x);
+    FT_ASSERT_EQ(1, mesh.occupied_bounds.maximum_y);
+    FT_ASSERT_EQ(1, mesh.occupied_bounds.maximum_z);
+    FT_ASSERT_EQ(FT_TRUE, chunk_mesh_intersects_frustum(frustum, 0, 0, 0));
+    FT_ASSERT_EQ(FT_FALSE, chunk_mesh_intersects_frustum(frustum, mesh, 0, 0,
+        0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk_mesh_destroy(mesh));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
     return (1);

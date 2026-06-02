@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Application/application.hpp"
+#include "../../Modules/Filesystem/filesystem.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Time/time.hpp"
 #include <cstdio>
@@ -61,6 +62,7 @@ FT_TEST(test_application_auth_service_login_signal_issues_one_time_password)
     application_auth_service service;
     ft_string *database_file_path;
     ft_string token_string;
+    ft_string session_token_string;
     ft_bool authenticated;
     int64_t timeout_seconds;
     char root_template[] = "/tmp/libft_application_root_XXXXXX";
@@ -96,10 +98,11 @@ FT_TEST(test_application_auth_service_login_signal_issues_one_time_password)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, service.register_user("alice", "s3cret"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pipe(pipe_descriptors));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, service.set_login_signal_output_file_descriptor(pipe_descriptors[1]));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, service.set_manual_login_approval_enabled(FT_TRUE));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, service.request_login_signal_one_time_password("alice"));
     timeout_seconds = 0;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, service.get_login_signal_token_timeout_seconds(timeout_seconds));
     FT_ASSERT_EQ(300, timeout_seconds);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, service.request_login_signal_one_time_password("alice"));
     FT_ASSERT_EQ(0, close(pipe_descriptors[1]));
     std::memset(output_buffer, 0, sizeof(output_buffer));
     read_result = read(pipe_descriptors[0], output_buffer, sizeof(output_buffer) - 1);
@@ -108,8 +111,16 @@ FT_TEST(test_application_auth_service_login_signal_issues_one_time_password)
         output_buffer[static_cast<size_t>(read_result)] = '\0';
     FT_ASSERT_EQ(0, close(pipe_descriptors[0]));
     FT_ASSERT_EQ(FT_TRUE, parse_login_signal_output(output_buffer, token_string));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, service.authenticate_login_signal_one_time_password("alice", token_string.c_str(), authenticated));
+    authenticated = FT_TRUE;
+    FT_ASSERT_EQ(FT_ERR_PERMISSION_DENIED, service.login_with_signal("alice", token_string.c_str(), "127.0.0.1", session_token_string, authenticated));
+    FT_ASSERT_EQ(FT_FALSE, authenticated);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, service.approve_login("alice"));
+    authenticated = FT_FALSE;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, service.login_with_signal("alice", token_string.c_str(), "127.0.0.1", session_token_string, authenticated));
     FT_ASSERT_EQ(FT_TRUE, authenticated);
+    authenticated = FT_TRUE;
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, service.authenticate_login_signal_one_time_password("alice", token_string.c_str(), authenticated));
+    FT_ASSERT_EQ(FT_FALSE, authenticated);
     authenticated = FT_TRUE;
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, service.authenticate_login_signal_one_time_password("alice", token_string.c_str(), authenticated));
     FT_ASSERT_EQ(FT_FALSE, authenticated);

@@ -1,9 +1,13 @@
+#include <stdint.h>
+#include "../Basic/class_nullptr.hpp"
 #include "voxel.hpp"
 
 #ifdef GAME_USE_VOXEL_REGION_BACKEND
 
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../RNG/rng.hpp"
+#include "../Game/game_voxel_chunk.hpp"
 #include "voxel_internal.hpp"
 
 static const int32_t TERRAIN_HEIGHTMAP_LARGE_SCALE = 32;
@@ -13,16 +17,50 @@ static const int32_t TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET = 1;
 static const uint64_t TERRAIN_FEATURE_SHRUB_THRESHOLD = 6U;
 static const uint64_t TERRAIN_FEATURE_TREE_SALT = UINT64_C(0x4F1E2D3C5B6A7980);
 
+static void terrain_abort_unknown_block_id(uint32_t block_id,
+    const char *method_name) noexcept
+{
+    char decimal_buffer[10];
+    ft_size_t digit_count;
+
+    errno_write_stderr("terrain error: method=");
+    errno_write_stderr(method_name);
+    errno_write_stderr(" unknown block id=");
+    if (block_id == 0U)
+    {
+        errno_write_stderr("0");
+    }
+    else
+    {
+        digit_count = 0;
+        while (block_id > 0U && digit_count < sizeof(decimal_buffer))
+        {
+            decimal_buffer[digit_count] = static_cast<char>('0'
+                + (block_id % 10U));
+            block_id /= 10U;
+            digit_count++;
+        }
+        while (digit_count > 0U)
+        {
+            digit_count--;
+            (void)su_write(2, &decimal_buffer[digit_count], 1U);
+        }
+    }
+    errno_write_stderr("\n");
+    su_abort();
+    return ;
+}
+
 static const terrain_block_metadata TERRAIN_BLOCK_REGISTRY[] =
 {
-    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, 0U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 1U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 2U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 4U},
-    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, 1U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 3U},
-    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, 1U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, 2U}
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_FALSE, 0U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 1U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 4U},
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U},
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U}
 };
 
 static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS[] =
@@ -559,8 +597,20 @@ const terrain_block_metadata &terrain_get_block_metadata(uint32_t block_id)
 {
     if (block_id >= static_cast<uint32_t>(sizeof(TERRAIN_BLOCK_REGISTRY)
             / sizeof(TERRAIN_BLOCK_REGISTRY[0])))
+    {
+        terrain_abort_unknown_block_id(block_id,
+            "terrain_get_block_metadata");
         return (TERRAIN_BLOCK_REGISTRY[GAME_VOXEL_AIR_BLOCK]);
+    }
     return (TERRAIN_BLOCK_REGISTRY[block_id]);
+}
+
+ft_bool terrain_block_is_known(uint32_t block_id) noexcept
+{
+    if (block_id >= static_cast<uint32_t>(sizeof(TERRAIN_BLOCK_REGISTRY)
+            / sizeof(TERRAIN_BLOCK_REGISTRY[0])))
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
 ft_bool terrain_block_is_solid(uint32_t block_id) noexcept
@@ -586,6 +636,11 @@ ft_bool terrain_block_is_replaceable(uint32_t block_id) noexcept
 ft_bool terrain_block_emits_light(uint32_t block_id) noexcept
 {
     return (terrain_get_block_metadata(block_id).light_emitting);
+}
+
+ft_bool terrain_block_occludes_faces(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).occludes_faces);
 }
 
 uint32_t terrain_block_hardness(uint32_t block_id) noexcept

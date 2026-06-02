@@ -1,5 +1,8 @@
 #include "application_settings.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
 #include <unistd.h>
 
 static const int64_t application_settings_default_login_signal_token_timeout_seconds = 300LL;

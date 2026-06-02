@@ -1,9 +1,11 @@
+#include <stdint.h>
 #include "voxel.hpp"
 
 #ifdef GAME_USE_VOXEL_REGION_BACKEND
 
 #include "voxel_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Game/game_voxel_chunk.hpp"
 
 static const int32_t TERRAIN_HEIGHTMAP_LARGE_SCALE = 32;
 static const int32_t TERRAIN_HEIGHTMAP_DETAIL_SCALE = 8;

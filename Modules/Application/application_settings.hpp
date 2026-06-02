@@ -1,6 +1,7 @@
 #ifndef APPLICATION_SETTINGS_HPP
 #define APPLICATION_SETTINGS_HPP
 
+#include <stdint.h>
 #include "../Basic/class_nullptr.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Errno/errno.hpp"
