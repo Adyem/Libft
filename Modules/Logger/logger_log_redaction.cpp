@@ -4,6 +4,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 ft_vector<s_redaction_rule> g_redaction_rules;
 

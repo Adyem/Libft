@@ -13,6 +13,10 @@
 #include "../../Modules/YAML/yaml_dom_bridge.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

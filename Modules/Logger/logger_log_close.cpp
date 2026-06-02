@@ -6,6 +6,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 static void log_close_report(void)
 {

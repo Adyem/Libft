@@ -4,6 +4,7 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 
+#include "../../Modules/Basic/limits.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

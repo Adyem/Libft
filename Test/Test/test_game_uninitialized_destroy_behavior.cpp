@@ -32,6 +32,16 @@
 #include <cstring>
 #include <new>
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Game/game_behavior_action.hpp"
+#include "../../Modules/Game/game_crafting.hpp"
+#include "../../Modules/Game/game_dialogue_line.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

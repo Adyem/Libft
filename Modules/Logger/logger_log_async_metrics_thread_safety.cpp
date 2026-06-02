@@ -6,6 +6,7 @@
 #include "../PThread/pthread.hpp"
 #include "../Basic/limits.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 int32_t log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
 {

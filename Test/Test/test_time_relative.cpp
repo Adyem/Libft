@@ -2,6 +2,9 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Time/time.hpp"
 #include <limits>
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 FT_TEST(test_time_add_helpers_apply_fixed_units)
 {

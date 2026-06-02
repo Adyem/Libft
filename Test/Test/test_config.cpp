@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "../../Modules/Basic/limits.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

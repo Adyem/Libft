@@ -2,6 +2,10 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/File/file_utils.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 FT_TEST(test_file_copy_rejects_directory_source_as_file)
 {

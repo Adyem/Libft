@@ -3,6 +3,7 @@
 #include "../../Modules/Basic/basic.hpp"
 #include "utils.hpp"
 
+#include "../../Modules/Basic/limits.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

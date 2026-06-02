@@ -4,6 +4,10 @@
 #include "../../Modules/Template/vector.hpp"
 #include "../../Modules/CPP_class/class_string.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static ft_bool test_file_list_directory_contains(ft_vector<ft_string> &entries,
     const char *needle)

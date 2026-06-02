@@ -3,6 +3,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 t_log_level g_level = LOG_LEVEL_INFO;
 ft_vector<s_log_sink> g_sinks;

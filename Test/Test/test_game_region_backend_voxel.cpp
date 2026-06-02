@@ -1,3 +1,9 @@
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Game/game_voxel_region.hpp"
+#include "../../Modules/Game/game_world_region.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 #define GAME_USE_VOXEL_REGION_BACKEND 1
 
 #include "../test_internal.hpp"

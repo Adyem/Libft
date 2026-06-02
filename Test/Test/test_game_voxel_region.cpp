@@ -7,6 +7,11 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static int32_t test_voxel_make_temp_path(char *buffer,
     ft_size_t buffer_size) noexcept

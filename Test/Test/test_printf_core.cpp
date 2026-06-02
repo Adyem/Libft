@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

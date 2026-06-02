@@ -6,6 +6,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Basic/basic.hpp"
 
 api_retry_policy::api_retry_policy() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED),

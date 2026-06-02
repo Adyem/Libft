@@ -2,6 +2,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 void ft_log_warn(const char *format_string, ...)
 {

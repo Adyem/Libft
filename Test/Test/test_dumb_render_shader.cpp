@@ -2,6 +2,9 @@
 #include "../../Modules/DUMB/render_window.hpp"
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static int32_t test_dumb_gradient_shader(
     const ft_render_shader_input *input,

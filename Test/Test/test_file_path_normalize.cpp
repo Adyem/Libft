@@ -3,6 +3,9 @@
 #include "../../Modules/File/file_utils.hpp"
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 FT_TEST(test_file_path_normalize_resolves_dot_and_dot_dot)
 {

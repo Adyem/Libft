@@ -3,6 +3,10 @@
 #include "../../Modules/Template/swap.hpp"
 #include "utils.hpp"
 
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

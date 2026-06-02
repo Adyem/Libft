@@ -7,6 +7,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 struct s_log_remote_health_state
 {

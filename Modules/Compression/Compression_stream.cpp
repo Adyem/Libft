@@ -1,13 +1,8 @@
 #include <zlib.h>
-#include "../PThread/pthread_internal.hpp"
 #include <limits>
 #include <new>
 #include <cstdio>
-#include "../Basic/basic.hpp"
-#include "../CMA/CMA.hpp"
-#include "../Basic/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
-#include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "compression.hpp"
 #include "compression_stream_test_hooks.hpp"

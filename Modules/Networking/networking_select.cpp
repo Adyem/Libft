@@ -1,6 +1,10 @@
 #include "networking.hpp"
 #include "../Errno/errno.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 
+#include "../Basic/limits.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 #else
@@ -64,7 +68,7 @@ int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
         if (ready_descriptors == 0)
             (void)(FT_ERR_SUCCESS);
         else
-            (void)(ft_map_system_error(select_error));
+            (void)(cmp_map_system_error_to_ft(select_error));
         return (ready_descriptors);
     }
     index = 0;
@@ -141,7 +145,7 @@ int32_t nw_poll(int32_t *read_file_descriptors, int32_t read_count,
         if (ready_descriptors == 0)
             (void)(FT_ERR_SUCCESS);
         else
-            (void)(ft_map_system_error(select_error));
+            (void)(cmp_map_system_error_to_ft(select_error));
         return (ready_descriptors);
     }
     index = 0;

@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 #define LIBFT_ENABLE_FILE_IO_HELPERS 0

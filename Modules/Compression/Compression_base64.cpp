@@ -1,7 +1,3 @@
-#include "../CMA/CMA.hpp"
-#include "../Basic/basic.hpp"
-#include "../Basic/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 #include "compression.hpp"
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"

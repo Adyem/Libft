@@ -12,6 +12,7 @@
 #include <new>
 #include "../Basic/limits.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 ft_logger *g_logger = ft_nullptr;
 

@@ -2,6 +2,11 @@
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

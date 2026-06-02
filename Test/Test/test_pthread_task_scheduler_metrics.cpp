@@ -9,6 +9,14 @@
 #include <new>
 #include <unistd.h>
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/pthread_internal.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
+#include "../../Modules/Template/queue.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

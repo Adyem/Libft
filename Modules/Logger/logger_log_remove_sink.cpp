@@ -4,6 +4,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 void ft_log_remove_sink(t_log_sink sink, void *user_data)
 {

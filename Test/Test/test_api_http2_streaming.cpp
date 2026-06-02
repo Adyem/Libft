@@ -12,6 +12,12 @@
 #include <cstring>
 #include <thread>
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
+#include "../../Modules/Template/vector.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

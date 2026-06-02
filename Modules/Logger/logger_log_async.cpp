@@ -12,6 +12,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 ft_bool g_async_running = FT_FALSE;
 static ft_size_t g_async_queue_limit = 1024;

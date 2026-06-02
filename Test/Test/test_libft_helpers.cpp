@@ -2,6 +2,7 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <type_traits>
 
+#include "../../Modules/Basic/class_nullptr.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

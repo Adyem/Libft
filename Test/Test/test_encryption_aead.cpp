@@ -6,6 +6,11 @@
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Networking/openssl_support.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/vector.hpp"
 #if NETWORKING_HAS_OPENSSL
 
 #include <openssl/ssl.h>

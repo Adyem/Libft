@@ -2,6 +2,10 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Threading/concurrency.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static int32_t pthread_once_increment_counter(int32_t *counter)
 {

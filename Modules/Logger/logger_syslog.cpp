@@ -4,6 +4,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 int32_t ft_log_set_syslog(const char *identifier)
 {

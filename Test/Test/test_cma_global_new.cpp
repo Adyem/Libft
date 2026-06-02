@@ -6,6 +6,7 @@
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include <new>
 #include <cstdint>
+#include "../../Modules/Basic/limits.hpp"
 #if __has_include(<valgrind/valgrind.h>)
 # include <valgrind/valgrind.h>
 #endif

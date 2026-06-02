@@ -11,6 +11,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 static int32_t logger_build_rotation_path(const ft_string &rotation_base,
     ft_size_t entry_index, ft_string &path)

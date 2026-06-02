@@ -4,6 +4,12 @@
 #include "../../Modules/File/file_utils.hpp"
 #include "../../Modules/Parser/document_backend.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/vector.hpp"
 
 FT_TEST(test_csv_split_line_handles_quotes_and_empty_fields)
 {

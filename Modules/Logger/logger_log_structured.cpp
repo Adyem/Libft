@@ -3,6 +3,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 static void logger_append_literal(ft_string &buffer, const char *literal,
     int32_t &error_code_value)

@@ -4,6 +4,7 @@
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/Basic/basic.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

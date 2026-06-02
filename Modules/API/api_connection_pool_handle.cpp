@@ -6,6 +6,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 api_connection_pool_handle::api_connection_pool_handle()
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED),

@@ -4,6 +4,10 @@
 #include "../../Modules/File/file_utils.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstring>
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static void reset_option(cli_option *option, const char *long_name, char short_name,
     uint8_t type)

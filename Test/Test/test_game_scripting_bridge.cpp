@@ -8,6 +8,32 @@
 #include <string>
 #include <cstring>
 
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Game/game_achievement.hpp"
+#include "../../Modules/Game/game_buff.hpp"
+#include "../../Modules/Game/game_crafting.hpp"
+#include "../../Modules/Game/game_currency_rate.hpp"
+#include "../../Modules/Game/game_debuff.hpp"
+#include "../../Modules/Game/game_dialogue_line.hpp"
+#include "../../Modules/Game/game_dialogue_script.hpp"
+#include "../../Modules/Game/game_dialogue_table.hpp"
+#include "../../Modules/Game/game_economy_table.hpp"
+#include "../../Modules/Game/game_pathfinding.hpp"
+#include "../../Modules/Game/game_price_definition.hpp"
+#include "../../Modules/Game/game_quest.hpp"
+#include "../../Modules/Game/game_rarity_band.hpp"
+#include "../../Modules/Game/game_region_definition.hpp"
+#include "../../Modules/Game/game_skill.hpp"
+#include "../../Modules/Game/game_state.hpp"
+#include "../../Modules/Game/game_upgrade.hpp"
+#include "../../Modules/Game/game_vendor_profile.hpp"
+#include "../../Modules/Game/game_world_region.hpp"
+#include "../../Modules/Game/game_world_registry.hpp"
+#include "../../Modules/Game/game_world_replay.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
+#include "../../Modules/Template/vector.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

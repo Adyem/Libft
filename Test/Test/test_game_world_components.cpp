@@ -18,6 +18,20 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Errno/errno.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Game/game_achievement.hpp"
+#include "../../Modules/Game/game_buff.hpp"
+#include "../../Modules/Game/game_debuff.hpp"
+#include "../../Modules/Game/game_dialogue_line.hpp"
+#include "../../Modules/Game/game_dialogue_script.hpp"
+#include "../../Modules/Game/game_pathfinding.hpp"
+#include "../../Modules/Game/game_rarity_band.hpp"
+#include "../../Modules/Game/game_skill.hpp"
+#include "../../Modules/Game/game_world_replay.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

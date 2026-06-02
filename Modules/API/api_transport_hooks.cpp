@@ -3,6 +3,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Basic/basic.hpp"
 
 struct api_transport_hooks_state
 {

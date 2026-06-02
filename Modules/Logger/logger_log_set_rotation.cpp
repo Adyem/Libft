@@ -2,6 +2,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 static int32_t log_rotation_report(int32_t return_value)
 {

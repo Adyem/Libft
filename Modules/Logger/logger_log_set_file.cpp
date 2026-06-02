@@ -9,6 +9,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 int32_t ft_file_sink(const char *message, void *user_data)
 {

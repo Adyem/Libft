@@ -2,6 +2,7 @@
 #include "../../Modules/CMA/CMA.hpp"
 #include "utils.hpp"
 
+#include "../../Modules/Basic/limits.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

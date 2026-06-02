@@ -3,6 +3,11 @@
 #include "../../Modules/Filesystem/filesystem.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstring>
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static ft_bool file_test_digest_equals(const uint8_t *left, const uint8_t *right,
     ft_size_t length)

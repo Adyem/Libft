@@ -5,6 +5,8 @@
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/HTML/html_parser.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

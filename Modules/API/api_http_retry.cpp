@@ -2,6 +2,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 int32_t api_retry_get_max_attempts(const api_retry_policy *retry_policy)
 {

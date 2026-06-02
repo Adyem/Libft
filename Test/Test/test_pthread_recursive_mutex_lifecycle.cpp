@@ -5,6 +5,9 @@
 #include <csignal>
 #include <cstring>
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

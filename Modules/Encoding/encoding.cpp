@@ -1,8 +1,6 @@
 #include "encoding.hpp"
-#include "../Basic/basic.hpp"
 #include "../Basic/utf8.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Basic/class_nullptr.hpp"
 #include "../Basic/limits.hpp"
 
 static thread_local int32_t g_encoding_error = FT_ERR_SUCCESS;

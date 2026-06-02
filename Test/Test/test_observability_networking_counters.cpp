@@ -3,6 +3,10 @@
 #include "../../Modules/Observability/observability.hpp"
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static int32_t test_observability_socket_hook(int32_t domain_value,
     int32_t type_value, int32_t protocol_value)

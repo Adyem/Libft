@@ -1,9 +1,8 @@
 #include "promise.hpp"
 #include "../Networking/openssl_support.hpp"
-#include "../Basic/limits.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 api_promise::api_promise() noexcept
 {

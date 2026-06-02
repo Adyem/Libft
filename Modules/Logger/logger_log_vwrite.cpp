@@ -8,6 +8,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 static int32_t logger_append_quoted_token(ft_string &buffer, const char *value)
 {

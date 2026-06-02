@@ -15,6 +15,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/pair.hpp"
+#include "../Basic/basic.hpp"
 
 static int32_t rng_stream_capture_math_error(ft_size_t previous_depth)
 {

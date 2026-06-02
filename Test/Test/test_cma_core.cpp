@@ -4,6 +4,8 @@
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

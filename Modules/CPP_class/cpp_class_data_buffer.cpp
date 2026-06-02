@@ -6,6 +6,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno.hpp"
 
 thread_local int32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
 

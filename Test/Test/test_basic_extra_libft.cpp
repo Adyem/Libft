@@ -11,6 +11,9 @@
 #include <cstring>
 #include <cstdlib>
 
+#include "../../Modules/Math/math_interval.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

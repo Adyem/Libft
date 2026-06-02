@@ -3,6 +3,8 @@
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstring>
+#include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Errno/errno.hpp"
 
 static void reset_option(cli_option *option, const char *long_name, char short_name,
     uint8_t type)

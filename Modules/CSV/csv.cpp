@@ -1,8 +1,5 @@
 #include "csv.hpp"
 
-#include "../CMA/CMA.hpp"
-#include "../Basic/class_nullptr.hpp"
-#include "../Errno/errno_internal.hpp"
 #include <cstring>
 #include <new>
 #include "../Basic/limits.hpp"

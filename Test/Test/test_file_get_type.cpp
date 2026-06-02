@@ -4,6 +4,9 @@
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include <sys/types.h>
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 FT_TEST(test_file_get_type_reports_regular_directory_and_missing)
 {

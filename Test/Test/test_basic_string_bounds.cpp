@@ -3,6 +3,7 @@
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

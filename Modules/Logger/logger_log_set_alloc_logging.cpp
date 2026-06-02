@@ -3,6 +3,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 void ft_log_set_alloc_logging(ft_bool enable)
 {

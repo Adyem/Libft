@@ -4,6 +4,7 @@
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
+#include "../../Modules/Errno/errno.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

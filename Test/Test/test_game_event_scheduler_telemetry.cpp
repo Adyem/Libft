@@ -7,6 +7,10 @@
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Template/vector.hpp"
 
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Game/game_event.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 

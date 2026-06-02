@@ -1,6 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <type_traits>
+#include "../../Modules/Basic/class_nullptr.hpp"
 
 static constexpr int constexpr_sum(int a, int b)
 {

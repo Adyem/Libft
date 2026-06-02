@@ -1,6 +1,4 @@
 #include "config.hpp"
-#include "../Errno/errno.hpp"
-#include "../Basic/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <new>

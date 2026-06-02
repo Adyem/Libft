@@ -4,6 +4,9 @@
 #include "../../Modules/File/file_utils.hpp"
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 
 static ft_observability_trace_event g_file_trace_last_event;
 static uint32_t g_file_trace_count = 0;

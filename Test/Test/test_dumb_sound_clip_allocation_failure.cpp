@@ -12,6 +12,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
 #if defined(__has_include)
 #if __has_include(<valgrind/valgrind.h>)
 #include <valgrind/valgrind.h>

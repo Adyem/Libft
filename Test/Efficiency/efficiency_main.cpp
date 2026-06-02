@@ -6,6 +6,7 @@
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "utils.hpp"
+#include "../../Modules/Basic/limits.hpp"
 
 struct s_efficiency_test_case
 {

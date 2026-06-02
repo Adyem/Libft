@@ -7,6 +7,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Storage/kv_store.hpp"
+#include "../../Modules/Template/pair.hpp"
+#include "../../Modules/Template/vector.hpp"
 
 static int32_t create_application_database(const char *file_path)
 {

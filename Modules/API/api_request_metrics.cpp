@@ -3,6 +3,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Errno/errno.hpp"
 
 void api_request_metrics_guard::abort_lifecycle_error(const char *method_name,
     const char *reason) const noexcept

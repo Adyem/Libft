@@ -5,6 +5,18 @@
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
+#include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/limits.hpp"
+#include "../../Modules/Game/game_achievement.hpp"
+#include "../../Modules/Game/game_buff.hpp"
+#include "../../Modules/Game/game_debuff.hpp"
+#include "../../Modules/Game/game_quest.hpp"
+#include "../../Modules/Game/game_skill.hpp"
+#include "../../Modules/Game/game_upgrade.hpp"
+#include "../../Modules/PThread/mutex.hpp"
+#include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Template/pair.hpp"
+#include "../../Modules/Template/shared_ptr.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 
