@@ -7,7 +7,7 @@ $(TARGET): $(OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-$(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
+$(OBJDIR)/%.o: %.cpp $(HEADERS) Makefile ../../mk/compiler_flags.mk ../../mk/modules/Voxel.mk | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
@@ -19,7 +19,7 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-$(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
+$(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) Makefile ../../mk/compiler_flags.mk ../../mk/modules/Voxel.mk | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
