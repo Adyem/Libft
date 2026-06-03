@@ -22,6 +22,7 @@ class application_auth_service
         application_settings _settings;
         ft_string _database_path;
 
+        void destroy_partial_copy_state() noexcept;
         int32_t initialize_from_copy(const application_auth_service &other) noexcept;
         int32_t initialize_from_move(application_auth_service &other) noexcept;
         int32_t build_user_key(const char *username, ft_string &key_output) const noexcept;
