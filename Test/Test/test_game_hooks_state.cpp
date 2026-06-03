@@ -185,3 +185,27 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks)
     destroy_hooks_handle(stored_hooks);
     return (1);
 }
+
+FT_TEST(test_game_hooks_move_source_destroy_failure_rolls_back_destination)
+{
+    game_hooks source;
+    game_hooks destination;
+    bool lock_acquired;
+    int32_t move_result;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.enable_thread_safety());
+    FT_ASSERT(source._mutex != ft_nullptr);
+    lock_acquired = false;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source._mutex->lock_state(&lock_acquired));
+    FT_ASSERT_EQ(true, lock_acquired);
+    move_result = destination.move(source);
+    FT_ASSERT_NE(FT_ERR_SUCCESS, move_result);
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, destination._initialised_state);
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, source._initialised_state);
+    FT_ASSERT_EQ(FT_TRUE, source.is_thread_safe());
+    source._mutex->unlock_state(lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.disable_thread_safety());
+    return (1);
+}

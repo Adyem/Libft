@@ -247,6 +247,13 @@ int32_t game_state::move(game_state &other) noexcept
     source_destroy_error = other.destroy();
     if (source_destroy_error != FT_ERR_SUCCESS)
     {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(source_destroy_error);
         return (source_destroy_error);
     }

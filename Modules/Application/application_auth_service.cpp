@@ -111,6 +111,15 @@ static int32_t application_auth_write_descriptor(int32_t file_descriptor, const 
     return (FT_ERR_SUCCESS);
 }
 
+static void application_auth_destroy_partial_copy_state(application_auth_service &service) noexcept
+{
+    (void)service._credential_store.destroy();
+    (void)service._settings.destroy();
+    (void)service._database_path.destroy();
+    service._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
 application_auth_service::application_auth_service() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _credential_store()
@@ -181,32 +190,32 @@ int32_t application_auth_service::initialize(const application_settings &setting
     error_code = application_auth_build_database_path(database_root_path.c_str(), database_relative_path.c_str(), this->_database_path);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_auth_destroy_partial_copy_state(*this);
         return (error_code);
     }
     error_code = this->_credential_store.initialize(this->_database_path.c_str(),
         encryption_key.c_str(), encryption_enabled, encryption_algorithm_name.c_str());
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_auth_destroy_partial_copy_state(*this);
         return (error_code);
     }
     error_code = this->_settings.initialize(settings);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_auth_destroy_partial_copy_state(*this);
         return (error_code);
     }
     error_code = this->load_manual_login_approval_enabled(manual_login_approval_enabled);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_auth_destroy_partial_copy_state(*this);
         return (error_code);
     }
     error_code = this->_settings.set_manual_login_approval_enabled(manual_login_approval_enabled);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_auth_destroy_partial_copy_state(*this);
         return (error_code);
     }
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
@@ -279,7 +288,7 @@ int32_t application_auth_service::initialize_from_move(application_auth_service 
     error_code = other.destroy();
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_auth_destroy_partial_copy_state(*this);
         return (error_code);
     }
     return (FT_ERR_SUCCESS);

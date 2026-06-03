@@ -143,3 +143,30 @@ FT_TEST(test_game_server_move_failure_destroys_destination_without_taking_source
     FT_ASSERT(source._server != ft_nullptr);
     return (1);
 }
+
+FT_TEST(test_game_server_move_source_destroy_failure_rolls_back_destination)
+{
+    ft_sharedptr<game_world> world_pointer(new (std::nothrow) game_world());
+    game_server source;
+    game_server destination;
+    bool lock_acquired;
+    int32_t move_result;
+
+    FT_ASSERT(world_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_pointer->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(world_pointer, "move_source_destroy_failure"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.enable_thread_safety());
+    FT_ASSERT(source._mutex != ft_nullptr);
+    lock_acquired = false;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source._mutex->lock_state(&lock_acquired));
+    FT_ASSERT_EQ(true, lock_acquired);
+    move_result = destination.move(source);
+    FT_ASSERT_NE(FT_ERR_SUCCESS, move_result);
+    FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, destination._initialised_state);
+    FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, source._initialised_state);
+    FT_ASSERT_EQ(FT_TRUE, source.is_thread_safe());
+    source._mutex->unlock_state(lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.disable_thread_safety());
+    return (1);
+}

@@ -10,6 +10,21 @@
 static const int64_t application_settings_default_login_signal_token_timeout_seconds = 300LL;
 static const int64_t application_settings_default_login_session_timeout_seconds = 28800LL;
 
+static void application_settings_destroy_partial_copy_state(application_settings &settings) noexcept
+{
+    (void)settings._database_root_path.destroy();
+    (void)settings._database_relative_path.destroy();
+    (void)settings._encryption_key.destroy();
+    (void)settings._encryption_algorithm_name.destroy();
+    settings._encryption_enabled = FT_FALSE;
+    settings._manual_login_approval_enabled = FT_FALSE;
+    settings._login_signal_output_file_descriptor = STDOUT_FILENO;
+    settings._login_signal_token_timeout_seconds = application_settings_default_login_signal_token_timeout_seconds;
+    settings._login_session_timeout_seconds = application_settings_default_login_session_timeout_seconds;
+    settings._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return ;
+}
+
 application_settings::application_settings() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED)
     , _database_root_path()
@@ -87,25 +102,25 @@ int32_t application_settings::initialize_from_copy(const application_settings &o
     error_code = this->_database_root_path.initialize(other._database_root_path);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_settings_destroy_partial_copy_state(*this);
         return (error_code);
     }
     error_code = this->_database_relative_path.initialize(other._database_relative_path);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_settings_destroy_partial_copy_state(*this);
         return (error_code);
     }
     error_code = this->_encryption_key.initialize(other._encryption_key);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_settings_destroy_partial_copy_state(*this);
         return (error_code);
     }
     error_code = this->_encryption_algorithm_name.initialize(other._encryption_algorithm_name);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_settings_destroy_partial_copy_state(*this);
         return (error_code);
     }
     this->_encryption_enabled = other._encryption_enabled;
@@ -127,7 +142,7 @@ int32_t application_settings::initialize_from_move(application_settings &other) 
     error_code = other.destroy();
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)this->destroy();
+        application_settings_destroy_partial_copy_state(*this);
         return (error_code);
     }
     return (FT_ERR_SUCCESS);

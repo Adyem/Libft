@@ -293,6 +293,13 @@ int32_t game_hooks::initialize(const game_hooks &other) noexcept
     while (index < count)
     {
         this->_listener_catalog.insert(entry->key, entry->value);
+        if (this->_listener_catalog.get_error() != FT_ERR_SUCCESS)
+        {
+            initialize_error = this->_listener_catalog.get_error();
+            (void)this->destroy();
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
         entry++;
         index += 1;
     }
@@ -300,8 +307,15 @@ int32_t game_hooks::initialize(const game_hooks &other) noexcept
     metadata_end = other._catalog_metadata.end();
     while (metadata_entry != metadata_end)
     {
-    this->_catalog_metadata.push_back(*metadata_entry);
-    ++metadata_entry;
+        this->_catalog_metadata.push_back(*metadata_entry);
+        if (this->_catalog_metadata.get_error() != FT_ERR_SUCCESS)
+        {
+            initialize_error = this->_catalog_metadata.get_error();
+            (void)this->destroy();
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+        ++metadata_entry;
     }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -315,6 +329,8 @@ int32_t game_hooks::initialize(game_hooks &&other) noexcept
 int32_t game_hooks::move(game_hooks &other) noexcept
 {
     int32_t initialize_error;
+    int32_t destroy_error;
+    int32_t source_destroy_error;
 
     if (&other == this)
         return (FT_ERR_SUCCESS);
@@ -329,7 +345,20 @@ int32_t game_hooks::move(game_hooks &other) noexcept
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
     if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
-        (void)other.destroy();
+    {
+        source_destroy_error = other.destroy();
+        if (source_destroy_error != FT_ERR_SUCCESS)
+        {
+            destroy_error = this->destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+            {
+                this->set_error(destroy_error);
+                return (destroy_error);
+            }
+            this->set_error(source_destroy_error);
+            return (source_destroy_error);
+        }
+    }
     return (FT_ERR_SUCCESS);
 }
 
@@ -516,6 +545,7 @@ void game_hooks::insert_listener_unlocked(
         index += 1;
     }
     listeners_pair->value.insert(listeners_pair->value.begin() + index, entry);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -523,6 +553,7 @@ void game_hooks::append_metadata_unlocked(
     const ft_game_hook_metadata &metadata) noexcept
 {
     this->_catalog_metadata.push_back(metadata);
+    this->set_error(this->_catalog_metadata.get_error());
     return ;
 }
 
@@ -530,15 +561,20 @@ void game_hooks::set_on_item_crafted(
     ft_function<void(game_character&, game_item&)> &&callback) noexcept
 {
     ft_game_hook_listener_entry entry;
+    ft_function<void(game_character&, game_item&)> staged_callback;
     ft_function<void(game_character&, game_item&)> callback_copy;
+    Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_bool lock_acquired;
+    ft_bool listener_found;
+    ft_size_t listener_index;
     int32_t metadata_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_item_crafted");
+    staged_callback = ft_move(callback);
+    callback_copy = staged_callback;
+    listener_found = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    this->_legacy_item_crafted = ft_move(callback);
-    callback_copy = this->_legacy_item_crafted;
     metadata_error = game_hooks_initialize_metadata(entry.metadata,
         ft_game_hook_item_crafted_identifier, "legacy.item_crafted",
         "Legacy callback set via set_on_item_crafted",
@@ -552,10 +588,46 @@ void game_hooks::set_on_item_crafted(
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_character_item_adapter(
         ft_move(callback_copy));
-    this->remove_listener_unlocked(entry.metadata.hook_identifier,
-        entry.metadata.listener_name);
+    listeners_pair = this->_listener_catalog.find(entry.metadata.hook_identifier);
+    if (listeners_pair != this->_listener_catalog.end())
+    {
+        listener_index = 0;
+        while (listener_index < listeners_pair->value.size())
+        {
+            if (listeners_pair->value[listener_index].metadata.listener_name
+                == entry.metadata.listener_name)
+            {
+                listener_found = FT_TRUE;
+                break ;
+            }
+            listener_index += 1;
+        }
+    }
+    if (listener_found == FT_TRUE)
+    {
+        listeners_pair->value[listener_index].callback = ft_move(entry.callback);
+        listeners_pair->value[listener_index].priority = entry.priority;
+        this->_legacy_item_crafted = ft_move(staged_callback);
+        this->set_error(FT_ERR_SUCCESS);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->insert_listener_unlocked(entry);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->append_metadata_unlocked(entry.metadata);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        this->remove_listener_unlocked(entry.metadata.hook_identifier,
+            entry.metadata.listener_name);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
+    this->_legacy_item_crafted = ft_move(staged_callback);
+    this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -564,15 +636,20 @@ void game_hooks::set_on_character_damaged(
     ft_function<void(game_character&, int32_t, uint8_t)> &&callback) noexcept
 {
     ft_game_hook_listener_entry entry;
+    ft_function<void(game_character&, int32_t, uint8_t)> staged_callback;
     ft_function<void(game_character&, int32_t, uint8_t)> callback_copy;
+    Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_bool lock_acquired;
+    ft_bool listener_found;
+    ft_size_t listener_index;
     int32_t metadata_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_character_damaged");
+    staged_callback = ft_move(callback);
+    callback_copy = staged_callback;
+    listener_found = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    this->_legacy_character_damaged = ft_move(callback);
-    callback_copy = this->_legacy_character_damaged;
     metadata_error = game_hooks_initialize_metadata(entry.metadata,
         ft_game_hook_character_damaged_identifier, "legacy.character_damaged",
         "Legacy callback set via set_on_character_damaged",
@@ -586,10 +663,46 @@ void game_hooks::set_on_character_damaged(
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_character_damage_adapter(
         ft_move(callback_copy));
-    this->remove_listener_unlocked(entry.metadata.hook_identifier,
-        entry.metadata.listener_name);
+    listeners_pair = this->_listener_catalog.find(entry.metadata.hook_identifier);
+    if (listeners_pair != this->_listener_catalog.end())
+    {
+        listener_index = 0;
+        while (listener_index < listeners_pair->value.size())
+        {
+            if (listeners_pair->value[listener_index].metadata.listener_name
+                == entry.metadata.listener_name)
+            {
+                listener_found = FT_TRUE;
+                break ;
+            }
+            listener_index += 1;
+        }
+    }
+    if (listener_found == FT_TRUE)
+    {
+        listeners_pair->value[listener_index].callback = ft_move(entry.callback);
+        listeners_pair->value[listener_index].priority = entry.priority;
+        this->_legacy_character_damaged = ft_move(staged_callback);
+        this->set_error(FT_ERR_SUCCESS);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->insert_listener_unlocked(entry);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->append_metadata_unlocked(entry.metadata);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        this->remove_listener_unlocked(entry.metadata.hook_identifier,
+            entry.metadata.listener_name);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
+    this->_legacy_character_damaged = ft_move(staged_callback);
+    this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -598,15 +711,20 @@ void game_hooks::set_on_event_triggered(
     ft_function<void(game_world&, game_event&)> &&callback) noexcept
 {
     ft_game_hook_listener_entry entry;
+    ft_function<void(game_world&, game_event&)> staged_callback;
     ft_function<void(game_world&, game_event&)> callback_copy;
+    Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_bool lock_acquired;
+    ft_bool listener_found;
+    ft_size_t listener_index;
     int32_t metadata_error;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::set_on_event_triggered");
+    staged_callback = ft_move(callback);
+    callback_copy = staged_callback;
+    listener_found = FT_FALSE;
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    this->_legacy_event_triggered = ft_move(callback);
-    callback_copy = this->_legacy_event_triggered;
     metadata_error = game_hooks_initialize_metadata(entry.metadata,
         ft_game_hook_event_triggered_identifier, "legacy.event_triggered",
         "Legacy callback set via set_on_event_triggered",
@@ -620,10 +738,46 @@ void game_hooks::set_on_event_triggered(
     entry.priority = 1000;
     entry.callback = ft_game_hook_make_world_event_adapter(
         ft_move(callback_copy));
-    this->remove_listener_unlocked(entry.metadata.hook_identifier,
-        entry.metadata.listener_name);
+    listeners_pair = this->_listener_catalog.find(entry.metadata.hook_identifier);
+    if (listeners_pair != this->_listener_catalog.end())
+    {
+        listener_index = 0;
+        while (listener_index < listeners_pair->value.size())
+        {
+            if (listeners_pair->value[listener_index].metadata.listener_name
+                == entry.metadata.listener_name)
+            {
+                listener_found = FT_TRUE;
+                break ;
+            }
+            listener_index += 1;
+        }
+    }
+    if (listener_found == FT_TRUE)
+    {
+        listeners_pair->value[listener_index].callback = ft_move(entry.callback);
+        listeners_pair->value[listener_index].priority = entry.priority;
+        this->_legacy_event_triggered = ft_move(staged_callback);
+        this->set_error(FT_ERR_SUCCESS);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->insert_listener_unlocked(entry);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->append_metadata_unlocked(entry.metadata);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        this->remove_listener_unlocked(entry.metadata.hook_identifier,
+            entry.metadata.listener_name);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
+    this->_legacy_event_triggered = ft_move(staged_callback);
+    this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -748,7 +902,19 @@ void game_hooks::register_listener(const ft_game_hook_metadata &metadata,
     this->remove_listener_unlocked(entry.metadata.hook_identifier,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->append_metadata_unlocked(entry.metadata);
+    if (this->get_error() != FT_ERR_SUCCESS)
+    {
+        this->remove_listener_unlocked(entry.metadata.hook_identifier,
+            entry.metadata.listener_name);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
+    }
     (void)this->unlock_internal(lock_acquired);
     return ;
 }

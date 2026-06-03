@@ -187,7 +187,10 @@ int32_t game_server::move(game_server &other) noexcept
 {
     int32_t destroy_error;
     int32_t source_error;
+    int32_t source_destroy_error;
     int32_t move_error;
+    ft_websocket_server *server_pointer;
+    pt_recursive_mutex *mutex_pointer;
     ft_sharedptr<game_world> world_copy;
     ft_map<int32_t, int32_t> clients_copy;
     ft_string auth_token_copy;
@@ -257,17 +260,28 @@ int32_t game_server::move(game_server &other) noexcept
         this->set_error(move_error);
         return (move_error);
     }
-    this->_server = other._server;
-    this->_on_join = other._on_join;
-    this->_on_leave = other._on_leave;
-    this->_mutex = other._mutex;
-    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    server_pointer = other._server;
+    mutex_pointer = other._mutex;
     source_error = other.get_error();
     other._server = ft_nullptr;
-    other._on_join = ft_nullptr;
-    other._on_leave = ft_nullptr;
     other._mutex = ft_nullptr;
-    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    this->_server = server_pointer;
+    this->_on_join = other._on_join;
+    this->_on_leave = other._on_leave;
+    this->_mutex = mutex_pointer;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    source_destroy_error = other.destroy();
+    if (source_destroy_error != FT_ERR_SUCCESS)
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->set_error(source_destroy_error);
+        return (source_destroy_error);
+    }
     this->set_error(source_error);
     return (FT_ERR_SUCCESS);
 }
@@ -592,7 +606,15 @@ void game_server::run_once() noexcept
     client_end = this->_clients.end();
     while (client_ptr != client_end)
     {
-        this->_server->send_text(client_ptr->value, update);
+        int32_t send_error;
+
+        send_error = this->_server->send_text(client_ptr->value, update);
+        if (send_error != FT_ERR_SUCCESS)
+        {
+            (void)this->unlock_internal(lock_acquired);
+            this->set_error(send_error);
+            return ;
+        }
         client_ptr++;
     }
     (void)this->unlock_internal(lock_acquired);
