@@ -128,6 +128,9 @@ static int32_t chunk_mesh_read_or_air(const game_voxel_chunk &chunk,
     int32_t local_x, int32_t local_y, int32_t local_z,
     uint32_t *block_id) noexcept
 {
+    const game_voxel_chunk_section *section;
+    uint16_t section_local_index;
+
     if (local_x < 0 || local_x >= GAME_VOXEL_CHUNK_WIDTH || local_y < 0
         || local_y >= GAME_VOXEL_CHUNK_HEIGHT || local_z < 0
         || local_z >= GAME_VOXEL_CHUNK_DEPTH)
@@ -135,7 +138,11 @@ static int32_t chunk_mesh_read_or_air(const game_voxel_chunk &chunk,
         *block_id = GAME_VOXEL_AIR_BLOCK;
         return (FT_ERR_SUCCESS);
     }
-    return (chunk.read_block(local_x, local_y, local_z, block_id));
+    section = &chunk.get_section(static_cast<uint8_t>(local_y >> 4));
+    section_local_index = static_cast<uint16_t>(local_x + (local_z << 4)
+        + ((local_y & 15) << 8));
+    *block_id = section->get_block(section_local_index);
+    return (FT_ERR_SUCCESS);
 }
 
 static int32_t chunk_mesh_face_is_visible(const game_voxel_chunk &chunk,
@@ -171,67 +178,6 @@ static int32_t chunk_mesh_face_is_visible(const game_voxel_chunk &chunk,
         *visible = FT_TRUE;
     else
         *visible = FT_FALSE;
-    return (FT_ERR_SUCCESS);
-}
-
-static int32_t chunk_mesh_count_block_faces(const game_voxel_chunk &chunk,
-    int32_t local_x, int32_t local_y, int32_t local_z,
-    ft_size_t *face_count) noexcept
-{
-    chunk_mesh_face face;
-    ft_bool visible;
-    int32_t error_code;
-
-    face = CHUNK_MESH_FACE_WEST;
-    while (face <= CHUNK_MESH_FACE_SOUTH)
-    {
-        error_code = chunk_mesh_face_is_visible(chunk, local_x, local_y,
-            local_z, face, &visible);
-        if (error_code != FT_ERR_SUCCESS)
-            return (error_code);
-        if (visible == FT_TRUE)
-            *face_count += 1;
-        face = static_cast<chunk_mesh_face>(static_cast<int32_t>(face) + 1);
-    }
-    return (FT_ERR_SUCCESS);
-}
-
-static int32_t chunk_mesh_count_visible_faces(const game_voxel_chunk &chunk,
-    ft_size_t *face_count) noexcept
-{
-    int32_t local_x;
-    int32_t local_y;
-    int32_t local_z;
-    uint32_t block_id;
-    int32_t error_code;
-
-    *face_count = 0;
-    local_y = 0;
-    while (local_y < GAME_VOXEL_CHUNK_HEIGHT)
-    {
-        local_z = 0;
-        while (local_z < GAME_VOXEL_CHUNK_DEPTH)
-        {
-            local_x = 0;
-            while (local_x < GAME_VOXEL_CHUNK_WIDTH)
-            {
-                error_code = chunk.read_block(local_x, local_y, local_z,
-                    &block_id);
-                if (error_code != FT_ERR_SUCCESS)
-                    return (error_code);
-                if (block_id != GAME_VOXEL_AIR_BLOCK)
-                {
-                    error_code = chunk_mesh_count_block_faces(chunk,
-                        local_x, local_y, local_z, face_count);
-                    if (error_code != FT_ERR_SUCCESS)
-                        return (error_code);
-                }
-                local_x += 1;
-            }
-            local_z += 1;
-        }
-        local_y += 1;
-    }
     return (FT_ERR_SUCCESS);
 }
 
@@ -505,8 +451,8 @@ static int32_t chunk_mesh_fill_visible_face_mask(const game_voxel_chunk &chunk,
         {
             chunk_mesh_block_coordinates_for_plane(face, axis_value,
                 column_value, row_value, &local_x, &local_y, &local_z);
-            error_code = chunk.read_block(local_x, local_y, local_z,
-                &block_id);
+            error_code = chunk_mesh_read_or_air(chunk, local_x, local_y,
+                local_z, &block_id);
             if (error_code != FT_ERR_SUCCESS)
                 return (error_code);
             mask[(row_value * column_count) + column_value] = 0U;
@@ -725,19 +671,15 @@ static int32_t chunk_mesh_emit_visible_faces(chunk_mesh &mesh,
 int32_t chunk_mesh_generate_from_chunk(chunk_mesh &mesh,
     const game_voxel_chunk &chunk) noexcept
 {
-    ft_size_t face_count;
     int32_t error_code;
 
-    error_code = chunk_mesh_count_visible_faces(chunk, &face_count);
-    if (error_code != FT_ERR_SUCCESS)
-        return (error_code);
     error_code = chunk_mesh_clear(mesh);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
-    mesh.vertices.reserve(face_count * 4U);
+    mesh.vertices.reserve(4096U);
     if (mesh.vertices.get_error() != FT_ERR_SUCCESS)
         return (mesh.vertices.get_error());
-    mesh.indices.reserve(face_count * 6U);
+    mesh.indices.reserve(6144U);
     if (mesh.indices.get_error() != FT_ERR_SUCCESS)
         return (mesh.indices.get_error());
     chunk_mesh_reset_occupied_bounds(mesh);

@@ -9,6 +9,8 @@
 
 static const int32_t TERRAIN_HEIGHTMAP_LARGE_SCALE = 32;
 static const int32_t TERRAIN_HEIGHTMAP_DETAIL_SCALE = 8;
+static const int32_t TERRAIN_BIOME_ZONE_BLEND_WIDTH = 16;
+static const int32_t TERRAIN_HEIGHTMAP_SMOOTH_RADIUS = 1;
 static const uint64_t TERRAIN_FEATURE_SHRUB_SALT = UINT64_C(0x2D9C1F4E8B3A6071);
 static const int32_t TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET = 1;
 static const uint64_t TERRAIN_FEATURE_SHRUB_THRESHOLD = 6U;
@@ -46,6 +48,150 @@ static int32_t terrain_column_height(uint64_t seed_value,
     surface_height = biome_profile.surface_height
         + static_cast<int32_t>(total_noise);
     return (surface_height);
+}
+
+static double terrain_zone_blend_factor(int32_t local_coordinate) noexcept
+{
+    double blend_factor;
+
+    blend_factor = static_cast<double>(local_coordinate)
+        / static_cast<double>(TERRAIN_BIOME_ZONE_BLEND_WIDTH);
+    if (blend_factor < 0.0)
+        blend_factor = 0.0;
+    if (blend_factor > 1.0)
+        blend_factor = 1.0;
+    return (blend_factor);
+}
+
+static int32_t terrain_blend_height(int32_t left_height, int32_t right_height,
+    double factor) noexcept
+{
+    return (static_cast<int32_t>(terrain_lerp(
+        static_cast<double>(left_height),
+        static_cast<double>(right_height), factor)));
+}
+
+static int32_t terrain_smooth_biome_height(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_z, terrain_biome biome,
+    const terrain_biome_profile &biome_profile) noexcept
+{
+    int32_t biome_zone_x;
+    int32_t biome_zone_z;
+    int32_t zone_local_x;
+    int32_t zone_local_z;
+    int32_t height;
+    int32_t neighbor_x;
+    int32_t neighbor_z;
+    terrain_biome neighbor_biome;
+    terrain_biome_profile neighbor_profile;
+    int32_t neighbor_height;
+    double blend_factor;
+
+    biome_zone_x = terrain_floor_div(world_block_x, TERRAIN_BIOME_ZONE_WIDTH);
+    biome_zone_z = terrain_floor_div(world_block_z, TERRAIN_BIOME_ZONE_WIDTH);
+    zone_local_x = world_block_x - (biome_zone_x * TERRAIN_BIOME_ZONE_WIDTH);
+    zone_local_z = world_block_z - (biome_zone_z * TERRAIN_BIOME_ZONE_WIDTH);
+    height = terrain_column_height(seed_value, world_block_x, world_block_z,
+        biome_profile);
+    if (zone_local_x < TERRAIN_BIOME_ZONE_BLEND_WIDTH)
+    {
+        neighbor_x = world_block_x - TERRAIN_BIOME_ZONE_WIDTH;
+        neighbor_biome = terrain_pick_biome(seed_value, neighbor_x,
+            world_block_z);
+        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_height = terrain_column_height(seed_value, neighbor_x,
+            world_block_z, neighbor_profile);
+        blend_factor = terrain_zone_blend_factor(zone_local_x);
+        height = terrain_blend_height(neighbor_height, height, blend_factor);
+    }
+    else if (zone_local_x >= (TERRAIN_BIOME_ZONE_WIDTH
+            - TERRAIN_BIOME_ZONE_BLEND_WIDTH))
+    {
+        neighbor_x = world_block_x + TERRAIN_BIOME_ZONE_WIDTH;
+        neighbor_biome = terrain_pick_biome(seed_value, neighbor_x,
+            world_block_z);
+        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_height = terrain_column_height(seed_value, neighbor_x,
+            world_block_z, neighbor_profile);
+        blend_factor = terrain_zone_blend_factor(
+            (TERRAIN_BIOME_ZONE_WIDTH - 1) - zone_local_x);
+        height = terrain_blend_height(height, neighbor_height, blend_factor);
+    }
+    if (zone_local_z < TERRAIN_BIOME_ZONE_BLEND_WIDTH)
+    {
+        neighbor_z = world_block_z - TERRAIN_BIOME_ZONE_WIDTH;
+        neighbor_biome = terrain_pick_biome(seed_value, world_block_x,
+            neighbor_z);
+        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_height = terrain_column_height(seed_value, world_block_x,
+            neighbor_z, neighbor_profile);
+        blend_factor = terrain_zone_blend_factor(zone_local_z);
+        height = terrain_blend_height(neighbor_height, height, blend_factor);
+    }
+    else if (zone_local_z >= (TERRAIN_BIOME_ZONE_WIDTH
+            - TERRAIN_BIOME_ZONE_BLEND_WIDTH))
+    {
+        neighbor_z = world_block_z + TERRAIN_BIOME_ZONE_WIDTH;
+        neighbor_biome = terrain_pick_biome(seed_value, world_block_x,
+            neighbor_z);
+        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_height = terrain_column_height(seed_value, world_block_x,
+            neighbor_z, neighbor_profile);
+        blend_factor = terrain_zone_blend_factor(
+            (TERRAIN_BIOME_ZONE_WIDTH - 1) - zone_local_z);
+        height = terrain_blend_height(height, neighbor_height, blend_factor);
+    }
+    (void)biome;
+    return (height);
+}
+
+static int32_t terrain_sample_height(uint64_t seed_value, int32_t world_block_x,
+    int32_t world_block_z) noexcept
+{
+    terrain_biome biome;
+    terrain_biome_profile biome_profile;
+
+    biome = terrain_pick_biome(seed_value, world_block_x, world_block_z);
+    biome_profile = terrain_get_biome_profile(biome);
+    return (terrain_smooth_biome_height(seed_value, world_block_x,
+        world_block_z, biome, biome_profile));
+}
+
+static int32_t terrain_smooth_heightfield(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_z) noexcept
+{
+    int32_t offset_x;
+    int32_t offset_z;
+    int32_t sample_count;
+    int32_t weighted_height;
+    int32_t sample_height;
+    int32_t sample_weight;
+
+    offset_z = -TERRAIN_HEIGHTMAP_SMOOTH_RADIUS;
+    sample_count = 0;
+    weighted_height = 0;
+    while (offset_z <= TERRAIN_HEIGHTMAP_SMOOTH_RADIUS)
+    {
+        offset_x = -TERRAIN_HEIGHTMAP_SMOOTH_RADIUS;
+        while (offset_x <= TERRAIN_HEIGHTMAP_SMOOTH_RADIUS)
+        {
+            sample_height = terrain_sample_height(seed_value,
+                world_block_x + offset_x, world_block_z + offset_z);
+            if (offset_x == 0 && offset_z == 0)
+                sample_weight = 4;
+            else if (offset_x == 0 || offset_z == 0)
+                sample_weight = 2;
+            else
+                sample_weight = 1;
+            weighted_height += sample_height * sample_weight;
+            sample_count += sample_weight;
+            offset_x += 1;
+        }
+        offset_z += 1;
+    }
+    if (sample_count <= 0)
+        return (terrain_sample_height(seed_value, world_block_x, world_block_z));
+    return (weighted_height / sample_count);
 }
 
 static ft_bool terrain_should_place_feature(uint64_t seed_value,
@@ -116,9 +262,9 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
                 world_block_x, world_block_z);
             column_cache[column_index].biome_profile
                 = terrain_get_biome_profile(column_cache[column_index].biome);
-            column_cache[column_index].column_height = terrain_column_height(
-                seed_value, world_block_x, world_block_z,
-                column_cache[column_index].biome_profile);
+            column_cache[column_index].column_height
+                = terrain_sample_height(seed_value, world_block_x,
+                    world_block_z);
             column_cache[column_index].surface_block_id
                 = terrain_surface_block_for_biome(
                     column_cache[column_index].biome);
@@ -126,21 +272,34 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
                 = terrain_biome_has_shrubs(column_cache[column_index].biome);
             column_cache[column_index].can_place_trees
                 = terrain_biome_has_trees(column_cache[column_index].biome);
+            local_x += 1;
+        }
+        local_z += 1;
+    }
+    local_z = 0;
+    while (local_z < GAME_VOXEL_CHUNK_DEPTH)
+    {
+        world_block_z = world_block_origin_z + local_z;
+        local_x = 0;
+        while (local_x < GAME_VOXEL_CHUNK_WIDTH)
+        {
+            column_index = (local_z * GAME_VOXEL_CHUNK_WIDTH) + local_x;
+            world_block_x = world_block_origin_x + local_x;
             biome = column_cache[column_index].biome;
             biome_profile = column_cache[column_index].biome_profile;
-            column_height = column_cache[column_index].column_height;
             surface_block_id = column_cache[column_index].surface_block_id;
             place_shrub = column_cache[column_index].can_place_shrubs;
+            column_height = terrain_smooth_heightfield(seed_value,
+                world_block_x, world_block_z);
+            column_cache[column_index].column_height = column_height;
             if (column_height < 0)
                 column_height = 0;
             if (column_height >= GAME_VOXEL_CHUNK_HEIGHT)
                 column_height = GAME_VOXEL_CHUNK_HEIGHT - 1;
             local_y = 0;
-            while (local_y < GAME_VOXEL_CHUNK_HEIGHT)
+            while (local_y <= column_height)
             {
-                if (local_y > column_height)
-                    block_id = GAME_VOXEL_AIR_BLOCK;
-                else if (local_y == column_height)
+                if (local_y == column_height)
                     block_id = surface_block_id;
                 else if (local_y >= column_height - biome_profile.topsoil_depth)
                     block_id = TERRAIN_GENERATOR_DIRT_BLOCK;
