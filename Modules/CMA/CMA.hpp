@@ -36,6 +36,7 @@ void        *cma_realloc(void *memory_pointer, ft_size_t size)
 void        *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
                 __attribute__ ((warn_unused_result, hot));
 void        cma_free(void* memory_pointer) __attribute__ ((hot));
+void        cma_bzero_and_free(void* memory_pointer) __attribute__ ((hot));
 int32_t      cma_checked_free(void* memory_pointer) __attribute__ ((warn_unused_result, hot));
 void        cma_free_double(char **content);
 ft_size_t    cma_block_size(const void *memory_pointer)

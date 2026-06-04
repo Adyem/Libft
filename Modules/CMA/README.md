@@ -24,6 +24,7 @@ The `CMA` module is the project allocator layer. It wraps allocation, reallocati
 - `cma_realloc(void *memory_pointer, ft_size_t size)` - Resizes a block.
 - `cma_aligned_alloc(ft_size_t alignment, ft_size_t size)` - Allocates a block with the requested alignment.
 - `cma_free(void *memory_pointer)` - Releases a block and accepts null.
+- `cma_bzero_and_free(void *memory_pointer)` - Zeroes the tracked allocation using its recorded size before releasing it.
 - `cma_checked_free(void *memory_pointer)` - Releases a block and returns an error code for invalid or failed frees.
 - `cma_free_double(char **content)` - Releases a null-terminated array of strings and the array itself.
 - `cma_block_size(const void *memory_pointer)` - Returns the tracked block size or zero when unavailable.

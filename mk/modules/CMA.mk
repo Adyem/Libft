@@ -5,6 +5,7 @@ SRCS := cma_backend.cpp \
         cma_arena.cpp \
         cma_malloc.cpp \
         cma_free.cpp \
+        cma_bzero_and_free.cpp \
         cma_free_checked.cpp \
         cma_realloc.cpp \
         cma_aligned_alloc.cpp \

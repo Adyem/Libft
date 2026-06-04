@@ -92,6 +92,8 @@ FT_TEST(test_scma_accessor_initialize_destroy_reinitialize_success)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     FT_ASSERT_EQ(1, accessor.is_initialised());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), accessor._handle.index);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), accessor._handle.generation);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
     FT_ASSERT_EQ(1, accessor.is_initialised());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.destroy());

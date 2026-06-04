@@ -10,6 +10,22 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
+static inline void scma_secure_bzero(void *memory_pointer, ft_size_t size)
+{
+    volatile unsigned char *pointer;
+
+    if (memory_pointer == nullptr || size == 0)
+        return ;
+    pointer = static_cast<volatile unsigned char *>(memory_pointer);
+    while (size > 0)
+    {
+        *pointer = 0;
+        pointer++;
+        size--;
+    }
+    return ;
+}
+
 
 struct scma_handle
 {
@@ -265,8 +281,7 @@ inline int32_t    scma_handle_accessor<TValue>::destroy(void)
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
-    this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
+    scma_secure_bzero(&this->_handle, sizeof(this->_handle));
     this->_initialised_state = FT_CLASS_STATE_DESTROYED;
     this->set_error(FT_ERR_SUCCESS);
     (void)scma_mutex_unlock();

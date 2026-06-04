@@ -22,6 +22,8 @@ struct test_backend_state
     ft_size_t allocation_slots;
     ft_size_t allocation_count;
     ft_size_t free_count;
+    ft_bool verify_zero_before_free;
+    ft_bool observed_zero_before_free;
 };
 
 static int32_t backend_find_allocation_slot(const test_backend_state *state,
@@ -55,6 +57,8 @@ static void initialize_test_backend_state(test_backend_state *state)
     state->allocation_slots = 0;
     state->allocation_count = 0;
     state->free_count = 0;
+    state->verify_zero_before_free = FT_FALSE;
+    state->observed_zero_before_free = FT_FALSE;
     return ;
 }
 
@@ -120,9 +124,26 @@ static void test_backend_deallocate(void *memory_pointer, void *user_data)
     if (!memory_pointer)
         return ;
     int32_t slot_index = backend_find_allocation_slot(state, memory_pointer);
+    ft_size_t allocation_size = 0;
 
     if (slot_index >= 0)
     {
+        allocation_size = state->allocations[slot_index].size;
+        if (state->verify_zero_before_free == FT_TRUE)
+        {
+            ft_size_t byte_index = 0;
+
+            state->observed_zero_before_free = FT_TRUE;
+            while (byte_index < allocation_size)
+            {
+                if (static_cast<unsigned char *>(memory_pointer)[byte_index] != 0)
+                {
+                    state->observed_zero_before_free = FT_FALSE;
+                    break ;
+                }
+                byte_index++;
+            }
+        }
         state->allocations[slot_index]
             = state->allocations[state->allocation_slots - 1];
         state->allocations[state->allocation_slots - 1].memory_pointer = ft_nullptr;
@@ -214,5 +235,39 @@ static int32_t test_cma_backend_hooks_impl(void)
 FT_TEST(test_cma_backend_hooks)
 {
     FT_ASSERT_EQ(1, test_cma_backend_hooks_impl());
+    return (1);
+}
+
+FT_TEST(test_cma_bzero_and_free_zeroes_backend_allocation_before_release)
+{
+    test_backend_state backend_state;
+    cma_backend_hooks hooks;
+    void *memory_pointer;
+
+    initialize_test_backend_state(&backend_state);
+    backend_state.verify_zero_before_free = FT_TRUE;
+    hooks.allocate = &test_backend_allocate;
+    hooks.reallocate = &test_backend_reallocate;
+    hooks.deallocate = &test_backend_deallocate;
+    hooks.aligned_allocate = ft_nullptr;
+    hooks.get_allocation_size = &test_backend_get_allocation_size;
+    hooks.owns_allocation = &test_backend_owns_allocation;
+    hooks.user_data = &backend_state;
+    if (cma_set_backend(&hooks) != FT_ERR_SUCCESS)
+        return (0);
+    memory_pointer = cma_malloc(64);
+    if (!memory_pointer)
+    {
+        cma_clear_backend();
+        return (0);
+    }
+    ft_memset(memory_pointer, 0x5A, 64);
+    cma_bzero_and_free(memory_pointer);
+    if (backend_state.observed_zero_before_free != FT_TRUE)
+    {
+        cma_clear_backend();
+        return (0);
+    }
+    cma_clear_backend();
     return (1);
 }
