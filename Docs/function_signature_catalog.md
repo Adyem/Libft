@@ -504,6 +504,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void *cma_realloc(void* ptr, ft_size_t new_size) __attribute__ ((warn_unused_result));`
 - `void cma_clear_backend(void);`
 - `void cma_free(void* ptr) __attribute__ ((hot));`
+- `void cma_bzero_and_free(void* ptr) __attribute__ ((hot));`
 - `void cma_free_double(char **content);`
 - `void cma_get_extended_stats(ft_size_t *allocation_count, ft_size_t *free_count, ft_size_t *current_bytes, ft_size_t *peak_bytes);`
 - `void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);`

@@ -7,7 +7,7 @@ The `SCMA` module is a safe compact memory allocator that returns handles instea
 - `scma_handle` - Public handle with `index` and `generation`.
 - `scma_invalid_handle()` - Returns the sentinel invalid handle.
 - `scma_initialize(ft_size_t initial_capacity)` - Initializes the allocator heap.
-- `scma_shutdown()` - Releases allocator runtime state.
+- `scma_shutdown()` - Releases allocator runtime state after zeroing the managed heap and block metadata.
 - `scma_is_initialised()` - Reports allocator initialization state.
 - `scma_runtime_mutex()` - Returns the allocator runtime mutex.
 
@@ -39,6 +39,7 @@ The `SCMA` module is a safe compact memory allocator that returns handles instea
 ## `scma_handle_accessor<TValue>`
 
 - Lifecycle: constructor, destructor, `initialize`, handle initialization, `destroy`, and `move`.
+- `destroy()` zeroes the bound handle before marking the accessor destroyed.
 - `bind(scma_handle handle)` - Binds the accessor to an existing handle.
 - `is_initialised()` / `is_bound()` / `get_handle()` - Inspect accessor state.
 - Operators `*`, `->`, and `[]` - Return proxy objects for structured handle access.

@@ -618,6 +618,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int cma_backend_is_enabled(void) __attribute__ ((warn_unused_result))`
   - `void *cma_malloc(ft_size_t size) __attribute__ ((warn_unused_result, hot))`
   - `void cma_free(void* ptr) __attribute__ ((hot))`
+  - `void cma_bzero_and_free(void* ptr) __attribute__ ((hot))`
   - `int cma_checked_free(void* ptr) __attribute__ ((warn_unused_result, hot))`
   - `char *cma_strdup(const char *string) __attribute__ ((warn_unused_result))`
   - `char *cma_strndup(const char *string, size_t maximum_length) __attribute__ ((warn_unused_result))`

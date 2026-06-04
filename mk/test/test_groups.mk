@@ -50,6 +50,7 @@ CMA_TEST_FILES := \
 	Test/test_cma_metadata.cpp \
 	Test/test_cma_stats.cpp \
 	Test/test_cma_strings.cpp \
+	Test/test_cma_scma_secure_wipe.cpp \
 	Test/test_scma_accessor.cpp \
 	Test/test_scma_accessor_lifecycle.cpp \
 	Test/test_scma_accessor_proxy_chain_errors.cpp \

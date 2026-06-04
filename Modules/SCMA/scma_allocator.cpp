@@ -85,11 +85,13 @@ void    scma_shutdown(void)
     }
     if (heap_data)
     {
+        scma_secure_bzero(heap_data, heap_capacity);
         std::free(heap_data);
         heap_data = ft_nullptr;
     }
     if (blocks_data)
     {
+        scma_secure_bzero(blocks_data, block_capacity * sizeof(scma_block));
         std::free(blocks_data);
         blocks_data = ft_nullptr;
     }
@@ -101,6 +103,18 @@ void    scma_shutdown(void)
     scma_unlock_and_return_void();
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+void    scma_test_secure_wipe_runtime(void)
+{
+    unsigned char *&heap_data = scma_heap_data_ref();
+    scma_block *&blocks_data = scma_blocks_data_ref();
+
+    scma_secure_bzero(heap_data, scma_heap_capacity_ref());
+    scma_secure_bzero(blocks_data, scma_block_capacity_ref() * sizeof(scma_block));
+    return ;
+}
+#endif
 
 int32_t    scma_is_initialised(void)
 {

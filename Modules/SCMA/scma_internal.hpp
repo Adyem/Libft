@@ -54,6 +54,7 @@ void    scma_unlock_and_return_void(void);
 
 #ifdef LIBFT_TEST_BUILD
 void    scma_capture_leak_stack(scma_block *block, ft_size_t skip_count);
+void    scma_test_secure_wipe_runtime(void);
 #endif
 
 #endif
