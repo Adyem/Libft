@@ -10,7 +10,10 @@ enum ft_dumb_control
     FT_DUMB_CONTROL_RIGHT = 3,
     FT_DUMB_CONTROL_CONFIRM = 4,
     FT_DUMB_CONTROL_BACK = 5,
-    FT_DUMB_CONTROL_COUNT = 6
+    FT_DUMB_CONTROL_JUMP = 6,
+    FT_DUMB_CONTROL_BOOST = 7,
+    FT_DUMB_CONTROL_MOUSE_PRIMARY = 8,
+    FT_DUMB_CONTROL_COUNT = 9
 };
 
 struct ft_dumb_mouse_delta

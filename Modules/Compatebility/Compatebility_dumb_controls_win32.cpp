@@ -41,12 +41,23 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     }
     if (control == FT_DUMB_CONTROL_CONFIRM)
     {
-        return (dumb_controls_win32_virtual_key_is_down(VK_RETURN)
-            || dumb_controls_win32_virtual_key_is_down(VK_SPACE));
+        return (dumb_controls_win32_virtual_key_is_down(VK_RETURN));
     }
     if (control == FT_DUMB_CONTROL_BACK)
     {
         return (dumb_controls_win32_virtual_key_is_down(VK_ESCAPE));
+    }
+    if (control == FT_DUMB_CONTROL_JUMP)
+    {
+        return (dumb_controls_win32_virtual_key_is_down(VK_SPACE));
+    }
+    if (control == FT_DUMB_CONTROL_BOOST)
+    {
+        return (dumb_controls_win32_virtual_key_is_down('B'));
+    }
+    if (control == FT_DUMB_CONTROL_MOUSE_PRIMARY)
+    {
+        return (dumb_controls_win32_virtual_key_is_down(VK_LBUTTON));
     }
     return (FT_FALSE);
 }

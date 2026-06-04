@@ -61,9 +61,33 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     if (control == FT_DUMB_CONTROL_RIGHT)
         return (dumb_controls_linux_key_is_down(XK_d, XK_Right));
     if (control == FT_DUMB_CONTROL_CONFIRM)
-        return (dumb_controls_linux_key_is_down(XK_Return, XK_space));
+        return (dumb_controls_linux_key_is_down(XK_Return, NoSymbol));
     if (control == FT_DUMB_CONTROL_BACK)
         return (dumb_controls_linux_key_is_down(XK_Escape, NoSymbol));
+    if (control == FT_DUMB_CONTROL_JUMP)
+        return (dumb_controls_linux_key_is_down(XK_space, NoSymbol));
+    if (control == FT_DUMB_CONTROL_BOOST)
+        return (dumb_controls_linux_key_is_down(XK_b, XK_B));
+    if (control == FT_DUMB_CONTROL_MOUSE_PRIMARY)
+    {
+        Display *display_pointer;
+        Window root_window;
+        Window child_window;
+        int root_x;
+        int root_y;
+        int window_x;
+        int window_y;
+        unsigned int mask;
+
+        display_pointer = dumb_controls_linux_open_display();
+        if (display_pointer == ft_nullptr)
+            return (FT_FALSE);
+        if (XQueryPointer(display_pointer, DefaultRootWindow(display_pointer),
+                &root_window, &child_window, &root_x, &root_y, &window_x,
+                &window_y, &mask) == 0)
+            return (FT_FALSE);
+        return ((mask & Button1Mask) != 0 ? FT_TRUE : FT_FALSE);
+    }
     return (FT_FALSE);
 }
 

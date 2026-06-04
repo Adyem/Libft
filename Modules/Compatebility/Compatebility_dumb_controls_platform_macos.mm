@@ -32,9 +32,17 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     if (control == FT_DUMB_CONTROL_RIGHT)
         return (dumb_controls_macos_key_is_down(2U, 124U, FT_TRUE));
     if (control == FT_DUMB_CONTROL_CONFIRM)
-        return (dumb_controls_macos_key_is_down(36U, 49U, FT_TRUE));
+        return (dumb_controls_macos_key_is_down(36U, 0U, FT_FALSE));
     if (control == FT_DUMB_CONTROL_BACK)
         return (dumb_controls_macos_key_is_down(53U, 0U, FT_FALSE));
+    if (control == FT_DUMB_CONTROL_JUMP)
+        return (dumb_controls_macos_key_is_down(49U, 0U, FT_FALSE));
+    if (control == FT_DUMB_CONTROL_BOOST)
+        return (dumb_controls_macos_key_is_down(11U, 0U, FT_FALSE));
+    if (control == FT_DUMB_CONTROL_MOUSE_PRIMARY)
+        return (CGEventSourceButtonState(
+            kCGEventSourceStateCombinedSessionState,
+            kCGMouseButtonLeft) != 0 ? FT_TRUE : FT_FALSE);
     return (FT_FALSE);
 }
 
