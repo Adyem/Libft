@@ -13,7 +13,17 @@
 #include "../Template/queue.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Template/vector.hpp"
+#include <cstdint>
 
+static unsigned long long ft_threading_trace_thread_id(t_thread_id thread_identifier)
+{
+#ifdef __APPLE__
+    return (static_cast<unsigned long long>(
+            reinterpret_cast<uintptr_t>(thread_identifier.native_id)));
+#else
+    return (static_cast<unsigned long long>(thread_identifier.native_id));
+#endif
+}
 
 ft_task_scheduler::scheduled_task::scheduled_task()
 {
@@ -1628,7 +1638,7 @@ void ft_task_scheduler::trace_emit_event(e_ft_task_trace_phase phase, unsigned l
     event.label = label;
     event.timestamp = time_monotonic_point_now();
     thread_identifier = ft_this_thread_get_id();
-    event.thread_id = static_cast<unsigned long long>(thread_identifier.native_id);
+    event.thread_id = ft_threading_trace_thread_id(thread_identifier);
     event.queue_depth = -1;
     event.scheduled_depth = -1;
     event.worker_active_count = -1;

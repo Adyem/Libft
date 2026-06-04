@@ -51,4 +51,28 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     return (FT_FALSE);
 }
 
+ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
+{
+    static ft_bool initialized = FT_FALSE;
+    static POINT previous_position;
+    ft_dumb_mouse_delta delta;
+    POINT position;
+
+    delta.x = 0;
+    delta.y = 0;
+    if (GetCursorPos(&position) == 0)
+    {
+        initialized = FT_FALSE;
+        return (delta);
+    }
+    if (initialized == FT_TRUE)
+    {
+        delta.x = position.x - previous_position.x;
+        delta.y = position.y - previous_position.y;
+    }
+    previous_position = position;
+    initialized = FT_TRUE;
+    return (delta);
+}
+
 #endif

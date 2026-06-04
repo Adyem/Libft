@@ -13,6 +13,13 @@ enum ft_dumb_control
     FT_DUMB_CONTROL_COUNT = 6
 };
 
+struct ft_dumb_mouse_delta
+{
+    int32_t x;
+    int32_t y;
+};
+
 void    ft_dumb_controls_poll(void);
 ft_bool ft_dumb_control_is_down(ft_dumb_control control);
 ft_bool ft_dumb_control_was_pressed(ft_dumb_control control);
+ft_dumb_mouse_delta ft_dumb_controls_mouse_delta(void);

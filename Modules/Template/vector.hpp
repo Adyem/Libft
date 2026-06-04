@@ -217,7 +217,7 @@ ft_vector<ElementType>::ft_vector(ft_size_t initial_capacity)
 template <typename ElementType>
 ft_vector<ElementType>::~ft_vector()
 {
-    uint32_t previous_error;
+    int32_t previous_error;
 
     previous_error = ft_vector<ElementType>::_last_error;
     (void)this->destroy();

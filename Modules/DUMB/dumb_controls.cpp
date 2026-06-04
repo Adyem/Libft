@@ -3,6 +3,7 @@
 static ft_bool g_dumb_control_down[FT_DUMB_CONTROL_COUNT];
 static ft_bool g_dumb_control_pressed[FT_DUMB_CONTROL_COUNT];
 static ft_bool g_dumb_control_previous_down[FT_DUMB_CONTROL_COUNT];
+static ft_dumb_mouse_delta g_dumb_mouse_delta;
 
 void ft_dumb_controls_poll(void)
 {
@@ -24,6 +25,7 @@ void ft_dumb_controls_poll(void)
         g_dumb_control_previous_down[index_control] = current_down;
         index_control = index_control + 1U;
     }
+    g_dumb_mouse_delta = ft_dumb_platform_mouse_delta();
     return ;
 }
 
@@ -43,4 +45,9 @@ ft_bool ft_dumb_control_was_pressed(ft_dumb_control control)
         return (FT_FALSE);
     }
     return (g_dumb_control_pressed[control]);
+}
+
+ft_dumb_mouse_delta ft_dumb_controls_mouse_delta(void)
+{
+    return (g_dumb_mouse_delta);
 }
