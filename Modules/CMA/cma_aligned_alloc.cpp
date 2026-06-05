@@ -149,8 +149,9 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     else
         *error_target = FT_ERR_NO_MEMORY;
 #endif
-    cma_record_allocation_log("cma_aligned_alloc %lu (alignment %lu) -> %p",
-            allocation_size, alignment, pointer);
+    cma_record_allocation_log("cma_aligned_alloc %llu (alignment %llu) -> %p",
+            static_cast<unsigned long long>(allocation_size),
+            static_cast<unsigned long long>(alignment), pointer);
     return (pointer);
 }
 
@@ -213,8 +214,10 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
         cma_unlock_allocator(lock_acquired);
-        cma_record_allocation_log("cma_aligned_alloc %lu (alignment %lu) -> %p",
-                request_size, alignment, arena_pointer);
+        cma_record_allocation_log(
+                "cma_aligned_alloc %llu (alignment %llu) -> %p",
+                static_cast<unsigned long long>(request_size),
+                static_cast<unsigned long long>(alignment), arena_pointer);
         return (arena_pointer);
     }
     ft_size_t padding = 0;
@@ -270,7 +273,8 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     cma_debug_prepare_allocation(block, request_size);
     void *result = static_cast<void *>(cma_block_user_pointer(block));
     cma_unlock_allocator(lock_acquired);
-    cma_record_allocation_log("cma_aligned_alloc %lu (alignment %lu) -> %p",
-            request_size, alignment, result);
+    cma_record_allocation_log("cma_aligned_alloc %llu (alignment %llu) -> %p",
+            static_cast<unsigned long long>(request_size),
+            static_cast<unsigned long long>(alignment), result);
     return (result);
 }

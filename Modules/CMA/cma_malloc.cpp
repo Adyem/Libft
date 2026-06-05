@@ -42,7 +42,8 @@ void* cma_malloc(ft_size_t size)
         }
         else
             return (nullptr);
-        cma_record_allocation_log("cma_malloc %lu -> %p", size, result);
+        cma_record_allocation_log("cma_malloc %llu -> %p",
+            static_cast<unsigned long long>(size), result);
         return (result);
     }
     if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
@@ -58,7 +59,8 @@ void* cma_malloc(ft_size_t size)
             g_cma_peak_bytes = g_cma_current_bytes;
         cma_unlock_allocator(lock_acquired);
         lock_acquired = FT_FALSE;
-        cma_record_allocation_log("cma_malloc %lu -> %p", size, result);
+        cma_record_allocation_log("cma_malloc %llu -> %p",
+            static_cast<unsigned long long>(size), result);
         return (result);
     }
     instrumented_size = cma_debug_allocation_size(size);
@@ -105,10 +107,12 @@ void* cma_malloc(ft_size_t size)
     cma_unlock_allocator(lock_acquired);
     lock_acquired = FT_FALSE;
     if (request_size == size)
-        cma_record_allocation_log("cma_malloc %lu -> %p", aligned_size, result);
+        cma_record_allocation_log("cma_malloc %llu -> %p",
+            static_cast<unsigned long long>(aligned_size), result);
     else
-        cma_record_allocation_log("cma_malloc %lu (rounded to %lu) -> %p",
-            request_size, aligned_size, result);
+        cma_record_allocation_log("cma_malloc %llu (rounded to %llu) -> %p",
+            static_cast<unsigned long long>(request_size),
+            static_cast<unsigned long long>(aligned_size), result);
     if (lock_acquired)
         cma_unlock_allocator(lock_acquired);
     return (result);

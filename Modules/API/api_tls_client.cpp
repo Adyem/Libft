@@ -482,18 +482,20 @@ static void tls_log_handshake_diagnostics(
     if (!ft_log_get_api_logging())
         return ;
     ft_log_info("api_tls_client::handshake host=%s protocol=%s cipher=%s "
-                "certificate_count=%zu",
+                "certificate_count=%llu",
         host.c_str(), diagnostics.protocol.c_str(),
-        diagnostics.cipher.c_str(), diagnostics.certificates.size());
+        diagnostics.cipher.c_str(),
+        static_cast<unsigned long long>(diagnostics.certificates.size()));
     certificate_index = 0;
     certificate_count = diagnostics.certificates.size();
     while (certificate_index < certificate_count)
     {
         const api_tls_certificate_diagnostics &entry =
             diagnostics.certificates[certificate_index];
-        ft_log_info("api_tls_client::certificate[%zu] subject=%s issuer=%s "
+        ft_log_info("api_tls_client::certificate[%llu] subject=%s issuer=%s "
                     "serial=%s not_before=%s not_after=%s fingerprint_sha256=%s",
-            certificate_index, entry.subject.c_str(), entry.issuer.c_str(),
+            static_cast<unsigned long long>(certificate_index),
+            entry.subject.c_str(), entry.issuer.c_str(),
             entry.serial_number.c_str(), entry.not_before.c_str(),
             entry.not_after.c_str(), entry.fingerprint_sha256.c_str());
         certificate_index++;

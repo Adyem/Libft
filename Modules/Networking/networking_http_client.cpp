@@ -1422,7 +1422,8 @@ int32_t http_post(const char *host, const char *path, const ft_string &body, ft_
             FT_ERR_NO_MEMORY, start_time));
     http_client_pool_reset_active(connection);
     body_length = body.size();
-    std::snprintf(length_string, sizeof(length_string), "%zu", body_length);
+    std::snprintf(length_string, sizeof(length_string), "%llu",
+        static_cast<unsigned long long>(body_length));
     attempt = 0;
     while (attempt < 2)
     {

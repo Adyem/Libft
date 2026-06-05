@@ -5,7 +5,6 @@ all: $(TARGET)
 
 .PHONY: FORCE
 FORCE:
-	@false
 
 $(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
 	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
@@ -288,7 +287,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-../$(LIBFT_ARCHIVE): FORCE
+../$(LIBFT_ARCHIVE):
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL); then \

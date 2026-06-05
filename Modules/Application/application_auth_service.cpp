@@ -34,7 +34,6 @@ static const char *application_auth_last_successful_login_timestamp_key_prefix =
 static const ft_size_t application_auth_salt_length = 16U;
 static const ft_size_t application_auth_digest_length = 32U;
 static const ft_size_t application_auth_login_signal_one_time_password_length = 16U;
-static const int64_t application_auth_login_signal_default_timeout_seconds = 300LL;
 
 static int32_t application_auth_encode_hex(const uint8_t *buffer, ft_size_t buffer_size, ft_string &output)
 {
