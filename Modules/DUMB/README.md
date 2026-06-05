@@ -8,6 +8,8 @@
 - `ft_dumb_controls_poll()` - Polls platform input and updates current/pressed state.
 - `ft_dumb_control_is_down(ft_dumb_control control)` - Reports whether a control is currently held.
 - `ft_dumb_control_was_pressed(ft_dumb_control control)` - Reports whether a control was pressed since the previous poll.
+- `ft_dumb_mouse_delta` - Signed X/Y mouse movement delta captured during the last poll.
+- `ft_dumb_controls_mouse_delta()` - Returns the most recent mouse movement delta collected by `ft_dumb_controls_poll()`.
 
 ## Rendering Types
 
