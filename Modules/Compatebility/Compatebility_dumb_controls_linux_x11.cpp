@@ -7,6 +7,25 @@
 #include <X11/keysym.h>
 #include <cstring>
 
+static Display *g_dumb_controls_linux_display = ft_nullptr;
+static Window g_dumb_controls_linux_window = 0;
+
+void ft_dumb_controls_linux_register_window(void *display_pointer,
+    unsigned long window_id)
+{
+    g_dumb_controls_linux_display = static_cast<Display *>(display_pointer);
+    g_dumb_controls_linux_window = static_cast<Window>(window_id);
+}
+
+void ft_dumb_controls_linux_unregister_window(unsigned long window_id)
+{
+    if (g_dumb_controls_linux_window == static_cast<Window>(window_id))
+    {
+        g_dumb_controls_linux_window = 0;
+        g_dumb_controls_linux_display = ft_nullptr;
+    }
+}
+
 static Display *dumb_controls_linux_open_display(void)
 {
     static Display *display_pointer = ft_nullptr;
@@ -119,15 +138,9 @@ static Window dumb_controls_linux_pointer_window(Display *display_pointer)
 
 static Window dumb_controls_linux_target_window(Display *display_pointer)
 {
-    Window target_window;
-    int revert_to;
-
-    target_window = 0;
-    revert_to = 0;
-    XGetInputFocus(display_pointer, &target_window, &revert_to);
-    if (target_window == 0 || target_window == PointerRoot)
-        target_window = dumb_controls_linux_pointer_window(display_pointer);
-    return (target_window);
+    if (g_dumb_controls_linux_window != 0)
+        return (g_dumb_controls_linux_window);
+    return (dumb_controls_linux_pointer_window(display_pointer));
 }
 
 static ft_bool dumb_controls_linux_query_local_pointer(Display *display_pointer,
@@ -170,28 +183,49 @@ ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
 
     delta.x = 0;
     delta.y = 0;
-    display_pointer = dumb_controls_linux_open_display();
+    display_pointer = g_dumb_controls_linux_display;
+    if (display_pointer == ft_nullptr)
+        display_pointer = dumb_controls_linux_open_display();
     if (display_pointer == ft_nullptr)
         return (delta);
     target_window = dumb_controls_linux_target_window(display_pointer);
-    if (dumb_controls_linux_query_local_pointer(display_pointer, target_window,
-            &pointer_x, &pointer_y, &center_x, &center_y) == FT_FALSE)
+    if (target_window == 0)
     {
         initialized = FT_FALSE;
         return (delta);
     }
     if (target_window != grabbed_window)
     {
-        XGrabPointer(display_pointer, target_window, False,
-            PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
-            GrabModeAsync, GrabModeAsync, target_window, None, CurrentTime);
-        grabbed_window = target_window;
+        grabbed_window = 0;
         initialized = FT_FALSE;
     }
-    if (initialized == FT_TRUE)
+    if (XGrabPointer(display_pointer, target_window, False,
+            PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
+            GrabModeAsync, GrabModeAsync, target_window, None, CurrentTime)
+        == GrabSuccess)
+        grabbed_window = target_window;
+    if (dumb_controls_linux_query_local_pointer(display_pointer, target_window,
+            &pointer_x, &pointer_y, &center_x, &center_y) == FT_TRUE)
     {
-        delta.x = pointer_x - center_x;
-        delta.y = pointer_y - center_y;
+        if (initialized == FT_TRUE)
+        {
+            delta.x = pointer_x - center_x;
+            delta.y = pointer_y - center_y;
+        }
+    }
+    else
+    {
+        XWindowAttributes attributes;
+
+        initialized = FT_FALSE;
+        center_x = DisplayWidth(display_pointer, DefaultScreen(display_pointer)) / 2;
+        center_y = DisplayHeight(display_pointer, DefaultScreen(display_pointer)) / 2;
+        if (XGetWindowAttributes(display_pointer, target_window, &attributes) != 0
+            && attributes.width > 0 && attributes.height > 0)
+        {
+            center_x = attributes.width / 2;
+            center_y = attributes.height / 2;
+        }
     }
     XWarpPointer(display_pointer, None, target_window, 0, 0, 0, 0,
         center_x, center_y);

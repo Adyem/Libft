@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+void ft_dumb_controls_linux_register_window(void *display_pointer,
+    unsigned long window_id);
+void ft_dumb_controls_linux_unregister_window(unsigned long window_id);
+
 struct ft_render_x11_state
 {
     Display             *display;
@@ -217,6 +221,8 @@ ft_render_platform_result ft_render_platform_create_window(
         return (create_result);
     }
     *out_platform_state = state;
+    ft_dumb_controls_linux_register_window(state->display,
+        static_cast<unsigned long>(state->window));
     return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
@@ -255,6 +261,8 @@ ft_render_platform_result ft_render_platform_destroy_window(
     }
     if (state->window != 0)
     {
+        ft_dumb_controls_linux_unregister_window(
+            static_cast<unsigned long>(state->window));
         XDestroyWindow(state->display, state->window);
         state->window = 0;
     }
