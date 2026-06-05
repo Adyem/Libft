@@ -43,6 +43,14 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
         return (CGEventSourceButtonState(
             kCGEventSourceStateCombinedSessionState,
             kCGMouseButtonLeft) != 0 ? FT_TRUE : FT_FALSE);
+    if (control == FT_DUMB_CONTROL_MOUSE_SECONDARY)
+        return (CGEventSourceButtonState(
+            kCGEventSourceStateCombinedSessionState,
+            kCGMouseButtonRight) != 0 ? FT_TRUE : FT_FALSE);
+    if (control == FT_DUMB_CONTROL_MOUSE_TERTIARY)
+        return (CGEventSourceButtonState(
+            kCGEventSourceStateCombinedSessionState,
+            kCGMouseButtonCenter) != 0 ? FT_TRUE : FT_FALSE);
     return (FT_FALSE);
 }
 

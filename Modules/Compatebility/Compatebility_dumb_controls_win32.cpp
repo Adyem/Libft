@@ -59,6 +59,14 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     {
         return (dumb_controls_win32_virtual_key_is_down(VK_LBUTTON));
     }
+    if (control == FT_DUMB_CONTROL_MOUSE_SECONDARY)
+    {
+        return (dumb_controls_win32_virtual_key_is_down(VK_RBUTTON));
+    }
+    if (control == FT_DUMB_CONTROL_MOUSE_TERTIARY)
+    {
+        return (dumb_controls_win32_virtual_key_is_down(VK_MBUTTON));
+    }
     return (FT_FALSE);
 }
 
