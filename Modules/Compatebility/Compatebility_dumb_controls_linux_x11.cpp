@@ -98,43 +98,104 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     return (FT_FALSE);
 }
 
-ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
+static Window dumb_controls_linux_pointer_window(Display *display_pointer)
 {
-    static ft_bool initialized = FT_FALSE;
-    ft_dumb_mouse_delta delta;
-    Display *display_pointer;
     Window root_window;
     Window child_window;
-    int center_x;
-    int center_y;
     int root_x;
     int root_y;
     int window_x;
     int window_y;
     unsigned int mask;
 
+    if (XQueryPointer(display_pointer, DefaultRootWindow(display_pointer),
+            &root_window, &child_window, &root_x, &root_y, &window_x,
+            &window_y, &mask) == 0)
+        return (0);
+    if (child_window != 0)
+        return (child_window);
+    return (root_window);
+}
+
+static Window dumb_controls_linux_target_window(Display *display_pointer)
+{
+    Window target_window;
+    int revert_to;
+
+    target_window = 0;
+    revert_to = 0;
+    XGetInputFocus(display_pointer, &target_window, &revert_to);
+    if (target_window == 0 || target_window == PointerRoot)
+        target_window = dumb_controls_linux_pointer_window(display_pointer);
+    return (target_window);
+}
+
+static ft_bool dumb_controls_linux_query_local_pointer(Display *display_pointer,
+    Window target_window, int *pointer_x, int *pointer_y, int *center_x,
+    int *center_y)
+{
+    XWindowAttributes attributes;
+    Window root_window;
+    Window child_window;
+    int root_x;
+    int root_y;
+    unsigned int mask;
+
+    if (target_window == 0)
+        return (FT_FALSE);
+    if (XGetWindowAttributes(display_pointer, target_window, &attributes) == 0)
+        return (FT_FALSE);
+    if (attributes.width <= 0 || attributes.height <= 0)
+        return (FT_FALSE);
+    if (XQueryPointer(display_pointer, target_window, &root_window,
+            &child_window, &root_x, &root_y, pointer_x, pointer_y,
+            &mask) == 0)
+        return (FT_FALSE);
+    *center_x = attributes.width / 2;
+    *center_y = attributes.height / 2;
+    return (FT_TRUE);
+}
+
+ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
+{
+    static ft_bool initialized = FT_FALSE;
+    static Window grabbed_window = 0;
+    ft_dumb_mouse_delta delta;
+    Display *display_pointer;
+    Window target_window;
+    int center_x;
+    int center_y;
+    int pointer_x;
+    int pointer_y;
+
     delta.x = 0;
     delta.y = 0;
     display_pointer = dumb_controls_linux_open_display();
     if (display_pointer == ft_nullptr)
         return (delta);
-    center_x = DisplayWidth(display_pointer, DefaultScreen(display_pointer)) / 2;
-    center_y = DisplayHeight(display_pointer, DefaultScreen(display_pointer)) / 2;
-    if (XQueryPointer(display_pointer,
-            DefaultRootWindow(display_pointer), &root_window, &child_window,
-            &root_x, &root_y, &window_x, &window_y, &mask) == 0)
+    target_window = dumb_controls_linux_target_window(display_pointer);
+    if (dumb_controls_linux_query_local_pointer(display_pointer, target_window,
+            &pointer_x, &pointer_y, &center_x, &center_y) == FT_FALSE)
     {
         initialized = FT_FALSE;
         return (delta);
     }
+    if (target_window != grabbed_window)
+    {
+        XGrabPointer(display_pointer, target_window, False,
+            PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
+            GrabModeAsync, GrabModeAsync, target_window, None, CurrentTime);
+        grabbed_window = target_window;
+        initialized = FT_FALSE;
+    }
     if (initialized == FT_TRUE)
     {
-        delta.x = root_x - center_x;
-        delta.y = root_y - center_y;
+        delta.x = pointer_x - center_x;
+        delta.y = pointer_y - center_y;
     }
-    XWarpPointer(display_pointer, None, DefaultRootWindow(display_pointer),
-        0, 0, 0, 0, center_x, center_y);
-    XFlush(display_pointer);
+    XWarpPointer(display_pointer, None, target_window, 0, 0, 0, 0,
+        center_x, center_y);
+    XSync(display_pointer, False);
     initialized = FT_TRUE;
     return (delta);
 }
