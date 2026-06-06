@@ -260,6 +260,15 @@ int32_t game_server::move(game_server &other) noexcept
         this->set_error(move_error);
         return (move_error);
     }
+    if (other._mutex != ft_nullptr && other._mutex->lockState())
+    {
+        (void)this->_world.destroy();
+        (void)this->_clients.destroy();
+        (void)this->_auth_token.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_THREAD_BUSY);
+        return (FT_ERR_THREAD_BUSY);
+    }
     server_pointer = other._server;
     mutex_pointer = other._mutex;
     source_error = other.get_error();

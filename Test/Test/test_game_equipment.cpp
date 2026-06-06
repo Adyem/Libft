@@ -36,6 +36,10 @@ FT_TEST(test_game_equipment_equip)
     ft_sharedptr<game_item> *found = hero.get_equipped_item(EQUIP_HEAD);
     FT_ASSERT(found != ft_nullptr);
     FT_ASSERT(found->get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, found->destroy());
+    delete found;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, helm.destroy());
     return (1);
 }
 
@@ -53,7 +57,13 @@ FT_TEST(test_game_equipment_unequip)
     hero.equip_item(EQUIP_HEAD, helm);
     hero.unequip_item(EQUIP_HEAD);
     FT_ASSERT_EQ(0, hero.get_physical_armor());
-    FT_ASSERT(hero.get_equipped_item(EQUIP_HEAD)->get() == ft_nullptr);
+    ft_sharedptr<game_item> *found = hero.get_equipped_item(EQUIP_HEAD);
+    FT_ASSERT(found != ft_nullptr);
+    FT_ASSERT(found->get() == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, found->destroy());
+    delete found;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, helm.destroy());
     return (1);
 }
 

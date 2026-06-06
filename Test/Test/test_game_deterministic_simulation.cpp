@@ -232,5 +232,19 @@ FT_TEST(test_game_deterministic_simulation_scenarios)
     FT_ASSERT_EQ(world_instance->get_event_scheduler()->size(), 0);
     FT_ASSERT_EQ(world_instance->get_error(), FT_ERR_SUCCESS);
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_instance->destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_event_one.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_event_two.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, combat_event.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_event.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafted_sword.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iron_ingot.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, oak_plank.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_system.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_quest.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, enemy_character.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_character.destroy());
+
     return (1);
 }

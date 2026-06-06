@@ -189,6 +189,18 @@ int32_t game_state::move(game_state &other) noexcept
         this->set_error(initialize_error);
         return (initialize_error);
     }
+    if (other._mutex != ft_nullptr && other._mutex->lockState())
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_THREAD_BUSY);
+        return (FT_ERR_THREAD_BUSY);
+    }
     this->_worlds.clear();
     index = 0;
     count = other._worlds.size();

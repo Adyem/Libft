@@ -125,7 +125,6 @@ static void test_backend_deallocate(void *memory_pointer, void *user_data)
         return ;
     int32_t slot_index = backend_find_allocation_slot(state, memory_pointer);
     ft_size_t allocation_size = 0;
-
     if (slot_index >= 0)
     {
         allocation_size = state->allocations[slot_index].size;
@@ -184,7 +183,6 @@ static int32_t test_cma_backend_hooks_impl(void)
     test_backend_state backend_state;
     initialize_test_backend_state(&backend_state);
     cma_backend_hooks hooks;
-
     hooks.allocate = &test_backend_allocate;
     hooks.reallocate = &test_backend_reallocate;
     hooks.deallocate = &test_backend_deallocate;
@@ -214,11 +212,9 @@ static int32_t test_cma_backend_hooks_impl(void)
         return (0);
     if (backend_find_allocation_slot(&backend_state, reallocated_pointer) < 0)
         return (0);
-
     cma_free(reallocated_pointer);
     if (backend_state.allocation_slots != 0)
         return (0);
-
     cma_clear_backend();
     if (cma_backend_is_enabled() != 0)
         return (0);

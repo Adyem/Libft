@@ -73,7 +73,13 @@ FT_TEST(test_game_equipment_invalid_slot_sets_errno)
     result = equipment.equip(99, item);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(result, equipment.get_error());
-    FT_ASSERT(equipment.get_item(EQUIP_HEAD)->get() == ft_nullptr);
+    ft_sharedptr<game_item> *head_item = equipment.get_item(EQUIP_HEAD);
+    FT_ASSERT(head_item != ft_nullptr);
+    FT_ASSERT(head_item->get() == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, head_item->destroy());
+    delete head_item;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.destroy());
     return (1);
 }
 
@@ -88,6 +94,12 @@ FT_TEST(test_game_equipment_invalid_item_sets_errno)
     result = equipment.equip(EQUIP_HEAD, item);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(result, equipment.get_error());
-    FT_ASSERT(equipment.get_item(EQUIP_HEAD)->get() == ft_nullptr);
+    ft_sharedptr<game_item> *head_item = equipment.get_item(EQUIP_HEAD);
+    FT_ASSERT(head_item != ft_nullptr);
+    FT_ASSERT(head_item->get() == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, head_item->destroy());
+    delete head_item;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.destroy());
     return (1);
 }

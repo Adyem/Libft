@@ -4,6 +4,7 @@
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"
 #include <cstdlib>
+#include <cstdio>
 #include <string>
 
 #ifndef LIBFT_TEST_BUILD
@@ -43,15 +44,31 @@ struct s_runtime_file_guard
     }
 };
 
-static const char *runtime_project_root(void)
+static std::string runtime_project_root(void)
 {
-    if (access("Full_Libft_test.a", F_OK) == 0
-        && access("Modules", F_OK) == 0)
-        return (".");
-    if (access("../Full_Libft_test.a", F_OK) == 0
-        && access("../Modules", F_OK) == 0)
-        return ("..");
-    return (ft_nullptr);
+    char current_directory[4096];
+    std::string candidate_directory;
+    std::size_t slash_position;
+
+    if (getcwd(current_directory, sizeof(current_directory)) == ft_nullptr)
+        return (std::string());
+    candidate_directory = current_directory;
+    while (candidate_directory.empty() == FT_FALSE)
+    {
+        if (access((candidate_directory + "/Full_Libft_test.a").c_str(), F_OK) == 0
+            && access((candidate_directory + "/Modules").c_str(), F_OK) == 0)
+            return (candidate_directory);
+        if (candidate_directory == "/")
+            break ;
+        slash_position = candidate_directory.find_last_of('/');
+        if (slash_position == std::string::npos)
+            break ;
+        if (slash_position == 0)
+            candidate_directory = "/";
+        else
+            candidate_directory.erase(slash_position);
+    }
+    return (std::string());
 }
 
 static int32_t runtime_write_source_file(const char *source_path,
@@ -79,7 +96,12 @@ static int32_t runtime_write_source_file(const char *source_path,
 
 static int32_t runtime_run_command(const std::string &command)
 {
-    if (std::system(command.c_str()) != 0)
+    int system_status;
+
+    std::fprintf(stderr, "[secure_wipe] run: %s\n", command.c_str());
+    system_status = std::system(command.c_str());
+    std::fprintf(stderr, "[secure_wipe] status: %d\n", system_status);
+    if (system_status != 0)
         return (0);
     return (1);
 }
@@ -298,7 +320,7 @@ int main(void)
 static int32_t runtime_compile_and_run_helper(void)
 {
     s_runtime_file_guard file_guard;
-    const char *project_root;
+    std::string project_root;
     const char *compiler;
     std::string compile_command;
     std::string run_command;
@@ -306,7 +328,7 @@ static int32_t runtime_compile_and_run_helper(void)
     int32_t source_descriptor;
 
     project_root = runtime_project_root();
-    if (project_root == ft_nullptr)
+    if (project_root.empty())
         return (0);
     source_descriptor = mkstemp(source_template);
     if (source_descriptor < 0)
@@ -333,7 +355,7 @@ static int32_t runtime_compile_and_run_helper(void)
     compile_command += project_root;
     compile_command += "/Modules ";
     compile_command += file_guard.source_path;
-    compile_command += " ";
+    compile_command += " -x none ";
     compile_command += project_root;
     compile_command += "/Full_Libft_test.a";
 #ifdef __APPLE__

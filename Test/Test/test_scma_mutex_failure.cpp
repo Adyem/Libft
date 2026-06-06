@@ -23,11 +23,11 @@ static void scma_mutex_failure_prepare(void)
 
 static void scma_mutex_failure_cleanup(void)
 {
+    pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SUCCESS,
+        std::memory_order_release);
     if (scma_is_initialised() != 0)
         scma_shutdown();
     (void)scma_disable_thread_safety();
-    pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SUCCESS,
-        std::memory_order_release);
     return ;
 }
 

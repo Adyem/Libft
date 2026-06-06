@@ -6,7 +6,7 @@
 #include <cstdlib>
 
 #define CMA_ARENA_ALLOCATION_MAGIC 0xA4E4A4E4U
-#define CMA_SMALL_ARENA_CAPACITY 1048576
+#define CMA_SMALL_ARENA_CAPACITY 8388608
 #define CMA_SMALL_ARENA_MAX_ALLOCATION 256
 
 struct cma_arena_allocation_header
@@ -252,6 +252,63 @@ static ft_bool cma_small_arena_size_is_supported(ft_size_t size)
     return (FT_FALSE);
 }
 
+static ft_bool cma_small_arena_has_live_allocations(void)
+{
+    const uint8_t *buffer_pointer;
+    ft_size_t scan_offset;
+
+    if (g_cma_small_arena.buffer == nullptr
+        || g_cma_small_arena.capacity < sizeof(cma_arena_allocation_header))
+        return (FT_FALSE);
+    buffer_pointer = g_cma_small_arena.buffer;
+    scan_offset = 0;
+    while (scan_offset + sizeof(cma_arena_allocation_header)
+        <= g_cma_small_arena.capacity)
+    {
+        const cma_arena_allocation_header *header;
+        ft_size_t payload_size;
+        ft_size_t payload_offset;
+        ft_size_t allocation_end_offset;
+
+        header = reinterpret_cast<const cma_arena_allocation_header *>(
+                buffer_pointer + scan_offset);
+        if (header->magic == CMA_ARENA_ALLOCATION_MAGIC)
+        {
+            payload_size = header->size;
+            payload_offset = scan_offset + sizeof(cma_arena_allocation_header);
+            if (payload_size != 0
+                && payload_offset <= g_cma_small_arena.capacity
+                && payload_size <= g_cma_small_arena.capacity - payload_offset)
+            {
+                allocation_end_offset = payload_offset + payload_size;
+                if (allocation_end_offset <= g_cma_small_arena.capacity)
+                    return (FT_TRUE);
+            }
+        }
+        scan_offset += 16;
+    }
+    return (FT_FALSE);
+}
+
+void cma_small_arena_reset_for_tests(void)
+{
+    if (g_cma_small_arena.buffer == nullptr)
+    {
+        g_cma_small_arena_live_count = 0;
+        return ;
+    }
+    if (g_cma_small_arena_live_count != 0)
+        return ;
+    std::free(g_cma_small_arena.buffer);
+    g_cma_small_arena.buffer = nullptr;
+    g_cma_small_arena.capacity = 0;
+    g_cma_small_arena.offset = 0;
+    g_cma_small_arena.owns_buffer = FT_FALSE;
+    g_cma_small_arena._initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    g_cma_small_arena_live_count = 0;
+    return ;
+}
+
 static ft_bool cma_small_arena_prepare_locked(void)
 {
     int32_t error_code;
@@ -281,6 +338,13 @@ void *cma_small_arena_allocate_locked(ft_size_t size)
             return (nullptr);
         memory_pointer = cma_arena_alloc(&g_cma_small_arena, size);
     }
+    if (memory_pointer == nullptr
+        && cma_small_arena_has_live_allocations() == FT_FALSE)
+    {
+        if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
+            return (nullptr);
+        memory_pointer = cma_arena_alloc(&g_cma_small_arena, size);
+    }
     if (memory_pointer == nullptr)
         return (nullptr);
     g_cma_small_arena_live_count++;
@@ -301,6 +365,14 @@ void *cma_small_arena_aligned_allocate_locked(ft_size_t alignment,
     memory_pointer = cma_arena_aligned_alloc(&g_cma_small_arena, alignment,
             size);
     if (memory_pointer == nullptr && g_cma_small_arena_live_count == 0)
+    {
+        if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
+            return (nullptr);
+        memory_pointer = cma_arena_aligned_alloc(&g_cma_small_arena,
+                alignment, size);
+    }
+    if (memory_pointer == nullptr
+        && cma_small_arena_has_live_allocations() == FT_FALSE)
     {
         if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
             return (nullptr);

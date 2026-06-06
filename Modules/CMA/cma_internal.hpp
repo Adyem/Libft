@@ -21,6 +21,7 @@
 #define SIZE 100
 #define SMALL_SIZE (SIZE)
 #define MEDIUM_SIZE (SIZE * 10)
+#define CMA_SMALL_ARENA_MAX_ALLOCATION 256
 
 #define BASE_SIZE 1024
 #define SMALL_ALLOC (BASE_SIZE * 1)
@@ -107,6 +108,7 @@ ft_bool cma_get_alloc_logging(void);
 void cma_record_allocation_log(const char *format_string, ...)
             __attribute__ ((format (printf, 1, 2)));
 ft_bool cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
+int32_t cma_clear_backend(void);
 ft_bool cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));
 void    *cma_backend_allocate(ft_size_t size, int32_t *error_code)
@@ -134,6 +136,7 @@ int32_t cma_small_arena_deallocate_locked(void *memory_pointer)
             __attribute__ ((hot));
 void    *cma_small_arena_reallocate_locked(void *memory_pointer,
             ft_size_t size) __attribute__ ((warn_unused_result, hot));
+void    cma_small_arena_reset_for_tests(void);
 #ifndef CMA_ENABLE_METADATA_PROTECTION
 # define CMA_ENABLE_METADATA_PROTECTION 1
 #endif

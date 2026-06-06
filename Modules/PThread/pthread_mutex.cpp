@@ -140,18 +140,23 @@ int pt_mutex::lock_state(bool *lock_acquired) const
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::lock_state");
-    int lock_error = this->lock_internal(lock_acquired);
+    int lock_error;
 
-    if (lock_error == FT_ERR_SUCCESS)
-        return (0);
-    return (-1);
+    lock_error = this->lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (-1);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (0);
 }
 
 void pt_mutex::unlock_state(bool lock_acquired) const
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_mutex::unlock_state");
-    (void)this->unlock_internal(lock_acquired);
+    if (lock_acquired == false)
+        return ;
+    (void)this->unlock();
     return ;
 }
 

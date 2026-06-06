@@ -1,8 +1,9 @@
 #include "../PThread/pthread_internal.hpp"
- #include "game_hooks.hpp"
- #include "../Printf/printf.hpp"
- #include "../System_utils/system_utils.hpp"
- #include "../Errno/errno_internal.hpp"
+#include "game_hooks.hpp"
+#include "../CMA/CMA.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
+#include "../Errno/errno_internal.hpp"
  #include "../Template/move.hpp"
  #include <new>
 #include "../Basic/limits.hpp"
@@ -344,6 +345,18 @@ int32_t game_hooks::move(game_hooks &other) noexcept
     initialize_error = this->initialize(static_cast<const game_hooks &>(other));
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
+    if (other._mutex != ft_nullptr && other._mutex->lockState())
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(FT_ERR_THREAD_BUSY);
+        return (FT_ERR_THREAD_BUSY);
+    }
     if (other._initialised_state == FT_CLASS_STATE_INITIALISED)
     {
         source_destroy_error = other.destroy();
@@ -566,6 +579,7 @@ void game_hooks::set_on_item_crafted(
     Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_bool lock_acquired;
     ft_bool listener_found;
+    ft_bool legacy_callback_exists;
     ft_size_t listener_index;
     int32_t metadata_error;
 
@@ -573,6 +587,7 @@ void game_hooks::set_on_item_crafted(
     staged_callback = ft_move(callback);
     callback_copy = staged_callback;
     listener_found = FT_FALSE;
+    legacy_callback_exists = static_cast<ft_bool>(this->_legacy_item_crafted);
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     metadata_error = game_hooks_initialize_metadata(entry.metadata,
@@ -602,6 +617,12 @@ void game_hooks::set_on_item_crafted(
             }
             listener_index += 1;
         }
+    }
+    if (legacy_callback_exists == FT_TRUE)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        (void)this->unlock_internal(lock_acquired);
+        return ;
     }
     if (listener_found == FT_TRUE)
     {
@@ -638,6 +659,7 @@ void game_hooks::set_on_character_damaged(
     ft_game_hook_listener_entry entry;
     ft_function<void(game_character&, int32_t, uint8_t)> staged_callback;
     ft_function<void(game_character&, int32_t, uint8_t)> callback_copy;
+    ft_vector<ft_game_hook_listener_entry> listeners_copy;
     Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_bool lock_acquired;
     ft_bool listener_found;
@@ -713,6 +735,7 @@ void game_hooks::set_on_event_triggered(
     ft_game_hook_listener_entry entry;
     ft_function<void(game_world&, game_event&)> staged_callback;
     ft_function<void(game_world&, game_event&)> callback_copy;
+    ft_vector<ft_game_hook_listener_entry> listeners_copy;
     Pair<ft_string, ft_vector<ft_game_hook_listener_entry> > *listeners_pair;
     ft_bool lock_acquired;
     ft_bool listener_found;
@@ -785,18 +808,21 @@ void game_hooks::set_on_event_triggered(
 ft_function<void(game_character&, game_item&)> game_hooks::get_on_item_crafted() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_on_item_crafted");
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_legacy_item_crafted);
 }
 
 ft_function<void(game_character&, int32_t, uint8_t)> game_hooks::get_on_character_damaged() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_on_character_damaged");
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_legacy_character_damaged);
 }
 
 ft_function<void(game_world&, game_event&)> game_hooks::get_on_event_triggered() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_hooks::get_on_event_triggered");
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_legacy_event_triggered);
 }
 

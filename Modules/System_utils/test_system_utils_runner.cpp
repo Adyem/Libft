@@ -6,6 +6,7 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_lock_tracking.hpp"
 #include "../SCMA/SCMA.hpp"
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -15,10 +16,6 @@
 #include <unistd.h>
 #include "../Basic/limits.hpp"
 #include "../PThread/pthread.hpp"
-#if defined(__linux__) || defined(__APPLE__)
-# include <execinfo.h>
-# include <signal.h>
-#endif
 #include "../Errno/errno.hpp"
 
 #ifndef FT_TEST_RUNNER_INITIAL_CAPACITY
@@ -57,6 +54,21 @@ static s_test_case **get_test_storage(void)
 static s_test_case *get_tests(void)
 {
     return (*get_test_storage());
+}
+
+static void release_test_storage(void)
+{
+    s_test_case **tests;
+
+    tests = get_test_storage();
+    if (*tests != NULL)
+    {
+        std::free(*tests);
+        *tests = NULL;
+    }
+    *get_test_count() = 0;
+    *get_test_capacity() = 0;
+    return ;
 }
 
 static int32_t ensure_test_capacity(int32_t required_capacity)
@@ -124,117 +136,6 @@ static void set_last_failure_message(const char *message)
     return ;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
-static int32_t g_test_runner_crash_output_descriptor = STDERR_FILENO;
-
-static const char *test_runner_signal_name(int32_t signal_number)
-{
-    if (signal_number == SIGABRT)
-        return ("SIGABRT");
-    if (signal_number == SIGBUS)
-        return ("SIGBUS");
-    if (signal_number == SIGFPE)
-        return ("SIGFPE");
-    if (signal_number == SIGILL)
-        return ("SIGILL");
-    if (signal_number == SIGSEGV)
-        return ("SIGSEGV");
-    if (signal_number == SIGTERM)
-        return ("SIGTERM");
-    return ("signal");
-}
-
-static int32_t test_runner_crash_output_descriptor(void)
-{
-    if (g_test_runner_crash_output_descriptor >= 0)
-        return (g_test_runner_crash_output_descriptor);
-    return (STDERR_FILENO);
-}
-
-static void test_runner_write_literal(int32_t file_descriptor,
-    const char *message)
-{
-    ft_size_t message_length;
-
-    if (message == NULL)
-        return ;
-    message_length = std::strlen(message);
-    if (message_length == 0)
-        return ;
-    (void)write(file_descriptor, message, message_length);
-    return ;
-}
-
-static void test_runner_crash_signal_handler(int signal_number,
-    siginfo_t *signal_information, void *context_pointer)
-{
-    void *frames[64];
-    int32_t frame_count;
-    int32_t output_descriptor;
-    struct sigaction default_action;
-
-    (void)signal_information;
-    (void)context_pointer;
-    output_descriptor = test_runner_crash_output_descriptor();
-    test_runner_write_literal(output_descriptor,
-        "\nlibft tests: crash caught (");
-    test_runner_write_literal(output_descriptor,
-        test_runner_signal_name(signal_number));
-    test_runner_write_literal(output_descriptor, ")\n");
-    test_runner_write_literal(output_descriptor,
-        "libft tests: stack trace:\n");
-    frame_count = backtrace(frames, 64);
-    if (frame_count <= 0)
-        test_runner_write_literal(output_descriptor,
-            "    <stack trace unavailable>\n");
-    else
-        backtrace_symbols_fd(frames, frame_count, output_descriptor);
-    std::memset(&default_action, 0, sizeof(default_action));
-    default_action.sa_handler = SIG_DFL;
-    (void)sigemptyset(&default_action.sa_mask);
-    (void)sigaction(signal_number, &default_action, NULL);
-    (void)raise(signal_number);
-    _exit(128 + signal_number);
-}
-
-static void test_runner_enable_crash_stack_traces(void)
-{
-    struct sigaction action;
-
-    std::memset(&action, 0, sizeof(action));
-    action.sa_sigaction = test_runner_crash_signal_handler;
-    action.sa_flags = SA_SIGINFO;
-    (void)sigemptyset(&action.sa_mask);
-    (void)sigaction(SIGABRT, &action, NULL);
-    (void)sigaction(SIGBUS, &action, NULL);
-    (void)sigaction(SIGFPE, &action, NULL);
-    (void)sigaction(SIGILL, &action, NULL);
-    (void)sigaction(SIGSEGV, &action, NULL);
-    (void)sigaction(SIGTERM, &action, NULL);
-# ifdef SIGIOT
-    if (SIGIOT != SIGABRT)
-        (void)sigaction(SIGIOT, &action, NULL);
-# endif
-    return ;
-}
-
-static void test_runner_set_crash_output_descriptor(int32_t file_descriptor)
-{
-    g_test_runner_crash_output_descriptor = file_descriptor;
-    return ;
-}
-#endif
-
-static void swap_test_cases(s_test_case *left, s_test_case *right)
-{
-    s_test_case temp;
-
-    temp = *left;
-    *left = *right;
-    *right = temp;
-    return ;
-}
-
 #ifdef LIBFT_TEST_BUILD
 static void report_allocator_leaks(void)
 {
@@ -259,23 +160,14 @@ static void sort_tests(void)
 {
     s_test_case *tests;
     int32_t *test_count;
-    int32_t outer_index;
-    int32_t inner_index;
 
     tests = get_tests();
     test_count = get_test_count();
-    outer_index = 0;
-    while (outer_index < *test_count)
-    {
-        inner_index = outer_index + 1;
-        while (inner_index < *test_count)
+    std::sort(tests, tests + *test_count,
+        [](const s_test_case &left_test, const s_test_case &right_test) -> int32_t
         {
-            if (std::strcmp(tests[inner_index].module, tests[outer_index].module) < 0)
-                swap_test_cases(&tests[outer_index], &tests[inner_index]);
-            inner_index++;
-        }
-        outer_index++;
-    }
+            return (std::strcmp(left_test.module, right_test.module) < 0);
+        });
     return ;
 }
 
@@ -331,11 +223,8 @@ static int32_t name_matches_filter(const char *filter, const char *name)
     return (0);
 }
 
-static int32_t test_is_selected(const s_test_case *test)
+static int32_t test_is_selected(const char *name_filter, const s_test_case *test)
 {
-    const char *name_filter;
-
-    name_filter = get_name_filter();
     if (name_filter && !name_matches_filter(name_filter, test->name))
         return (0);
     return (1);
@@ -391,14 +280,12 @@ static int32_t get_stdout_terminal_width(void)
 }
 
 static void print_running_test_line(int32_t test_number,
-    const char *description)
+    const char *description, int32_t terminal_width)
 {
-    int32_t terminal_width;
     int32_t prefix_length;
     int32_t available_description_length;
     int32_t description_index;
 
-    terminal_width = get_stdout_terminal_width();
     if (terminal_width <= 0)
         return ;
     printf("\r\033[2KRunning test %d \"", test_number);
@@ -475,119 +362,50 @@ static int32_t restore_descriptor_checked(int32_t saved_descriptor,
     return (1);
 }
 
-static int32_t close_descriptor_checked(int32_t descriptor, const char *message)
+static int32_t restore_baseline_descriptors(int32_t baseline_stdin_descriptor,
+    int32_t baseline_stdout_descriptor, int32_t baseline_stderr_descriptor)
 {
-    if (descriptor < 0)
-        return (1);
-    if (close(descriptor) < 0)
-    {
-        report_runner_failure(message);
+    int32_t restore_ok;
+
+    restore_ok = restore_descriptor_checked(baseline_stdin_descriptor,
+        STDIN_FILENO, "runner failed to restore stdin after test");
+    if (restore_ok == 0)
         return (0);
-    }
+    restore_ok = restore_descriptor_checked(baseline_stdout_descriptor,
+        STDOUT_FILENO, "runner failed to restore stdout after test");
+    if (restore_ok == 0)
+        return (0);
+    restore_ok = restore_descriptor_checked(baseline_stderr_descriptor,
+        STDERR_FILENO, "runner failed to restore stderr after test");
+    if (restore_ok == 0)
+        return (0);
     return (1);
 }
 
-static int32_t execute_test_function(const s_test_case *test)
+static int32_t execute_test_function(const s_test_case *test,
+    int32_t baseline_stdin_descriptor, int32_t baseline_stdout_descriptor,
+    int32_t baseline_stderr_descriptor, int32_t null_descriptor)
 {
-    int32_t saved_stdin_descriptor;
-    int32_t saved_stdout_descriptor;
-    int32_t saved_stderr_descriptor;
-    int32_t null_descriptor;
-    int32_t restore_ok;
     int32_t reset_error;
     int32_t result;
-
-    saved_stdin_descriptor = dup(STDIN_FILENO);
-    if (saved_stdin_descriptor < 0)
-    {
-        report_runner_failure("runner failed to dup stdin before test");
-        return (0);
-    }
-    saved_stdout_descriptor = dup(STDOUT_FILENO);
-    if (saved_stdout_descriptor < 0)
-    {
-        report_runner_failure("runner failed to dup stdout before test");
-        (void)close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after dup stdout failure");
-        return (0);
-    }
-    saved_stderr_descriptor = dup(STDERR_FILENO);
-    if (saved_stderr_descriptor < 0)
-    {
-        report_runner_failure("runner failed to dup stderr before test");
-        (void)close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after dup stderr failure");
-        (void)close_descriptor_checked(saved_stdout_descriptor,
-            "runner failed to close saved stdout after dup stderr failure");
-        return (0);
-    }
-    null_descriptor = open("/dev/null", O_WRONLY);
-    if (null_descriptor < 0)
-    {
-        report_runner_failure("runner failed to open /dev/null before test");
-        (void)close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after /dev/null open failure");
-        (void)close_descriptor_checked(saved_stdout_descriptor,
-            "runner failed to close saved stdout after /dev/null open failure");
-        (void)close_descriptor_checked(saved_stderr_descriptor,
-            "runner failed to close saved stderr after /dev/null open failure");
-        return (0);
-    }
     if (dup2(null_descriptor, STDOUT_FILENO) < 0)
     {
         report_runner_failure("runner failed to redirect stdout before test");
-        (void)close_descriptor_checked(null_descriptor,
-            "runner failed to close /dev/null after stdout redirect failure");
-        (void)close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after stdout redirect failure");
-        (void)close_descriptor_checked(saved_stdout_descriptor,
-            "runner failed to close saved stdout after stdout redirect failure");
-        (void)close_descriptor_checked(saved_stderr_descriptor,
-            "runner failed to close saved stderr after stdout redirect failure");
         return (0);
     }
     if (dup2(null_descriptor, STDERR_FILENO) < 0)
     {
         report_runner_failure("runner failed to redirect stderr before test");
-        (void)close_descriptor_checked(null_descriptor,
-            "runner failed to close /dev/null after stderr redirect failure");
-        (void)close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after stderr redirect failure");
-        (void)close_descriptor_checked(saved_stdout_descriptor,
-            "runner failed to close saved stdout after stderr redirect failure");
-        (void)close_descriptor_checked(saved_stderr_descriptor,
-            "runner failed to close saved stderr after stderr redirect failure");
-        return (0);
-    }
-    if (!close_descriptor_checked(null_descriptor,
-            "runner failed to close /dev/null before test"))
-    {
-        (void)close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after /dev/null close failure");
-        (void)close_descriptor_checked(saved_stdout_descriptor,
-            "runner failed to close saved stdout after /dev/null close failure");
-        (void)close_descriptor_checked(saved_stderr_descriptor,
-            "runner failed to close saved stderr after /dev/null close failure");
+        (void)restore_baseline_descriptors(baseline_stdin_descriptor,
+            baseline_stdout_descriptor, baseline_stderr_descriptor);
         return (0);
     }
     reset_error = cma_set_alloc_limit(0);
     if (reset_error != FT_ERR_SUCCESS)
     {
-        (void)restore_descriptor_checked(saved_stderr_descriptor, STDERR_FILENO,
-            "runner failed to restore stderr after pre-test CMA reset failure");
+        (void)restore_baseline_descriptors(baseline_stdin_descriptor,
+            baseline_stdout_descriptor, baseline_stderr_descriptor);
         report_runner_failure("runner failed to reset CMA alloc limit before test");
-        (void)restore_descriptor_checked(saved_stdin_descriptor, STDIN_FILENO,
-            "runner failed to restore stdin after pre-test CMA reset failure");
-        (void)restore_descriptor_checked(saved_stdout_descriptor, STDOUT_FILENO,
-            "runner failed to restore stdout after pre-test CMA reset failure");
-        (void)restore_descriptor_checked(saved_stderr_descriptor, STDERR_FILENO,
-            "runner failed to restore stderr after pre-test CMA reset failure");
-        (void)close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after pre-test CMA reset failure");
-        (void)close_descriptor_checked(saved_stdout_descriptor,
-            "runner failed to close saved stdout after pre-test CMA reset failure");
-        (void)close_descriptor_checked(saved_stderr_descriptor,
-            "runner failed to close saved stderr after pre-test CMA reset failure");
         return (0);
     }
     sink_clear();
@@ -628,33 +446,15 @@ static int32_t execute_test_function(const s_test_case *test)
     reset_error = cma_set_alloc_limit(0);
     if (reset_error != FT_ERR_SUCCESS)
     {
-        (void)restore_descriptor_checked(saved_stderr_descriptor, STDERR_FILENO,
-            "runner failed to restore stderr after post-test CMA reset failure");
+        (void)restore_baseline_descriptors(baseline_stdin_descriptor,
+            baseline_stdout_descriptor, baseline_stderr_descriptor);
         report_runner_failure("runner failed to reset CMA alloc limit after test");
         result = 0;
     }
     sink_clear();
     reset_mutex_failure_overrides();
-    restore_ok = restore_descriptor_checked(saved_stdin_descriptor, STDIN_FILENO,
-        "runner failed to restore stdin after test");
-    if (restore_ok == 0)
-        result = 0;
-    restore_ok = restore_descriptor_checked(saved_stdout_descriptor, STDOUT_FILENO,
-        "runner failed to restore stdout after test");
-    if (restore_ok == 0)
-        result = 0;
-    restore_ok = restore_descriptor_checked(saved_stderr_descriptor, STDERR_FILENO,
-        "runner failed to restore stderr after test");
-    if (restore_ok == 0)
-        result = 0;
-    if (!close_descriptor_checked(saved_stdin_descriptor,
-            "runner failed to close saved stdin after test"))
-        result = 0;
-    if (!close_descriptor_checked(saved_stdout_descriptor,
-            "runner failed to close saved stdout after test"))
-        result = 0;
-    if (!close_descriptor_checked(saved_stderr_descriptor,
-            "runner failed to close saved stderr after test"))
+    if (restore_baseline_descriptors(baseline_stdin_descriptor,
+            baseline_stdout_descriptor, baseline_stderr_descriptor) == 0)
         result = 0;
     return (result);
 }
@@ -742,6 +542,8 @@ void ft_test_fail_values(const char *expression, const char *file, int32_t line,
 int32_t ft_run_registered_tests(void)
 {
     FILE *log_file;
+    const char *name_filter;
+    int32_t null_descriptor;
     int32_t baseline_stdin_descriptor;
     int32_t baseline_stdout_descriptor;
     int32_t baseline_stderr_descriptor;
@@ -753,6 +555,7 @@ int32_t ft_run_registered_tests(void)
     int32_t total_tests;
     int32_t selected_tests;
     int32_t hide_successful_tests;
+    int32_t terminal_width;
     int32_t show_running_line;
     const char *failure_message;
 
@@ -762,44 +565,49 @@ int32_t ft_run_registered_tests(void)
     sort_tests();
     tests = get_tests();
     test_count = get_test_count();
+    name_filter = get_name_filter();
     baseline_stdin_descriptor = dup(STDIN_FILENO);
     baseline_stdout_descriptor = dup(STDOUT_FILENO);
     baseline_stderr_descriptor = dup(STDERR_FILENO);
-#if defined(__linux__) || defined(__APPLE__)
-    test_runner_set_crash_output_descriptor(baseline_stderr_descriptor);
-#endif
+    null_descriptor = open("/dev/null", O_WRONLY);
+    if (null_descriptor < 0)
+    {
+        report_runner_failure("runner failed to open /dev/null before test loop");
+        if (baseline_stdin_descriptor >= 0)
+            (void)close(baseline_stdin_descriptor);
+        if (baseline_stdout_descriptor >= 0)
+            (void)close(baseline_stdout_descriptor);
+        if (baseline_stderr_descriptor >= 0)
+            (void)close(baseline_stderr_descriptor);
+        return (1);
+    }
     total_tests = *test_count;
     selected_tests = 0;
     hide_successful_tests = hide_successful_tests_enabled();
+    terminal_width = get_stdout_terminal_width();
     index = 0;
     passed = 0;
     while (index < total_tests)
     {
         tests = get_tests();
-        if (!test_is_selected(&tests[index]))
+        if (!test_is_selected(name_filter, &tests[index]))
         {
             index++;
             continue ;
         }
-        if (baseline_stdin_descriptor >= 0)
-            (void)dup2(baseline_stdin_descriptor, STDIN_FILENO);
-        if (baseline_stdout_descriptor >= 0)
-            (void)dup2(baseline_stdout_descriptor, STDOUT_FILENO);
-        if (baseline_stderr_descriptor >= 0)
-            (void)dup2(baseline_stderr_descriptor, STDERR_FILENO);
-#if defined(__linux__) || defined(__APPLE__)
-        test_runner_enable_crash_stack_traces();
-#endif
         selected_tests++;
         current_test = tests[index];
         show_running_line = 1;
-        if (hide_successful_tests != 0 && isatty(STDOUT_FILENO) == 0)
+        if (hide_successful_tests != 0 && terminal_width <= 0)
             show_running_line = 0;
         if (show_running_line != 0)
         {
-            print_running_test_line(selected_tests, current_test.description);
+            print_running_test_line(selected_tests, current_test.description,
+                terminal_width);
         }
-        if (execute_test_function(&current_test))
+        if (execute_test_function(&current_test, baseline_stdin_descriptor,
+                baseline_stdout_descriptor, baseline_stderr_descriptor,
+                null_descriptor))
         {
             if (hide_successful_tests != 0)
             {
@@ -830,6 +638,9 @@ int32_t ft_run_registered_tests(void)
         (void)close(baseline_stdout_descriptor);
     if (baseline_stderr_descriptor >= 0)
         (void)close(baseline_stderr_descriptor);
+    if (null_descriptor >= 0)
+        (void)close(null_descriptor);
+    release_test_storage();
     if (selected_tests == 0)
     {
         printf("0/0 tests passed\n");

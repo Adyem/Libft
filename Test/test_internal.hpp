@@ -37,14 +37,12 @@ static int32_t __attribute__((unused)) test_output_contains_lifecycle_error(cons
 }
 
 static int32_t __attribute__((unused)) test_capture_abort_output_begin(
-    int32_t &saved_stdout,
     int32_t &saved_stderr,
     int32_t &pipe_read_descriptor,
     int32_t &pipe_write_descriptor)
 {
     int32_t pipe_descriptors[2];
 
-    saved_stdout = -1;
     saved_stderr = -1;
     pipe_read_descriptor = -1;
     pipe_write_descriptor = -1;
@@ -52,13 +50,8 @@ static int32_t __attribute__((unused)) test_capture_abort_output_begin(
         return (0);
     pipe_read_descriptor = pipe_descriptors[0];
     pipe_write_descriptor = pipe_descriptors[1];
-    saved_stdout = dup(STDOUT_FILENO);
-    if (saved_stdout < 0)
-        return (0);
     saved_stderr = dup(STDERR_FILENO);
     if (saved_stderr < 0)
-        return (0);
-    if (dup2(pipe_write_descriptor, STDOUT_FILENO) < 0)
         return (0);
     if (dup2(pipe_write_descriptor, STDERR_FILENO) < 0)
         return (0);
@@ -66,7 +59,6 @@ static int32_t __attribute__((unused)) test_capture_abort_output_begin(
 }
 
 static void __attribute__((unused)) test_capture_abort_output_end(
-    int32_t saved_stdout,
     int32_t saved_stderr,
     int32_t pipe_read_descriptor,
     int32_t pipe_write_descriptor,
@@ -80,11 +72,6 @@ static void __attribute__((unused)) test_capture_abort_output_end(
         output_buffer[0] = '\0';
     std::fflush(stdout);
     std::fflush(stderr);
-    if (saved_stdout >= 0)
-    {
-        (void)dup2(saved_stdout, STDOUT_FILENO);
-        (void)close(saved_stdout);
-    }
     if (saved_stderr >= 0)
     {
         (void)dup2(saved_stderr, STDERR_FILENO);
@@ -120,7 +107,6 @@ static int __attribute__((unused)) test_expect_sigabrt_signal(void (*operation)(
     int jump_result;
     int iot_handler_installed;
     char output_buffer[8192];
-    int32_t saved_stdout;
     int32_t saved_stderr;
     int32_t pipe_read_descriptor;
     int32_t pipe_write_descriptor;
@@ -144,14 +130,14 @@ static int __attribute__((unused)) test_expect_sigabrt_signal(void (*operation)(
     }
     if (SIGIOT != SIGABRT)
         iot_handler_installed = 1;
-    if (test_capture_abort_output_begin(saved_stdout, saved_stderr,
+    if (test_capture_abort_output_begin(saved_stderr,
             pipe_read_descriptor, pipe_write_descriptor) == 0)
         return (0);
     g_test_abort_signal_caught = 0;
     jump_result = sigsetjmp(g_test_abort_signal_jump_buffer, 1);
     if (jump_result == 0)
         operation();
-    test_capture_abort_output_end(saved_stdout, saved_stderr,
+    test_capture_abort_output_end(saved_stderr,
         pipe_read_descriptor, pipe_write_descriptor,
         output_buffer, sizeof(output_buffer));
     (void)sigaction(SIGABRT, &old_action_abort, nullptr);
@@ -178,7 +164,6 @@ static int __attribute__((unused)) test_expect_sigabrt_signal_uninitialised(void
     alignas(TypeName) unsigned char object_storage[sizeof(TypeName)];
     TypeName *object_pointer;
     char output_buffer[8192];
-    int32_t saved_stdout;
     int32_t saved_stderr;
     int32_t pipe_read_descriptor;
     int32_t pipe_write_descriptor;
@@ -202,7 +187,7 @@ static int __attribute__((unused)) test_expect_sigabrt_signal_uninitialised(void
     }
     if (SIGIOT != SIGABRT)
         iot_handler_installed = 1;
-    if (test_capture_abort_output_begin(saved_stdout, saved_stderr,
+    if (test_capture_abort_output_begin(saved_stderr,
             pipe_read_descriptor, pipe_write_descriptor) == 0)
         return (0);
     g_test_abort_signal_caught = 0;
@@ -213,7 +198,7 @@ static int __attribute__((unused)) test_expect_sigabrt_signal_uninitialised(void
         object_pointer = reinterpret_cast<TypeName *>(object_storage);
         operation(*object_pointer);
     }
-    test_capture_abort_output_end(saved_stdout, saved_stderr,
+    test_capture_abort_output_end(saved_stderr,
         pipe_read_descriptor, pipe_write_descriptor,
         output_buffer, sizeof(output_buffer));
     (void)sigaction(SIGABRT, &old_action_abort, nullptr);

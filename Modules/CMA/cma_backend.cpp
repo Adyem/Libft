@@ -38,48 +38,16 @@ static ft_bool cma_backend_query_ownership(const void *memory_pointer)
     return (FT_FALSE);
 }
 
-static void cma_backend_track_allocation(ft_size_t allocation_size)
-{
-    ft_bool lock_acquired = FT_FALSE;
-    int32_t lock_error = cma_lock_allocator(&lock_acquired);
-
-    if (lock_error != FT_ERR_SUCCESS)
-        return ;
-    g_cma_allocation_count++;
-    if (allocation_size != 0)
-    {
-        g_cma_current_bytes += allocation_size;
-        if (g_cma_current_bytes > g_cma_peak_bytes)
-            g_cma_peak_bytes = g_cma_current_bytes;
-    }
-    cma_unlock_allocator(lock_acquired);
-    return ;
-}
-
-static void cma_backend_track_free(ft_size_t allocation_size)
-{
-    ft_bool lock_acquired = FT_FALSE;
-    int32_t lock_error = cma_lock_allocator(&lock_acquired);
-
-    if (lock_error != FT_ERR_SUCCESS)
-        return ;
-    if (allocation_size != 0)
-    {
-        if (g_cma_current_bytes >= allocation_size)
-            g_cma_current_bytes -= allocation_size;
-        else
-            g_cma_current_bytes = 0;
-    }
-    g_cma_free_count++;
-    cma_unlock_allocator(lock_acquired);
-    return ;
-}
-
 int32_t cma_set_backend(const cma_backend_hooks *hooks)
 {
     if (!hooks || !hooks->allocate || !hooks->deallocate
         || !hooks->get_allocation_size || !hooks->owns_allocation)
         return (FT_ERR_INVALID_ARGUMENT);
+    if (cma_enable_thread_safety() != FT_ERR_SUCCESS)
+        return (FT_ERR_INITIALIZATION_FAILED);
+    if (cma_metadata_make_writable() != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
+    cma_metadata_make_inaccessible();
     g_cma_backend_hooks = *hooks;
     g_cma_backend_enabled = FT_TRUE;
     return (FT_ERR_SUCCESS);
@@ -128,7 +96,13 @@ void *cma_backend_allocate(ft_size_t size, int32_t *error_code)
         return (nullptr);
     }
     ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
-    cma_backend_track_allocation(allocation_size);
+    g_cma_allocation_count++;
+    if (allocation_size != 0)
+    {
+        g_cma_current_bytes += allocation_size;
+        if (g_cma_current_bytes > g_cma_peak_bytes)
+            g_cma_peak_bytes = g_cma_current_bytes;
+    }
     cma_backend_set_error(error_code, FT_ERR_SUCCESS);
     return (memory_pointer);
 }
@@ -142,7 +116,14 @@ int32_t cma_backend_deallocate(void *memory_pointer)
     if (!g_cma_backend_hooks.deallocate)
         return (FT_ERR_INVALID_STATE);
     ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
-    cma_backend_track_free(allocation_size);
+    if (allocation_size != 0)
+    {
+        if (g_cma_current_bytes >= allocation_size)
+            g_cma_current_bytes -= allocation_size;
+        else
+            g_cma_current_bytes = 0;
+    }
+    g_cma_free_count++;
     g_cma_backend_hooks.deallocate(memory_pointer, g_cma_backend_hooks.user_data);
     return (FT_ERR_SUCCESS);
 }
@@ -165,36 +146,17 @@ void *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size,
             return (nullptr);
         }
         ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
-        cma_backend_track_allocation(allocation_size);
+        g_cma_allocation_count++;
+        if (allocation_size != 0)
+        {
+            g_cma_current_bytes += allocation_size;
+            if (g_cma_current_bytes > g_cma_peak_bytes)
+                g_cma_peak_bytes = g_cma_current_bytes;
+        }
         cma_backend_set_error(error_code, FT_ERR_SUCCESS);
         return (memory_pointer);
     }
     return (cma_backend_allocate(size, error_code));
-}
-
-static void cma_backend_update_stats_for_resize(ft_size_t previous_size,
-        ft_size_t new_size)
-{
-    ft_bool lock_acquired = FT_FALSE;
-    int32_t lock_error = cma_lock_allocator(&lock_acquired);
-
-    if (lock_error != FT_ERR_SUCCESS)
-        return ;
-    if (previous_size != 0)
-    {
-        if (g_cma_current_bytes >= previous_size)
-            g_cma_current_bytes -= previous_size;
-        else
-            g_cma_current_bytes = 0;
-    }
-    if (new_size != 0)
-    {
-        g_cma_current_bytes += new_size;
-        if (g_cma_current_bytes > g_cma_peak_bytes)
-            g_cma_peak_bytes = g_cma_current_bytes;
-    }
-    cma_unlock_allocator(lock_acquired);
-    return ;
 }
 
 void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
@@ -223,7 +185,19 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
             return (nullptr);
         }
         ft_size_t new_size_value = cma_backend_query_size(new_pointer);
-        cma_backend_update_stats_for_resize(previous_size, new_size_value);
+        if (previous_size != 0)
+        {
+            if (g_cma_current_bytes >= previous_size)
+                g_cma_current_bytes -= previous_size;
+            else
+                g_cma_current_bytes = 0;
+        }
+        if (new_size_value != 0)
+        {
+            g_cma_current_bytes += new_size_value;
+            if (g_cma_current_bytes > g_cma_peak_bytes)
+                g_cma_peak_bytes = g_cma_current_bytes;
+        }
         cma_backend_set_error(error_code, FT_ERR_SUCCESS);
         return (new_pointer);
     }

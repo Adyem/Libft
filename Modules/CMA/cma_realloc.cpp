@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <cstddef>
-#include <cstdio>
 #include <pthread.h>
 #include "../Errno/errno.hpp"
 #include "CMA.hpp"
