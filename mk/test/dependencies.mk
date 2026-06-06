@@ -30,6 +30,7 @@ X11_LIBS :=
 endif
 
 HAS_XEXT_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXext.so" && echo 1 || echo 0)
+HAS_XI_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXi.so" && echo 1 || echo 0)
 ifeq ($(HAS_ASOUND_LIB),1)
 ASOUND_LIBS := -lasound
 else
@@ -40,4 +41,10 @@ ifeq ($(HAS_XEXT_LIB),1)
 XEXT_LIBS := -lXext
 else
 XEXT_LIBS :=
+endif
+
+ifeq ($(HAS_XI_LIB),1)
+XI_LIBS := -lXi
+else
+XI_LIBS :=
 endif

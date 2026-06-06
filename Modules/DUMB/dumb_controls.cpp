@@ -5,6 +5,42 @@ static ft_bool g_dumb_control_pressed[FT_DUMB_CONTROL_COUNT];
 static ft_bool g_dumb_control_previous_down[FT_DUMB_CONTROL_COUNT];
 static ft_dumb_mouse_delta g_dumb_mouse_delta;
 
+#ifdef LIBFT_TEST_BUILD
+static ft_dumb_test_platform_control_is_down_fn g_dumb_test_platform_control_is_down =
+    ft_dumb_platform_control_is_down;
+static ft_dumb_test_platform_mouse_delta_fn g_dumb_test_platform_mouse_delta =
+    ft_dumb_platform_mouse_delta;
+#endif
+
+#ifdef LIBFT_TEST_BUILD
+void ft_dumb_controls_set_test_platform_control_is_down(
+    ft_dumb_test_platform_control_is_down_fn control_provider)
+{
+    if (control_provider == nullptr)
+        g_dumb_test_platform_control_is_down = ft_dumb_platform_control_is_down;
+    else
+        g_dumb_test_platform_control_is_down = control_provider;
+    return ;
+}
+
+void ft_dumb_controls_set_test_platform_mouse_delta(
+    ft_dumb_test_platform_mouse_delta_fn mouse_delta_provider)
+{
+    if (mouse_delta_provider == nullptr)
+        g_dumb_test_platform_mouse_delta = ft_dumb_platform_mouse_delta;
+    else
+        g_dumb_test_platform_mouse_delta = mouse_delta_provider;
+    return ;
+}
+
+void ft_dumb_controls_clear_test_platform_hooks(void)
+{
+    g_dumb_test_platform_control_is_down = ft_dumb_platform_control_is_down;
+    g_dumb_test_platform_mouse_delta = ft_dumb_platform_mouse_delta;
+    return ;
+}
+#endif
+
 void ft_dumb_controls_poll(void)
 {
     uint32_t index_control;
@@ -13,8 +49,13 @@ void ft_dumb_controls_poll(void)
     index_control = 0U;
     while (index_control < FT_DUMB_CONTROL_COUNT)
     {
+#ifdef LIBFT_TEST_BUILD
+        current_down = g_dumb_test_platform_control_is_down(
+            static_cast<ft_dumb_control>(index_control));
+#else
         current_down = ft_dumb_platform_control_is_down(
             static_cast<ft_dumb_control>(index_control));
+#endif
         g_dumb_control_down[index_control] = current_down;
         g_dumb_control_pressed[index_control] = FT_FALSE;
         if (current_down == FT_TRUE
@@ -25,7 +66,11 @@ void ft_dumb_controls_poll(void)
         g_dumb_control_previous_down[index_control] = current_down;
         index_control = index_control + 1U;
     }
+#ifdef LIBFT_TEST_BUILD
+    g_dumb_mouse_delta = g_dumb_test_platform_mouse_delta();
+#else
     g_dumb_mouse_delta = ft_dumb_platform_mouse_delta();
+#endif
     return ;
 }
 

@@ -42,6 +42,7 @@ endif
 SUBDIRS := Modules/Basic \
            Modules/Advanced \
            Modules/Compatebility \
+           Modules/Debug \
            Modules/Errno \
            Modules/CMA \
            Modules/SCMA \
@@ -89,6 +90,7 @@ LIB_BASES := \
   Modules/Basic/Basic \
   Modules/Advanced/Advanced \
   Modules/Compatebility/Compatebility \
+  Modules/Debug/Debug \
   Modules/Errno/errno \
   Modules/CMA/CustomMemoryAllocator \
   Modules/SCMA/SCMA \

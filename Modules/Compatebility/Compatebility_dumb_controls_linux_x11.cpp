@@ -5,16 +5,24 @@
 #include "../Basic/class_nullptr.hpp"
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <cmath>
 #include <cstring>
+#include <cstdio>
 
 static Display *g_dumb_controls_linux_display = ft_nullptr;
 static Window g_dumb_controls_linux_window = 0;
+static ft_bool g_dumb_controls_linux_has_previous_mouse_position = FT_FALSE;
+static int32_t g_dumb_controls_linux_previous_mouse_x = 0;
+static int32_t g_dumb_controls_linux_previous_mouse_y = 0;
 
 void ft_dumb_controls_linux_register_window(void *display_pointer,
     unsigned long window_id)
 {
     g_dumb_controls_linux_display = static_cast<Display *>(display_pointer);
     g_dumb_controls_linux_window = static_cast<Window>(window_id);
+    g_dumb_controls_linux_has_previous_mouse_position = FT_FALSE;
+    g_dumb_controls_linux_previous_mouse_x = 0;
+    g_dumb_controls_linux_previous_mouse_y = 0;
 }
 
 void ft_dumb_controls_linux_unregister_window(unsigned long window_id)
@@ -23,6 +31,9 @@ void ft_dumb_controls_linux_unregister_window(unsigned long window_id)
     {
         g_dumb_controls_linux_window = 0;
         g_dumb_controls_linux_display = ft_nullptr;
+        g_dumb_controls_linux_has_previous_mouse_position = FT_FALSE;
+        g_dumb_controls_linux_previous_mouse_x = 0;
+        g_dumb_controls_linux_previous_mouse_y = 0;
     }
 }
 
@@ -117,8 +128,9 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     return (FT_FALSE);
 }
 
-static Window dumb_controls_linux_pointer_window(Display *display_pointer)
+ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
 {
+    ft_dumb_mouse_delta delta;
     Window root_window;
     Window child_window;
     int root_x;
@@ -126,111 +138,47 @@ static Window dumb_controls_linux_pointer_window(Display *display_pointer)
     int window_x;
     int window_y;
     unsigned int mask;
-
-    if (XQueryPointer(display_pointer, DefaultRootWindow(display_pointer),
-            &root_window, &child_window, &root_x, &root_y, &window_x,
-            &window_y, &mask) == 0)
-        return (0);
-    if (child_window != 0)
-        return (child_window);
-    return (root_window);
-}
-
-static Window dumb_controls_linux_target_window(Display *display_pointer)
-{
-    if (g_dumb_controls_linux_window != 0)
-        return (g_dumb_controls_linux_window);
-    return (dumb_controls_linux_pointer_window(display_pointer));
-}
-
-static ft_bool dumb_controls_linux_query_local_pointer(Display *display_pointer,
-    Window target_window, int *pointer_x, int *pointer_y, int *center_x,
-    int *center_y)
-{
-    XWindowAttributes attributes;
-    Window root_window;
-    Window child_window;
-    int root_x;
-    int root_y;
-    unsigned int mask;
-
-    if (target_window == 0)
-        return (FT_FALSE);
-    if (XGetWindowAttributes(display_pointer, target_window, &attributes) == 0)
-        return (FT_FALSE);
-    if (attributes.width <= 0 || attributes.height <= 0)
-        return (FT_FALSE);
-    if (XQueryPointer(display_pointer, target_window, &root_window,
-            &child_window, &root_x, &root_y, pointer_x, pointer_y,
-            &mask) == 0)
-        return (FT_FALSE);
-    *center_x = attributes.width / 2;
-    *center_y = attributes.height / 2;
-    return (FT_TRUE);
-}
-
-ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
-{
-    static ft_bool initialized = FT_FALSE;
-    static Window grabbed_window = 0;
-    ft_dumb_mouse_delta delta;
-    Display *display_pointer;
-    Window target_window;
-    int center_x;
-    int center_y;
-    int pointer_x;
-    int pointer_y;
+    int32_t current_mouse_x;
+    int32_t current_mouse_y;
 
     delta.x = 0;
     delta.y = 0;
-    display_pointer = g_dumb_controls_linux_display;
-    if (display_pointer == ft_nullptr)
-        display_pointer = dumb_controls_linux_open_display();
-    if (display_pointer == ft_nullptr)
+    if (g_dumb_controls_linux_display == ft_nullptr
+        || g_dumb_controls_linux_window == 0)
+    {
+#ifdef DEBUG
+        std::fprintf(stderr,
+            "[mouse-debug] poll skipped display=%p window=%lu\n",
+            static_cast<void *>(g_dumb_controls_linux_display),
+            static_cast<unsigned long>(g_dumb_controls_linux_window));
+#endif
         return (delta);
-    target_window = dumb_controls_linux_target_window(display_pointer);
-    if (target_window == 0)
+    }
+    if (XQueryPointer(g_dumb_controls_linux_display,
+            DefaultRootWindow(g_dumb_controls_linux_display), &root_window,
+            &child_window, &root_x, &root_y, &window_x, &window_y, &mask) == 0)
     {
-        initialized = FT_FALSE;
+        g_dumb_controls_linux_has_previous_mouse_position = FT_FALSE;
+#ifdef DEBUG
+        std::fprintf(stderr, "[mouse-debug] poll failed\n");
+#endif
         return (delta);
     }
-    if (target_window != grabbed_window)
+    current_mouse_x = static_cast<int32_t>(root_x);
+    current_mouse_y = static_cast<int32_t>(root_y);
+    if (g_dumb_controls_linux_has_previous_mouse_position == FT_TRUE)
     {
-        grabbed_window = 0;
-        initialized = FT_FALSE;
+        delta.x = current_mouse_x - g_dumb_controls_linux_previous_mouse_x;
+        delta.y = current_mouse_y - g_dumb_controls_linux_previous_mouse_y;
     }
-    if (XGrabPointer(display_pointer, target_window, False,
-            PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
-            GrabModeAsync, GrabModeAsync, target_window, None, CurrentTime)
-        == GrabSuccess)
-        grabbed_window = target_window;
-    if (dumb_controls_linux_query_local_pointer(display_pointer, target_window,
-            &pointer_x, &pointer_y, &center_x, &center_y) == FT_TRUE)
-    {
-        if (initialized == FT_TRUE)
-        {
-            delta.x = pointer_x - center_x;
-            delta.y = pointer_y - center_y;
-        }
-    }
-    else
-    {
-        XWindowAttributes attributes;
-
-        initialized = FT_FALSE;
-        center_x = DisplayWidth(display_pointer, DefaultScreen(display_pointer)) / 2;
-        center_y = DisplayHeight(display_pointer, DefaultScreen(display_pointer)) / 2;
-        if (XGetWindowAttributes(display_pointer, target_window, &attributes) != 0
-            && attributes.width > 0 && attributes.height > 0)
-        {
-            center_x = attributes.width / 2;
-            center_y = attributes.height / 2;
-        }
-    }
-    XWarpPointer(display_pointer, None, target_window, 0, 0, 0, 0,
-        center_x, center_y);
-    XSync(display_pointer, False);
-    initialized = FT_TRUE;
+    g_dumb_controls_linux_previous_mouse_x = current_mouse_x;
+    g_dumb_controls_linux_previous_mouse_y = current_mouse_y;
+    g_dumb_controls_linux_has_previous_mouse_position = FT_TRUE;
+#ifdef DEBUG
+    std::fprintf(stderr,
+        "[mouse-debug] poll position=%d,%d delta=%d,%d\n",
+        current_mouse_x, current_mouse_y, delta.x, delta.y);
+#endif
     return (delta);
 }
 
