@@ -231,7 +231,7 @@ static int32_t cmp_translate_posix_error(int32_t error_code)
     if (error_code == EALREADY)
         return (FT_ERR_INVALID_STATE);
     if (error_code == ENOENT)
-        return (FT_ERR_IO);
+        return (FT_ERR_NOT_FOUND);
     if (error_code == ENOTDIR)
         return (FT_ERR_IO);
     if (error_code == EISDIR)
@@ -281,7 +281,7 @@ static int32_t cmp_translate_posix_error(int32_t error_code)
     if (error_code == ENOTDIR)
         return (FT_ERR_IO);
     if (error_code == ENOENT)
-        return (FT_ERR_IO);
+        return (FT_ERR_NOT_FOUND);
 #if defined(ENFILE)
     if (error_code == ENFILE)
         return (FT_ERR_FULL);
