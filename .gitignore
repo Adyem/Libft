@@ -6,6 +6,7 @@
 **/objs_opt0/**/*.d
 **/objs_debug/**/*.o
 **/objs_debug/**/*.d
+**/objs_debug_opt0/
 **/objs_test/**/*.o
 **/objs_test/**/*.d
 **/objs_test_opt0/**/*.o
