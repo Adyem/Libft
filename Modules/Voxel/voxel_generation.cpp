@@ -15,6 +15,12 @@ static const uint64_t TERRAIN_FEATURE_SHRUB_SALT = UINT64_C(0x2D9C1F4E8B3A6071);
 static const int32_t TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET = 1;
 static const uint64_t TERRAIN_FEATURE_SHRUB_THRESHOLD = 6U;
 static const uint64_t TERRAIN_FEATURE_TREE_SALT = UINT64_C(0x4F1E2D3C5B6A7980);
+static const uint64_t TERRAIN_CAVE_PRIMARY_SALT = UINT64_C(0x7C3A91E2D4B8560F);
+static const uint64_t TERRAIN_CAVE_DETAIL_SALT = UINT64_C(0x1D6F80B3C9274A55);
+static const int32_t TERRAIN_CAVE_PRIMARY_SCALE = 24;
+static const int32_t TERRAIN_CAVE_DETAIL_SCALE = 9;
+static const int32_t TERRAIN_CAVE_MIN_Y = 8;
+static const int32_t TERRAIN_CAVE_SURFACE_MARGIN = 7;
 static const int32_t TERRAIN_COLUMN_CACHE_COUNT =
     GAME_VOXEL_CHUNK_WIDTH * GAME_VOXEL_CHUNK_DEPTH;
 
@@ -207,6 +213,43 @@ static ft_bool terrain_should_place_feature(uint64_t seed_value,
     return (FT_FALSE);
 }
 
+static double terrain_cave_noise(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_y, int32_t world_block_z,
+    int32_t scale, uint64_t salt) noexcept
+{
+    uint64_t layer_seed;
+    int32_t layer_y;
+
+    layer_y = terrain_floor_div(world_block_y, scale);
+    layer_seed = seed_value ^ salt
+        ^ (static_cast<uint64_t>(layer_y) * UINT64_C(0x9E3779B97F4A7C15));
+    return (terrain_value_noise(layer_seed,
+        world_block_x + (world_block_y * 13),
+        world_block_z - (world_block_y * 7), scale));
+}
+
+static ft_bool terrain_should_carve_cave(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_y, int32_t world_block_z,
+    int32_t surface_height) noexcept
+{
+    double primary_noise;
+    double detail_noise;
+
+    if (world_block_y < TERRAIN_CAVE_MIN_Y)
+        return (FT_FALSE);
+    if (world_block_y >= surface_height - TERRAIN_CAVE_SURFACE_MARGIN)
+        return (FT_FALSE);
+    primary_noise = terrain_cave_noise(seed_value, world_block_x,
+        world_block_y, world_block_z, TERRAIN_CAVE_PRIMARY_SCALE,
+        TERRAIN_CAVE_PRIMARY_SALT);
+    detail_noise = terrain_cave_noise(seed_value, world_block_x,
+        world_block_y, world_block_z, TERRAIN_CAVE_DETAIL_SCALE,
+        TERRAIN_CAVE_DETAIL_SALT);
+    if (primary_noise > 0.34 && detail_noise > -0.12)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
 static uint64_t terrain_tree_threshold(terrain_biome biome) noexcept
 {
     if (biome == TERRAIN_BIOME_DESERT)
@@ -299,6 +342,12 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             local_y = 0;
             while (local_y <= column_height)
             {
+                if (terrain_should_carve_cave(seed_value, world_block_x,
+                        local_y, world_block_z, column_height) == FT_TRUE)
+                {
+                    local_y += 1;
+                    continue ;
+                }
                 if (local_y == column_height)
                     block_id = surface_block_id;
                 else if (local_y >= column_height - biome_profile.topsoil_depth)
