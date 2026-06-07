@@ -28,7 +28,7 @@ For a broader architecture view grouped by layer, see [Docs/module_layering.md](
 | `Config` | `Advanced`, `Basic`, `CMA`, `Compatebility`, `Errno`, `File`, `JSon`, `PThread`, `Printf` |
 | `CrossProcess` | `Basic`, `CPP_class`, `Compatebility`, `Errno`, `PThread` |
 | `DUMB` | `Basic`, `CMA`, `CPP_class`, `Compatebility`, `Errno`, `GetNextLine`, `PThread` |
-| `Debug` | `Basic`, `Errno` |
+| `Debug` | `Basic`, `Compatebility`, `Errno` |
 | `Encoding` | `Basic`, `CMA`, `Errno` |
 | `Encryption` | `Basic`, `CMA`, `CPP_class`, `Compatebility`, `Errno`, `Networking`, `PThread`, `RNG`, `System_utils`, `Template` |
 | `Errno` | `Basic`, `Compatebility`, `PThread` |
@@ -169,6 +169,7 @@ graph TD
     DUMB --> GetNextLine
     DUMB --> PThread
     Debug --> Basic
+    Debug --> Compatebility
     Debug --> Errno
     Encoding --> Basic
     Encoding --> CMA
@@ -418,4 +419,4 @@ graph TD
 ## Maintenance rule
 If a new module is added or existing includes change module-to-module dependencies, regenerate this document from the source tree in the same change set.
 
-Generated from 609 source file(s) and 251 header file(s).
+Generated from 611 source file(s) and 251 header file(s).

@@ -63,6 +63,8 @@ class ft_byte_buffer
         int32_t append_u32_le(uint32_t value) noexcept;
         int32_t append_u64_be(uint64_t value) noexcept;
         int32_t append_u64_le(uint64_t value) noexcept;
+        int32_t append_varuint64(uint64_t value) noexcept;
+        int32_t append_varint64(int64_t value) noexcept;
 
         int32_t read_u8(uint8_t *value_out) noexcept;
         int32_t read_u16_be(uint16_t *value_out) noexcept;
@@ -71,6 +73,13 @@ class ft_byte_buffer
         int32_t read_u32_le(uint32_t *value_out) noexcept;
         int32_t read_u64_be(uint64_t *value_out) noexcept;
         int32_t read_u64_le(uint64_t *value_out) noexcept;
+        int32_t read_varuint64(uint64_t *value_out) noexcept;
+        int32_t read_varint64(int64_t *value_out) noexcept;
+
+        ft_size_t find(const void *data, ft_size_t length) const noexcept;
+        int32_t peek(ft_size_t offset, void *data, ft_size_t length) const noexcept;
+        int32_t skip(ft_size_t length) noexcept;
+        int32_t slice(ft_size_t offset, ft_size_t length, ft_byte_buffer &output) const noexcept;
 
         const uint8_t *data() const noexcept;
         ft_size_t size() const noexcept;

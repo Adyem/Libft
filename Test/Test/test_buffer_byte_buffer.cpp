@@ -7,6 +7,7 @@
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/PThread/mutex.hpp"
 #include "../../Modules/PThread/recursive_mutex.hpp"
+#include <cstring>
 #ifndef LIBFT_TEST_BUILD
 #endif
 
@@ -167,5 +168,62 @@ FT_TEST(test_buffer_byte_buffer_thread_safety_toggle)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.disable_thread_safety());
     FT_ASSERT_EQ(FT_FALSE, buffer.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.destroy());
+    return (1);
+}
+
+FT_TEST(test_buffer_byte_buffer_varint_helpers_roundtrip)
+{
+    ft_byte_buffer buffer;
+    uint64_t unsigned_value;
+    int64_t signed_value;
+
+    unsigned_value = 0;
+    signed_value = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.append_varuint64(300U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        buffer.append_varint64(static_cast<int64_t>(-123456789)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.read_varuint64(&unsigned_value));
+    FT_ASSERT_EQ(300U, unsigned_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.read_varint64(&signed_value));
+    FT_ASSERT_EQ(static_cast<int64_t>(-123456789), signed_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.destroy());
+    return (1);
+}
+
+FT_TEST(test_buffer_byte_buffer_search_peek_skip_and_slice_helpers)
+{
+    ft_byte_buffer buffer;
+    ft_byte_buffer slice;
+    uint8_t output[3];
+    const char input[] = "abc123abc";
+    ft_size_t found_position;
+
+    output[0] = 0;
+    output[1] = 0;
+    output[2] = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.append(input, 9));
+
+    found_position = buffer.find("123", 3);
+    FT_ASSERT_EQ(3, found_position);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.get_error());
+
+    found_position = buffer.find("zzz", 3);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(-1), found_position);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, buffer.get_error());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.peek(3, output, 3));
+    FT_ASSERT_EQ(0, std::memcmp(output, "123", 3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.skip(3));
+    FT_ASSERT_EQ(3, buffer.read_position());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.slice(3, 3, slice));
+    FT_ASSERT_EQ(3, slice.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, slice.read(output, 3));
+    FT_ASSERT_EQ(0, std::memcmp(output, "123", 3));
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, slice.destroy());
     return (1);
 }

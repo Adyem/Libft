@@ -42,8 +42,41 @@ static ft_size_t    cmp_shell_escape_double_quotes(char *destination,
     return (destination_index);
 }
 
-static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
-        void *frame, ft_size_t frame_index)
+static int32_t    cmp_stack_trace_copy_text(char *destination,
+        ft_size_t capacity, const char *source)
+{
+    int32_t    formatted_length;
+
+    if (destination == NULL || source == NULL || capacity == 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    formatted_length = std::snprintf(destination, capacity, "%s", source);
+    if (formatted_length < 0)
+        return (FT_ERR_SYSTEM);
+    if (static_cast<ft_size_t>(formatted_length) >= capacity)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (FT_ERR_SUCCESS);
+}
+
+static void    cmp_stack_trace_strip_line_ending(char *line)
+{
+    ft_size_t    line_length;
+
+    if (line == NULL)
+        return ;
+    line_length = std::strlen(line);
+    while (line_length > 0
+        && (line[line_length - 1] == '\n'
+            || line[line_length - 1] == '\r'))
+    {
+        line[line_length - 1] = '\0';
+        line_length -= 1;
+    }
+    return ;
+}
+
+static int32_t    cmp_stack_trace_symbolize_linux(const void *address,
+        char *symbol_buffer, ft_size_t symbol_buffer_size,
+        char *location_buffer, ft_size_t location_buffer_size)
 {
     Dl_info          info;
     uintptr_t        frame_address;
@@ -53,14 +86,15 @@ static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
     char             command[1280];
     char             line_buffer[1024];
     FILE             *pipe_file;
-    ft_bool          printed_detail;
 
-    if (dladdr(frame, &info) == 0 || info.dli_fname == NULL)
-    {
-        std::fprintf(output_file, "    #%zu %p\n", frame_index, frame);
-        return ;
-    }
-    frame_address = reinterpret_cast<uintptr_t>(frame);
+    if (address == NULL || symbol_buffer == NULL || location_buffer == NULL
+        || symbol_buffer_size == 0 || location_buffer_size == 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    symbol_buffer[0] = '\0';
+    location_buffer[0] = '\0';
+    if (dladdr(address, &info) == 0 || info.dli_fname == NULL)
+        return (FT_ERR_NOT_FOUND);
+    frame_address = reinterpret_cast<uintptr_t>(address);
     base_address = reinterpret_cast<uintptr_t>(info.dli_fbase);
     if (frame_address >= base_address)
         relative_address = frame_address - base_address;
@@ -73,39 +107,50 @@ static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
         escaped_path, relative_address);
     pipe_file = popen(command, "r");
     if (pipe_file == NULL)
+        return (FT_ERR_SYSTEM);
+    if (std::fgets(line_buffer, sizeof(line_buffer), pipe_file) == NULL)
     {
-        std::fprintf(output_file, "    #%zu %p %s\n", frame_index, frame,
-            info.dli_fname);
-        return ;
+        pclose(pipe_file);
+        return (FT_ERR_NOT_FOUND);
     }
-    printed_detail = FT_FALSE;
-    while (std::fgets(line_buffer, sizeof(line_buffer), pipe_file) != NULL)
+    cmp_stack_trace_strip_line_ending(line_buffer);
+    if (cmp_stack_trace_copy_text(symbol_buffer, symbol_buffer_size,
+            line_buffer) != FT_ERR_SUCCESS)
     {
-        ft_size_t    line_length;
-
-        line_length = std::strlen(line_buffer);
-        while (line_length > 0
-            && (line_buffer[line_length - 1] == '\n'
-                || line_buffer[line_length - 1] == '\r'))
-        {
-            line_buffer[line_length - 1] = '\0';
-            line_length -= 1;
-        }
-        if (printed_detail == FT_FALSE)
-        {
-            std::fprintf(output_file, "    #%zu %s\n", frame_index,
-                line_buffer);
-            printed_detail = FT_TRUE;
-        }
-        else
-            std::fprintf(output_file, "       %s\n", line_buffer);
+        pclose(pipe_file);
+        return (FT_ERR_OUT_OF_RANGE);
+    }
+    if (std::fgets(line_buffer, sizeof(line_buffer), pipe_file) == NULL)
+    {
+        pclose(pipe_file);
+        return (FT_ERR_NOT_FOUND);
+    }
+    cmp_stack_trace_strip_line_ending(line_buffer);
+    if (cmp_stack_trace_copy_text(location_buffer, location_buffer_size,
+            line_buffer) != FT_ERR_SUCCESS)
+    {
+        pclose(pipe_file);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     pclose(pipe_file);
-    if (printed_detail == FT_FALSE)
+    return (FT_ERR_SUCCESS);
+}
+
+static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
+        void *frame, ft_size_t frame_index)
+{
+    char             symbol_buffer[1024];
+    char             location_buffer[1024];
+
+    if (cmp_stack_trace_symbolize_address(frame, symbol_buffer,
+            sizeof(symbol_buffer), location_buffer,
+            sizeof(location_buffer)) != FT_ERR_SUCCESS)
     {
-        std::fprintf(output_file, "    #%zu %p %s\n", frame_index, frame,
-            info.dli_fname);
+        std::fprintf(output_file, "    #%zu %p\n", frame_index, frame);
+        return ;
     }
+    std::fprintf(output_file, "    #%zu %s\n       %s\n", frame_index,
+        symbol_buffer, location_buffer);
     return ;
 }
 #endif
@@ -202,4 +247,24 @@ void    cmp_stack_trace_print(FILE *output_file, void *const *frames,
     }
 #endif
     return ;
+}
+
+int32_t    cmp_stack_trace_symbolize_address(const void *address,
+        char *symbol_buffer, ft_size_t symbol_buffer_size,
+        char *location_buffer, ft_size_t location_buffer_size)
+{
+#if defined(__linux__)
+    if (address == NULL || symbol_buffer == NULL || location_buffer == NULL
+        || symbol_buffer_size == 0 || location_buffer_size == 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    return (cmp_stack_trace_symbolize_linux(address, symbol_buffer,
+        symbol_buffer_size, location_buffer, location_buffer_size));
+#else
+    (void)address;
+    if (symbol_buffer != NULL && symbol_buffer_size > 0)
+        symbol_buffer[0] = '\0';
+    if (location_buffer != NULL && location_buffer_size > 0)
+        location_buffer[0] = '\0';
+    return (FT_ERR_INVALID_OPERATION);
+#endif
 }

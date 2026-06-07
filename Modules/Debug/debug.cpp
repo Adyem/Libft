@@ -1,6 +1,7 @@
 #include "debug.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
+#include "../Compatebility/compatebility_stack_trace.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -9,10 +10,6 @@
 # include <execinfo.h>
 # include <signal.h>
 # include <unistd.h>
-#endif
-
-#if defined(__linux__)
-# include <dlfcn.h>
 #endif
 
 #define DBG_SIGNAL_STACK_SIZE 65536
@@ -25,9 +22,6 @@ static stack_t g_dbg_previous_signal_stack;
 static ft_bool g_dbg_has_previous_signal_stack = FT_FALSE;
 static ft_bool g_dbg_enabled = FT_FALSE;
 static void *g_dbg_frames[DBG_STACK_TRACE_MAX_FRAMES];
-static char g_dbg_symbol_path[1024];
-static char g_dbg_symbol_command[1280];
-static char g_dbg_symbol_line[1024];
 static struct sigaction g_dbg_previous_sigabrt;
 static struct sigaction g_dbg_previous_sigbus;
 static struct sigaction g_dbg_previous_sigfpe;
@@ -120,110 +114,52 @@ static const char *dbg_signal_name(int32_t signal_number) noexcept
     return ("signal");
 }
 
-#if defined(__linux__)
-static ft_size_t dbg_shell_escape_double_quotes(char *destination,
-    ft_size_t capacity, const char *source) noexcept
+static void dbg_write_frame_index(int32_t file_descriptor,
+    ft_size_t frame_index) noexcept
 {
-    ft_size_t source_index;
-    ft_size_t destination_index;
+    char digit_buffer[32];
+    ft_size_t digit_count;
 
-    if (destination == ft_nullptr || capacity == 0 || source == ft_nullptr)
-        return (0);
-    source_index = 0;
-    destination_index = 0;
-    while (source[source_index] != '\0' && destination_index + 1 < capacity)
+    digit_count = 0;
+    if (frame_index == 0)
     {
-        if ((source[source_index] == '"' || source[source_index] == '\\'
-                || source[source_index] == '$'
-                || source[source_index] == '`')
-            && destination_index + 2 < capacity)
-        {
-            destination[destination_index] = '\\';
-            destination_index += 1;
-        }
-        destination[destination_index] = source[source_index];
-        destination_index += 1;
-        source_index += 1;
+        digit_buffer[digit_count] = '0';
+        digit_count += 1;
     }
-    destination[destination_index] = '\0';
-    return (destination_index);
-}
-
-static void dbg_strip_line_ending(char *line) noexcept
-{
-    ft_size_t line_length;
-
-    if (line == ft_nullptr)
-        return ;
-    line_length = ft_strlen(line);
-    while (line_length > 0
-        && (line[line_length - 1] == '\n' || line[line_length - 1] == '\r'))
+    while (frame_index > 0 && digit_count < sizeof(digit_buffer))
     {
-        line[line_length - 1] = '\0';
-        line_length -= 1;
+        digit_buffer[digit_count] = static_cast<char>('0' + (frame_index % 10));
+        frame_index = frame_index / 10;
+        digit_count += 1;
     }
+    dbg_write_literal(file_descriptor, "    #");
+    while (digit_count > 0)
+    {
+        digit_count -= 1;
+        (void)write(file_descriptor, &digit_buffer[digit_count], 1);
+    }
+    (void)write(file_descriptor, " ", 1);
     return ;
 }
 
 static void dbg_write_symbolized_frame(int32_t file_descriptor, void *frame,
     ft_size_t frame_index) noexcept
 {
-    Dl_info symbol_information;
-    uintptr_t frame_address;
-    uintptr_t base_address;
-    uintptr_t relative_address;
-    FILE *pipe_file;
-    ft_bool printed_line;
+    char symbol_buffer[1024];
+    char location_buffer[1024];
 
-    if (dladdr(frame, &symbol_information) == 0
-        || symbol_information.dli_fname == ft_nullptr)
+    if (cmp_stack_trace_symbolize_address(frame, symbol_buffer,
+            sizeof(symbol_buffer), location_buffer, sizeof(location_buffer))
+        != FT_ERR_SUCCESS)
     {
         backtrace_symbols_fd(&frame, 1, file_descriptor);
         return ;
     }
-    frame_address = reinterpret_cast<uintptr_t>(frame);
-    base_address = reinterpret_cast<uintptr_t>(symbol_information.dli_fbase);
-    if (frame_address >= base_address)
-        relative_address = frame_address - base_address;
-    else
-        relative_address = frame_address;
-    dbg_shell_escape_double_quotes(g_dbg_symbol_path,
-        sizeof(g_dbg_symbol_path), symbol_information.dli_fname);
-    std::snprintf(g_dbg_symbol_command, sizeof(g_dbg_symbol_command),
-        "addr2line -f -C -e \"%s\" %zx 2>/dev/null",
-        g_dbg_symbol_path, static_cast<ft_size_t>(relative_address));
-    pipe_file = popen(g_dbg_symbol_command, "r");
-    if (pipe_file == ft_nullptr)
-    {
-        backtrace_symbols_fd(&frame, 1, file_descriptor);
-        return ;
-    }
-    printed_line = FT_FALSE;
-    std::snprintf(g_dbg_symbol_line, sizeof(g_dbg_symbol_line), "    #%zu ",
-        frame_index);
-    dbg_write_literal(file_descriptor, g_dbg_symbol_line);
-    while (std::fgets(g_dbg_symbol_line, sizeof(g_dbg_symbol_line),
-            pipe_file) != ft_nullptr)
-    {
-        dbg_strip_line_ending(g_dbg_symbol_line);
-        if (printed_line == FT_FALSE)
-        {
-            dbg_write_literal(file_descriptor, g_dbg_symbol_line);
-            dbg_write_literal(file_descriptor, "\n       ");
-            printed_line = FT_TRUE;
-        }
-        else
-        {
-            dbg_write_literal(file_descriptor, g_dbg_symbol_line);
-            dbg_write_literal(file_descriptor, "\n");
-        }
-    }
-    pclose(pipe_file);
-    if (printed_line == FT_FALSE)
-    {
-        dbg_write_literal(file_descriptor, "<symbol unavailable>\n");
-        backtrace_symbols_fd(&frame, 1, file_descriptor);
-    }
+    dbg_write_frame_index(file_descriptor, frame_index);
+    dbg_write_literal(file_descriptor, symbol_buffer);
+    dbg_write_literal(file_descriptor, "\n       ");
+    dbg_write_literal(file_descriptor, location_buffer);
+    dbg_write_literal(file_descriptor, "\n");
     return ;
 }
 
@@ -355,7 +291,6 @@ static void dbg_warm_stack_trace_backend(void) noexcept
     (void)backtrace(frames, 1);
     return ;
 }
-#endif
 
 int32_t dbg_enable_crash_stack_traces(void) noexcept
 {
@@ -432,4 +367,13 @@ void dbg_print_stack_trace(void) noexcept
     dbg_print_stack_trace_to_fd(STDERR_FILENO, 1);
 #endif
     return ;
+}
+
+int32_t dbg_symbolize_address(const void *address, char *symbol_buffer,
+    ft_size_t symbol_buffer_size, char *location_buffer,
+    ft_size_t location_buffer_size) noexcept
+{
+    return (dbg_set_error(cmp_stack_trace_symbolize_address(address,
+        symbol_buffer, symbol_buffer_size, location_buffer,
+        location_buffer_size)));
 }

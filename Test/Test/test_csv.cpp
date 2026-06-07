@@ -292,3 +292,50 @@ FT_TEST(test_csv_document_handles_tab_delimiter)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.destroy());
     return (1);
 }
+
+FT_TEST(test_csv_document_supports_header_lookup_typed_access_and_row_iteration)
+{
+    ft_csv_document document;
+    const ft_string *row_pointer;
+    ft_size_t column_count;
+    int64_t score_value;
+    uint64_t count_value;
+    double ratio_value;
+    ft_bool enabled_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.initialize(
+        "name,score,count,ratio,enabled\nAlice,42,9000,3.5,true\nBob,-7,12,2.25,off", ',', FT_TRUE));
+    FT_ASSERT(document.get_field_by_name(1, "score") != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, *document.get_field_by_name(1, "name") == "Alice");
+    FT_ASSERT_EQ(FT_TRUE, *document.get_field_by_name(2, "name") == "Bob");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_int64(1, "score", &score_value));
+    FT_ASSERT_EQ(static_cast<int64_t>(42), score_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_uint64(1, "count", &count_value));
+    FT_ASSERT_EQ(static_cast<uint64_t>(9000), count_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_double(1, "ratio", &ratio_value));
+    FT_ASSERT(ratio_value == 3.5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_bool(1, "enabled", &enabled_value));
+    FT_ASSERT_EQ(FT_TRUE, enabled_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_int64(2, 1, &score_value));
+    FT_ASSERT_EQ(static_cast<int64_t>(-7), score_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_uint64(2, 2, &count_value));
+    FT_ASSERT_EQ(static_cast<uint64_t>(12), count_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_double(2, 2, &ratio_value));
+    FT_ASSERT(ratio_value == 12.0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_double(2, 3, &ratio_value));
+    FT_ASSERT(ratio_value == 2.25);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_bool(2, "enabled", &enabled_value));
+    FT_ASSERT_EQ(FT_FALSE, enabled_value);
+    row_pointer = document.get_row(2, &column_count);
+    FT_ASSERT(row_pointer != ft_nullptr);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(5), column_count);
+    FT_ASSERT_EQ(FT_TRUE, row_pointer[0] == "Bob");
+    FT_ASSERT_EQ(FT_TRUE, row_pointer[1] == "-7");
+    FT_ASSERT_EQ(FT_TRUE, row_pointer[2] == "12");
+    FT_ASSERT_EQ(FT_TRUE, row_pointer[3] == "2.25");
+    FT_ASSERT_EQ(FT_TRUE, row_pointer[4] == "off");
+    FT_ASSERT(document.get_field_by_name(1, "missing") == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.destroy());
+    return (1);
+}

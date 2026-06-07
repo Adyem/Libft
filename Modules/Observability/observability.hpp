@@ -2,6 +2,7 @@
 # define OBSERVABILITY_HPP
 
 #include "../Errno/errno.hpp"
+#include "observability_histogram.hpp"
 
 enum ft_observability_module
 {

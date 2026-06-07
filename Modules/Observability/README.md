@@ -1,6 +1,6 @@
 # Observability
 
-The `Observability` module records structured errors, trace events, counters, game metrics, networking metrics, and task-scheduler span metrics. Its task scheduler bridge consumes the separate `Threading` module for trace events and span timing.
+The `Observability` module records structured errors, trace events, counters, histograms, game metrics, networking metrics, and task-scheduler span metrics. Its task scheduler bridge consumes the separate `Threading` module for trace events and span timing.
 
 ## Core Observability
 
@@ -17,6 +17,17 @@ The `Observability` module records structured errors, trace events, counters, ga
 - `observability_record_operation(...)` - Updates counters for a module operation.
 - `observability_get_counters(...)` - Reads counters for one module.
 - `observability_reset_counters(...)` - Clears counters for one module.
+
+## Histograms
+
+- `ft_observability_histogram_bucket` - One histogram bucket with an upper bound and cumulative count.
+- `ft_observability_histogram` - Lightweight histogram state with a name, unit, bucket array, total count, and running sum.
+- `ft_observability_histogram_exporter` - Callback that receives exported histogram text or JSON chunks.
+- `observability_histogram_initialize(...)` - Binds a histogram to caller-owned buckets and clears counts.
+- `observability_histogram_clear(...)` - Resets the running sum and bucket counts.
+- `observability_histogram_record(...)` - Records one value into the matching cumulative buckets.
+- `observability_histogram_export_text(...)` - Exports a compact text representation through a callback.
+- `observability_histogram_export_json(...)` - Exports a JSON representation through a callback.
 
 ## Game Metrics
 

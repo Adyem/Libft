@@ -29,6 +29,7 @@ The `Compatebility` module contains platform-specific adapters used by higher-le
 
 - `CMP_STACK_TRACE_MAX_FRAMES` - Maximum platform stack frames captured by the compatibility helper.
 - `cmp_stack_trace_capture(...)` - Captures return addresses into caller storage.
+- `cmp_stack_trace_symbolize_address(...)` - Resolves one address into symbol and source-location strings on supported platforms.
 - `cmp_stack_trace_print(...)` - Prints captured frames to a file stream.
 - `SQLITE3_AVAILABLE` - Compile-time availability flag for SQLite support.
 

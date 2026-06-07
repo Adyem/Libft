@@ -17,6 +17,143 @@ static ft_bool buffer_add_overflows(ft_size_t left, ft_size_t right) noexcept
     return (FT_FALSE);
 }
 
+static ft_size_t buffer_find_bytes(const uint8_t *haystack, ft_size_t haystack_size,
+    const uint8_t *needle, ft_size_t needle_size) noexcept
+{
+    ft_size_t index;
+
+    if (needle_size == 0)
+        return (0);
+    if (haystack == ft_nullptr || needle == ft_nullptr)
+        return (static_cast<ft_size_t>(-1));
+    if (needle_size > haystack_size)
+        return (static_cast<ft_size_t>(-1));
+    index = 0;
+    while (index <= haystack_size - needle_size)
+    {
+        if (ft_memcmp(haystack + index, needle, needle_size) == 0)
+            return (index);
+        index += 1;
+    }
+    return (static_cast<ft_size_t>(-1));
+}
+
+static int32_t buffer_encode_varuint64(uint64_t value, uint8_t *buffer,
+    ft_size_t buffer_size, ft_size_t *encoded_size) noexcept
+{
+    ft_size_t index;
+
+    if (buffer == ft_nullptr || encoded_size == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    index = 0;
+    while (value >= 0x80U)
+    {
+        if (index >= buffer_size)
+            return (FT_ERR_OUT_OF_RANGE);
+        buffer[index] = static_cast<uint8_t>((value & 0x7FU) | 0x80U);
+        value >>= 7;
+        index += 1;
+    }
+    if (index >= buffer_size)
+        return (FT_ERR_OUT_OF_RANGE);
+    buffer[index] = static_cast<uint8_t>(value & 0x7FU);
+    *encoded_size = index + 1;
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t buffer_encode_varint64(int64_t value, uint8_t *buffer,
+    ft_size_t buffer_size, ft_size_t *encoded_size) noexcept
+{
+    ft_size_t index;
+    ft_bool more_bytes;
+    ft_bool sign_bit_set;
+    uint8_t byte_value;
+
+    if (buffer == ft_nullptr || encoded_size == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    index = 0;
+    more_bytes = FT_TRUE;
+    while (more_bytes == FT_TRUE)
+    {
+        byte_value = static_cast<uint8_t>(value & 0x7F);
+        value >>= 7;
+        sign_bit_set = (byte_value & 0x40U) != 0;
+        if ((value == 0 && sign_bit_set == FT_FALSE)
+            || (value == -1 && sign_bit_set == FT_TRUE))
+            more_bytes = FT_FALSE;
+        else
+            byte_value = static_cast<uint8_t>(byte_value | 0x80U);
+        if (index >= buffer_size)
+            return (FT_ERR_OUT_OF_RANGE);
+        buffer[index] = byte_value;
+        index += 1;
+    }
+    *encoded_size = index;
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t buffer_decode_varuint64(const uint8_t *buffer, ft_size_t buffer_size,
+    uint64_t *value_out, ft_size_t *consumed_size) noexcept
+{
+    ft_size_t index;
+    uint64_t value;
+    uint32_t shift;
+
+    if (buffer == ft_nullptr || value_out == ft_nullptr || consumed_size == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    value = 0;
+    shift = 0;
+    index = 0;
+    while (index < buffer_size)
+    {
+        if (shift >= 64U)
+            return (FT_ERR_OUT_OF_RANGE);
+        value |= static_cast<uint64_t>(buffer[index] & 0x7FU) << shift;
+        index += 1;
+        if ((buffer[index - 1] & 0x80U) == 0)
+        {
+            *value_out = value;
+            *consumed_size = index;
+            return (FT_ERR_SUCCESS);
+        }
+        shift += 7U;
+    }
+    return (FT_ERR_OUT_OF_RANGE);
+}
+
+static int32_t buffer_decode_varint64(const uint8_t *buffer, ft_size_t buffer_size,
+    int64_t *value_out, ft_size_t *consumed_size) noexcept
+{
+    ft_size_t index;
+    uint64_t value;
+    uint32_t shift;
+    uint8_t byte_value;
+
+    if (buffer == ft_nullptr || value_out == ft_nullptr || consumed_size == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    value = 0;
+    shift = 0;
+    index = 0;
+    while (index < buffer_size)
+    {
+        if (shift >= 64U)
+            return (FT_ERR_OUT_OF_RANGE);
+        byte_value = buffer[index];
+        value |= static_cast<uint64_t>(byte_value & 0x7FU) << shift;
+        shift += 7U;
+        index += 1;
+        if ((byte_value & 0x80U) == 0)
+        {
+            if (shift < 64U && (byte_value & 0x40U) != 0)
+                value |= (~static_cast<uint64_t>(0)) << shift;
+            *value_out = static_cast<int64_t>(value);
+            *consumed_size = index;
+            return (FT_ERR_SUCCESS);
+        }
+    }
+    return (FT_ERR_OUT_OF_RANGE);
+}
+
 int32_t ft_byte_buffer::set_error(int32_t error_code) noexcept
 {
     ft_byte_buffer::_last_error = error_code;
@@ -467,6 +604,30 @@ int32_t ft_byte_buffer::append_u64_le(uint64_t value) noexcept
     return (this->append(bytes, 8));
 }
 
+int32_t ft_byte_buffer::append_varuint64(uint64_t value) noexcept
+{
+    uint8_t bytes[10];
+    ft_size_t encoded_size;
+    int32_t error_code;
+
+    error_code = buffer_encode_varuint64(value, bytes, 10, &encoded_size);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(error_code));
+    return (this->append(bytes, encoded_size));
+}
+
+int32_t ft_byte_buffer::append_varint64(int64_t value) noexcept
+{
+    uint8_t bytes[10];
+    ft_size_t encoded_size;
+    int32_t error_code;
+
+    error_code = buffer_encode_varint64(value, bytes, 10, &encoded_size);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(error_code));
+    return (this->append(bytes, encoded_size));
+}
+
 int32_t ft_byte_buffer::read_u8(uint8_t *value_out) noexcept
 {
     if (value_out == ft_nullptr)
@@ -580,6 +741,179 @@ int32_t ft_byte_buffer::read_u64_le(uint64_t *value_out) noexcept
         | (static_cast<uint64_t>(bytes[6]) << 48)
         | (static_cast<uint64_t>(bytes[7]) << 56);
     return (ft_byte_buffer::set_error(FT_ERR_SUCCESS));
+}
+
+int32_t ft_byte_buffer::read_varuint64(uint64_t *value_out) noexcept
+{
+    ft_size_t consumed_size;
+    int32_t read_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::read_varuint64");
+    if (value_out == ft_nullptr)
+        return (ft_byte_buffer::set_error(FT_ERR_INVALID_ARGUMENT));
+    read_error = this->lock_internal();
+    if (read_error != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(read_error));
+    if (this->_read_position > this->_size)
+    {
+        this->unlock_internal();
+        return (ft_byte_buffer::set_error(FT_ERR_INVALID_STATE));
+    }
+    read_error = buffer_decode_varuint64(this->_data + this->_read_position,
+            this->_size - this->_read_position, value_out, &consumed_size);
+    if (read_error == FT_ERR_SUCCESS)
+        this->_read_position += consumed_size;
+    this->unlock_internal();
+    return (ft_byte_buffer::set_error(read_error));
+}
+
+int32_t ft_byte_buffer::read_varint64(int64_t *value_out) noexcept
+{
+    ft_size_t consumed_size;
+    int32_t read_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::read_varint64");
+    if (value_out == ft_nullptr)
+        return (ft_byte_buffer::set_error(FT_ERR_INVALID_ARGUMENT));
+    read_error = this->lock_internal();
+    if (read_error != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(read_error));
+    if (this->_read_position > this->_size)
+    {
+        this->unlock_internal();
+        return (ft_byte_buffer::set_error(FT_ERR_INVALID_STATE));
+    }
+    read_error = buffer_decode_varint64(this->_data + this->_read_position,
+            this->_size - this->_read_position, value_out, &consumed_size);
+    if (read_error == FT_ERR_SUCCESS)
+        this->_read_position += consumed_size;
+    this->unlock_internal();
+    return (ft_byte_buffer::set_error(read_error));
+}
+
+ft_size_t ft_byte_buffer::find(const void *data, ft_size_t length) const noexcept
+{
+    ft_size_t index;
+    ft_size_t found_index;
+    int32_t lock_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::find");
+    if (length > 0 && data == ft_nullptr)
+    {
+        (void)ft_byte_buffer::set_error(FT_ERR_INVALID_ARGUMENT);
+        return (static_cast<ft_size_t>(-1));
+    }
+    lock_error = this->lock_internal();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)ft_byte_buffer::set_error(lock_error);
+        return (static_cast<ft_size_t>(-1));
+    }
+    if (this->_read_position > this->_size)
+    {
+        this->unlock_internal();
+        (void)ft_byte_buffer::set_error(FT_ERR_INVALID_STATE);
+        return (static_cast<ft_size_t>(-1));
+    }
+    if (length == 0)
+    {
+        this->unlock_internal();
+        (void)ft_byte_buffer::set_error(FT_ERR_SUCCESS);
+        return (this->_read_position);
+    }
+    found_index = buffer_find_bytes(this->_data + this->_read_position,
+            this->_size - this->_read_position,
+            static_cast<const uint8_t *>(data), length);
+    this->unlock_internal();
+    if (found_index == static_cast<ft_size_t>(-1))
+    {
+        (void)ft_byte_buffer::set_error(FT_ERR_NOT_FOUND);
+        return (static_cast<ft_size_t>(-1));
+    }
+    index = this->_read_position + found_index;
+    (void)ft_byte_buffer::set_error(FT_ERR_SUCCESS);
+    return (index);
+}
+
+int32_t ft_byte_buffer::peek(ft_size_t offset, void *data, ft_size_t length) const noexcept
+{
+    int32_t lock_error;
+    int32_t result;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::peek");
+    if (data == ft_nullptr)
+        return (ft_byte_buffer::set_error(FT_ERR_INVALID_ARGUMENT));
+    lock_error = this->lock_internal();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(lock_error));
+    result = FT_ERR_SUCCESS;
+    if (this->_read_position > this->_size)
+        result = FT_ERR_INVALID_STATE;
+    else if (offset > this->_size - this->_read_position)
+        result = FT_ERR_OUT_OF_RANGE;
+    else if (length > this->_size - this->_read_position - offset)
+        result = FT_ERR_OUT_OF_RANGE;
+    else if (length > 0)
+        ft_memcpy(data, this->_data + this->_read_position + offset, length);
+    this->unlock_internal();
+    return (ft_byte_buffer::set_error(result));
+}
+
+int32_t ft_byte_buffer::skip(ft_size_t length) noexcept
+{
+    int32_t lock_error;
+    int32_t result;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::skip");
+    lock_error = this->lock_internal();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(lock_error));
+    result = FT_ERR_SUCCESS;
+    if (this->_read_position > this->_size)
+        result = FT_ERR_INVALID_STATE;
+    else if (length > this->_size - this->_read_position)
+        result = FT_ERR_OUT_OF_RANGE;
+    else
+        this->_read_position += length;
+    this->unlock_internal();
+    return (ft_byte_buffer::set_error(result));
+}
+
+int32_t ft_byte_buffer::slice(ft_size_t offset, ft_size_t length,
+    ft_byte_buffer &output) const noexcept
+{
+    int32_t lock_error_source;
+    int32_t result;
+    ft_byte_buffer temporary_buffer;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::slice");
+    if (&output == this)
+        return (ft_byte_buffer::set_error(FT_ERR_INVALID_ARGUMENT));
+    lock_error_source = this->lock_internal();
+    if (lock_error_source != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(lock_error_source));
+    result = FT_ERR_SUCCESS;
+    if (offset > this->_size)
+        result = FT_ERR_OUT_OF_RANGE;
+    else if (length > this->_size - offset)
+        result = FT_ERR_OUT_OF_RANGE;
+    else
+    {
+        result = temporary_buffer.initialize(length, FT_TRUE);
+        if (result == FT_ERR_SUCCESS && length > 0)
+            result = temporary_buffer.append(this->_data + offset, length);
+        if (result == FT_ERR_SUCCESS)
+            result = output.initialize(temporary_buffer);
+        (void)temporary_buffer.destroy();
+    }
+    this->unlock_internal();
+    return (ft_byte_buffer::set_error(result));
 }
 
 const uint8_t *ft_byte_buffer::data() const noexcept

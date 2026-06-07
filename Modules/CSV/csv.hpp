@@ -1,6 +1,8 @@
 #ifndef CSV_HPP
 # define CSV_HPP
 
+#include <cstdint>
+
 #include "../CPP_class/class_string.hpp"
 #include "../Errno/errno.hpp"
 #include "../File/file_utils.hpp"
@@ -25,6 +27,8 @@ class ft_csv_document
 
         int32_t parse_content(const char *content, char delimiter,
             ft_bool has_header) noexcept;
+        ft_bool find_header_column_index(const char *column_name,
+            ft_size_t *column_index_out) const noexcept;
 
     public:
         ft_csv_document() noexcept;
@@ -51,8 +55,28 @@ class ft_csv_document
         ft_size_t column_count(ft_size_t row_index) const noexcept;
         ft_bool has_header() const noexcept;
         char delimiter() const noexcept;
+        const ft_string *get_row(ft_size_t row_index,
+            ft_size_t *column_count_out) const noexcept;
         const ft_string *get_field(ft_size_t row_index, ft_size_t column_index) const noexcept;
+        const ft_string *get_field_by_name(ft_size_t row_index,
+            const char *column_name) const noexcept;
         const ft_string *get_header(ft_size_t column_index) const noexcept;
+        int32_t get_int64(ft_size_t row_index, ft_size_t column_index,
+            int64_t *value_out) const noexcept;
+        int32_t get_int64(ft_size_t row_index, const char *column_name,
+            int64_t *value_out) const noexcept;
+        int32_t get_double(ft_size_t row_index, ft_size_t column_index,
+            double *value_out) const noexcept;
+        int32_t get_double(ft_size_t row_index, const char *column_name,
+            double *value_out) const noexcept;
+        int32_t get_uint64(ft_size_t row_index, ft_size_t column_index,
+            uint64_t *value_out) const noexcept;
+        int32_t get_uint64(ft_size_t row_index, const char *column_name,
+            uint64_t *value_out) const noexcept;
+        int32_t get_bool(ft_size_t row_index, ft_size_t column_index,
+            ft_bool *value_out) const noexcept;
+        int32_t get_bool(ft_size_t row_index, const char *column_name,
+            ft_bool *value_out) const noexcept;
 
         int32_t write_to_string(ft_string &output) const noexcept;
         int32_t write_to_backend(ft_document_sink &sink) const noexcept;

@@ -1,6 +1,6 @@
 # Buffer
 
-The `Buffer` module provides `ft_byte_buffer`, a lifecycle-managed byte buffer with append/read cursors, endian-aware integer helpers, fixed-capacity mode, optional thread safety, and object-local error reporting.
+The `Buffer` module provides `ft_byte_buffer`, a lifecycle-managed byte buffer with append/read cursors, endian-aware integer helpers, variable-length integer helpers, search/slice helpers, fixed-capacity mode, optional thread safety, and object-local error reporting.
 
 ## `ft_byte_buffer`
 
@@ -32,10 +32,21 @@ The `Buffer` module provides `ft_byte_buffer`, a lifecycle-managed byte buffer w
 - `append_u16_be(uint16_t value)` / `append_u16_le(uint16_t value)` - Appends a 16-bit integer in big- or little-endian order.
 - `append_u32_be(uint32_t value)` / `append_u32_le(uint32_t value)` - Appends a 32-bit integer in big- or little-endian order.
 - `append_u64_be(uint64_t value)` / `append_u64_le(uint64_t value)` - Appends a 64-bit integer in big- or little-endian order.
+- `append_varuint64(uint64_t value)` - Appends an unsigned LEB128-encoded integer.
+- `append_varint64(int64_t value)` - Appends a signed LEB128-encoded integer.
 - `read_u8(uint8_t *value_out)` - Reads one byte.
 - `read_u16_be(uint16_t *value_out)` / `read_u16_le(uint16_t *value_out)` - Reads a 16-bit integer in big- or little-endian order.
 - `read_u32_be(uint32_t *value_out)` / `read_u32_le(uint32_t *value_out)` - Reads a 32-bit integer in big- or little-endian order.
 - `read_u64_be(uint64_t *value_out)` / `read_u64_le(uint64_t *value_out)` - Reads a 64-bit integer in big- or little-endian order.
+- `read_varuint64(uint64_t *value_out)` - Reads an unsigned LEB128-encoded integer.
+- `read_varint64(int64_t *value_out)` - Reads a signed LEB128-encoded integer.
+
+### Search and Slice Helpers
+
+- `find(const void *data, ft_size_t length)` - Finds a byte sequence from the current read cursor and returns the absolute offset.
+- `peek(ft_size_t offset, void *data, ft_size_t length)` - Copies bytes from an absolute offset without advancing the read cursor.
+- `skip(ft_size_t length)` - Advances the read cursor without copying data.
+- `slice(ft_size_t offset, ft_size_t length, ft_byte_buffer &output)` - Copies a byte range into another buffer.
 
 ### State and Thread Safety
 

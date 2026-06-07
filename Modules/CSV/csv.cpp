@@ -1,5 +1,6 @@
 #include "csv.hpp"
 
+#include <cstdlib>
 #include <cstring>
 #include <new>
 #include "../Basic/limits.hpp"
@@ -126,6 +127,11 @@ static int32_t csv_finalize_row(ft_vector<ft_size_t> &row_offsets,
         return (error_code);
     return (FT_ERR_SUCCESS);
 }
+
+static int32_t csv_parse_int64_field(const char *field, int64_t *value_out);
+static int32_t csv_parse_double_field(const char *field, double *value_out);
+static int32_t csv_parse_uint64_field(const char *field, uint64_t *value_out);
+static int32_t csv_parse_bool_field(const char *field, ft_bool *value_out);
 
 thread_local int32_t ft_csv_document::_last_error = FT_ERR_SUCCESS;
 
@@ -598,6 +604,33 @@ int32_t ft_csv_document::move(ft_csv_document &other) noexcept
     return (ft_csv_document::set_error(FT_ERR_SUCCESS));
 }
 
+ft_bool ft_csv_document::find_header_column_index(const char *column_name,
+    ft_size_t *column_index_out) const noexcept
+{
+    ft_size_t column_index;
+    const ft_string *header_field;
+
+    if (column_index_out != ft_nullptr)
+        *column_index_out = 0;
+    if (column_name == ft_nullptr)
+        return (FT_FALSE);
+    if (this->_has_header == FT_FALSE)
+        return (FT_FALSE);
+    column_index = 0;
+    while (column_index < this->_row_lengths[0])
+    {
+        header_field = &this->_fields[this->_row_offsets[0] + column_index];
+        if (*header_field == column_name)
+        {
+            if (column_index_out != ft_nullptr)
+                *column_index_out = column_index;
+            return (FT_TRUE);
+        }
+        column_index += 1;
+    }
+    return (FT_FALSE);
+}
+
 ft_size_t ft_csv_document::row_count() const noexcept
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
@@ -632,6 +665,32 @@ char ft_csv_document::delimiter() const noexcept
     return (this->_delimiter);
 }
 
+const ft_string *ft_csv_document::get_row(ft_size_t row_index,
+    ft_size_t *column_count_out) const noexcept
+{
+    ft_size_t row_offset;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_row");
+    if (column_count_out != ft_nullptr)
+        *column_count_out = 0;
+    if (row_index >= this->_row_lengths.size())
+    {
+        (void)ft_csv_document::set_error(FT_ERR_OUT_OF_RANGE);
+        return (ft_nullptr);
+    }
+    row_offset = this->_row_offsets[row_index];
+    if (row_offset >= this->_fields.size())
+    {
+        (void)ft_csv_document::set_error(FT_ERR_OUT_OF_RANGE);
+        return (ft_nullptr);
+    }
+    if (column_count_out != ft_nullptr)
+        *column_count_out = this->_row_lengths[row_index];
+    (void)ft_csv_document::set_error(FT_ERR_SUCCESS);
+    return (&this->_fields[row_offset]);
+}
+
 const ft_string *ft_csv_document::get_field(ft_size_t row_index,
     ft_size_t column_index) const noexcept
 {
@@ -661,11 +720,194 @@ const ft_string *ft_csv_document::get_field(ft_size_t row_index,
     return (&this->_fields[field_index]);
 }
 
+const ft_string *ft_csv_document::get_field_by_name(ft_size_t row_index,
+    const char *column_name) const noexcept
+{
+    ft_size_t column_index;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_field_by_name");
+    if (column_name == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (ft_nullptr);
+    }
+    if (this->find_header_column_index(column_name, &column_index) == FT_FALSE)
+    {
+        if (this->_has_header == FT_FALSE)
+            (void)ft_csv_document::set_error(FT_ERR_INVALID_OPERATION);
+        else
+            (void)ft_csv_document::set_error(FT_ERR_NOT_FOUND);
+        return (ft_nullptr);
+    }
+    return (this->get_field(row_index, column_index));
+}
+
 const ft_string *ft_csv_document::get_header(ft_size_t column_index) const noexcept
 {
     if (this->has_header() == FT_FALSE)
         return (ft_nullptr);
     return (this->get_field(0, column_index));
+}
+
+int32_t ft_csv_document::get_int64(ft_size_t row_index, ft_size_t column_index,
+    int64_t *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_int64");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field(row_index, column_index);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_int64_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
+}
+
+int32_t ft_csv_document::get_int64(ft_size_t row_index, const char *column_name,
+    int64_t *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_int64");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field_by_name(row_index, column_name);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_int64_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
+}
+
+int32_t ft_csv_document::get_double(ft_size_t row_index, ft_size_t column_index,
+    double *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_double");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field(row_index, column_index);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_double_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
+}
+
+int32_t ft_csv_document::get_double(ft_size_t row_index, const char *column_name,
+    double *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_double");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field_by_name(row_index, column_name);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_double_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
+}
+
+int32_t ft_csv_document::get_uint64(ft_size_t row_index, ft_size_t column_index,
+    uint64_t *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_uint64");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field(row_index, column_index);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_uint64_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
+}
+
+int32_t ft_csv_document::get_uint64(ft_size_t row_index, const char *column_name,
+    uint64_t *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_uint64");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field_by_name(row_index, column_name);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_uint64_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
+}
+
+int32_t ft_csv_document::get_bool(ft_size_t row_index, ft_size_t column_index,
+    ft_bool *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_bool");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field(row_index, column_index);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_bool_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
+}
+
+int32_t ft_csv_document::get_bool(ft_size_t row_index, const char *column_name,
+    ft_bool *value_out) const noexcept
+{
+    const ft_string *field_pointer;
+    int32_t error_code;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_csv_document::get_bool");
+    if (value_out == ft_nullptr)
+    {
+        (void)ft_csv_document::set_error(FT_ERR_INVALID_POINTER);
+        return (FT_ERR_INVALID_POINTER);
+    }
+    field_pointer = this->get_field_by_name(row_index, column_name);
+    if (field_pointer == ft_nullptr)
+        return (ft_csv_document::set_error(ft_csv_document::_last_error));
+    error_code = csv_parse_bool_field(field_pointer->c_str(), value_out);
+    return (ft_csv_document::set_error(error_code));
 }
 
 int32_t ft_csv_document::write_to_string(ft_string &output) const noexcept
@@ -721,6 +963,68 @@ int32_t ft_csv_document::write_to_string(ft_string &output) const noexcept
         row_index += 1;
     }
     return (FT_ERR_SUCCESS);
+}
+
+static int32_t csv_parse_int64_field(const char *field, int64_t *value_out)
+{
+    char *end_pointer;
+    int64_t parsed_value;
+
+    if (field == ft_nullptr || value_out == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    end_pointer = ft_nullptr;
+    parsed_value = ft_strtol(field, &end_pointer, 10);
+    if (end_pointer == ft_nullptr || end_pointer == field || *end_pointer != '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    *value_out = parsed_value;
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t csv_parse_double_field(const char *field, double *value_out)
+{
+    char *end_pointer;
+
+    if (field == ft_nullptr || value_out == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    end_pointer = ft_nullptr;
+    *value_out = std::strtod(field, &end_pointer);
+    if (end_pointer == ft_nullptr || end_pointer == field || *end_pointer != '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t csv_parse_uint64_field(const char *field, uint64_t *value_out)
+{
+    char *end_pointer;
+    uint64_t parsed_value;
+
+    if (field == ft_nullptr || value_out == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    end_pointer = ft_nullptr;
+    parsed_value = ft_strtoul(field, &end_pointer, 10);
+    if (end_pointer == ft_nullptr || end_pointer == field || *end_pointer != '\0')
+        return (FT_ERR_INVALID_ARGUMENT);
+    *value_out = parsed_value;
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t csv_parse_bool_field(const char *field, ft_bool *value_out)
+{
+    if (field == ft_nullptr || value_out == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    if (ft_strcmp(field, "1") == 0 || ft_strcmp(field, "true") == 0
+        || ft_strcmp(field, "yes") == 0 || ft_strcmp(field, "on") == 0)
+    {
+        *value_out = FT_TRUE;
+        return (FT_ERR_SUCCESS);
+    }
+    if (ft_strcmp(field, "0") == 0 || ft_strcmp(field, "false") == 0
+        || ft_strcmp(field, "no") == 0 || ft_strcmp(field, "off") == 0)
+    {
+        *value_out = FT_FALSE;
+        return (FT_ERR_SUCCESS);
+    }
+    return (FT_ERR_INVALID_ARGUMENT);
 }
 
 int32_t ft_csv_document::write_to_backend(ft_document_sink &sink) const noexcept
