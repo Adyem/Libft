@@ -686,4 +686,192 @@ int32_t chunk_mesh_generate_from_chunk(chunk_mesh &mesh,
     return (chunk_mesh_emit_visible_faces(mesh, chunk));
 }
 
+namespace
+{
+    struct chunk_neighbor_ctx
+    {
+        const game_voxel_chunk *chunk;
+        int32_t chunk_x;
+        int32_t chunk_z;
+        int32_t (*lookup_block)(void *user_data, int32_t world_x,
+            int32_t world_y, int32_t world_z, uint32_t *block_id);
+        void *user_data;
+    };
+}
+
+static int32_t chunk_mesh_read_or_air_nb(const chunk_neighbor_ctx &ctx,
+    int32_t local_x, int32_t local_y, int32_t local_z,
+    uint32_t *block_id) noexcept
+{
+    int32_t world_x;
+    int32_t world_z;
+
+    if (local_y < 0 || local_y >= GAME_VOXEL_CHUNK_HEIGHT)
+    {
+        *block_id = GAME_VOXEL_AIR_BLOCK;
+        return (FT_ERR_SUCCESS);
+    }
+    if (local_x < 0 || local_x >= GAME_VOXEL_CHUNK_WIDTH
+        || local_z < 0 || local_z >= GAME_VOXEL_CHUNK_DEPTH)
+    {
+        world_x = ctx.chunk_x * GAME_VOXEL_CHUNK_WIDTH + local_x;
+        world_z = ctx.chunk_z * GAME_VOXEL_CHUNK_DEPTH + local_z;
+        return (ctx.lookup_block(ctx.user_data, world_x, local_y,
+            world_z, block_id));
+    }
+    return (chunk_mesh_read_or_air(*ctx.chunk, local_x, local_y,
+        local_z, block_id));
+}
+
+static int32_t chunk_mesh_face_is_visible_nb(const chunk_neighbor_ctx &ctx,
+    int32_t local_x, int32_t local_y, int32_t local_z,
+    chunk_mesh_face face, ft_bool *visible) noexcept
+{
+    uint32_t neighbor_block_id;
+    int32_t neighbor_x;
+    int32_t neighbor_y;
+    int32_t neighbor_z;
+    int32_t error_code;
+
+    neighbor_x = local_x;
+    neighbor_y = local_y;
+    neighbor_z = local_z;
+    if (face == CHUNK_MESH_FACE_WEST)
+        neighbor_x -= 1;
+    if (face == CHUNK_MESH_FACE_EAST)
+        neighbor_x += 1;
+    if (face == CHUNK_MESH_FACE_DOWN)
+        neighbor_y -= 1;
+    if (face == CHUNK_MESH_FACE_UP)
+        neighbor_y += 1;
+    if (face == CHUNK_MESH_FACE_NORTH)
+        neighbor_z -= 1;
+    if (face == CHUNK_MESH_FACE_SOUTH)
+        neighbor_z += 1;
+    error_code = chunk_mesh_read_or_air_nb(ctx, neighbor_x, neighbor_y,
+        neighbor_z, &neighbor_block_id);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    if (terrain_block_occludes_faces(neighbor_block_id) == FT_FALSE)
+        *visible = FT_TRUE;
+    else
+        *visible = FT_FALSE;
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t chunk_mesh_fill_visible_face_mask_nb(
+    const chunk_neighbor_ctx &ctx, chunk_mesh_face face,
+    int32_t axis_value, uint32_t mask[4096]) noexcept
+{
+    int32_t column_count;
+    int32_t row_count;
+    int32_t column_value;
+    int32_t row_value;
+    int32_t local_x;
+    int32_t local_y;
+    int32_t local_z;
+    uint32_t block_id;
+    ft_bool visible;
+    int32_t error_code;
+
+    chunk_mesh_plane_dimensions(face, &column_count, &row_count);
+    row_value = 0;
+    while (row_value < row_count)
+    {
+        column_value = 0;
+        while (column_value < column_count)
+        {
+            chunk_mesh_block_coordinates_for_plane(face, axis_value,
+                column_value, row_value, &local_x, &local_y, &local_z);
+            error_code = chunk_mesh_read_or_air(*ctx.chunk, local_x, local_y,
+                local_z, &block_id);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            mask[(row_value * column_count) + column_value] = 0U;
+            if (block_id != GAME_VOXEL_AIR_BLOCK)
+            {
+                error_code = chunk_mesh_face_is_visible_nb(ctx, local_x,
+                    local_y, local_z, face, &visible);
+                if (error_code != FT_ERR_SUCCESS)
+                    return (error_code);
+                if (visible == FT_TRUE)
+                    mask[(row_value * column_count) + column_value] = block_id;
+            }
+            column_value += 1;
+        }
+        row_value += 1;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t chunk_mesh_emit_greedy_faces_nb(chunk_mesh &mesh,
+    const chunk_neighbor_ctx &ctx, chunk_mesh_face face) noexcept
+{
+    uint32_t mask[4096];
+    ft_bool consumed[4096];
+    int32_t axis_count;
+    int32_t axis_value;
+    int32_t error_code;
+
+    axis_count = chunk_mesh_axis_count(face);
+    axis_value = 0;
+    while (axis_value < axis_count)
+    {
+        error_code = chunk_mesh_fill_visible_face_mask_nb(ctx, face,
+            axis_value, mask);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = chunk_mesh_emit_greedy_mask(mesh, mask, consumed, face,
+            axis_value);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        axis_value += 1;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t chunk_mesh_emit_visible_faces_nb(chunk_mesh &mesh,
+    const chunk_neighbor_ctx &ctx) noexcept
+{
+    chunk_mesh_face face;
+    int32_t error_code;
+
+    face = CHUNK_MESH_FACE_WEST;
+    while (face <= CHUNK_MESH_FACE_SOUTH)
+    {
+        error_code = chunk_mesh_emit_greedy_faces_nb(mesh, ctx, face);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        face = static_cast<chunk_mesh_face>(static_cast<int32_t>(face) + 1);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t chunk_mesh_generate_from_chunk_with_neighbors(chunk_mesh &mesh,
+    const game_voxel_chunk &chunk, int32_t chunk_x, int32_t chunk_z,
+    int32_t (*lookup_block)(void *user_data, int32_t world_x, int32_t world_y,
+        int32_t world_z, uint32_t *block_id),
+    void *user_data) noexcept
+{
+    chunk_neighbor_ctx ctx;
+    int32_t error_code;
+
+    error_code = chunk_mesh_clear(mesh);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    mesh.vertices.reserve(4096U);
+    if (mesh.vertices.get_error() != FT_ERR_SUCCESS)
+        return (mesh.vertices.get_error());
+    mesh.indices.reserve(6144U);
+    if (mesh.indices.get_error() != FT_ERR_SUCCESS)
+        return (mesh.indices.get_error());
+    chunk_mesh_reset_occupied_bounds(mesh);
+    ctx.chunk = &chunk;
+    ctx.chunk_x = chunk_x;
+    ctx.chunk_z = chunk_z;
+    ctx.lookup_block = lookup_block;
+    ctx.user_data = user_data;
+    return (chunk_mesh_emit_visible_faces_nb(mesh, ctx));
+}
+
 #endif
