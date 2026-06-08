@@ -61,6 +61,7 @@ static const terrain_block_metadata TERRAIN_BLOCK_REGISTRY[] =
     {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U},
     {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U},
     {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U}
+    ,{FT_FALSE, FT_TRUE, FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, 0U}
 };
 
 static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS[] =
