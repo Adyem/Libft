@@ -5,12 +5,20 @@
 #include <inttypes.h>
 #include "compatebility_stack_trace.hpp"
 
+#if defined(_WIN32)
+# include <windows.h>
+#endif
+
 #if defined(__linux__) || defined(__APPLE__)
 # include <execinfo.h>
 #endif
 
 #if defined(__linux__)
 # include <dlfcn.h>
+#endif
+
+#if defined(_WIN32)
+extern "C" USHORT WINAPI RtlCaptureStackBackTrace(ULONG, ULONG, PVOID *, PULONG);
 #endif
 
 #if defined(__linux__)
@@ -155,6 +163,27 @@ static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
 }
 #endif
 
+#if defined(_WIN32)
+static ft_size_t    cmp_stack_trace_capture_windows(void **frames,
+        ft_size_t capacity, ft_size_t skip_count)
+{
+    USHORT    captured_count;
+    ULONG     capture_capacity;
+
+    if (frames == NULL || capacity == 0)
+        return (0);
+    if (capacity > static_cast<ft_size_t>(USHRT_MAX))
+        capture_capacity = static_cast<ULONG>(USHRT_MAX);
+    else
+        capture_capacity = static_cast<ULONG>(capacity);
+    if (skip_count > static_cast<ft_size_t>(ULONG_MAX))
+        skip_count = static_cast<ft_size_t>(ULONG_MAX);
+    captured_count = RtlCaptureStackBackTrace(static_cast<ULONG>(skip_count),
+            capture_capacity, reinterpret_cast<PVOID *>(frames), NULL);
+    return (static_cast<ft_size_t>(captured_count));
+}
+#endif
+
 ft_size_t    cmp_stack_trace_capture(void **frames, ft_size_t capacity,
         ft_size_t skip_count)
 {
@@ -181,6 +210,8 @@ ft_size_t    cmp_stack_trace_capture(void **frames, ft_size_t capacity,
         output_index += 1;
     }
     return (output_index);
+#elif defined(_WIN32)
+    return (cmp_stack_trace_capture_windows(frames, capacity, skip_count));
 #else
     (void)frames;
     (void)capacity;
@@ -233,6 +264,18 @@ void    cmp_stack_trace_print(FILE *output_file, void *const *frames,
         frame_index += 1;
     }
     std::free(symbols);
+#elif defined(_WIN32)
+    ft_size_t    frame_index;
+
+    if (output_file == NULL || frames == NULL || frame_count == 0)
+        return ;
+    frame_index = 0;
+    while (frame_index < frame_count)
+    {
+        std::fprintf(output_file, "    #%zu %p\n", frame_index,
+            frames[frame_index]);
+        frame_index += 1;
+    }
 #else
     ft_size_t    frame_index;
 

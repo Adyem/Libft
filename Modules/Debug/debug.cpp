@@ -52,6 +52,7 @@ void dbg_print_stack_trace(void) noexcept
         return ;
     std::fprintf(stderr, "libft debug: stack trace:\n");
     cmp_stack_trace_print(stderr, frames, frame_count);
+    std::fflush(stderr);
     return ;
 }
 

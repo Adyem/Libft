@@ -103,12 +103,23 @@ static ft_bool dumb_controls_linux_mouse_button_is_down(unsigned int button_mask
 
 ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
 {
+    ft_dumb_keyboard_layout layout;
+
+    layout = ft_dumb_controls_get_keyboard_layout();
     if (control == FT_DUMB_CONTROL_UP)
+    {
+        if (layout == FT_DUMB_KEYBOARD_LAYOUT_AZERTY)
+            return (dumb_controls_linux_key_is_down(XK_z, XK_Up));
         return (dumb_controls_linux_key_is_down(XK_w, XK_Up));
+    }
     if (control == FT_DUMB_CONTROL_DOWN)
         return (dumb_controls_linux_key_is_down(XK_s, XK_Down));
     if (control == FT_DUMB_CONTROL_LEFT)
+    {
+        if (layout == FT_DUMB_KEYBOARD_LAYOUT_AZERTY)
+            return (dumb_controls_linux_key_is_down(XK_q, XK_Left));
         return (dumb_controls_linux_key_is_down(XK_a, XK_Left));
+    }
     if (control == FT_DUMB_CONTROL_RIGHT)
         return (dumb_controls_linux_key_is_down(XK_d, XK_Right));
     if (control == FT_DUMB_CONTROL_CONFIRM)

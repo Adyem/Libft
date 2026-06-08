@@ -4,6 +4,8 @@ static ft_bool g_dumb_control_down[FT_DUMB_CONTROL_COUNT];
 static ft_bool g_dumb_control_pressed[FT_DUMB_CONTROL_COUNT];
 static ft_bool g_dumb_control_previous_down[FT_DUMB_CONTROL_COUNT];
 static ft_dumb_mouse_delta g_dumb_mouse_delta;
+static ft_dumb_keyboard_layout g_dumb_keyboard_layout =
+    FT_DUMB_KEYBOARD_LAYOUT_QWERTY;
 
 #ifdef LIBFT_TEST_BUILD
 static ft_dumb_test_platform_control_is_down_fn g_dumb_test_platform_control_is_down =
@@ -95,4 +97,18 @@ ft_bool ft_dumb_control_was_pressed(ft_dumb_control control)
 ft_dumb_mouse_delta ft_dumb_controls_mouse_delta(void)
 {
     return (g_dumb_mouse_delta);
+}
+
+void ft_dumb_controls_set_keyboard_layout(ft_dumb_keyboard_layout layout)
+{
+    if (layout != FT_DUMB_KEYBOARD_LAYOUT_AZERTY)
+        g_dumb_keyboard_layout = FT_DUMB_KEYBOARD_LAYOUT_QWERTY;
+    else
+        g_dumb_keyboard_layout = FT_DUMB_KEYBOARD_LAYOUT_AZERTY;
+    return ;
+}
+
+ft_dumb_keyboard_layout ft_dumb_controls_get_keyboard_layout(void)
+{
+    return (g_dumb_keyboard_layout);
 }

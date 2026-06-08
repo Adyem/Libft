@@ -17,6 +17,17 @@
 
 static HANDLE g_file_handles[1024];
 static pt_mutex g_file_mutex;
+static ft_bool g_file_mutex_ready = FT_FALSE;
+
+static int32_t cmp_ensure_file_mutex_initialized(void)
+{
+    if (g_file_mutex_ready == FT_TRUE)
+        return (FT_ERR_SUCCESS);
+    if (g_file_mutex.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
+    g_file_mutex_ready = FT_TRUE;
+    return (FT_ERR_SUCCESS);
+}
 
 static int32_t cmp_store_handle(HANDLE file_handle)
 {
@@ -53,8 +64,13 @@ static void cmp_clear_handle(int32_t file_descriptor)
 
 static int32_t cmp_lock_file_mutex(void)
 {
-    int32_t lock_result = g_file_mutex.lock();
+    int32_t init_error;
+    int32_t lock_result;
 
+    init_error = cmp_ensure_file_mutex_initialized();
+    if (init_error != FT_ERR_SUCCESS)
+        return (init_error);
+    lock_result = g_file_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
     return (FT_ERR_SUCCESS);
@@ -256,6 +272,8 @@ void cmp_initialize_standard_file_descriptors()
 {
     static int32_t initialised = 0;
     if (initialised == 1)
+        return ;
+    if (cmp_ensure_file_mutex_initialized() != FT_ERR_SUCCESS)
         return ;
     HANDLE standard_input = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE standard_output = GetStdHandle(STD_OUTPUT_HANDLE);

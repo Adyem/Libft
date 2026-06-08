@@ -23,12 +23,23 @@ static ft_bool dumb_controls_macos_key_is_down(CGKeyCode key_code_primary,
 
 ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
 {
+    ft_dumb_keyboard_layout layout;
+
+    layout = ft_dumb_controls_get_keyboard_layout();
     if (control == FT_DUMB_CONTROL_UP)
+    {
+        if (layout == FT_DUMB_KEYBOARD_LAYOUT_AZERTY)
+            return (dumb_controls_macos_key_is_down(13U, 126U, FT_TRUE));
         return (dumb_controls_macos_key_is_down(13U, 126U, FT_TRUE));
+    }
     if (control == FT_DUMB_CONTROL_DOWN)
         return (dumb_controls_macos_key_is_down(1U, 125U, FT_TRUE));
     if (control == FT_DUMB_CONTROL_LEFT)
+    {
+        if (layout == FT_DUMB_KEYBOARD_LAYOUT_AZERTY)
+            return (dumb_controls_macos_key_is_down(0U, 123U, FT_TRUE));
         return (dumb_controls_macos_key_is_down(0U, 123U, FT_TRUE));
+    }
     if (control == FT_DUMB_CONTROL_RIGHT)
         return (dumb_controls_macos_key_is_down(2U, 124U, FT_TRUE));
     if (control == FT_DUMB_CONTROL_CONFIRM)

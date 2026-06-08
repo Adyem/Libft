@@ -33,6 +33,7 @@ void    su_abort(void)
         cmp_stack_trace_print(stderr, stack_frames, frame_count);
     }
 #endif
+    std::fflush(nullptr);
     std::abort();
     return ;
 }
