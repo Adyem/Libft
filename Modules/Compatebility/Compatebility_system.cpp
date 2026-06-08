@@ -882,7 +882,7 @@ const char *cmp_system_strerror(int32_t error_code)
 #endif
 }
 
-static char *cmp_join_two_c_strings(const char *string_left, const char *string_right)
+[[maybe_unused]] static char *cmp_join_two_c_strings(const char *string_left, const char *string_right)
 {
     ft_size_t left_length;
     ft_size_t right_length;

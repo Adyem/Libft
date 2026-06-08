@@ -490,9 +490,9 @@ int pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier,
         int detect_error;
 
         if (info->waiting_mutex != requested_mutex)
-            info->wait_started_ms = static_cast<long>(time_now_ms());
+            info->wait_started_ms = time_now_ms();
         if (info->wait_started_ms == 0)
-            info->wait_started_ms = static_cast<long>(time_now_ms());
+            info->wait_started_ms = time_now_ms();
         info->waiting_mutex = requested_mutex;
         pt_mutex_vector visited_mutexes_inner;
         pt_thread_vector visited_threads_inner;

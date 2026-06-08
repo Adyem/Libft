@@ -90,15 +90,15 @@ unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t
     {
         return (ft_nullptr);
     }
-    zlib_bound = compressBound(static_cast<uLong>(input_size));
+    zlib_bound = compressBound(input_size);
     result_buffer = static_cast<unsigned char *>(cma_malloc(zlib_bound + sizeof(uint32_t)));
     if (!result_buffer)
     {
         return (ft_nullptr);
     }
     actual_size = zlib_bound;
-    zlib_status = compress2(result_buffer + sizeof(uint32_t), &actual_size, input_buffer,
-            static_cast<uLong>(input_size), Z_BEST_COMPRESSION);
+        zlib_status = compress2(result_buffer + sizeof(uint32_t), &actual_size, input_buffer,
+            input_size, Z_BEST_COMPRESSION);
     if (zlib_status != Z_OK)
     {
         cma_free(result_buffer);
@@ -144,8 +144,8 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
         return (ft_nullptr);
     }
     actual_size = static_cast<uLongf>(expected_size);
-    zlib_status = uncompress(result_buffer, &actual_size, input_buffer + sizeof(uint32_t),
-            static_cast<uLong>(input_size - sizeof(uint32_t)));
+        zlib_status = uncompress(result_buffer, &actual_size, input_buffer + sizeof(uint32_t),
+            input_size - sizeof(uint32_t));
     if (zlib_status != Z_OK || actual_size != expected_size)
     {
         cma_free(result_buffer);
