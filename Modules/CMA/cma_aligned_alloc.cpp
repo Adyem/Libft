@@ -1,6 +1,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#ifdef _WIN32
+# include <malloc.h>
+#endif
 #include "../Errno/errno.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
@@ -131,7 +134,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
         allocation_size = alignment_value;
     pointer = nullptr;
 #ifdef _WIN32
-    pointer = std::aligned_alloc(alignment_value, allocation_size);
+    pointer = _aligned_malloc(allocation_size, alignment_value);
     if (pointer)
     {
         g_cma_allocation_count++;

@@ -62,7 +62,7 @@ FT_TEST(test_cpp_class_fd_istream_lifecycle_read_destroy_reinitialize)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe_descriptors(read_descriptor, write_descriptor));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
     stream_value.set_file_descriptor(read_descriptor);
-    FT_ASSERT_EQ(1, static_cast<int>(write(write_descriptor, "x", 1)));
+    FT_ASSERT_EQ(1, write(write_descriptor, "x", 1));
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(1, static_cast<int>(stream_value.read(buffer, 1)));
@@ -70,7 +70,7 @@ FT_TEST(test_cpp_class_fd_istream_lifecycle_read_destroy_reinitialize)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.initialize());
     stream_value.set_file_descriptor(read_descriptor);
-    FT_ASSERT_EQ(1, static_cast<int>(write(write_descriptor, "y", 1)));
+    FT_ASSERT_EQ(1, write(write_descriptor, "y", 1));
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(1, static_cast<int>(stream_value.read(buffer, 1)));
@@ -165,7 +165,7 @@ FT_TEST(test_cpp_class_fd_istream_copy_constructor_preserves_readability)
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, copied_stream._initialised_state);
     FT_ASSERT_EQ(read_descriptor, copied_stream.get_file_descriptor());
     FT_ASSERT_EQ(FT_TRUE, copied_stream.is_thread_safe());
-    FT_ASSERT_EQ(1, static_cast<int>(write(write_descriptor, "c", 1)));
+    FT_ASSERT_EQ(1, write(write_descriptor, "c", 1));
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(1, static_cast<int>(copied_stream.read(buffer, 1)));
@@ -201,7 +201,7 @@ FT_TEST(test_cpp_class_fd_istream_move_constructor_preserves_readability)
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, moved_stream._initialised_state);
     FT_ASSERT_EQ(read_descriptor, moved_stream.get_file_descriptor());
     FT_ASSERT_EQ(FT_TRUE, moved_stream.is_thread_safe());
-    FT_ASSERT_EQ(1, static_cast<int>(write(write_descriptor, "m", 1)));
+    FT_ASSERT_EQ(1, write(write_descriptor, "m", 1));
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_EQ(1, static_cast<int>(moved_stream.read(buffer, 1)));

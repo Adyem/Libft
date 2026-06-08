@@ -121,14 +121,18 @@ int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *c
 
 int32_t cmp_readline_terminal_width(int32_t *width_out)
 {
-    struct winsize window_size;
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    HANDLE handle;
 
     if (width_out == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *width_out = 0;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window_size) == -1)
-        return (cmp_map_errno_to_ft_error());
-    *width_out = static_cast<int32_t>(window_size.ws_col);
+    handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (handle == INVALID_HANDLE_VALUE)
+        return (cmp_map_last_error_to_ft_error());
+    if (!GetConsoleScreenBufferInfo(handle, &info))
+        return (cmp_map_last_error_to_ft_error());
+    *width_out = info.srWindow.Right - info.srWindow.Left + 1;
     return (FT_ERR_SUCCESS);
 }
 #else

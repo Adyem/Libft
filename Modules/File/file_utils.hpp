@@ -14,6 +14,9 @@ enum file_type
     FILE_TYPE_DIRECTORY,
     FILE_TYPE_SYMLINK,
     FILE_TYPE_MISSING,
+#ifdef FILE_TYPE_UNKNOWN
+# undef FILE_TYPE_UNKNOWN
+#endif
     FILE_TYPE_UNKNOWN
 };
 

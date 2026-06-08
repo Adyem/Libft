@@ -19,7 +19,12 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/mman.h>
-#include <sys/socket.h>
+#if defined(_WIN32) || defined(_WIN64)
+# include <winsock2.h>
+# include <ws2tcpip.h>
+#else
+# include <sys/socket.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

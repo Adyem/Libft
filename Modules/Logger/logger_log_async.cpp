@@ -65,7 +65,12 @@ void ft_log_process_message(const ft_string &message)
     {
         logger_unlock_sinks();
         ssize_t write_result;
+#if defined(_WIN32) || defined(_WIN64)
+        write_result = write(1, message.c_str(),
+                static_cast<unsigned int>(message.size()));
+#else
         write_result = write(1, message.c_str(), message.size());
+#endif
         (void)write_result;
         return ;
     }

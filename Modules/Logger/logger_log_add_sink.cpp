@@ -427,7 +427,12 @@ int32_t ft_json_sink(const char *message, void *user_data)
     }
     ssize_t write_result;
 
+#if defined(_WIN32) || defined(_WIN64)
+    write_result = write(file_descriptor, payload.c_str(),
+            static_cast<unsigned int>(payload.size()));
+#else
     write_result = write(file_descriptor, payload.c_str(), payload.size());
+#endif
     if (write_result < 0)
         return (FT_ERR_IO);
     if (write_result != static_cast<ssize_t>(payload.size()))

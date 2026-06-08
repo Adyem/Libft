@@ -692,7 +692,7 @@ static int32_t cmp_environment_map_last_error(void)
     system_error = static_cast<int32_t>(GetLastError());
     if (system_error != 0)
         return (cmp_map_system_error_to_ft(system_error));
-    system_error = static_cast<int32_t>(WSAGetLastError());
+    system_error = WSAGetLastError();
     if (system_error != 0)
         return (cmp_map_system_error_to_ft(system_error));
     if (errno != 0)
@@ -882,6 +882,38 @@ const char *cmp_system_strerror(int32_t error_code)
 #endif
 }
 
+static char *cmp_join_two_c_strings(const char *string_left, const char *string_right)
+{
+    ft_size_t left_length;
+    ft_size_t right_length;
+    ft_size_t total_length;
+    ft_size_t index;
+    char *output;
+
+    if (string_left == ft_nullptr || string_right == ft_nullptr)
+        return (ft_nullptr);
+    left_length = ft_strlen_size_t(string_left);
+    right_length = ft_strlen_size_t(string_right);
+    total_length = left_length + right_length;
+    output = static_cast<char *>(cma_malloc(total_length + 1));
+    if (output == ft_nullptr)
+        return (ft_nullptr);
+    index = 0;
+    while (index < left_length)
+    {
+        output[index] = string_left[index];
+        index++;
+    }
+    index = 0;
+    while (index < right_length)
+    {
+        output[left_length + index] = string_right[index];
+        index++;
+    }
+    output[total_length] = '\0';
+    return (output);
+}
+
 char *cmp_get_home_directory(void)
 {
 #if defined(_WIN32) || defined(_WIN64)
@@ -901,7 +933,7 @@ char *cmp_get_home_directory(void)
     {
         return (ft_nullptr);
     }
-    combined_home = cma_strjoin_multiple(2, home_drive, home_path);
+    combined_home = cmp_join_two_c_strings(home_drive, home_path);
     if (combined_home == ft_nullptr)
     {
         return (ft_nullptr);

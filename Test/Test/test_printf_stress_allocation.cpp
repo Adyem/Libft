@@ -188,10 +188,13 @@ FT_TEST(test_printf_stress_mixed_numeric_formats)
     int printed;
 
     printed = pf_snprintf(output_buffer, sizeof(output_buffer),
-            "%ld|%lu|%lx|%zu|%zx|%.4f|%c|%s",
-            2147483648L, 2147483648UL, 2147483648UL,
-            static_cast<size_t>(4294967295ULL),
-            static_cast<size_t>(4294967295ULL), 3.1415926, 'Z', "tail");
+            "%lld|%llu|%llx|%llu|%llx|%.4f|%c|%s",
+            2147483648LL,
+            2147483648ULL,
+            2147483648ULL,
+            4294967295ULL,
+            4294967295ULL,
+            3.1415926, 'Z', "tail");
     FT_ASSERT(printed > 0);
     FT_ASSERT(ft_strstr(output_buffer, "80000000") != ft_nullptr);
     FT_ASSERT(ft_strstr(output_buffer, "3.1416") != ft_nullptr);

@@ -10,7 +10,7 @@ static ft_size_t compute_offset(uint64_t pointer_value, uint64_t base_value)
 {
     if (pointer_value < base_value)
         return (0);
-    return (static_cast<ft_size_t>(pointer_value - base_value));
+    return (pointer_value - base_value);
 }
 
 int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const cross_process_message &message)
@@ -22,7 +22,7 @@ int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const 
     buffer.buf = reinterpret_cast<char *>(const_cast<cross_process_message *>(&message));
     buffer.len = static_cast<ULONG>(sizeof(cross_process_message));
     bytes_sent = 0;
-    result = WSASend(reinterpret_cast<SOCKET>(socket_file_descriptor), &buffer, 1, &bytes_sent, 0, 0, 0);
+    result = WSASend(static_cast<SOCKET>(socket_file_descriptor), &buffer, 1, &bytes_sent, 0, ft_nullptr, ft_nullptr);
     if (result != 0 || bytes_sent != buffer.len)
     {
         int32_t windows_error;
@@ -41,13 +41,13 @@ int32_t cmp_cross_process_receive_descriptor(int32_t socket_file_descriptor, cro
     ft_size_t offset;
 
     raw_message = reinterpret_cast<char *>(&message);
-    total_size = static_cast<ft_size_t>(sizeof(cross_process_message));
+    total_size = sizeof(cross_process_message);
     offset = 0;
     while (offset < total_size)
     {
         int32_t chunk_size;
 
-        chunk_size = recv(reinterpret_cast<SOCKET>(socket_file_descriptor), raw_message + offset, static_cast<int32_t>(total_size - offset), 0);
+        chunk_size = recv(static_cast<SOCKET>(socket_file_descriptor), raw_message + offset, static_cast<int32_t>(total_size - offset), 0);
         if (chunk_size == SOCKET_ERROR)
         {
             int32_t windows_error;
@@ -98,7 +98,7 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
         return (cmp_map_system_error_to_ft(errno));
     }
     ft_size_t mutex_offset = compute_offset(message.shared_mutex_address, message.stack_base_address);
-    if (mutex_offset + static_cast<ft_size_t>(sizeof(HANDLE)) > mapping->mapping_length)
+    if (mutex_offset + sizeof(HANDLE) > mapping->mapping_length)
     {
         cmp_cross_process_close_mapping(mapping);
         errno = EINVAL;

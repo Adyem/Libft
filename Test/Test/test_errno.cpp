@@ -8,7 +8,9 @@
 #include <cstring>
 #include <thread>
 #include <unistd.h>
-#include <sys/wait.h>
+#if !defined(_WIN32) && !defined(_WIN64)
+# include <sys/wait.h>
+#endif
 
 #ifndef LIBFT_TEST_BUILD
 #endif

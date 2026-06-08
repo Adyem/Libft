@@ -256,7 +256,7 @@ int32_t su_fseek(su_file *stream, int64_t offset, int32_t origin)
         su_file_unlock(stream, lock_acquired);
         return (-1);
     }
-    result = lseek(stream->_descriptor, offset, origin);
+    result = lseek(stream->_descriptor, static_cast<off_t>(offset), origin);
     su_file_unlock(stream, lock_acquired);
     if (result < 0)
         return (-1);
@@ -277,7 +277,7 @@ int64_t su_ftell(su_file *stream)
         su_file_unlock(stream, lock_acquired);
         return (-1L);
     }
-    position = lseek(stream->_descriptor, 0, SEEK_CUR);
+    position = lseek(stream->_descriptor, static_cast<off_t>(0), SEEK_CUR);
     su_file_unlock(stream, lock_acquired);
     if (position < 0)
         return (-1L);

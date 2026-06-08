@@ -77,7 +77,7 @@ class game_path_step_test_helper
         static int32_t unlock(game_path_step &step) noexcept;
         static ft_bool is_locked(const game_path_step &step) noexcept;
         static ft_bool is_owned_by_thread(const game_path_step &step,
-            pthread_t thread_id) noexcept;
+            pt_thread_id_type thread_id) noexcept;
         static int32_t get_mutex_error(const game_path_step &step) noexcept;
 };
 

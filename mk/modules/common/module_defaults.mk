@@ -14,6 +14,9 @@ endif
 ifdef COMPILE_FLAGS
     CFLAGS := $(COMPILE_FLAGS)
 endif
+ifeq ($(OS),Windows_NT)
+    CFLAGS += -I../..
+endif
 
 CXX ?= g++
 AR ?= ar

@@ -21,10 +21,10 @@ FT_TEST(test_math_min_int)
 
 FT_TEST(test_math_min_equal_values_preserve_value)
 {
-    long result;
+    int64_t result;
 
-    result = math_min(42L, 42L);
-    FT_ASSERT_EQ(42L, result);
+    result = math_min(static_cast<int64_t>(42), static_cast<int64_t>(42));
+    FT_ASSERT_EQ(42LL, result);
     return (1);
 }
 

@@ -30,9 +30,15 @@ TEMP_DIRS := temp_objs temp_objs_test .libft_output_lock .libft_progress .libft_
 OUTPUT_LOGS := .libft_build_*.log .libft_build_status_*
 
 ifeq ($(OS),Windows_NT)
-    MKDIR  = mkdir
-    RM     = del /F /Q
-    RMDIR  = rmdir /S /Q
+    ifneq ($(LIBFT_POSIX_SHELL),)
+        MKDIR  = mkdir -p
+        RM     = rm -f
+        RMDIR  = rm -rf
+    else
+        MKDIR  = mkdir
+        RM     = del /F /Q
+        RMDIR  = rmdir /S /Q
+    endif
 else
     MKDIR  = mkdir -p
     RM     = rm -f

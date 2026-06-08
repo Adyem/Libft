@@ -33,7 +33,7 @@ static int32_t cmp_store_handle(HANDLE file_handle)
     return (-1);
 }
 
-static HANDLE cmp_retrieve_handle(int32_t file_descriptor)
+HANDLE cmp_retrieve_handle(int32_t file_descriptor)
 {
     if (file_descriptor < 0 || file_descriptor >= 1024)
         return (INVALID_HANDLE_VALUE);

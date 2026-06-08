@@ -54,7 +54,7 @@ ft_sound_device_win32::ft_sound_device_win32(void)
 }
 
 ft_sound_device_win32::ft_sound_device_win32(const ft_sound_device_win32 &other)
-    : ft_sound_device(other)
+    : ft_sound_device()
 {
     (void)other;
     this->_wave_out = ft_nullptr;
@@ -67,7 +67,7 @@ ft_sound_device_win32::ft_sound_device_win32(const ft_sound_device_win32 &other)
 }
 
 ft_sound_device_win32::ft_sound_device_win32(ft_sound_device_win32 &&other)
-    : ft_sound_device(static_cast<ft_sound_device &&>(other))
+    : ft_sound_device()
 {
     (void)other;
     this->_wave_out = ft_nullptr;
@@ -104,8 +104,8 @@ int32_t ft_sound_device_win32::open(const ft_sound_spec *spec)
     wave_format.wBitsPerSample = 16;
     wave_format.cbSize = 0;
     result = waveOutOpen(&this->_wave_out, WAVE_MAPPER, &wave_format,
-        static_cast<DWORD_PTR>(ft_sound_device_win32::wave_out_proc),
-        static_cast<DWORD_PTR>(reinterpret_cast<uintptr_t>(this)),
+        reinterpret_cast<DWORD_PTR>(&ft_sound_device_win32::wave_out_proc),
+        reinterpret_cast<DWORD_PTR>(this),
         CALLBACK_FUNCTION);
     if (result != MMSYSERR_NOERROR)
         return (FT_ERR_IO);
@@ -178,8 +178,8 @@ void ft_sound_device_win32::play(const ft_sound_clip *clip)
     while (buffer_index < 2)
     {
         ft_sound_device_win32::wave_out_proc(this->_wave_out, WOM_DONE,
-            static_cast<DWORD_PTR>(reinterpret_cast<uintptr_t>(this)),
-            static_cast<DWORD_PTR>(reinterpret_cast<uintptr_t>(&this->_headers[buffer_index])),
+            reinterpret_cast<DWORD_PTR>(this),
+            reinterpret_cast<DWORD_PTR>(&this->_headers[buffer_index]),
             0);
         buffer_index++;
     }

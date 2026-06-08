@@ -12,11 +12,15 @@
 #include <cstdlib>
 #include <exception>
 #include <fcntl.h>
-#include <sys/ioctl.h>
+#if !defined(_WIN32) && !defined(_WIN64)
+# include <sys/ioctl.h>
+#endif
 #include <unistd.h>
 #include "../Basic/limits.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Errno/errno.hpp"
+
+int32_t cmp_readline_terminal_width(int32_t *width_out);
 
 #ifndef FT_TEST_RUNNER_INITIAL_CAPACITY
 # define FT_TEST_RUNNER_INITIAL_CAPACITY 4096
@@ -268,6 +272,15 @@ static int32_t hide_successful_tests_enabled(void)
 
 static int32_t get_stdout_terminal_width(void)
 {
+#if defined(_WIN32) || defined(_WIN64)
+    int32_t terminal_width;
+
+    if (cmp_readline_terminal_width(&terminal_width) != FT_ERR_SUCCESS)
+        return (80);
+    if (terminal_width <= 0)
+        return (80);
+    return (terminal_width);
+#else
     struct winsize terminal_size;
 
     if (isatty(STDOUT_FILENO) == 0)
@@ -277,6 +290,7 @@ static int32_t get_stdout_terminal_width(void)
     if (terminal_size.ws_col == 0)
         return (80);
     return (static_cast<int32_t>(terminal_size.ws_col));
+#endif
 }
 
 static void print_running_test_line(int32_t test_number,
@@ -313,7 +327,12 @@ static void write_literal_to_stderr(const char *message)
 
     if (message == NULL)
         return ;
+#if defined(_WIN32) || defined(_WIN64)
+    write_result = write(STDERR_FILENO, message,
+            static_cast<unsigned int>(std::strlen(message)));
+#else
     write_result = write(STDERR_FILENO, message, std::strlen(message));
+#endif
     if (write_result < 0)
         return ;
     return ;

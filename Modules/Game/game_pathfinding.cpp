@@ -49,7 +49,7 @@ ft_bool game_path_step_test_helper::is_locked(const game_path_step &step) noexce
 }
 
 ft_bool game_path_step_test_helper::is_owned_by_thread(const game_path_step &step,
-    pthread_t thread_id) noexcept
+    pt_thread_id_type thread_id) noexcept
 {
     return (step._mutex != ft_nullptr
         && step._mutex->is_owned_by_thread(thread_id));

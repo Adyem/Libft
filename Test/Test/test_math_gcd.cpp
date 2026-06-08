@@ -21,16 +21,16 @@ FT_TEST(test_math_gcd_basic_values)
 
 FT_TEST(test_math_gcd_negative_inputs)
 {
-    long result;
+    int64_t result;
 
-    result = math_gcd(-42L, -56L);
-    FT_ASSERT_EQ(14L, result);
+    result = math_gcd(static_cast<int64_t>(-42), static_cast<int64_t>(-56));
+    FT_ASSERT_EQ(14LL, result);
     return (1);
 }
 
 FT_TEST(test_math_gcd_zero_arguments)
 {
-    long long result;
+    int64_t result;
 
     result = math_gcd(static_cast<int64_t>(0), static_cast<int64_t>(0));
     FT_ASSERT_EQ(0LL, result);
@@ -39,19 +39,19 @@ FT_TEST(test_math_gcd_zero_arguments)
 
 FT_TEST(test_math_gcd_one_zero_argument)
 {
-    FT_ASSERT_EQ(25, math_gcd(0, -25));
-    FT_ASSERT_EQ(9L, math_gcd(9L, 0L));
+    FT_ASSERT_EQ(25LL, math_gcd(static_cast<int64_t>(0), static_cast<int64_t>(-25)));
+    FT_ASSERT_EQ(9LL, math_gcd(static_cast<int64_t>(9), static_cast<int64_t>(0)));
     return (1);
 }
 
 FT_TEST(test_math_gcd_mixed_signs_match_positive_result)
 {
-    long result_first_sign;
-    long result_second_sign;
+    int64_t result_first_sign;
+    int64_t result_second_sign;
 
-    result_first_sign = math_gcd(-84L, 30L);
-    result_second_sign = math_gcd(84L, -30L);
+    result_first_sign = math_gcd(static_cast<int64_t>(-84), static_cast<int64_t>(30));
+    result_second_sign = math_gcd(static_cast<int64_t>(84), static_cast<int64_t>(-30));
     FT_ASSERT_EQ(result_first_sign, result_second_sign);
-    FT_ASSERT_EQ(6L, result_first_sign);
+    FT_ASSERT_EQ(6LL, result_first_sign);
     return (1);
 }

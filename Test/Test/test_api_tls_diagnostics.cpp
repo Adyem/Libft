@@ -25,9 +25,14 @@
 #else
 # include <unistd.h>
 # include <sys/types.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
+# if defined(_WIN32) || defined(_WIN64)
+#  include <winsock2.h>
+#  include <ws2tcpip.h>
+# else
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <arpa/inet.h>
+# endif
 # define TLS_TEST_CLOSE close
 # define TLS_TEST_WRITE write
 # define TLS_TEST_UNLINK unlink

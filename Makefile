@@ -1,3 +1,10 @@
+ifeq ($(OS),Windows_NT)
+SHELL := C:/Progra~1/Git/bin/bash.exe
+.SHELLFLAGS := -lc
+export SHELL
+export LIBFT_POSIX_SHELL := 1
+endif
+
 include mk/compiler_flags.mk
 include mk/build_config.mk
 

@@ -18,9 +18,9 @@
 
 #define OFFSWITCH 0
 
-#define SIZE 100
-#define SMALL_SIZE (SIZE)
-#define MEDIUM_SIZE (SIZE * 10)
+#define CMA_SIZE 100
+#define SMALL_SIZE (CMA_SIZE)
+#define MEDIUM_SIZE (CMA_SIZE * 10)
 #define CMA_SMALL_ARENA_MAX_ALLOCATION 256
 
 #define BASE_SIZE 1024

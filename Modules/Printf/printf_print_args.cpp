@@ -404,7 +404,7 @@ static int32_t format_double_output(char specifier, int32_t precision, double nu
     }
 
     FORMAT_DOUBLE_CASE('f', "%.*f");
-    FORMAT_DOUBLE_CASE('F', "%.*F");
+    FORMAT_DOUBLE_CASE('F', "%.*f");
     FORMAT_DOUBLE_CASE('e', "%.*e");
     FORMAT_DOUBLE_CASE('E', "%.*E");
     FORMAT_DOUBLE_CASE('g', "%.*g");

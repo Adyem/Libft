@@ -7,10 +7,12 @@
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <csetjmp>
-#include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
 #include <cstring>
+#if !defined(_WIN32) && !defined(_WIN64)
+# include <sys/wait.h>
+#endif
 
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"

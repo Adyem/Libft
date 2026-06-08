@@ -127,8 +127,6 @@ static void test_storage_block_cipher_decrypt(uint8_t *block_buffer, const uint8
 
 FT_TEST(test_kv_store_encrypted_round_trip_uses_active_algorithm_name)
 {
-    char directory_template[] = "/tmp/libft_storage_block_cipher_XXXXXX";
-    char file_path_buffer[256];
     const char *directory_path;
     const char *file_path;
     const char *encryption_key;
@@ -145,10 +143,11 @@ FT_TEST(test_kv_store_encrypted_round_trip_uses_active_algorithm_name)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_storage_cleanup_paths(directory_path, file_path));
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
 #else
+    char directory_template[] = "/tmp/libft_storage_block_cipher_XXXXXX";
+    char file_path_buffer[256];
+
     directory_path = mkdtemp(directory_template);
     FT_ASSERT(directory_path != ft_nullptr);
-#endif
-#if !defined(_WIN32) && !defined(_WIN64)
     std::snprintf(file_path_buffer, sizeof(file_path_buffer),
         "%s/kv_store.json", directory_path);
     file_path = file_path_buffer;

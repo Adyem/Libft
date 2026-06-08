@@ -2,8 +2,9 @@
 # define PTHREAD_HPP
 
 #ifdef _WIN32
+    #include <winsock2.h>
     #include <windows.h>
-
+    #include <pthread.h>
 #endif
 #ifndef _WIN32
     #include <pthread.h>

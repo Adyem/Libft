@@ -92,9 +92,14 @@ int test_pf_printf_modifiers(void)
     int fd = ::open(fname, O_CREAT | O_RDWR | O_TRUNC, 0644);
     if (fd < 0)
         return (0);
-    long lval = 2147483648L;
-    size_t zval = static_cast<size_t>(0x1FFFFFFFFULL);
-    pf_printf_fd(fd, "%ld %lu %lx %zu %zx", lval, lval, lval, zval, zval);
+    long long lval = 2147483648LL;
+    unsigned long long zval = 0x1FFFFFFFFULL;
+    pf_printf_fd(fd, "%lld %llu %llx %llu %llx",
+        lval,
+        static_cast<unsigned long long>(lval),
+        static_cast<unsigned long long>(lval),
+        zval,
+        zval);
     ::lseek(fd, 0, SEEK_SET);
     char buf[128];
     ssize_t r = ::read(fd, buf, sizeof(buf) - 1);

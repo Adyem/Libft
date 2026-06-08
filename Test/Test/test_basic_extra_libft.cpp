@@ -5,6 +5,7 @@
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/System_utils/system_utils.hpp"
 #include "../../Modules/Time/time.hpp"
+#include "../../Modules/Advanced/advanced.hpp"
 #include "../../Modules/CPP_class/class_string.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Errno/errno.hpp"
@@ -472,7 +473,7 @@ int test_su_get_home_directory_windows(void)
     home_path = su_getenv("HOMEPATH");
     if (home_drive == ft_nullptr || home_path == ft_nullptr)
         return (result == ft_nullptr);
-    combined = cma_strjoin_multiple(2, home_drive, home_path);
+    combined = adv_strjoin_multiple(2, home_drive, home_path);
     if (combined == ft_nullptr)
         return (0);
     test_ok = (result != ft_nullptr && std::strcmp(result, combined) == 0);

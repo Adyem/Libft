@@ -8,28 +8,6 @@
 # include <cstdlib>
 #endif
 
-static char *cmp_path_duplicate_c_string(const char *source)
-{
-    char *output;
-    ft_size_t size;
-    ft_size_t index;
-
-    if (source == ft_nullptr)
-        return (ft_nullptr);
-    size = ft_strlen_size_t(source);
-    output = static_cast<char *>(cma_malloc(size + 1));
-    if (output == ft_nullptr)
-        return (ft_nullptr);
-    index = 0;
-    while (index < size)
-    {
-        output[index] = source[index];
-        index++;
-    }
-    output[size] = '\0';
-    return (output);
-}
-
 #if defined(_WIN32) || defined(_WIN64)
 int32_t cmp_path_canonical(const char *path, char **output_path)
 {
@@ -61,6 +39,28 @@ int32_t cmp_path_canonical(const char *path, char **output_path)
     return (FT_ERR_SUCCESS);
 }
 #else
+static char *cmp_path_duplicate_c_string(const char *source)
+{
+    char *output;
+    ft_size_t size;
+    ft_size_t index;
+
+    if (source == ft_nullptr)
+        return (ft_nullptr);
+    size = ft_strlen_size_t(source);
+    output = static_cast<char *>(cma_malloc(size + 1));
+    if (output == ft_nullptr)
+        return (ft_nullptr);
+    index = 0;
+    while (index < size)
+    {
+        output[index] = source[index];
+        index++;
+    }
+    output[size] = '\0';
+    return (output);
+}
+
 int32_t cmp_path_canonical(const char *path, char **output_path)
 {
     char *system_path;

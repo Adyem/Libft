@@ -10,7 +10,7 @@
 
 static const uint32_t PT_RECURSIVE_MUTEX_TRY_LOCK_ATTEMPTS = 2U;
 
-int pt_recursive_mutex::try_lock(pthread_t thread_id) const
+int pt_recursive_mutex::try_lock(pt_thread_id_type thread_id) const
 {
     int ensure_error = this->ensure_native_mutex();
     const void *mutex_handle;

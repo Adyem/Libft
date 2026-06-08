@@ -173,7 +173,7 @@ void pt_recursive_mutex::unlock_state(bool lock_acquired) const
     return ;
 }
 
-bool pt_recursive_mutex::is_owned_by_thread(pthread_t thread_id) const
+bool pt_recursive_mutex::is_owned_by_thread(pt_thread_id_type thread_id) const
 {
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "pt_recursive_mutex::is_owned_by_thread");

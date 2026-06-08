@@ -31,11 +31,11 @@ static BOOL WINAPI cmp_service_console_handler(DWORD control_type)
     if (g_cmp_service_signal_handler == ft_nullptr)
         return (FALSE);
     if (control_type == CTRL_C_EVENT || control_type == CTRL_BREAK_EVENT)
-        mapped_signal = static_cast<int32_t>(SIGINT);
+        mapped_signal = SIGINT;
     else if (control_type == CTRL_CLOSE_EVENT
         || control_type == CTRL_SHUTDOWN_EVENT
         || control_type == CTRL_LOGOFF_EVENT)
-        mapped_signal = static_cast<int32_t>(SIGTERM);
+        mapped_signal = SIGTERM;
     if (mapped_signal == 0)
         return (FALSE);
     g_cmp_service_signal_handler(mapped_signal, g_cmp_service_signal_context);

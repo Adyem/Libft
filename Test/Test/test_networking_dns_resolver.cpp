@@ -2,9 +2,14 @@
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Basic/basic.hpp"
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#if defined(_WIN32) || defined(_WIN64)
+# include <winsock2.h>
+# include <ws2tcpip.h>
+#else
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <netdb.h>
+#endif
 
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"

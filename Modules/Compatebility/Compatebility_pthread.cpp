@@ -8,7 +8,6 @@
 #include "../PThread/recursive_mutex.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
-# include <synchapi.h>
 
 static int32_t cmp_thread_map_windows_error(DWORD error_code)
 {
@@ -24,7 +23,7 @@ int32_t cmp_thread_equal(pthread_t thread1, pthread_t thread2)
 
 int32_t cmp_thread_cancel(pthread_t thread)
 {
-    if (TerminateThread((HANDLE)thread, 0) == 0)
+    if (TerminateThread(reinterpret_cast<HANDLE>(thread), 0) == 0)
     {
         return (cmp_thread_map_windows_error(GetLastError()));
     }
@@ -45,27 +44,13 @@ int32_t cmp_thread_sleep(uint32_t milliseconds)
 
 int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
 {
-    BOOL wait_result;
-    DWORD error_code;
-
     if (address == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     while (1)
     {
-        wait_result = WaitOnAddress(reinterpret_cast<volatile VOID *>(address),
-                &expected_value, sizeof(uint32_t), INFINITE);
-        if (wait_result != FALSE)
-        {
+        if (address->load() != expected_value)
             return (FT_ERR_SUCCESS);
-        }
-        error_code = GetLastError();
-        if (error_code == ERROR_SUCCESS)
-        {
-            return (FT_ERR_SUCCESS);
-        }
-        if (error_code == ERROR_TIMEOUT)
-            continue;
-        return (cmp_thread_map_windows_error(error_code));
+        Sleep(1);
     }
 }
 
@@ -73,7 +58,6 @@ int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
 {
     if (address == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    WakeByAddressSingle(reinterpret_cast<volatile VOID *>(address));
     return (FT_ERR_SUCCESS);
 }
 #else

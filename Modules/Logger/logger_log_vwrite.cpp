@@ -214,7 +214,12 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
             write_result = write(1, color_code, ft_strlen(color_code));
             if (write_result < 0)
                 return ;
+#if defined(_WIN32) || defined(_WIN64)
+            write_result = write(1, final_message.c_str(),
+                    static_cast<unsigned int>(final_message.size()));
+#else
             write_result = write(1, final_message.c_str(), final_message.size());
+#endif
             if (write_result < 0)
                 return ;
             write_result = write(1, "\x1b[0m", 4);
@@ -222,7 +227,12 @@ void ft_log_vwrite(t_log_level level, const char *format_string, va_list argumen
                 return ;
             return ;
         }
+#if defined(_WIN32) || defined(_WIN64)
+        write_result = write(1, final_message.c_str(),
+                static_cast<unsigned int>(final_message.size()));
+#else
         write_result = write(1, final_message.c_str(), final_message.size());
+#endif
         if (write_result < 0)
             return ;
         return ;

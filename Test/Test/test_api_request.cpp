@@ -32,9 +32,14 @@
 #ifdef _WIN32
 # include <windows.h>
 #else
-# include <arpa/inet.h>
-# include <netinet/in.h>
-# include <sys/socket.h>
+# if defined(_WIN32) || defined(_WIN64)
+#  include <winsock2.h>
+#  include <ws2tcpip.h>
+# else
+#  include <arpa/inet.h>
+#  include <netinet/in.h>
+#  include <sys/socket.h>
+# endif
 # include <unistd.h>
 #endif
 
@@ -887,7 +892,8 @@ static void api_request_stream_large_response_server(void)
     }
     ft_memset(body_buffer, 'A', body_size);
     pf_snprintf(header_buffer, sizeof(header_buffer),
-        "HTTP/1.1 200 OK\r\nContent-Length: %zu\r\n\r\n", body_size);
+        "HTTP/1.1 200 OK\r\nContent-Length: %llu\r\n\r\n",
+        static_cast<unsigned long long>(body_size));
     nw_send(client_fd, header_buffer, ft_strlen(header_buffer), 0);
     size_t total_sent;
 
@@ -1858,14 +1864,15 @@ FT_TEST(test_api_request_formats_large_content_length)
     ft_string expected_header;
     const char *header_pointer;
 
-    payload_size = static_cast<size_t>(static_cast<unsigned long long>(INT_MAX)) + 42;
+    payload_size = static_cast<unsigned long long>(INT_MAX) + 42ULL;
     time_sleep_ms(6000);
     if (request.initialize("POST /resource HTTP/1.1") != FT_ERR_SUCCESS)
         return (0);
     append_result = api_append_content_length_header(request, payload_size);
     if (!append_result)
         return (0);
-    expected_length = pf_snprintf(expected_buffer, sizeof(expected_buffer), "%zu", payload_size);
+    expected_length = pf_snprintf(expected_buffer, sizeof(expected_buffer), "%llu",
+        static_cast<unsigned long long>(payload_size));
     if (expected_length < 0)
         return (0);
     if (static_cast<size_t>(expected_length) >= sizeof(expected_buffer))

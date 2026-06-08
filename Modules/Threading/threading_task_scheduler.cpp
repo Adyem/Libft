@@ -1332,7 +1332,7 @@ void ft_task_scheduler::timer_loop()
                 seconds = wait_milliseconds / 1000;
                 nanoseconds = (wait_milliseconds % 1000) * 1000000;
                 wake_time.tv_sec += seconds;
-                wake_time.tv_nsec += nanoseconds;
+                wake_time.tv_nsec += static_cast<decltype(wake_time.tv_nsec)>(nanoseconds);
                 if (wake_time.tv_nsec >= 1000000000)
                 {
                     long long carry;
@@ -1562,7 +1562,7 @@ void ft_task_scheduler::timer_loop()
 
 bool ft_task_scheduler::capture_metrics(ft_task_trace_event &event) const
 {
-    pthread_t current_thread_id;
+    pt_thread_id_type current_thread_id;
     bool queue_locked;
     int queue_lock_error;
 

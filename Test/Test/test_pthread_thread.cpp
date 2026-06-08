@@ -28,7 +28,7 @@ FT_TEST(test_pt_thread_create_updates_errno)
 
     routine_started = 0;
     pthread_attr_init(&attributes);
-    huge_stack_size = static_cast<size_t>(1ULL) << 40;
+    huge_stack_size = 1ULL << 40;
     set_stack_result = pthread_attr_setstacksize(&attributes, huge_stack_size);
     FT_ASSERT_EQ(0, set_stack_result);
     failure_result = pt_thread_create(&thread, &attributes, pthread_test_routine, &routine_started);

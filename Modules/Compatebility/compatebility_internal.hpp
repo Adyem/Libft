@@ -19,12 +19,16 @@
 #if defined(_WIN32) || defined(_WIN64)
 # include <BaseTsd.h>
 # include <sys/stat.h>
+# include <winsock2.h>
 # include <windows.h>
+# ifndef _TIMEVAL_DEFINED
 struct timeval
 {
     int64_t tv_sec;
     int64_t tv_usec;
 };
+#  define _TIMEVAL_DEFINED
+# endif
 # ifndef O_DIRECTORY
 #  define O_DIRECTORY 0
 # endif
@@ -38,6 +42,7 @@ struct file_dir
     file_dirent entry;
     ft_bool closed;
 };
+HANDLE cmp_retrieve_handle(int32_t file_descriptor);
 int32_t cmp_open(const char *path_name);
 int32_t cmp_open(const char *path_name, int32_t flags);
 int32_t cmp_open(const char *path_name, int32_t flags, int32_t mode);

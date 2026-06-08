@@ -16,6 +16,98 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+# include <io.h>
+# include <direct.h>
+
+# ifndef STDIN_FILENO
+#  define STDIN_FILENO 0
+# endif
+# ifndef STDOUT_FILENO
+#  define STDOUT_FILENO 1
+# endif
+# ifndef STDERR_FILENO
+#  define STDERR_FILENO 2
+# endif
+
+# ifndef SIGIOT
+#  define SIGIOT SIGABRT
+# endif
+
+# ifndef SA_SIGINFO
+#  define SA_SIGINFO 0
+# endif
+# ifndef SA_ONSTACK
+#  define SA_ONSTACK 0
+# endif
+# ifndef SA_RESETHAND
+#  define SA_RESETHAND 0
+# endif
+
+typedef jmp_buf sigjmp_buf;
+typedef int sigset_t;
+
+# define sigsetjmp(environment, savesigs) setjmp(environment)
+# define siglongjmp(environment, value) longjmp(environment, value)
+
+struct sigaction
+{
+    void (*sa_handler)(int);
+    sigset_t sa_mask;
+    int sa_flags;
+};
+
+static int sigemptyset(sigset_t *signal_set) noexcept
+{
+    if (signal_set != nullptr)
+        *signal_set = 0;
+    return (0);
+}
+
+static int __attribute__((unused)) sigaddset(sigset_t *signal_set, int signal_number) noexcept
+{
+    (void)signal_number;
+    if (signal_set != nullptr)
+        *signal_set = 0;
+    return (0);
+}
+
+static int sigaction(int signal_number, const struct sigaction *new_action,
+    struct sigaction *old_action) noexcept
+{
+    void (*previous_handler)(int);
+
+    previous_handler = std::signal(signal_number,
+            new_action != nullptr ? new_action->sa_handler : SIG_DFL);
+    if (previous_handler == SIG_ERR)
+        return (-1);
+    if (old_action != nullptr)
+    {
+        old_action->sa_handler = previous_handler;
+        old_action->sa_mask = 0;
+        old_action->sa_flags = 0;
+    }
+    return (0);
+}
+
+# define pipe(pipe_descriptors) _pipe(pipe_descriptors, 4096, _O_BINARY)
+# define mkdir(directory_path, permissions) _mkdir(directory_path)
+
+static inline char *mkdtemp(char *directory_template) noexcept
+{
+    size_t template_length;
+
+    if (directory_template == nullptr)
+        return (nullptr);
+    template_length = std::strlen(directory_template) + 1;
+    if (_mktemp_s(directory_template, template_length) != 0)
+        return (nullptr);
+    if (_mkdir(directory_template) != 0)
+        return (nullptr);
+    return (directory_template);
+}
+#endif
+
 static thread_local sigjmp_buf g_test_abort_signal_jump_buffer __attribute__((unused));
 static volatile sig_atomic_t g_test_abort_signal_caught __attribute__((unused)) = 0;
 

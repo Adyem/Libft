@@ -131,8 +131,8 @@ int32_t cmp_time_get_time_of_day(struct timeval *time_value)
     file_time_value.LowPart = file_time.dwLowDateTime;
     file_time_value.HighPart = file_time.dwHighDateTime;
     microseconds_since_epoch = (file_time_value.QuadPart - 116444736000000000ULL) / 10ULL;
-    time_value->tv_sec = static_cast<int64_t>(microseconds_since_epoch / 1000000ULL);
-    time_value->tv_usec = static_cast<int64_t>(microseconds_since_epoch % 1000000ULL);
+    time_value->tv_sec = static_cast<decltype(time_value->tv_sec)>(microseconds_since_epoch / 1000000ULL);
+    time_value->tv_usec = static_cast<decltype(time_value->tv_usec)>(microseconds_since_epoch % 1000000ULL);
     return (FT_ERR_SUCCESS);
 #else
     if (gettimeofday(time_value, ft_nullptr) == 0)
@@ -145,6 +145,7 @@ int32_t cmp_time_get_time_of_day(struct timeval *time_value)
 #endif
 }
 
+#if !defined(_WIN32) && !defined(_WIN64)
 static int32_t cmp_timespec_to_nanoseconds(const struct timespec *time_value, int64_t *nanoseconds_out)
 {
     __int128 seconds_component;
@@ -169,6 +170,7 @@ static int32_t cmp_timespec_to_nanoseconds(const struct timespec *time_value, in
     *nanoseconds_out = static_cast<int64_t>(total_nanoseconds);
     return (FT_ERR_SUCCESS);
 }
+#endif
 
 int32_t cmp_high_resolution_time(int64_t *nanoseconds_out)
 {
@@ -179,7 +181,7 @@ int32_t cmp_high_resolution_time(int64_t *nanoseconds_out)
 #if defined(_WIN32) || defined(_WIN64)
     LARGE_INTEGER performance_counter;
     LARGE_INTEGER performance_frequency;
-    double scaled_value;
+    long double scaled_value;
 
     if (!QueryPerformanceCounter(&performance_counter))
     {
@@ -193,14 +195,14 @@ int32_t cmp_high_resolution_time(int64_t *nanoseconds_out)
     {
         return (FT_ERR_INVALID_OPERATION);
     }
-    scaled_value = static_cast<double>(performance_counter.QuadPart);
+    scaled_value = static_cast<long double>(performance_counter.QuadPart);
     scaled_value *= 1000000000.0L;
-    scaled_value /= static_cast<double>(performance_frequency.QuadPart);
-    if (scaled_value >= static_cast<double>(LLONG_MAX))
+    scaled_value /= static_cast<long double>(performance_frequency.QuadPart);
+    if (scaled_value >= static_cast<long double>(LLONG_MAX))
     {
         return (FT_ERR_OUT_OF_RANGE);
     }
-    if (scaled_value <= static_cast<double>(LLONG_MIN))
+    if (scaled_value <= static_cast<long double>(LLONG_MIN))
     {
         return (FT_ERR_OUT_OF_RANGE);
     }

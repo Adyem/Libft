@@ -302,7 +302,7 @@ ft_bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             if (notification->FileNameLength > 0)
             {
                 int32_t converted = WideCharToMultiByte(CP_UTF8, 0, notification->FileName,
-                    notification->FileNameLength / sizeof(WCHAR), event->name,
+                    static_cast<int32_t>(notification->FileNameLength / sizeof(WCHAR)), event->name,
                     static_cast<int32_t>(sizeof(event->name) - 1), ft_nullptr, ft_nullptr);
                 if (converted > 0)
                 {

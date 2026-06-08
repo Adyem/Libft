@@ -27,7 +27,7 @@ static LRESULT CALLBACK ft_render_win32_wndproc(HWND hwnd, UINT message, WPARAM 
 {
     ft_render_win32_state *state;
 
-    state = (ft_render_win32_state *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    state = reinterpret_cast<ft_render_win32_state *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     if (message == WM_CLOSE)
     {
@@ -75,7 +75,7 @@ static ft_render_platform_result ft_render_win32_create_dib(
         ft_render_platform_result result;
 
         result.error_code = FT_ERR_INITIALIZATION_FAILED;
-        result.system_error_code = (int32_t)GetLastError();
+        result.system_error_code = static_cast<int32_t>(GetLastError());
         return (result);
     }
 
@@ -84,7 +84,7 @@ static ft_render_platform_result ft_render_win32_create_dib(
 
     out_framebuffer->width = state->width;
     out_framebuffer->height = state->height;
-    out_framebuffer->pixels = (uint32_t *)pixels;
+    out_framebuffer->pixels = static_cast<uint32_t *>(pixels);
 
     return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
@@ -96,12 +96,12 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
         return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
-    out_size->width = (int32_t)GetSystemMetrics(SM_CXSCREEN);
-    out_size->height = (int32_t)GetSystemMetrics(SM_CYSCREEN);
+    out_size->width = GetSystemMetrics(SM_CXSCREEN);
+    out_size->height = GetSystemMetrics(SM_CYSCREEN);
 
     if (out_size->width <= 0 || out_size->height <= 0)
     {
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, (int32_t)GetLastError() });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, static_cast<int32_t>(GetLastError()) });
     }
 
     return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
@@ -124,7 +124,7 @@ ft_render_platform_result ft_render_platform_create_window(
         return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
-    state = (ft_render_win32_state *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ft_render_win32_state));
+    state = static_cast<ft_render_win32_state *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ft_render_win32_state)));
     if (state == NULL)
     {
         return ((ft_render_platform_result){ FT_ERR_NO_MEMORY, 0 });
@@ -148,7 +148,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result result;
 
         result.error_code = FT_ERR_INITIALIZATION_FAILED;
-        result.system_error_code = (int32_t)GetLastError();
+        result.system_error_code = static_cast<int32_t>(GetLastError());
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
     }
@@ -185,7 +185,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result result;
 
         result.error_code = FT_ERR_INITIALIZATION_FAILED;
-        result.system_error_code = (int32_t)GetLastError();
+        result.system_error_code = static_cast<int32_t>(GetLastError());
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
     }
@@ -193,7 +193,7 @@ ft_render_platform_result ft_render_platform_create_window(
     state->window_handle = hwnd;
     state->window_style = style;
 
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)state);
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(state));
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -204,7 +204,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result result;
 
         result.error_code = FT_ERR_INITIALIZATION_FAILED;
-        result.system_error_code = (int32_t)GetLastError();
+        result.system_error_code = static_cast<int32_t>(GetLastError());
         DestroyWindow(hwnd);
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
@@ -239,7 +239,7 @@ ft_render_platform_result ft_render_platform_destroy_window(
         return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
     }
 
-    state = (ft_render_win32_state *)(*platform_state);
+    state = static_cast<ft_render_win32_state *>(*platform_state);
 
     if (state->dib_section != NULL)
     {
@@ -321,15 +321,15 @@ ft_render_platform_result ft_render_platform_present(
         return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
-    state = (ft_render_win32_state *)platform_state;
+    state = static_cast<ft_render_win32_state *>(platform_state);
 
     memory_dc = CreateCompatibleDC(state->window_device_context);
     if (memory_dc == NULL)
     {
-        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, (int32_t)GetLastError() });
+        return ((ft_render_platform_result){ FT_ERR_INITIALIZATION_FAILED, static_cast<int32_t>(GetLastError()) });
     }
 
-    old_bitmap = (HBITMAP)SelectObject(memory_dc, state->dib_section);
+    old_bitmap = static_cast<HBITMAP>(SelectObject(memory_dc, state->dib_section));
     BitBlt(
         state->window_device_context,
         0,
@@ -404,7 +404,7 @@ ft_render_platform_result ft_render_platform_set_fullscreen(
         return ((ft_render_platform_result){ FT_ERR_INVALID_ARGUMENT, 0 });
     }
 
-    state = (ft_render_win32_state *)platform_state;
+    state = static_cast<ft_render_win32_state *>(platform_state);
 
     if (enabled == FT_TRUE && state->is_fullscreen == FT_FALSE)
     {

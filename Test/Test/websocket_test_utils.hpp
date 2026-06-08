@@ -12,9 +12,14 @@
 #include <unistd.h>
 #include <cstring>
 #include <cstddef>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
+#if defined(_WIN32) || defined(_WIN64)
+# include <winsock2.h>
+# include <ws2tcpip.h>
+#else
+# include <arpa/inet.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
+#endif
 
 struct websocket_server_context
 {
