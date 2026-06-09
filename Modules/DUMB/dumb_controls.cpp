@@ -1,5 +1,6 @@
 #include "dumb_controls_internal.hpp"
 
+static ft_bool g_mouse_captured = FT_TRUE;
 static ft_bool g_dumb_control_down[FT_DUMB_CONTROL_COUNT];
 static ft_bool g_dumb_control_pressed[FT_DUMB_CONTROL_COUNT];
 static ft_bool g_dumb_control_previous_down[FT_DUMB_CONTROL_COUNT];
@@ -42,6 +43,16 @@ void ft_dumb_controls_clear_test_platform_hooks(void)
     return ;
 }
 #endif
+
+void ft_dumb_controls_set_mouse_captured(ft_bool captured)
+{
+    g_mouse_captured = captured;
+}
+
+ft_bool ft_dumb_controls_get_mouse_captured(void)
+{
+    return (g_mouse_captured);
+}
 
 void ft_dumb_controls_poll(void)
 {

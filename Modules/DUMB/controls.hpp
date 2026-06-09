@@ -35,4 +35,6 @@ ft_bool ft_dumb_control_is_down(ft_dumb_control control);
 ft_bool ft_dumb_control_was_pressed(ft_dumb_control control);
 ft_dumb_mouse_delta ft_dumb_controls_mouse_delta(void);
 void    ft_dumb_controls_set_keyboard_layout(ft_dumb_keyboard_layout layout);
+void    ft_dumb_controls_set_mouse_captured(ft_bool captured);
+ft_bool ft_dumb_controls_get_mouse_captured(void);
 ft_dumb_keyboard_layout ft_dumb_controls_get_keyboard_layout(void);

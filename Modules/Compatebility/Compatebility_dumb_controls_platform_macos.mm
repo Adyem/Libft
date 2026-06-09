@@ -92,8 +92,11 @@ ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
         delta.x = static_cast<int32_t>(position.x - center.x);
         delta.y = static_cast<int32_t>(position.y - center.y);
     }
-    CGWarpMouseCursorPosition(center);
-    CGAssociateMouseAndMouseCursorPosition(true);
+    if (ft_dumb_controls_get_mouse_captured() == FT_TRUE)
+    {
+        CGWarpMouseCursorPosition(center);
+        CGAssociateMouseAndMouseCursorPosition(true);
+    }
     initialized = FT_TRUE;
     return (delta);
 }

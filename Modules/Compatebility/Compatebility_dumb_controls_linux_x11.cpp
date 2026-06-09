@@ -182,14 +182,39 @@ ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
         delta.x = current_mouse_x - g_dumb_controls_linux_previous_mouse_x;
         delta.y = current_mouse_y - g_dumb_controls_linux_previous_mouse_y;
     }
-    g_dumb_controls_linux_previous_mouse_x = current_mouse_x;
-    g_dumb_controls_linux_previous_mouse_y = current_mouse_y;
+    if (g_dumb_controls_linux_window != 0
+        && ft_dumb_controls_get_mouse_captured() == FT_TRUE)
+    {
+        XWindowAttributes win_attrs;
+        if (XGetWindowAttributes(g_dumb_controls_linux_display,
+                g_dumb_controls_linux_window, &win_attrs) != 0)
+        {
+            int cx = win_attrs.width / 2;
+            int cy = win_attrs.height / 2;
+            XWarpPointer(g_dumb_controls_linux_display, None,
+                g_dumb_controls_linux_window, 0, 0, 0, 0, cx, cy);
+            XFlush(g_dumb_controls_linux_display);
+            Window child_ret;
+            int root_cx, root_cy;
+            XTranslateCoordinates(g_dumb_controls_linux_display,
+                g_dumb_controls_linux_window,
+                DefaultRootWindow(g_dumb_controls_linux_display),
+                cx, cy, &root_cx, &root_cy, &child_ret);
+            g_dumb_controls_linux_previous_mouse_x = root_cx;
+            g_dumb_controls_linux_previous_mouse_y = root_cy;
+        }
+        else
+        {
+            g_dumb_controls_linux_previous_mouse_x = current_mouse_x;
+            g_dumb_controls_linux_previous_mouse_y = current_mouse_y;
+        }
+    }
+    else
+    {
+        g_dumb_controls_linux_previous_mouse_x = current_mouse_x;
+        g_dumb_controls_linux_previous_mouse_y = current_mouse_y;
+    }
     g_dumb_controls_linux_has_previous_mouse_position = FT_TRUE;
-#ifdef DEBUG
-    std::fprintf(stderr,
-        "[mouse-debug] poll position=%d,%d delta=%d,%d\n",
-        current_mouse_x, current_mouse_y, delta.x, delta.y);
-#endif
     return (delta);
 }
 
