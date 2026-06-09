@@ -2,9 +2,15 @@ MODULE_NAME ?= $(notdir $(CURDIR))
 TOTAL_SRCS ?= $(words $(SRCS) $(MM_SRCS))
 
 ifeq ($(OS),Windows_NT)
-    MKDIR ?= mkdir
-    RM ?= del /F /Q
-    RMDIR ?= rmdir /S /Q
+    ifneq ($(LIBFT_POSIX_SHELL),)
+        MKDIR ?= mkdir -p
+        RM ?= rm -f
+        RMDIR ?= rm -rf
+    else
+        MKDIR ?= mkdir
+        RM ?= del /F /Q
+        RMDIR ?= rmdir /S /Q
+    endif
 else
     MKDIR ?= mkdir -p
     RM ?= rm -f

@@ -23,8 +23,10 @@ The `Buffer` module provides `ft_byte_buffer`, a lifecycle-managed byte buffer w
 - `set_read_position(ft_size_t position)` - Sets the read cursor to an absolute offset.
 - `consume(ft_size_t length)` - Drops bytes from the front of the buffer.
 - `append(const void *data, ft_size_t length)` - Appends raw bytes.
+- `append_buffer(const ft_byte_buffer &other)` - Appends the stored bytes from another buffer.
 - `read(void *data, ft_size_t length)` - Copies bytes from the current read cursor and advances it.
 - `view(ft_size_t offset, ft_size_t length, const uint8_t **view_out)` - Returns a read-only pointer into a valid buffer range.
+- `shrink_to_fit()` - Releases unused capacity so the allocation matches the stored size.
 
 ### Endian-Aware Integer Helpers
 

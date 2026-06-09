@@ -76,9 +76,15 @@ int32_t         ft_strncmp(const char *string_1, const char *string_2,
                     ft_size_t maximum_length);
 int32_t         ft_memcmp(const void *pointer1, const void *pointer2, ft_size_t size);
 ft_bool         ft_constant_time_equal(const void *pointer1, const void *pointer2, ft_size_t size) noexcept;
+int32_t         ft_strcasecmp(const char *left, const char *right);
+int32_t         ft_strncasecmp(const char *left, const char *right, ft_size_t maximum_length);
+ft_bool         ft_str_starts_with(const char *string, const char *prefix);
+ft_bool         ft_str_ends_with(const char *string, const char *suffix);
+ft_bool         ft_str_contains(const char *haystack, const char *needle);
 int32_t         ft_isdigit(int32_t character);
 int32_t         ft_isalpha(int32_t character);
 int32_t         ft_isalnum(int32_t character);
+int32_t         ft_isascii(int32_t character);
 int32_t         ft_isprint(int32_t character);
 int32_t         ft_islower(int32_t character);
 int32_t         ft_isupper(int32_t character);
@@ -108,6 +114,11 @@ void            *ft_memset(void *destination, int32_t value, ft_size_t number_of
 int32_t         ft_isspace(int32_t character);
 void            ft_striteri(char *string, void (*function)(uint32_t, char *));
 ft_size_t          ft_wstrlen(const wchar_t *string);
+int32_t         ft_utf8_is_leading_byte(int32_t byte_value);
+int32_t         ft_utf8_is_trailing_byte(int32_t byte_value);
+char            *ft_strtrim_left_in_place(char *string);
+char            *ft_strtrim_right_in_place(char *string);
+char            *ft_strtrim_in_place(char *string);
 char16_t        *ft_utf8_to_utf16(const char *input, ft_size_t input_length,
                     ft_size_t *output_length_pointer);
 char32_t        *ft_utf8_to_utf32(const char *input, ft_size_t input_length,

@@ -1,3 +1,10 @@
+ifeq ($(OS),Windows_NT)
+SHELL := C:/Progra~1/Git/bin/bash.exe
+.SHELLFLAGS := -lc
+export SHELL
+export LIBFT_POSIX_SHELL := 1
+endif
+
 include ../mk/compiler_flags.mk
 include ../mk/test/config.mk
 
@@ -9,7 +16,8 @@ FORCE:
 $(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
 	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(TARGET))"
-	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../$(LIBFT_ARCHIVE) $(LDFLAGS)
+	$(file >$@.rsp,$(OBJS) ../$(LIBFT_ARCHIVE) $(LDFLAGS))
+	@$(CXX) $(CFLAGS) -o $@ @$@.rsp
 
 Basic:
 	@echo "Building basic test executable ($(TARGET))"
@@ -98,7 +106,9 @@ $(OBJDIR)/%.o: %.cpp
 	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
 		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
 		{ \
-			$(MKDIR) $(dir $@); \
+			if [ ! -d "$(dir $@)" ]; then \
+				$(MKDIR) $(dir $@); \
+			fi; \
 			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
 			built=$$(find $(OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
 			printf '        [Test] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
@@ -110,7 +120,9 @@ $(OBJDIR)/%.o: %.cpp
 		$(RM) "$$log_file"; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	else \
-		$(MKDIR) $(dir $@); \
+		if [ ! -d "$(dir $@)" ]; then \
+			$(MKDIR) $(dir $@); \
+		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
 		built=$$(find $(OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
 		printf '        [Test] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
@@ -217,13 +229,16 @@ debug: $(DEBUG_TARGET)
 $(DEBUG_TARGET): $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE)
 	@printf "Compiled debug test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
-	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE) $(LDFLAGS)
+	$(file >$@.rsp,$(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE) $(LDFLAGS))
+	@$(CXX) $(CFLAGS) -o $@ @$@.rsp
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
 	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
 		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
 		{ \
-			$(MKDIR) $(dir $@); \
+			if [ ! -d "$(dir $@)" ]; then \
+				$(MKDIR) $(dir $@); \
+			fi; \
 			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
 			built=$$(find $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
 			printf '        [Test Debug] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
@@ -235,7 +250,9 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 		$(RM) "$$log_file"; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	else \
-		$(MKDIR) $(dir $@); \
+		if [ ! -d "$(dir $@)" ]; then \
+			$(MKDIR) $(dir $@); \
+		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
 		built=$$(find $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
 		printf '        [Test Debug] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
@@ -244,13 +261,16 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 $(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
 	@printf "Compiled efficiency files (%d files)\n" $(EFF_TOTAL_SRCS)
 	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
-	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS)
+	$(file >$@.rsp,$(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS))
+	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ @$@.rsp
 
 $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
 		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
 		{ \
-			$(MKDIR) $(dir $@); \
+			if [ ! -d "$(dir $@)" ]; then \
+				$(MKDIR) $(dir $@); \
+			fi; \
 			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
 			built=$$(find $(EFFICIENCY_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
 			printf '        [Test Efficiency] Building file %s (%d/%d)\n' "$<" $$built $(EFF_TOTAL_SRCS); \
@@ -262,7 +282,9 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 		$(RM) "$$log_file"; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	else \
-		$(MKDIR) $(dir $@); \
+		if [ ! -d "$(dir $@)" ]; then \
+			$(MKDIR) $(dir $@); \
+		fi; \
 		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
 		built=$$(find $(EFFICIENCY_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
 		printf '        [Test Efficiency] Building file %s (%d/%d)\n' "$<" $$built $(EFF_TOTAL_SRCS); \

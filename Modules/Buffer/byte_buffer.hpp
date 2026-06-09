@@ -52,9 +52,11 @@ class ft_byte_buffer
         int32_t set_read_position(ft_size_t position) noexcept;
         int32_t consume(ft_size_t length) noexcept;
         int32_t append(const void *data, ft_size_t length) noexcept;
+        int32_t append_buffer(const ft_byte_buffer &other) noexcept;
         int32_t read(void *data, ft_size_t length) noexcept;
         int32_t view(ft_size_t offset, ft_size_t length,
             const uint8_t **view_out) const noexcept;
+        int32_t shrink_to_fit() noexcept;
 
         int32_t append_u8(uint8_t value) noexcept;
         int32_t append_u16_be(uint16_t value) noexcept;

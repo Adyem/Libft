@@ -16,8 +16,10 @@ SRCS := advanced_to_string.cpp \
     advanced_itoa_base.cpp \
     advanced_strjoin.cpp \
     advanced_strjoin_multiple.cpp \
+    advanced_join_format.cpp \
     advanced_substr.cpp \
     advanced_strtrim.cpp \
+    advanced_text_transform.cpp \
     advanced_split.cpp
 
 HEADERS := advanced.hpp

@@ -6,6 +6,8 @@
 #include "../Basic/basic.hpp"
 
 class ft_string;
+template <typename ElementType>
+class ft_vector;
 
 typedef uint32_t (*ft_utf8_case_hook)(uint32_t code_point);
 
@@ -44,8 +46,14 @@ char *adv_strdup(const char *string);
 char *adv_strndup(const char *string, ft_size_t maximum_length);
 char *adv_strjoin(char const *string_1, char const *string_2);
 char *adv_strjoin_multiple(int32_t count, ...);
+ft_string *adv_strjoin_vector(const ft_vector<ft_string> &strings, const char *separator);
+ft_string *adv_format_string(const char *format, ...) __attribute__((format(printf, 1, 2)));
 char *adv_substr(const char *source, uint32_t start, ft_size_t length);
 char *adv_strtrim(const char *input_string, const char *set);
+char *adv_str_to_title_case(const char *input_string);
+char *adv_str_to_snake_case(const char *input_string);
+char *adv_str_to_camel_case(const char *input_string);
+char *adv_str_normalize_whitespace(const char *input_string);
 char **adv_split(char const *string, char delimiter);
 char *adv_itoa_base(int32_t number, int32_t base);
 void *adv_memdup(const void *source, ft_size_t size);

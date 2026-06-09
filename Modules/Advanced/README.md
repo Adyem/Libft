@@ -20,6 +20,10 @@ The `Advanced` module contains allocation-returning convenience helpers built on
 - `ft_hash_string31(const ft_string &string)` - Computes the same 31-based hash for an `ft_string`.
 - `ft_span_dup(const char *buffer, ft_size_t length)` - Allocates and copies a non-null-terminated character span.
 - `ft_strmapi(const char *string, char (*function)(uint32_t, char))` - Allocates a mapped copy of a string using an index-aware callback.
+- `adv_str_to_title_case(const char *input_string)` - Allocates a title-cased copy of the input string.
+- `adv_str_to_snake_case(const char *input_string)` - Allocates a lowercase snake_case copy of the input string.
+- `adv_str_to_camel_case(const char *input_string)` - Allocates a camelCase copy of the input string.
+- `adv_str_normalize_whitespace(const char *input_string)` - Allocates a copy with whitespace collapsed to single spaces and trimmed at the ends.
 - `adv_utf16_to_utf8(const char16_t *input, ft_size_t input_length)` - Converts a UTF-16 span into an allocated UTF-8 `ft_string`.
 - `adv_utf32_to_utf8(const char32_t *input, ft_size_t input_length)` - Converts a UTF-32 span into an allocated UTF-8 `ft_string`.
 - `adv_locale_casefold(const char *input, const char *locale_name)` - Allocates a locale-aware folded string for comparisons.
@@ -28,6 +32,8 @@ The `Advanced` module contains allocation-returning convenience helpers built on
 - `adv_strndup(const char *string, ft_size_t maximum_length)` - Duplicates at most `maximum_length` bytes from a C string.
 - `adv_strjoin(char const *string_1, char const *string_2)` - Allocates the concatenation of two C strings.
 - `adv_strjoin_multiple(int32_t count, ...)` - Allocates the concatenation of `count` C strings from varargs.
+- `adv_strjoin_vector(const ft_vector<ft_string> &strings, const char *separator)` - Allocates a joined `ft_string` from a vector of strings.
+- `adv_format_string(const char *format, ...)` - Allocates an `ft_string` using `printf`-style formatting.
 - `adv_substr(const char *source, uint32_t start, ft_size_t length)` - Allocates a substring beginning at `start`.
 - `adv_strtrim(const char *input_string, const char *set)` - Allocates a copy with characters from `set` trimmed from both ends.
 - `adv_split(char const *string, char delimiter)` - Splits a string by delimiter into a null-terminated array of allocated strings.

@@ -21,6 +21,7 @@ SRCS := basic_atoi.cpp \
     basic_strstr.cpp \
     basic_strrchr.cpp \
     basic_strtok.cpp \
+    basic_string_predicates.cpp \
     basic_atol.cpp \
     basic_strtol.cpp \
     basic_strtoul.cpp \
@@ -42,6 +43,8 @@ SRCS := basic_atoi.cpp \
     basic_wstrlen.cpp \
     basic_striteri.cpp \
     basic_isspace.cpp \
+    basic_ascii_utf8_helpers.cpp \
+    basic_string_trim.cpp \
     basic_validate_int.cpp \
     basic_utf8_decode.cpp \
     basic_utf8_encode.cpp \

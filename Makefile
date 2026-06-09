@@ -151,11 +151,11 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	progress_index=$$(printf '%s\n' "$(TEST_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
 	if [ "$(LIBFT_BATCH_OUTPUT)" = "1" ]; then \
 		log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__').log"; \
-		LIBFT_PROGRESS_MODULES="$(TEST_LIBS)" mk/run_module_build.sh "$(TOTAL_TEST_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
+		LIBFT_PROGRESS_MODULES="$(TEST_LIBS)" mk/run_module_build.sh "$(TOTAL_TEST_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
 		status=$$?; \
 	else \
 		printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
-		env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
+		env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
 		status=$$?; \
 	fi; \
 	if [ $$status -ne 0 ]; then exit $$status; fi
@@ -179,11 +179,11 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 		progress_index=$$(printf '%s\n' "$(LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
 		if [ "$(LIBFT_BATCH_OUTPUT)" = "1" ]; then \
 			log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__').log"; \
-			LIBFT_PROGRESS_MODULES="$(LIBS)" mk/run_module_build.sh "$(TOTAL_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+			LIBFT_PROGRESS_MODULES="$(LIBS)" mk/run_module_build.sh "$(TOTAL_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
 		else \
 			printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_LIBS)" "$$module_path"; \
-			env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+			env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
 		fi; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
@@ -208,11 +208,11 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 		progress_index=$$(printf '%s\n' "$(DEBUG_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
 		if [ "$(LIBFT_BATCH_OUTPUT)" = "1" ]; then \
 			log_file=".libft_build_$$(printf '%s' "$$module_path" | tr '/.' '__').log"; \
-			LIBFT_PROGRESS_MODULES="$(DEBUG_LIBS)" mk/run_module_build.sh "$(TOTAL_DEBUG_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+			LIBFT_PROGRESS_MODULES="$(DEBUG_LIBS)" mk/run_module_build.sh "$(TOTAL_DEBUG_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
 		else \
 			printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
-			env MAKEFLAGS=--no-print-directory $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+			env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
 			status=$$?; \
 		fi; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \

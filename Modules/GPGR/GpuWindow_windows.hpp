@@ -5,6 +5,7 @@
 #include "gl_funcs.hpp"
 #include "../Compatebility/compatebility_dumb_controls_internal.hpp"
 #include <windows.h>
+#include <windowsx.h>
 #include <new>
 #include <cstring>
 

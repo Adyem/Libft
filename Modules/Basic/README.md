@@ -25,6 +25,11 @@ The `Basic` module provides C-style memory, string, character, numeric parsing, 
 - `ft_strnstr(const char *haystack, const char *needle, ft_size_t maximum_length)` - Finds a substring inside a bounded prefix.
 - `ft_strcmp(const char *string1, const char *string2)` - Compares two C strings.
 - `ft_strncmp(const char *string_1, const char *string_2, ft_size_t maximum_length)` - Compares bounded prefixes of two C strings.
+- `ft_strcasecmp(const char *left, const char *right)` - Compares two C strings using ASCII case folding.
+- `ft_strncasecmp(const char *left, const char *right, ft_size_t maximum_length)` - Compares bounded prefixes using ASCII case folding.
+- `ft_str_starts_with(const char *string, const char *prefix)` - Reports whether a string starts with a given prefix.
+- `ft_str_ends_with(const char *string, const char *suffix)` - Reports whether a string ends with a given suffix.
+- `ft_str_contains(const char *haystack, const char *needle)` - Reports whether a string contains a given substring.
 - `ft_locale_compare(const char *left, const char *right, const char *locale_name)` - Compares strings using locale-aware collation.
 
 ## String Copy and Append
@@ -59,10 +64,16 @@ The `Basic` module provides C-style memory, string, character, numeric parsing, 
 - `ft_isdigit(int32_t character)` - Tests for an ASCII digit.
 - `ft_isalpha(int32_t character)` - Tests for an ASCII letter.
 - `ft_isalnum(int32_t character)` - Tests for an ASCII letter or digit.
+- `ft_isascii(int32_t character)` - Tests whether a value falls within the 7-bit ASCII range.
 - `ft_isprint(int32_t character)` - Tests for a printable ASCII character.
 - `ft_islower(int32_t character)` - Tests for a lowercase ASCII letter.
 - `ft_isupper(int32_t character)` - Tests for an uppercase ASCII letter.
 - `ft_isspace(int32_t character)` - Tests for an ASCII whitespace character.
+
+## ASCII and UTF-8 Boundary Checks
+
+- `ft_utf8_is_leading_byte(int32_t byte_value)` - Reports whether a byte can start a valid UTF-8 sequence.
+- `ft_utf8_is_trailing_byte(int32_t byte_value)` - Reports whether a byte is a UTF-8 continuation byte.
 
 ## Numeric Parsing
 
@@ -79,3 +90,9 @@ The `Basic` module provides C-style memory, string, character, numeric parsing, 
 - `ft_utf8_next(const char *string, ft_size_t string_length, ft_size_t *index_pointer, uint32_t *code_point_pointer, ft_size_t *sequence_length_pointer)` - Decodes the next code point and advances the index.
 - `ft_utf8_count(const char *string, ft_size_t *code_point_count_pointer)` - Counts UTF-8 code points in a null-terminated string.
 - `ft_utf8_encode(uint32_t code_point, char *buffer, ft_size_t buffer_size, ft_size_t *encoded_length_pointer)` - Encodes one Unicode code point into UTF-8.
+
+## String Trimming
+
+- `ft_strtrim_left_in_place(char *string)` - Removes leading ASCII whitespace from a mutable string in place.
+- `ft_strtrim_right_in_place(char *string)` - Removes trailing ASCII whitespace from a mutable string in place.
+- `ft_strtrim_in_place(char *string)` - Removes leading and trailing ASCII whitespace from a mutable string in place.

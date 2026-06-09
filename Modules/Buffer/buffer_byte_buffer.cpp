@@ -489,6 +489,85 @@ int32_t ft_byte_buffer::append(const void *data, ft_size_t length) noexcept
     return (ft_byte_buffer::set_error(append_error));
 }
 
+int32_t ft_byte_buffer::append_buffer(const ft_byte_buffer &other) noexcept
+{
+    ft_byte_buffer snapshot;
+    const ft_byte_buffer *first_buffer;
+    const ft_byte_buffer *second_buffer;
+    uintptr_t this_address;
+    uintptr_t other_address;
+    ft_size_t destination_size;
+    ft_size_t source_size;
+    int32_t lock_error;
+    int32_t append_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::append_buffer");
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_byte_buffer::append_buffer",
+            "called with uninitialised source object");
+    if (&other == this)
+    {
+        append_error = snapshot.initialize(*this);
+        if (append_error != FT_ERR_SUCCESS)
+            return (ft_byte_buffer::set_error(append_error));
+        append_error = this->append_buffer(snapshot);
+        (void)snapshot.destroy();
+        return (ft_byte_buffer::set_error(append_error));
+    }
+    this_address = reinterpret_cast<uintptr_t>(this);
+    other_address = reinterpret_cast<uintptr_t>(&other);
+    if (this_address < other_address)
+    {
+        first_buffer = this;
+        second_buffer = &other;
+    }
+    else
+    {
+        first_buffer = &other;
+        second_buffer = this;
+    }
+    lock_error = first_buffer->lock_internal();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(lock_error));
+    if (second_buffer != first_buffer)
+    {
+        lock_error = second_buffer->lock_internal();
+        if (lock_error != FT_ERR_SUCCESS)
+        {
+            first_buffer->unlock_internal();
+            return (ft_byte_buffer::set_error(lock_error));
+        }
+    }
+    destination_size = this->_size;
+    source_size = other._size;
+    append_error = FT_ERR_SUCCESS;
+    if (buffer_add_overflows(destination_size, source_size) == FT_TRUE)
+        append_error = FT_ERR_OUT_OF_RANGE;
+    else
+    {
+        append_error = this->reserve_internal(destination_size + source_size);
+        if (append_error == FT_ERR_SUCCESS && source_size > 0)
+        {
+            if (other._data == ft_nullptr)
+                append_error = FT_ERR_INVALID_STATE;
+            else
+            {
+                ft_memcpy(this->_data + destination_size, other._data,
+                    source_size);
+                this->_size = destination_size + source_size;
+            }
+        }
+        else if (append_error == FT_ERR_SUCCESS)
+            this->_size = destination_size;
+    }
+    if (second_buffer != first_buffer)
+        second_buffer->unlock_internal();
+    first_buffer->unlock_internal();
+    return (ft_byte_buffer::set_error(append_error));
+}
+
 int32_t ft_byte_buffer::read(void *data, ft_size_t length) noexcept
 {
     int32_t lock_error;
@@ -502,6 +581,43 @@ int32_t ft_byte_buffer::read(void *data, ft_size_t length) noexcept
     read_error = this->read_internal(data, length);
     this->unlock_internal();
     return (ft_byte_buffer::set_error(read_error));
+}
+
+int32_t ft_byte_buffer::shrink_to_fit() noexcept
+{
+    uint8_t *new_data;
+    int32_t lock_error;
+    int32_t result;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::shrink_to_fit");
+    lock_error = this->lock_internal();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(lock_error));
+    result = FT_ERR_SUCCESS;
+    if (this->_capacity > this->_size)
+    {
+        if (this->_size == 0)
+        {
+            cma_free(this->_data);
+            this->_data = ft_nullptr;
+            this->_capacity = 0;
+        }
+        else
+        {
+            new_data = static_cast<uint8_t *>(cma_realloc(this->_data,
+                this->_size));
+            if (new_data == ft_nullptr)
+                result = FT_ERR_NO_MEMORY;
+            else
+            {
+                this->_data = new_data;
+                this->_capacity = this->_size;
+            }
+        }
+    }
+    this->unlock_internal();
+    return (ft_byte_buffer::set_error(result));
 }
 
 int32_t ft_byte_buffer::view(ft_size_t offset, ft_size_t length,

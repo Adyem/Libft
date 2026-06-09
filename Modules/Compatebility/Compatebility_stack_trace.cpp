@@ -17,10 +17,6 @@
 # include <dlfcn.h>
 #endif
 
-#if defined(_WIN32)
-extern "C" USHORT WINAPI RtlCaptureStackBackTrace(ULONG, ULONG, PVOID *, PULONG);
-#endif
-
 #if defined(__linux__)
 static ft_size_t    cmp_shell_escape_double_quotes(char *destination,
         ft_size_t capacity, const char *source)

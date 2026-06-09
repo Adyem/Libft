@@ -71,6 +71,7 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Docs/ ensures that knowledge does not live only inside source comments but is accessible through markdown that mirrors the code layout.
   The current module-to-module dependency map lives in [Docs/module_dependency_graph.md](Docs/module_dependency_graph.md).
   The coarse layer map lives in [Docs/module_layering.md](Docs/module_layering.md).
+  Candidate extension ideas for existing modules live in [Docs/module_extension_roadmap.md](Docs/module_extension_roadmap.md).
   Updating Docs/ keeps onboarding smoother and gives module authors a place to explain trade-offs or future directions.
 
 - `Encryption/`: Supplies hashing, cryptographic primitives, and key handling utilities so security-sensitive modules share consistent implementations.
@@ -191,6 +192,11 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Its goal is to offer a predictable line-editing experience that integrates with the shared allocator, logging, and error stack rules.
   ReadLine/ handles character-by-character input, history persistence, Ctrl-R search, and ranked/fuzzy autocompletion so other modules can build REPLs.
   By centralizing the interface, the rest of the project avoids duplicating interactive input handling while still enjoying consistent behavior.
+
+- `Regex/`: Provides pattern validation, full matches, substring search, replacement, and capture-span extraction for text workflows.
+  It uses standard ECMAScript regex semantics so callers can validate input, rewrite text, and inspect match groups without introducing another parser.
+  Regex/ sits between low-level string helpers and higher-level format parsers when wildcard matching is not expressive enough.
+  The module exists to cover a common text-processing primitive that many other modules can build on.
 
 - `SCMA/`: Manages shared and secure memory allocation for scenarios where control over lifetime, growth, and instrumentation matters most.
   It layers on top of CMA/ but adds access control, snapshotting, and thread-safety guarantees required for shared memory use cases.

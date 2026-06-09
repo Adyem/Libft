@@ -23,6 +23,8 @@ BASIC_TEST_FILES := \
 	Test/test_basic_striteri.cpp \
 	Test/test_basic_strlcat.cpp \
 	Test/test_basic_strlcpy.cpp \
+	Test/test_basic_ascii_utf8_trim.cpp \
+	Test/test_basic_string_predicates.cpp \
 	Test/test_basic_strlen.cpp \
 	Test/test_basic_strmapi.cpp \
 	Test/test_basic_strncmp.cpp \
@@ -64,6 +66,9 @@ CMA_TEST_FILES := \
 GET_NEXT_LINE_TEST_FILES := \
 	Test/test_get_next_line.cpp \
 	Test/test_get_next_line_strjoin.cpp
+
+BUFFER_TEST_FILES := \
+	Test/test_buffer_byte_buffer.cpp
 
 FILE_TEST_FILES := \
 	Test/test_file_copy.cpp \

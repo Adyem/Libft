@@ -1,52 +1,5 @@
 include ../../mk/compiler_flags.mk
-TARGET := Debug.a
-DEBUG_TARGET := Debug_debug.a
-
-SRCS := debug.cpp
-
-HEADERS := debug.hpp
-
-MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
-
-ifeq ($(OS),Windows_NT)
-    ifneq ($(LIBFT_POSIX_SHELL),)
-        MKDIR   = mkdir -p
-        RM      = rm -f
-        RMDIR   = rm -rf
-    else
-        MKDIR   = mkdir
-        RM      = del /F /Q
-        RMDIR   = rmdir /S /Q
-    endif
-else
-    MKDIR   = mkdir -p
-    RM      = rm -f
-    RMDIR   = rm -rf
-endif
-
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
-endif
-
-CXX       := g++
-AR        := ar
-ARFLAGS   := rcs
-
-BUILD_OBJ_SUFFIX := $(BUILD_OUTPUT_SUFFIX)
-ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
-    BUILD_OBJ_SUFFIX := _test$(BUILD_OUTPUT_SUFFIX)
-endif
-
-OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
-DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
-
-OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
-DEPS       := $(OBJS:.o=.d)
-DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+include ../../mk/modules/Regex.mk
 
 all: $(TARGET)
 
@@ -73,20 +26,6 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
-
-CLEAN_OBJS := $(shell find . -type f \( -name *.o -o -name *.d -o -name *.gcda -o -name *.gcno \) 2>/dev/null)
-CLEAN_DIRS := $(wildcard objs*)
-TEST_ARCHIVES := $(wildcard *_test.a) $(wildcard *_debug_test.a)
-GENERATED_FILES := compile_commands.json
-
-ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\,$(CLEAN_OBJS))
-    CLEAN_DIRS := $(subst /,\,$(CLEAN_DIRS))
-    FCLEAN_FILES := $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
-else
-    CLEAN_FILES := $(CLEAN_OBJS)
-    FCLEAN_FILES := $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
-endif
 
 clean:
 	@status=0; \
@@ -118,7 +57,9 @@ fclean:
 		exit 1; \
 	fi
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 both: all debug
 

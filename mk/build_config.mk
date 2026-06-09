@@ -59,6 +59,7 @@ SUBDIRS := Modules/Basic \
            Modules/System_utils \
            Modules/Printf \
            Modules/ReadLine \
+           Modules/Regex \
            Modules/PThread \
            Modules/Threading \
            Modules/CPP_class \
@@ -108,6 +109,7 @@ LIB_BASES := \
   Modules/System_utils/System_utils \
   Modules/Printf/Printf \
   Modules/ReadLine/ReadLine \
+  Modules/Regex/regex \
   Modules/PThread/PThread \
   Modules/Threading/Threading \
   Modules/CPP_class/CPP_class \
