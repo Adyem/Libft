@@ -373,6 +373,19 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
                 if (error_code != FT_ERR_SUCCESS)
                     return (error_code);
             }
+            if (column_height < TERRAIN_GENERATOR_SEA_LEVEL)
+            {
+                local_y = column_height + 1;
+                while (local_y <= TERRAIN_GENERATOR_SEA_LEVEL
+                    && local_y < GAME_VOXEL_CHUNK_HEIGHT)
+                {
+                    error_code = chunk.write_block(local_x, local_y, local_z,
+                        TERRAIN_GENERATOR_WATER_BLOCK);
+                    if (error_code != FT_ERR_SUCCESS)
+                        return (error_code);
+                    local_y += 1;
+                }
+            }
             local_x += 1;
         }
         local_z += 1;

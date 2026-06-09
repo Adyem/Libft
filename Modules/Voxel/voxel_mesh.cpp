@@ -458,12 +458,25 @@ static int32_t chunk_mesh_fill_visible_face_mask(const game_voxel_chunk &chunk,
             mask[(row_value * column_count) + column_value] = 0U;
             if (block_id != GAME_VOXEL_AIR_BLOCK)
             {
-                error_code = chunk_mesh_face_is_visible(chunk, local_x,
-                    local_y, local_z, face, &visible);
-                if (error_code != FT_ERR_SUCCESS)
-                    return (error_code);
-                if (visible == FT_TRUE)
-                    mask[(row_value * column_count) + column_value] = block_id;
+                if (terrain_block_is_liquid(block_id) == FT_FALSE
+                    || face == CHUNK_MESH_FACE_UP)
+                {
+                    error_code = chunk_mesh_face_is_visible(chunk, local_x,
+                        local_y, local_z, face, &visible);
+                    if (error_code != FT_ERR_SUCCESS)
+                        return (error_code);
+                    if (visible == FT_TRUE
+                        && terrain_block_is_liquid(block_id) == FT_TRUE)
+                    {
+                        uint32_t above_id = 0U;
+                        (void)chunk_mesh_read_or_air(chunk, local_x,
+                            local_y + 1, local_z, &above_id);
+                        if (terrain_block_is_liquid(above_id) == FT_TRUE)
+                            visible = FT_FALSE;
+                    }
+                    if (visible == FT_TRUE)
+                        mask[(row_value * column_count) + column_value] = block_id;
+                }
             }
             column_value += 1;
         }
@@ -790,12 +803,25 @@ static int32_t chunk_mesh_fill_visible_face_mask_nb(
             mask[(row_value * column_count) + column_value] = 0U;
             if (block_id != GAME_VOXEL_AIR_BLOCK)
             {
-                error_code = chunk_mesh_face_is_visible_nb(ctx, local_x,
-                    local_y, local_z, face, &visible);
-                if (error_code != FT_ERR_SUCCESS)
-                    return (error_code);
-                if (visible == FT_TRUE)
-                    mask[(row_value * column_count) + column_value] = block_id;
+                if (terrain_block_is_liquid(block_id) == FT_FALSE
+                    || face == CHUNK_MESH_FACE_UP)
+                {
+                    error_code = chunk_mesh_face_is_visible_nb(ctx, local_x,
+                        local_y, local_z, face, &visible);
+                    if (error_code != FT_ERR_SUCCESS)
+                        return (error_code);
+                    if (visible == FT_TRUE
+                        && terrain_block_is_liquid(block_id) == FT_TRUE)
+                    {
+                        uint32_t above_id = 0U;
+                        (void)chunk_mesh_read_or_air(*ctx.chunk, local_x,
+                            local_y + 1, local_z, &above_id);
+                        if (terrain_block_is_liquid(above_id) == FT_TRUE)
+                            visible = FT_FALSE;
+                    }
+                    if (visible == FT_TRUE)
+                        mask[(row_value * column_count) + column_value] = block_id;
+                }
             }
             column_value += 1;
         }

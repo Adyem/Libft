@@ -60,8 +60,8 @@ static const terrain_block_metadata TERRAIN_BLOCK_REGISTRY[] =
     {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U},
     {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U},
     {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U}
-    ,{FT_FALSE, FT_TRUE, FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, 0U}
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U},
+    {FT_FALSE, FT_TRUE, FT_TRUE, FT_TRUE, FT_FALSE, FT_FALSE, 0U}
 };
 
 static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS[] =
@@ -554,6 +554,8 @@ uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept
 {
     if (biome == TERRAIN_BIOME_DESERT)
         return (TERRAIN_GENERATOR_DIRT_BLOCK);
+    if (biome == TERRAIN_BIOME_SNOW)
+        return (TERRAIN_GENERATOR_STONE_BLOCK);
     if (biome == TERRAIN_BIOME_MOUNTAINS)
         return (TERRAIN_GENERATOR_STONE_BLOCK);
     return (TERRAIN_GENERATOR_GRASS_BLOCK);
