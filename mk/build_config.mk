@@ -90,7 +90,8 @@ SUBDIRS := Modules/Basic \
            Modules/Logger \
            Modules/Parser \
            Modules/Game \
-           Modules/Voxel
+           Modules/Voxel \
+           Modules/GPGR
 
 LIB_BASES := \
   Modules/Basic/Basic \
@@ -137,7 +138,8 @@ LIB_BASES := \
   Modules/Logger/Logger \
   Modules/Parser/parser \
   Modules/Game/Game \
-  Modules/Voxel/Voxel
+  Modules/Voxel/Voxel \
+  Modules/GPGR/GPGR
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
