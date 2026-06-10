@@ -14,6 +14,7 @@
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Advanced/advanced.hpp"
+#include "../../Modules/Compatebility/compatebility_internal.hpp"
 
 #include "../../Modules/Basic/limits.hpp"
 #include "../../Modules/PThread/mutex.hpp"
@@ -51,7 +52,7 @@ static void test_readline_suppress_stderr(int *backup_descriptor)
     if (backup_descriptor == ft_nullptr)
         return ;
     *backup_descriptor = -1;
-    null_descriptor = open("/dev/null", O_WRONLY);
+    null_descriptor = open(cmp_service_null_device_path(), O_WRONLY);
     if (null_descriptor == -1)
         return ;
     *backup_descriptor = dup(STDERR_FILENO);

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -u
 
-state_dir=".libft_progress"
-lock_dir=".libft_progress.lock"
+state_dir="Test/.libft_progress"
+lock_dir="Test/.libft_progress.lock"
 bar_width=24
 if [ -t 1 ]; then
     color_on=$'\033[1;35m'

@@ -2,6 +2,10 @@ MODULE_NAME ?= $(notdir $(CURDIR))
 TOTAL_SRCS ?= $(words $(SRCS) $(MM_SRCS))
 
 ifeq ($(OS),Windows_NT)
+    SHELL := C:/Progra~1/Git/bin/bash.exe
+    .SHELLFLAGS := -lc
+    export SHELL
+    export LIBFT_POSIX_SHELL := 1
     ifneq ($(LIBFT_POSIX_SHELL),)
         MKDIR ?= mkdir -p
         RM ?= rm -f
@@ -60,10 +64,10 @@ GENERATED_FILES ?= compile_commands.json
 FORCE:
 
 ifeq ($(OS),Windows_NT)
-    CLEAN_FILES ?= $(subst /,\\,$(CLEAN_OBJS))
+    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
     CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
-    FCLEAN_FILES ?= $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
+    FCLEAN_FILES := $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
 else
-    CLEAN_FILES ?= $(CLEAN_OBJS)
-    FCLEAN_FILES ?= $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
+    CLEAN_FILES := $(CLEAN_OBJS)
+    FCLEAN_FILES := $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
 endif

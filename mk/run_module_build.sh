@@ -12,7 +12,7 @@ fi
 
 progress_script="mk/progress.sh"
 modules=${LIBFT_PROGRESS_MODULES:-$module_path}
-status_file=".libft_build_status_$$_${progress_index}"
+status_file="Test/.libft_build_status_$$_${progress_index}"
 
 cleanup_on_interrupt() {
     "$progress_script" finish

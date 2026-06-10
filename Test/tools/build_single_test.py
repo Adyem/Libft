@@ -12,12 +12,21 @@ ROOT = Path(__file__).resolve().parents[2]
 TEST_DIR = ROOT / "Test"
 LIBFT_DIR = ROOT
 SINGLE_TEST_DIR = TEST_DIR / "single_tests"
+POSIX_SHELL = r"C:/Progra~1/Git/bin/bash.exe"
+
+
+def make_environment():
+    environment = os.environ.copy()
+    environment["SHELL"] = POSIX_SHELL
+    environment["LIBFT_POSIX_SHELL"] = "1"
+    return environment
 
 
 def run_command(command, *, cwd=None, check=True, capture_output=False):
     return subprocess.run(
         command,
         cwd=cwd,
+        env=make_environment(),
         check=check,
         text=True,
         capture_output=capture_output,
@@ -69,10 +78,10 @@ def module_sources():
 
 def existing_module_objects(objdir):
     objects = []
-    for object_path in LIBFT_DIR.glob(f"*/{objdir}/*.o"):
-        if object_path.is_relative_to(TEST_DIR):
-            continue
-        objects.append(object_path.resolve())
+    dependency_root = TEST_DIR / objdir / "module_deps"
+    if dependency_root.exists():
+        for object_path in dependency_root.rglob("*.o"):
+            objects.append(object_path.resolve())
     return objects
 
 
@@ -80,11 +89,11 @@ def build_test_object(test_source, objdir):
     main_object = TEST_DIR / objdir / "main.o"
     test_object = TEST_DIR / objdir / test_source.relative_to(TEST_DIR).with_suffix(".o")
     run_command(
-        ["make", str(main_object.relative_to(TEST_DIR))],
+        ["make", main_object.relative_to(TEST_DIR).as_posix()],
         cwd=TEST_DIR,
     )
     run_command(
-        ["make", str(test_object.relative_to(TEST_DIR))],
+        ["make", test_object.relative_to(TEST_DIR).as_posix()],
         cwd=TEST_DIR,
     )
     return [main_object, test_object]
@@ -103,8 +112,17 @@ def grep_candidate_sources(symbol_name, source_list):
     matches = []
     seen_paths = set()
     for pattern in symbol_search_patterns(symbol_name):
-        command = ["rg", "-F", "-l", pattern]
-        command.extend(str(source) for source in source_list)
+        command = [
+            "rg",
+            "-F",
+            "-l",
+            "--glob",
+            "!Test/**",
+            "--glob",
+            "!**/objs*/**",
+            pattern,
+            str(LIBFT_DIR),
+        ]
         result = run_command(command, capture_output=True, check=False)
         for line in result.stdout.splitlines():
             path = Path(line).resolve()
@@ -118,22 +136,23 @@ def grep_candidate_sources(symbol_name, source_list):
 
 def module_object_path(source_path, objdir):
     relative_path = source_path.relative_to(LIBFT_DIR)
-    module_dir = relative_path.parts[0]
     object_name = source_path.stem + ".o"
-    return LIBFT_DIR / module_dir / objdir / object_name
+    return TEST_DIR / objdir / "module_deps" / relative_path.with_suffix(".o")
 
 
 def build_module_object(source_path, objdir, compile_flags):
-    relative_path = source_path.relative_to(LIBFT_DIR)
-    module_dir = relative_path.parts[0]
     object_path = module_object_path(source_path, objdir)
+    object_path.parent.mkdir(parents=True, exist_ok=True)
     result = run_command(
         [
-            "make",
-            str(object_path.relative_to(LIBFT_DIR / module_dir)),
-            f"COMPILE_FLAGS={compile_flags}",
+            "g++",
+            *shlex.split(compile_flags),
+            "-c",
+            source_path.as_posix(),
+            "-o",
+            object_path.as_posix(),
         ],
-        cwd=LIBFT_DIR / module_dir,
+        cwd=TEST_DIR,
         check=False,
         capture_output=True,
     )
@@ -241,6 +260,11 @@ def should_resolve_symbol(symbol_name):
     )
     if symbol_name.startswith(project_prefixes):
         return True
+    if symbol_name in (
+        "history_count",
+        "ft_nullptr_instance",
+    ):
+        return True
     if "::" in symbol_name and symbol_name.startswith("ft_"):
         return True
     return False
@@ -252,8 +276,8 @@ def extract_linker_undefined_symbols(stderr_text):
 
 
 def link_single_test(binary_path, object_paths, ldflags):
-    command = ["g++", "-o", str(binary_path)]
-    command.extend(str(path) for path in object_paths)
+    command = ["g++", "-o", binary_path.as_posix()]
+    command.extend(path.as_posix() for path in object_paths)
     command.extend(shlex.split(ldflags))
     return run_command(command, capture_output=True, check=False)
 

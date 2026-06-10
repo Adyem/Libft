@@ -6,6 +6,7 @@
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread_lock_tracking.hpp"
 #include "../SCMA/SCMA.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -588,18 +589,10 @@ int32_t ft_run_registered_tests(void)
     baseline_stdin_descriptor = dup(STDIN_FILENO);
     baseline_stdout_descriptor = dup(STDOUT_FILENO);
     baseline_stderr_descriptor = dup(STDERR_FILENO);
-    #if defined(_WIN32) || defined(_WIN64)
-    null_descriptor = open("NUL", O_WRONLY);
-    #else
-    null_descriptor = open("/dev/null", O_WRONLY);
-    #endif
+    null_descriptor = open(cmp_service_null_device_path(), O_WRONLY);
     if (null_descriptor < 0)
     {
-    #if defined(_WIN32) || defined(_WIN64)
-        report_runner_failure("runner failed to open NUL before test loop");
-    #else
-        report_runner_failure("runner failed to open /dev/null before test loop");
-    #endif
+        report_runner_failure("runner failed to open null device before test loop");
         if (baseline_stdin_descriptor >= 0)
             (void)close(baseline_stdin_descriptor);
         if (baseline_stdout_descriptor >= 0)

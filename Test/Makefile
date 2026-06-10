@@ -16,8 +16,10 @@ FORCE:
 $(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
 	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(TARGET))"
-	$(file >$@.rsp,$(OBJS) ../$(LIBFT_ARCHIVE) $(LDFLAGS))
-	@$(CXX) $(CFLAGS) -o $@ @$@.rsp
+	@$(file >$@.rsp,$(OBJS) ../$(LIBFT_ARCHIVE))
+	@$(RM) $@
+	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
+	@$(RM) $@.rsp
 
 Basic:
 	@echo "Building basic test executable ($(TARGET))"
@@ -229,8 +231,10 @@ debug: $(DEBUG_TARGET)
 $(DEBUG_TARGET): $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE)
 	@printf "Compiled debug test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
-	$(file >$@.rsp,$(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE) $(LDFLAGS))
-	@$(CXX) $(CFLAGS) -o $@ @$@.rsp
+	@$(file >$@.rsp,$(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE))
+	@$(RM) $@
+	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
+	@$(RM) $@.rsp
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
 	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
@@ -261,8 +265,10 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 $(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
 	@printf "Compiled efficiency files (%d files)\n" $(EFF_TOTAL_SRCS)
 	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
-	$(file >$@.rsp,$(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS))
-	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ @$@.rsp
+	@$(file >$@.rsp,$(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE))
+	@$(RM) $@
+	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
+	@$(RM) $@.rsp
 
 $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
@@ -350,7 +356,14 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 clean:
 	@echo "Cleaning test objects"
 	@status=0; \
-	if ! $(RM) $(CLEAN_FILES) $(LIBFT_TEST_OUTPUT_LOGS); then \
+	for build_dir in objs*; do \
+		if [ -d "$$build_dir" ]; then \
+			if ! find "$$build_dir" -type f \( -name '*.o' -o -name '*.d' -o -name '*.gcda' -o -name '*.gcno' \) -delete 2>/dev/null; then \
+				status=1; \
+			fi; \
+		fi; \
+	done; \
+	if ! $(RM) $(LIBFT_TEST_OUTPUT_LOGS); then \
 	        status=1; \
 	fi; \
 	if ! $(RMDIR) $(CLEAN_DIRS) $(LIBFT_TEST_OUTPUT_LOCK); then \
@@ -359,8 +372,8 @@ clean:
 	if [ $$status -ne 0 ]; then \
 	        echo "Clean failed"; \
 	        exit 1; \
-	fi; \
-	echo "Clean completed successfully"
+	fi
+	@echo "Clean completed successfully"
 
 fclean: clean
 	@echo "Removing test artifacts"
@@ -376,8 +389,8 @@ fclean: clean
 	if [ $$status -ne 0 ]; then \
 		echo "Full clean failed"; \
 		exit 1; \
-	fi; \
-	echo "Full clean completed successfully"
+	fi
+	@echo "Full clean completed successfully"
 
 re:
 	@$(MAKE) fclean

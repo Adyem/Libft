@@ -10,6 +10,10 @@ MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
 ifeq ($(OS),Windows_NT)
+    SHELL := C:/Progra~1/Git/bin/bash.exe
+    .SHELLFLAGS := -lc
+    export SHELL
+    export LIBFT_POSIX_SHELL := 1
     ifneq ($(LIBFT_POSIX_SHELL),)
         MKDIR   = mkdir -p
         RM      = rm -f

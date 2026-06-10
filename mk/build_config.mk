@@ -26,10 +26,17 @@ endif
 
 SUBMAKE_OVERRIDES ?=
 
-TEMP_DIRS := temp_objs temp_objs_test .libft_output_lock .libft_progress .libft_progress.lock
-OUTPUT_LOGS := .libft_build_*.log .libft_build_status_*
+TEMP_DIRS := temp_objs temp_objs_test Test/.libft_output_lock Test/.libft_progress Test/.libft_progress.lock
+OUTPUT_LOGS := Test/.libft_build_*.log Test/.libft_build_status_*
 
 ifeq ($(OS),Windows_NT)
+    ifeq ($(strip $(LIBFT_POSIX_SHELL)),)
+        ifneq ($(findstring bash,$(SHELL)),)
+            LIBFT_POSIX_SHELL := 1
+        else ifneq ($(findstring sh,$(SHELL)),)
+            LIBFT_POSIX_SHELL := 1
+        endif
+    endif
     ifneq ($(LIBFT_POSIX_SHELL),)
         MKDIR  = mkdir -p
         RM     = rm -f
@@ -152,8 +159,8 @@ TOTAL_TEST_LIBS := $(words $(TEST_LIBS))
 
 TARGET        := Full_Libft.a
 DEBUG_TARGET  := Full_Libft_debug.a
-TEST_TARGET   := Full_Libft_test.a
-TEST_DEBUG_TARGET := Full_Libft_test_debug.a
+TEST_TARGET   := Test/Full_Libft_test.a
+TEST_DEBUG_TARGET := Test/Full_Libft_test_debug.a
 
 CPP_CLASS_LIB := Modules/CPP_class/CPP_class.a
 

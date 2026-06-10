@@ -4,6 +4,7 @@
 
 #include "../../Modules/PThread/mutex.hpp"
 #include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Compatebility/compatebility_internal.hpp"
 #ifndef LIBFT_TEST_BUILD
 #endif
 
@@ -17,7 +18,7 @@ int test_efficiency_printf(void) {
   unsigned hex = 0x2a;
   volatile int sink = 0;
 
-  FILE *devnull = std::fopen("/dev/null", "w");
+  FILE *devnull = std::fopen(cmp_service_null_device_path(), "w");
   if (!devnull)
     return (0);
 
