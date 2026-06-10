@@ -5,11 +5,11 @@ OPT_LEVEL ?= 0
 ifeq ($(OPT_LEVEL),0)
     OPT_FLAGS = -O0 -g
 else ifeq ($(OPT_LEVEL),1)
-    OPT_FLAGS = -O1 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    OPT_FLAGS = -O1 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
 else ifeq ($(OPT_LEVEL),2)
-    OPT_FLAGS = -O2 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    OPT_FLAGS = -O2 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
 else ifeq ($(OPT_LEVEL),3)
-    OPT_FLAGS = -O3 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    OPT_FLAGS = -O3 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
 else
     $(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
