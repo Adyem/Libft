@@ -77,8 +77,10 @@ static int sigaction(int signal_number, const struct sigaction *new_action,
 {
     void (*previous_handler)(int);
 
-    previous_handler = std::signal(signal_number,
-            new_action != nullptr ? new_action->sa_handler : SIG_DFL);
+    if (new_action != nullptr)
+        previous_handler = std::signal(signal_number, new_action->sa_handler);
+    else
+        previous_handler = std::signal(signal_number, SIG_DFL);
     if (previous_handler == SIG_ERR)
         return (-1);
     if (old_action != nullptr)

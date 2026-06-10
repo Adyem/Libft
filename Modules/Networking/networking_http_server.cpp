@@ -616,7 +616,7 @@ int32_t ft_http_server::run_once_locked()
             should_keep_alive = FT_FALSE;
         if (is_post && !body.empty())
         {
-            std::snprintf(buffer, sizeof(buffer), "%llu",
+            std::snprintf(buffer, sizeof(buffer), "%zu",
                 body.size());
             response.append("HTTP/1.1 200 OK\r\nContent-Length: ");
             response.append(buffer);
@@ -708,17 +708,6 @@ int32_t ft_http_server::run_once_locked()
             break ;
         else if (connection_active == FT_FALSE)
             break ;
-        if (networking_check_socket_after_send(client_socket) != 0)
-        {
-            nw_close(client_socket);
-            overall_result = 1;
-            last_error_code = FT_ERR_SOCKET_SEND_FAILED;
-            request_result = 1;
-            if (metrics_enabled != FT_FALSE)
-                http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, last_error_code, request_start_time);
-            connection_active = FT_FALSE;
-            break ;
-        }
         status_code_value = 200;
         request_result = 0;
         if (metrics_enabled != FT_FALSE)

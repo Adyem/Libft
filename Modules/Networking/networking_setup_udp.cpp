@@ -247,14 +247,21 @@ int32_t udp_socket::configure_address(const SocketConfig &config)
 int32_t udp_socket::bind_socket(const SocketConfig &config)
 {
     int32_t reuse_option;
+    socklen_t address_length;
 
     reuse_option = 1;
     if (config._type != SocketType::SERVER)
         return (FT_ERR_SUCCESS);
     if (setsockopt_reuse(this->_socket_fd, reuse_option) != FT_ERR_SUCCESS)
         return (FT_ERR_CONFIGURATION);
+    if (config._address_family == AF_INET)
+        address_length = sizeof(struct sockaddr_in);
+    else if (config._address_family == AF_INET6)
+        address_length = sizeof(struct sockaddr_in6);
+    else
+        return (FT_ERR_CONFIGURATION);
     if (nw_bind(this->_socket_fd, reinterpret_cast<const struct sockaddr *>(&this->_address),
-            sizeof(this->_address)) < 0)
+            address_length) < 0)
         return (FT_ERR_SOCKET_BIND_FAILED);
     return (FT_ERR_SUCCESS);
 }

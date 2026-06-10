@@ -51,7 +51,11 @@ static const char *ft_test_value_to_string(char *buffer, ft_size_t buffer_size,
     const ValueType &value)
 {
     if constexpr (std::is_same<typename std::decay<ValueType>::type, bool>::value)
-        return (value ? "true" : "false");
+    {
+        if (value)
+            return ("true");
+        return ("false");
+    }
     else if constexpr (std::is_same<typename std::decay<ValueType>::type, ft_nullptr_t>::value)
         return ("ft_nullptr");
     else if constexpr (std::is_enum<typename std::decay<ValueType>::type>::value)

@@ -51,17 +51,35 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
     if (control == FT_DUMB_CONTROL_BOOST)
         return (dumb_controls_macos_key_is_down(11U, 0U, FT_FALSE));
     if (control == FT_DUMB_CONTROL_MOUSE_PRIMARY)
-        return (CGEventSourceButtonState(
+    {
+        if (CGEventSourceButtonState(
             kCGEventSourceStateCombinedSessionState,
-            kCGMouseButtonLeft) != 0 ? FT_TRUE : FT_FALSE);
+            kCGMouseButtonLeft) != 0)
+        {
+            return (FT_TRUE);
+        }
+        return (FT_FALSE);
+    }
     if (control == FT_DUMB_CONTROL_MOUSE_SECONDARY)
-        return (CGEventSourceButtonState(
+    {
+        if (CGEventSourceButtonState(
             kCGEventSourceStateCombinedSessionState,
-            kCGMouseButtonRight) != 0 ? FT_TRUE : FT_FALSE);
+            kCGMouseButtonRight) != 0)
+        {
+            return (FT_TRUE);
+        }
+        return (FT_FALSE);
+    }
     if (control == FT_DUMB_CONTROL_MOUSE_TERTIARY)
-        return (CGEventSourceButtonState(
+    {
+        if (CGEventSourceButtonState(
             kCGEventSourceStateCombinedSessionState,
-            kCGMouseButtonCenter) != 0 ? FT_TRUE : FT_FALSE);
+            kCGMouseButtonCenter) != 0)
+        {
+            return (FT_TRUE);
+        }
+        return (FT_FALSE);
+    }
     return (FT_FALSE);
 }
 

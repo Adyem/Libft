@@ -871,8 +871,6 @@ int32_t http_client_send_plain_request(int32_t socket_fd, const char *buffer, ft
         }
         total_sent += static_cast<ft_size_t>(send_result);
     }
-    if (networking_check_socket_after_send(socket_fd) != 0)
-        return (FT_ERR_INVALID_OPERATION);
     return (FT_ERR_SUCCESS);
 }
 

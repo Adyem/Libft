@@ -88,9 +88,9 @@ bool GpuWindowLinux::initialize(const char *title, int width, int height,
         return (false);
     }
 
-    _width  = fullscreen ? static_cast<int>(DisplayWidth(_display,  screen))
+    _width  = fullscreen ? DisplayWidth(_display, screen)
                          : width;
-    _height = fullscreen ? static_cast<int>(DisplayHeight(_display, screen))
+    _height = fullscreen ? DisplayHeight(_display, screen)
                          : height;
 
     XSetWindowAttributes swa;
@@ -187,7 +187,7 @@ bool GpuWindowLinux::initialize(const char *title, int width, int height,
 
     ft_dumb_controls_linux_register_window(
         static_cast<void *>(_display),
-        static_cast<unsigned long>(_window));
+        _window);
 
     return (true);
 }
@@ -198,7 +198,7 @@ void GpuWindowLinux::destroy() noexcept
         return ;
     if (_window != 0)
         ft_dumb_controls_linux_unregister_window(
-            static_cast<unsigned long>(_window));
+            _window);
     if (_grab_active)
     {
         XUngrabPointer(_display, CurrentTime);

@@ -44,7 +44,10 @@ class GpuWindowWindows : public GpuWindow
         {
             if (_cursor_visible == visible)
                 return ;
-            ShowCursor(visible ? TRUE : FALSE);
+            if (visible)
+                ShowCursor(TRUE);
+            else
+                ShowCursor(FALSE);
             _cursor_visible = visible;
         }
         bool was_settings_key_pressed() const noexcept override
@@ -151,7 +154,12 @@ bool GpuWindowWindows::initialize(const char *title, int width, int height,
     if (RegisterClassA(&wc) == 0 && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
         return (false);
 
-    DWORD style = fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+    DWORD style;
+
+    if (fullscreen)
+        style = WS_POPUP;
+    else
+        style = WS_OVERLAPPEDWINDOW;
     RECT rect = {0, 0, width, height};
     AdjustWindowRect(&rect, style, FALSE);
 

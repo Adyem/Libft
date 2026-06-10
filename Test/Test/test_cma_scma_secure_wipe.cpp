@@ -82,9 +82,8 @@ static int32_t runtime_write_source_file(const char *source_path,
     if (source_file == ft_nullptr)
         return (0);
     source_length = ft_strlen_size_t(source_code);
-    write_count = std::fwrite(source_code, 1,
-            static_cast<std::size_t>(source_length), source_file);
-    if (write_count != static_cast<std::size_t>(source_length))
+    write_count = std::fwrite(source_code, 1, source_length, source_file);
+    if (write_count != source_length)
     {
         (void)std::fclose(source_file);
         return (0);

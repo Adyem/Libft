@@ -506,8 +506,8 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
                 != static_cast<int32_t>(std::errc::not_a_directory))
         {
             cmp_set_error_code(error_code_out,
-                cmp_map_system_error_to_ft(directory_error_code.value()));
-            return (cmp_map_system_error_to_ft(directory_error_code.value()));
+                cmp_file_error_to_errno(directory_error_code.value()));
+            return (cmp_file_error_to_errno(directory_error_code.value()));
         }
         if (destination_is_directory != FT_FALSE)
         {
@@ -527,15 +527,15 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
             std::error_code remove_error_code;
 
             std::filesystem::remove(destination_path, remove_error_code);
-            cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(delete_errno));
-            return (cmp_map_system_error_to_ft(delete_errno));
+            cmp_set_error_code(error_code_out, cmp_file_error_to_errno(delete_errno));
+            return (cmp_file_error_to_errno(delete_errno));
         }
         if (copy_error_code.value() != 0)
         {
             int32_t copy_value;
 
             copy_value = copy_error_code.value();
-            cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(copy_value));
+            cmp_set_error_code(error_code_out, cmp_file_error_to_errno(copy_value));
         }
     }
     catch (const std::bad_alloc &)
@@ -553,8 +553,10 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
 
 int32_t cmp_file_copy(const char *source_path, const char *destination_path, int32_t *error_code_out)
 {
+    std::error_code directory_error_code;
     std::error_code copy_error_code;
     int32_t error_code;
+    ft_bool destination_is_directory;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
@@ -564,6 +566,24 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
     }
     try
     {
+        destination_is_directory = std::filesystem::is_directory(destination_path,
+            directory_error_code);
+        if (directory_error_code.value() == 0
+            && destination_is_directory != FT_FALSE)
+        {
+            cmp_set_error_code(error_code_out, FT_ERR_INVALID_OPERATION);
+            return (FT_ERR_INVALID_OPERATION);
+        }
+        if (directory_error_code.value() != 0
+            && directory_error_code.value()
+                != static_cast<int32_t>(std::errc::not_a_directory)
+            && directory_error_code.value()
+                != static_cast<int32_t>(std::errc::no_such_file_or_directory))
+        {
+            error_code = cmp_file_error_to_errno(directory_error_code.value());
+            cmp_set_error_code(error_code_out, error_code);
+            return (error_code);
+        }
         std::filesystem::copy_file(source_path, destination_path,
             std::filesystem::copy_options::overwrite_existing, copy_error_code);
         if (copy_error_code.value() == 0)
@@ -576,7 +596,7 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
             int32_t copy_value;
 
             copy_value = copy_error_code.value();
-            error_code = cmp_map_system_error_to_ft(copy_value);
+            error_code = cmp_file_error_to_errno(copy_value);
             cmp_set_error_code(error_code_out, error_code);
             return (error_code);
         }

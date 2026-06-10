@@ -81,7 +81,17 @@ FT_TEST(test_adv_format_string_formats_allocated_string)
 
 FT_TEST(test_adv_format_string_null_format_returns_null)
 {
-    FT_ASSERT_EQ(ft_nullptr, adv_format_string(ft_nullptr));
+    ft_string *formatted_string;
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+#endif
+    formatted_string = adv_format_string(ft_nullptr);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+    FT_ASSERT_EQ(ft_nullptr, formatted_string);
     return (1);
 }
 

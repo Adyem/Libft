@@ -466,12 +466,7 @@ static ft_bool api_http_send_request(ft_socket &socket_wrapper,
     sent = socket_wrapper.send_all(request.c_str(), request.size());
     if (sent < 0)
     {
-        if (FT_ERR_SUCCESS)
-            error_code = FT_ERR_SUCCESS;
-        else if (FT_FALSE)
-            error_code = FT_ERR_SUCCESS;
-        else
-            error_code = FT_ERR_IO;
+        error_code = FT_ERR_IO;
         return (FT_FALSE);
     }
     return (FT_TRUE);
@@ -494,12 +489,7 @@ static ft_bool api_http_socket_send_callback(const char *data_pointer,
     sent_bytes = socket_pointer->send_all(data_pointer, data_length);
     if (sent_bytes < 0)
     {
-        if (FT_ERR_SUCCESS)
-            error_code = FT_ERR_SUCCESS;
-        else if (FT_FALSE)
-            error_code = FT_ERR_SUCCESS;
-        else
-            error_code = FT_ERR_IO;
+        error_code = FT_ERR_IO;
         return (FT_FALSE);
     }
     return (FT_TRUE);
@@ -1222,15 +1212,18 @@ static char *api_http_execute_plain_once(
     ft_bool skip_send)
 {
     ft_socket &socket_wrapper = connection_handle.socket;
+    ft_bool should_skip_send;
 
-    if (skip_send && !prefetched_response)
+    should_skip_send = skip_send;
+    if (should_skip_send != FT_FALSE)
+    {
+        if (prefetched_response == ft_nullptr
+            || prefetched_response->size() == 0)
+            should_skip_send = FT_FALSE;
+    }
+    if (should_skip_send != FT_FALSE && !prefetched_response)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
-    }
-    if (FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
         return (ft_nullptr);
     }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
@@ -1257,7 +1250,7 @@ static char *api_http_execute_plain_once(
 
     send_failed = FT_FALSE;
     send_error_code = FT_ERR_SUCCESS;
-    if (!skip_send)
+    if (!should_skip_send)
     {
         ft_string request;
 
@@ -1412,11 +1405,6 @@ static ft_bool api_http_execute_plain_streaming_once(
     ft_socket &socket_wrapper = connection_handle.socket;
 
     connection_close = FT_FALSE;
-    if (FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (FT_FALSE);
-    }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
     {
 #ifdef _WIN32
@@ -1630,11 +1618,6 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         error_code = FT_ERR_UNSUPPORTED_TYPE;
         return (FT_FALSE);
     }
-    if (FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (FT_FALSE);
-    }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
     {
 #ifdef _WIN32
@@ -1658,21 +1641,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (FT_ERR_SUCCESS)
-        {
-            error_code = FT_ERR_SUCCESS;
-            if (error_code == FT_ERR_IO)
-                error_code = FT_ERR_SOCKET_SEND_FAILED;
-        }
-        else if (FT_FALSE)
-        {
-            error_code = FT_ERR_SUCCESS;
-            if (error_code == FT_ERR_IO)
-                error_code = FT_ERR_SOCKET_SEND_FAILED;
-        }
-        else
-            error_code = FT_ERR_SOCKET_SEND_FAILED;
-        if (error_code == FT_ERR_SOCKET_SEND_FAILED)
+        error_code = FT_ERR_SOCKET_SEND_FAILED;
         api_connection_pool_evict(connection_handle);
         return (FT_FALSE);
     }
@@ -1698,13 +1667,6 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         return (FT_FALSE);
     }
     settings_frame.clear_payload();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        api_connection_pool_disable_store(connection_handle);
-        error_code = FT_ERR_SUCCESS;
-        api_connection_pool_evict(connection_handle);
-        return (FT_FALSE);
-    }
     if (!http2_encode_frame(settings_frame, encoded_frame, error_code))
     {
         api_connection_pool_disable_store(connection_handle);
@@ -1717,12 +1679,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (FT_ERR_SUCCESS)
-            error_code = FT_ERR_SUCCESS;
-        else if (FT_FALSE)
-            error_code = FT_ERR_SUCCESS;
-        else
-            error_code = FT_ERR_SOCKET_SEND_FAILED;
+        error_code = FT_ERR_SOCKET_SEND_FAILED;
         api_connection_pool_evict(connection_handle);
         return (FT_FALSE);
     }
@@ -1748,12 +1705,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         if (received_bytes <= 0)
         {
             api_connection_pool_disable_store(connection_handle);
-            if (FT_ERR_SUCCESS)
-                error_code = FT_ERR_SUCCESS;
-            else if (FT_FALSE)
-                error_code = FT_ERR_SUCCESS;
-            else
-                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+            error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
             api_connection_pool_evict(connection_handle);
             return (FT_FALSE);
         }
@@ -1874,13 +1826,6 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                             return (FT_FALSE);
                         }
                         ack_frame.clear_payload();
-                        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-                        {
-                            api_connection_pool_disable_store(connection_handle);
-                            error_code = FT_ERR_SUCCESS;
-                            api_connection_pool_evict(connection_handle);
-                            return (FT_FALSE);
-                        }
                         if (!http2_encode_frame(ack_frame, ack_encoded, error_code))
                         {
                             api_connection_pool_disable_store(connection_handle);
@@ -1893,12 +1838,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                         if (ack_bytes < 0)
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            if (FT_ERR_SUCCESS)
-                                error_code = FT_ERR_SUCCESS;
-                            else if (FT_FALSE)
-                                error_code = FT_ERR_SUCCESS;
-                            else
-                                error_code = FT_ERR_SOCKET_SEND_FAILED;
+                            error_code = FT_ERR_SOCKET_SEND_FAILED;
                             api_connection_pool_evict(connection_handle);
                             return (FT_FALSE);
                         }
@@ -1973,50 +1913,30 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
         authority_value = host;
     if (!header_entry.assign_from_cstr(":method", method))
     {
-        error_code = FT_ERR_SUCCESS;
+        error_code = FT_ERR_IO;
         return (FT_FALSE);
     }
     request_headers.push_back(header_entry);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (FT_FALSE);
-    }
     if (!header_entry.assign_from_cstr(":path", path))
     {
-        error_code = FT_ERR_SUCCESS;
+        error_code = FT_ERR_IO;
         return (FT_FALSE);
     }
     request_headers.push_back(header_entry);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (FT_FALSE);
-    }
     if (!header_entry.assign_from_cstr(":scheme", "http"))
     {
-        error_code = FT_ERR_SUCCESS;
+        error_code = FT_ERR_IO;
         return (FT_FALSE);
     }
     request_headers.push_back(header_entry);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (FT_FALSE);
-    }
     if (authority_value && authority_value[0] != '\0')
     {
         if (!header_entry.assign_from_cstr(":authority", authority_value))
         {
-            error_code = FT_ERR_SUCCESS;
+            error_code = FT_ERR_IO;
             return (FT_FALSE);
         }
         request_headers.push_back(header_entry);
-        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-        {
-            error_code = FT_ERR_SUCCESS;
-            return (FT_FALSE);
-        }
     }
     if (headers && headers[0])
     {
@@ -2068,15 +1988,10 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             {
                 if (!header_entry.assign(header_name, header_value))
                 {
-                    error_code = FT_ERR_SUCCESS;
+                    error_code = FT_ERR_IO;
                     return (FT_FALSE);
                 }
                 request_headers.push_back(header_entry);
-                if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-                {
-                    error_code = FT_ERR_SUCCESS;
-                    return (FT_FALSE);
-                }
             }
             while (header_cursor[index] == '\r' || header_cursor[index] == '\n')
                 index++;
@@ -2123,12 +2038,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (FT_ERR_SUCCESS)
-            error_code = FT_ERR_SUCCESS;
-        else if (FT_FALSE)
-            error_code = FT_ERR_SUCCESS;
-        else
-            error_code = FT_ERR_SOCKET_SEND_FAILED;
+        error_code = FT_ERR_SOCKET_SEND_FAILED;
         api_connection_pool_evict(connection_handle);
         return (FT_FALSE);
     }
@@ -2288,18 +2198,11 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                     if (!ack_frame.set_stream_identifier(0))
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        error_code = FT_ERR_SUCCESS;
+                        error_code = FT_ERR_IO;
                         api_connection_pool_evict(connection_handle);
                         return (FT_FALSE);
                     }
                     ack_frame.clear_payload();
-                    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-                    {
-                        api_connection_pool_disable_store(connection_handle);
-                        error_code = FT_ERR_SUCCESS;
-                        api_connection_pool_evict(connection_handle);
-                        return (FT_FALSE);
-                    }
                     if (!http2_encode_frame(ack_frame, ack_buffer, error_code))
                     {
                         api_connection_pool_disable_store(connection_handle);
@@ -2312,12 +2215,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                     if (ack_sent_bytes < 0)
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        if (FT_ERR_SUCCESS)
-                            error_code = FT_ERR_SUCCESS;
-                        else if (FT_FALSE)
-                            error_code = FT_ERR_SUCCESS;
-                        else
-                            error_code = FT_ERR_SOCKET_SEND_FAILED;
+                        error_code = FT_ERR_SOCKET_SEND_FAILED;
                         api_connection_pool_evict(connection_handle);
                         return (FT_FALSE);
                     }
@@ -2387,12 +2285,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                     if (ping_sent_bytes < 0)
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        if (FT_ERR_SUCCESS)
-                            error_code = FT_ERR_SUCCESS;
-                        else if (FT_FALSE)
-                            error_code = FT_ERR_SUCCESS;
-                        else
-                            error_code = FT_ERR_SOCKET_SEND_FAILED;
+                        error_code = FT_ERR_SOCKET_SEND_FAILED;
                         api_connection_pool_evict(connection_handle);
                         return (FT_FALSE);
                     }
@@ -2445,13 +2338,6 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                     ft_size_t header_index;
 
                     header_count = response_headers.size();
-                    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-                    {
-                        api_connection_pool_disable_store(connection_handle);
-                        error_code = FT_ERR_SUCCESS;
-                        api_connection_pool_evict(connection_handle);
-                        return (FT_FALSE);
-                    }
                     header_index = 0;
                     while (header_index < header_count)
                     {
@@ -2461,24 +2347,17 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
                         const char *name_cstr;
                         const char *value_cstr;
 
-                        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-                        {
-                            api_connection_pool_disable_store(connection_handle);
-                            error_code = FT_ERR_SUCCESS;
-                            api_connection_pool_evict(connection_handle);
-                            return (FT_FALSE);
-                        }
                         if (!response_entry.copy_name(name_copy))
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            error_code = FT_ERR_SUCCESS;
+                            error_code = FT_ERR_IO;
                             api_connection_pool_evict(connection_handle);
                             return (FT_FALSE);
                         }
                         if (!response_entry.copy_value(value_copy))
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            error_code = FT_ERR_SUCCESS;
+                            error_code = FT_ERR_IO;
                             api_connection_pool_evict(connection_handle);
                             return (FT_FALSE);
                         }
@@ -2656,12 +2535,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
             if (received_bytes <= 0)
             {
                 api_connection_pool_disable_store(connection_handle);
-                if (FT_ERR_SUCCESS)
-                    error_code = FT_ERR_SUCCESS;
-                else if (FT_FALSE)
-                    error_code = FT_ERR_SUCCESS;
-                else
-                    error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
                 api_connection_pool_evict(connection_handle);
                 return (FT_FALSE);
             }
@@ -3032,11 +2906,6 @@ static char *api_http_execute_plain_http2_once(
     (void)headers;
     (void)status;
     (void)port;
-    if (FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (ft_nullptr);
-    }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
     {
 #ifdef _WIN32
@@ -3075,21 +2944,7 @@ static char *api_http_execute_plain_http2_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (FT_ERR_SUCCESS)
-        {
-            error_code = FT_ERR_SUCCESS;
-            if (error_code == FT_ERR_IO)
-                error_code = FT_ERR_SOCKET_SEND_FAILED;
-        }
-        else if (FT_FALSE)
-        {
-            error_code = FT_ERR_SUCCESS;
-            if (error_code == FT_ERR_IO)
-                error_code = FT_ERR_SOCKET_SEND_FAILED;
-        }
-        else
-            error_code = FT_ERR_SOCKET_SEND_FAILED;
-        if (error_code == FT_ERR_SOCKET_SEND_FAILED)
+        error_code = FT_ERR_SOCKET_SEND_FAILED;
         api_connection_pool_evict(connection_handle);
         return (ft_nullptr);
     }
@@ -3115,13 +2970,6 @@ static char *api_http_execute_plain_http2_once(
         return (ft_nullptr);
     }
     settings_frame.clear_payload();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        api_connection_pool_disable_store(connection_handle);
-        error_code = FT_ERR_SUCCESS;
-        api_connection_pool_evict(connection_handle);
-        return (ft_nullptr);
-    }
     if (!http2_encode_frame(settings_frame, encoded_frame, error_code))
     {
         api_connection_pool_disable_store(connection_handle);
@@ -3134,12 +2982,7 @@ static char *api_http_execute_plain_http2_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (FT_ERR_SUCCESS)
-            error_code = FT_ERR_SUCCESS;
-        else if (FT_FALSE)
-            error_code = FT_ERR_SUCCESS;
-        else
-            error_code = FT_ERR_SOCKET_SEND_FAILED;
+        error_code = FT_ERR_SOCKET_SEND_FAILED;
         api_connection_pool_evict(connection_handle);
         return (ft_nullptr);
     }
@@ -3165,12 +3008,7 @@ static char *api_http_execute_plain_http2_once(
         if (received_bytes <= 0)
         {
             api_connection_pool_disable_store(connection_handle);
-            if (FT_ERR_SUCCESS)
-                error_code = FT_ERR_SUCCESS;
-            else if (FT_FALSE)
-                error_code = FT_ERR_SUCCESS;
-            else
-                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+            error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
             api_connection_pool_evict(connection_handle);
             return (ft_nullptr);
         }
@@ -3275,13 +3113,6 @@ static char *api_http_execute_plain_http2_once(
                             return (ft_nullptr);
                         }
                         ack_frame.clear_payload();
-                        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-                        {
-                            api_connection_pool_disable_store(connection_handle);
-                            error_code = FT_ERR_SUCCESS;
-                            api_connection_pool_evict(connection_handle);
-                            return (ft_nullptr);
-                        }
                         if (!http2_encode_frame(ack_frame, ack_encoded, error_code))
                         {
                             api_connection_pool_disable_store(connection_handle);
@@ -3294,12 +3125,7 @@ static char *api_http_execute_plain_http2_once(
                         if (ack_bytes < 0)
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            if (FT_ERR_SUCCESS)
-                                error_code = FT_ERR_SUCCESS;
-                            else if (FT_FALSE)
-                                error_code = FT_ERR_SUCCESS;
-                            else
-                                error_code = FT_ERR_SOCKET_SEND_FAILED;
+                            error_code = FT_ERR_SOCKET_SEND_FAILED;
                             api_connection_pool_evict(connection_handle);
                             return (ft_nullptr);
                         }
@@ -3400,12 +3226,7 @@ static char *api_http_execute_plain_http2_once(
             if (received_bytes < 0)
             {
                 api_connection_pool_disable_store(connection_handle);
-                if (FT_ERR_SUCCESS)
-                    error_code = FT_ERR_SUCCESS;
-                else if (FT_FALSE)
-                    error_code = FT_ERR_SUCCESS;
-                else
-                    error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
                 api_connection_pool_evict(connection_handle);
                 return (ft_nullptr);
             }

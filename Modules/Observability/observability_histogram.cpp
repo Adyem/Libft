@@ -48,7 +48,7 @@ static int32_t observability_histogram_export_emit_uint64(
     int32_t number_length;
 
     number_length = std::snprintf(number_buffer, sizeof(number_buffer), "%" PRIu64,
-            static_cast<uint64_t>(value));
+            value);
     if (number_length < 0)
         return (FT_ERR_SYSTEM);
     if (static_cast<size_t>(number_length) >= sizeof(number_buffer))

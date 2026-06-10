@@ -151,24 +151,11 @@ ssize_t ft_socket::send_all_locked(const void *data, ft_size_t size, int32_t fla
         }
         if (bytes_sent == 0)
         {
-            if (networking_check_socket_after_send(this->_socket_file_descriptor) != 0)
-            {
-                networking_error_entry entry = networking_consume_last_error();
-                (void)(entry.error_code);
-                return (-1);
-            }
             (void)(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
         total_sent += bytes_sent;
     }
-    if (networking_check_socket_after_send(this->_socket_file_descriptor) != 0)
-    {
-        networking_error_entry entry = networking_consume_last_error();
-        (void)(entry.error_code);
-        return (-1);
-    }
-    networking_consume_last_error();
     (void)(FT_ERR_SUCCESS);
     return (static_cast<ssize_t>(total_sent));
 }

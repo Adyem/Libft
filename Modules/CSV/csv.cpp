@@ -19,7 +19,7 @@ static char *csv_duplicate_c_string(const char *string)
     copy_pointer = static_cast<char *>(cma_malloc(length + 1));
     if (copy_pointer == ft_nullptr)
         return (ft_nullptr);
-    std::memcpy(copy_pointer, string, static_cast<size_t>(length));
+    std::memcpy(copy_pointer, string, length);
     copy_pointer[length] = '\0';
     return (copy_pointer);
 }

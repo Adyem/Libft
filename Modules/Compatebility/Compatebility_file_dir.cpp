@@ -268,7 +268,7 @@ file_dir *cmp_dir_open(const char *directory_path, int32_t *error_code_out)
     if (file_descriptor < 0)
     {
         if (errno != 0)
-            cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
+            cmp_set_error_code(error_code_out, cmp_file_error_to_errno(errno));
         else
             cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
@@ -312,7 +312,7 @@ file_dir *cmp_dir_open(const char *directory_path, int32_t *error_code_out)
     if (!dir)
     {
         if (errno != 0)
-            cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
+            cmp_set_error_code(error_code_out, cmp_file_error_to_errno(errno));
         else
             cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
@@ -567,7 +567,7 @@ int32_t cmp_directory_exists(const char *path, int32_t *exists_out,
         return (FT_ERR_SUCCESS);
     }
     if (errno != 0)
-        error_code = cmp_map_system_error_to_ft(errno);
+        error_code = cmp_file_error_to_errno(errno);
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
     cmp_set_error_code(error_code_out, error_code);

@@ -36,7 +36,7 @@ static int32_t open_file_backing(const cross_process_message &message)
     if (file_descriptor < 0)
     {
         errno = ENOENT;
-        return (-1);
+        return (cmp_file_error_to_errno(errno));
     }
     return (file_descriptor);
 }
@@ -110,7 +110,7 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
         if (shared_memory_fd < 0)
         {
             errno = ENOENT;
-            return (cmp_map_system_error_to_ft(errno));
+            return (cmp_file_error_to_errno(errno));
         }
     }
     mapping_pointer = mmap(ft_nullptr, message.remote_memory_size, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_fd, 0);
@@ -118,7 +118,7 @@ int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp
     if (mapping_pointer == MAP_FAILED)
     {
         errno = ENOENT;
-        return (cmp_map_system_error_to_ft(errno));
+        return (cmp_file_error_to_errno(errno));
     }
     mapping->mapping_address = reinterpret_cast<unsigned char *>(mapping_pointer);
     mapping->mapping_length = message.remote_memory_size;

@@ -279,11 +279,6 @@ static ft_bool api_https_ensure_session(
 {
     ft_socket &socket_wrapper = connection_handle.socket;
 
-    if (FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (FT_FALSE);
-    }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
     {
 #ifdef _WIN32
@@ -1285,42 +1280,27 @@ static char *api_https_execute_http2_once(
         return (ft_nullptr);
     if (!field_entry.assign_from_cstr(":method", method))
     {
-        error_code = FT_ERR_SUCCESS;
+        error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
     header_fields.push_back(field_entry);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (ft_nullptr);
-    }
     if (!field_entry.assign_from_cstr(":path", path))
     {
-        error_code = FT_ERR_SUCCESS;
+        error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
     header_fields.push_back(field_entry);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (ft_nullptr);
-    }
     if (!field_entry.assign_from_cstr(":scheme", "https"))
     {
-        error_code = FT_ERR_SUCCESS;
+        error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
     header_fields.push_back(field_entry);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (ft_nullptr);
-    }
     if (host_header)
     {
         if (!field_entry.assign_from_cstr(":authority", host_header))
         {
-            error_code = FT_ERR_SUCCESS;
+            error_code = FT_ERR_IO;
             return (ft_nullptr);
         }
     }
@@ -1328,16 +1308,11 @@ static char *api_https_execute_http2_once(
     {
         if (!field_entry.assign_from_cstr(":authority", ""))
         {
-            error_code = FT_ERR_SUCCESS;
+            error_code = FT_ERR_IO;
             return (ft_nullptr);
         }
     }
     header_fields.push_back(field_entry);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        error_code = FT_ERR_SUCCESS;
-        return (ft_nullptr);
-    }
     if (headers && headers[0])
     {
         const char *header_cursor;
@@ -1378,15 +1353,10 @@ static char *api_https_execute_http2_once(
             {
                 if (!field_entry.assign(header_name, header_value))
                 {
-                    error_code = FT_ERR_SUCCESS;
+                    error_code = FT_ERR_IO;
                     return (ft_nullptr);
                 }
                 header_fields.push_back(field_entry);
-                if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-                {
-                    error_code = FT_ERR_SUCCESS;
-                    return (ft_nullptr);
-                }
             }
             while (header_cursor[index] == '\r' || header_cursor[index] == '\n')
                 index++;

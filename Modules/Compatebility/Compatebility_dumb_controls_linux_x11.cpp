@@ -19,7 +19,7 @@ void ft_dumb_controls_linux_register_window(void *display_pointer,
     unsigned long window_id)
 {
     g_dumb_controls_linux_display = static_cast<Display *>(display_pointer);
-    g_dumb_controls_linux_window = static_cast<Window>(window_id);
+    g_dumb_controls_linux_window = window_id;
     g_dumb_controls_linux_has_previous_mouse_position = FT_FALSE;
     g_dumb_controls_linux_previous_mouse_x = 0;
     g_dumb_controls_linux_previous_mouse_y = 0;
@@ -27,7 +27,7 @@ void ft_dumb_controls_linux_register_window(void *display_pointer,
 
 void ft_dumb_controls_linux_unregister_window(unsigned long window_id)
 {
-    if (g_dumb_controls_linux_window == static_cast<Window>(window_id))
+    if (g_dumb_controls_linux_window == window_id)
     {
         g_dumb_controls_linux_window = 0;
         g_dumb_controls_linux_display = ft_nullptr;
@@ -98,7 +98,11 @@ static ft_bool dumb_controls_linux_mouse_button_is_down(unsigned int button_mask
             &root_window, &child_window, &root_x, &root_y, &window_x,
             &window_y, &mask) == 0)
         return (FT_FALSE);
-    return ((mask & button_mask) != 0 ? FT_TRUE : FT_FALSE);
+    if ((mask & button_mask) != 0)
+    {
+        return (FT_TRUE);
+    }
+    return (FT_FALSE);
 }
 
 ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
@@ -175,8 +179,8 @@ ft_dumb_mouse_delta ft_dumb_platform_mouse_delta(void)
 #endif
         return (delta);
     }
-    current_mouse_x = static_cast<int32_t>(root_x);
-    current_mouse_y = static_cast<int32_t>(root_y);
+    current_mouse_x = root_x;
+    current_mouse_y = root_y;
     if (g_dumb_controls_linux_has_previous_mouse_position == FT_TRUE)
     {
         delta.x = current_mouse_x - g_dumb_controls_linux_previous_mouse_x;

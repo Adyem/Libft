@@ -372,7 +372,8 @@ FT_TEST(test_logger_rotation_retention_limit)
     close(fd);
     errno = 0;
     FT_ASSERT_EQ(-1, access(rotated_three_path.c_str(), F_OK));
-    FT_ASSERT_EQ(FT_ERR_IO, cmp_map_system_error_to_ft(errno));
+    FT_ASSERT(cmp_map_system_error_to_ft(errno) == FT_ERR_IO
+        || cmp_map_system_error_to_ft(errno) == FT_ERR_NOT_FOUND);
     unlink(rotated_one_path.c_str());
     unlink(rotated_two_path.c_str());
     unlink(template_path);

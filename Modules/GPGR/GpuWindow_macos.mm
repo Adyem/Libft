@@ -241,22 +241,30 @@ bool GpuWindowMacOS::should_close() const noexcept
 
 int GpuWindowMacOS::get_width() const noexcept
 {
-    return (_state != nullptr ? _state->width : 0);
+    if (_state != nullptr)
+        return (_state->width);
+    return (0);
 }
 
 int GpuWindowMacOS::get_height() const noexcept
 {
-    return (_state != nullptr ? _state->height : 0);
+    if (_state != nullptr)
+        return (_state->height);
+    return (0);
 }
 
 int GpuWindowMacOS::get_mouse_x() const noexcept
 {
-    return (_state != nullptr ? _state->mouse_x : 0);
+    if (_state != nullptr)
+        return (_state->mouse_x);
+    return (0);
 }
 
 int GpuWindowMacOS::get_mouse_y() const noexcept
 {
-    return (_state != nullptr ? _state->mouse_y : 0);
+    if (_state != nullptr)
+        return (_state->mouse_y);
+    return (0);
 }
 
 bool GpuWindowMacOS::was_mouse_clicked() const noexcept

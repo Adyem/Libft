@@ -271,8 +271,6 @@ int32_t ft_websocket_client::perform_handshake_locked(const char *host, const ch
             return (FT_ERR_INVALID_OPERATION);
         total_sent += static_cast<ft_size_t>(send_result);
     }
-    if (networking_check_socket_after_send(socket_fd) != 0)
-        return (FT_ERR_INVALID_OPERATION);
     response.clear();
     while (FT_TRUE)
     {
@@ -346,7 +344,7 @@ int32_t ft_websocket_client::connect(const char *host, uint16_t port, const char
         return (FT_ERR_INVALID_OPERATION);
     }
     result = nw_connect(this->_socket.get(), address_info->ai_addr,
-            static_cast<socklen_t>(address_info->ai_addrlen));
+            address_info->ai_addrlen);
     freeaddrinfo(address_info);
     if (result < 0)
     {

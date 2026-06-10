@@ -222,7 +222,7 @@ ft_render_platform_result ft_render_platform_create_window(
     }
     *out_platform_state = state;
     ft_dumb_controls_linux_register_window(state->display,
-        static_cast<unsigned long>(state->window));
+        state->window);
     return ((ft_render_platform_result){ FT_ERR_SUCCESS, 0 });
 }
 
@@ -262,7 +262,7 @@ ft_render_platform_result ft_render_platform_destroy_window(
     if (state->window != 0)
     {
         ft_dumb_controls_linux_unregister_window(
-            static_cast<unsigned long>(state->window));
+            state->window);
         XDestroyWindow(state->display, state->window);
         state->window = 0;
     }

@@ -42,7 +42,8 @@ static int32_t logger_remove_oldest_rotation(const ft_string &rotation_base,
         return (FT_ERR_SUCCESS);
     saved_errno = errno;
     normalized_error = cmp_map_system_error_to_ft(saved_errno);
-    if (normalized_error != FT_ERR_IO)
+    if (normalized_error != FT_ERR_IO
+        && normalized_error != FT_ERR_NOT_FOUND)
     {
         errno = saved_errno;
         return (FT_ERR_INTERNAL);
@@ -73,7 +74,8 @@ static int32_t logger_shift_rotation_chain(const ft_string &rotation_base,
         {
             saved_errno = errno;
             normalized_error = cmp_map_system_error_to_ft(saved_errno);
-            if (normalized_error != FT_ERR_IO)
+            if (normalized_error != FT_ERR_IO
+                && normalized_error != FT_ERR_NOT_FOUND)
             {
                 errno = saved_errno;
                 return (FT_ERR_INTERNAL);
