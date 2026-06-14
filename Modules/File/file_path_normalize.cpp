@@ -84,6 +84,27 @@ static ft_bool file_path_last_segment_is_dot_dot(const ft_string &result,
     return (FT_FALSE);
 }
 
+static void file_path_convert_separator(ft_string &path_value,
+    char source_separator, char destination_separator) noexcept
+{
+    char *data;
+    ft_size_t index;
+
+    if (source_separator == destination_separator)
+        return ;
+    data = path_value.print();
+    if (data == ft_nullptr)
+        return ;
+    index = 0;
+    while (index < path_value.size())
+    {
+        if (data[index] == source_separator)
+            data[index] = destination_separator;
+        index++;
+    }
+    return ;
+}
+
 static int32_t file_path_remove_last_segment(ft_string &result,
     ft_size_t root_length, char path_separator) noexcept
 {
@@ -194,6 +215,7 @@ ft_string *file_path_normalize(const char *path)
     ft_string original;
     char *data;
     char path_separator;
+    ft_bool use_native_separator;
     ft_size_t index;
     ft_size_t segment_start;
     ft_bool trailing_separator;
@@ -209,6 +231,12 @@ ft_string *file_path_normalize(const char *path)
     }
     if (path == ft_nullptr || path[0] == '\0')
         return (result);
+    if (path[0] != '\0' && file_path_is_separator(path[0]) == FT_TRUE
+        && path[1] == '\0')
+    {
+        (void)result->append('/');
+        return (result);
+    }
     if (original.initialize(path) != FT_ERR_SUCCESS)
     {
         file_path_delete_string(result);
@@ -226,7 +254,18 @@ ft_string *file_path_normalize(const char *path)
         return (ft_nullptr);
     }
     cmp_normalize_slashes(data);
-    path_separator = cmp_path_separator();
+    use_native_separator = FT_FALSE;
+    if (file_path_is_absolute(data) == FT_TRUE)
+    {
+        if (file_path_is_drive_letter(data[0]) == FT_TRUE && data[1] == ':')
+            use_native_separator = FT_TRUE;
+        else if (file_path_is_separator(data[0]) == FT_TRUE
+            && file_path_is_separator(data[1]) == FT_TRUE)
+            use_native_separator = FT_TRUE;
+    }
+    path_separator = '/';
+    if (use_native_separator == FT_TRUE)
+        path_separator = cmp_path_separator();
     trailing_separator = FT_FALSE;
     if (original.size() > 0
         && file_path_is_separator(data[original.size() - 1]) == FT_TRUE)
@@ -258,6 +297,8 @@ ft_string *file_path_normalize(const char *path)
         file_path_delete_string(result);
         return (ft_nullptr);
     }
+    if (use_native_separator == FT_FALSE)
+        file_path_convert_separator(*result, cmp_path_separator(), '/');
     if (result->size() == 0)
         (void)result->append('.');
     if (trailing_separator == FT_TRUE && result->size() > 1

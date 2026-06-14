@@ -48,10 +48,10 @@ FT_TEST(test_math_factorial_int_overflow)
 
 FT_TEST(test_math_factorial_long_large_value)
 {
-    long result;
+    int64_t result;
 
     result = math_factorial(static_cast<int64_t>(20));
-    FT_ASSERT_EQ(2432902008176640000L, result);
+    FT_ASSERT_EQ(2432902008176640000LL, result);
     return (1);
 }
 

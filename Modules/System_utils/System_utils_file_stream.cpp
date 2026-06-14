@@ -244,6 +244,36 @@ ft_size_t su_fwrite(const void *buffer, ft_size_t size, ft_size_t count, su_file
 
 int32_t su_fseek(su_file *stream, int64_t offset, int32_t origin)
 {
+#if defined(_WIN32) || defined(_WIN64)
+    LARGE_INTEGER distance_to_move;
+    LARGE_INTEGER new_position;
+    HANDLE file_handle;
+    ft_bool lock_acquired;
+
+    if (stream == ft_nullptr)
+        return (-1);
+    if (su_file_lock(stream, &lock_acquired) != 0)
+        return (-1);
+    if (stream->closed == FT_TRUE)
+    {
+        su_file_unlock(stream, lock_acquired);
+        return (-1);
+    }
+    file_handle = cmp_retrieve_handle(stream->_descriptor);
+    if (file_handle == INVALID_HANDLE_VALUE)
+    {
+        su_file_unlock(stream, lock_acquired);
+        return (-1);
+    }
+    distance_to_move.QuadPart = static_cast<LONGLONG>(offset);
+    if (SetFilePointerEx(file_handle, distance_to_move, &new_position, origin) == 0)
+    {
+        su_file_unlock(stream, lock_acquired);
+        return (-1);
+    }
+    su_file_unlock(stream, lock_acquired);
+    return (0);
+#else
     off_t   result;
     ft_bool    lock_acquired;
 
@@ -261,10 +291,41 @@ int32_t su_fseek(su_file *stream, int64_t offset, int32_t origin)
     if (result < 0)
         return (-1);
     return (0);
+#endif
 }
 
 int64_t su_ftell(su_file *stream)
 {
+#if defined(_WIN32) || defined(_WIN64)
+    LARGE_INTEGER distance_to_move;
+    LARGE_INTEGER new_position;
+    HANDLE file_handle;
+    ft_bool lock_acquired;
+
+    if (stream == ft_nullptr)
+        return (-1L);
+    if (su_file_lock(stream, &lock_acquired) != 0)
+        return (-1L);
+    if (stream->closed == FT_TRUE)
+    {
+        su_file_unlock(stream, lock_acquired);
+        return (-1L);
+    }
+    file_handle = cmp_retrieve_handle(stream->_descriptor);
+    if (file_handle == INVALID_HANDLE_VALUE)
+    {
+        su_file_unlock(stream, lock_acquired);
+        return (-1L);
+    }
+    distance_to_move.QuadPart = 0;
+    if (SetFilePointerEx(file_handle, distance_to_move, &new_position, FILE_CURRENT) == 0)
+    {
+        su_file_unlock(stream, lock_acquired);
+        return (-1L);
+    }
+    su_file_unlock(stream, lock_acquired);
+    return (static_cast<int64_t>(new_position.QuadPart));
+#else
     off_t   position;
     ft_bool    lock_acquired;
 
@@ -282,4 +343,5 @@ int64_t su_ftell(su_file *stream)
     if (position < 0)
         return (-1L);
     return (position);
+#endif
 }

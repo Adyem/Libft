@@ -65,6 +65,7 @@ int pt_condition_variable::ensure_native_sync_objects()
 {
     int native_error;
     bool mutex_created;
+    bool use_condition_attributes;
 
     if (this->_mutex_initialised && this->_condition_initialised)
         return (FT_ERR_SUCCESS);
@@ -86,34 +87,31 @@ int pt_condition_variable::ensure_native_sync_objects()
         this->_mutex_initialised = true;
         mutex_created = true;
     }
+    use_condition_attributes = false;
 #if defined(CLOCK_MONOTONIC) && !defined(__APPLE__)
     pthread_condattr_t condition_attributes;
 
     native_error = pthread_condattr_init(&condition_attributes);
     if (native_error != 0)
     {
-        if (mutex_created)
-        {
-            (void)pthread_mutex_destroy(&this->_mutex);
-            this->_mutex_initialised = false;
-        }
-        this->_initialization_mutex.unlock();
-        return (cmp_map_system_error_to_ft(native_error));
+        native_error = 0;
     }
-    native_error = pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC);
-    if (native_error != 0)
+    else
     {
-        (void)pthread_condattr_destroy(&condition_attributes);
-        if (mutex_created)
+        native_error = pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC);
+        if (native_error == 0)
         {
-            (void)pthread_mutex_destroy(&this->_mutex);
-            this->_mutex_initialised = false;
+            use_condition_attributes = true;
+            native_error = pt_cond_init(&this->_condition, &condition_attributes);
         }
-        this->_initialization_mutex.unlock();
-        return (cmp_map_system_error_to_ft(native_error));
+        (void)pthread_condattr_destroy(&condition_attributes);
+        if (native_error != 0)
+        {
+            native_error = 0;
+        }
     }
-    native_error = pt_cond_init(&this->_condition, &condition_attributes);
-    (void)pthread_condattr_destroy(&condition_attributes);
+    if (!use_condition_attributes)
+        native_error = pt_cond_init(&this->_condition, ft_nullptr);
 #else
     native_error = pt_cond_init(&this->_condition, ft_nullptr);
 #endif

@@ -711,6 +711,8 @@ int32_t cmp_setenv(const char *name, const char *value, int32_t overwrite)
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
+    if (name[0] == '\0' || ft_strchr(name, '=') != ft_nullptr)
+        return (FT_ERR_INVALID_OPERATION);
 #if defined(_WIN32) || defined(_WIN64)
     if (!overwrite && getenv(name) != ft_nullptr)
     {
@@ -750,10 +752,7 @@ int32_t cmp_unsetenv(const char *name)
         errno = global_force_unsetenv_errno_value;
         SetLastError(global_force_unsetenv_last_error);
         WSASetLastError(global_force_unsetenv_socket_error);
-        int32_t forced_result = global_force_unsetenv_result;
-        if (forced_result != 0)
-            return (cmp_environment_map_last_error());
-        return (FT_ERR_SUCCESS);
+        return (global_force_unsetenv_result);
     }
     errno = 0;
     SetLastError(0);
@@ -763,23 +762,20 @@ int32_t cmp_unsetenv(const char *name)
     {
         if (errno == 0)
             errno = result;
-        return (cmp_environment_map_last_error());
+        return (-1);
     }
     return (FT_ERR_SUCCESS);
 #else
     if (global_force_unsetenv_enabled != 0)
     {
         errno = global_force_unsetenv_errno_value;
-        int32_t forced_result = global_force_unsetenv_result;
-        if (forced_result != 0)
-            return (cmp_environment_map_last_error());
-        return (FT_ERR_SUCCESS);
+        return (global_force_unsetenv_result);
     }
     errno = 0;
     int32_t result = unsetenv(name);
     if (result != 0)
     {
-        return (cmp_environment_map_last_error());
+        return (result);
     }
     return (FT_ERR_SUCCESS);
 #endif

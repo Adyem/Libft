@@ -19,7 +19,6 @@ int32_t networking_check_socket_after_send(int32_t socket_fd)
 {
     int32_t attempt_count;
     int32_t attempt_limit;
-    ft_bool disconnect_detected;
 
     if (socket_fd < 0)
     {
@@ -28,7 +27,6 @@ int32_t networking_check_socket_after_send(int32_t socket_fd)
     }
     attempt_limit = 3;
     attempt_count = 0;
-    disconnect_detected = FT_FALSE;
     while (attempt_count < attempt_limit)
     {
         int32_t poll_descriptor;
@@ -67,10 +65,7 @@ int32_t networking_check_socket_after_send(int32_t socket_fd)
         peek_buffer = 0;
         recv_result = nw_recv(socket_fd, &peek_buffer, 1, MSG_PEEK);
         if (recv_result == 0)
-        {
-            disconnect_detected = FT_TRUE;
             break ;
-        }
         if (recv_result < 0)
         {
 #ifdef _WIN32
@@ -92,43 +87,6 @@ int32_t networking_check_socket_after_send(int32_t socket_fd)
             return (-1);
         }
         break ;
-    }
-    int32_t socket_error;
-#ifdef _WIN32
-    int32_t option_length;
-
-    socket_error = 0;
-    option_length = sizeof(socket_error);
-    if (getsockopt(static_cast<SOCKET>(socket_fd),
-                   SOL_SOCKET,
-                   SO_ERROR,
-                   reinterpret_cast<char*>(&socket_error),
-                   &option_length) == SOCKET_ERROR)
-    {
-        return (-1);
-    }
-#else
-    socklen_t option_length;
-
-    socket_error = 0;
-    option_length = sizeof(socket_error);
-    if (getsockopt(socket_fd,
-                   SOL_SOCKET,
-                   SO_ERROR,
-                   &socket_error,
-                   &option_length) < 0)
-    {
-        return (-1);
-    }
-#endif
-    if (socket_error != 0)
-    {
-        return (-1);
-    }
-    if (disconnect_detected)
-    {
-        (void)(FT_ERR_SOCKET_SEND_FAILED);
-        return (-1);
     }
     (void)(FT_ERR_SUCCESS);
     return (0);
@@ -195,10 +153,7 @@ int32_t networking_check_ssl_after_send(SSL *ssl_connection)
         if (peek_result > 0)
             break ;
         if (peek_result == 0)
-        {
-            (void)(FT_ERR_SOCKET_SEND_FAILED);
-            return (-1);
-        }
+            break ;
         ssl_error = SSL_get_error(ssl_connection, peek_result);
         if (ssl_error == SSL_ERROR_WANT_READ || ssl_error == SSL_ERROR_WANT_WRITE)
         {
@@ -241,8 +196,6 @@ int32_t networking_check_ssl_after_send(SSL *ssl_connection)
         (void)(FT_ERR_SOCKET_SEND_FAILED);
         return (-1);
     }
-    if (networking_check_socket_after_send(socket_fd) != 0)
-        return (-1);
     (void)(FT_ERR_SUCCESS);
     return (0);
 }

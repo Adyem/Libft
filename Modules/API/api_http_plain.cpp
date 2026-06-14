@@ -12,6 +12,7 @@
 #include "../Printf/printf.hpp"
 #include "../Time/time.hpp"
 #include <errno.h>
+#include <cstdio>
 #include <utility>
 #include "../Template/move.hpp"
 
@@ -136,42 +137,13 @@ static void api_http_reset_plain_socket(api_connection_pool_handle &connection_h
     return ;
 }
 
-static ft_bool api_http_plain_socket_is_connected(int32_t descriptor)
-{
-    int32_t result;
-    struct sockaddr_storage peer;
-#ifdef _WIN32
-    int32_t peer_length;
-#else
-    socklen_t peer_length;
-#endif
-
-    if (descriptor < 0)
-    {
-        return (FT_FALSE);
-    }
-    ft_bzero(&peer, sizeof(peer));
-#ifdef _WIN32
-    peer_length = static_cast<int32_t>(sizeof(peer));
-    result = getpeername(descriptor, reinterpret_cast<sockaddr*>(&peer), &peer_length);
-#else
-    peer_length = static_cast<socklen_t>(sizeof(peer));
-    result = getpeername(descriptor, reinterpret_cast<sockaddr*>(&peer), &peer_length);
-#endif
-    if (result == 0)
-    {
-        return (FT_TRUE);
-    }
-    return (FT_FALSE);
-}
-
 ft_bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handle)
 {
     int32_t poll_descriptor;
     int32_t poll_result;
     char peek_byte;
     ssize_t peek_result;
-    int32_t socket_error;
+
     if (connection_handle.plain_socket_timed_out)
     {
         return (FT_FALSE);
@@ -197,61 +169,50 @@ ft_bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_ha
     peek_byte = 0;
 #ifdef _WIN32
     peek_result = connection_handle.socket.receive_data(&peek_byte, 1, MSG_PEEK);
-#else
-    peek_result = connection_handle.socket.receive_data(&peek_byte, 1, MSG_PEEK | MSG_DONTWAIT);
-#endif
-    socket_error = FT_ERR_SUCCESS;
-    if (peek_result > 0)
+    if (peek_result < 0)
     {
-        return (FT_TRUE);
-    }
-    if (peek_result == 0)
-    {
-        ft_bool socket_connected;
+        int32_t last_error;
 
-        socket_connected = api_http_plain_socket_is_connected(poll_descriptor);
-        if (!socket_connected)
-        {
-            return (FT_FALSE);
-        }
-#ifdef _WIN32
-        if (socket_error == (WSAEWOULDBLOCK)
-            || socket_error == (WSAEINTR))
-        {
+        last_error = WSAGetLastError();
+        if (last_error == WSAEWOULDBLOCK || last_error == WSAEINTR)
             return (FT_TRUE);
-        }
-#else
-        if (socket_error == (EWOULDBLOCK)
-            || socket_error == (EAGAIN)
-            || socket_error == (EINTR))
-        {
-            return (FT_TRUE);
-        }
-#endif
         return (FT_FALSE);
     }
-#ifdef _WIN32
-    if (socket_error == (WSAEWOULDBLOCK)
-        || socket_error == (WSAEINTR))
-    {
-        return (FT_TRUE);
-    }
 #else
-    if (socket_error == (EWOULDBLOCK)
-        || socket_error == (EAGAIN)
-        || socket_error == (EINTR))
+    peek_result = connection_handle.socket.receive_data(&peek_byte, 1, MSG_PEEK | MSG_DONTWAIT);
+    if (peek_result < 0)
     {
-        return (FT_TRUE);
+        if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+            return (FT_TRUE);
+        return (FT_FALSE);
     }
+#endif
+    if (peek_result > 0)
+        return (FT_FALSE);
+    if (peek_result == 0)
+        return (FT_FALSE);
+#ifdef _WIN32
+    return (FT_FALSE);
+#else
+    if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+        return (FT_TRUE);
 #endif
     return (FT_FALSE);
 }
+
+#ifdef DEBUG
+static void api_http_plain_debug_log(const char *message);
+#else
+#define api_http_plain_debug_log(message) do { } while (0)
+#endif
 
 ft_bool api_http_prepare_plain_socket(
     api_connection_pool_handle &connection_handle, const char *host,
     uint16_t port, int32_t timeout, int32_t &error_code)
 {
     ft_bool pooled_connection;
+
+    api_http_plain_debug_log("prepare_plain_socket: enter");
 
     if (connection_handle.has_socket)
     {
@@ -262,23 +223,37 @@ ft_bool api_http_prepare_plain_socket(
         }
         if (!connection_handle.plain_socket_validated)
         {
-            connection_handle.plain_socket_validated = FT_TRUE;
-            connection_handle.plain_socket_timed_out = FT_FALSE;
-            return (FT_TRUE);
+            if (connection_handle.from_pool == FT_TRUE
+                && !api_http_plain_socket_is_alive(connection_handle))
+            {
+                api_http_plain_debug_log("prepare_plain_socket: reset unvalidated dead");
+                api_http_reset_plain_socket(connection_handle);
+            }
+            else
+            {
+                connection_handle.plain_socket_validated = FT_TRUE;
+                connection_handle.plain_socket_timed_out = FT_FALSE;
+                api_http_plain_debug_log("prepare_plain_socket: reuse validated");
+                return (FT_TRUE);
+            }
         }
         if (api_http_plain_socket_is_alive(connection_handle))
         {
             connection_handle.plain_socket_timed_out = FT_FALSE;
+            api_http_plain_debug_log("prepare_plain_socket: reuse alive");
             return (FT_TRUE);
         }
+        api_http_plain_debug_log("prepare_plain_socket: reset dead");
         api_http_reset_plain_socket(connection_handle);
     }
     pooled_connection = api_connection_pool_acquire(connection_handle, host, port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (pooled_connection)
     {
+        api_http_plain_debug_log("prepare_plain_socket: pooled acquire");
         if (!api_http_apply_timeouts(connection_handle.socket, timeout))
         {
+            api_http_plain_debug_log("prepare_plain_socket: pooled apply_timeouts failed");
 #ifdef _WIN32
             int32_t last_error;
 
@@ -300,6 +275,7 @@ ft_bool api_http_prepare_plain_socket(
         connection_handle.plain_socket_validated = FT_TRUE;
         return (FT_TRUE);
     }
+    api_http_plain_debug_log("prepare_plain_socket: create fresh socket");
     SocketConfig config;
     int32_t config_error;
     int32_t socket_error_code;
@@ -308,6 +284,7 @@ ft_bool api_http_prepare_plain_socket(
     if (config_error != FT_ERR_SUCCESS)
     {
         error_code = config_error;
+        api_http_plain_debug_log("prepare_plain_socket: config initialize failed");
         return (FT_FALSE);
     }
     config._type = SocketType::CLIENT;
@@ -321,6 +298,7 @@ ft_bool api_http_prepare_plain_socket(
     socket_error_code = connection_handle.socket.initialize(config);
     if (socket_error_code != FT_ERR_SUCCESS)
     {
+        api_http_plain_debug_log("prepare_plain_socket: socket initialize failed");
         if (api_is_configuration_socket_error(socket_error_code))
             error_code = socket_error_code;
         else
@@ -333,8 +311,23 @@ ft_bool api_http_prepare_plain_socket(
     connection_handle.security_mode = api_connection_security_mode::PLAIN;
     connection_handle.plain_socket_timed_out = FT_FALSE;
     connection_handle.plain_socket_validated = FT_FALSE;
+    api_http_plain_debug_log("prepare_plain_socket: success fresh");
     return (FT_TRUE);
 }
+
+#ifdef DEBUG
+static void api_http_plain_debug_log(const char *message)
+{
+    std::FILE *file_pointer;
+
+    file_pointer = std::fopen("api_http_plain_debug.log", "a");
+    if (!file_pointer)
+        return ;
+    std::fprintf(file_pointer, "%s\n", message);
+    std::fclose(file_pointer);
+    return ;
+}
+#endif
 
 #if NETWORKING_HAS_OPENSSL
 static char *api_http_execute_plain_http2_once(
@@ -456,16 +449,24 @@ static ft_bool api_http_execute_plain_streaming_once(
     const api_streaming_handler *streaming_handler, ft_bool &connection_close,
     int32_t &error_code);
 
+#endif
+
 static ft_bool api_http_send_request(ft_socket &socket_wrapper,
     const ft_string &request, int32_t &error_code)
 {
     ssize_t sent;
 
     if (request.empty())
+    {
+        api_http_plain_debug_log("send_request: empty_request");
         return (FT_TRUE);
+    }
+    if (socket_wrapper.get_file_descriptor() < 0)
+        api_http_plain_debug_log("send_request: invalid_fd");
     sent = socket_wrapper.send_all(request.c_str(), request.size());
     if (sent < 0)
     {
+        api_http_plain_debug_log("send_request: send_all_failed");
         error_code = FT_ERR_IO;
         return (FT_FALSE);
     }
@@ -842,6 +843,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
     ft_bool chunk_stream_trailers;
     ft_size_t prefetched_offset;
     ft_bool use_prefetched;
+    ft_size_t receive_retry_count;
 
     streaming_enabled = (streaming_handler != ft_nullptr);
     headers_complete = FT_FALSE;
@@ -852,6 +854,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
     chunk_stream_trailers = FT_FALSE;
     prefetched_offset = 0;
     use_prefetched = FT_FALSE;
+    receive_retry_count = 0;
     if (prefetched_response)
         use_prefetched = FT_TRUE;
     if (response.is_initialised() == FT_FALSE)
@@ -917,35 +920,63 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
         if (received < 0)
         {
             int32_t socket_error_code;
+            ft_bool retry_receive;
 
             socket_error_code = FT_ERR_SUCCESS;
-            if (socket_error_code != FT_ERR_SUCCESS)
-                error_code = socket_error_code;
-            else if (FT_FALSE)
-                error_code = FT_ERR_SUCCESS;
+#ifdef _WIN32
+            socket_error_code = WSAGetLastError();
+            if (socket_error_code == WSAEWOULDBLOCK
+                || socket_error_code == WSAETIMEDOUT)
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+            else if (socket_error_code != 0)
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
             else
                 error_code = FT_ERR_IO;
-#ifdef _WIN32
-            if (error_code == ((WSAEWOULDBLOCK))
-                || error_code == ((WSAETIMEDOUT)))
-                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
 #else
-            if (error_code == ((EAGAIN))
-                || error_code == ((EWOULDBLOCK))
-                || error_code == ((ETIMEDOUT)))
+            socket_error_code = errno;
+            if (socket_error_code == EAGAIN
+                || socket_error_code == EWOULDBLOCK
+                || socket_error_code == ETIMEDOUT)
                 error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+            else if (socket_error_code != 0)
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+            else
+                error_code = FT_ERR_IO;
 #endif
-            if (error_code == FT_ERR_IO && socket_error_code == FT_ERR_SUCCESS
-                && FT_TRUE)
-                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+            retry_receive = FT_FALSE;
+#ifdef _WIN32
+            if (socket_error_code == WSAECONNABORTED
+                || socket_error_code == WSAECONNRESET)
+                retry_receive = FT_TRUE;
+#else
+            if (socket_error_code == ECONNABORTED
+                || socket_error_code == ECONNRESET
+                || socket_error_code == EPIPE)
+                retry_receive = FT_TRUE;
+#endif
+            if (retry_receive && receive_retry_count < 3)
+            {
+                receive_retry_count += 1;
+                time_sleep_ms(10);
+                continue ;
+            }
+            api_http_plain_debug_log("receive_response: received_lt_zero");
             if (error_code == FT_ERR_SOCKET_RECEIVE_FAILED)
                 connection_handle.plain_socket_timed_out = FT_TRUE;
+#ifdef DEBUG
+            char error_buffer[128];
+
+            pf_snprintf(error_buffer, sizeof(error_buffer),
+                "receive_response: socket_error=%d", socket_error_code);
+            api_http_plain_debug_log(error_buffer);
+#endif
             return (FT_FALSE);
         }
         if (received == 0)
         {
             if (!headers_complete)
             {
+                api_http_plain_debug_log("receive_response: eof_before_headers");
                 error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
                 return (FT_FALSE);
             }
@@ -966,6 +997,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
                         expected_size = static_cast<ft_size_t>(content_length);
                     if (body_size < expected_size)
                     {
+                        api_http_plain_debug_log("receive_response: body_too_short");
                         error_code = FT_ERR_IO;
                         return (FT_FALSE);
                     }
@@ -978,6 +1010,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
                             response.c_str() + header_length,
                             body_size, consumed_length))
                     {
+                        api_http_plain_debug_log("receive_response: chunked_incomplete");
                         error_code = FT_ERR_IO;
                         return (FT_FALSE);
                     }
@@ -998,6 +1031,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
                     || chunk_stream_remaining >= 0
                     || streaming_body_buffer.size() > 0)
                 {
+                    api_http_plain_debug_log("receive_response: streaming_chunked_incomplete");
                     error_code = FT_ERR_IO;
                     return (FT_FALSE);
                 }
@@ -1008,6 +1042,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
                 if (static_cast<int64_t>(streaming_delivered)
                     != content_length)
                 {
+                    api_http_plain_debug_log("receive_response: streaming_length_mismatch");
                     error_code = FT_ERR_IO;
                     return (FT_FALSE);
                 }
@@ -1032,6 +1067,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             response.append(buffer, static_cast<ft_size_t>(received));
             if (response.get_error() != FT_ERR_SUCCESS)
             {
+                api_http_plain_debug_log("receive_response: append_header_failed");
                 error_code = response.get_error();
                 return (FT_FALSE);
             }
@@ -1052,6 +1088,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             {
                 if (!streaming_enabled && response.size() >= sizeof(buffer))
                 {
+                    api_http_plain_debug_log("receive_response: header_buffer_full");
                     error_code = FT_ERR_IO;
                     return (FT_FALSE);
                 }
@@ -1067,6 +1104,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             header_storage.assign(response.c_str(), header_length);
             if (header_storage.get_error() != FT_ERR_SUCCESS)
             {
+                api_http_plain_debug_log("receive_response: header_storage_failed");
                 error_code = header_storage.get_error();
                 return (FT_FALSE);
             }
@@ -1087,6 +1125,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
                         response.c_str() + header_length, body_length);
                     if (streaming_body_buffer.get_error() != FT_ERR_SUCCESS)
                     {
+                        api_http_plain_debug_log("receive_response: streaming_append_failed");
                         error_code = streaming_body_buffer.get_error();
                         return (FT_FALSE);
                     }
@@ -1126,6 +1165,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
                 }
                 else if (response.size() >= sizeof(buffer))
                 {
+                    api_http_plain_debug_log("receive_response: headers_complete_no_length_buffer_full");
                     error_code = FT_ERR_IO;
                     return (FT_FALSE);
                 }
@@ -1139,6 +1179,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
             response.append(buffer, static_cast<ft_size_t>(received));
             if (response.get_error() != FT_ERR_SUCCESS)
             {
+                api_http_plain_debug_log("receive_response: append_body_failed");
                 error_code = response.get_error();
                 return (FT_FALSE);
             }
@@ -1169,6 +1210,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
         streaming_body_buffer.append(buffer, static_cast<ft_size_t>(received));
         if (streaming_body_buffer.get_error() != FT_ERR_SUCCESS)
         {
+            api_http_plain_debug_log("receive_response: streaming_body_append_failed");
             error_code = streaming_body_buffer.get_error();
             return (FT_FALSE);
         }
@@ -1194,6 +1236,7 @@ static ft_bool api_http_receive_response(api_connection_pool_handle &connection_
     headers_end = ft_strstr(response.c_str(), "\r\n\r\n");
     if (!headers_end)
     {
+        api_http_plain_debug_log("receive_response: final_header_parse_failed");
         error_code = FT_ERR_IO;
         return (FT_FALSE);
     }
@@ -1228,6 +1271,7 @@ static char *api_http_execute_plain_once(
     }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
     {
+        api_http_plain_debug_log("plain_once: apply_timeouts failed");
 #ifdef _WIN32
         int32_t last_error;
 
@@ -1256,9 +1300,20 @@ static char *api_http_execute_plain_once(
 
         if (!api_http_prepare_request(method, path, host_header, payload,
                 headers, request, error_code))
+        {
+            api_http_plain_debug_log("plain_once: prepare_request failed");
             return (ft_nullptr);
+        }
+#ifdef DEBUG
+        char request_length_buffer[128];
+
+        pf_snprintf(request_length_buffer, sizeof(request_length_buffer),
+            "plain_once: request_size=%zu", request.size());
+        api_http_plain_debug_log(request_length_buffer);
+#endif
         if (!api_http_send_request(socket_wrapper, request, error_code))
         {
+            api_http_plain_debug_log("plain_once: send_request failed");
             send_failed = FT_TRUE;
             send_error_code = error_code;
             api_connection_pool_disable_store(connection_handle);
@@ -1268,6 +1323,7 @@ static char *api_http_execute_plain_once(
         }
         else if (!api_http_send_payload(socket_wrapper, payload, error_code))
         {
+            api_http_plain_debug_log("plain_once: send_payload failed");
             send_failed = FT_TRUE;
             send_error_code = error_code;
             api_connection_pool_disable_store(connection_handle);
@@ -1286,10 +1342,13 @@ static char *api_http_execute_plain_once(
 
     if (send_failed)
         error_code = FT_ERR_SUCCESS;
+    else
+        time_sleep_ms(10);
     if (!api_http_receive_response(connection_handle, socket_wrapper, response, header_length,
             connection_close, chunked_encoding, has_length, content_length,
             error_code, ft_nullptr, prefetched_response))
     {
+        api_http_plain_debug_log("plain_once: receive_response failed");
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
         if (send_failed)
@@ -1313,6 +1372,7 @@ static char *api_http_execute_plain_once(
 
     if (decoded_body.initialize() != FT_ERR_SUCCESS)
     {
+        api_http_plain_debug_log("plain_once: decoded_body initialize failed");
         error_code = decoded_body.get_error();
         return (ft_nullptr);
     }
@@ -1325,6 +1385,7 @@ static char *api_http_execute_plain_once(
         if (!api_http_decode_chunked(body_start, body_length, decoded_body,
                 consumed_length))
         {
+            api_http_plain_debug_log("plain_once: chunked decode failed");
             error_code = FT_ERR_IO;
             (void)decoded_body.destroy();
             return (ft_nullptr);
@@ -1340,6 +1401,7 @@ static char *api_http_execute_plain_once(
         expected_length = static_cast<ft_size_t>(content_length);
         if (body_length < expected_length)
         {
+            api_http_plain_debug_log("plain_once: body too short");
             error_code = FT_ERR_IO;
             (void)decoded_body.destroy();
             return (ft_nullptr);
@@ -1366,6 +1428,7 @@ static char *api_http_execute_plain_once(
         decoded_body.append(body_start);
         if (decoded_body.get_error() != FT_ERR_SUCCESS)
         {
+            api_http_plain_debug_log("plain_once: append failed");
             error_code = decoded_body.get_error();
             (void)decoded_body.destroy();
             return (ft_nullptr);
@@ -1463,6 +1526,8 @@ static ft_bool api_http_execute_plain_streaming_once(
     content_length = 0;
     if (send_failed)
         error_code = FT_ERR_SUCCESS;
+    else
+        time_sleep_ms(10);
     if (!api_http_receive_response(connection_handle, socket_wrapper, response, header_length,
             connection_close, chunked_encoding, has_length, content_length,
             error_code, streaming_handler, ft_nullptr))
@@ -1563,6 +1628,7 @@ ft_bool api_http_execute_plain_streaming(
     return (FT_FALSE);
 }
 
+#if NETWORKING_HAS_OPENSSL
 static ft_bool api_http_execute_plain_http2_streaming_once(
     api_connection_pool_handle &connection_handle, const char *method,
     const char *path, const char *host_header, json_group *payload,
@@ -2572,6 +2638,7 @@ static ft_bool api_http_execute_plain_http2_streaming_once(
     error_code = FT_ERR_SUCCESS;
     return (FT_TRUE);
 }
+
 #endif
 
 #if NETWORKING_HAS_OPENSSL
@@ -2592,6 +2659,11 @@ ft_bool api_http_execute_plain_http2_streaming(
     ft_bool http2_used_local;
 
     used_http2 = FT_FALSE;
+    if (headers && headers[0])
+    {
+        error_code = FT_ERR_HTTP_PROTOCOL_MISMATCH;
+        return (FT_FALSE);
+    }
     max_attempts = api_retry_get_max_attempts(retry_policy);
     initial_delay = api_retry_get_initial_delay(retry_policy);
     max_delay = api_retry_get_max_delay(retry_policy);
@@ -2676,6 +2748,11 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
     ft_bool http2_used_local;
     ft_bool downgrade_due_to_connect_refused;
 
+    if (headers && headers[0])
+    {
+        error_code = FT_ERR_HTTP_PROTOCOL_MISMATCH;
+        return (ft_nullptr);
+    }
     max_attempts = api_retry_get_max_attempts(retry_policy);
     initial_delay = api_retry_get_initial_delay(retry_policy);
     max_delay = api_retry_get_max_delay(retry_policy);
@@ -2781,6 +2858,8 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
     return (ft_nullptr);
 }
 
+#endif
+
 char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int32_t *status, int32_t timeout,
@@ -2804,33 +2883,39 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     attempt_index = 0;
     last_meaningful_error = FT_ERR_SUCCESS;
     has_meaningful_error = FT_FALSE;
+    api_http_plain_debug_log("execute_plain: enter");
     while (attempt_index < max_attempts)
     {
-        if (!api_retry_circuit_allow(connection_handle, retry_policy,
-                error_code))
-            return (ft_nullptr);
         ft_bool socket_ready;
         ft_bool should_retry;
 
+        api_http_plain_debug_log("execute_plain: before_prepare");
         socket_ready = api_http_prepare_plain_socket(connection_handle, host,
                 port, timeout, error_code);
+        api_http_plain_debug_log("execute_plain: after_prepare");
         if (socket_ready)
         {
             char *result_body;
 
+            api_http_plain_debug_log("execute_plain: before_once");
             result_body = api_http_execute_plain_once(connection_handle, method,
                     path, host_header, payload, headers, status, timeout,
                     error_code, ft_nullptr, FT_FALSE);
+            api_http_plain_debug_log("execute_plain: after_once");
             if (result_body)
             {
                 api_retry_circuit_record_success(connection_handle,
                     retry_policy);
+                api_http_plain_debug_log("execute_plain: success");
                 return (result_body);
             }
         }
         should_retry = api_http_should_retry_plain(error_code);
         if (!should_retry)
+        {
+            api_http_plain_debug_log("execute_plain: no_retry");
             return (ft_nullptr);
+        }
         api_retry_circuit_record_failure(connection_handle, retry_policy);
         if (error_code != FT_ERR_SOCKET_CONNECT_FAILED
             && error_code != FT_ERR_SUCCESS)
@@ -2873,7 +2958,6 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
         error_code = FT_ERR_IO;
     return (ft_nullptr);
 }
-#endif
 
 #if NETWORKING_HAS_OPENSSL
 static char *api_http_execute_plain_http2_once(

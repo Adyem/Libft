@@ -143,6 +143,10 @@ int32_t su_setenv(const char *name, const char *value, int32_t overwrite)
     int32_t unlock_error;
     int32_t result;
 
+    if (name == ft_nullptr || value == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (*name == '\0' || ft_strchr(name, '=') != ft_nullptr)
+        return (FT_ERR_INVALID_OPERATION);
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -159,24 +163,26 @@ int32_t su_unsetenv(const char *name)
     int32_t unlock_error;
     int32_t result;
 
+    if (name == ft_nullptr || *name == '\0' || ft_strchr(name, '=') != ft_nullptr)
+        return (-1);
     lock_error = su_environment_lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    if (name == ft_nullptr || *name == '\0')
-    {
-        (void)su_environment_unlock_mutex();
-        return (-1);
-    }
-    if (ft_strchr(name, '=') != ft_nullptr)
-    {
-        (void)su_environment_unlock_mutex();
-        return (-1);
-    }
     result = cmp_unsetenv(name);
     unlock_error = su_environment_unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
         return (-1);
-    return (result);
+    if (result == FT_ERR_SUCCESS)
+        return (FT_ERR_SUCCESS);
+    if (result > FT_ERR_SUCCESS)
+        return (result);
+#if defined(_WIN32) || defined(_WIN64)
+    if (GetLastError() != 0 || WSAGetLastError() != 0)
+        return (-1);
+#endif
+    if (errno == 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    return (-1);
 }
 
 int32_t su_putenv(char *string)

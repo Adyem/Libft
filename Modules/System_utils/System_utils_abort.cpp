@@ -6,6 +6,7 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include <csignal>
 
 const char  *su_internal_take_abort_reason(void);
 
@@ -34,6 +35,7 @@ void    su_abort(void)
     }
 #endif
     std::fflush(nullptr);
+    (void)std::raise(SIGABRT);
     std::abort();
     return ;
 }

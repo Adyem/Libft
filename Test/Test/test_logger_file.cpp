@@ -50,7 +50,7 @@ FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex)
     s_file_sink sink;
     ft_bool     lock_acquired;
 
-    temp_fd = mkstemp(template_path);
+    temp_fd = test_mkstemp_linux_path(template_path);
     FT_ASSERT(temp_fd >= 0);
     sink.file_descriptor = temp_fd;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sink.path.initialize(template_path));
@@ -79,7 +79,7 @@ FT_TEST(test_logger_file_sink_lock_blocks_until_release)
     std::atomic<long long>   wait_duration_ms;
     std::thread              worker;
 
-    temp_fd = mkstemp(template_path);
+    temp_fd = test_mkstemp_linux_path(template_path);
     FT_ASSERT(temp_fd >= 0);
     sink.file_descriptor = temp_fd;
     sink.max_size = 0;
@@ -135,7 +135,7 @@ FT_TEST(test_logger_file_sink_uses_system_utils_write)
     ssize_t read_count;
     int     log_fd;
 
-    temp_fd = mkstemp(template_path);
+    temp_fd = test_mkstemp_linux_path(template_path);
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();
@@ -194,7 +194,7 @@ FT_TEST(test_logger_rotate_success_clears_errno)
     s_file_sink sink;
     ft_string   rotated_path;
 
-    temp_fd = mkstemp(template_path);
+    temp_fd = test_mkstemp_linux_path(template_path);
     FT_ASSERT(temp_fd >= 0);
     write_result = write(temp_fd, "rotation-test", 13);
     FT_ASSERT_EQ(13, write_result);
@@ -268,7 +268,7 @@ FT_TEST(test_logger_rotation_by_age)
     ssize_t         read_count;
     char            buffer[512];
 
-    temp_fd = mkstemp(template_path);
+    temp_fd = test_mkstemp_linux_path(template_path);
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();
@@ -308,7 +308,7 @@ FT_TEST(test_logger_rotation_getter_reports_config)
     ft_size_t       retention_count;
     unsigned int    max_age_seconds;
 
-    temp_fd = mkstemp(template_path);
+    temp_fd = test_mkstemp_linux_path(template_path);
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();
@@ -337,7 +337,7 @@ FT_TEST(test_logger_rotation_retention_limit)
     ssize_t     read_count;
     char        buffer[512];
 
-    temp_fd = mkstemp(template_path);
+    temp_fd = test_mkstemp_linux_path(template_path);
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();

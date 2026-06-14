@@ -60,6 +60,10 @@ ft_bool networking_dns_resolve_first(const char *host, const char *service,
     int32_t family, int32_t socktype, int32_t protocol, int32_t flags,
     networking_resolved_address &out_address) noexcept;
 
+ft_bool networking_resolved_address_to_string(
+    const networking_resolved_address &address, char *buffer,
+    ft_size_t buffer_size) noexcept;
+
 int32_t networking_dns_enable_thread_safety(void) noexcept;
 int32_t networking_dns_disable_thread_safety(void) noexcept;
 ft_bool networking_dns_is_thread_safe(void) noexcept;

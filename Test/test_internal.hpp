@@ -72,6 +72,10 @@ static int __attribute__((unused)) sigaddset(sigset_t *signal_set, int signal_nu
     return (0);
 }
 
+#if defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wshadow"
+#endif
 static int sigaction(int signal_number, const struct sigaction *new_action,
     struct sigaction *old_action) noexcept
 {
@@ -91,16 +95,39 @@ static int sigaction(int signal_number, const struct sigaction *new_action,
     }
     return (0);
 }
+#if defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif
 
 # define pipe(pipe_descriptors) _pipe(pipe_descriptors, 4096, _O_BINARY)
 # define mkdir(directory_path, permissions) _mkdir(directory_path)
 
 static inline char *mkdtemp(char *directory_template) noexcept
 {
+    size_t path_index;
     size_t template_length;
 
     if (directory_template == nullptr)
         return (nullptr);
+    if (directory_template[0] == '/' || directory_template[0] == '\\')
+    {
+        std::memmove(directory_template,
+            directory_template + 1,
+            std::strlen(directory_template));
+    }
+    path_index = 0;
+    while (directory_template[path_index] != '\0')
+    {
+        if (directory_template[path_index] == '/'
+            || directory_template[path_index] == '\\')
+        {
+            directory_template[path_index] = '\0';
+            if (directory_template[0] != '\0')
+                (void)_mkdir(directory_template);
+            directory_template[path_index] = '\\';
+        }
+        path_index += 1;
+    }
     template_length = std::strlen(directory_template) + 1;
     if (_mktemp_s(directory_template, template_length) != 0)
         return (nullptr);
@@ -108,7 +135,45 @@ static inline char *mkdtemp(char *directory_template) noexcept
         return (nullptr);
     return (directory_template);
 }
+
 #endif
+
+static inline int test_mkstemp_linux_path(char *file_template) noexcept
+{
+#if defined(_WIN32) || defined(_WIN64)
+    size_t path_index;
+    size_t template_length;
+
+    if (file_template == nullptr)
+        return (-1);
+    if (file_template[0] == '/' || file_template[0] == '\\')
+    {
+        std::memmove(file_template,
+            file_template + 1,
+            std::strlen(file_template));
+    }
+    path_index = 0;
+    while (file_template[path_index] != '\0')
+    {
+        if (file_template[path_index] == '/'
+            || file_template[path_index] == '\\')
+        {
+            file_template[path_index] = '\0';
+            if (file_template[0] != '\0')
+                (void)_mkdir(file_template);
+            file_template[path_index] = '\\';
+        }
+        path_index += 1;
+    }
+    template_length = std::strlen(file_template) + 1;
+    if (_mktemp_s(file_template, template_length) != 0)
+        return (-1);
+    return (_open(file_template, _O_CREAT | _O_EXCL | _O_RDWR | _O_BINARY,
+            0644));
+#else
+    return (mkstemp(file_template));
+#endif
+}
 
 static thread_local sigjmp_buf g_test_abort_signal_jump_buffer __attribute__((unused));
 static volatile sig_atomic_t g_test_abort_signal_caught __attribute__((unused)) = 0;

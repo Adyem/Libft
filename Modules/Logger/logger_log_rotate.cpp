@@ -4,9 +4,7 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include <cerrno>
 #include <cstdio>
-#include <fcntl.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <inttypes.h>
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
@@ -30,25 +28,16 @@ static int32_t logger_remove_oldest_rotation(const ft_string &rotation_base,
     ft_size_t retention_count)
 {
     ft_string oldest_path;
-    int32_t unlink_result;
-    int32_t saved_errno;
-    int32_t normalized_error;
+    int32_t delete_error;
 
     if (logger_build_rotation_path(rotation_base, retention_count,
             oldest_path) != 0)
         return (FT_ERR_INTERNAL);
-    unlink_result = unlink(oldest_path.c_str());
-    if (unlink_result == 0)
+    delete_error = FT_ERR_SUCCESS;
+    if (cmp_file_delete(oldest_path.c_str(), &delete_error) == FT_ERR_SUCCESS)
         return (FT_ERR_SUCCESS);
-    saved_errno = errno;
-    normalized_error = cmp_map_system_error_to_ft(saved_errno);
-    if (normalized_error != FT_ERR_IO
-        && normalized_error != FT_ERR_NOT_FOUND)
-    {
-        errno = saved_errno;
+    if (delete_error != FT_ERR_IO)
         return (FT_ERR_INTERNAL);
-    }
-    errno = saved_errno;
     return (FT_ERR_SUCCESS);
 }
 
@@ -58,8 +47,7 @@ static int32_t logger_shift_rotation_chain(const ft_string &rotation_base,
     ft_size_t current_index;
     ft_string source_path;
     ft_string destination_path;
-    int32_t saved_errno;
-    int32_t normalized_error;
+    int32_t move_error;
 
     current_index = retention_count;
     while (current_index > 1)
@@ -70,17 +58,12 @@ static int32_t logger_shift_rotation_chain(const ft_string &rotation_base,
         if (logger_build_rotation_path(rotation_base, current_index,
                 destination_path) != 0)
             return (FT_ERR_INTERNAL);
-        if (::rename(source_path.c_str(), destination_path.c_str()) != 0)
+        move_error = FT_ERR_SUCCESS;
+        if (cmp_file_move(source_path.c_str(), destination_path.c_str(),
+                &move_error) != FT_ERR_SUCCESS)
         {
-            saved_errno = errno;
-            normalized_error = cmp_map_system_error_to_ft(saved_errno);
-            if (normalized_error != FT_ERR_IO
-                && normalized_error != FT_ERR_NOT_FOUND)
-            {
-                errno = saved_errno;
+            if (move_error != FT_ERR_IO)
                 return (FT_ERR_INTERNAL);
-            }
-            errno = saved_errno;
         }
         current_index -= 1;
     }
@@ -90,10 +73,12 @@ static int32_t logger_shift_rotation_chain(const ft_string &rotation_base,
 static int32_t logger_prepare_rotation_internal(s_file_sink *sink,
     ft_bool *rotate_for_size, ft_bool *rotate_for_age)
 {
-    struct stat file_stats;
     t_time current_time;
     int64_t age_seconds;
+    ft_size_t file_size;
+    t_time modification_time;
     ft_size_t retention_count;
+    int32_t metadata_error;
 
     if (!sink || !rotate_for_size || !rotate_for_age)
         return (FT_ERR_INTERNAL);
@@ -105,7 +90,8 @@ static int32_t logger_prepare_rotation_internal(s_file_sink *sink,
         *rotate_for_age = FT_FALSE;
         return (FT_ERR_SUCCESS);
     }
-    if (fstat(sink->file_descriptor, &file_stats) == -1)
+    metadata_error = cmp_file_get_size(sink->path.c_str(), &file_size, ft_nullptr);
+    if (metadata_error != FT_ERR_SUCCESS)
         return (FT_ERR_INTERNAL);
     retention_count = sink->retention_count;
     if (retention_count > 1024)
@@ -115,17 +101,21 @@ static int32_t logger_prepare_rotation_internal(s_file_sink *sink,
     sink->retention_count = retention_count;
     *rotate_for_size = FT_FALSE;
     if (sink->max_size > 0
-        && static_cast<ft_size_t>(file_stats.st_size) >= sink->max_size)
+        && file_size >= sink->max_size)
         *rotate_for_size = FT_TRUE;
     *rotate_for_age = FT_FALSE;
     if (sink->max_age_seconds > 0)
     {
+        metadata_error = cmp_file_get_modification_time(sink->path.c_str(), &modification_time,
+                ft_nullptr);
+        if (metadata_error != FT_ERR_SUCCESS)
+            return (FT_ERR_INTERNAL);
         current_time = time_now();
         if (current_time == static_cast<t_time>(-1))
             return (FT_ERR_INTERNAL);
-        if (current_time >= file_stats.st_mtime)
+        if (current_time >= modification_time)
         {
-            age_seconds = current_time - file_stats.st_mtime;
+            age_seconds = current_time - modification_time;
             if (age_seconds >= static_cast<int64_t>(sink->max_age_seconds))
                 *rotate_for_age = FT_TRUE;
         }
@@ -169,6 +159,13 @@ void logger_execute_rotation(s_file_sink *sink)
         should_unlock = FT_TRUE;
     retention_count = sink->retention_count;
     reopen_flags = O_CREAT | O_WRONLY | O_APPEND;
+    close_result = cmp_close(sink->file_descriptor);
+    if (close_result == -1)
+    {
+        sink->file_descriptor = -1;
+        goto cleanup;
+    }
+    sink->file_descriptor = -1;
     if (retention_count > 0)
     {
         rotation_base = sink->path + ".";
@@ -181,21 +178,14 @@ void logger_execute_rotation(s_file_sink *sink)
         rotated_path = sink->path + ".1";
         if (rotated_path.get_error() != FT_ERR_SUCCESS)
             goto cleanup;
-        if (::rename(sink->path.c_str(), rotated_path.c_str()) != 0)
+        if (cmp_file_move(sink->path.c_str(), rotated_path.c_str(), ft_nullptr) != FT_ERR_SUCCESS)
             goto cleanup;
     }
     else
     {
         reopen_flags = O_CREAT | O_WRONLY | O_TRUNC | O_APPEND;
     }
-    close_result = close(sink->file_descriptor);
-    if (close_result == -1)
-    {
-        sink->file_descriptor = -1;
-        goto cleanup;
-    }
-    sink->file_descriptor = -1;
-    sink->file_descriptor = open(sink->path.c_str(), reopen_flags, 0644);
+    sink->file_descriptor = cmp_open(sink->path.c_str(), reopen_flags, 0644);
     if (sink->file_descriptor == -1)
         goto cleanup;
 

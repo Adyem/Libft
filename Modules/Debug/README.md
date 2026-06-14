@@ -8,6 +8,7 @@ The `Debug` module exposes stack trace capture/printing and address symbolizatio
 - `dbg_enable_crash_stack_traces()` - Marks crash stack traces as enabled for the module.
 - `dbg_disable_crash_stack_traces()` - Marks crash stack traces as disabled for the module.
 - `dbg_crash_stack_traces_enabled()` - Reports whether crash stack traces are currently enabled.
+- `dbg_trace_message(...)` - Writes a plain trace line to `stderr`.
 - `dbg_print_stack_trace()` - Prints the current thread's stack trace immediately.
 - `dbg_symbolize_address(...)` - Resolves a code address into a symbol name and source location string.
 - `dbg_get_error()` - Returns the last debug-module error code.

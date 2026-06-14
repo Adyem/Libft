@@ -68,6 +68,7 @@ void cmp_set_force_cross_device_move(int32_t force_cross_device_move)
 int32_t cmp_file_exists(const char *path, int32_t *exists_out,
     int32_t *error_code_out)
 {
+    char *native_path;
     int32_t error_code;
     DWORD file_attributes;
     DWORD last_error;
@@ -80,7 +81,15 @@ int32_t cmp_file_exists(const char *path, int32_t *exists_out,
         cmp_set_error_code(error_code_out, error_code);
         return (error_code);
     }
-    file_attributes = GetFileAttributesA(path);
+    native_path = ft_nullptr;
+    if (cmp_translate_path_to_native(path, &native_path) != FT_ERR_SUCCESS)
+    {
+        error_code = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    file_attributes = GetFileAttributesA(native_path);
+    cma_free(native_path);
     if (file_attributes != INVALID_FILE_ATTRIBUTES)
     {
         if ((file_attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
@@ -105,6 +114,7 @@ int32_t cmp_file_exists(const char *path, int32_t *exists_out,
 
 int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
 {
+    char *native_path;
     int32_t error_code;
     DWORD last_error;
 
@@ -114,11 +124,20 @@ int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
         cmp_set_error_code(error_code_out, error_code);
         return (error_code);
     }
-    if (DeleteFileA(path) != 0)
+    native_path = ft_nullptr;
+    if (cmp_translate_path_to_native(path, &native_path) != FT_ERR_SUCCESS)
     {
+        error_code = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (DeleteFileA(native_path) != 0)
+    {
+        cma_free(native_path);
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    cma_free(native_path);
     last_error = GetLastError();
     if (last_error != 0)
         error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
@@ -130,6 +149,8 @@ int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
 
 int32_t cmp_file_move(const char *source_path, const char *destination_path, int32_t *error_code_out)
 {
+    char *native_source_path;
+    char *native_destination_path;
     DWORD last_error;
     int32_t stored_error;
     int32_t delete_error;
@@ -140,11 +161,23 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
+    native_source_path = ft_nullptr;
+    native_destination_path = ft_nullptr;
+    if (cmp_translate_path_to_native(source_path, &native_source_path) != FT_ERR_SUCCESS
+        || cmp_translate_path_to_native(destination_path, &native_destination_path) != FT_ERR_SUCCESS)
+    {
+        cma_free(native_source_path);
+        cma_free(native_destination_path);
+        cmp_set_error_code(error_code_out, FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
     if (global_force_cross_device_move == FT_FALSE)
     {
-        if (MoveFileExA(source_path, destination_path,
+        if (MoveFileExA(native_source_path, native_destination_path,
                 MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
         {
+            cma_free(native_source_path);
+            cma_free(native_destination_path);
             cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
             return (FT_ERR_SUCCESS);
         }
@@ -154,6 +187,8 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
         last_error = ERROR_NOT_SAME_DEVICE;
     if (last_error == ERROR_NOT_SAME_DEVICE)
     {
+        cma_free(native_source_path);
+        cma_free(native_destination_path);
         if (cmp_file_copy(source_path, destination_path, &copy_error) == 0)
         {
             if (cmp_file_delete(source_path, &delete_error) == 0)
@@ -180,6 +215,8 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
         stored_error = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
     else
         stored_error = FT_ERR_INVALID_ARGUMENT;
+    cma_free(native_source_path);
+    cma_free(native_destination_path);
     if (stored_error == FT_ERR_SUCCESS)
         stored_error = FT_ERR_INTERNAL;
     cmp_set_error_code(error_code_out, stored_error);
@@ -188,6 +225,8 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
 
 int32_t cmp_file_copy(const char *source_path, const char *destination_path, int32_t *error_code_out)
 {
+    char *native_source_path;
+    char *native_destination_path;
     int32_t error_code;
     DWORD last_error;
 
@@ -197,11 +236,26 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
         cmp_set_error_code(error_code_out, error_code);
         return (error_code);
     }
-    if (CopyFileA(source_path, destination_path, 0))
+    native_source_path = ft_nullptr;
+    native_destination_path = ft_nullptr;
+    if (cmp_translate_path_to_native(source_path, &native_source_path) != FT_ERR_SUCCESS
+        || cmp_translate_path_to_native(destination_path, &native_destination_path) != FT_ERR_SUCCESS)
     {
+        cma_free(native_source_path);
+        cma_free(native_destination_path);
+        error_code = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (CopyFileA(native_source_path, native_destination_path, 0))
+    {
+        cma_free(native_source_path);
+        cma_free(native_destination_path);
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    cma_free(native_source_path);
+    cma_free(native_destination_path);
     last_error = GetLastError();
     if (last_error != 0)
         error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
@@ -213,6 +267,7 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
 
 int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_code_out)
 {
+    char *native_path;
     int32_t error_code;
     (void)mode;
     DWORD last_error;
@@ -223,11 +278,20 @@ int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_
         cmp_set_error_code(error_code_out, error_code);
         return (error_code);
     }
-    if (CreateDirectoryA(path, ft_nullptr))
+    native_path = ft_nullptr;
+    if (cmp_translate_path_to_native(path, &native_path) != FT_ERR_SUCCESS)
     {
+        error_code = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (CreateDirectoryA(native_path, ft_nullptr))
+    {
+        cma_free(native_path);
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    cma_free(native_path);
     last_error = GetLastError();
     if (last_error != 0)
         error_code = cmp_file_error_to_errno(static_cast<int32_t>(last_error));
@@ -306,6 +370,59 @@ int32_t cmp_file_get_size(const char *path, ft_size_t *size_out,
         error_code = cmp_file_error_to_errno(errno);
     else
         error_code = FT_ERR_INVALID_ARGUMENT;
+    cmp_set_error_code(error_code_out, error_code);
+    return (error_code);
+}
+
+int32_t cmp_file_get_modification_time(const char *path, t_time *modification_time_out,
+    int32_t *error_code_out)
+{
+    int32_t error_code;
+    struct _stat file_info;
+
+    if (modification_time_out != ft_nullptr)
+        *modification_time_out = 0;
+    if (path == ft_nullptr || modification_time_out == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (_stat(path, &file_info) == 0)
+    {
+        *modification_time_out = static_cast<t_time>(file_info.st_mtime);
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (errno != 0)
+        error_code = cmp_file_error_to_errno(errno);
+    else
+        error_code = FT_ERR_INVALID_ARGUMENT;
+    cmp_set_error_code(error_code_out, error_code);
+    return (error_code);
+}
+
+int32_t cmp_file_get_modification_time(const char *path, t_time *modification_time_out,
+    int32_t *error_code_out)
+{
+    int32_t error_code;
+    struct stat stat_buffer;
+
+    if (modification_time_out != ft_nullptr)
+        *modification_time_out = 0;
+    if (path == ft_nullptr || modification_time_out == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (stat(path, &stat_buffer) == 0)
+    {
+        *modification_time_out = stat_buffer.st_mtime;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    error_code = cmp_file_error_to_errno(errno);
     cmp_set_error_code(error_code_out, error_code);
     return (error_code);
 }

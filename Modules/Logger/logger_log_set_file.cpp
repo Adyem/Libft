@@ -1,7 +1,5 @@
 #include "logger_internal.hpp"
 #include <cerrno>
-#include <fcntl.h>
-#include <unistd.h>
 #include <new>
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Basic/basic.hpp"
@@ -57,13 +55,13 @@ int32_t ft_log_set_file(const char *path, ft_size_t max_size)
 
     if (!path)
         return (log_set_file_report(-1));
-    file_descriptor = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
+    file_descriptor = cmp_open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
     if (file_descriptor == -1)
         return (log_set_file_report(-1));
     sink = new(std::nothrow) s_file_sink;
     if (!sink)
     {
-        close(file_descriptor);
+        (void)cmp_close(file_descriptor);
         return (log_set_file_report(-1));
     }
     sink->file_descriptor = file_descriptor;
@@ -73,20 +71,20 @@ int32_t ft_log_set_file(const char *path, ft_size_t max_size)
     sink->max_age_seconds = 0;
     if (sink->path.get_error() != FT_ERR_SUCCESS)
     {
-        close(file_descriptor);
+        (void)cmp_close(file_descriptor);
         delete sink;
         return (log_set_file_report(-1));
     }
     prepare_status = file_sink_prepare_thread_safety(sink);
     if (prepare_status != FT_ERR_SUCCESS)
     {
-        close(file_descriptor);
+        (void)cmp_close(file_descriptor);
         delete sink;
         return (log_set_file_report(-1));
     }
     if (ft_log_add_sink(ft_file_sink, sink) != 0)
     {
-        close(file_descriptor);
+        (void)cmp_close(file_descriptor);
         file_sink_teardown_thread_safety(sink);
         delete sink;
         return (log_set_file_report(-1));

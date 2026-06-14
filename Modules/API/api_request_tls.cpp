@@ -23,16 +23,12 @@
 # include <winsock2.h>
 # include <ws2tcpip.h>
 #else
-# include <netdb.h>
-# include <arpa/inet.h>
 # include <sys/socket.h>
 # include <sys/time.h>
 # include <unistd.h>
 # include <fcntl.h>
 # include <sys/select.h>
 #endif
-
-#
 #if NETWORKING_HAS_OPENSSL
 #include <openssl/err.h>
 #include <cstdint>
@@ -1121,9 +1117,6 @@ static void api_tls_async_worker(api_tls_async_request *data)
     SSL_CTX *context = ft_nullptr;
     SSL *ssl_session = ft_nullptr;
     int32_t socket_fd = -1;
-    struct addrinfo hints;
-    struct addrinfo *address_results = ft_nullptr;
-    struct addrinfo *address_info;
     ft_string request;
     ft_string body_string;
     ft_string response;
@@ -1136,7 +1129,10 @@ static void api_tls_async_worker(api_tls_async_request *data)
     struct timeval tv;
     ft_size_t total_sent;
     int32_t ssl_ret;
-    int32_t async_resolver_status;
+    ft_vector<networking_resolved_address> address_results;
+    networking_resolved_address resolved_address;
+    ft_size_t address_index;
+    int32_t address_results_initialize_error;
 
     if (!data || !data->host || !data->method || !data->path)
         goto cleanup;
@@ -1152,24 +1148,27 @@ static void api_tls_async_worker(api_tls_async_request *data)
         goto cleanup;
     }
 
-    ft_bzero(&hints, sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_family = AF_UNSPEC;
-    pf_snprintf(port_string, sizeof(port_string), "%u", data->port);
-    async_resolver_status = getaddrinfo(data->host, port_string, &hints, &address_results);
-    if (async_resolver_status != 0)
+    address_results_initialize_error = address_results.initialize();
+    if (address_results_initialize_error != FT_ERR_SUCCESS)
     {
-        api_request_set_resolve_error(async_resolver_status);
+        api_request_set_resolve_error(address_results_initialize_error);
         goto cleanup;
     }
-    address_info = address_results;
-    while (address_info != ft_nullptr && socket_fd < 0)
+    pf_snprintf(port_string, sizeof(port_string), "%u", data->port);
+    if (!networking_dns_resolve(data->host, port_string, AF_UNSPEC,
+            SOCK_STREAM, 0, 0, address_results))
     {
-        socket_fd = nw_socket(address_info->ai_family,
-                               address_info->ai_socktype,
-                               address_info->ai_protocol);
+        api_request_set_resolve_error(FT_ERR_SOCKET_RESOLVE_FAILED);
+        goto cleanup;
+    }
+    address_index = 0;
+    while (address_index < address_results.size() && socket_fd < 0)
+    {
+        resolved_address = address_results[address_index];
+        socket_fd = nw_socket(resolved_address.address.ss_family,
+                               SOCK_STREAM, 0);
         if (socket_fd < 0)
-            address_info = address_info->ai_next;
+            address_index++;
     }
     if (socket_fd < 0)
         goto cleanup;
@@ -1181,8 +1180,9 @@ static void api_tls_async_worker(api_tls_async_request *data)
     fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 #endif
 
-    if (nw_connect(socket_fd, address_info->ai_addr,
-                    static_cast<socklen_t>(address_info->ai_addrlen)) < 0)
+    if (nw_connect(socket_fd,
+            reinterpret_cast<const struct sockaddr *>(&resolved_address.address),
+            resolved_address.length) < 0)
     {
         int32_t connect_error;
 
@@ -1428,8 +1428,7 @@ cleanup:
         nw_close(socket_fd);
     if (context)
         SSL_CTX_free(context);
-    if (address_results)
-        freeaddrinfo(address_results);
+    (void)address_results.destroy();
     if (data->host)
         cma_free(data->host);
     if (data->method)

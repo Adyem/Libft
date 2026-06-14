@@ -568,7 +568,42 @@ ft_bool networking_dns_resolve_first(const char *host, const char *service,
     }
     out_address = results[0];
     (void)results.destroy();
-    (void)(FT_ERR_SUCCESS);
+    return (FT_TRUE);
+}
+
+ft_bool networking_resolved_address_to_string(
+    const networking_resolved_address &address, char *buffer,
+    ft_size_t buffer_size) noexcept
+{
+    const void *source_address;
+    int32_t family;
+
+    if (buffer == ft_nullptr || buffer_size == 0)
+    {
+        networking_push_failure(FT_ERR_INVALID_POINTER);
+        return (FT_FALSE);
+    }
+    buffer[0] = '\0';
+    family = address.address.ss_family;
+    if (family == AF_INET)
+    {
+        source_address = &reinterpret_cast<const sockaddr_in *>(&address.address)->sin_addr;
+    }
+    else if (family == AF_INET6)
+    {
+        source_address = &reinterpret_cast<const sockaddr_in6 *>(&address.address)->sin6_addr;
+    }
+    else
+    {
+        networking_push_failure(FT_ERR_SOCKET_RESOLVE_FAMILY);
+        return (FT_FALSE);
+    }
+    if (!inet_ntop(family, source_address, buffer,
+            static_cast<socklen_t>(buffer_size)))
+    {
+        networking_push_failure(FT_ERR_SOCKET_RESOLVE_FAILED);
+        return (FT_FALSE);
+    }
     return (FT_TRUE);
 }
 

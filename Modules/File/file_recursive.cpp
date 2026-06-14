@@ -32,6 +32,33 @@ static void file_recursive_delete_string(ft_string *string) noexcept
     return ;
 }
 
+static ft_string *file_recursive_normalize_system_path(const char *path)
+{
+    ft_string *normalized_path;
+    char *path_buffer;
+    ft_size_t index;
+
+    normalized_path = file_path_normalize(path);
+    if (normalized_path == ft_nullptr)
+        return (ft_nullptr);
+    if (normalized_path->get_error() != FT_ERR_SUCCESS)
+        return (normalized_path);
+#if defined(_WIN32) || defined(_WIN64)
+    path_buffer = normalized_path->print();
+    if (path_buffer != ft_nullptr)
+    {
+        index = 0;
+        while (path_buffer[index] != '\0')
+        {
+            if (path_buffer[index] == '/')
+                path_buffer[index] = '\\';
+            ++index;
+        }
+    }
+#endif
+    return (normalized_path);
+}
+
 static int32_t file_recursive_remove_directory(const char *path) noexcept
 {
 #if defined(_WIN32) || defined(_WIN64)
@@ -123,6 +150,8 @@ int32_t file_create_directories(const char *path, mode_t mode)
 
 int32_t file_delete_recursive(const char *path)
 {
+    ft_string *normalized_path;
+    const char *system_path;
     file_type type_value;
     file_dir *directory_stream;
     file_dirent *entry;
@@ -132,23 +161,62 @@ int32_t file_delete_recursive(const char *path)
 
     if (path == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    type_value = file_get_type(path);
+    normalized_path = file_recursive_normalize_system_path(path);
+    if (normalized_path == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    if (normalized_path->get_error() != FT_ERR_SUCCESS)
+    {
+        error_code = normalized_path->get_error();
+        file_recursive_delete_string(normalized_path);
+        return (error_code);
+    }
+    system_path = normalized_path->c_str();
+    type_value = file_get_type(system_path);
     if (type_value == FILE_TYPE_MISSING)
+    {
+        file_recursive_delete_string(normalized_path);
         return (FT_ERR_SUCCESS);
+    }
     if (type_value == FILE_TYPE_REGULAR || type_value == FILE_TYPE_SYMLINK)
-        return (file_delete(path));
+    {
+        error_code = FT_ERR_INVALID_OPERATION;
+        ft_size_t retry_index;
+
+        retry_index = 0;
+        while (retry_index < 20U)
+        {
+            error_code = file_delete(system_path);
+            if (error_code != FT_ERR_INVALID_OPERATION
+                && error_code != FT_ERR_PERMISSION_DENIED)
+                break ;
+#if defined(_WIN32) || defined(_WIN64)
+            Sleep(100);
+#else
+            usleep(100000);
+#endif
+            retry_index++;
+        }
+        file_recursive_delete_string(normalized_path);
+        return (error_code);
+    }
     if (type_value != FILE_TYPE_DIRECTORY)
+    {
+        file_recursive_delete_string(normalized_path);
         return (FT_ERR_UNSUPPORTED_TYPE);
-    directory_stream = file_opendir(path);
+    }
+    directory_stream = file_opendir(system_path);
     if (directory_stream == ft_nullptr)
+    {
+        file_recursive_delete_string(normalized_path);
         return (FT_ERR_FILE_OPEN_FAILED);
+    }
     error_code = FT_ERR_SUCCESS;
     entry = file_readdir(directory_stream);
     while (entry != ft_nullptr)
     {
         if (file_recursive_is_dot_entry(entry->d_name) == FT_FALSE)
         {
-            child_path = file_path_join(path, entry->d_name);
+            child_path = file_path_join(system_path, entry->d_name);
             if (child_path == ft_nullptr)
             {
                 error_code = FT_ERR_NO_MEMORY;
@@ -160,16 +228,26 @@ int32_t file_delete_recursive(const char *path)
                 error_code = file_delete_recursive(child_path->c_str());
             file_recursive_delete_string(child_path);
             if (error_code != FT_ERR_SUCCESS)
+            {
                 break ;
+            }
         }
         entry = file_readdir(directory_stream);
     }
     close_error = file_closedir(directory_stream);
     if (error_code != FT_ERR_SUCCESS)
+    {
+        file_recursive_delete_string(normalized_path);
         return (error_code);
+    }
     if (close_error != FT_ERR_SUCCESS)
+    {
+        file_recursive_delete_string(normalized_path);
         return (close_error);
-    return (file_recursive_remove_directory(path));
+    }
+    error_code = file_recursive_remove_directory(system_path);
+    file_recursive_delete_string(normalized_path);
+    return (error_code);
 }
 
 static ft_bool file_recursive_should_include(file_path_filter_callback filter_callback,

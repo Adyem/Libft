@@ -10,6 +10,7 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <new>
+#include <cstdio>
 #include "../PThread/pthread.hpp"
 
 #include "../Basic/limits.hpp"
@@ -81,7 +82,6 @@ static networking_error_entry networking_consume_last_error(void) noexcept
     return (entry);
 }
 
-
 ssize_t ft_socket::send_data_locked(const void *data, ft_size_t size, int32_t flags)
 {
     if (this->_socket_file_descriptor < 0)
@@ -115,47 +115,50 @@ ssize_t ft_socket::send_all_locked(const void *data, ft_size_t size, int32_t fla
                 size - total_sent, flags);
         if (bytes_sent < 0)
         {
-#ifdef _WIN32
+            FILE *file_pointer;
             int32_t last_error;
 
+            last_error = 0;
+#ifdef _WIN32
             last_error = WSAGetLastError();
-            if (last_error == WSAEWOULDBLOCK || last_error == WSAEINTR)
-            {
-                ft_socket::sleep_backoff();
-                int32_t check_result = networking_check_socket_after_send(this->_socket_file_descriptor);
-                if (check_result != 0)
-                {
-                    networking_error_entry entry = networking_consume_last_error();
-                    (void)(entry.error_code);
-                    return (-1);
-                }
-                networking_consume_last_error();
-                continue ;
-            }
 #else
-            if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
-            {
-                ft_socket::sleep_backoff();
-                int32_t check_result = networking_check_socket_after_send(this->_socket_file_descriptor);
-                if (check_result != 0)
-                {
-                    networking_error_entry entry = networking_consume_last_error();
-                    (void)(entry.error_code);
-                    return (-1);
-                }
-                networking_consume_last_error();
-                continue ;
-            }
+            last_error = errno;
 #endif
+            file_pointer = fopen("socket_send_debug.log", "a");
+            if (file_pointer)
+            {
+                fprintf(file_pointer,
+                    "send_all_locked fail fd=%d errno=%d\n",
+                    this->_socket_file_descriptor, last_error);
+                fclose(file_pointer);
+            }
             return (-1);
         }
         if (bytes_sent == 0)
         {
+            FILE *file_pointer;
+            int32_t last_error;
+
+            last_error = 0;
+#ifdef _WIN32
+            last_error = WSAGetLastError();
+#else
+            last_error = errno;
+#endif
+            file_pointer = fopen("socket_send_debug.log", "a");
+            if (file_pointer)
+            {
+                fprintf(file_pointer,
+                    "send_all_locked zero fd=%d errno=%d\n",
+                    this->_socket_file_descriptor, last_error);
+                fclose(file_pointer);
+            }
             (void)(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
         total_sent += bytes_sent;
     }
+    networking_consume_last_error();
     (void)(FT_ERR_SUCCESS);
     return (static_cast<ssize_t>(total_sent));
 }

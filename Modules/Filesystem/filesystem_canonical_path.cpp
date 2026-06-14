@@ -31,12 +31,15 @@ static ft_string *filesystem_string_from_owned_c_string(char *value)
 
 ft_string *filesystem_canonical_path(const char *path)
 {
-    char *canonical_path;
+    char *owned_path;
     int32_t error_code;
 
-    canonical_path = ft_nullptr;
-    error_code = cmp_path_canonical(path, &canonical_path);
+    if (path == ft_nullptr || path[0] == '\0')
+        return (ft_nullptr);
+    error_code = cmp_path_canonical(path, &owned_path);
     if (error_code != FT_ERR_SUCCESS)
         return (ft_nullptr);
-    return (filesystem_string_from_owned_c_string(canonical_path));
+    if (owned_path == ft_nullptr)
+        return (ft_nullptr);
+    return (filesystem_string_from_owned_c_string(owned_path));
 }

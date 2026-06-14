@@ -2,6 +2,7 @@
 #include "errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include <cstdio>
 
 namespace
 {
@@ -35,7 +36,8 @@ void    errno_write_stderr(const char *string) noexcept
 {
     if (string == ft_nullptr)
         return ;
-    (void)su_write(2, string, ft_strlen_size_t(string));
+    (void)std::fwrite(string, 1, ft_strlen_size_t(string), stderr);
+    (void)std::fflush(stderr);
     return ;
 }
 

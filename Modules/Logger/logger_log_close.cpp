@@ -141,7 +141,7 @@ void ft_log_close()
                 file_lock_error = file_sink_lock(sink, &file_sink_lock_acquired);
                 if (file_lock_error != FT_ERR_SUCCESS)
                     file_sink_lock_acquired = FT_FALSE;
-                close(sink->file_descriptor);
+                (void)cmp_close(sink->file_descriptor);
                 sink->file_descriptor = -1;
                 if (file_sink_lock_acquired)
                     file_sink_unlock(sink, file_sink_lock_acquired);

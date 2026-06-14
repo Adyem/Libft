@@ -3,6 +3,7 @@
 #include "api_http_internal.hpp"
 #include "api_request_metrics.hpp"
 #include "../Networking/socket_class.hpp"
+#include "../Networking/networking.hpp"
 #include "../Networking/openssl_support.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
@@ -12,36 +13,13 @@
 #include "../Printf/printf.hpp"
 #include "../Time/time.hpp"
 #include <errno.h>
+#include <cstdio>
 #include <utility>
 #include "../Template/move.hpp"
 
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#ifdef _WIN32
-# include <winsock2.h>
-# include <ws2tcpip.h>
-#else
-# include <netdb.h>
-# include <arpa/inet.h>
-# include <sys/socket.h>
-# include <sys/time.h>
-# include <unistd.h>
-#endif
-
-static int32_t api_request_capture_network_error()
-{
-    int32_t system_error;
-
-#ifdef _WIN32
-    system_error = WSAGetLastError();
-#else
-    system_error = errno;
-#endif
-    if (system_error == 0)
-        return (FT_ERR_SUCCESS);
-    return (cmp_map_system_error_to_ft(system_error));
-}
 
 static int32_t api_request_prepare_connection_handle(api_connection_pool_handle &handle,
     int32_t &error_code) noexcept
@@ -50,13 +28,6 @@ static int32_t api_request_prepare_connection_handle(api_connection_pool_handle 
     if (initialize_result != FT_ERR_SUCCESS)
         error_code = initialize_result;
     return (initialize_result);
-}
-
-static int32_t api_request_assign_resolve_error(int32_t mapped_error)
-{
-    if (mapped_error != FT_ERR_SUCCESS)
-        return (mapped_error);
-    return (FT_ERR_SOCKET_RESOLVE_FAILED);
 }
 
 static void api_request_copy_ip(char destination[46], const char *source)
@@ -70,6 +41,22 @@ static void api_request_copy_ip(char destination[46], const char *source)
 }
 
 static api_request_wait_until_ready_hook g_api_request_wait_hook = ft_nullptr;
+
+#ifdef DEBUG
+static void api_request_debug_log(const char *message)
+{
+    std::FILE *file_pointer;
+
+    file_pointer = std::fopen("api_request_debug.log", "a");
+    if (!file_pointer)
+        return ;
+    std::fprintf(file_pointer, "%s\n", message);
+    std::fclose(file_pointer);
+    return ;
+}
+#else
+#define api_request_debug_log(message) do { } while (0)
+#endif
 
 void api_request_set_downgrade_wait_hook(
     api_request_wait_until_ready_hook hook)
@@ -242,17 +229,11 @@ ft_bool api_request_stream(const char *ip_address, uint16_t port,
     }
     ft_bool result;
 
-#if NETWORKING_HAS_OPENSSL
     result = api_http_execute_plain_streaming(connection_handle, method, path,
             ip_address, payload, headers, timeout, ip_address, port, retry_policy,
             streaming_handler, error_code);
     if (!result)
         return (FT_FALSE);
-#else
-    (void)result;
-    error_code = FT_ERR_INVALID_OPERATION;
-    return (FT_FALSE);
-#endif
     connection_guard.set_success();
     return (FT_TRUE);
 }
@@ -491,14 +472,19 @@ char *api_request_string(const char *ip_address, uint16_t port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (!pooled_connection)
     {
+        api_request_debug_log("request_string: no pooled connection");
         if (!api_retry_circuit_allow(connection_handle, retry_policy,
                 error_code))
+        {
+            api_request_debug_log("request_string: circuit blocked");
             return (ft_nullptr);
+        }
         int32_t socket_setup_error;
 
         socket_setup_error = connection_handle.socket.initialize(config);
         if (socket_setup_error != FT_ERR_SUCCESS)
         {
+            api_request_debug_log("request_string: socket initialize failed");
             if (api_is_configuration_socket_error(socket_setup_error))
                 error_code = socket_setup_error;
             else
@@ -507,6 +493,7 @@ char *api_request_string(const char *ip_address, uint16_t port,
             return (ft_nullptr);
         }
         connection_handle.has_socket = FT_TRUE;
+        api_request_debug_log("request_string: socket initialize ok");
     }
     struct api_connection_return_guard
     {
@@ -541,17 +528,16 @@ char *api_request_string(const char *ip_address, uint16_t port,
         error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
-#if NETWORKING_HAS_OPENSSL
     metrics_result_body = api_http_execute_plain(connection_handle, method,
             path, ip_address, payload, headers, status, timeout, ip_address, port,
             retry_policy, error_code);
     if (!metrics_result_body)
+    {
+        api_request_debug_log("request_string: api_http_execute_plain returned null");
         return (ft_nullptr);
-#else
-    error_code = FT_ERR_INVALID_OPERATION;
-    return (ft_nullptr);
-#endif
+    }
     connection_guard.set_success();
+    api_request_debug_log("request_string: success");
     return (metrics_result_body);
 }
 
@@ -905,25 +891,8 @@ ft_bool api_request_stream_host(const char *host, uint16_t port,
     const char *headers, int32_t timeout,
     const api_retry_policy *retry_policy)
 {
-    if (ft_log_get_api_logging())
-    {
-        const char *log_host = "(null)";
-        const char *log_method = "(null)";
-        const char *log_path = "(null)";
-
-        if (host)
-            log_host = host;
-        if (method)
-            log_method = method;
-        if (path)
-            log_path = path;
-        ft_log_debug("api_request_stream_host %s:%u %s %s", log_host, port,
-            log_method, log_path);
-    }
     if (!host || !method || !path || !streaming_handler)
-    {
-                return (FT_FALSE);
-    }
+        return (FT_FALSE);
     const api_transport_hooks *hooks;
 
     hooks = api_get_transport_hooks();
@@ -933,59 +902,21 @@ ft_bool api_request_stream_host(const char *host, uint16_t port,
                 streaming_handler, payload, headers, timeout, retry_policy,
                 hooks->user_data));
     }
+    networking_resolved_address resolved_address;
     char port_string[6];
-    struct addrinfo hints;
-    struct addrinfo *address_results;
-    struct addrinfo *address_info;
-    int32_t resolver_status;
+    char ip_buffer[INET6_ADDRSTRLEN];
 
-    ft_bzero(&hints, sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_family = AF_UNSPEC;
     pf_snprintf(port_string, sizeof(port_string), "%u", port);
-    resolver_status = getaddrinfo(host, port_string, &hints, &address_results);
-    if (resolver_status != 0)
+    if (!networking_dns_resolve_first(host, port_string, AF_UNSPEC,
+            SOCK_STREAM, 0, 0, resolved_address))
     {
-        api_request_set_resolve_error(resolver_status);
         return (FT_FALSE);
     }
-    address_info = address_results;
-    while (address_info && address_info->ai_socktype != SOCK_STREAM)
-        address_info = address_info->ai_next;
-    if (!address_info)
+    if (!networking_resolved_address_to_string(resolved_address, ip_buffer,
+            sizeof(ip_buffer)))
     {
-        freeaddrinfo(address_results);
-                return (FT_FALSE);
+        return (FT_FALSE);
     }
-    char ip_buffer[INET6_ADDRSTRLEN];
-    void *source_address;
-    int32_t family;
-
-    family = address_info->ai_family;
-    if (family == AF_INET)
-    {
-        source_address = &reinterpret_cast<sockaddr_in*>(address_info->ai_addr)->sin_addr;
-        if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
-        {
-            freeaddrinfo(address_results);
-            return (FT_FALSE);
-        }
-    }
-    else if (family == AF_INET6)
-    {
-        source_address = &reinterpret_cast<sockaddr_in6*>(address_info->ai_addr)->sin6_addr;
-        if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
-        {
-            freeaddrinfo(address_results);
-            return (FT_FALSE);
-        }
-    }
-    else
-    {
-        freeaddrinfo(address_results);
-                return (FT_FALSE);
-    }
-    freeaddrinfo(address_results);
     return (api_request_stream(ip_buffer, port, method, path,
         streaming_handler, payload, headers, timeout, retry_policy));
 }
@@ -995,27 +926,8 @@ char *api_request_string_host(const char *host, uint16_t port,
     const char *headers, int32_t *status, int32_t timeout,
     const api_retry_policy *retry_policy)
 {
-    if (ft_log_get_api_logging())
-    {
-        const char *log_host = "(null)";
-        const char *log_method = "(null)";
-        const char *log_path = "(null)";
-
-        if (host)
-            log_host = host;
-        if (method)
-            log_method = method;
-        if (path)
-            log_path = path;
-        ft_log_debug("api_request_string_host %s:%u %s %s",
-            log_host, port, log_method, log_path);
-    }
-    int32_t error_code = FT_ERR_SUCCESS;
     if (!host || !method || !path)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
-    }
     const api_transport_hooks *hooks;
 
     hooks = api_get_transport_hooks();
@@ -1024,87 +936,25 @@ char *api_request_string_host(const char *host, uint16_t port,
         char *hook_result = hooks->request_string_host(host, port, method,
                 path, payload, headers, status, timeout, retry_policy,
                 hooks->user_data);
-        if (!hook_result)
-        {
-            error_code = FT_ERR_IO;
-            if (error_code == FT_ERR_SUCCESS)
-                error_code = FT_ERR_IO;
-        }
         return (hook_result);
     }
+    networking_resolved_address resolved_address;
     char port_string[6];
-    struct addrinfo hints;
-    struct addrinfo *address_results;
-    struct addrinfo *address_info;
-    int32_t resolver_status;
-
-    ft_bzero(&hints, sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_family = AF_UNSPEC;
-    pf_snprintf(port_string, sizeof(port_string), "%u", port);
-    resolver_status = getaddrinfo(host, port_string, &hints, &address_results);
-    if (resolver_status != 0)
-    {
-        error_code = api_request_set_resolve_error(resolver_status);
-        return (ft_nullptr);
-    }
-    address_info = address_results;
-    while (address_info && address_info->ai_socktype != SOCK_STREAM)
-        address_info = address_info->ai_next;
-    if (!address_info)
-    {
-        freeaddrinfo(address_results);
-        error_code = FT_ERR_SOCKET_RESOLVE_FAILED;
-        return (ft_nullptr);
-    }
     char ip_buffer[INET6_ADDRSTRLEN];
-    void *source_address;
-    int32_t family;
 
-    family = address_info->ai_family;
-    if (family == AF_INET)
+    pf_snprintf(port_string, sizeof(port_string), "%u", port);
+    if (!networking_dns_resolve_first(host, port_string, AF_UNSPEC,
+            SOCK_STREAM, 0, 0, resolved_address))
     {
-        source_address = &reinterpret_cast<sockaddr_in*>(address_info->ai_addr)->sin_addr;
-        if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
-        {
-            int32_t resolve_error;
-
-            resolve_error = api_request_capture_network_error();
-            freeaddrinfo(address_results);
-            error_code = api_request_assign_resolve_error(resolve_error);
-            return (ft_nullptr);
-        }
-    }
-    else if (family == AF_INET6)
-    {
-        source_address = &reinterpret_cast<sockaddr_in6*>(address_info->ai_addr)->sin6_addr;
-        if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
-        {
-            int32_t resolve_error;
-
-            resolve_error = api_request_capture_network_error();
-            freeaddrinfo(address_results);
-            error_code = api_request_assign_resolve_error(resolve_error);
-            return (ft_nullptr);
-        }
-    }
-    else
-    {
-        freeaddrinfo(address_results);
-        error_code = FT_ERR_SOCKET_RESOLVE_FAMILY;
         return (ft_nullptr);
     }
-    freeaddrinfo(address_results);
+    if (!networking_resolved_address_to_string(resolved_address, ip_buffer,
+            sizeof(ip_buffer)))
+    {
+        return (ft_nullptr);
+    }
     char *result = api_request_string(ip_buffer, port, method, path, payload,
             headers, status, timeout, retry_policy);
-    if (!result)
-    {
-        error_code = FT_ERR_IO;
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_IO;
-        return (ft_nullptr);
-    }
-    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1258,8 +1108,8 @@ char *api_request_string_host_bearer(const char *host, uint16_t port,
     header_string += "Authorization: Bearer ";
     header_string += token;
     return (api_request_string_host(host, port, method, path, payload,
-                                    header_string.c_str(), status, timeout,
-                                    retry_policy));
+                                   header_string.c_str(), status, timeout,
+                                   retry_policy));
 }
 
 json_group *api_request_json_host_bearer(const char *host, uint16_t port,
@@ -1310,8 +1160,8 @@ char *api_request_string_host_basic(const char *host, uint16_t port,
     header_string += "Authorization: Basic ";
     header_string += credentials;
     return (api_request_string_host(host, port, method, path, payload,
-                                    header_string.c_str(), status, timeout,
-                                    retry_policy));
+                                   header_string.c_str(), status, timeout,
+                                   retry_policy));
 }
 
 json_group *api_request_json_host_basic(const char *host, uint16_t port,

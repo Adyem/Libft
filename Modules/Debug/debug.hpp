@@ -8,6 +8,7 @@
 int32_t dbg_enable_crash_stack_traces(void) noexcept;
 void    dbg_disable_crash_stack_traces(void) noexcept;
 ft_bool dbg_crash_stack_traces_enabled(void) noexcept;
+void    dbg_trace_message(const char *message) noexcept;
 void    dbg_print_stack_trace(void) noexcept;
 int32_t dbg_symbolize_address(const void *address,
             char *symbol_buffer, ft_size_t symbol_buffer_size,

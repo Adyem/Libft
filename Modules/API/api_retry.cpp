@@ -7,8 +7,10 @@
 #include "../Time/time.hpp"
 #include "../Errno/errno.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "api_internal.hpp"
 #include <new>
 #include <climits>
+#include <cstdio>
 #include "../Basic/limits.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
@@ -19,8 +21,25 @@ struct api_circuit_state
     int32_t failure_count;
     int64_t open_until_ms;
     ft_bool half_open;
+    ft_bool probe_in_flight;
     int32_t half_open_success_count;
 };
+
+#ifdef DEBUG
+static void api_retry_circuit_debug_log(const char *message)
+{
+    std::FILE *file_pointer;
+
+    file_pointer = std::fopen("api_retry_debug.log", "a");
+    if (!file_pointer)
+        return ;
+    std::fprintf(file_pointer, "%s\n", message);
+    std::fclose(file_pointer);
+    return ;
+}
+#else
+#define api_retry_circuit_debug_log(message) do { } while (0)
+#endif
 
 static ft_vector<api_circuit_state> &api_retry_circuit_get_states(void)
 {
@@ -118,6 +137,7 @@ static api_circuit_state *api_retry_circuit_get_state(
 {
     api_circuit_state *state;
     int32_t key_initialization_error;
+    int32_t push_back_error;
 
     state = api_retry_circuit_find_state(states, key);
     if (state)
@@ -131,8 +151,11 @@ static api_circuit_state *api_retry_circuit_get_state(
     new_state.failure_count = 0;
     new_state.open_until_ms = 0;
     new_state.half_open = FT_FALSE;
+    new_state.probe_in_flight = FT_FALSE;
     new_state.half_open_success_count = 0;
-    states.push_back(new_state);
+    push_back_error = states.push_back(new_state);
+    if (push_back_error != FT_ERR_SUCCESS)
+        return (ft_nullptr);
     ft_size_t last_index;
 
     last_index = states.size();
@@ -179,6 +202,7 @@ ft_bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     if (state->open_until_ms > now_ms)
     {
         error_code = FT_ERR_API_CIRCUIT_OPEN;
+        api_retry_circuit_debug_log("allow: open");
         (void)circuit_mutex->unlock();
         return (FT_FALSE);
     }
@@ -186,9 +210,24 @@ ft_bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     {
         state->open_until_ms = 0;
         state->half_open = FT_TRUE;
+        state->probe_in_flight = FT_FALSE;
         state->half_open_success_count = 0;
         state->failure_count = 0;
+        api_retry_circuit_debug_log("allow: half_open");
     }
+    if (state->half_open)
+    {
+        if (state->probe_in_flight)
+        {
+            error_code = FT_ERR_API_CIRCUIT_OPEN;
+            api_retry_circuit_debug_log("allow: probe_in_flight");
+            (void)circuit_mutex->unlock();
+            return (FT_FALSE);
+        }
+        state->probe_in_flight = FT_TRUE;
+        api_retry_circuit_debug_log("allow: reserve_probe");
+    }
+    api_retry_circuit_debug_log("allow: permit");
     (void)circuit_mutex->unlock();
     return (FT_TRUE);
 }
@@ -238,11 +277,15 @@ void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
         if (state->half_open_success_count >= required_successes)
         {
             state->half_open = FT_FALSE;
+            state->probe_in_flight = FT_FALSE;
             state->half_open_success_count = 0;
         }
     }
     else
+    {
         state->half_open_success_count = 0;
+        state->probe_in_flight = FT_FALSE;
+    }
     (void)circuit_mutex->unlock();
     return ;
 }
@@ -287,6 +330,7 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
     if (state->half_open)
     {
         state->half_open = FT_FALSE;
+        state->probe_in_flight = FT_FALSE;
         state->half_open_success_count = 0;
         state->failure_count = threshold;
         state->open_until_ms = api_retry_circuit_compute_deadline(now_ms,
@@ -296,10 +340,12 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
     }
     if (state->failure_count < threshold)
         state->failure_count += 1;
+    state->probe_in_flight = FT_FALSE;
     if (state->failure_count >= threshold)
     {
         state->failure_count = threshold;
         state->half_open = FT_FALSE;
+        state->probe_in_flight = FT_FALSE;
         state->half_open_success_count = 0;
         state->open_until_ms = api_retry_circuit_compute_deadline(now_ms,
                 cooldown_ms);
@@ -326,5 +372,7 @@ void api_retry_circuit_reset(void)
     }
     states.clear();
     (void)circuit_mutex->unlock();
+    api_retry_circuit_debug_log("reset");
+    api_connection_pool_flush();
     return ;
 }

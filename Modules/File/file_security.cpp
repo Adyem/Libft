@@ -171,13 +171,13 @@ static ft_bool file_security_has_root_boundary(const char *root,
     const char *candidate) noexcept
 {
     ft_size_t index;
-    char separator;
 
-    separator = cmp_path_separator();
     index = 0;
     while (root[index] != '\0' && candidate[index] != '\0')
     {
-        if (root[index] != candidate[index])
+        if (root[index] != candidate[index]
+            && !((root[index] == '/' || root[index] == '\\')
+                && (candidate[index] == '/' || candidate[index] == '\\')))
             return (FT_FALSE);
         ++index;
     }
@@ -185,9 +185,10 @@ static ft_bool file_security_has_root_boundary(const char *root,
         return (FT_FALSE);
     if (candidate[index] == '\0')
         return (FT_TRUE);
-    if (index > 0 && root[index - 1] == separator)
+    if (index > 0
+        && (root[index - 1] == '/' || root[index - 1] == '\\'))
         return (FT_TRUE);
-    if (candidate[index] == separator)
+    if (candidate[index] == '/' || candidate[index] == '\\')
         return (FT_TRUE);
     return (FT_FALSE);
 }

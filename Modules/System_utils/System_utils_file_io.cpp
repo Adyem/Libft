@@ -146,6 +146,9 @@ int32_t su_close(int32_t file_descriptor)
     int32_t close_result;
 
     close_result = cmp_close(file_descriptor);
+    if (close_result == FT_ERR_INVALID_HANDLE
+        || close_result == FT_ERR_INVALID_ARGUMENT)
+        return (FT_ERR_INVALID_ARGUMENT);
     if (close_result != 0)
         return (close_result);
     return (0);

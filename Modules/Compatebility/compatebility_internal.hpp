@@ -8,6 +8,7 @@
 #include "../Basic/basic.hpp"
 #include "../File/open_dir.hpp"
 #include "../File/file_utils.hpp"
+#include "../Time/time.hpp"
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -21,6 +22,7 @@
 # include <sys/stat.h>
 # include <winsock2.h>
 # include <windows.h>
+# define CMP_SHUTDOWN_SEND_MODE SD_SEND
 # ifndef _TIMEVAL_DEFINED
 struct timeval
 {
@@ -55,6 +57,7 @@ int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
 # include <unistd.h>
 # include <sys/stat.h>
 # include <sys/time.h>
+# define CMP_SHUTDOWN_SEND_MODE SHUT_WR
 struct file_dir
 {
     intptr_t file_descriptor;
@@ -85,6 +88,7 @@ int32_t cmp_directory_exists(const char *path, int32_t *exists_out,
     int32_t *error_code_out);
 char cmp_path_separator(void);
 void cmp_normalize_slashes(char *data);
+int32_t cmp_translate_path_to_native(const char *path, char **output_path);
 ft_bool cmp_path_equal(const char *path_left, const char *path_right) noexcept;
 int32_t cmp_file_error_to_errno(int32_t system_error) noexcept;
 int32_t cmp_file_exists(const char *path, int32_t *exists_out,
@@ -95,6 +99,8 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
 int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_code_out);
 int32_t cmp_file_get_type(const char *path, file_type *type_out, int32_t *error_code_out);
 int32_t cmp_file_get_size(const char *path, ft_size_t *size_out, int32_t *error_code_out);
+int32_t cmp_file_get_modification_time(const char *path, t_time *modification_time_out,
+    int32_t *error_code_out);
 int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *error_code_out);
 int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
     int32_t group_permissions, int32_t other_permissions, int32_t *error_code_out);

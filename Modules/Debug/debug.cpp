@@ -41,6 +41,15 @@ ft_bool dbg_crash_stack_traces_enabled(void) noexcept
     return (g_dbg_enabled);
 }
 
+void dbg_trace_message(const char *message) noexcept
+{
+    if (!message)
+        return ;
+    std::fprintf(stderr, "%s\n", message);
+    std::fflush(stderr);
+    return ;
+}
+
 void dbg_print_stack_trace(void) noexcept
 {
     void *frames[DBG_STACK_TRACE_MAX_FRAMES];

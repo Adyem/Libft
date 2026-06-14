@@ -7,6 +7,7 @@
 #include "../PThread/pthread_lock_tracking.hpp"
 #include "../SCMA/SCMA.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Networking/socket_handle.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -578,6 +579,7 @@ int32_t ft_run_registered_tests(void)
     int32_t terminal_width;
     int32_t show_running_line;
     const char *failure_message;
+    ft_bool socket_runtime_acquired;
 
     log_file = fopen("test_failures.log", "w");
     if (log_file)
@@ -589,10 +591,29 @@ int32_t ft_run_registered_tests(void)
     baseline_stdin_descriptor = dup(STDIN_FILENO);
     baseline_stdout_descriptor = dup(STDOUT_FILENO);
     baseline_stderr_descriptor = dup(STDERR_FILENO);
+    socket_runtime_acquired = FT_FALSE;
+#ifdef _WIN32
+    if (ft_socket_runtime_acquire() != FT_ERR_SUCCESS)
+    {
+        report_runner_failure("runner failed to initialize socket runtime before test loop");
+        if (baseline_stdin_descriptor >= 0)
+            (void)close(baseline_stdin_descriptor);
+        if (baseline_stdout_descriptor >= 0)
+            (void)close(baseline_stdout_descriptor);
+        if (baseline_stderr_descriptor >= 0)
+            (void)close(baseline_stderr_descriptor);
+        return (1);
+    }
+    socket_runtime_acquired = FT_TRUE;
+#endif
     null_descriptor = open(cmp_service_null_device_path(), O_WRONLY);
     if (null_descriptor < 0)
     {
         report_runner_failure("runner failed to open null device before test loop");
+#ifdef _WIN32
+        if (socket_runtime_acquired == FT_TRUE)
+            ft_socket_runtime_release();
+#endif
         if (baseline_stdin_descriptor >= 0)
             (void)close(baseline_stdin_descriptor);
         if (baseline_stdout_descriptor >= 0)
@@ -660,6 +681,10 @@ int32_t ft_run_registered_tests(void)
         (void)close(baseline_stderr_descriptor);
     if (null_descriptor >= 0)
         (void)close(null_descriptor);
+#ifdef _WIN32
+    if (socket_runtime_acquired == FT_TRUE)
+        ft_socket_runtime_release();
+#endif
     release_test_storage();
     if (selected_tests == 0)
     {

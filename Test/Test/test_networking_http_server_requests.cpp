@@ -15,6 +15,8 @@
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/PThread/mutex.hpp"
 #include "../../Modules/PThread/recursive_mutex.hpp"
+#include "../../Modules/Time/time.hpp"
+#include <atomic>
 #ifndef LIBFT_TEST_BUILD
 #endif
 
@@ -34,6 +36,14 @@ struct http_server_context
     int result;
 };
 
+struct http_server_watchdog_context
+{
+    ft_http_server *server;
+    ft_socket *client_socket;
+    std::atomic<bool> *stop_requested;
+    std::atomic<bool> *timed_out;
+};
+
 static void http_server_run_once(http_server_context *context)
 {
     if (context == ft_nullptr)
@@ -41,6 +51,33 @@ static void http_server_run_once(http_server_context *context)
     if (context->server == ft_nullptr)
         return ;
     context->result = context->server->run_once();
+    return ;
+}
+
+static void http_server_watchdog(http_server_watchdog_context *context)
+{
+    t_monotonic_time_point start_time;
+    t_monotonic_time_point current_time;
+
+    if (context == ft_nullptr)
+        return ;
+    if (context->server == ft_nullptr || context->stop_requested == ft_nullptr
+        || context->timed_out == ft_nullptr)
+        return ;
+    start_time = time_monotonic_point_now();
+    while (context->stop_requested->load() == false)
+    {
+        current_time = time_monotonic_point_now();
+        if (time_monotonic_point_diff_ms(start_time, current_time) >= 10000)
+        {
+            context->timed_out->store(true);
+            if (context->client_socket != ft_nullptr)
+                (void)context->client_socket->close_socket();
+            (void)context->server->_server_socket.close_socket();
+            return ;
+        }
+        time_sleep_ms(50);
+    }
     return ;
 }
 
@@ -341,15 +378,23 @@ FT_TEST(test_networking_http_server_thread_safe_run_once)
     ft_string response;
     ft_bool run_thread_started;
     ft_bool error_thread_started;
+    ft_bool watchdog_started;
     ft_bool client_initialized;
     ft_bool response_initialized;
     ft_bool test_passed;
+    std::atomic<bool> watchdog_stop_requested;
+    std::atomic<bool> watchdog_timed_out;
+    http_server_watchdog_context watchdog_context;
+    ft_thread watchdog_thread;
 
     run_thread_started = FT_FALSE;
     error_thread_started = FT_FALSE;
+    watchdog_started = FT_FALSE;
     client_initialized = FT_FALSE;
     response_initialized = FT_FALSE;
     test_passed = FT_FALSE;
+    watchdog_stop_requested.store(false);
+    watchdog_timed_out.store(false);
     run_context.result = FT_ERR_INVALID_STATE;
     error_context.result = FT_ERR_INVALID_STATE;
     FT_TEST_REQUIRE(server.initialize() == FT_ERR_SUCCESS);
@@ -375,6 +420,13 @@ FT_TEST(test_networking_http_server_thread_safe_run_once)
     client_configuration._port = 54336;
     FT_TEST_REQUIRE(client_socket.initialize(client_configuration) == FT_ERR_SUCCESS);
     client_initialized = FT_TRUE;
+    watchdog_context.server = &server;
+    watchdog_context.client_socket = &client_socket;
+    watchdog_context.stop_requested = &watchdog_stop_requested;
+    watchdog_context.timed_out = &watchdog_timed_out;
+    watchdog_thread = ft_thread(http_server_watchdog, &watchdog_context);
+    FT_TEST_REQUIRE(watchdog_thread.joinable());
+    watchdog_started = FT_TRUE;
     request_string = "GET /thread HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
     FT_TEST_REQUIRE(client_socket.send_all(request_string, ft_strlen(request_string), 0)
         == static_cast<ssize_t>(ft_strlen(request_string)));
@@ -389,13 +441,23 @@ FT_TEST(test_networking_http_server_thread_safe_run_once)
         error_thread.join();
         error_thread_started = FT_FALSE;
     }
+    watchdog_stop_requested.store(true);
+    if (watchdog_started == FT_TRUE)
+    {
+        watchdog_thread.join();
+        watchdog_started = FT_FALSE;
+    }
     FT_TEST_REQUIRE(run_context.result == FT_ERR_SUCCESS
         || run_context.result == 1
         || error_context.result == FT_ERR_SUCCESS
         || error_context.result == 1);
+    FT_TEST_REQUIRE(watchdog_timed_out.load() == false);
     FT_TEST_REQUIRE(ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) != ft_nullptr);
     test_passed = FT_TRUE;
 cleanup:
+    watchdog_stop_requested.store(true);
+    if (watchdog_started == FT_TRUE)
+        watchdog_thread.join();
     if (response_initialized == FT_TRUE)
         FT_ASSERT_EQ(FT_ERR_SUCCESS, response.destroy());
     if (client_initialized == FT_TRUE)

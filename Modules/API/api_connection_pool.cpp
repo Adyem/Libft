@@ -231,17 +231,21 @@ static ft_bool api_connection_pool_socket_is_alive(ft_socket &socket)
     peek_byte = 0;
 #ifdef _WIN32
     peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK);
+    if (peek_result < 0)
+    {
+        int32_t last_error;
+
+        last_error = WSAGetLastError();
+        if (last_error == WSAEWOULDBLOCK || last_error == WSAEINTR)
+            return (FT_TRUE);
+        return (FT_FALSE);
+    }
 #else
     peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK | MSG_DONTWAIT);
-#endif
     if (peek_result > 0)
         return (FT_FALSE);
     if (peek_result == 0)
         return (FT_FALSE);
-#ifdef _WIN32
-    if (WSAGetLastError() == WSAEWOULDBLOCK || WSAGetLastError() == WSAEINTR)
-        return (FT_TRUE);
-#else
     if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
         return (FT_TRUE);
 #endif

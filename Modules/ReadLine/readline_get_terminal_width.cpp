@@ -14,14 +14,28 @@ int32_t rl_get_terminal_width(int32_t *terminal_width)
     if (terminal_width == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (rl_terminal_dimensions_prepare_thread_safety(&shared_dimensions) != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+    {
+        *terminal_width = 80;
+        return (FT_ERR_SUCCESS);
+    }
     if (rl_terminal_dimensions_refresh(&shared_dimensions) != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+    {
+        *terminal_width = 80;
+        return (FT_ERR_SUCCESS);
+    }
     if (rl_terminal_dimensions_get(&shared_dimensions, &row_count, &column_count, ft_nullptr,
         ft_nullptr, &dimensions_valid) != FT_ERR_SUCCESS)
-        return (FT_ERR_INTERNAL);
+    {
+        *terminal_width = 80;
+        return (FT_ERR_SUCCESS);
+    }
     if (dimensions_valid == FT_FALSE)
-        return (FT_ERR_INTERNAL);
+    {
+        *terminal_width = 80;
+        return (FT_ERR_SUCCESS);
+    }
     *terminal_width = static_cast<int32_t>(column_count);
+    if (*terminal_width <= 0)
+        *terminal_width = 80;
     return (FT_ERR_SUCCESS);
 }

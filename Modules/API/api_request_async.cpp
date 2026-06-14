@@ -312,6 +312,7 @@ static int32_t api_async_calculate_receive_timeout(
 static void api_async_worker(api_async_request *data)
 {
     ft_string request_string;
+    api_retry_policy retry_policy;
     int32_t status;
     char *result_body;
     ft_bool request_prepared;
@@ -332,12 +333,20 @@ static void api_async_worker(api_async_request *data)
     receive_timeout_ms = api_async_calculate_receive_timeout(
             request_string, data->timeout, send_timeout_ms);
     g_api_async_last_receive_timeout.store(receive_timeout_ms);
+    if (retry_policy.initialize() == FT_ERR_SUCCESS)
+    {
+        retry_policy.set_max_attempts(10);
+        retry_policy.set_initial_delay_ms(100);
+        retry_policy.set_max_delay_ms(500);
+        retry_policy.set_backoff_multiplier(2);
+    }
     if (request_prepared)
     {
         result_body = api_request_string_host(data->ip_address, data->port,
                 data->method, data->path, data->payload, data->headers,
-                &status, data->timeout);
+                &status, receive_timeout_ms, &retry_policy);
     }
+    (void)retry_policy.destroy();
     if (result_body)
     {
         body_length = ft_strlen(result_body);
