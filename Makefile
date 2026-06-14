@@ -145,7 +145,7 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	fi
 
 %_test.a: FORCE
-	module_dir="$(patsubst %/,%,$(dir $@))"; \
+	@module_dir="$(patsubst %/,%,$(dir $@))"; \
 	module_target="$(notdir $@)"; \
 	module_path="$$module_dir/$$module_target"; \
 	progress_index=$$(printf '%s\n' "$(TEST_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
@@ -161,7 +161,7 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	if [ $$status -ne 0 ]; then exit $$status; fi
 
 %.a: FORCE
-	module_dir="$(patsubst %/,%,$(dir $@))"; \
+	@module_dir="$(patsubst %/,%,$(dir $@))"; \
 	module_target="$(notdir $@)"; \
 	need_build=0; \
 	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \
@@ -190,7 +190,7 @@ $(TEST_DEBUG_TARGET): FORCE $(DEBUG_LIBS)
 	fi
 
 %_debug.a: FORCE
-	module_dir="$(patsubst %/,%,$(dir $@))"; \
+	@module_dir="$(patsubst %/,%,$(dir $@))"; \
 	module_target="$(notdir $@)"; \
 	need_build=0; \
 	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \

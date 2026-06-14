@@ -23,7 +23,8 @@ static int  create_temp_fd_with_content(const char *content)
     ft_size_t   content_length;
     ssize_t     write_result;
 
-    file_descriptor = mkstemp(template_path);
+    file_descriptor = test_create_temp_file_from_template(template_path,
+            sizeof(template_path), template_path);
     if (file_descriptor < 0)
         return (-1);
     unlink(template_path);

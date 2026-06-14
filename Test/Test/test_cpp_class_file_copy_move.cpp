@@ -63,7 +63,8 @@ FT_TEST(test_cpp_class_file_copy_constructor_preserves_open_handle)
     ft_file source_file;
 
     file_copy_move_make_template(path_buffer);
-    template_descriptor = mkstemp(path_buffer);
+    template_descriptor = test_create_temp_file_from_template(path_buffer,
+            sizeof(path_buffer), path_buffer);
     FT_ASSERT(template_descriptor >= 0);
     close(template_descriptor);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
@@ -121,7 +122,8 @@ FT_TEST(test_cpp_class_file_move_constructor_preserves_open_handle)
     ft_file source_file;
 
     file_copy_move_make_template(path_buffer);
-    template_descriptor = mkstemp(path_buffer);
+    template_descriptor = test_create_temp_file_from_template(path_buffer,
+            sizeof(path_buffer), path_buffer);
     FT_ASSERT(template_descriptor >= 0);
     close(template_descriptor);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
@@ -159,7 +161,8 @@ FT_TEST(test_cpp_class_file_move_into_initialized_destination_preserves_source_t
     ft_file destination_file;
 
     file_copy_move_make_template(path_buffer);
-    template_descriptor = mkstemp(path_buffer);
+    template_descriptor = test_create_temp_file_from_template(path_buffer,
+            sizeof(path_buffer), path_buffer);
     FT_ASSERT(template_descriptor >= 0);
     close(template_descriptor);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
@@ -232,7 +235,8 @@ FT_TEST(test_cpp_class_file_move_into_uninitialised_destination_preserves_thread
     ft_file destination_file;
 
     file_copy_move_make_template(path_buffer);
-    template_descriptor = mkstemp(path_buffer);
+    template_descriptor = test_create_temp_file_from_template(path_buffer,
+            sizeof(path_buffer), path_buffer);
     FT_ASSERT(template_descriptor >= 0);
     close(template_descriptor);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());
@@ -263,7 +267,8 @@ FT_TEST(test_cpp_class_file_move_into_destroyed_destination_preserves_thread_saf
     ft_file destination_file;
 
     file_copy_move_make_template(path_buffer);
-    template_descriptor = mkstemp(path_buffer);
+    template_descriptor = test_create_temp_file_from_template(path_buffer,
+            sizeof(path_buffer), path_buffer);
     FT_ASSERT(template_descriptor >= 0);
     close(template_descriptor);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_file.initialize());

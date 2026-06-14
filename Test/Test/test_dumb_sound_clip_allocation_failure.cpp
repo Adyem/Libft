@@ -37,7 +37,8 @@ static int32_t dumb_prepare_sparse_wav_file(char *path_buffer, ft_size_t path_bu
     if (path_buffer == ft_nullptr || path_buffer_size < 32)
         return (0);
     std::snprintf(path_buffer, path_buffer_size, "/tmp/libft_dumb_wav_XXXXXX");
-    file_descriptor = mkstemp(path_buffer);
+    file_descriptor = test_create_temp_file_from_template(path_buffer,
+            sizeof(path_buffer), path_buffer);
     if (file_descriptor < 0)
         return (0);
     truncate_status = ftruncate(file_descriptor, 16 * 1024 * 1024);

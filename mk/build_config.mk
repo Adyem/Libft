@@ -26,8 +26,8 @@ endif
 
 SUBMAKE_OVERRIDES ?=
 
-TEMP_DIRS := temp_objs temp_objs_test Test/.libft_output_lock Test/.libft_progress Test/.libft_progress.lock
-OUTPUT_LOGS := Test/.libft_build_*.log Test/.libft_build_status_*
+TEMP_DIRS := temp_objs temp_objs_test $(LIBFT_ROOT_DIR)/Test/.libft_output_lock $(LIBFT_ROOT_DIR)/Test/.libft_progress $(LIBFT_ROOT_DIR)/Test/.libft_progress.lock
+OUTPUT_LOGS := $(LIBFT_ROOT_DIR)/Test/.libft_build_*.log $(LIBFT_ROOT_DIR)/Test/.libft_build_status_*
 
 ifeq ($(OS),Windows_NT)
     ifeq ($(strip $(LIBFT_POSIX_SHELL)),)
@@ -157,11 +157,11 @@ TOTAL_LIBS := $(words $(LIBS))
 TOTAL_DEBUG_LIBS := $(words $(DEBUG_LIBS))
 TOTAL_TEST_LIBS := $(words $(TEST_LIBS))
 
-TARGET        := Full_Libft.a
-DEBUG_TARGET  := Full_Libft_debug.a
-TEST_TARGET   := Test/Full_Libft_test.a
-TEST_DEBUG_TARGET := Test/Full_Libft_test_debug.a
+TARGET        := $(LIBFT_ROOT_DIR)/Full_Libft.a
+DEBUG_TARGET  := $(LIBFT_ROOT_DIR)/Full_Libft_debug.a
+TEST_TARGET   := $(LIBFT_ROOT_DIR)/Test/Full_Libft_test.a
+TEST_DEBUG_TARGET := $(LIBFT_ROOT_DIR)/Test/Full_Libft_test_debug.a
 
-CPP_CLASS_LIB := Modules/CPP_class/CPP_class.a
+CPP_CLASS_LIB := $(LIBFT_ROOT_DIR)/Modules/CPP_class/CPP_class.a
 
 endif

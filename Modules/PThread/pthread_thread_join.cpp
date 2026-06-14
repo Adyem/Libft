@@ -18,8 +18,7 @@ int pt_thread_join(pthread_t thread, void **retval)
     return_value = pthread_join(thread, retval);
     if (return_value != 0)
         return (return_value);
-    tracking_error = pt_lock_tracking::notify_thread_exit(
-            static_cast<pt_thread_id_type>(thread));
+    tracking_error = pt_lock_tracking::notify_thread_exit(thread);
     if (tracking_error != FT_ERR_SUCCESS)
         return (tracking_error);
     return (return_value);
@@ -61,8 +60,7 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
     return_value = pthread_timedjoin_np(thread, retval, &absolute_timeout);
     if (return_value != 0)
         return (return_value);
-    tracking_error = pt_lock_tracking::notify_thread_exit(
-            static_cast<pt_thread_id_type>(thread));
+    tracking_error = pt_lock_tracking::notify_thread_exit(thread);
     if (tracking_error != FT_ERR_SUCCESS)
         return (tracking_error);
     return (return_value);
@@ -71,8 +69,7 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
     return_value = pthread_join(thread, retval);
     if (return_value != 0)
         return (return_value);
-    tracking_error = pt_lock_tracking::notify_thread_exit(
-            static_cast<pt_thread_id_type>(thread));
+    tracking_error = pt_lock_tracking::notify_thread_exit(thread);
     if (tracking_error != FT_ERR_SUCCESS)
         return (tracking_error);
     return (return_value);

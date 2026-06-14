@@ -2,6 +2,7 @@ ifndef COMPILER_FLAGS_INCLUDED
 COMPILER_FLAGS_INCLUDED := 1
 
 OPT_LEVEL ?= 0
+LIBFT_ROOT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/..)
 ifeq ($(OPT_LEVEL),0)
     OPT_FLAGS = -O0 -g
 else ifeq ($(OPT_LEVEL),1)

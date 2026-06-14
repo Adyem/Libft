@@ -329,7 +329,8 @@ static int32_t runtime_compile_and_run_helper(void)
     project_root = runtime_project_root();
     if (project_root.empty())
         return (0);
-    source_descriptor = mkstemp(source_template);
+    source_descriptor = test_create_temp_file_from_template(source_template,
+            sizeof(source_template), source_template);
     if (source_descriptor < 0)
         return (0);
     (void)close(source_descriptor);

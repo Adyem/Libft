@@ -16,6 +16,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "../Modules/File/file_utils.hpp"
+
 #if defined(_WIN32) || defined(_WIN64)
 # include <io.h>
 # include <direct.h>
@@ -138,41 +140,114 @@ static inline char *mkdtemp(char *directory_template) noexcept
 
 #endif
 
-static inline int test_mkstemp_linux_path(char *file_template) noexcept
+static inline int32_t test_create_temp_file_from_template(
+    const char *template_path, ft_string *path_out,
+    int32_t *file_descriptor_out) noexcept
 {
-#if defined(_WIN32) || defined(_WIN64)
-    size_t path_index;
-    size_t template_length;
+    ft_string directory_path;
+    ft_string prefix;
+    const char *base_name;
+    const char *last_separator;
+    ft_size_t base_length;
+    int32_t error_code;
 
-    if (file_template == nullptr)
-        return (-1);
-    if (file_template[0] == '/' || file_template[0] == '\\')
+    if (path_out == ft_nullptr || file_descriptor_out == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    error_code = directory_path.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = prefix.initialize();
+    if (error_code != FT_ERR_SUCCESS)
     {
-        std::memmove(file_template,
-            file_template + 1,
-            std::strlen(file_template));
+        (void)directory_path.destroy();
+        return (error_code);
     }
-    path_index = 0;
-    while (file_template[path_index] != '\0')
+    if (template_path == ft_nullptr || template_path[0] == '\0')
     {
-        if (file_template[path_index] == '/'
-            || file_template[path_index] == '\\')
+        error_code = prefix.assign("libft_test", 10);
+    }
+    else
+    {
+        last_separator = std::strrchr(template_path, '/');
+#if defined(_WIN32) || defined(_WIN64)
         {
-            file_template[path_index] = '\0';
-            if (file_template[0] != '\0')
-                (void)_mkdir(file_template);
-            file_template[path_index] = '\\';
+            const char *alternate_separator;
+
+            alternate_separator = std::strrchr(template_path, '\\');
+            if (alternate_separator != ft_nullptr
+                && (last_separator == ft_nullptr
+                    || alternate_separator > last_separator))
+                last_separator = alternate_separator;
         }
-        path_index += 1;
-    }
-    template_length = std::strlen(file_template) + 1;
-    if (_mktemp_s(file_template, template_length) != 0)
-        return (-1);
-    return (_open(file_template, _O_CREAT | _O_EXCL | _O_RDWR | _O_BINARY,
-            0644));
-#else
-    return (mkstemp(file_template));
 #endif
+        if (last_separator != ft_nullptr)
+        {
+            if (last_separator > template_path)
+            {
+                error_code = directory_path.assign(template_path,
+                        static_cast<ft_size_t>(last_separator - template_path));
+                if (error_code != FT_ERR_SUCCESS)
+                {
+                    (void)prefix.destroy();
+                    (void)directory_path.destroy();
+                    return (error_code);
+                }
+            }
+            base_name = last_separator + 1;
+        }
+        else
+        {
+            base_name = template_path;
+        }
+        base_length = std::strlen(base_name);
+        while (base_length > 0 && base_name[base_length - 1] == 'X')
+            --base_length;
+        if (base_length == 0)
+            error_code = prefix.assign("libft_test", 10);
+        else
+            error_code = prefix.assign(base_name, base_length);
+    }
+    if (error_code == FT_ERR_SUCCESS)
+    {
+        error_code = file_secure_temp_file(
+                directory_path.size() > 0 ? directory_path.c_str() : ft_nullptr,
+                prefix.c_str(), path_out, file_descriptor_out);
+    }
+    (void)prefix.destroy();
+    (void)directory_path.destroy();
+    return (error_code);
+}
+
+static inline int test_create_temp_file_from_template(
+    char *path_buffer, size_t path_buffer_size,
+    const char *template_path) noexcept
+{
+    ft_string path_out;
+    int32_t file_descriptor;
+    int32_t error_code;
+
+    if (path_buffer == ft_nullptr || path_buffer_size == 0)
+        return (-1);
+    error_code = path_out.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+        return (-1);
+    error_code = test_create_temp_file_from_template(template_path, &path_out,
+            &file_descriptor);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)path_out.destroy();
+        return (-1);
+    }
+    if (path_out.size() + 1 > path_buffer_size)
+    {
+        (void)file_delete(path_out.c_str());
+        (void)file_close_descriptor(file_descriptor);
+        (void)path_out.destroy();
+        return (-1);
+    }
+    std::memcpy(path_buffer, path_out.c_str(), path_out.size() + 1);
+    (void)path_out.destroy();
+    return (file_descriptor);
 }
 
 static thread_local sigjmp_buf g_test_abort_signal_jump_buffer __attribute__((unused));

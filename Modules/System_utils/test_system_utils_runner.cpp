@@ -579,7 +579,6 @@ int32_t ft_run_registered_tests(void)
     int32_t terminal_width;
     int32_t show_running_line;
     const char *failure_message;
-    ft_bool socket_runtime_acquired;
 
     log_file = fopen("test_failures.log", "w");
     if (log_file)
@@ -591,8 +590,10 @@ int32_t ft_run_registered_tests(void)
     baseline_stdin_descriptor = dup(STDIN_FILENO);
     baseline_stdout_descriptor = dup(STDOUT_FILENO);
     baseline_stderr_descriptor = dup(STDERR_FILENO);
-    socket_runtime_acquired = FT_FALSE;
 #ifdef _WIN32
+    ft_bool socket_runtime_acquired;
+
+    socket_runtime_acquired = FT_FALSE;
     if (ft_socket_runtime_acquire() != FT_ERR_SUCCESS)
     {
         report_runner_failure("runner failed to initialize socket runtime before test loop");

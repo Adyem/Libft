@@ -35,8 +35,6 @@ static void file_recursive_delete_string(ft_string *string) noexcept
 static ft_string *file_recursive_normalize_system_path(const char *path)
 {
     ft_string *normalized_path;
-    char *path_buffer;
-    ft_size_t index;
 
     normalized_path = file_path_normalize(path);
     if (normalized_path == ft_nullptr)
@@ -44,6 +42,9 @@ static ft_string *file_recursive_normalize_system_path(const char *path)
     if (normalized_path->get_error() != FT_ERR_SUCCESS)
         return (normalized_path);
 #if defined(_WIN32) || defined(_WIN64)
+    char *path_buffer;
+    ft_size_t index;
+
     path_buffer = normalized_path->print();
     if (path_buffer != ft_nullptr)
     {

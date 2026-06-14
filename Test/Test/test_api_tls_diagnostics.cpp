@@ -144,7 +144,6 @@ static void tls_signal_server_stop(tls_test_server_context &context)
 
 static bool tls_write_temp_file(const char *prefix, const char *contents, ft_string &path)
 {
-    char template_path[256];
     int file_descriptor;
     size_t total_written;
     size_t content_length;
@@ -152,22 +151,9 @@ static bool tls_write_temp_file(const char *prefix, const char *contents, ft_str
 
     if (!prefix || !contents)
         return (false);
-    ft_bzero(template_path, sizeof(template_path));
-#ifdef _WIN32
-    if (pf_snprintf(template_path, sizeof(template_path), "%sXXXXXX", prefix) < 0)
+    if (test_create_temp_file_from_template(prefix, &path, &file_descriptor)
+        != FT_ERR_SUCCESS)
         return (false);
-    if (_mktemp_s(template_path, sizeof(template_path)) != 0)
-        return (false);
-    file_descriptor = TLS_TEST_OPEN(template_path, TLS_TEST_FLAGS, TLS_TEST_PERMISSIONS);
-    if (file_descriptor < 0)
-        return (false);
-#else
-    if (pf_snprintf(template_path, sizeof(template_path), "%sXXXXXX", prefix) < 0)
-        return (false);
-    file_descriptor = mkstemp(template_path);
-    if (file_descriptor < 0)
-        return (false);
-#endif
     content_length = ft_strlen(contents);
     total_written = 0;
     while (total_written < content_length)
@@ -177,20 +163,19 @@ static bool tls_write_temp_file(const char *prefix, const char *contents, ft_str
         if (write_result <= 0)
         {
             TLS_TEST_CLOSE(file_descriptor);
-            TLS_TEST_UNLINK(template_path);
+            TLS_TEST_UNLINK(path.c_str());
             return (false);
         }
         total_written += static_cast<size_t>(write_result);
     }
     if (TLS_TEST_CLOSE(file_descriptor) != 0)
     {
-        TLS_TEST_UNLINK(template_path);
+        TLS_TEST_UNLINK(path.c_str());
         return (false);
     }
-    path = template_path;
     if (path.get_error() != FT_ERR_SUCCESS)
     {
-        TLS_TEST_UNLINK(template_path);
+        TLS_TEST_UNLINK(path.c_str());
         return (false);
     }
     return (true);

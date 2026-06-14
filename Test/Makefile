@@ -13,10 +13,11 @@ all: $(TARGET)
 .PHONY: FORCE
 FORCE:
 
-$(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
+$(TARGET): $(OBJS) $(LIBFT_ARCHIVE)
 	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(TARGET))"
-	@$(file >$@.rsp,$(OBJS) ../$(LIBFT_ARCHIVE))
+	@# Rescan the archive so cross-module references inside the combined test library resolve.
+	@$(file >$@.rsp,$(OBJS) -Wl,--start-group $(LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(RM) $@
 	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
@@ -262,10 +263,10 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 		printf '        [Test Debug] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
 	fi
 
-$(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE)
+$(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) $(EFFICIENCY_LIBFT_ARCHIVE)
 	@printf "Compiled efficiency files (%d files)\n" $(EFF_TOTAL_SRCS)
 	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
-	@$(file >$@.rsp,$(EFFICIENCY_OBJS) ../$(EFFICIENCY_LIBFT_ARCHIVE))
+	@$(file >$@.rsp,$(EFFICIENCY_OBJS) -Wl,--start-group $(EFFICIENCY_LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(RM) $@
 	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
@@ -296,10 +297,10 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 		printf '        [Test Efficiency] Building file %s (%d/%d)\n' "$<" $$built $(EFF_TOTAL_SRCS); \
 	fi
 
-../$(EFFICIENCY_LIBFT_ARCHIVE): FORCE
+$(EFFICIENCY_LIBFT_ARCHIVE): FORCE
 	@need_build=0; \
-	if $(MAKE) -C .. -q $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
-		OPT_LEVEL=$(OPT_LEVEL); then \
+	if $(MAKE) -C $(LIBFT_ROOT_DIR) -q $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
+			OPT_LEVEL=$(OPT_LEVEL); then \
 		:; \
 	else \
 		status=$$?; \
@@ -310,15 +311,15 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 		fi; \
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-	        echo "Building $(EFFICIENCY_LIBFT_ARCHIVE)"; \
-	        $(MAKE) -C .. $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
-			OPT_LEVEL=$(OPT_LEVEL); \
+		        echo "Building $(EFFICIENCY_LIBFT_ARCHIVE)"; \
+		        $(MAKE) -C $(LIBFT_ROOT_DIR) $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
+				OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-../$(LIBFT_ARCHIVE):
+$(LIBFT_ARCHIVE):
 	@need_build=0; \
-	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
-		OPT_LEVEL=$(OPT_LEVEL); then \
+	if $(MAKE) -C $(LIBFT_ROOT_DIR) -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+			OPT_LEVEL=$(OPT_LEVEL); then \
 		:; \
 	else \
 		status=$$?; \
@@ -329,15 +330,15 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 		fi; \
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-	        echo "Building $(LIBFT_ARCHIVE)"; \
-	        $(MAKE) -C .. $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
-			OPT_LEVEL=$(OPT_LEVEL); \
+		        echo "Building $(LIBFT_ARCHIVE)"; \
+		        $(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+				OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-../$(LIBFT_DEBUG_ARCHIVE): FORCE
+$(LIBFT_DEBUG_ARCHIVE): FORCE
 	@need_build=0; \
-	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
-		OPT_LEVEL=$(OPT_LEVEL); then \
+	if $(MAKE) -C $(LIBFT_ROOT_DIR) -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+			OPT_LEVEL=$(OPT_LEVEL); then \
 		:; \
 	else \
 		status=$$?; \
@@ -348,9 +349,9 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 		fi; \
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-	        echo "Building $(LIBFT_DEBUG_ARCHIVE)"; \
-	        $(MAKE) -C .. $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
-			OPT_LEVEL=$(OPT_LEVEL); \
+		        echo "Building $(LIBFT_DEBUG_ARCHIVE)"; \
+		        $(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+				OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
 clean:
@@ -382,7 +383,7 @@ fclean: clean
 		status=1; \
 	fi; \
 	if [ -z "$(LIBFT_PARENT_CLEAN)" ]; then \
-		if ! $(MAKE) -C .. fclean; then \
+		if ! $(MAKE) -C $(LIBFT_ROOT_DIR) fclean; then \
 			status=1; \
 		fi; \
 	fi; \
