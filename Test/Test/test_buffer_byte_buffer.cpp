@@ -254,6 +254,29 @@ FT_TEST(test_buffer_byte_buffer_append_buffer_appends_source_bytes)
     return (1);
 }
 
+FT_TEST(test_buffer_byte_buffer_prepend_buffer_prepends_source_bytes)
+{
+    ft_byte_buffer destination_buffer;
+    ft_byte_buffer source_buffer;
+    uint8_t output[2];
+
+    output[0] = 0;
+    output[1] = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.append("bar", 3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.consume(1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.append("foo", 3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.prepend_buffer(source_buffer));
+    FT_ASSERT_EQ(4, destination_buffer.read_position());
+    FT_ASSERT_EQ(2, destination_buffer.remaining());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.read(output, 2));
+    FT_ASSERT_EQ(0, std::memcmp(output, "ar", 2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_buffer.destroy());
+    return (1);
+}
+
 FT_TEST(test_buffer_byte_buffer_shrink_to_fit_reduces_capacity)
 {
     ft_byte_buffer buffer;

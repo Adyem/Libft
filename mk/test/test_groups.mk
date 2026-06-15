@@ -78,9 +78,13 @@ FILE_TEST_FILES := \
 	Test/test_file_secure_temp_file.cpp \
 	Test/test_file_utils.cpp
 
+CONFIG_TEST_FILES := \
+	Test/test_config.cpp
+
 FILESYSTEM_TEST_FILES := \
 	Test/test_filesystem.cpp \
-	Test/test_filesystem_glob.cpp
+	Test/test_filesystem_glob.cpp \
+	Test/test_filesystem_path_helpers.cpp
 
 STORAGE_TEST_FILES := \
 	Test/test_storage_kv_store.cpp \

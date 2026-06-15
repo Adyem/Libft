@@ -71,7 +71,7 @@ Every module that allocates through this layer inherits the same mechanisms for 
   Docs/ ensures that knowledge does not live only inside source comments but is accessible through markdown that mirrors the code layout.
   The current module-to-module dependency map lives in [Docs/module_dependency_graph.md](Docs/module_dependency_graph.md).
   The coarse layer map lives in [Docs/module_layering.md](Docs/module_layering.md).
-  Candidate extension ideas for existing modules live in [Docs/module_extension_roadmap.md](Docs/module_extension_roadmap.md).
+  Candidate extension ideas for existing modules are now folded into the module READMEs and tests.
   Updating Docs/ keeps onboarding smoother and gives module authors a place to explain trade-offs or future directions.
 
 - `Encryption/`: Supplies hashing, cryptographic primitives, and key handling utilities so security-sensitive modules share consistent implementations.

@@ -56,6 +56,10 @@ File:
 	@echo "Building file test executable ($(TARGET))"
 	@$(MAKE) FILES="$(FILE_TEST_FILES)" all
 
+Config:
+	@echo "Building config test executable ($(TARGET))"
+	@$(MAKE) FILES="$(CONFIG_TEST_FILES)" all
+
 Filesystem:
 	@echo "Building filesystem test executable ($(TARGET))"
 	@$(MAKE) FILES="$(FILESYSTEM_TEST_FILES)" all
@@ -89,6 +93,8 @@ re_get_next_line: fclean get_next_line
 re_Basic: fclean Basic
 
 re_CLI: fclean CLI
+
+re_Config: fclean Config
 
 re_Application: fclean Application
 

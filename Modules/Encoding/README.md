@@ -6,6 +6,8 @@ The `Encoding` module provides allocation-returning codecs for binary/text trans
 
 - `encoding_base64_encode(const uint8_t *input, ft_size_t input_size)` - Encodes binary input as a padded Base64 C string.
 - `encoding_base64_decode(const char *input, ft_size_t input_size, ft_size_t *output_size)` - Decodes Base64 text into an allocated byte buffer and writes the decoded length.
+- `encoding_base32_encode(const uint8_t *input, ft_size_t input_size)` - Encodes binary input as a padded Base32 C string.
+- `encoding_base32_decode(const char *input, ft_size_t input_size, ft_size_t *output_size)` - Decodes Base32 text into an allocated byte buffer and writes the decoded length.
 - `encoding_base64url_encode(const uint8_t *input, ft_size_t input_size, ft_bool padded)` - Encodes binary input using the URL-safe Base64 alphabet, optionally retaining padding.
 - `encoding_base64url_decode(const char *input, ft_size_t input_size, ft_size_t *output_size)` - Decodes URL-safe Base64 into an allocated byte buffer.
 

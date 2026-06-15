@@ -19,14 +19,18 @@ The `Filesystem` module provides path manipulation, safety checks, glob matching
 - `filesystem_dirname(const char *path)` - Returns the parent directory component.
 - `filesystem_extension(const char *path)` - Returns the extension portion of the final path component.
 - `filesystem_stem(const char *path)` - Returns the final path component without its extension.
+- `filesystem_split_path(const char *path, ft_string *directory_out, ft_string *basename_out)` - Fills two caller-owned strings with the directory and basename components.
 
 ## Path Checks
 
 - `filesystem_is_absolute(const char *path)` - Reports whether a path is absolute.
+- `filesystem_is_rooted(const char *path)` - Alias for the absolute-path check.
 - `filesystem_is_relative(const char *path)` - Reports whether a path is relative.
 - `filesystem_is_safe_relative_path(const char *path)` - Reports whether a relative path avoids absolute roots and parent traversal.
 - `filesystem_is_inside_root(const char *root_path, const char *candidate_path)` - Reports whether a candidate path stays inside a root directory.
 - `filesystem_validate_inside_root(const char *root_path, const char *candidate_path)` - Returns an error code if a candidate path escapes the root.
+- `filesystem_is_hidden(const char *path)` - Reports whether the final path component is a dotfile-style hidden name.
+- `filesystem_is_reserved_name(const char *path)` - Reports whether the final path component matches a Windows device-reserved name.
 - `filesystem_has_extension(const char *path, const char *extension)` - Checks whether a path ends with the requested extension.
 - `filesystem_path_has_wildcards(const char *path)` - Reports whether a path contains `*` or `?`.
 - `filesystem_match_glob(const char *pattern, const char *path)` - Matches a path against wildcard syntax with `*`, `?`, and `**`.

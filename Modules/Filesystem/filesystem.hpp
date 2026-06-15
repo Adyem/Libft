@@ -12,17 +12,22 @@ ft_string   *filesystem_join_path(const char *path_left, const char *path_right)
 ft_string   *filesystem_safe_join_path(const char *root_path,
                 const char *relative_path);
 ft_string   *filesystem_canonical_path(const char *path);
+int32_t     filesystem_split_path(const char *path, ft_string *directory_out,
+                ft_string *basename_out);
 ft_string   *filesystem_basename(const char *path);
 ft_string   *filesystem_dirname(const char *path);
 ft_string   *filesystem_extension(const char *path);
 ft_string   *filesystem_stem(const char *path);
 ft_bool     filesystem_is_absolute(const char *path) noexcept;
+ft_bool     filesystem_is_rooted(const char *path) noexcept;
 ft_bool     filesystem_is_relative(const char *path) noexcept;
 ft_bool     filesystem_is_safe_relative_path(const char *path) noexcept;
 ft_bool     filesystem_is_inside_root(const char *root_path,
                 const char *candidate_path) noexcept;
 int32_t     filesystem_validate_inside_root(const char *root_path,
                 const char *candidate_path);
+ft_bool     filesystem_is_hidden(const char *path) noexcept;
+ft_bool     filesystem_is_reserved_name(const char *path) noexcept;
 ft_bool     filesystem_has_extension(const char *path, const char *extension) noexcept;
 ft_bool     filesystem_path_has_wildcards(const char *path) noexcept;
 ft_bool     filesystem_match_glob(const char *pattern, const char *path) noexcept;

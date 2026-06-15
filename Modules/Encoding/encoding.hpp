@@ -7,6 +7,9 @@
 char        *encoding_base64_encode(const uint8_t *input, ft_size_t input_size);
 uint8_t     *encoding_base64_decode(const char *input, ft_size_t input_size,
                 ft_size_t *output_size);
+char        *encoding_base32_encode(const uint8_t *input, ft_size_t input_size);
+uint8_t     *encoding_base32_decode(const char *input, ft_size_t input_size,
+                ft_size_t *output_size);
 char        *encoding_base64url_encode(const uint8_t *input,
                 ft_size_t input_size, ft_bool padded);
 uint8_t     *encoding_base64url_decode(const char *input, ft_size_t input_size,

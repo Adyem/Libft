@@ -79,6 +79,24 @@ static int32_t encoding_hex_value(char character) noexcept
     return (-1);
 }
 
+static int32_t encoding_base32_value(char character) noexcept
+{
+    if (character >= 'A' && character <= 'Z')
+        return (character - 'A');
+    if (character >= 'a' && character <= 'z')
+        return (character - 'a');
+    if (character >= '2' && character <= '7')
+        return (character - '2' + 26);
+    return (-1);
+}
+
+static char encoding_base32_character(uint8_t value) noexcept
+{
+    static const char base32_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+    return (base32_table[value & 0x1FU]);
+}
+
 static char *encoding_base64_encode_internal(const uint8_t *input,
     ft_size_t input_size, ft_bool url_safe, ft_bool padded)
 {
@@ -265,6 +283,288 @@ uint8_t *encoding_base64url_decode(const char *input, ft_size_t input_size,
     ft_size_t *output_size)
 {
     return (encoding_base64_decode_internal(input, input_size, output_size, FT_TRUE));
+}
+
+static char *encoding_base32_encode_internal(const uint8_t *input,
+    ft_size_t input_size)
+{
+    ft_size_t output_size;
+    ft_size_t output_index;
+    ft_size_t input_index;
+    ft_size_t remaining_size;
+    uint8_t byte_one;
+    uint8_t byte_two;
+    uint8_t byte_three;
+    uint8_t byte_four;
+    uint8_t byte_five;
+    char *output;
+
+    if (input == ft_nullptr && input_size != 0)
+    {
+        encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+        return (ft_nullptr);
+    }
+    if (input_size > (FT_SYSTEM_SIZE_MAX / 8U) * 5U)
+    {
+        encoding_set_error(FT_ERR_OUT_OF_RANGE);
+        return (ft_nullptr);
+    }
+    output_size = ((input_size + 4) / 5) * 8;
+    output = static_cast<char *>(cma_malloc(output_size + 1));
+    if (output == ft_nullptr)
+    {
+        encoding_set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    input_index = 0;
+    output_index = 0;
+    while (input_index < input_size)
+    {
+        remaining_size = input_size - input_index;
+        byte_one = input[input_index];
+        byte_two = 0U;
+        byte_three = 0U;
+        byte_four = 0U;
+        byte_five = 0U;
+        if (remaining_size >= 2)
+            byte_two = input[input_index + 1];
+        if (remaining_size >= 3)
+            byte_three = input[input_index + 2];
+        if (remaining_size >= 4)
+            byte_four = input[input_index + 3];
+        if (remaining_size >= 5)
+            byte_five = input[input_index + 4];
+        output[output_index++] = encoding_base32_character(
+            static_cast<uint8_t>(byte_one >> 3));
+        output[output_index++] = encoding_base32_character(
+            static_cast<uint8_t>(((byte_one & 0x07U) << 2)
+                | (byte_two >> 6)));
+        if (remaining_size >= 2)
+        {
+            output[output_index++] = encoding_base32_character(
+                static_cast<uint8_t>((byte_two >> 1) & 0x1FU));
+            output[output_index++] = encoding_base32_character(
+                static_cast<uint8_t>(((byte_two & 0x01U) << 4)
+                    | (byte_three >> 4)));
+        }
+        else
+        {
+            output[output_index++] = '=';
+            output[output_index++] = '=';
+        }
+        if (remaining_size >= 3)
+        {
+            output[output_index++] = encoding_base32_character(
+                static_cast<uint8_t>(((byte_three & 0x0FU) << 1)
+                    | (byte_four >> 7)));
+        }
+        else
+        {
+            output[output_index++] = '=';
+        }
+        if (remaining_size >= 4)
+        {
+            output[output_index++] = encoding_base32_character(
+                static_cast<uint8_t>((byte_four >> 2) & 0x1FU));
+            output[output_index++] = encoding_base32_character(
+                static_cast<uint8_t>(((byte_four & 0x03U) << 3)
+                    | (byte_five >> 5)));
+        }
+        else
+        {
+            output[output_index++] = '=';
+            output[output_index++] = '=';
+        }
+        if (remaining_size >= 5)
+        {
+            output[output_index++] = encoding_base32_character(
+                static_cast<uint8_t>(byte_five & 0x1FU));
+        }
+        else
+            output[output_index++] = '=';
+        input_index += 5;
+    }
+    output[output_index] = '\0';
+    encoding_set_error(FT_ERR_SUCCESS);
+    return (output);
+}
+
+char *encoding_base32_encode(const uint8_t *input, ft_size_t input_size)
+{
+    return (encoding_base32_encode_internal(input, input_size));
+}
+
+static int32_t encoding_base32_decode_block(const uint8_t values[8],
+    ft_size_t data_length, uint8_t *output, ft_size_t *output_size)
+{
+    if (data_length == 2)
+    {
+        if ((values[1] & 0x03U) != 0U)
+            return (FT_ERR_INVALID_ARGUMENT);
+        output[0] = static_cast<uint8_t>((values[0] << 3)
+            | (values[1] >> 2));
+        *output_size = 1;
+        return (FT_ERR_SUCCESS);
+    }
+    if (data_length == 4)
+    {
+        if ((values[3] & 0x0FU) != 0U)
+            return (FT_ERR_INVALID_ARGUMENT);
+        output[0] = static_cast<uint8_t>((values[0] << 3)
+            | (values[1] >> 2));
+        output[1] = static_cast<uint8_t>(((values[1] & 0x03U) << 6)
+            | (values[2] << 1) | (values[3] >> 4));
+        *output_size = 2;
+        return (FT_ERR_SUCCESS);
+    }
+    if (data_length == 5)
+    {
+        if ((values[4] & 0x01U) != 0U)
+            return (FT_ERR_INVALID_ARGUMENT);
+        output[0] = static_cast<uint8_t>((values[0] << 3)
+            | (values[1] >> 2));
+        output[1] = static_cast<uint8_t>(((values[1] & 0x03U) << 6)
+            | (values[2] << 1) | (values[3] >> 4));
+        output[2] = static_cast<uint8_t>(((values[3] & 0x0FU) << 4)
+            | (values[4] >> 1));
+        *output_size = 3;
+        return (FT_ERR_SUCCESS);
+    }
+    if (data_length == 7)
+    {
+        if ((values[6] & 0x07U) != 0U)
+            return (FT_ERR_INVALID_ARGUMENT);
+        output[0] = static_cast<uint8_t>((values[0] << 3)
+            | (values[1] >> 2));
+        output[1] = static_cast<uint8_t>(((values[1] & 0x03U) << 6)
+            | (values[2] << 1) | (values[3] >> 4));
+        output[2] = static_cast<uint8_t>(((values[3] & 0x0FU) << 4)
+            | (values[4] >> 1));
+        output[3] = static_cast<uint8_t>(((values[4] & 0x01U) << 7)
+            | (values[5] << 2) | (values[6] >> 3));
+        *output_size = 4;
+        return (FT_ERR_SUCCESS);
+    }
+    if (data_length == 8)
+    {
+        output[0] = static_cast<uint8_t>((values[0] << 3)
+            | (values[1] >> 2));
+        output[1] = static_cast<uint8_t>(((values[1] & 0x03U) << 6)
+            | (values[2] << 1) | (values[3] >> 4));
+        output[2] = static_cast<uint8_t>(((values[3] & 0x0FU) << 4)
+            | (values[4] >> 1));
+        output[3] = static_cast<uint8_t>(((values[4] & 0x01U) << 7)
+            | (values[5] << 2) | (values[6] >> 3));
+        output[4] = static_cast<uint8_t>(((values[6] & 0x07U) << 5)
+            | values[7]);
+        *output_size = 5;
+        return (FT_ERR_SUCCESS);
+    }
+    return (FT_ERR_INVALID_ARGUMENT);
+}
+
+static uint8_t *encoding_base32_decode_internal(const char *input,
+    ft_size_t input_size, ft_size_t *output_size)
+{
+    uint8_t *output;
+    ft_size_t output_capacity;
+    ft_size_t input_index;
+    ft_size_t output_index;
+    ft_size_t block_index;
+    ft_size_t output_block_size;
+    uint8_t block_values[8];
+    ft_bool padding_started;
+    int32_t value;
+    int32_t block_error;
+
+    if (output_size != ft_nullptr)
+        *output_size = 0;
+    if (input == ft_nullptr && input_size != 0)
+    {
+        encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+        return (ft_nullptr);
+    }
+    output_capacity = ((input_size + 7) / 8) * 5;
+    output = static_cast<uint8_t *>(cma_malloc(output_capacity + 1));
+    if (output == ft_nullptr)
+    {
+        encoding_set_error(FT_ERR_NO_MEMORY);
+        return (ft_nullptr);
+    }
+    input_index = 0;
+    output_index = 0;
+    while (input_index < input_size)
+    {
+        block_index = 0;
+        padding_started = FT_FALSE;
+        while (block_index < 8 && input_index < input_size)
+        {
+            if (input[input_index] == '=')
+            {
+                padding_started = FT_TRUE;
+                input_index++;
+                break ;
+            }
+            value = encoding_base32_value(input[input_index]);
+            if (value < 0)
+            {
+                cma_free(output);
+                encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+                return (ft_nullptr);
+            }
+            block_values[block_index] = static_cast<uint8_t>(value);
+            block_index++;
+            input_index++;
+        }
+        if (padding_started == FT_TRUE)
+        {
+            while (block_index < 8 && input_index < input_size)
+            {
+                if (input[input_index] != '=')
+                {
+                    cma_free(output);
+                    encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+                    return (ft_nullptr);
+                }
+                block_index++;
+                input_index++;
+            }
+            if (block_index != 8 || input_index != input_size)
+            {
+                cma_free(output);
+                encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+                return (ft_nullptr);
+            }
+        }
+        block_error = encoding_base32_decode_block(block_values, block_index,
+                output + output_index, &output_block_size);
+        if (block_error != FT_ERR_SUCCESS)
+        {
+            cma_free(output);
+            encoding_set_error(block_error);
+            return (ft_nullptr);
+        }
+        output_index += output_block_size;
+        if (padding_started == FT_TRUE)
+            break ;
+        if (block_index < 8 && input_index != input_size)
+        {
+            cma_free(output);
+            encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+            return (ft_nullptr);
+        }
+    }
+    if (output_size != ft_nullptr)
+        *output_size = output_index;
+    output[output_index] = 0;
+    encoding_set_error(FT_ERR_SUCCESS);
+    return (output);
+}
+
+uint8_t *encoding_base32_decode(const char *input, ft_size_t input_size,
+    ft_size_t *output_size)
+{
+    return (encoding_base32_decode_internal(input, input_size, output_size));
 }
 
 char *encoding_hex_encode(const uint8_t *input, ft_size_t input_size,

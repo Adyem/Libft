@@ -2,6 +2,8 @@
 
 The `Config` module loads, stores, merges, writes, and synchronizes key/value configuration entries. Configuration data is represented as simple public structs so callers can inspect and manipulate entries directly.
 
+It also exposes lightweight reload and file-watch helpers for call chains that want save/reload/watch naming without changing the underlying storage model.
+
 ## Types
 
 - `config_entry` - One configuration value. Public fields are `mutex`, `section`, `key`, and `value`.
@@ -16,8 +18,11 @@ The `Config` module loads, stores, merges, writes, and synchronizes key/value co
 - `config_data_free(config_data *config)` - Frees a configuration table and its entries.
 - `config_load_env()` - Loads configuration values from the process environment.
 - `config_load_file(const char *filename)` - Loads configuration values from a file.
+- `config_reload_file(const char *filename)` - Alias for `config_load_file(...)` for reload-style call chains.
 - `config_write_file(const config_data *config, const char *filename)` - Writes a configuration table to disk.
+- `config_save_file(const config_data *config, const char *filename)` - Alias for `config_write_file(...)` for save-style call chains.
 - `config_merge(const config_data *base_config, const config_data *override_config)` - Allocates a merged configuration where override entries replace base entries.
+- `config_watch_file(const char *filename, file_watch_callback callback, void *user_data)` - Creates a file watcher for the directory that contains `filename`.
 
 ## Entry Synchronization
 

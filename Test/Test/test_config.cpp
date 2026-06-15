@@ -4,6 +4,7 @@
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/File/file_watch.hpp"
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <cstdio>
@@ -339,6 +340,96 @@ FT_TEST(test_config_write_json_round_trip)
     FT_ASSERT(std::strcmp(parsed->entries[1].key, "second") == 0);
     FT_ASSERT(std::strcmp(parsed->entries[1].value, "two") == 0);
     config_data_free(parsed);
+    cleanup_file(filename);
+    return (1);
+}
+
+static void config_watch_noop_callback(const char *path,
+    file_watch_event_type event_type, void *user_data)
+{
+    (void)path;
+    (void)event_type;
+    (void)user_data;
+    return ;
+}
+
+FT_TEST(test_config_save_file_aliases_write_file)
+{
+    const char *filename = "config_save_alias.ini";
+    config_data *source = create_test_config(1);
+    config_data *parsed;
+
+    if (!source)
+        return (0);
+    source->entries[0].key = adv_strdup("alias");
+    if (!source->entries[0].key)
+    {
+        config_data_free(source);
+        return (0);
+    }
+    source->entries[0].value = adv_strdup("saved");
+    if (!source->entries[0].value)
+    {
+        config_data_free(source);
+        return (0);
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config_save_file(source, filename));
+    parsed = config_reload_file(filename);
+    FT_ASSERT(parsed != ft_nullptr);
+    FT_ASSERT(parsed->entry_count == 1);
+    FT_ASSERT(std::strcmp(parsed->entries[0].key, "alias") == 0);
+    FT_ASSERT(std::strcmp(parsed->entries[0].value, "saved") == 0);
+    config_data_free(parsed);
+    config_data_free(source);
+    cleanup_file(filename);
+    return (1);
+}
+
+FT_TEST(test_config_reload_file_aliases_load_file)
+{
+    const char *filename = "config_reload_alias.json";
+    config_data *source = create_test_config(1);
+    config_data *parsed;
+
+    if (!source)
+        return (0);
+    source->entries[0].key = adv_strdup("reload");
+    if (!source->entries[0].key)
+    {
+        config_data_free(source);
+        return (0);
+    }
+    source->entries[0].value = adv_strdup("ready");
+    if (!source->entries[0].value)
+    {
+        config_data_free(source);
+        return (0);
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config_write_file(source, filename));
+    parsed = config_reload_file(filename);
+    FT_ASSERT(parsed != ft_nullptr);
+    FT_ASSERT(parsed->entry_count == 1);
+    FT_ASSERT(std::strcmp(parsed->entries[0].key, "reload") == 0);
+    FT_ASSERT(std::strcmp(parsed->entries[0].value, "ready") == 0);
+    config_data_free(parsed);
+    config_data_free(source);
+    cleanup_file(filename);
+    return (1);
+}
+
+FT_TEST(test_config_watch_file_creates_watcher_for_file_directory)
+{
+    const char *filename = "config_watch_target.ini";
+    ft_file_watch *file_watch;
+
+    file_watch = config_watch_file(filename, &config_watch_noop_callback, ft_nullptr);
+    FT_ASSERT(file_watch != ft_nullptr);
+    if (file_watch)
+    {
+        file_watch->stop();
+        (void)file_watch->destroy();
+        delete file_watch;
+    }
     cleanup_file(filename);
     return (1);
 }

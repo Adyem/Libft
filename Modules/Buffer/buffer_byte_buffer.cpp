@@ -568,6 +568,88 @@ int32_t ft_byte_buffer::append_buffer(const ft_byte_buffer &other) noexcept
     return (ft_byte_buffer::set_error(append_error));
 }
 
+int32_t ft_byte_buffer::prepend_buffer(const ft_byte_buffer &other) noexcept
+{
+    ft_byte_buffer snapshot;
+    const ft_byte_buffer *first_buffer;
+    const ft_byte_buffer *second_buffer;
+    uintptr_t this_address;
+    uintptr_t other_address;
+    ft_size_t destination_size;
+    ft_size_t source_size;
+    int32_t lock_error;
+    int32_t prepend_error;
+
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_byte_buffer::prepend_buffer");
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        errno_abort_lifecycle(other._initialised_state,
+            "ft_byte_buffer::prepend_buffer",
+            "called with uninitialised source object");
+    if (&other == this)
+    {
+        prepend_error = snapshot.initialize(*this);
+        if (prepend_error != FT_ERR_SUCCESS)
+            return (ft_byte_buffer::set_error(prepend_error));
+        prepend_error = this->prepend_buffer(snapshot);
+        (void)snapshot.destroy();
+        return (ft_byte_buffer::set_error(prepend_error));
+    }
+    this_address = reinterpret_cast<uintptr_t>(this);
+    other_address = reinterpret_cast<uintptr_t>(&other);
+    if (this_address < other_address)
+    {
+        first_buffer = this;
+        second_buffer = &other;
+    }
+    else
+    {
+        first_buffer = &other;
+        second_buffer = this;
+    }
+    lock_error = first_buffer->lock_internal();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (ft_byte_buffer::set_error(lock_error));
+    if (second_buffer != first_buffer)
+    {
+        lock_error = second_buffer->lock_internal();
+        if (lock_error != FT_ERR_SUCCESS)
+        {
+            first_buffer->unlock_internal();
+            return (ft_byte_buffer::set_error(lock_error));
+        }
+    }
+    destination_size = this->_size;
+    source_size = other._size;
+    prepend_error = FT_ERR_SUCCESS;
+    if (buffer_add_overflows(destination_size, source_size) == FT_TRUE)
+        prepend_error = FT_ERR_OUT_OF_RANGE;
+    else
+    {
+        prepend_error = this->reserve_internal(destination_size + source_size);
+        if (prepend_error == FT_ERR_SUCCESS && source_size > 0)
+        {
+            if (other._data == ft_nullptr)
+                prepend_error = FT_ERR_INVALID_STATE;
+            else
+            {
+                if (destination_size > 0)
+                {
+                    ft_memmove(this->_data + source_size, this->_data,
+                        destination_size);
+                }
+                ft_memcpy(this->_data, other._data, source_size);
+                this->_size = destination_size + source_size;
+                this->_read_position += source_size;
+            }
+        }
+    }
+    if (second_buffer != first_buffer)
+        second_buffer->unlock_internal();
+    first_buffer->unlock_internal();
+    return (ft_byte_buffer::set_error(prepend_error));
+}
+
 int32_t ft_byte_buffer::read(void *data, ft_size_t length) noexcept
 {
     int32_t lock_error;

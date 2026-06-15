@@ -53,6 +53,7 @@ class ft_byte_buffer
         int32_t consume(ft_size_t length) noexcept;
         int32_t append(const void *data, ft_size_t length) noexcept;
         int32_t append_buffer(const ft_byte_buffer &other) noexcept;
+        int32_t prepend_buffer(const ft_byte_buffer &other) noexcept;
         int32_t read(void *data, ft_size_t length) noexcept;
         int32_t view(ft_size_t offset, ft_size_t length,
             const uint8_t **view_out) const noexcept;
