@@ -49,7 +49,7 @@ int32_t default_string_serializer(const ElementType &value, ft_string &output) n
         if constexpr (std::numeric_limits<ElementType>::is_signed)
         {
             format_result = std::snprintf(number_buffer, sizeof(number_buffer),
-                    "%" FT_PRId64, static_cast<int64_t>(value));
+                    FT_INT64_DECIMAL_FORMAT, static_cast<int64_t>(value));
             if (format_result <= 0)
                 return (FT_ERR_INVALID_ARGUMENT);
             output = number_buffer;
@@ -60,7 +60,7 @@ int32_t default_string_serializer(const ElementType &value, ft_string &output) n
         else
         {
             format_result = std::snprintf(number_buffer, sizeof(number_buffer),
-                    "%" FT_PRIu64, static_cast<uint64_t>(value));
+                    FT_UINT64_DECIMAL_FORMAT, static_cast<uint64_t>(value));
             if (format_result <= 0)
                 return (FT_ERR_INVALID_ARGUMENT);
             output = number_buffer;
@@ -193,7 +193,7 @@ int32_t ft_vector_serialize_json(const ft_vector<ElementType> &values,
             int32_t format_result;
 
             format_result = std::snprintf(index_buffer, sizeof(index_buffer),
-                    "%" FT_PRIu64, index);
+                    FT_UINT64_DECIMAL_FORMAT, index);
             if (format_result <= 0)
             {
                 json_free_groups(group);
@@ -290,7 +290,7 @@ int32_t ft_vector_deserialize_json(json_group *group,
             int32_t format_result;
 
             format_result = std::snprintf(index_buffer, sizeof(index_buffer),
-                    "%" FT_PRIu64, index);
+                    FT_UINT64_DECIMAL_FORMAT, index);
             if (format_result <= 0)
                 return (FT_ERR_INVALID_ARGUMENT);
             if (index_string.initialize(index_buffer) != FT_ERR_SUCCESS)

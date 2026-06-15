@@ -61,7 +61,7 @@ static const char *ft_test_value_to_string(char *buffer, ft_size_t buffer_size,
         return ("ft_nullptr");
     else if constexpr (std::is_enum<typename std::decay<ValueType>::type>::value)
     {
-        std::snprintf(buffer, buffer_size, "%" FT_PRId64,
+        std::snprintf(buffer, buffer_size, FT_INT64_DECIMAL_FORMAT,
             static_cast<int64_t>(static_cast<typename ft_test_numeric_type_helper<
                 ValueType, true>::type>(value)));
         return (buffer);
@@ -77,10 +77,10 @@ static const char *ft_test_value_to_string(char *buffer, ft_size_t buffer_size,
     else if constexpr (std::is_integral<typename std::decay<ValueType>::type>::value)
     {
         if constexpr (std::is_signed<typename std::decay<ValueType>::type>::value)
-            std::snprintf(buffer, buffer_size, "%" FT_PRId64,
+            std::snprintf(buffer, buffer_size, FT_INT64_DECIMAL_FORMAT,
                 static_cast<int64_t>(value));
         else
-            std::snprintf(buffer, buffer_size, "%" FT_PRIu64,
+            std::snprintf(buffer, buffer_size, FT_UINT64_DECIMAL_FORMAT,
                 static_cast<uint64_t>(value));
         return (buffer);
     }

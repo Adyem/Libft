@@ -8,6 +8,9 @@ The `Basic` module provides C-style memory, string, character, numeric parsing, 
 - `ft_bool` - Project-wide 8-bit boolean type.
 - `FT_FALSE` / `FT_TRUE` - Boolean constants used across the library.
 - `ft_nullptr_t` / `ft_nullptr` - Project null-pointer literal stand-in assignable to pointer types.
+- `FT_PRId64` / `FT_PRIu64` - Portable 64-bit integer format specifiers from `<cinttypes>`.
+- `FT_INT64_FORMAT` / `FT_UINT64_FORMAT` - Basic-owned 64-bit integer length modifiers selected by platform for decimal formatting.
+- `FT_INT64_DECIMAL_FORMAT` / `FT_UINT64_DECIMAL_FORMAT` - Ready-to-use decimal `printf`/`snprintf` format strings for 64-bit signed and unsigned integers.
 
 ## String Length
 

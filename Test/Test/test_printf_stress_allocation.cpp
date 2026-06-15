@@ -188,7 +188,8 @@ FT_TEST(test_printf_stress_mixed_numeric_formats)
     int printed;
 
     printed = pf_snprintf(output_buffer, sizeof(output_buffer),
-            "%" FT_PRId64 "|%" FT_PRIu64 "|%llx|%" FT_PRIu64 "|%llx|%.4f|%c|%s",
+            FT_INT64_DECIMAL_FORMAT "|" FT_UINT64_DECIMAL_FORMAT "|%llx|"
+            FT_UINT64_DECIMAL_FORMAT "|%llx|%.4f|%c|%s",
             static_cast<int64_t>(2147483648LL),
             static_cast<uint64_t>(2147483648ULL),
             2147483648ULL,

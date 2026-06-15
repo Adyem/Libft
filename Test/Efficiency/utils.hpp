@@ -63,6 +63,6 @@ inline void print_comparison(const char *name, int64_t std_time, int64_t ft_time
         percent = static_cast<double>(std_time) / ft_time * 100.0;
     else
         percent = 0.0;
-    printf("%s std: %" FT_PRId64 " us (100%%)\n", name, std_time);
-    printf("%s ft : %" FT_PRId64 " us (%.2f%%)\n", name, ft_time, percent);
+    printf("%s std: " FT_INT64_DECIMAL_FORMAT " us (100%%)\n", name, std_time);
+    printf("%s ft : " FT_INT64_DECIMAL_FORMAT " us (%.2f%%)\n", name, ft_time, percent);
 }
