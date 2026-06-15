@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "networking_test_support.hpp"
 #include "../../Modules/Networking/socket_class.hpp"
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
@@ -120,6 +121,8 @@ static ft_bool networking_socket_receive_timed_out(void)
 
 FT_TEST(test_networking_socket_send_all_thread_safety)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     uint16_t server_port;
     int server_fd;
     SocketConfig client_config;
@@ -272,6 +275,8 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
 
 FT_TEST(test_networking_socket_receive_close_thread_safety)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     uint16_t server_port;
     int server_fd;
     SocketConfig client_config;

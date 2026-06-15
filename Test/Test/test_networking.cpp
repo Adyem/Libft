@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "networking_test_support.hpp"
 #include "../../Modules/Networking/socket_class.hpp"
 #include "../../Modules/Networking/networking.hpp"
 #include "../../Modules/Networking/udp_socket.hpp"
@@ -178,6 +179,8 @@ static void test_http_streaming_handler(int status_code, const ft_string &header
 
 FT_TEST(test_network_send_receive_ipv4)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     SocketConfig server_configuration;
     ft_socket server_socket;
     SocketConfig client_configuration;
@@ -232,6 +235,8 @@ FT_TEST(test_network_send_receive_ipv4)
 
 FT_TEST(test_udp_send_receive_ipv4)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     SocketConfig server_configuration;
     udp_socket server;
     SocketConfig client_configuration;
@@ -327,6 +332,8 @@ FT_TEST(test_network_invalid_ip_address)
 
 FT_TEST(test_network_poll_ipv6_ready)
 {
+    if (networking_test_local_ipv6_available() == FT_FALSE)
+        return (1);
     SocketConfig server_configuration;
     ft_socket server_socket;
     SocketConfig client_configuration;
@@ -403,6 +410,8 @@ FT_TEST(test_network_poll_ipv6_ready)
 #if NETWORKING_HAS_OPENSSL
 FT_TEST(test_http_client_streaming_chunks)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     SocketConfig server_configuration;
     ft_socket server_socket;
     http_stream_test_server_context server_context;
@@ -515,6 +524,8 @@ cleanup:
 
 FT_TEST(test_server_config_ipv4_any_address)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     SocketConfig configuration;
     ft_socket server_socket;
     const struct sockaddr_storage *address;
@@ -537,6 +548,8 @@ FT_TEST(test_server_config_ipv4_any_address)
 
 FT_TEST(test_server_config_ipv6_any_address)
 {
+    if (networking_test_local_ipv6_available() == FT_FALSE)
+        return (1);
     SocketConfig configuration;
     ft_socket server_socket;
     const struct sockaddr_storage *address;
@@ -657,6 +670,8 @@ FT_TEST(test_nw_poll_negative_timeout_is_infinite)
 
 FT_TEST(test_networking_check_socket_after_send_detects_disconnect)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     SocketConfig server_configuration;
     ft_socket server_socket;
     SocketConfig client_configuration;
@@ -719,6 +734,8 @@ FT_TEST(test_networking_check_socket_after_send_handles_invalid_descriptor)
 
 FT_TEST(test_networking_check_socket_after_send_reports_success)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     SocketConfig server_configuration;
     ft_socket server_socket;
     SocketConfig client_configuration;

@@ -2,6 +2,7 @@
 #include "../../Modules/Networking/websocket_server.hpp"
 #include "../../Modules/Networking/websocket_client.hpp"
 #include "../../Modules/Networking/networking.hpp"
+#include "networking_test_support.hpp"
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Threading/thread.hpp"
@@ -35,6 +36,8 @@ static void websocket_server_run_once(websocket_server_thread_context *context)
 
 FT_TEST(test_websocket_server_thread_safe_error_queries)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_websocket_server server;
     websocket_server_thread_context context;
     ft_thread server_thread;

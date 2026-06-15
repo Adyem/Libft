@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "websocket_test_utils.hpp"
+#include "networking_test_support.hpp"
 
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"
@@ -106,6 +107,8 @@ static void websocket_invalid_handshake_server(websocket_invalid_handshake_conte
 
 FT_TEST(test_websocket_handshake_and_echo)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_websocket_server server;
     websocket_server_context context;
     ft_thread server_thread;
@@ -226,6 +229,8 @@ FT_TEST(test_websocket_handshake_and_echo)
 
 FT_TEST(test_websocket_server_handles_fragmented_handshake)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_websocket_server server;
     websocket_server_context context;
     int client_socket;
@@ -389,6 +394,8 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake)
 
 FT_TEST(test_websocket_client_rejects_invalid_handshake)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     int server_socket;
     struct sockaddr_in server_address;
     websocket_invalid_handshake_context context;

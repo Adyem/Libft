@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "websocket_compression_test_utils.hpp"
+#include "networking_test_support.hpp"
 
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"
@@ -14,6 +15,8 @@
 
 FT_TEST(test_websocket_server_negotiates_permessage_deflate)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_websocket_server server;
     websocket_server_context context;
     int client_socket;

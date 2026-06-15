@@ -1809,6 +1809,8 @@ FT_TEST(test_api_request_send_failure_sets_errno)
     char *result;
     ft_thread server_thread;
 
+    if (api_request_local_sockets_available() == FT_FALSE)
+        return (1);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif

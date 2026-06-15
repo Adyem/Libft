@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "networking_test_support.hpp"
 #include "../../Modules/Networking/http_server.hpp"
 #include "../../Modules/Networking/socket_class.hpp"
 #include "../../Modules/Networking/networking.hpp"
@@ -151,6 +152,8 @@ static int32_t start_http_server_with_retry(ft_http_server &server)
 
 FT_TEST(test_networking_http_server_get_response)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_http_server server;
     http_server_context context;
     ft_thread server_thread;
@@ -215,6 +218,8 @@ cleanup:
 
 FT_TEST(test_networking_http_server_short_write_sets_error)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_http_server server;
     http_server_context context;
     ft_thread server_thread;
@@ -268,6 +273,8 @@ cleanup:
 
 FT_TEST(test_networking_http_server_post_echoes_body)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_http_server server;
     http_server_context context;
     ft_thread server_thread;
@@ -353,6 +360,8 @@ cleanup:
 
 FT_TEST(test_networking_http_server_keep_alive_multiple_requests)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_http_server server;
     http_server_context context;
     ft_thread server_thread;
@@ -429,6 +438,8 @@ cleanup:
 
 FT_TEST(test_networking_http_server_thread_safe_run_once)
 {
+    if (networking_test_local_ipv4_available() == FT_FALSE)
+        return (1);
     ft_http_server server;
     http_server_context run_context;
     http_server_context error_context;
