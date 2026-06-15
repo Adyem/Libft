@@ -25,6 +25,7 @@ else ifneq ($(LIBFT_PARALLEL_JOBS),)
 endif
 
 SUBMAKE_OVERRIDES ?=
+LIBFT_ARCHIVE_SUFFIX ?=
 
 TEMP_DIRS := temp_objs temp_objs_test $(LIBFT_ROOT_DIR)/Test/.libft_output_lock $(LIBFT_ROOT_DIR)/Test/.libft_progress $(LIBFT_ROOT_DIR)/Test/.libft_progress.lock
 OUTPUT_LOGS := $(LIBFT_ROOT_DIR)/Test/.libft_build_*.log $(LIBFT_ROOT_DIR)/Test/.libft_build_status_*
@@ -150,18 +151,18 @@ LIB_BASES := \
   Modules/Voxel/Voxel \
   Modules/GPGR/GPGR
 
-LIBS       := $(addsuffix .a, $(LIB_BASES))
-DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
-TEST_LIBS  := $(addsuffix _test.a, $(LIB_BASES))
+LIBS       := $(addsuffix $(LIBFT_ARCHIVE_SUFFIX).a, $(LIB_BASES))
+DEBUG_LIBS := $(addsuffix $(LIBFT_ARCHIVE_SUFFIX)_debug.a, $(LIB_BASES))
+TEST_LIBS  := $(addsuffix $(LIBFT_ARCHIVE_SUFFIX)_test.a, $(LIB_BASES))
 TOTAL_LIBS := $(words $(LIBS))
 TOTAL_DEBUG_LIBS := $(words $(DEBUG_LIBS))
 TOTAL_TEST_LIBS := $(words $(TEST_LIBS))
 
-TARGET        := $(LIBFT_ROOT_DIR)/Full_Libft.a
-DEBUG_TARGET  := $(LIBFT_ROOT_DIR)/Full_Libft_debug.a
-TEST_TARGET   := $(LIBFT_ROOT_DIR)/Test/Full_Libft_test.a
-TEST_DEBUG_TARGET := $(LIBFT_ROOT_DIR)/Test/Full_Libft_test_debug.a
+TARGET        := Full_Libft.a
+DEBUG_TARGET  := Full_Libft_debug.a
+TEST_TARGET   := Test/Full_Libft_test.a
+TEST_DEBUG_TARGET := Test/Full_Libft_test_debug.a
 
-CPP_CLASS_LIB := $(LIBFT_ROOT_DIR)/Modules/CPP_class/CPP_class.a
+CPP_CLASS_LIB := Modules/CPP_class/CPP_class$(LIBFT_ARCHIVE_SUFFIX).a
 
 endif

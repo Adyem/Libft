@@ -19,16 +19,8 @@ static constexpr ft_size_t FT_SYSTEM_SIZE_MAX = 18446744073709551615ULL;
 #define FT_PRId64 PRId64
 #define FT_PRIu64 PRIu64
 
-#if defined(_WIN32) || defined(_WIN64)
-#define FT_INT64_FORMAT "lld"
-#define FT_UINT64_FORMAT "llu"
-#elif defined(__LP64__) || defined(_LP64)
-#define FT_INT64_FORMAT "ld"
-#define FT_UINT64_FORMAT "lu"
-#else
-#define FT_INT64_FORMAT "lld"
-#define FT_UINT64_FORMAT "llu"
-#endif
+#define FT_INT64_FORMAT PRId64
+#define FT_UINT64_FORMAT PRIu64
 
 #define FT_INT64_DECIMAL_FORMAT "%" FT_INT64_FORMAT
 #define FT_UINT64_DECIMAL_FORMAT "%" FT_UINT64_FORMAT

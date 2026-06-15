@@ -65,7 +65,6 @@ int pt_condition_variable::ensure_native_sync_objects()
 {
     int native_error;
     bool mutex_created;
-    bool use_condition_attributes;
 
     if (this->_mutex_initialised && this->_condition_initialised)
         return (FT_ERR_SUCCESS);
@@ -87,10 +86,11 @@ int pt_condition_variable::ensure_native_sync_objects()
         this->_mutex_initialised = true;
         mutex_created = true;
     }
-    use_condition_attributes = false;
 #if defined(CLOCK_MONOTONIC) && !defined(__APPLE__)
     pthread_condattr_t condition_attributes;
+    bool use_condition_attributes;
 
+    use_condition_attributes = false;
     native_error = pthread_condattr_init(&condition_attributes);
     if (native_error != 0)
     {
