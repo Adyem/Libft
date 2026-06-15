@@ -56,6 +56,24 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     return ;
 }
 
+static int32_t websocket_recv_exact(int32_t socket_fd, void *buffer, ft_size_t length)
+{
+    ft_size_t total_received;
+    ssize_t bytes_received;
+
+    total_received = 0;
+    while (total_received < length)
+    {
+        bytes_received = nw_recv(socket_fd,
+                static_cast<unsigned char *>(buffer) + total_received,
+                length - total_received, 0);
+        if (bytes_received <= 0)
+            return (FT_ERR_INVALID_OPERATION);
+        total_received += static_cast<ft_size_t>(bytes_received);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
 ft_websocket_client::ft_websocket_client() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _socket(), _mutex(ft_nullptr)
 {
@@ -498,8 +516,7 @@ int32_t ft_websocket_client::receive_text_locked(ft_string &message)
         return (FT_ERR_INVALID_OPERATION);
     while (FT_TRUE)
     {
-        bytes_received = nw_recv(socket_fd, header, 2, 0);
-        if (bytes_received <= 0)
+        if (websocket_recv_exact(socket_fd, header, 2) != FT_ERR_SUCCESS)
             return (FT_ERR_INVALID_OPERATION);
         opcode = header[0] & 0x0F;
         mask_bit_set = (header[1] & 0x80) != 0;
@@ -508,8 +525,7 @@ int32_t ft_websocket_client::receive_text_locked(ft_string &message)
         {
             unsigned char extended[2];
 
-            bytes_received = nw_recv(socket_fd, extended, 2, 0);
-            if (bytes_received <= 0)
+            if (websocket_recv_exact(socket_fd, extended, 2) != FT_ERR_SUCCESS)
                 return (FT_ERR_INVALID_OPERATION);
             payload_length = static_cast<ft_size_t>((extended[0] << 8) | extended[1]);
         }
@@ -517,8 +533,7 @@ int32_t ft_websocket_client::receive_text_locked(ft_string &message)
             return (FT_ERR_INVALID_OPERATION);
         if (mask_bit_set)
         {
-            bytes_received = nw_recv(socket_fd, mask_key, 4, 0);
-            if (bytes_received <= 0)
+            if (websocket_recv_exact(socket_fd, mask_key, 4) != FT_ERR_SUCCESS)
                 return (FT_ERR_INVALID_OPERATION);
         }
         payload = static_cast<unsigned char *>(cma_malloc(payload_length));

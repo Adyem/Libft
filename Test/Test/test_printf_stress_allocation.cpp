@@ -188,11 +188,11 @@ FT_TEST(test_printf_stress_mixed_numeric_formats)
     int printed;
 
     printed = pf_snprintf(output_buffer, sizeof(output_buffer),
-            "%lld|%llu|%llx|%llu|%llx|%.4f|%c|%s",
-            2147483648LL,
+            "%" FT_PRId64 "|%" FT_PRIu64 "|%llx|%" FT_PRIu64 "|%llx|%.4f|%c|%s",
+            static_cast<int64_t>(2147483648LL),
+            static_cast<uint64_t>(2147483648ULL),
             2147483648ULL,
-            2147483648ULL,
-            4294967295ULL,
+            static_cast<uint64_t>(4294967295ULL),
             4294967295ULL,
             3.1415926, 'Z', "tail");
     FT_ASSERT(printed > 0);

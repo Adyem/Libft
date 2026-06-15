@@ -95,8 +95,6 @@ static int32_t file_security_build_temp_path(const char *directory_path,
     else
         error_code = name.append("libft_secure");
     if (error_code == FT_ERR_SUCCESS)
-        error_code = name.append("_");
-    if (error_code == FT_ERR_SUCCESS)
         error_code = file_security_append_random_hex(&name);
     if (error_code != FT_ERR_SUCCESS)
     {

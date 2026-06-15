@@ -55,7 +55,7 @@ static std::string runtime_project_root(void)
     candidate_directory = current_directory;
     while (candidate_directory.empty() == FT_FALSE)
     {
-        if (access((candidate_directory + "/Full_Libft_test.a").c_str(), F_OK) == 0
+        if (access((candidate_directory + "/Test/Full_Libft_test.a").c_str(), F_OK) == 0
             && access((candidate_directory + "/Modules").c_str(), F_OK) == 0)
             return (candidate_directory);
         if (candidate_directory == "/")
@@ -364,7 +364,9 @@ static int32_t runtime_compile_and_run_helper(void)
     compile_command += " -pthread -Wl,--allow-multiple-definition -rdynamic";
     compile_command += " -lz -ldl";
 #endif
-    compile_command += " -o ";
+    compile_command += " ";
+    compile_command += project_root;
+    compile_command += "/Test/Full_Libft_test.a -o ";
     compile_command += file_guard.executable_path;
     if (runtime_run_command(compile_command) == 0)
         return (0);

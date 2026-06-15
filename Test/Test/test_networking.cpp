@@ -665,26 +665,36 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect)
     socklen_t address_length;
     int accepted_fd;
     int check_result;
+    uint16_t server_port;
 
     if (server_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     server_configuration._type = SocketType::SERVER;
-    server_configuration._port = 54344;
+    server_configuration._port = 0;
     std::strncpy(server_configuration._ip, "127.0.0.1",
         sizeof(server_configuration._ip) - 1);
     server_configuration._ip[sizeof(server_configuration._ip) - 1] = '\0';
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
         return (0);
+    address_length = sizeof(address_storage);
+    if (getsockname(server_socket.get_file_descriptor(),
+            reinterpret_cast<struct sockaddr*>(&address_storage), &address_length) != 0)
+        return (0);
+    if (address_storage.ss_family == AF_INET)
+        server_port = ntohs(reinterpret_cast<struct sockaddr_in *>(&address_storage)->sin_port);
+    else if (address_storage.ss_family == AF_INET6)
+        server_port = ntohs(reinterpret_cast<struct sockaddr_in6 *>(&address_storage)->sin6_port);
+    else
+        return (0);
     if (client_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
-    client_configuration._port = 54344;
+    client_configuration._port = server_port;
     std::strncpy(client_configuration._ip, "127.0.0.1",
         sizeof(client_configuration._ip) - 1);
     client_configuration._ip[sizeof(client_configuration._ip) - 1] = '\0';
     if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
         return (0);
-    address_length = sizeof(address_storage);
     accepted_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (accepted_fd < 0)
         return (0);
@@ -717,20 +727,31 @@ FT_TEST(test_networking_check_socket_after_send_reports_success)
     socklen_t address_length;
     int accepted_fd;
     int check_result;
+    uint16_t server_port;
 
     if (server_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     server_configuration._type = SocketType::SERVER;
-    server_configuration._port = 54345;
+    server_configuration._port = 0;
     std::strncpy(server_configuration._ip, "127.0.0.1",
         sizeof(server_configuration._ip) - 1);
     server_configuration._ip[sizeof(server_configuration._ip) - 1] = '\0';
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
         return (0);
+    address_length = sizeof(address_storage);
+    if (getsockname(server_socket.get_file_descriptor(),
+            reinterpret_cast<struct sockaddr*>(&address_storage), &address_length) != 0)
+        return (0);
+    if (address_storage.ss_family == AF_INET)
+        server_port = ntohs(reinterpret_cast<struct sockaddr_in *>(&address_storage)->sin_port);
+    else if (address_storage.ss_family == AF_INET6)
+        server_port = ntohs(reinterpret_cast<struct sockaddr_in6 *>(&address_storage)->sin6_port);
+    else
+        return (0);
     if (client_configuration.initialize() != FT_ERR_SUCCESS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
-    client_configuration._port = 54345;
+    client_configuration._port = server_port;
     std::strncpy(client_configuration._ip, "127.0.0.1",
         sizeof(client_configuration._ip) - 1);
     client_configuration._ip[sizeof(client_configuration._ip) - 1] = '\0';

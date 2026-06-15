@@ -135,6 +135,24 @@ static ft_bool websocket_header_contains_token(const ft_string &request,
     return (FT_FALSE);
 }
 
+static int32_t websocket_recv_exact(int32_t client_fd, void *buffer, ft_size_t length)
+{
+    ft_size_t total_received;
+    ssize_t bytes_received;
+
+    total_received = 0;
+    while (total_received < length)
+    {
+        bytes_received = nw_recv(client_fd,
+                static_cast<unsigned char *>(buffer) + total_received,
+                length - total_received, 0);
+        if (bytes_received <= 0)
+            return (FT_ERR_INVALID_OPERATION);
+        total_received += static_cast<ft_size_t>(bytes_received);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
 static int32_t websocket_append_bytes(ft_vector<unsigned char> &buffer,
     const unsigned char *data, ft_size_t length)
 {
@@ -691,8 +709,7 @@ int32_t ft_websocket_server::receive_frame_locked(int32_t client_fd, ft_string &
     permessage_deflate_enabled = this->connection_supports_permessage_deflate_locked(client_fd);
     while (FT_TRUE)
     {
-        bytes_received = nw_recv(client_fd, header, 2, 0);
-        if (bytes_received <= 0)
+        if (websocket_recv_exact(client_fd, header, 2) != FT_ERR_SUCCESS)
         {
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
@@ -727,8 +744,7 @@ int32_t ft_websocket_server::receive_frame_locked(int32_t client_fd, ft_string &
         {
             unsigned char extended[2];
 
-            bytes_received = nw_recv(client_fd, extended, 2, 0);
-            if (bytes_received <= 0)
+            if (websocket_recv_exact(client_fd, extended, 2) != FT_ERR_SUCCESS)
             {
                 this->remove_connection_state_locked(client_fd);
                 return (FT_ERR_INVALID_OPERATION);
@@ -740,8 +756,7 @@ int32_t ft_websocket_server::receive_frame_locked(int32_t client_fd, ft_string &
             unsigned char extended[8];
             ft_size_t shift_index;
 
-            bytes_received = nw_recv(client_fd, extended, 8, 0);
-            if (bytes_received <= 0)
+            if (websocket_recv_exact(client_fd, extended, 8) != FT_ERR_SUCCESS)
             {
                 this->remove_connection_state_locked(client_fd);
                 return (FT_ERR_INVALID_OPERATION);
@@ -769,8 +784,7 @@ int32_t ft_websocket_server::receive_frame_locked(int32_t client_fd, ft_string &
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);
         }
-        bytes_received = nw_recv(client_fd, mask_key, 4, 0);
-        if (bytes_received <= 0)
+        if (websocket_recv_exact(client_fd, mask_key, 4) != FT_ERR_SUCCESS)
         {
             this->remove_connection_state_locked(client_fd);
             return (FT_ERR_INVALID_OPERATION);

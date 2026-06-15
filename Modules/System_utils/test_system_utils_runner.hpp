@@ -7,6 +7,7 @@
 #include <cstring>
 #include <type_traits>
 
+#include "../Basic/limits.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/class_nullptr.hpp"
 
@@ -60,8 +61,8 @@ static const char *ft_test_value_to_string(char *buffer, ft_size_t buffer_size,
         return ("ft_nullptr");
     else if constexpr (std::is_enum<typename std::decay<ValueType>::type>::value)
     {
-        std::snprintf(buffer, buffer_size, "%lld",
-            static_cast<long long>(static_cast<typename ft_test_numeric_type_helper<
+        std::snprintf(buffer, buffer_size, "%" FT_PRId64,
+            static_cast<int64_t>(static_cast<typename ft_test_numeric_type_helper<
                 ValueType, true>::type>(value)));
         return (buffer);
     }
@@ -76,11 +77,11 @@ static const char *ft_test_value_to_string(char *buffer, ft_size_t buffer_size,
     else if constexpr (std::is_integral<typename std::decay<ValueType>::type>::value)
     {
         if constexpr (std::is_signed<typename std::decay<ValueType>::type>::value)
-            std::snprintf(buffer, buffer_size, "%lld",
-                static_cast<long long>(value));
+            std::snprintf(buffer, buffer_size, "%" FT_PRId64,
+                static_cast<int64_t>(value));
         else
-            std::snprintf(buffer, buffer_size, "%llu",
-                static_cast<unsigned long long>(value));
+            std::snprintf(buffer, buffer_size, "%" FT_PRIu64,
+                static_cast<uint64_t>(value));
         return (buffer);
     }
     else if constexpr (std::is_floating_point<typename std::decay<ValueType>::type>::value)

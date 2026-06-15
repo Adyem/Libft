@@ -145,14 +145,18 @@ void logger_execute_rotation(s_file_sink *sink)
     ft_string rotated_path;
     int32_t close_result;
     int32_t reopen_flags;
+    int32_t rotation_errno;
     ft_size_t retention_count;
     ft_bool lock_acquired;
     ft_bool should_unlock;
+    ft_bool rotation_failed;
 
     if (!sink)
         return ;
     lock_acquired = FT_FALSE;
     should_unlock = FT_FALSE;
+    rotation_errno = 0;
+    rotation_failed = FT_FALSE;
     if (file_sink_lock(sink, &lock_acquired) != 0)
         return ;
     if (lock_acquired)
@@ -172,14 +176,26 @@ void logger_execute_rotation(s_file_sink *sink)
         if (rotation_base.get_error() != FT_ERR_SUCCESS)
             goto cleanup;
         if (logger_remove_oldest_rotation(rotation_base, retention_count) != 0)
-            goto cleanup;
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = errno;
+        }
         if (logger_shift_rotation_chain(rotation_base, retention_count) != 0)
-            goto cleanup;
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = errno;
+        }
         rotated_path = sink->path + ".1";
         if (rotated_path.get_error() != FT_ERR_SUCCESS)
-            goto cleanup;
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = errno;
+        }
         if (cmp_file_move(sink->path.c_str(), rotated_path.c_str(), ft_nullptr) != FT_ERR_SUCCESS)
-            goto cleanup;
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = errno;
+        }
     }
     else
     {
@@ -188,8 +204,12 @@ void logger_execute_rotation(s_file_sink *sink)
     sink->file_descriptor = cmp_open(sink->path.c_str(), reopen_flags, 0644);
     if (sink->file_descriptor == -1)
         goto cleanup;
+    if (rotation_failed != FT_FALSE && rotation_errno != 0)
+        errno = rotation_errno;
 
 cleanup:
+    if (rotation_failed != FT_FALSE && sink->file_descriptor != -1 && rotation_errno != 0)
+        errno = rotation_errno;
     if (should_unlock)
         file_sink_unlock(sink, lock_acquired);
     return ;

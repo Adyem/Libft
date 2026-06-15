@@ -65,7 +65,7 @@ int32_t networking_check_socket_after_send(int32_t socket_fd)
         peek_buffer = 0;
         recv_result = nw_recv(socket_fd, &peek_buffer, 1, MSG_PEEK);
         if (recv_result == 0)
-            break ;
+            return (1);
         if (recv_result < 0)
         {
 #ifdef _WIN32
