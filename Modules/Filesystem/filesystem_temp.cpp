@@ -1,4 +1,6 @@
 #include "filesystem.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
+#include "../CMA/CMA.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../File/file_utils.hpp"
 #include "../Time/time.hpp"
@@ -70,6 +72,7 @@ int32_t filesystem_temp_path(const char *prefix, const char *extension,
 {
     ft_string name;
     ft_string *joined_path;
+    char *native_directory_path;
     int32_t error_code;
 
     if (output == ft_nullptr)
@@ -120,7 +123,15 @@ int32_t filesystem_temp_path(const char *prefix, const char *extension,
             return (name.get_error());
         }
     }
-    joined_path = file_path_join(filesystem_temp_directory(), name.c_str());
+    native_directory_path = ft_nullptr;
+    error_code = cmp_translate_path_to_native(filesystem_temp_directory(),
+            &native_directory_path);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        return (error_code);
+    }
+    joined_path = file_path_join(native_directory_path, name.c_str());
+    cma_free(native_directory_path);
     if (joined_path == ft_nullptr)
     {
         return (FT_ERR_INVALID_STATE);

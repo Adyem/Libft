@@ -229,10 +229,10 @@ $(OBJDIR)/Test/test_xml_copy_move_deleted.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_M
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
-$(DEBUG_TARGET): $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE)
+$(DEBUG_TARGET): $(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE)
 	@printf "Compiled debug test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
-	@$(file >$@.rsp,$(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE))
+	@$(file >$@.rsp,$(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE))
 	@$(RM) $@
 	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp

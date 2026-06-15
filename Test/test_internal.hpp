@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include "../Modules/File/file_utils.hpp"
+#include "../Modules/Compatebility/compatebility_internal.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <io.h>
@@ -245,7 +246,46 @@ static inline int test_create_temp_file_from_template(
         (void)path_out.destroy();
         return (-1);
     }
-    std::memcpy(path_buffer, path_out.c_str(), path_out.size() + 1);
+#if defined(_WIN32) || defined(_WIN64)
+    {
+        HANDLE duplicated_handle;
+        HANDLE original_handle;
+        int32_t file_descriptor_result;
+
+        original_handle = cmp_retrieve_handle(file_descriptor);
+        if (original_handle == INVALID_HANDLE_VALUE)
+        {
+            (void)file_delete(path_out.c_str());
+            (void)file_close_descriptor(file_descriptor);
+            (void)path_out.destroy();
+            return (-1);
+        }
+        duplicated_handle = INVALID_HANDLE_VALUE;
+        if (DuplicateHandle(GetCurrentProcess(), original_handle,
+                GetCurrentProcess(), &duplicated_handle, 0, FALSE,
+                DUPLICATE_SAME_ACCESS) == 0)
+        {
+            (void)file_delete(path_out.c_str());
+            (void)file_close_descriptor(file_descriptor);
+            (void)path_out.destroy();
+            return (-1);
+        }
+        file_descriptor_result = _open_osfhandle(
+                reinterpret_cast<intptr_t>(duplicated_handle),
+                _O_RDWR | _O_BINARY);
+        if (file_descriptor_result < 0)
+        {
+            (void)CloseHandle(duplicated_handle);
+            (void)file_delete(path_out.c_str());
+            (void)file_close_descriptor(file_descriptor);
+            (void)path_out.destroy();
+            return (-1);
+        }
+        (void)file_close_descriptor(file_descriptor);
+        file_descriptor = file_descriptor_result;
+    }
+#endif
+    ft_memcpy(path_buffer, path_out.c_str(), path_out.size() + 1);
     (void)path_out.destroy();
     return (file_descriptor);
 }

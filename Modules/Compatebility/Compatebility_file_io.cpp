@@ -19,6 +19,15 @@ static HANDLE g_file_handles[1024];
 static pt_mutex g_file_mutex;
 static ft_bool g_file_mutex_ready = FT_FALSE;
 
+static ft_bool cmp_has_tracked_handle(int32_t file_descriptor)
+{
+    if (file_descriptor < 0 || file_descriptor >= 1024)
+        return (FT_FALSE);
+    if (g_file_handles[file_descriptor] == ft_nullptr)
+        return (FT_FALSE);
+    return (FT_TRUE);
+}
+
 static int32_t cmp_ensure_file_mutex_initialized(void)
 {
     if (g_file_mutex_ready == FT_TRUE)
@@ -185,7 +194,7 @@ int32_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count,
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (file_descriptor >= 0 && file_descriptor <= 2)
+    if (cmp_has_tracked_handle(file_descriptor) == FT_FALSE)
     {
         int32_t read_result;
 
@@ -250,7 +259,7 @@ int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (file_descriptor >= 0 && file_descriptor <= 2)
+    if (cmp_has_tracked_handle(file_descriptor) == FT_FALSE)
     {
         int32_t write_result;
 
@@ -297,7 +306,7 @@ int32_t cmp_close(int32_t file_descriptor)
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (file_descriptor >= 0 && file_descriptor <= 2)
+    if (cmp_has_tracked_handle(file_descriptor) == FT_FALSE)
     {
         int32_t close_result;
 
@@ -343,21 +352,30 @@ void cmp_initialize_standard_file_descriptors()
         int32_t file_descriptor_input = _open_osfhandle(
             reinterpret_cast<intptr_t>(standard_input), _O_RDONLY);
         if (file_descriptor_input != -1)
+        {
             _dup2(file_descriptor_input, 0);
+            cmp_clear_handle(0);
+        }
     }
     if (standard_output != INVALID_HANDLE_VALUE)
     {
         int32_t file_descriptor_output = _open_osfhandle(
             reinterpret_cast<intptr_t>(standard_output), _O_WRONLY);
         if (file_descriptor_output != -1)
+        {
             _dup2(file_descriptor_output, 1);
+            cmp_clear_handle(1);
+        }
     }
     if (standard_error != INVALID_HANDLE_VALUE)
     {
         int32_t file_descriptor_error = _open_osfhandle(
             reinterpret_cast<intptr_t>(standard_error), _O_WRONLY);
         if (file_descriptor_error != -1)
+        {
             _dup2(file_descriptor_error, 2);
+            cmp_clear_handle(2);
+        }
     }
     int32_t lock_error;
 

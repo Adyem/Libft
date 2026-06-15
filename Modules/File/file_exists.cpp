@@ -13,8 +13,12 @@ int32_t file_exists(const char *path)
     exists_value = 0;
     status = cmp_file_exists(path, &exists_value, &error_code);
     if (status != FT_ERR_SUCCESS)
-        return (error_code);
-    if (exists_value == FT_ERR_SUCCESS)
-        return (FT_ERR_NOT_FOUND);
-    return (FT_ERR_SUCCESS);
+    {
+        if (error_code == FT_ERR_INVALID_ARGUMENT)
+            return (error_code);
+        return (0);
+    }
+    if (exists_value != FT_ERR_SUCCESS)
+        return (1);
+    return (0);
 }

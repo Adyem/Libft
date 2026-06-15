@@ -69,7 +69,7 @@ static int32_t application_auth_write_integer_value(int64_t value, ft_string &ou
     char value_buffer[64];
     int32_t written_length;
 
-    written_length = pf_snprintf(value_buffer, sizeof(value_buffer), "%ld", value);
+    written_length = pf_snprintf(value_buffer, sizeof(value_buffer), "%lld", value);
     if (written_length < 0 || written_length >= static_cast<int32_t>(sizeof(value_buffer)))
         return (FT_ERR_INVALID_OPERATION);
     (void)output.destroy();

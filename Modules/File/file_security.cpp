@@ -1,5 +1,6 @@
 #include "file_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../CMA/CMA.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../RNG/rng.hpp"
@@ -41,7 +42,7 @@ static char file_security_hex_digit(uint8_t value) noexcept
 
 static int32_t file_security_append_random_hex(ft_string *name)
 {
-    uint8_t random_bytes[16];
+    uint8_t random_bytes[3];
     ft_size_t index;
     int32_t error_code;
 
@@ -78,8 +79,10 @@ static void file_security_delete_string(ft_string *string) noexcept
 static int32_t file_security_build_temp_path(const char *directory_path,
     const char *prefix, ft_string *path_out)
 {
+    const char *effective_directory_path;
     ft_string name;
     ft_string *joined_path;
+    char *native_directory_path;
     int32_t error_code;
 
     if (path_out == ft_nullptr)
@@ -95,17 +98,27 @@ static int32_t file_security_build_temp_path(const char *directory_path,
         error_code = name.append("_");
     if (error_code == FT_ERR_SUCCESS)
         error_code = file_security_append_random_hex(&name);
-    if (error_code == FT_ERR_SUCCESS)
-        error_code = name.append(".tmp");
     if (error_code != FT_ERR_SUCCESS)
     {
         (void)name.destroy();
         return (error_code);
     }
-    if (directory_path == ft_nullptr || directory_path[0] == '\0')
+    effective_directory_path = directory_path;
+    native_directory_path = ft_nullptr;
+    if (effective_directory_path == ft_nullptr || effective_directory_path[0] == '\0')
         joined_path = file_path_join(file_security_temp_directory(), name.c_str());
     else
-        joined_path = file_path_join(directory_path, name.c_str());
+    {
+        error_code = cmp_translate_path_to_native(effective_directory_path,
+                &native_directory_path);
+        if (error_code != FT_ERR_SUCCESS)
+        {
+            (void)name.destroy();
+            return (error_code);
+        }
+        joined_path = file_path_join(native_directory_path, name.c_str());
+        cma_free(native_directory_path);
+    }
     (void)name.destroy();
     if (joined_path == ft_nullptr)
         return (FT_ERR_NO_MEMORY);

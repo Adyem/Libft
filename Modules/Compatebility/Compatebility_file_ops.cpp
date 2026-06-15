@@ -402,56 +402,6 @@ int32_t cmp_file_get_modification_time(const char *path, t_time *modification_ti
     return (error_code);
 }
 
-int32_t cmp_file_get_modification_time(const char *path, t_time *modification_time_out,
-    int32_t *error_code_out)
-{
-    int32_t error_code;
-    struct stat stat_buffer;
-
-    if (modification_time_out != ft_nullptr)
-        *modification_time_out = 0;
-    if (path == ft_nullptr || modification_time_out == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        cmp_set_error_code(error_code_out, error_code);
-        return (error_code);
-    }
-    if (stat(path, &stat_buffer) == 0)
-    {
-        *modification_time_out = stat_buffer.st_mtime;
-        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    error_code = cmp_file_error_to_errno(errno);
-    cmp_set_error_code(error_code_out, error_code);
-    return (error_code);
-}
-
-int32_t cmp_file_get_modification_time(const char *path, t_time *modification_time_out,
-    int32_t *error_code_out)
-{
-    int32_t error_code;
-    struct stat stat_buffer;
-
-    if (modification_time_out != ft_nullptr)
-        *modification_time_out = 0;
-    if (path == ft_nullptr || modification_time_out == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        cmp_set_error_code(error_code_out, error_code);
-        return (error_code);
-    }
-    if (stat(path, &stat_buffer) == 0)
-    {
-        *modification_time_out = stat_buffer.st_mtime;
-        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    error_code = cmp_file_error_to_errno(errno);
-    cmp_set_error_code(error_code_out, error_code);
-    return (error_code);
-}
-
 int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *error_code_out)
 {
     int32_t error_code;

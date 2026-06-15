@@ -138,38 +138,61 @@ static int32_t file_path_append_segment(ft_string &result, const char *data,
     return (result.append(data + start, length));
 }
 
-static ft_size_t file_path_append_root(ft_string &result, const char *data,
-    char path_separator) noexcept
+static int32_t file_path_append_root(ft_string &result, const char *data,
+    char path_separator, ft_size_t *root_length_out) noexcept
 {
     ft_size_t index;
+    int32_t error_code;
 
     if (file_path_is_drive_letter(data[0]) == FT_TRUE && data[1] == ':')
     {
-        (void)result.append(data[0]);
-        (void)result.append(':');
+        error_code = result.append(data[0]);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = result.append(':');
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
         if (file_path_is_separator(data[2]) == FT_TRUE)
         {
-            (void)result.append(path_separator);
-            return (3);
+            error_code = result.append(path_separator);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            if (root_length_out != ft_nullptr)
+                *root_length_out = 3;
+            return (FT_ERR_SUCCESS);
         }
-        return (2);
+        if (root_length_out != ft_nullptr)
+            *root_length_out = 2;
+        return (FT_ERR_SUCCESS);
     }
     if (file_path_is_separator(data[0]) == FT_TRUE)
     {
         if (file_path_is_separator(data[1]) == FT_TRUE
             && file_path_is_separator(data[2]) == FT_FALSE)
         {
-            (void)result.append(path_separator);
-            (void)result.append(path_separator);
-            return (2);
+            error_code = result.append(path_separator);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            error_code = result.append(path_separator);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            if (root_length_out != ft_nullptr)
+                *root_length_out = 2;
+            return (FT_ERR_SUCCESS);
         }
-        (void)result.append(path_separator);
+        error_code = result.append(path_separator);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
         index = 0;
         while (file_path_is_separator(data[index]) == FT_TRUE)
             ++index;
-        return (index);
+        if (root_length_out != ft_nullptr)
+            *root_length_out = index;
+        return (FT_ERR_SUCCESS);
     }
-    return (0);
+    if (root_length_out != ft_nullptr)
+        *root_length_out = 0;
+    return (FT_ERR_SUCCESS);
 }
 
 static ft_size_t file_path_root_length(const ft_string &result,
@@ -217,6 +240,7 @@ ft_string *file_path_normalize(const char *path)
     char path_separator;
     ft_bool use_native_separator;
     ft_size_t index;
+    ft_size_t root_length;
     ft_size_t segment_start;
     ft_bool trailing_separator;
     int32_t error_code;
@@ -234,7 +258,8 @@ ft_string *file_path_normalize(const char *path)
     if (path[0] != '\0' && file_path_is_separator(path[0]) == FT_TRUE
         && path[1] == '\0')
     {
-        (void)result->append('/');
+        if (result->append('/') != FT_ERR_SUCCESS)
+            return (file_path_delete_string(result), ft_nullptr);
         return (result);
     }
     if (original.initialize(path) != FT_ERR_SUCCESS)
@@ -255,12 +280,12 @@ ft_string *file_path_normalize(const char *path)
     }
     cmp_normalize_slashes(data);
     use_native_separator = FT_FALSE;
-    if (file_path_is_absolute(data) == FT_TRUE)
+    if (data[0] != '\0')
     {
         if (file_path_is_drive_letter(data[0]) == FT_TRUE && data[1] == ':')
             use_native_separator = FT_TRUE;
         else if (file_path_is_separator(data[0]) == FT_TRUE
-            && file_path_is_separator(data[1]) == FT_TRUE)
+            && data[1] != '\0')
             use_native_separator = FT_TRUE;
     }
     path_separator = '/';
@@ -270,7 +295,13 @@ ft_string *file_path_normalize(const char *path)
     if (original.size() > 0
         && file_path_is_separator(data[original.size() - 1]) == FT_TRUE)
         trailing_separator = FT_TRUE;
-    index = file_path_append_root(*result, data, path_separator);
+    error_code = file_path_append_root(*result, data, path_separator, &root_length);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        file_path_delete_string(result);
+        return (ft_nullptr);
+    }
+    index = root_length;
     segment_start = index;
     while (data[index] != '\0')
     {
@@ -300,9 +331,21 @@ ft_string *file_path_normalize(const char *path)
     if (use_native_separator == FT_FALSE)
         file_path_convert_separator(*result, cmp_path_separator(), '/');
     if (result->size() == 0)
-        (void)result->append('.');
+    {
+        if (result->append('.') != FT_ERR_SUCCESS)
+        {
+            file_path_delete_string(result);
+            return (ft_nullptr);
+        }
+    }
     if (trailing_separator == FT_TRUE && result->size() > 1
         && file_path_result_ends_with_separator(*result, path_separator) == FT_FALSE)
-        (void)result->append(path_separator);
+    {
+        if (result->append(path_separator) != FT_ERR_SUCCESS)
+        {
+            file_path_delete_string(result);
+            return (ft_nullptr);
+        }
+    }
     return (result);
 }

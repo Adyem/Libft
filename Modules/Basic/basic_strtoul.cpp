@@ -1,6 +1,7 @@
 #include "basic.hpp"
 #include "limits.hpp"
 #include "../Basic/class_nullptr.hpp"
+#include <climits>
 
 static int32_t ft_digit_value(char character)
 {
@@ -99,12 +100,7 @@ uint64_t ft_strtoul(const char *input_string, char **end_pointer, int32_t numeri
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
     if (sign_value < 0)
-    {
-        if (overflow_detected)
-            return (limit_value);
-        uint64_t negated_value = 0UL - accumulated_value;
-        return (negated_value);
-    }
+        return (static_cast<uint64_t>(ULONG_MAX));
     if (overflow_detected)
         return (limit_value);
     return (accumulated_value);
