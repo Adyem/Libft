@@ -163,6 +163,44 @@ void logger_execute_rotation(s_file_sink *sink)
         should_unlock = FT_TRUE;
     retention_count = sink->retention_count;
     reopen_flags = O_CREAT | O_WRONLY | O_APPEND;
+    if (retention_count > 0)
+    {
+        rotation_base = sink->path + ".";
+        if (rotation_base.get_error() != FT_ERR_SUCCESS)
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = ENAMETOOLONG;
+        }
+        else if (logger_remove_oldest_rotation(rotation_base, retention_count) != 0)
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = (errno != 0) ? errno : ENAMETOOLONG;
+        }
+        if (rotation_failed == FT_FALSE
+            && logger_shift_rotation_chain(rotation_base, retention_count) != 0)
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = (errno != 0) ? errno : ENAMETOOLONG;
+        }
+        rotated_path = sink->path + ".1";
+        if (rotated_path.get_error() != FT_ERR_SUCCESS)
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = ENAMETOOLONG;
+        }
+        else if (rotation_failed == FT_FALSE
+            && cmp_file_move(sink->path.c_str(), rotated_path.c_str(), ft_nullptr) != FT_ERR_SUCCESS)
+        {
+            rotation_failed = FT_TRUE;
+            rotation_errno = (errno != 0) ? errno : ENAMETOOLONG;
+        }
+    }
+    else
+    {
+        reopen_flags = O_CREAT | O_WRONLY | O_TRUNC | O_APPEND;
+    }
+    if (rotation_failed != FT_FALSE && retention_count > 0)
+        goto cleanup;
     close_result = cmp_close(sink->file_descriptor);
     if (close_result == -1)
     {
@@ -170,37 +208,6 @@ void logger_execute_rotation(s_file_sink *sink)
         goto cleanup;
     }
     sink->file_descriptor = -1;
-    if (retention_count > 0)
-    {
-        rotation_base = sink->path + ".";
-        if (rotation_base.get_error() != FT_ERR_SUCCESS)
-            goto cleanup;
-        if (logger_remove_oldest_rotation(rotation_base, retention_count) != 0)
-        {
-            rotation_failed = FT_TRUE;
-            rotation_errno = errno;
-        }
-        if (logger_shift_rotation_chain(rotation_base, retention_count) != 0)
-        {
-            rotation_failed = FT_TRUE;
-            rotation_errno = errno;
-        }
-        rotated_path = sink->path + ".1";
-        if (rotated_path.get_error() != FT_ERR_SUCCESS)
-        {
-            rotation_failed = FT_TRUE;
-            rotation_errno = errno;
-        }
-        if (cmp_file_move(sink->path.c_str(), rotated_path.c_str(), ft_nullptr) != FT_ERR_SUCCESS)
-        {
-            rotation_failed = FT_TRUE;
-            rotation_errno = errno;
-        }
-    }
-    else
-    {
-        reopen_flags = O_CREAT | O_WRONLY | O_TRUNC | O_APPEND;
-    }
     sink->file_descriptor = cmp_open(sink->path.c_str(), reopen_flags, 0644);
     if (sink->file_descriptor == -1)
         goto cleanup;

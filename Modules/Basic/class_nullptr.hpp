@@ -23,6 +23,12 @@ class ft_nullptr_t
 
         template <typename ClassType, typename MemberType>
         operator MemberType ClassType::*() const noexcept;
+
+        template <typename ReturnType, typename... ArgumentTypes>
+        using function_pointer_type = ReturnType (*)(ArgumentTypes...);
+
+        template <typename ReturnType, typename... ArgumentTypes>
+        operator function_pointer_type<ReturnType, ArgumentTypes...>() const noexcept;
 };
 
 extern const ft_nullptr_t ft_nullptr_instance;
@@ -39,6 +45,12 @@ template <typename ClassType, typename MemberType>
 inline ft_nullptr_t::operator MemberType ClassType::*() const noexcept
 {
     return (static_cast<MemberType ClassType::*>(nullptr));
+}
+
+template <typename ReturnType, typename... ArgumentTypes>
+inline ft_nullptr_t::operator function_pointer_type<ReturnType, ArgumentTypes...>() const noexcept
+{
+    return (static_cast<function_pointer_type<ReturnType, ArgumentTypes...>>(nullptr));
 }
 
 #endif

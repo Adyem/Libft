@@ -225,7 +225,8 @@ int32_t ft_socket::configure_address(const SocketConfig &config)
     {
         if (current->ai_addrlen <= sizeof(this->_address))
         {
-            ft_memcpy(&this->_address, current->ai_addr, current->ai_addrlen);
+            ft_memcpy(&this->_address, current->ai_addr,
+                static_cast<ft_size_t>(current->ai_addrlen));
             freeaddrinfo(results);
             return (FT_ERR_SUCCESS);
         }

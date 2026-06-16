@@ -60,8 +60,7 @@ FT_TEST(test_math_average_balances_large_opposites)
     int64_t result_long;
 
     result_int = math_average(1000000000, -1000000000);
-    result_long = math_average(static_cast<int64_t>(5000000000LL),
-                               static_cast<int64_t>(-5000000000LL));
+    result_long = math_average(5000000000LL, -5000000000LL);
     FT_ASSERT_EQ(0, result_int);
     FT_ASSERT_EQ(0LL, result_long);
     return (1);

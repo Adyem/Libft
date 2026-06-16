@@ -186,15 +186,24 @@ FT_TEST(test_printf_stress_mixed_numeric_formats)
 {
     char output_buffer[256];
     int printed;
+    int64_t signed_value;
+    uint64_t unsigned_value_one;
+    uint64_t unsigned_value_two;
+    uint64_t unsigned_value_three;
+
+    signed_value = INT64_C(2147483648);
+    unsigned_value_one = UINT64_C(2147483648);
+    unsigned_value_two = UINT64_C(2147483648);
+    unsigned_value_three = UINT64_C(4294967295);
 
     printed = pf_snprintf(output_buffer, sizeof(output_buffer),
             FT_INT64_DECIMAL_FORMAT "|" FT_UINT64_DECIMAL_FORMAT "|%llx|"
             FT_UINT64_DECIMAL_FORMAT "|%llx|%.4f|%c|%s",
-            static_cast<int64_t>(2147483648LL),
-            static_cast<uint64_t>(2147483648ULL),
-            2147483648ULL,
-            static_cast<uint64_t>(4294967295ULL),
-            4294967295ULL,
+            signed_value,
+            unsigned_value_one,
+            unsigned_value_two,
+            unsigned_value_three,
+            unsigned_value_three,
             3.1415926, 'Z', "tail");
     FT_ASSERT(printed > 0);
     FT_ASSERT(ft_strstr(output_buffer, "80000000") != ft_nullptr);
