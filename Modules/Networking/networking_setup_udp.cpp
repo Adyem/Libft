@@ -239,7 +239,8 @@ int32_t udp_socket::configure_address(const SocketConfig &config)
         host_value = config._ip;
     if (getaddrinfo(host_value, port_string, &hints, &address_info) != 0)
         return (FT_ERR_SOCKET_RESOLVE_FAILED);
-    ft_memcpy(&this->_address, address_info->ai_addr, address_info->ai_addrlen);
+    ft_memcpy(&this->_address, address_info->ai_addr,
+        static_cast<ft_size_t>(address_info->ai_addrlen));
     freeaddrinfo(address_info);
     return (FT_ERR_SUCCESS);
 }

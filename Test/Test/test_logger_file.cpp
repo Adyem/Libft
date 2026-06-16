@@ -31,16 +31,18 @@ static int64_t    logger_partial_write_hook(int file_descriptor,
     const void *buffer, ft_size_t count)
 {
     ft_size_t  chunk_size;
+    int64_t    bytes_written;
     int64_t    write_result;
 
     g_file_sink_hook_calls += 1;
     chunk_size = 4;
     if (count < chunk_size)
         chunk_size = count;
-    write_result = write(file_descriptor, buffer, chunk_size);
-    if (write_result < 0)
+    bytes_written = 0;
+    write_result = cmp_write(file_descriptor, buffer, chunk_size, &bytes_written);
+    if (write_result != FT_ERR_SUCCESS)
         return (write_result);
-    return (write_result);
+    return (bytes_written);
 }
 
 FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex)
@@ -233,10 +235,51 @@ FT_TEST(test_logger_rotate_rename_failure_reopens_file)
     FT_ASSERT(directory_path != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path.initialize(directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path.append("/"));
+#if defined(_WIN32)
+    ft_bool path_found;
+    ft_size_t long_name_length;
+
+    path_found = FT_FALSE;
+    long_name_length = 255;
+    while (long_name_length > 0 && path_found == FT_FALSE)
+    {
+        ft_string candidate_path;
+        ft_string rotated_candidate_path;
+        int rotated_file_descriptor;
+        std::string long_name_src(long_name_length, 'a');
+
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, candidate_path.initialize(directory_path));
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, candidate_path.append("/"));
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, candidate_path.append(long_name_src.c_str()));
+        file_descriptor = open(candidate_path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+        if (file_descriptor >= 0)
+        {
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_candidate_path.initialize(candidate_path));
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_candidate_path.append(".1"));
+            rotated_file_descriptor = open(rotated_candidate_path.c_str(),
+                    O_CREAT | O_WRONLY | O_APPEND, 0644);
+            if (rotated_file_descriptor < 0)
+            {
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path.initialize(candidate_path));
+                path_found = FT_TRUE;
+            }
+            else
+            {
+                close(rotated_file_descriptor);
+                close(file_descriptor);
+                unlink(candidate_path.c_str());
+            }
+        }
+        if (path_found == FT_FALSE)
+            long_name_length -= 1;
+    }
+    FT_ASSERT(path_found == FT_TRUE);
+#else
     std::string long_name_src(255, 'a');
     FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path.append(long_name_src.c_str()));
     file_descriptor = open(file_path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
     FT_ASSERT(file_descriptor >= 0);
+#endif
     write_result = write(file_descriptor, "trigger", 7);
     FT_ASSERT_EQ(7, write_result);
     sink.file_descriptor = file_descriptor;

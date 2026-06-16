@@ -22,6 +22,7 @@
 # include <sys/stat.h>
 # include <winsock2.h>
 # include <windows.h>
+# include <ws2tcpip.h>
 # define CMP_SHUTDOWN_SEND_MODE SD_SEND
 # ifndef _TIMEVAL_DEFINED
 struct timeval
@@ -55,6 +56,9 @@ int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
 #else
 # include <fcntl.h>
 # include <unistd.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
 # include <sys/stat.h>
 # include <sys/time.h>
 # define CMP_SHUTDOWN_SEND_MODE SHUT_WR

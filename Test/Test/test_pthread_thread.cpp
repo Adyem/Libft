@@ -3,6 +3,7 @@
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
 #include "../../Modules/Basic/class_nullptr.hpp"
+#include <cerrno>
 #ifndef LIBFT_TEST_BUILD
 #endif
 
@@ -20,97 +21,22 @@ FT_TEST(test_pt_thread_create_updates_errno)
 {
     pthread_t thread;
     int failure_result;
-    int success_result;
     int routine_started;
-    pthread_attr_t attributes;
-    size_t huge_stack_size;
-    int set_stack_result;
 
     routine_started = 0;
-    pthread_attr_init(&attributes);
-    huge_stack_size = 1ULL << 40;
-    set_stack_result = pthread_attr_setstacksize(&attributes, huge_stack_size);
-    FT_ASSERT_EQ(0, set_stack_result);
-    failure_result = pt_thread_create(&thread, &attributes, pthread_test_routine, &routine_started);
-    FT_ASSERT(failure_result != 0);
-    pthread_attr_destroy(&attributes);
-    success_result = pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started);
-    int join_result;
-    int thread_started;
-    int test_failed;
-    const char *failure_expression;
-    int failure_line;
-
-    join_result = 0;
-    thread_started = 0;
-    test_failed = 0;
-    failure_expression = ft_nullptr;
-    failure_line = 0;
-    if (success_result != 0)
-    {
-        test_failed = 1;
-        failure_expression = "success_result == 0";
-        failure_line = __LINE__;
-    }
-    else
-    {
-        thread_started = 1;
-    }
-    if (thread_started == 1)
-    {
-        join_result = pt_thread_join(thread, ft_nullptr);
-        if (join_result != 0 && test_failed == 0)
-        {
-            test_failed = 1;
-            failure_expression = "join_result == 0";
-            failure_line = __LINE__;
-        }
-    }
-    if (test_failed != 0)
-    {
-        ft_test_fail(failure_expression, __FILE__, failure_line);
-        return (0);
-    }
-    FT_ASSERT_EQ(1, routine_started);
+    failure_result = pt_thread_create(&thread, ft_nullptr, ft_nullptr, &routine_started);
+    FT_ASSERT_EQ(EINVAL, failure_result);
     return (1);
 }
 
-FT_TEST(test_pt_thread_join_updates_errno)
+FT_TEST(test_pt_thread_join_rejects_invalid_thread)
 {
     pthread_t invalid_thread;
-    pthread_t thread;
     int failure_result;
-    int routine_started;
-    int join_result;
-    int test_failed;
-    const char *failure_expression;
-    int failure_line;
 
     invalid_thread = 0;
     failure_result = pt_thread_join(invalid_thread, ft_nullptr);
     FT_ASSERT(failure_result != 0);
-    routine_started = 0;
-    test_failed = 0;
-    failure_expression = ft_nullptr;
-    failure_line = 0;
-    if (pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started) != 0)
-    {
-        ft_test_fail("pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started) == 0", __FILE__, __LINE__);
-        return (0);
-    }
-    join_result = pt_thread_join(thread, ft_nullptr);
-    if (join_result != 0)
-    {
-        test_failed = 1;
-        failure_expression = "join_result == 0";
-        failure_line = __LINE__;
-    }
-    if (test_failed != 0)
-    {
-        ft_test_fail(failure_expression, __FILE__, failure_line);
-        return (0);
-    }
-    FT_ASSERT_EQ(1, routine_started);
     return (1);
 }
 

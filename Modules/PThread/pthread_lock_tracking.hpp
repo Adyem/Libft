@@ -14,10 +14,10 @@ typedef pt_buffer<pt_thread_id_type> pt_thread_vector;
 
 struct s_pt_lock_wait_snapshot
 {
-    const void      *mutex_pointer;
-    pt_thread_id_type  owner_thread;
-    pt_thread_id_type  waiting_thread;
-    long               wait_started_ms;
+    const void *mutex_pointer;
+    pt_thread_id_type owner_thread;
+    pt_thread_id_type waiting_thread;
+    int64_t wait_started_ms;
 };
 
 typedef pt_buffer<s_pt_lock_wait_snapshot> pt_lock_wait_snapshot_vector;
@@ -26,16 +26,16 @@ struct s_pt_thread_lock_info
 {
     pt_thread_id_type thread_identifier;
     pt_mutex_vector owned_mutexes;
-    const void      *waiting_mutex;
-    long wait_started_ms;
+    const void *waiting_mutex;
+    int64_t wait_started_ms;
 };
 
 struct s_pt_lock_tracking_thread_state
 {
     pt_thread_id_type thread_identifier;
     pt_mutex_vector owned_mutexes;
-    const void      *waiting_mutex;
-    long wait_started_ms;
+    const void *waiting_mutex;
+    int64_t wait_started_ms;
 };
 
 class pt_lock_tracking

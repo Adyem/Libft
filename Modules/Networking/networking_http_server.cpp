@@ -616,8 +616,8 @@ int32_t ft_http_server::run_once_locked()
             should_keep_alive = FT_FALSE;
         if (is_post && !body.empty())
         {
-            std::snprintf(buffer, sizeof(buffer), FT_UINT64_DECIMAL_FORMAT,
-                static_cast<uint64_t>(body.size()));
+            pf_snprintf(buffer, sizeof(buffer), FT_UINT64_DECIMAL_FORMAT,
+                body.size());
             response.append("HTTP/1.1 200 OK\r\nContent-Length: ");
             response.append(buffer);
             if (should_keep_alive != FT_FALSE)

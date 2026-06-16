@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include "pthread.hpp"
+#include <cerrno>
 #include "../Errno/errno.hpp"
 
 thread_local pt_thread_id_type pt_thread_id = THREAD_ID;
@@ -8,7 +9,11 @@ int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                 void *(*start_routine)(void *), void *arg)
 {
     int return_value;
+    void *(*null_start_routine)(void *);
 
+    null_start_routine = ft_nullptr;
+    if (thread == ft_nullptr || start_routine == null_start_routine)
+        return (EINVAL);
     return_value = pthread_create(thread, attr, start_routine, arg);
     if (return_value != 0)
         return (return_value);

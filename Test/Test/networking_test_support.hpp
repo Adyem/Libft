@@ -5,9 +5,6 @@
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Networking/networking.hpp"
 #include <cerrno>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 static inline ft_bool networking_test_local_ipv4_available(void)
 {
