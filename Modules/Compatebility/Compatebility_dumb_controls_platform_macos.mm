@@ -50,6 +50,8 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
         return (dumb_controls_macos_key_is_down(49U, 0U, FT_FALSE));
     if (control == FT_DUMB_CONTROL_BOOST)
         return (dumb_controls_macos_key_is_down(11U, 0U, FT_FALSE));
+    if (control == FT_DUMB_CONTROL_SETTINGS)
+        return (dumb_controls_macos_key_is_down(46U, 0U, FT_FALSE));
     if (control == FT_DUMB_CONTROL_MOUSE_PRIMARY)
     {
         if (CGEventSourceButtonState(

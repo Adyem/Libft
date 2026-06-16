@@ -134,6 +134,8 @@ ft_bool ft_dumb_platform_control_is_down(ft_dumb_control control)
         return (dumb_controls_linux_key_is_down(XK_space, NoSymbol));
     if (control == FT_DUMB_CONTROL_BOOST)
         return (dumb_controls_linux_key_is_down(XK_b, XK_B));
+    if (control == FT_DUMB_CONTROL_SETTINGS)
+        return (dumb_controls_linux_key_is_down(XK_m, XK_M));
     if (control == FT_DUMB_CONTROL_MOUSE_PRIMARY)
         return (dumb_controls_linux_mouse_button_is_down(Button1Mask));
     if (control == FT_DUMB_CONTROL_MOUSE_SECONDARY)
