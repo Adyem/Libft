@@ -539,17 +539,7 @@ int32_t kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &e
         json_add_item_to_group(store_group, metadata_item);
     }
     entry_begin = entries.begin();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        json_free_groups(store_group);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_end = entries.end();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        json_free_groups(store_group);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_cursor = entry_begin;
     while (entry_cursor != entry_end)
     {
@@ -725,17 +715,7 @@ int32_t kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_ent
         cma_free(serialized_line);
     }
     entry_begin = entries.begin();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        su_fclose(file_handle);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_end = entries.end();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        su_fclose(file_handle);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_cursor = entry_begin;
     while (entry_cursor != entry_end)
     {
@@ -891,25 +871,13 @@ int32_t kv_store::load_json_lines_entries(const char *location, ft_vector<kv_sto
         return (FT_ERR_INVALID_OPERATION);
     }
     lines.clear();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        return (FT_ERR_INVALID_OPERATION);
-    }
     read_result = ft_open_and_read_file(location, lines, 8192);
     if (read_result != 0)
     {
         return (FT_ERR_NOT_FOUND);
     }
     out_entries.clear();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        return (FT_ERR_INVALID_OPERATION);
-    }
     line_count = lines.size();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        return (FT_ERR_INVALID_OPERATION);
-    }
     line_index = 0;
     while (line_index < line_count)
     {
@@ -1060,11 +1028,6 @@ int32_t kv_store::load_json_lines_entries(const char *location, ft_vector<kv_sto
             snapshot_entry.has_expiration = FT_FALSE;
         snapshot_entry.expiration_timestamp = expiration_value;
         out_entries.push_back(ft_move(snapshot_entry));
-        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-        {
-            json_free_groups(line_groups);
-            return (FT_ERR_INVALID_OPERATION);
-        }
         json_free_groups(line_groups);
         line_index++;
     }
@@ -1162,21 +1125,7 @@ int32_t kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> 
         return (FT_ERR_INVALID_OPERATION);
     }
     entry_begin = entries.begin();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        sqlite3_finalize(insert_statement);
-        sqlite3_exec(database_handle, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
-        sqlite3_close(database_handle);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_end = entries.end();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        sqlite3_finalize(insert_statement);
-        sqlite3_exec(database_handle, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
-        sqlite3_close(database_handle);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_cursor = entry_begin;
     while (entry_cursor != entry_end)
     {
@@ -1337,11 +1286,6 @@ int32_t kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_s
         metadata_statement = ft_nullptr;
     }
     out_entries.clear();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        sqlite3_close(database_handle);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     if (sqlite3_prepare_v2(database_handle, "SELECT key, value, has_expiration, expiration FROM kv_store_entries;", -1, &select_statement, ft_nullptr) != SQLITE_OK)
     {
         sqlite3_close(database_handle);
@@ -1443,12 +1387,6 @@ int32_t kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_s
             snapshot_entry.has_expiration = FT_FALSE;
         snapshot_entry.expiration_timestamp = static_cast<int64_t>(expiration_value);
         out_entries.push_back(ft_move(snapshot_entry));
-        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-        {
-            sqlite3_finalize(select_statement);
-            sqlite3_close(database_handle);
-            return (FT_ERR_INVALID_OPERATION);
-        }
     }
     sqlite3_finalize(select_statement);
     sqlite3_close(database_handle);
@@ -1494,17 +1432,7 @@ int32_t kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_
         json_add_item_to_group(store_group, metadata_item);
     }
     entry_begin = entries.begin();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        json_free_groups(store_group);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_end = entries.end();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        json_free_groups(store_group);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_cursor = entry_begin;
     while (entry_cursor != entry_end)
     {
@@ -1691,10 +1619,6 @@ int32_t kv_store::set_backend(kv_store_backend_type backend_type, const char *lo
         return (FT_ERR_INVALID_OPERATION);
     }
     loaded_entries.clear();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        return (FT_ERR_INVALID_OPERATION);
-    }
     load_result = this->load_backend_entries(backend_type, location, loaded_entries);
     if (load_result < 0)
         return (FT_ERR_INVALID_OPERATION);
@@ -1767,10 +1691,6 @@ int32_t kv_store::write_snapshot(ft_document_sink &sink) const
 
     mutable_this = const_cast<kv_store *>(this);
     entries.clear();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        return (FT_ERR_INVALID_OPERATION);
-    }
     if (mutable_this->export_snapshot(entries) != 0)
         return (FT_ERR_INVALID_OPERATION);
     store_group = json_create_json_group("kv_store");
@@ -1801,17 +1721,7 @@ int32_t kv_store::write_snapshot(ft_document_sink &sink) const
     const kv_store_snapshot_entry *entry_cursor;
 
     entry_begin = entries.begin();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        json_free_groups(store_group);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_end = entries.end();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        json_free_groups(store_group);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     entry_cursor = entry_begin;
     while (entry_cursor != entry_end)
     {
@@ -1936,11 +1846,6 @@ int32_t kv_store::read_snapshot(ft_document_source &source)
         return (FT_ERR_INVALID_OPERATION);
     }
     entries.clear();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        json_free_groups(group_head);
-        return (FT_ERR_INVALID_OPERATION);
-    }
     if (this->parse_json_groups(group_head, entries) != 0)
     {
         json_free_groups(group_head);
@@ -2178,10 +2083,6 @@ int32_t kv_store::start_background_thread_locked(int64_t interval_seconds) noexc
     this->_background_stop_requested = FT_FALSE;
     this->_background_interval_seconds = interval_seconds;
     background_instance = ft_thread(&kv_store::background_compaction_worker, this);
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        return (FT_ERR_INVALID_OPERATION);
-    }
     this->_background_thread = ft_move(background_instance);
     this->_background_thread_active = FT_TRUE;
     return (FT_ERR_SUCCESS);
@@ -2918,10 +2819,6 @@ int32_t kv_store::import_snapshot(const ft_vector<kv_store_snapshot_entry> &entr
     int32_t lock_error;
     int32_t operation_error;
 
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-    {
-        return (FT_ERR_INVALID_OPERATION);
-    }
     lock_error = this->lock_store(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -2984,10 +2881,6 @@ int32_t kv_store::stop_background_compaction()
     if (thread_holder.joinable())
     {
         thread_holder.join();
-        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-        {
-            return (FT_ERR_INVALID_OPERATION);
-        }
     }
     lock_error = this->lock_background(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

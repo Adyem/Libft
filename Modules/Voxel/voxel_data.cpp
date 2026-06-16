@@ -10,13 +10,6 @@
 #include "../Game/game_voxel_chunk.hpp"
 #include "voxel_internal.hpp"
 
-static const int32_t TERRAIN_HEIGHTMAP_LARGE_SCALE = 32;
-static const int32_t TERRAIN_HEIGHTMAP_DETAIL_SCALE = 8;
-static const uint64_t TERRAIN_FEATURE_SHRUB_SALT = UINT64_C(0x2D9C1F4E8B3A6071);
-static const int32_t TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET = 1;
-static const uint64_t TERRAIN_FEATURE_SHRUB_THRESHOLD = 6U;
-static const uint64_t TERRAIN_FEATURE_TREE_SALT = UINT64_C(0x4F1E2D3C5B6A7980);
-
 static void terrain_abort_unknown_block_id(uint32_t block_id,
     const char *method_name) noexcept
 {
