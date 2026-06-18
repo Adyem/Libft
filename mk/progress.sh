@@ -3,6 +3,7 @@ set -u
 
 state_dir="Test/.libft_progress"
 lock_dir="Test/.libft_progress.lock"
+completion_count_file="$state_dir/completion_count"
 bar_width=24
 if [ -t 1 ]; then
     color_on=$'\033[1;35m'
@@ -55,6 +56,9 @@ init_progress() {
     if [ ! -f "$state_dir/initialized" ]; then
         printf '%s[LIBFT BUILD]%s Parallel module progress (%s modules)\n' "$color_on" "$color_off" "$total"
         : > "$state_dir/initialized"
+    fi
+    if [ ! -f "$completion_count_file" ]; then
+        printf '%s\n' "0" > "$completion_count_file"
     fi
     unlock_progress
 }

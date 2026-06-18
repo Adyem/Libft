@@ -378,7 +378,7 @@ FT_TEST(test_ft_putptr_fd_formats_address)
     FT_ASSERT(create_pipe(pipe_fds));
     sample_value = 42;
     address_value = reinterpret_cast<uintptr_t>(&sample_value);
-    expected_length = std::snprintf(expected, sizeof(expected), "0x%llx", static_cast<unsigned long long>(address_value));
+    expected_length = std::snprintf(expected, sizeof(expected), "0x%" PRIxPTR, address_value);
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putptr_fd(&sample_value, pipe_fds[1], &write_count);

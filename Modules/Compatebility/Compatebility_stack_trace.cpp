@@ -113,7 +113,7 @@ static int32_t    cmp_stack_trace_symbolize_linux(const void *address,
         "addr2line -f -C -e \"%s\" 0x%" PRIxPTR " 2>/dev/null",
         escaped_path, relative_address) < 0)
         return (FT_ERR_SYSTEM);
-    if (static_cast<ft_size_t>(ft_strlen_size_t(command)) >= sizeof(command))
+    if (ft_strlen_size_t(command) >= sizeof(command))
         return (FT_ERR_SYSTEM);
     pipe_file = popen(command, "r");
     if (pipe_file == NULL)

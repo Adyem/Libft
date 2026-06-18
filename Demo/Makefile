@@ -26,9 +26,7 @@ clean:
 	if ! $(RMDIR) $(TARGET_DIR); then \
 		status=1; \
 	fi; \
-	if [ $$status -eq 0 ]; then \
-		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
-	else \
+	if [ $$status -ne 0 ]; then \
 		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
 		exit 1; \
 	fi
@@ -37,7 +35,6 @@ fclean: clean
 	@if [ -z "$(LIBFT_PARENT_CLEAN)" ]; then \
 		$(MAKE) -C .. fclean; \
 	fi
-	@printf '        [%s] fclean: success\n' "$(MODULE_NAME)"
 
 re:
 	@$(MAKE) fclean

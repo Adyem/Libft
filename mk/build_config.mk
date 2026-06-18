@@ -10,17 +10,17 @@ CLANG_FORMAT   ?= clang-format
 
 MAKEFLAGS      += --no-print-directory
 
-LIBFT_PARALLEL_JOBS := $(filter -j% j%,$(MAKEFLAGS))
-LIBFT_EXPLICIT_J1 := $(filter -j1 j1,$(MAKEFLAGS))
-LIBFT_JOBSERVER := $(findstring --jobserver-auth,$(MAKEFLAGS))
-LIBFT_BATCH_OUTPUT := 1
+LIBFT_PARALLEL_JOBS = $(filter -j% j%,$(MAKEFLAGS))
+LIBFT_EXPLICIT_J1 = $(filter -j1 j1,$(MAKEFLAGS))
+LIBFT_JOBSERVER = $(findstring --jobserver-auth,$(MAKEFLAGS))
+LIBFT_BATCH_OUTPUT = 0
 ifneq ($(LIBFT_JOBSERVER),)
     ifeq ($(LIBFT_EXPLICIT_J1),)
-        LIBFT_BATCH_OUTPUT := 1
+        LIBFT_BATCH_OUTPUT = 1
     endif
 else ifneq ($(LIBFT_PARALLEL_JOBS),)
     ifeq ($(LIBFT_EXPLICIT_J1),)
-        LIBFT_BATCH_OUTPUT := 1
+        LIBFT_BATCH_OUTPUT = 1
     endif
 endif
 

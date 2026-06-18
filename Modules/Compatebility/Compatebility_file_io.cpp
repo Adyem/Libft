@@ -67,24 +67,6 @@ HANDLE cmp_retrieve_handle(int32_t file_descriptor)
     return (stored_handle);
 }
 
-off_t cmp_lseek(int32_t file_descriptor, off_t offset, int32_t whence)
-{
-#if defined(_WIN32) || defined(_WIN64)
-    off_t result;
-
-    result = static_cast<off_t>(_lseeki64(file_descriptor,
-        static_cast<__int64>(offset), whence));
-    if (result < 0)
-        return (static_cast<off_t>(-1));
-    return (result);
-#else
-    off_t result;
-
-    result = lseek(file_descriptor, offset, whence);
-    return (result);
-#endif
-}
-
 static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t mode)
 {
     char *native_path;
@@ -414,3 +396,21 @@ void cmp_initialize_standard_file_descriptors()
 }
 
 #endif
+
+off_t cmp_lseek(int32_t file_descriptor, off_t offset, int32_t whence)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    off_t result;
+
+    result = static_cast<off_t>(_lseeki64(file_descriptor,
+        static_cast<__int64>(offset), whence));
+    if (result < 0)
+        return (static_cast<off_t>(-1));
+    return (result);
+#else
+    off_t result;
+
+    result = lseek(file_descriptor, offset, whence);
+    return (result);
+#endif
+}

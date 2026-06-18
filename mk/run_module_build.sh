@@ -10,21 +10,40 @@ if [ "${1:-}" = "--" ]; then
     shift
 fi
 
-progress_script="mk/progress.sh"
-modules=${LIBFT_PROGRESS_MODULES:-$module_path}
+batch_output="${LIBFT_BATCH_OUTPUT:-0}"
+light_blue=""
+purple=""
+reset=""
+if [ -t 1 ]; then
+    light_blue=$'\033[1;94m'
+    purple=$'\033[1;35m'
+    reset=$'\033[0m'
+fi
+
 status_file="Test/.libft_build_status_$$_${progress_index}"
+progress_state_dir="Test/.libft_progress"
+completion_count_file="$progress_state_dir/completion_count"
+progress_lock_dir="Test/.libft_progress.lock"
 
-cleanup_on_interrupt() {
-    "$progress_script" finish
-    rm -f "$status_file" "$log_file"
-    exit 130
+cleanup_status_file() {
+    rm -f "$status_file"
 }
-trap cleanup_on_interrupt INT TERM
 
-# shellcheck disable=SC2086
-"$progress_script" init "$total_modules" $modules
+cleanup_all_files() {
+    rm -f "$status_file" "$log_file"
+    rmdir "$progress_lock_dir" 2>/dev/null || true
+}
+
+trap cleanup_status_file EXIT
+trap 'cleanup_all_files; exit 130' INT TERM
+
 : > "$log_file"
 rm -f "$status_file"
+
+module_name=$(basename "$module_path")
+module_name=${module_name%.a}
+module_name=${module_name%_debug}
+module_name=${module_name%_test}
 
 last_count=0
 last_total=1
@@ -32,6 +51,9 @@ last_file=""
 while IFS= read -r line; do
     printf '%s\n' "$line" >> "$log_file"
     case "$line" in
+        *" is up to date.")
+            continue
+            ;;
         *"Building file "*)
             count=$(printf '%s\n' "$line" | sed -n 's/.*(\([0-9][0-9]*\)\/\([0-9][0-9]*\)).*/\1/p')
             total=$(printf '%s\n' "$line" | sed -n 's/.*(\([0-9][0-9]*\)\/\([0-9][0-9]*\)).*/\2/p')
@@ -40,7 +62,18 @@ while IFS= read -r line; do
                 last_count="$count"
                 last_total="$total"
                 last_file="$file"
-                "$progress_script" update "$total_modules" "$progress_index" "$module_path" "$count" "$total" "build" "$file"
+                if [ "$batch_output" -ne 1 ]; then
+                    printf '%s        [%s] Building file %s (%d/%d)%s\n' \
+                        "$light_blue" "$module_name" "$file" "$count" "$total" "$reset"
+                fi
+            fi
+            ;;
+        *"Module archive ready "*)
+            :
+            ;;
+        *)
+            if [ "$batch_output" -ne 1 ]; then
+                printf '%s\n' "$line"
             fi
             ;;
     esac
@@ -50,14 +83,29 @@ status=1
 if [ -f "$status_file" ]; then
     status=$(cat "$status_file")
 fi
-rm -f "$status_file"
+cleanup_status_file
 
 if [ "$status" -eq 0 ]; then
-    "$progress_script" update "$total_modules" "$progress_index" "$module_path" "$last_total" "$last_total" "done" ""
+    while ! mkdir "$progress_lock_dir" 2>/dev/null; do
+        sleep 0.02
+    done
+    if [ ! -f "$completion_count_file" ]; then
+        mkdir -p "$progress_state_dir"
+        printf '%s\n' "0" > "$completion_count_file"
+    fi
+    completion_index=$(cat "$completion_count_file")
+    if [ -z "$completion_index" ]; then
+        completion_index=0
+    fi
+    completion_index=$((completion_index + 1))
+    printf '%s\n' "$completion_index" > "$completion_count_file"
+    rmdir "$progress_lock_dir" 2>/dev/null || true
+    printf '%s[LIBFT BUILD]%s (%d/%d) Built %s%s\n' \
+        "$purple" "$reset" "$completion_index" "$total_modules" "$(basename "$module_path")" "$reset"
     rm -f "$log_file"
 else
-    "$progress_script" update "$total_modules" "$progress_index" "$module_path" "$last_count" "$last_total" "failed" "$last_file"
-    "$progress_script" finish
+    printf '%s[LIBFT BUILD]%s (%d/%d) Failed %s%s\n' \
+        "$purple" "$reset" "$progress_index" "$total_modules" "$(basename "$module_path")" "$reset"
     cat "$log_file"
     rm -f "$log_file"
 fi

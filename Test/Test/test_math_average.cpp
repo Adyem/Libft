@@ -58,9 +58,11 @@ FT_TEST(test_math_average_balances_large_opposites)
 {
     int result_int;
     int64_t result_long;
+    const int64_t positive_large = INT64_C(5000000000);
+    const int64_t negative_large = -INT64_C(5000000000);
 
     result_int = math_average(1000000000, -1000000000);
-    result_long = math_average(5000000000LL, -5000000000LL);
+    result_long = math_average(positive_large, negative_large);
     FT_ASSERT_EQ(0, result_int);
     FT_ASSERT_EQ(0LL, result_long);
     return (1);

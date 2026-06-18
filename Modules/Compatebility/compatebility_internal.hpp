@@ -83,6 +83,7 @@ int32_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count,
 int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
     int64_t *bytes_written_out);
 #endif
+off_t cmp_lseek(int32_t file_descriptor, off_t offset, int32_t whence);
 int32_t cmp_close(int32_t file_descriptor);
 void cmp_initialize_standard_file_descriptors();
 
@@ -98,7 +99,6 @@ int32_t cmp_translate_path_to_portable(const char *path, char **output_path);
 int32_t cmp_get_temp_directory(char **output_path);
 ft_bool cmp_path_equal(const char *path_left, const char *path_right) noexcept;
 int32_t cmp_file_error_to_errno(int32_t system_error) noexcept;
-HANDLE cmp_retrieve_handle(int32_t file_descriptor);
 int32_t cmp_file_exists(const char *path, int32_t *exists_out,
     int32_t *error_code_out);
 int32_t cmp_file_delete(const char *path, int32_t *error_code_out);

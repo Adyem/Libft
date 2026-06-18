@@ -28,7 +28,11 @@ $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
 clean:
-	@if $(RM) $(CLEAN_FILES); then \
+	@status=0; \
+	if ! $(RM) $(CLEAN_FILES); then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
 		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
 	else \
 		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \

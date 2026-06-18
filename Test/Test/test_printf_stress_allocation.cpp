@@ -197,8 +197,8 @@ FT_TEST(test_printf_stress_mixed_numeric_formats)
     unsigned_value_three = UINT64_C(4294967295);
 
     printed = pf_snprintf(output_buffer, sizeof(output_buffer),
-            FT_INT64_DECIMAL_FORMAT "|" FT_UINT64_DECIMAL_FORMAT "|%llx|"
-            FT_UINT64_DECIMAL_FORMAT "|%llx|%.4f|%c|%s",
+            FT_INT64_DECIMAL_FORMAT "|" FT_UINT64_DECIMAL_FORMAT "|%" PRIx64 "|"
+            FT_UINT64_DECIMAL_FORMAT "|%" PRIx64 "|%.4f|%c|%s",
             signed_value,
             unsigned_value_one,
             unsigned_value_two,

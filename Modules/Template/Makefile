@@ -42,7 +42,24 @@ clean:
 		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
 		exit 1; \
 	fi
-fclean: clean
+
+fclean:
+	@status=0; \
+	if ! $(RM) $(CLEAN_FILES); then \
+		status=1; \
+	fi; \
+	if ! $(RMDIR) $(CLEAN_DIRS); then \
+		status=1; \
+	fi; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES); then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
+		printf '        [%s] fclean: success\n' "$(MODULE_NAME)"; \
+	else \
+		printf '        [%s] fclean: failed\n' "$(MODULE_NAME)"; \
+		exit 1; \
+	fi
 
 re:
 	@$(MAKE) fclean

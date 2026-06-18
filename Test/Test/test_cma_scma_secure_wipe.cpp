@@ -388,20 +388,14 @@ static int32_t runtime_compile_and_run_helper(void)
     if (runtime_write_source_file(file_guard.source_path,
             runtime_child_source()) == 0)
         return (0);
-    {
-        FILE *log_file;
-
-        log_file = fopen("secure_wipe_runtime.log", "a");
-        if (log_file != ft_nullptr)
-        {
-            fprintf(log_file, "source_exists: %d\n",
-                access(file_guard.source_path, F_OK));
-            fclose(log_file);
-        }
-    }
+    compiler = ft_nullptr;
     compiler = getenv("CXX");
     if (compiler == ft_nullptr || compiler[0] == '\0')
+#if defined(_WIN32) || defined(_WIN64)
         compiler = "C:/ProgramData/mingw64/mingw64/bin/g++.exe";
+#else
+        compiler = "g++";
+#endif
     compile_command = "\"";
     compile_command += compiler;
     compile_command += "\" -x c++ -O3 -Wall -Wextra -Werror -std=c++17 -pthread";

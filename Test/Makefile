@@ -8,35 +8,39 @@ endif
 include ../mk/compiler_flags.mk
 include ../mk/test/config.mk
 
+TEST_LIBFT_ARCHIVE_TARGET := Test/Full_Libft_test.a
+TEST_LIBFT_DEBUG_ARCHIVE_TARGET := Test/Full_Libft_test_debug.a
+
 all: $(TARGET)
 
 .PHONY: FORCE
 FORCE:
 
-$(TARGET): $(OBJS) $(LIBFT_ARCHIVE)
-	@printf "Compiled test files (%d files)\n" $(TOTAL_SRCS)
-	@echo "Linking final executable ($(TARGET))"
+$(TARGET): $(OBJS)
 	@# Rescan the archive so cross-module references inside the combined test library resolve.
+	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+		OPT_LEVEL=$(OPT_LEVEL)
 	@$(file >$@.rsp,$(OBJS) -Wl,--start-group $(LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(RM) $@
 	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
+	@printf '\033[1;35m[LIBFT BUILD] Test executable ready (%s)\033[0m\n' "$(TARGET)"
 
 Basic:
 	@echo "Building basic test executable ($(TARGET))"
-	@$(MAKE) FILES="$(BASIC_TEST_FILES)" all
+	@$(MAKE) FILES="$(BASIC_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 CMA:
 	@echo "Building CMA test executable ($(TARGET))"
-	@$(MAKE) FILES="$(CMA_TEST_FILES)" all
+	@$(MAKE) FILES="$(CMA_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Efficiency:
 	@echo "Building efficiency test executable ($(EFFICIENCY_TARGET)) with OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL)"
-	@$(MAKE) $(EFFICIENCY_TARGET) OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL)
+	@$(MAKE) $(EFFICIENCY_TARGET) OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL) LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 	@echo "Efficiency executable ready; run ./$(EFFICIENCY_TARGET) manually if desired."
 
 run_Efficiency:
-	@$(MAKE) $(EFFICIENCY_TARGET) OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL)
+	@$(MAKE) $(EFFICIENCY_TARGET) OPT_LEVEL=$(EFFICIENCY_OPT_LEVEL) LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 	@./$(EFFICIENCY_TARGET)
 
 single_test:
@@ -50,43 +54,43 @@ run_single_test: single_test
 
 get_next_line:
 	@echo "Building get_next_line test executable ($(TARGET))"
-	@$(MAKE) FILES="$(GET_NEXT_LINE_TEST_FILES)" all
+	@$(MAKE) FILES="$(GET_NEXT_LINE_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 File:
 	@echo "Building file test executable ($(TARGET))"
-	@$(MAKE) FILES="$(FILE_TEST_FILES)" all
+	@$(MAKE) FILES="$(FILE_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Config:
 	@echo "Building config test executable ($(TARGET))"
-	@$(MAKE) FILES="$(CONFIG_TEST_FILES)" all
+	@$(MAKE) FILES="$(CONFIG_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Filesystem:
 	@echo "Building filesystem test executable ($(TARGET))"
-	@$(MAKE) FILES="$(FILESYSTEM_TEST_FILES)" all
+	@$(MAKE) FILES="$(FILESYSTEM_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Storage:
 	@echo "Building Storage test executable ($(TARGET))"
-	@$(MAKE) FILES="$(STORAGE_TEST_FILES)" all
+	@$(MAKE) FILES="$(STORAGE_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Voxel:
 	@echo "Building Voxel test executable ($(TARGET))"
-	@$(MAKE) FILES="$(VOXEL_TEST_FILES)" all
+	@$(MAKE) FILES="$(VOXEL_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 CLI:
 	@echo "Building CLI test executable ($(TARGET))"
-	@$(MAKE) FILES="$(CLI_TEST_FILES)" all
+	@$(MAKE) FILES="$(CLI_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Application:
 	@echo "Building Application test executable ($(TARGET))"
-	@$(MAKE) FILES="$(APPLICATION_TEST_FILES)" all
+	@$(MAKE) FILES="$(APPLICATION_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Logger:
 	@echo "Building Logger test executable ($(TARGET))"
-	@$(MAKE) FILES="$(LOGGER_TEST_FILES)" all
+	@$(MAKE) FILES="$(LOGGER_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 Sink:
 	@echo "Building Sink test executable ($(TARGET))"
-	@$(MAKE) FILES="$(SINK_TEST_FILES)" all
+	@$(MAKE) FILES="$(SINK_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
 re_get_next_line: fclean get_next_line
 
@@ -112,29 +116,40 @@ build_tests: all
 	@echo "Test executable ready; run ./$(TARGET) manually if desired."
 
 $(OBJDIR)/%.o: %.cpp
-	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
+	@batch_output=0; \
+	case "$$MAKEFLAGS" in \
+		*"-j1"*) batch_output=0 ;; \
+		*"-j"*|*"--jobserver-auth="*) batch_output=1 ;; \
+	esac; \
+	if [ "$$batch_output" = "1" ]; then \
 		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
 		{ \
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
 			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-			built=$$(find $(OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
-			printf '        [Test] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+			built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
+			printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
+		if [ $$status -ne 0 ]; then \
+			while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
+			cat "$$log_file"; \
+			rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
+			$(RM) "$$log_file"; \
+			exit $$status; \
+		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		cat "$$log_file"; \
+		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
-		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	else \
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-		built=$$(find $(OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
-		printf '        [Test] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+		built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
+		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
@@ -235,72 +250,98 @@ $(OBJDIR)/Test/test_xml_copy_move_deleted.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_M
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
-$(DEBUG_TARGET): $(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE)
+$(DEBUG_TARGET): $(DEBUG_OBJS)
 	@printf "Compiled debug test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
+	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+		OPT_LEVEL=$(OPT_LEVEL)
 	@$(file >$@.rsp,$(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE))
 	@$(RM) $@
 	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
-	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
+	@batch_output=0; \
+	case "$$MAKEFLAGS" in \
+		*"-j1"*) batch_output=0 ;; \
+		*"-j"*|*"--jobserver-auth="*) batch_output=1 ;; \
+	esac; \
+	if [ "$$batch_output" = "1" ]; then \
 		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
 		{ \
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
 			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-			built=$$(find $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
-			printf '        [Test Debug] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+			built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
+			printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
+		if [ $$status -ne 0 ]; then \
+			while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
+			cat "$$log_file"; \
+			rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
+			$(RM) "$$log_file"; \
+			exit $$status; \
+		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		cat "$$log_file"; \
+		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
-		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	else \
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-		built=$$(find $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
-		printf '        [Test Debug] Building file %s (%d/%d)\n' "$<" $$built $(TOTAL_SRCS); \
+		built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
+		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
-$(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS) $(EFFICIENCY_LIBFT_ARCHIVE)
+$(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS)
 	@printf "Compiled efficiency files (%d files)\n" $(EFF_TOTAL_SRCS)
 	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
+	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
+		OPT_LEVEL=$(OPT_LEVEL)
 	@$(file >$@.rsp,$(EFFICIENCY_OBJS) -Wl,--start-group $(EFFICIENCY_LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(RM) $@
 	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
 
 $(EFFICIENCY_OBJDIR)/%.o: %.cpp
-	@if [ "$(LIBFT_TEST_BATCH_OUTPUT)" = "1" ]; then \
+	@batch_output=0; \
+	case "$$MAKEFLAGS" in \
+		*"-j1"*) batch_output=0 ;; \
+		*"-j"*|*"--jobserver-auth="*) batch_output=1 ;; \
+	esac; \
+	if [ "$$batch_output" = "1" ]; then \
 		log_file=".libft_test_build_$$(printf '%s' "$@" | tr '/.' '__')_$$$$.log"; \
 		{ \
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
 			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
-			built=$$(find $(EFFICIENCY_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
-			printf '        [Test Efficiency] Building file %s (%d/%d)\n' "$<" $$built $(EFF_TOTAL_SRCS); \
+			built=$$(printf '%s\n' "$(EFF_SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
+			printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
+		if [ $$status -ne 0 ]; then \
+			while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
+			cat "$$log_file"; \
+			rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
+			$(RM) "$$log_file"; \
+			exit $$status; \
+		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		cat "$$log_file"; \
+		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
-		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	else \
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
-		built=$$(find $(EFFICIENCY_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
-		printf '        [Test Efficiency] Building file %s (%d/%d)\n' "$<" $$built $(EFF_TOTAL_SRCS); \
+		built=$$(printf '%s\n' "$(EFF_SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
+		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(EFFICIENCY_LIBFT_ARCHIVE): FORCE
@@ -324,7 +365,7 @@ $(EFFICIENCY_LIBFT_ARCHIVE): FORCE
 
 $(LIBFT_ARCHIVE):
 	@need_build=0; \
-	if $(MAKE) -C $(LIBFT_ROOT_DIR) -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+	if $(MAKE) -C $(LIBFT_ROOT_DIR) -q $(TEST_LIBFT_ARCHIVE_TARGET) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 			OPT_LEVEL=$(OPT_LEVEL); then \
 		:; \
 	else \
@@ -336,14 +377,13 @@ $(LIBFT_ARCHIVE):
 		fi; \
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-		        echo "Building $(LIBFT_ARCHIVE)"; \
-		        $(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+		        $(MAKE) -C $(LIBFT_ROOT_DIR) $(TEST_LIBFT_ARCHIVE_TARGET) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 				OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
 $(LIBFT_DEBUG_ARCHIVE): FORCE
 	@need_build=0; \
-	if $(MAKE) -C $(LIBFT_ROOT_DIR) -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+	if $(MAKE) -C $(LIBFT_ROOT_DIR) -q $(TEST_LIBFT_DEBUG_ARCHIVE_TARGET) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 			OPT_LEVEL=$(OPT_LEVEL); then \
 		:; \
 	else \
@@ -355,13 +395,11 @@ $(LIBFT_DEBUG_ARCHIVE): FORCE
 		fi; \
 	fi; \
 	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-		        echo "Building $(LIBFT_DEBUG_ARCHIVE)"; \
-		        $(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
+		        $(MAKE) -C $(LIBFT_ROOT_DIR) $(TEST_LIBFT_DEBUG_ARCHIVE_TARGET) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 				OPT_LEVEL=$(OPT_LEVEL); \
 	fi
 
-clean:
-	@echo "Cleaning test objects"
+_clean_common:
 	@status=0; \
 	for build_dir in objs*; do \
 		if [ -d "$$build_dir" ]; then \
@@ -373,17 +411,26 @@ clean:
 	if ! $(RM) $(LIBFT_TEST_OUTPUT_LOGS); then \
 	        status=1; \
 	fi; \
+	if ! $(RMDIR) .libft_progress; then \
+	        status=1; \
+	fi; \
 	if ! $(RMDIR) $(CLEAN_DIRS) $(LIBFT_TEST_OUTPUT_LOCK); then \
 	        status=1; \
 	fi; \
 	if [ $$status -ne 0 ]; then \
-	        echo "Clean failed"; \
-	        exit 1; \
+		printf '        [Test] clean: failed\n'; \
+		exit 1; \
 	fi
-	@echo "Clean completed successfully"
 
-fclean: clean
-	@echo "Removing test artifacts"
+clean: _clean_common
+	@if [ -z "$(LIBFT_PARENT_CLEAN)" ]; then \
+		if ! $(MAKE) -C $(LIBFT_ROOT_DIR) clean; then \
+			exit 1; \
+		fi; \
+	fi
+	@printf '        [Test] clean: success\n'
+
+fclean: _clean_common
 	@status=0; \
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(EFFICIENCY_TARGET); then \
 		status=1; \
@@ -394,10 +441,10 @@ fclean: clean
 		fi; \
 	fi; \
 	if [ $$status -ne 0 ]; then \
-		echo "Full clean failed"; \
+		printf '        [Test] fclean: failed\n'; \
 		exit 1; \
-	fi
-	@echo "Full clean completed successfully"
+	fi; \
+	printf '        [Test] fclean: success\n'
 
 re:
 	@$(MAKE) fclean

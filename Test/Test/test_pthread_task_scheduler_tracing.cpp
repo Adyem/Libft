@@ -35,7 +35,6 @@ static void task_scheduler_trace_clear_events(void)
 {
     std::lock_guard<std::mutex> guard(g_trace_mutex);
     std::vector<ft_task_trace_event>().swap(g_recorded_events);
-    g_recorded_events.reserve(128);
     return ;
 }
 
