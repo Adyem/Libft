@@ -15,8 +15,8 @@ The `Filesystem` module provides path manipulation, safety checks, glob matching
 
 ## Path Components
 
-- `filesystem_basename(const char *path)` - Returns the final filename component.
-- `filesystem_dirname(const char *path)` - Returns the parent directory component.
+- `filesystem_basename(const char *path)` - Returns the final filename component using portable `/` separators in the returned string.
+- `filesystem_dirname(const char *path)` - Returns the parent directory component using portable `/` separators in the returned string.
 - `filesystem_extension(const char *path)` - Returns the extension portion of the final path component.
 - `filesystem_stem(const char *path)` - Returns the final path component without its extension.
 - `filesystem_split_path(const char *path, ft_string *directory_out, ft_string *basename_out)` - Fills two caller-owned strings with the directory and basename components.
@@ -37,6 +37,6 @@ The `Filesystem` module provides path manipulation, safety checks, glob matching
 
 ## File Operations
 
-- `filesystem_temp_path(const char *prefix, const char *extension, ft_string *output)` - Creates a temporary path string in `output`.
+- `filesystem_temp_path(const char *prefix, const char *extension, ft_string *output)` - Creates a temporary path string in `output`, using the compatibility temp-directory helper and portable separators in the returned path.
 - `filesystem_atomic_write(const char *path, const void *data, ft_size_t size)` - Writes data through a temporary file and replaces the target atomically where supported.
 - `filesystem_walk_recursive(const char *root_path, filesystem_walk_callback callback, void *user_context)` - Visits files and directories under a root and calls the callback for each entry.

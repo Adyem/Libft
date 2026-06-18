@@ -22,7 +22,7 @@
 
 ft_http_server::ft_http_server() noexcept
     : _initialised_state(FT_CLASS_STATE_UNINITIALISED), _server_socket(),
-      _non_blocking(FT_FALSE), _mutex(ft_nullptr)
+      _non_blocking(FT_FALSE), _run_once_active(false), _mutex(ft_nullptr)
 {
     return ;
 }
@@ -46,6 +46,7 @@ int32_t ft_http_server::initialize() noexcept
             "initialize called on initialised instance");
     this->_mutex = ft_nullptr;
     this->_non_blocking = FT_FALSE;
+    this->_run_once_active.store(false);
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;
     return (FT_ERR_SUCCESS);
 }
@@ -89,6 +90,7 @@ int32_t ft_http_server::destroy() noexcept
         || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
         return (FT_ERR_SUCCESS);
     disable_error = this->disable_thread_safety();
+    this->_run_once_active.store(false);
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
     (void)this->_server_socket.destroy();
@@ -330,13 +332,21 @@ int32_t ft_http_server::run_once() noexcept
 {
     int32_t result;
     int32_t lock_error;
+    bool expected_running;
 
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "ft_http_server::run_once");
+    expected_running = false;
+    if (!this->_run_once_active.compare_exchange_strong(expected_running, true))
+        return (FT_ERR_INVALID_OPERATION);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_run_once_active.store(false);
         return (FT_ERR_INVALID_OPERATION);
+    }
     result = this->run_once_locked();
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    this->_run_once_active.store(false);
     return (result);
 }
 

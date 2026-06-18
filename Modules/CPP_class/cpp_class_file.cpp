@@ -382,7 +382,7 @@ int32_t ft_file::seek(off_t offset, int32_t whence) noexcept
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
-        result = ::lseek(this->_file_descriptor, offset, whence);
+        result = su_lseek(this->_file_descriptor, offset, whence);
         if (result == -1)
             final_error = cmp_map_system_error_to_ft(errno);
     }

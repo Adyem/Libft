@@ -1,4 +1,5 @@
 #include "filesystem.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/class_nullptr.hpp"
 #include "../File/file_utils.hpp"
@@ -7,27 +8,12 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
-static ft_string *filesystem_empty_string(void)
-{
-    ft_string *result;
-
-    result = new (std::nothrow) ft_string();
-    if (result == ft_nullptr)
-        return (ft_nullptr);
-    if (result->initialize() != FT_ERR_SUCCESS)
-    {
-        delete result;
-        return (ft_nullptr);
-    }
-    return (result);
-}
-
 static ft_string *filesystem_string_from_owned_c_string(char *value)
 {
     ft_string *result;
 
     if (value == ft_nullptr)
-        return (filesystem_empty_string());
+        return (ft_nullptr);
     result = new (std::nothrow) ft_string();
     if (result == ft_nullptr)
     {
@@ -44,6 +30,40 @@ static ft_string *filesystem_string_from_owned_c_string(char *value)
     return (result);
 }
 
+static void filesystem_normalize_portable_slashes(char *value) noexcept
+{
+    ft_size_t index;
+
+    if (value == ft_nullptr)
+        return ;
+    index = 0;
+    while (value[index] != '\0')
+    {
+        if (value[index] == '\\')
+            value[index] = '/';
+        index++;
+    }
+    return ;
+}
+
+static ft_string *filesystem_string_from_owned_path(char *value)
+{
+    char *portable_path;
+    ft_string *result;
+    int32_t error_code;
+
+    if (value == ft_nullptr)
+        return (ft_nullptr);
+    portable_path = ft_nullptr;
+    error_code = cmp_translate_path_to_portable(value, &portable_path);
+    cma_free(value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_nullptr);
+    filesystem_normalize_portable_slashes(portable_path);
+    result = filesystem_string_from_owned_c_string(portable_path);
+    return (result);
+}
+
 ft_string *filesystem_normalize_path(const char *path)
 {
     return (file_path_normalize(path));
@@ -56,22 +76,22 @@ ft_string *filesystem_join_path(const char *path_left, const char *path_right)
 
 ft_string *filesystem_basename(const char *path)
 {
-    return (filesystem_string_from_owned_c_string(file_path_basename(path)));
+    return (filesystem_string_from_owned_path(file_path_basename(path)));
 }
 
 ft_string *filesystem_dirname(const char *path)
 {
-    return (filesystem_string_from_owned_c_string(file_path_dirname(path)));
+    return (filesystem_string_from_owned_path(file_path_dirname(path)));
 }
 
 ft_string *filesystem_extension(const char *path)
 {
-    return (filesystem_string_from_owned_c_string(file_path_extension(path)));
+    return (filesystem_string_from_owned_path(file_path_extension(path)));
 }
 
 ft_string *filesystem_stem(const char *path)
 {
-    return (filesystem_string_from_owned_c_string(file_path_stem(path)));
+    return (filesystem_string_from_owned_path(file_path_stem(path)));
 }
 
 ft_bool filesystem_is_absolute(const char *path) noexcept

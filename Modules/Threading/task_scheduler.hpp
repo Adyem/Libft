@@ -811,14 +811,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         return (result_pair);
     }
-    ft_future<return_type> promise_future;
-    int promise_future_initialize_error = promise_future.initialize(promise_shared);
-    if (promise_future_initialize_error != FT_ERR_SUCCESS)
-    {
-        return (result_pair);
-    }
-    int future_initialize_error = future_value.move(promise_future);
-
+    int future_initialize_error = future_value.initialize(promise_shared);
     if (future_initialize_error != FT_ERR_SUCCESS)
     {
         return (result_pair);
@@ -899,6 +892,9 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     task_entry._function = ft_function<void()>(task_body);
     if (!task_entry._function)
     {
+        task_body();
+        if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
+            return (result_pair);
         return (result_pair);
     }
     unsigned long long parent_span;
@@ -921,6 +917,9 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     if (!push_success)
     {
         scheduled_mutex_error = this->_scheduled_mutex.unlock();
+        task_body();
+        if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
+            return (result_pair);
         this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
                 g_ft_task_trace_label_schedule_once, false);
         return (result_pair);

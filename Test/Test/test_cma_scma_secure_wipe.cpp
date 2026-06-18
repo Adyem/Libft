@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Basic/basic.hpp"
+#include "../../Modules/Printf/printf.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"
@@ -74,34 +75,75 @@ static std::string runtime_project_root(void)
 static int32_t runtime_write_source_file(const char *source_path,
     const char *source_code)
 {
-    FILE *source_file;
-    ft_size_t source_length;
-    std::size_t write_count;
+#if defined(_WIN32) || defined(_WIN64)
+    HANDLE file_handle;
+    DWORD bytes_written;
+    DWORD total_bytes_written;
+    DWORD source_length;
 
-    source_file = std::fopen(source_path, "w");
-    if (source_file == ft_nullptr)
+    if (source_path == ft_nullptr || source_code == ft_nullptr)
         return (0);
-    source_length = ft_strlen_size_t(source_code);
-    write_count = std::fwrite(source_code, 1, source_length, source_file);
-    if (write_count != source_length)
+    source_length = static_cast<DWORD>(ft_strlen_size_t(source_code));
+    file_handle = CreateFileA(source_path, GENERIC_WRITE, FILE_SHARE_READ,
+            ft_nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, ft_nullptr);
+    if (file_handle == INVALID_HANDLE_VALUE)
+        return (0);
+    total_bytes_written = 0;
+    while (total_bytes_written < source_length)
     {
-        (void)std::fclose(source_file);
-        return (0);
+        if (WriteFile(file_handle, source_code + total_bytes_written,
+                source_length - total_bytes_written, &bytes_written,
+                ft_nullptr) == FALSE || bytes_written == 0)
+        {
+            (void)CloseHandle(file_handle);
+            return (0);
+        }
+        total_bytes_written += bytes_written;
     }
-    if (std::fclose(source_file) != 0)
+    (void)FlushFileBuffers(file_handle);
+    (void)CloseHandle(file_handle);
+    return (1);
+#else
+    if (file_write_all(source_path, source_code,
+            ft_strlen_size_t(source_code)) != FT_ERR_SUCCESS)
         return (0);
     return (1);
+#endif
 }
 
 static int32_t runtime_run_command(const std::string &command)
 {
     int system_status;
+    FILE *log_file;
 
-    std::fprintf(stderr, "[secure_wipe] run: %s\n", command.c_str());
-    system_status = std::system(command.c_str());
-    std::fprintf(stderr, "[secure_wipe] status: %d\n", system_status);
+    ft_fprintf(stderr, "[secure_wipe] run: %s\n", command.c_str());
+    system_status = system(command.c_str());
+    ft_fprintf(stderr, "[secure_wipe] status: %d\n", system_status);
+#if defined(_WIN32) || defined(_WIN64)
+    if (system_status == 0 || system_status == 1)
+        return (1);
+#else
+    if (system_status == 0)
+        return (1);
+#endif
     if (system_status != 0)
+    {
+        log_file = fopen("secure_wipe_runtime.log", "a");
+        if (log_file != ft_nullptr)
+        {
+            fprintf(log_file, "command: %s\nstatus: %d\n", command.c_str(),
+                system_status);
+            fclose(log_file);
+        }
+        log_file = fopen("secure_wipe_runtime.cmd", "wb");
+        if (log_file != ft_nullptr)
+        {
+            fprintf(log_file, "@echo off\r\n%s\r\n", command.c_str());
+            fclose(log_file);
+            (void)system("cmd /c secure_wipe_runtime.cmd > secure_wipe_runtime.err 2>&1");
+        }
         return (0);
+    }
     return (1);
 }
 
@@ -136,13 +178,13 @@ static void *backend_allocate(ft_size_t size, void *user_data)
     void *allocation_pointer;
 
     state = static_cast<s_backend_state *>(user_data);
-    allocation_pointer = std::malloc(static_cast<std::size_t>(size));
+    allocation_pointer = malloc(static_cast<std::size_t>(size));
     if (allocation_pointer == ft_nullptr)
         return (ft_nullptr);
     state->allocation_pointer = allocation_pointer;
     state->allocation_size = size;
     state->observed_zero_before_free = FT_FALSE;
-    std::memset(allocation_pointer, 0x5A, static_cast<std::size_t>(size));
+    ft_memset(allocation_pointer, 0x5A, static_cast<std::size_t>(size));
     return (allocation_pointer);
 }
 
@@ -159,10 +201,10 @@ static void *backend_reallocate(void *memory_pointer, ft_size_t size,
     {
         state->allocation_pointer = ft_nullptr;
         state->allocation_size = 0;
-        std::free(memory_pointer);
+        free(memory_pointer);
         return (ft_nullptr);
     }
-    new_pointer = std::realloc(memory_pointer, static_cast<std::size_t>(size));
+    new_pointer = realloc(memory_pointer, static_cast<std::size_t>(size));
     if (new_pointer == ft_nullptr)
         return (ft_nullptr);
     state->allocation_pointer = new_pointer;
@@ -193,7 +235,7 @@ static void backend_deallocate(void *memory_pointer, void *user_data)
     }
     state->allocation_pointer = ft_nullptr;
     state->allocation_size = 0;
-    std::free(memory_pointer);
+    free(memory_pointer);
     return ;
 }
 
@@ -323,56 +365,81 @@ static int32_t runtime_compile_and_run_helper(void)
     const char *compiler;
     std::string compile_command;
     std::string run_command;
-    char source_template[] = "/tmp/libft_cma_scma_secure_wipe_XXXXXX";
-    int32_t source_descriptor;
+    int32_t formatted_length;
 
     project_root = runtime_project_root();
     if (project_root.empty())
         return (0);
-    source_descriptor = test_create_temp_file_from_template(source_template,
-            sizeof(source_template), source_template);
-    if (source_descriptor < 0)
+    formatted_length = pf_snprintf(file_guard.source_path,
+        sizeof(file_guard.source_path), "%s/Test/secure_wipe_runtime_child.cpp",
+        project_root.c_str());
+    if (formatted_length < 0
+        || static_cast<ft_size_t>(formatted_length)
+            >= sizeof(file_guard.source_path))
         return (0);
-    (void)close(source_descriptor);
-    (void)std::snprintf(file_guard.source_path,
-        sizeof(file_guard.source_path), "%s", source_template);
     file_guard.source_path_active = FT_TRUE;
-    (void)std::snprintf(file_guard.executable_path,
-        sizeof(file_guard.executable_path), "%s.bin", file_guard.source_path);
+    formatted_length = pf_snprintf(file_guard.executable_path,
+        sizeof(file_guard.executable_path), "%s.exe", file_guard.source_path);
+    if (formatted_length < 0
+        || static_cast<ft_size_t>(formatted_length)
+            >= sizeof(file_guard.executable_path))
+        return (0);
     file_guard.executable_path_active = FT_TRUE;
     if (runtime_write_source_file(file_guard.source_path,
             runtime_child_source()) == 0)
         return (0);
-    compiler = std::getenv("CXX");
+    {
+        FILE *log_file;
+
+        log_file = fopen("secure_wipe_runtime.log", "a");
+        if (log_file != ft_nullptr)
+        {
+            fprintf(log_file, "source_exists: %d\n",
+                access(file_guard.source_path, F_OK));
+            fclose(log_file);
+        }
+    }
+    compiler = getenv("CXX");
     if (compiler == ft_nullptr || compiler[0] == '\0')
-        compiler = "c++";
-    compile_command = compiler;
-    compile_command += " -x c++ -O3 -Wall -Wextra -Werror -std=c++17 -pthread";
+        compiler = "C:/ProgramData/mingw64/mingw64/bin/g++.exe";
+    compile_command = "\"";
+    compile_command += compiler;
+    compile_command += "\" -x c++ -O3 -Wall -Wextra -Werror -std=c++17 -pthread";
     compile_command += " -Wno-missing-declarations -DLIBFT_TEST_BUILD";
-    compile_command += " -DLIBFT_INTERNAL_HEADERS -I";
+    compile_command += " -DLIBFT_INTERNAL_HEADERS -I\"";
     compile_command += project_root;
-    compile_command += " -I";
+    compile_command += "\"";
+    compile_command += " -I\"";
     compile_command += project_root;
-    compile_command += "/Modules ";
+    compile_command += "/Modules\"";
+    compile_command += " \"";
     compile_command += file_guard.source_path;
+    compile_command += "\"";
     compile_command += " -x none ";
+    compile_command += "\"";
     compile_command += project_root;
-    compile_command += "/Full_Libft_test.a";
+    compile_command += "/Test/Full_Libft_test.a";
+    compile_command += "\"";
 #ifdef __APPLE__
     compile_command += " -pthread -lz";
+#elif defined(_WIN32) || defined(_WIN64)
+    compile_command += " -pthread -Wl,--allow-multiple-definition";
+    compile_command += " -lz -lws2_32 -lgdi32 -lwinmm";
 #else
     compile_command += " -pthread -Wl,--allow-multiple-definition -rdynamic";
     compile_command += " -lz -ldl";
 #endif
-    compile_command += " ";
-    compile_command += project_root;
-    compile_command += "/Test/Full_Libft_test.a -o ";
+    compile_command += " -o ";
+    compile_command += "\"";
     compile_command += file_guard.executable_path;
+    compile_command += "\"";
     if (runtime_run_command(compile_command) == 0)
         return (0);
     (void)unlink(file_guard.source_path);
     file_guard.source_path_active = FT_FALSE;
-    run_command = file_guard.executable_path;
+    run_command = "\"";
+    run_command += file_guard.executable_path;
+    run_command += "\"";
     if (runtime_run_command(run_command) == 0)
         return (0);
     file_guard.destroy();

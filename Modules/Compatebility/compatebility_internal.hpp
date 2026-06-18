@@ -46,6 +46,7 @@ struct file_dir
     ft_bool closed;
 };
 HANDLE cmp_retrieve_handle(int32_t file_descriptor);
+off_t cmp_lseek(int32_t file_descriptor, off_t offset, int32_t whence);
 int32_t cmp_open(const char *path_name);
 int32_t cmp_open(const char *path_name, int32_t flags);
 int32_t cmp_open(const char *path_name, int32_t flags, int32_t mode);
@@ -93,8 +94,11 @@ int32_t cmp_directory_exists(const char *path, int32_t *exists_out,
 char cmp_path_separator(void);
 void cmp_normalize_slashes(char *data);
 int32_t cmp_translate_path_to_native(const char *path, char **output_path);
+int32_t cmp_translate_path_to_portable(const char *path, char **output_path);
+int32_t cmp_get_temp_directory(char **output_path);
 ft_bool cmp_path_equal(const char *path_left, const char *path_right) noexcept;
 int32_t cmp_file_error_to_errno(int32_t system_error) noexcept;
+HANDLE cmp_retrieve_handle(int32_t file_descriptor);
 int32_t cmp_file_exists(const char *path, int32_t *exists_out,
     int32_t *error_code_out);
 int32_t cmp_file_delete(const char *path, int32_t *error_code_out);

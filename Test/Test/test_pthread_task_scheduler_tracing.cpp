@@ -2,6 +2,7 @@
 #include "../../Modules/Threading/task_scheduler.hpp"
 #include "../../Modules/Threading/task_scheduler_tracing.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "../../Modules/CMA/CMA.hpp"
 #include <vector>
 #include <mutex>
 #include <chrono>
@@ -34,6 +35,7 @@ static void task_scheduler_trace_clear_events(void)
 {
     std::lock_guard<std::mutex> guard(g_trace_mutex);
     std::vector<ft_task_trace_event>().swap(g_recorded_events);
+    g_recorded_events.reserve(128);
     return ;
 }
 
@@ -100,6 +102,7 @@ FT_TEST(test_task_scheduler_tracing_submit)
     FT_ASSERT_EQ(0, task_scheduler_register_trace_sink(&task_scheduler_trace_test_sink));
     task_scheduler_trace_test_guard cleanup_guard;
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
     unsigned long long previous_span;
@@ -157,6 +160,7 @@ FT_TEST(test_task_scheduler_tracing_schedule_after)
     FT_ASSERT_EQ(0, task_scheduler_register_trace_sink(&task_scheduler_trace_test_sink));
     task_scheduler_trace_test_guard cleanup_guard;
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
     unsigned long long previous_span;
@@ -165,6 +169,7 @@ FT_TEST(test_task_scheduler_tracing_schedule_after)
     previous_span = task_scheduler_trace_push_span(root_span);
     auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(20), []() { return (7); });
     ft_future<int> future_value;
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, future_value.initialize(ft_move(schedule_result.key)));
     FT_ASSERT_EQ(7, future_value.get());
     task_scheduler_trace_pop_span(previous_span);

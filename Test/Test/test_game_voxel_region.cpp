@@ -1,12 +1,11 @@
 #include "../test_internal.hpp"
 #include "../../Modules/Game/game_voxel_region.hpp"
 #include "../../Modules/CMA/CMA.hpp"
+#include "../../Modules/Filesystem/filesystem.hpp"
 #include "../../Modules/Printf/printf.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include <climits>
 #include <cstdio>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"
 #include "../../Modules/Errno/errno.hpp"
@@ -16,29 +15,36 @@
 static int32_t test_voxel_make_temp_path(char *buffer,
     ft_size_t buffer_size) noexcept
 {
-    int32_t process_id;
+    ft_string temporary_path;
+    int32_t error_code;
+    ft_size_t path_length;
 
-    process_id = getpid();
-    if (pf_snprintf(buffer, buffer_size, "/tmp/libft_voxel_region_%d",
-            process_id) < 0)
+    if (buffer == ft_nullptr || buffer_size == 0)
         return (FT_ERR_INVALID_ARGUMENT);
+    error_code = temporary_path.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = filesystem_temp_path("libft_voxel_region", ft_nullptr,
+            &temporary_path);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)temporary_path.destroy();
+        return (error_code);
+    }
+    path_length = temporary_path.size();
+    if (path_length + 1 > buffer_size)
+    {
+        (void)temporary_path.destroy();
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
+    std::memcpy(buffer, temporary_path.c_str(), path_length + 1);
+    (void)temporary_path.destroy();
     return (FT_ERR_SUCCESS);
 }
 
 static void test_voxel_cleanup_region_dir(const char *directory_path) noexcept
 {
-    char file_path[256];
-
-    (void)pf_snprintf(file_path, sizeof(file_path), "%s/region_P0P0.dat",
-        directory_path);
-    (void)unlink(file_path);
-    (void)pf_snprintf(file_path, sizeof(file_path), "%s/region_N512N512.dat",
-        directory_path);
-    (void)unlink(file_path);
-    (void)pf_snprintf(file_path, sizeof(file_path), "%s/region_P512P0.dat",
-        directory_path);
-    (void)unlink(file_path);
-    (void)rmdir(directory_path);
+    (void)file_delete_recursive(directory_path);
     return ;
 }
 
@@ -451,7 +457,7 @@ FT_TEST(test_game_voxel_region_negative_coordinate_boundaries)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(-1, -1, directory_path));
     FT_ASSERT_EQ(-512, region.get_region_start_x());
     FT_ASSERT_EQ(-512, region.get_region_start_z());
@@ -493,7 +499,7 @@ FT_TEST(test_game_voxel_region_save_load_round_trip)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(0, 0, 0, 22));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(15, 255, 15, 23));
@@ -534,7 +540,7 @@ FT_TEST(test_game_voxel_region_empty_file_uses_explicit_table_size)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.save_region());
     (void)pf_snprintf(expected_file_path, sizeof(expected_file_path),
@@ -562,7 +568,7 @@ FT_TEST(test_game_voxel_region_save_chunk_updates_slot)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.write_block(3, 4, 5, 77));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
@@ -611,7 +617,7 @@ FT_TEST(test_game_voxel_region_missing_and_corrupt_files)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(-1, -1, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.load_region(-1, -1));
     (void)pf_snprintf(file_path, sizeof(file_path), "%s/region_N512N512.dat",
@@ -637,7 +643,7 @@ FT_TEST(test_game_voxel_region_load_chunk_creates_empty_chunk)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     chunk = ft_nullptr;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.load_chunk(4, 5, &chunk));
@@ -660,7 +666,7 @@ FT_TEST(test_game_voxel_region_chunk_visibility_uses_frustum)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_initialize_unit_cube_frustum(
         frustum));
@@ -682,7 +688,7 @@ FT_TEST(test_game_voxel_region_chunk_visibility_rejects_unloaded_chunk)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_initialize_unit_cube_frustum(
         frustum));
@@ -702,7 +708,7 @@ FT_TEST(test_game_voxel_region_chunk_visibility_keeps_edge_chunk_visible)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_initialize_unit_cube_frustum(
         frustum));
@@ -723,7 +729,7 @@ FT_TEST(test_game_voxel_region_air_write_does_not_allocate_missing_chunk)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(33, 2, 49,
         GAME_VOXEL_AIR_BLOCK));
@@ -745,7 +751,7 @@ FT_TEST(test_game_voxel_region_rejects_chunk_requests_outside_region)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     chunk_out = ft_nullptr;
@@ -771,7 +777,7 @@ FT_TEST(test_game_voxel_region_move_transfers_loaded_chunks)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_region.initialize(0, 0,
         directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_region.initialize(0, 0,
@@ -797,7 +803,7 @@ FT_TEST(test_game_voxel_region_move_from_destroyed_source_destroys_destination)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_region.initialize(0, 0,
         directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_region.initialize(0, 0,
@@ -823,7 +829,7 @@ FT_TEST(test_game_voxel_region_move_failure_keeps_source_chunks)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     (void)pf_snprintf(long_directory_path, sizeof(long_directory_path),
         "%s/%s", directory_path,
         "very_long_voxel_storage_directory_name_used_for_move_failure");
@@ -856,7 +862,7 @@ FT_TEST(test_game_voxel_region_read_block_updates_region_error)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, region.read_block(0, 0, 0,
         ft_nullptr));
@@ -879,7 +885,7 @@ FT_TEST(test_game_voxel_region_write_block_chunk_allocation_failure)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     cma_set_alloc_limit(512);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, region.write_block(0, 0, 0, 501));
@@ -904,7 +910,7 @@ FT_TEST(test_game_voxel_region_storage_path_assignment_failure)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     (void)pf_snprintf(long_directory_path, sizeof(long_directory_path),
         "%s/%s", directory_path,
@@ -927,7 +933,7 @@ FT_TEST(test_game_voxel_region_save_region_buffer_allocation_failure)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(1, 1, 1, 502));
     cma_set_alloc_limit(1);
@@ -949,7 +955,7 @@ FT_TEST(test_game_voxel_region_load_region_chunk_buffer_allocation_failure)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(1, 1, 1, 503));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(2, 1, 1, 504));
@@ -980,7 +986,7 @@ FT_TEST(test_game_voxel_region_load_region_truncated_chunk_payload)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(1, 1, 1, 505));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.save_region());
@@ -1011,7 +1017,7 @@ FT_TEST(test_game_voxel_region_load_region_rejects_invalid_table_offset)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(1, 1, 1, 601));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(17, 1, 1, 602));
@@ -1050,7 +1056,7 @@ FT_TEST(test_game_voxel_region_save_region_cleans_buffers_on_open_failure)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_voxel_make_temp_path(directory_path,
         sizeof(directory_path)));
     test_voxel_cleanup_region_dir(directory_path);
-    FT_ASSERT_EQ(0, mkdir(directory_path, 0700));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, directory_path));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(1, 1, 1, 701));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.write_block(17, 1, 1, 702));

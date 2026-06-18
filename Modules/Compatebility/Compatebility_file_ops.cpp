@@ -117,6 +117,7 @@ int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
     char *native_path;
     int32_t error_code;
     DWORD last_error;
+    DWORD file_attributes;
 
     if (path == ft_nullptr)
     {
@@ -128,6 +129,15 @@ int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
     if (cmp_translate_path_to_native(path, &native_path) != FT_ERR_SUCCESS)
     {
         error_code = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    file_attributes = GetFileAttributesA(native_path);
+    if (file_attributes != INVALID_FILE_ATTRIBUTES
+        && (file_attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+    {
+        cma_free(native_path);
+        error_code = FT_ERR_INVALID_OPERATION;
         cmp_set_error_code(error_code_out, error_code);
         return (error_code);
     }
@@ -229,6 +239,7 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
     char *native_destination_path;
     int32_t error_code;
     DWORD last_error;
+    DWORD destination_attributes;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
@@ -244,6 +255,16 @@ int32_t cmp_file_copy(const char *source_path, const char *destination_path, int
         cma_free(native_source_path);
         cma_free(native_destination_path);
         error_code = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    destination_attributes = GetFileAttributesA(native_destination_path);
+    if (destination_attributes != INVALID_FILE_ATTRIBUTES
+        && (destination_attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+    {
+        cma_free(native_source_path);
+        cma_free(native_destination_path);
+        error_code = FT_ERR_INVALID_OPERATION;
         cmp_set_error_code(error_code_out, error_code);
         return (error_code);
     }

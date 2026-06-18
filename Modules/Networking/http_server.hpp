@@ -4,6 +4,7 @@
 #include "socket_class.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include <atomic>
 #include <cstdint>
 
 class ft_http_server
@@ -16,6 +17,7 @@ class ft_http_server
         uint8_t _initialised_state;
         ft_socket _server_socket;
         ft_bool _non_blocking;
+        std::atomic<bool> _run_once_active;
         mutable pt_recursive_mutex *_mutex;
 
         int32_t run_once_locked();

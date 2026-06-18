@@ -189,6 +189,12 @@ static int32_t cmp_translate_windows_error(int32_t error_code)
         return (FT_ERR_IO);
     if (error_code == ERROR_PATH_NOT_FOUND)
         return (FT_ERR_IO);
+    if (error_code == EACCES)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == EPERM)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == EBADF)
+        return (FT_ERR_INVALID_HANDLE);
     if (error_code == ERROR_ACCESS_DENIED)
         return (FT_ERR_INVALID_OPERATION);
     if (error_code == ERROR_SHARING_VIOLATION)
@@ -213,6 +219,8 @@ static int32_t cmp_translate_windows_error(int32_t error_code)
         return (FT_ERR_INVALID_ARGUMENT);
     if (error_code == ERROR_INVALID_NAME)
         return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == EINVAL)
+        return (FT_ERR_INVALID_OPERATION);
     if (error_code == ERROR_BROKEN_PIPE)
         return (FT_ERR_IO);
     return (static_cast<int32_t>(error_code) + ERRNO_OFFSET);

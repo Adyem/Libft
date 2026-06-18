@@ -25,6 +25,11 @@ The `Compatebility` module contains platform-specific adapters used by higher-le
 - `cmp_file_watch_start(...)` / `cmp_file_watch_stop(...)` - Start or stop watching a path.
 - `cmp_file_watch_wait_event(...)` - Waits for one platform file-watch event.
 
+## File Descriptor Platform
+
+- `cmp_retrieve_handle(...)` - Returns the platform handle tracked for a descriptor on Windows.
+- `cmp_lseek(...)` - Platform-specific descriptor seek helper used by `System_utils`.
+
 ## Stack Trace and Optional SQLite
 
 - `CMP_STACK_TRACE_MAX_FRAMES` - Maximum platform stack frames captured by the compatibility helper.

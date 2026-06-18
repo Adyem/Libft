@@ -1061,6 +1061,14 @@ static int32_t pf_engine_format_standard_sequential(const pf_engine_format_spec 
     {
         void *value;
         value = va_arg(*argument_list, void*);
+        if (value == ft_nullptr)
+        {
+            status = writer("0x0", 3, context, written_count);
+            if (status != FT_ERR_SUCCESS)
+                return (status);
+            *character_count = *written_count;
+            return (FT_ERR_SUCCESS);
+        }
         status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
     }
     else if (format_spec.conversion_specifier == '%')
@@ -1553,6 +1561,14 @@ static int32_t pf_engine_format_standard_positional(const pf_engine_format_spec 
         if (format_spec.argument_index < 0)
             return (FT_ERR_INVALID_ARGUMENT);
         const pf_engine_argument_value &value = values[static_cast<ft_size_t>(format_spec.argument_index)];
+        if (value.data.pointer_value == ft_nullptr)
+        {
+            status = writer("0x0", 3, context, written_count);
+            if (status != FT_ERR_SUCCESS)
+                return (status);
+            *character_count += 3;
+            return (FT_ERR_SUCCESS);
+        }
         status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value.data.pointer_value);
     }
     else if (format_spec.conversion_specifier == '%')

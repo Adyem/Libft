@@ -19,15 +19,6 @@ static HANDLE g_file_handles[1024];
 static pt_mutex g_file_mutex;
 static ft_bool g_file_mutex_ready = FT_FALSE;
 
-static ft_bool cmp_has_tracked_handle(int32_t file_descriptor)
-{
-    if (file_descriptor < 0 || file_descriptor >= 1024)
-        return (FT_FALSE);
-    if (g_file_handles[file_descriptor] == ft_nullptr)
-        return (FT_FALSE);
-    return (FT_TRUE);
-}
-
 static int32_t cmp_ensure_file_mutex_initialized(void)
 {
     if (g_file_mutex_ready == FT_TRUE)
@@ -36,31 +27,6 @@ static int32_t cmp_ensure_file_mutex_initialized(void)
         return (FT_ERR_NO_MEMORY);
     g_file_mutex_ready = FT_TRUE;
     return (FT_ERR_SUCCESS);
-}
-
-static int32_t cmp_store_handle(HANDLE file_handle)
-{
-    int32_t handle_index = 3;
-    while (handle_index < 1024)
-    {
-        if (g_file_handles[handle_index] == ft_nullptr)
-        {
-            g_file_handles[handle_index] = file_handle;
-            return (handle_index);
-        }
-        handle_index++;
-    }
-    return (-1);
-}
-
-HANDLE cmp_retrieve_handle(int32_t file_descriptor)
-{
-    if (file_descriptor < 0 || file_descriptor >= 1024)
-        return (INVALID_HANDLE_VALUE);
-    HANDLE stored_handle = g_file_handles[file_descriptor];
-    if (stored_handle == ft_nullptr)
-        return (INVALID_HANDLE_VALUE);
-    return (stored_handle);
 }
 
 static void cmp_clear_handle(int32_t file_descriptor)
@@ -91,11 +57,45 @@ static int32_t cmp_unlock_file_mutex(void)
     return (FT_ERR_SUCCESS);
 }
 
+HANDLE cmp_retrieve_handle(int32_t file_descriptor)
+{
+    if (file_descriptor < 0 || file_descriptor >= 1024)
+        return (INVALID_HANDLE_VALUE);
+    HANDLE stored_handle = g_file_handles[file_descriptor];
+    if (stored_handle == ft_nullptr)
+        return (INVALID_HANDLE_VALUE);
+    return (stored_handle);
+}
+
+off_t cmp_lseek(int32_t file_descriptor, off_t offset, int32_t whence)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    off_t result;
+
+    result = static_cast<off_t>(_lseeki64(file_descriptor,
+        static_cast<__int64>(offset), whence));
+    if (result < 0)
+        return (static_cast<off_t>(-1));
+    return (result);
+#else
+    off_t result;
+
+    result = lseek(file_descriptor, offset, whence);
+    return (result);
+#endif
+}
+
 static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t mode)
 {
     char *native_path;
     int32_t lock_error;
     int32_t translate_error;
+    DWORD desired_access;
+    DWORD creation_disposition;
+    DWORD flags_and_attributes;
+    int32_t open_flags;
+    HANDLE file_handle;
+    int32_t file_descriptor;
 
     if (path_name == ft_nullptr)
         return (-1);
@@ -109,9 +109,9 @@ static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t m
         cma_free(native_path);
         return (-1);
     }
-    DWORD desired_access = 0;
-    DWORD creation_disposition = 0;
-    DWORD flags_and_attributes = FILE_ATTRIBUTE_NORMAL;
+    desired_access = 0;
+    creation_disposition = 0;
+    flags_and_attributes = FILE_ATTRIBUTE_NORMAL;
     (void)mode;
     if (flags & O_DIRECTORY)
     {
@@ -140,7 +140,7 @@ static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t m
         if (flags & O_APPEND)
             desired_access |= FILE_APPEND_DATA;
     }
-    HANDLE file_handle = CreateFileA(native_path, desired_access,
+    file_handle = CreateFileA(native_path, desired_access,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, ft_nullptr, creation_disposition,
         flags_and_attributes, ft_nullptr);
     cma_free(native_path);
@@ -149,13 +149,24 @@ static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t m
         cmp_unlock_file_mutex();
         return (-1);
     }
-    int32_t file_descriptor = cmp_store_handle(file_handle);
+    open_flags = _O_BINARY;
+    if ((flags & O_RDWR) == O_RDWR)
+        open_flags |= _O_RDWR;
+    else if (flags & O_WRONLY)
+        open_flags |= _O_WRONLY;
+    else
+        open_flags |= _O_RDONLY;
+    if (flags & O_APPEND)
+        open_flags |= _O_APPEND;
+    file_descriptor = _open_osfhandle(reinterpret_cast<intptr_t>(file_handle), open_flags);
     if (file_descriptor < 0)
     {
         CloseHandle(file_handle);
         cmp_unlock_file_mutex();
         return (-1);
     }
+    if (file_descriptor >= 0 && file_descriptor < 1024)
+        g_file_handles[file_descriptor] = file_handle;
     cmp_unlock_file_mutex();
     return (file_descriptor);
 }
@@ -179,14 +190,13 @@ int32_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count,
     int64_t *bytes_read_out)
 {
     int32_t lock_error;
-    DWORD bytes_read;
-    BOOL is_successful;
-    HANDLE file_handle;
-    BY_HANDLE_FILE_INFORMATION file_info;
+    int32_t read_result;
 
     if (bytes_read_out != ft_nullptr)
         *bytes_read_out = 0;
     if (buffer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (file_descriptor < 0)
         return (FT_ERR_INVALID_ARGUMENT);
     if (count > static_cast<ft_size_t>(UINT32_MAX))
         return (FT_ERR_OUT_OF_RANGE);
@@ -194,50 +204,12 @@ int32_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count,
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (cmp_has_tracked_handle(file_descriptor) == FT_FALSE)
-    {
-        int32_t read_result;
-
-        read_result = _read(file_descriptor, buffer,
-            static_cast<unsigned int>(count));
-        cmp_unlock_file_mutex();
-        if (read_result < 0)
-        {
-            return (cmp_map_system_error_to_ft(errno));
-        }
-        if (bytes_read_out != ft_nullptr)
-            *bytes_read_out = static_cast<int64_t>(read_result);
-        return (FT_ERR_SUCCESS);
-    }
-    file_handle = cmp_retrieve_handle(file_descriptor);
-    if (file_handle == INVALID_HANDLE_VALUE)
-    {
-        cmp_unlock_file_mutex();
-        return (FT_ERR_INVALID_HANDLE);
-    }
-    if (GetFileInformationByHandle(file_handle, &file_info))
-    {
-        if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-            cmp_unlock_file_mutex();
-            return (FT_ERR_INVALID_HANDLE);
-        }
-    }
-    bytes_read = 0;
-    is_successful = ReadFile(file_handle, buffer, static_cast<DWORD>(count),
-        &bytes_read, ft_nullptr);
+    read_result = _read(file_descriptor, buffer, static_cast<unsigned int>(count));
     cmp_unlock_file_mutex();
-    if (!is_successful)
-    {
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error == ERROR_INVALID_HANDLE || last_error == ERROR_ACCESS_DENIED)
-            return (FT_ERR_INVALID_HANDLE);
-        return (cmp_map_system_error_to_ft(static_cast<int32_t>(last_error)));
-    }
+    if (read_result < 0)
+        return (cmp_map_system_error_to_ft(errno));
     if (bytes_read_out != ft_nullptr)
-        *bytes_read_out = static_cast<int64_t>(bytes_read);
+        *bytes_read_out = static_cast<int64_t>(read_result);
     return (FT_ERR_SUCCESS);
 }
 
@@ -245,13 +217,13 @@ int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
     int64_t *bytes_written_out)
 {
     int32_t lock_error;
-    DWORD bytes_written;
-    BOOL is_successful;
-    HANDLE file_handle;
+    int32_t write_result;
 
     if (bytes_written_out != ft_nullptr)
         *bytes_written_out = 0;
     if (buffer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (file_descriptor < 0)
         return (FT_ERR_INVALID_ARGUMENT);
     if (count > static_cast<ft_size_t>(UINT32_MAX))
         return (FT_ERR_OUT_OF_RANGE);
@@ -259,78 +231,30 @@ int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (cmp_has_tracked_handle(file_descriptor) == FT_FALSE)
-    {
-        int32_t write_result;
-
-        write_result = _write(file_descriptor, buffer,
-            static_cast<unsigned int>(count));
-        cmp_unlock_file_mutex();
-        if (write_result < 0)
-            return (cmp_map_system_error_to_ft(errno));
-        if (bytes_written_out != ft_nullptr)
-            *bytes_written_out = static_cast<int64_t>(write_result);
-        return (FT_ERR_SUCCESS);
-    }
-    file_handle = cmp_retrieve_handle(file_descriptor);
-    if (file_handle == INVALID_HANDLE_VALUE)
-    {
-        cmp_unlock_file_mutex();
-        return (FT_ERR_INVALID_HANDLE);
-    }
-    bytes_written = 0;
-    is_successful = WriteFile(file_handle, buffer, static_cast<DWORD>(count),
-        &bytes_written, ft_nullptr);
+    write_result = _write(file_descriptor, buffer, static_cast<unsigned int>(count));
     cmp_unlock_file_mutex();
-    if (!is_successful)
-    {
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error == ERROR_INVALID_HANDLE || last_error == ERROR_ACCESS_DENIED)
-            return (FT_ERR_INVALID_HANDLE);
-        return (cmp_map_system_error_to_ft(static_cast<int32_t>(last_error)));
-    }
+    if (write_result < 0)
+        return (cmp_map_system_error_to_ft(errno));
     if (bytes_written_out != ft_nullptr)
-        *bytes_written_out = static_cast<int64_t>(bytes_written);
+        *bytes_written_out = static_cast<int64_t>(write_result);
     return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_close(int32_t file_descriptor)
 {
     int32_t lock_error;
-    HANDLE file_handle;
-    DWORD last_error;
-    int32_t error_code;
+    int32_t close_result;
 
+    if (file_descriptor < 0)
+        return (FT_ERR_INVALID_ARGUMENT);
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
-    if (cmp_has_tracked_handle(file_descriptor) == FT_FALSE)
-    {
-        int32_t close_result;
-
-        close_result = _close(file_descriptor);
-        cmp_unlock_file_mutex();
-        if (close_result < 0)
-            return (cmp_map_system_error_to_ft(errno));
-        return (FT_ERR_SUCCESS);
-    }
-    file_handle = cmp_retrieve_handle(file_descriptor);
-    if (file_handle == INVALID_HANDLE_VALUE)
+    close_result = _close(file_descriptor);
+    if (close_result < 0)
     {
         cmp_unlock_file_mutex();
-        return (FT_ERR_INVALID_HANDLE);
-    }
-    if (!CloseHandle(file_handle))
-    {
-        cmp_unlock_file_mutex();
-        last_error = GetLastError();
-        if (last_error != 0)
-            error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
-        else
-            error_code = FT_ERR_IO;
-        return (error_code);
+        return (cmp_map_system_error_to_ft(errno));
     }
     cmp_clear_handle(file_descriptor);
     cmp_unlock_file_mutex();

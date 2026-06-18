@@ -31,6 +31,7 @@ int32_t     su_open(const char *path_name, int32_t flags);
 int32_t     su_open(const char *path_name, int32_t flags, mode_t mode);
 int64_t su_read(int32_t file_descriptor, void *buffer, ft_size_t count);
 int64_t su_write(int32_t file_descriptor, const void *buffer, ft_size_t count);
+off_t   su_lseek(int32_t file_descriptor, off_t offset, int32_t whence);
 typedef int64_t (*t_su_write_syscall_hook)(int32_t file_descriptor,
             const void *buffer, ft_size_t count);
 void    su_set_write_syscall_hook(t_su_write_syscall_hook hook);

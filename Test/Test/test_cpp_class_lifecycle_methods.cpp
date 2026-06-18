@@ -3,6 +3,7 @@
 #include "../../Modules/CPP_class/class_ofstream.hpp"
 #include "../../Modules/CPP_class/class_stringbuf.hpp"
 #include "../../Modules/CPP_class/class_string.hpp"
+#include "../../Modules/Filesystem/filesystem.hpp"
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
@@ -40,7 +41,7 @@ static int lifecycle_expect_sigabrt_signal_handler(void (*operation)(void))
     struct sigaction backup;
     int result;
 
-    std::memset(&action, 0, sizeof(action));
+    ft_memset(&action, 0, sizeof(action));
     action.sa_handler = lifecycle_abort_handler;
     sigemptyset(&action.sa_mask);
     result = 0;
@@ -318,13 +319,21 @@ FT_TEST(test_ft_ofstream_error_queries_follow_lifecycle_contract)
 
 FT_TEST(test_ft_ofstream_move_constructor_preserves_open_file)
 {
+    ft_string file_path_storage;
     const char *file_path;
     ft_ofstream source_stream;
     FILE *file_pointer;
     char read_buffer[32];
     size_t bytes_read;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path_storage.initialize());
+#if defined(_WIN32) || defined(_WIN64)
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_temp_path(
+        "libft_ofstream_move_constructor", "txt", &file_path_storage));
+    file_path = file_path_storage.c_str();
+#else
     file_path = "/tmp/libft_ofstream_move_constructor.txt";
+#endif
     (void)unlink(file_path);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.open(file_path));
@@ -339,15 +348,18 @@ FT_TEST(test_ft_ofstream_move_constructor_preserves_open_file)
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.close());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.destroy());
     }
-    file_pointer = std::fopen(file_path, "rb");
+    file_pointer = ft_fopen(file_path, "rb");
     FT_ASSERT(file_pointer != ft_nullptr);
-    std::memset(read_buffer, 0, sizeof(read_buffer));
-    bytes_read = std::fread(read_buffer, 1, sizeof(read_buffer) - 1,
+    ft_memset(read_buffer, 0, sizeof(read_buffer));
+    bytes_read = fread(read_buffer, 1, sizeof(read_buffer) - 1,
         file_pointer);
-    std::fclose(file_pointer);
+    ft_fclose(file_pointer);
     FT_ASSERT_EQ((size_t)6, bytes_read);
-    FT_ASSERT_EQ(0, std::strcmp(read_buffer, "onetwo"));
+    FT_ASSERT_EQ(0, ft_strcmp(read_buffer, "onetwo"));
     (void)unlink(file_path);
+#if defined(_WIN32) || defined(_WIN64)
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, file_path_storage.destroy());
+#endif
     return (1);
 }
 

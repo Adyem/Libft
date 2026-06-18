@@ -198,7 +198,8 @@ int64_t time_timer::add_time(int64_t amount_ms) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (result);
     if (this->_running == FT_TRUE && amount_ms >= static_cast<int64_t>(0)
-        && !(amount_ms > static_cast<int64_t>(0) && this->_duration_ms > INT64_MAX - amount_ms))
+        && !(amount_ms > static_cast<int64_t>(0)
+            && this->_duration_ms > static_cast<int64_t>(LONG_MAX) - amount_ms))
     {
         std::chrono::steady_clock::time_point now;
         int64_t elapsed;

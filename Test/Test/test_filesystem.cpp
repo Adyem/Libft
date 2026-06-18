@@ -68,7 +68,7 @@ static int32_t filesystem_make_test_directory(ft_string *path, const char *name)
     {
         return (error_code);
     }
-    (void)file_delete(path->c_str());
+    (void)file_delete_recursive(path->c_str());
     return (file_create_directory(path->c_str(), 0700));
 }
 

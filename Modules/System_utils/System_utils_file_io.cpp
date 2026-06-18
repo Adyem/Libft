@@ -141,14 +141,16 @@ int64_t su_write(int32_t file_descriptor, const void *buffer, ft_size_t count)
     return (static_cast<int64_t>(total_written));
 }
 
+off_t su_lseek(int32_t file_descriptor, off_t offset, int32_t whence)
+{
+    return (cmp_lseek(file_descriptor, offset, whence));
+}
+
 int32_t su_close(int32_t file_descriptor)
 {
     int32_t close_result;
 
     close_result = cmp_close(file_descriptor);
-    if (close_result == FT_ERR_INVALID_HANDLE
-        || close_result == FT_ERR_INVALID_ARGUMENT)
-        return (FT_ERR_INVALID_ARGUMENT);
     if (close_result != 0)
         return (close_result);
     return (0);

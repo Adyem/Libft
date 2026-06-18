@@ -2,6 +2,8 @@
 #include "../../Modules/Storage/kv_store.hpp"
 #include "../../Modules/Encryption/encryption.hpp"
 #include "../../Modules/File/file_utils.hpp"
+#include "../../Modules/Filesystem/filesystem.hpp"
+#include "../../Modules/Printf/printf.hpp"
 #include "../../Modules/File/open_dir.hpp"
 #include "../../Modules/Compatebility/compatebility_internal.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
@@ -49,6 +51,7 @@ static int32_t test_storage_cleanup_paths(const char *directory_path, const char
     delete_error = file_delete(file_path);
     if (delete_error != FT_ERR_SUCCESS
         && delete_error != FT_ERR_NOT_FOUND
+        && delete_error != FT_ERR_IO
         && delete_error != FT_ERR_INVALID_OPERATION)
         return (delete_error);
     directory_error = test_storage_remove_directory_if_present(directory_path);
@@ -64,7 +67,7 @@ static int32_t test_storage_create_kv_store_file(const char *file_path)
     file_pointer = ft_fopen(file_path, "w");
     if (file_pointer == ft_nullptr)
         return (FT_ERR_INVALID_OPERATION);
-    if (std::fputs("{\n  \"kv_store\": {\n    \"__placeholder__\": \"\"\n  }\n}\n", file_pointer) < 0)
+    if (ft_fprintf(file_pointer, "{\n  \"kv_store\": {\n    \"__placeholder__\": \"\"\n  }\n}\n") < 0)
     {
         ft_fclose(file_pointer);
         return (FT_ERR_INVALID_OPERATION);
@@ -84,18 +87,18 @@ static std::string test_storage_read_file_contents(const char *file_path)
     file_pointer = ft_fopen(file_path, "rb");
     if (file_pointer == ft_nullptr)
         return (std::string());
-    if (std::fseek(file_pointer, 0, SEEK_END) != 0)
+    if (fseek(file_pointer, 0, SEEK_END) != 0)
     {
         ft_fclose(file_pointer);
         return (std::string());
     }
-    file_size = std::ftell(file_pointer);
+    file_size = ftell(file_pointer);
     if (file_size < 0)
     {
         ft_fclose(file_pointer);
         return (std::string());
     }
-    if (std::fseek(file_pointer, 0, SEEK_SET) != 0)
+    if (fseek(file_pointer, 0, SEEK_SET) != 0)
     {
         ft_fclose(file_pointer);
         return (std::string());
@@ -106,7 +109,7 @@ static std::string test_storage_read_file_contents(const char *file_path)
         ft_fclose(file_pointer);
         return (file_content);
     }
-    bytes_read = std::fread(&file_content[0], 1, file_content.size(), file_pointer);
+    bytes_read = fread(&file_content[0], 1, file_content.size(), file_pointer);
     ft_fclose(file_pointer);
     if (bytes_read != file_content.size())
         return (std::string());
@@ -127,6 +130,7 @@ static void test_storage_block_cipher_decrypt(uint8_t *block_buffer, const uint8
 
 FT_TEST(test_kv_store_encrypted_round_trip_uses_active_algorithm_name)
 {
+    ft_string directory_path_storage;
     const char *directory_path;
     const char *file_path;
     const char *encryption_key;
@@ -138,18 +142,32 @@ FT_TEST(test_kv_store_encrypted_round_trip_uses_active_algorithm_name)
     int32_t cleanup_error;
 
 #if defined(_WIN32) || defined(_WIN64)
-    directory_path = "C:/Temp/libft_storage_block_cipher";
-    file_path = "C:/Temp/libft_storage_block_cipher/kv_store.json";
+    char file_path_buffer[256];
+    int32_t file_path_length;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, filesystem_temp_path("libft_storage_block_cipher",
+            ft_nullptr, &directory_path_storage));
+    directory_path = directory_path_storage.c_str();
+    file_path_length = pf_snprintf(file_path_buffer, sizeof(file_path_buffer),
+        "%s/kv_store.json", directory_path);
+    if (file_path_length < 0
+        || static_cast<ft_size_t>(file_path_length) >= sizeof(file_path_buffer))
+        return (0);
+    file_path = file_path_buffer;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, test_storage_cleanup_paths(directory_path, file_path));
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
 #else
     char directory_template[] = "/tmp/libft_storage_block_cipher_XXXXXX";
     char file_path_buffer[256];
+    int32_t file_path_length;
 
     directory_path = mkdtemp(directory_template);
     FT_ASSERT(directory_path != ft_nullptr);
-    std::snprintf(file_path_buffer, sizeof(file_path_buffer),
+    file_path_length = pf_snprintf(file_path_buffer, sizeof(file_path_buffer),
         "%s/kv_store.json", directory_path);
+    if (file_path_length < 0
+        || static_cast<ft_size_t>(file_path_length) >= sizeof(file_path_buffer))
+        return (0);
     file_path = file_path_buffer;
 #endif
     encryption_key = "sixteen-byte-key";
@@ -178,5 +196,8 @@ FT_TEST(test_kv_store_encrypted_round_trip_uses_active_algorithm_name)
     cleanup_error = test_storage_cleanup_paths(directory_path, file_path);
     FT_ASSERT(cleanup_error == FT_ERR_SUCCESS
         || cleanup_error == FT_ERR_INVALID_OPERATION);
+#if defined(_WIN32) || defined(_WIN64)
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, directory_path_storage.destroy());
+#endif
     return (1);
 }

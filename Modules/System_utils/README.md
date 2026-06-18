@@ -14,7 +14,7 @@ The `System_utils` module wraps environment variables, low-level file descriptor
 ## File Descriptors and File Streams
 
 - `su_open(...)` overloads - Open a file path with default or explicit flags/mode.
-- `su_read(...)` / `su_write(...)` / `su_close(...)` - Low-level descriptor IO.
+- `su_read(...)` / `su_write(...)` / `su_lseek(...)` / `su_close(...)` - Low-level descriptor IO.
 - `t_su_write_syscall_hook`, `su_set_write_syscall_hook(...)`, and `su_reset_write_syscall_hook()` - Test hook for write calls.
 - `su_file` - Lightweight stream wrapper with mutex, closed flag, and descriptor.
 - `su_force_file_stream_allocation_failure(...)` - Test hook for stream allocation.
