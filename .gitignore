@@ -21,6 +21,7 @@
 **/objs_opt3/**/*.d
 **/objs_test_opt3/**/*.o
 **/objs_test_opt3/**/*.d
+Modules/**/objs_ft_vox_opt*/
 Test/single_tests/
 Test/objs_efficiency_opt0/
 Test/objs_efficiency_opt3/
