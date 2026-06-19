@@ -301,6 +301,7 @@ int32_t observability_task_scheduler_bridge_shutdown(void)
     int32_t lock_result;
     int32_t unlock_result;
     int32_t runtime_error;
+    int32_t unregister_result;
 
     runtime_error = observability_task_scheduler_bridge_ensure_runtime();
     if (runtime_error != FT_ERR_SUCCESS)
@@ -308,6 +309,7 @@ int32_t observability_task_scheduler_bridge_shutdown(void)
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    unregister_result = task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink);
     if (!g_observability_bridge_initialised)
     {
         g_observability_bridge_exporter = ft_nullptr;
@@ -322,8 +324,6 @@ int32_t observability_task_scheduler_bridge_shutdown(void)
     unlock_result = g_observability_bridge_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-    int32_t unregister_result;
-    unregister_result = task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink);
     if (unregister_result != FT_ERR_SUCCESS)
     {
         return (FT_ERR_INVALID_OPERATION);

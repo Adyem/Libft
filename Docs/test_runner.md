@@ -44,6 +44,9 @@ output. The runner still prints the currently executing test on one transient
 line; that line is cleared when the test passes and replaced with a persistent
 `FAIL` line only when the test fails.
 
+Abort diagnostics written to `stderr` are left visible so `su_abort()` stack
+traces can reach the console.
+
 ```bash
 FT_TEST_NAME_FILTER=serializer FT_TEST_HIDE_SUCCESSFUL=1 ./Test/libft_tests
 ```

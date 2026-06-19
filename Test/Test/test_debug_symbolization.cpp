@@ -2,7 +2,6 @@
 #include "../../Modules/Debug/debug.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Basic/class_nullptr.hpp"
-#include <cstring>
 
 FT_TEST(test_debug_symbolize_address_reports_symbol_and_location)
 {
@@ -17,7 +16,7 @@ FT_TEST(test_debug_symbolize_address_reports_symbol_and_location)
         symbol_buffer, sizeof(symbol_buffer),
         location_buffer, sizeof(location_buffer));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT(std::strstr(symbol_buffer, "dbg_print_stack_trace") != ft_nullptr);
-    FT_ASSERT(std::strstr(location_buffer, "debug.cpp") != ft_nullptr);
+    FT_ASSERT(ft_strstr(symbol_buffer, "dbg_print_stack_trace") != ft_nullptr);
+    FT_ASSERT(ft_strstr(location_buffer, "debug.cpp") != ft_nullptr);
     return (1);
 }

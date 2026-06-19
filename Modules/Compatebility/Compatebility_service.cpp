@@ -88,7 +88,10 @@ int32_t cmp_service_set_working_directory(const char *working_directory)
 int32_t cmp_service_detach_process(ft_bool force_no_fork)
 {
 #if defined(_WIN32) || defined(_WIN64)
-    (void)force_no_fork;
+    if (force_no_fork == FT_TRUE)
+        return (0);
+    if (cmp_service_release_console() != 0)
+        return (-1);
     return (0);
 #else
     pid_t process_id;

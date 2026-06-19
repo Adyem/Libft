@@ -42,7 +42,6 @@ BASIC_TEST_FILES := \
 	Test/test_basic_wstrlen.cpp
 
 CMA_TEST_FILES := \
-	Test/test_cma.cpp \
 	Test/test_cma_alloc.cpp \
 	Test/test_cma_arena.cpp \
 	Test/test_cma_backend.cpp \

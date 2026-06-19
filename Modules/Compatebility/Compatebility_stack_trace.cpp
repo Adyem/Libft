@@ -10,6 +10,7 @@
 
 #if defined(_WIN32)
 # include <windows.h>
+# include <dbghelp.h>
 #endif
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -166,6 +167,32 @@ static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
 #endif
 
 #if defined(_WIN32)
+void    dbg_print_stack_trace(void) noexcept;
+static INIT_ONCE    g_cmp_stack_trace_windows_symbols_once = INIT_ONCE_STATIC_INIT;
+static ft_bool      g_cmp_stack_trace_windows_symbols_ready = FT_FALSE;
+
+static BOOL CALLBACK    cmp_stack_trace_initialize_windows_symbols(
+        PINIT_ONCE, PVOID, PVOID *)
+{
+    HANDLE    process_handle;
+
+    process_handle = GetCurrentProcess();
+    SymSetOptions(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS | SYMOPT_LOAD_LINES);
+    if (SymInitialize(process_handle, NULL, TRUE) == FALSE)
+        g_cmp_stack_trace_windows_symbols_ready = FT_FALSE;
+    else
+        g_cmp_stack_trace_windows_symbols_ready = FT_TRUE;
+    return (TRUE);
+}
+
+static ft_bool    cmp_stack_trace_windows_symbols_are_ready(void)
+{
+    if (InitOnceExecuteOnce(&g_cmp_stack_trace_windows_symbols_once,
+            cmp_stack_trace_initialize_windows_symbols, NULL, NULL) == FALSE)
+        return (FT_FALSE);
+    return (g_cmp_stack_trace_windows_symbols_ready);
+}
+
 static ft_size_t    cmp_stack_trace_capture_windows(void **frames,
         ft_size_t capacity, ft_size_t skip_count)
 {
@@ -185,136 +212,85 @@ static ft_size_t    cmp_stack_trace_capture_windows(void **frames,
     return (static_cast<ft_size_t>(captured_count));
 }
 
-static int32_t    cmp_stack_trace_copy_windows_text(char *destination,
-        ft_size_t capacity, const char *source)
-{
-    int32_t    formatted_length;
-
-    if (destination == NULL || source == NULL || capacity == 0)
-        return (FT_ERR_INVALID_ARGUMENT);
-    formatted_length = pf_snprintf(destination, capacity, "%s", source);
-    if (formatted_length < 0)
-        return (FT_ERR_SYSTEM);
-    if (static_cast<ft_size_t>(formatted_length) >= capacity)
-        return (FT_ERR_OUT_OF_RANGE);
-    return (FT_ERR_SUCCESS);
-}
-
-static int32_t    cmp_stack_trace_run_addr2line_command(const char *command,
-        char *symbol_buffer, ft_size_t symbol_buffer_size,
-        char *location_buffer, ft_size_t location_buffer_size)
-{
-    char    line_buffer[1024];
-    FILE    *pipe_file;
-
-    pipe_file = popen(command, "r");
-    if (pipe_file == NULL)
-        return (FT_ERR_SYSTEM);
-    if (fgets(line_buffer, sizeof(line_buffer), pipe_file) == NULL)
-    {
-        pclose(pipe_file);
-        return (FT_ERR_NOT_FOUND);
-    }
-    cmp_stack_trace_strip_line_ending(line_buffer);
-    if (cmp_stack_trace_copy_windows_text(symbol_buffer, symbol_buffer_size,
-            line_buffer) != FT_ERR_SUCCESS)
-    {
-        pclose(pipe_file);
-        return (FT_ERR_OUT_OF_RANGE);
-    }
-    if (fgets(line_buffer, sizeof(line_buffer), pipe_file) == NULL)
-    {
-        pclose(pipe_file);
-        return (FT_ERR_NOT_FOUND);
-    }
-    cmp_stack_trace_strip_line_ending(line_buffer);
-    if (cmp_stack_trace_copy_windows_text(location_buffer,
-            location_buffer_size, line_buffer) != FT_ERR_SUCCESS)
-    {
-        pclose(pipe_file);
-        return (FT_ERR_OUT_OF_RANGE);
-    }
-    pclose(pipe_file);
-    return (FT_ERR_SUCCESS);
-}
-
 static int32_t    cmp_stack_trace_symbolize_windows(const void *address,
         char *symbol_buffer, ft_size_t symbol_buffer_size,
         char *location_buffer, ft_size_t location_buffer_size)
 {
-    HMODULE           module_handle;
-    uintptr_t         frame_address;
-    uintptr_t         module_base_address;
-    uintptr_t         text_section_address;
-    char              module_path[MAX_PATH];
-    char              command[1280];
-    int32_t           command_length;
+    HANDLE            process_handle;
+    DWORD64           frame_address;
+    DWORD64           symbol_displacement;
+    DWORD             line_displacement;
+    IMAGEHLP_LINE64   line_information;
+    unsigned char     symbol_storage[sizeof(SYMBOL_INFO)
+                        + MAX_SYM_NAME * sizeof(char)];
+    PSYMBOL_INFO      symbol_information;
+    int32_t           formatted_length;
 
     if (address == NULL || symbol_buffer == NULL || location_buffer == NULL
         || symbol_buffer_size == 0 || location_buffer_size == 0)
         return (FT_ERR_INVALID_ARGUMENT);
     symbol_buffer[0] = '\0';
     location_buffer[0] = '\0';
-    module_handle = NULL;
-    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
-            | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-            reinterpret_cast<LPCSTR>(address), &module_handle) == FALSE)
+    if (cmp_stack_trace_windows_symbols_are_ready() == FT_FALSE)
         return (FT_ERR_NOT_FOUND);
-    if (GetModuleFileNameA(module_handle, module_path, MAX_PATH) == 0)
-        return (FT_ERR_NOT_FOUND);
-    frame_address = reinterpret_cast<uintptr_t>(address);
-    module_base_address = reinterpret_cast<uintptr_t>(module_handle);
-    text_section_address = 0;
+    process_handle = GetCurrentProcess();
+    frame_address = reinterpret_cast<DWORD64>(address);
+    ZeroMemory(symbol_storage, sizeof(symbol_storage));
+    symbol_information = reinterpret_cast<PSYMBOL_INFO>(symbol_storage);
+    symbol_information->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symbol_information->MaxNameLen = MAX_SYM_NAME;
+    symbol_displacement = 0;
+    if (SymFromAddr(process_handle, frame_address, &symbol_displacement,
+            symbol_information) == FALSE)
+        symbol_information = NULL;
+    if (symbol_information != NULL)
     {
-        PIMAGE_DOS_HEADER    dos_header;
-        PIMAGE_NT_HEADERS    nt_headers;
-        PIMAGE_SECTION_HEADER    section_header;
-        uint16_t             section_index;
-
-        dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(module_base_address);
-        if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
-            return (FT_ERR_NOT_FOUND);
-        nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS>(
-                module_base_address + static_cast<uintptr_t>(dos_header->e_lfanew));
-        if (nt_headers->Signature != IMAGE_NT_SIGNATURE)
-            return (FT_ERR_NOT_FOUND);
-        section_header = reinterpret_cast<PIMAGE_SECTION_HEADER>(
-                reinterpret_cast<unsigned char *>(nt_headers)
-                + sizeof(DWORD)
-                + sizeof(IMAGE_FILE_HEADER)
-                + static_cast<ft_size_t>(
-                    nt_headers->FileHeader.SizeOfOptionalHeader));
-        section_index = 0;
-        while (section_index < nt_headers->FileHeader.NumberOfSections)
+        if (symbol_displacement > 0)
         {
-            if (section_header[section_index].Name[0] == '.'
-                && section_header[section_index].Name[1] == 't'
-                && section_header[section_index].Name[2] == 'e'
-                && section_header[section_index].Name[3] == 'x'
-                && section_header[section_index].Name[4] == 't'
-                && section_header[section_index].Name[5] == '\0')
-            {
-                text_section_address = module_base_address
-                    + static_cast<uintptr_t>(
-                        section_header[section_index].VirtualAddress);
-                break ;
-            }
-            section_index += 1;
+            formatted_length = pf_snprintf(symbol_buffer, symbol_buffer_size,
+                    "%s + 0x%" PRIx64, symbol_information->Name,
+                    static_cast<uint64_t>(symbol_displacement));
         }
+        else
+        {
+            formatted_length = pf_snprintf(symbol_buffer, symbol_buffer_size,
+                    "%s", symbol_information->Name);
+        }
+        if (formatted_length < 0
+            || static_cast<ft_size_t>(formatted_length) >= symbol_buffer_size)
+            return (FT_ERR_OUT_OF_RANGE);
     }
-    if (text_section_address == 0 || frame_address < text_section_address)
-        return (FT_ERR_NOT_FOUND);
-    command_length = pf_snprintf(command, sizeof(command),
-            "addr2line -f -C -j .text -e \"%s\" 0x%" PRIxPTR " 2>nul",
-            module_path, frame_address - text_section_address);
-    if (command_length < 0
-        || static_cast<ft_size_t>(command_length) >= sizeof(command))
-        return (FT_ERR_SYSTEM);
-    if (cmp_stack_trace_run_addr2line_command(command, symbol_buffer,
-            symbol_buffer_size, location_buffer, location_buffer_size)
-        == FT_ERR_SUCCESS)
-        return (FT_ERR_SUCCESS);
-    return (FT_ERR_NOT_FOUND);
+    else
+    {
+        formatted_length = pf_snprintf(symbol_buffer, symbol_buffer_size,
+                "%p", address);
+        if (formatted_length < 0
+            || static_cast<ft_size_t>(formatted_length) >= symbol_buffer_size)
+            return (FT_ERR_OUT_OF_RANGE);
+    }
+    ZeroMemory(&line_information, sizeof(line_information));
+    line_information.SizeOfStruct = sizeof(line_information);
+    line_displacement = 0;
+    if (SymGetLineFromAddr64(process_handle, frame_address, &line_displacement,
+            &line_information) != FALSE && line_information.FileName != NULL)
+    {
+        if (line_information.LineNumber > 0)
+        {
+            formatted_length = pf_snprintf(location_buffer,
+                    location_buffer_size, "%s:%lu",
+                    line_information.FileName,
+                    static_cast<unsigned long>(line_information.LineNumber));
+        }
+        else
+        {
+            formatted_length = pf_snprintf(location_buffer,
+                    location_buffer_size, "%s", line_information.FileName);
+        }
+        if (formatted_length < 0
+            || static_cast<ft_size_t>(formatted_length) >= location_buffer_size)
+            return (FT_ERR_OUT_OF_RANGE);
+    }
+    return (FT_ERR_SUCCESS);
 }
 #endif
 
@@ -399,6 +375,8 @@ void    cmp_stack_trace_print(FILE *output_file, void *const *frames,
     }
     free(symbols);
 #elif defined(_WIN32)
+    char         symbol_buffer[1024];
+    char         location_buffer[1024];
     ft_size_t    frame_index;
 
     if (output_file == NULL || frames == NULL || frame_count == 0)
@@ -406,9 +384,24 @@ void    cmp_stack_trace_print(FILE *output_file, void *const *frames,
     frame_index = 0;
     while (frame_index < frame_count)
     {
-        ft_fprintf(output_file, "    #%" PRIu64 " %p\n",
-            static_cast<uint64_t>(frame_index),
-            frames[frame_index]);
+        if (cmp_stack_trace_symbolize_address(frames[frame_index],
+                symbol_buffer, sizeof(symbol_buffer), location_buffer,
+                sizeof(location_buffer)) != FT_ERR_SUCCESS)
+        {
+            ft_fprintf(output_file, "    #%" PRIu64 " %p\n",
+                static_cast<uint64_t>(frame_index), frames[frame_index]);
+        }
+        else if (location_buffer[0] != '\0')
+        {
+            ft_fprintf(output_file, "    #%" PRIu64 " %s\n       %s\n",
+                static_cast<uint64_t>(frame_index), symbol_buffer,
+                location_buffer);
+        }
+        else
+        {
+            ft_fprintf(output_file, "    #%" PRIu64 " %s\n",
+                static_cast<uint64_t>(frame_index), symbol_buffer);
+        }
         frame_index += 1;
     }
 #else

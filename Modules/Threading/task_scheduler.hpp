@@ -918,6 +918,13 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         scheduled_mutex_error = this->_scheduled_mutex.unlock();
         task_body();
+        {
+            ft_bool scheduled_lock_acquired;
+
+            scheduled_lock_acquired = FT_FALSE;
+            if (this->_scheduled.lock(&scheduled_lock_acquired) == FT_ERR_SUCCESS)
+                this->_scheduled.unlock(scheduled_lock_acquired);
+        }
         if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
             return (result_pair);
         this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
@@ -1009,6 +1016,13 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
         scheduled_mutex_error = this->_scheduled_mutex.unlock();
         this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
                 g_ft_task_trace_label_schedule_repeat, false);
+        {
+            ft_bool scheduled_lock_acquired;
+
+            scheduled_lock_acquired = FT_FALSE;
+            if (this->_scheduled.lock(&scheduled_lock_acquired) == FT_ERR_SUCCESS)
+                this->_scheduled.unlock(scheduled_lock_acquired);
+        }
         return (handle_result);
     }
     scheduled_mutex_error = this->_scheduled_mutex.unlock();

@@ -1402,12 +1402,14 @@ void ft_task_scheduler::timer_loop()
                     original_function();
                 if (!this->_running.load())
                     return ;
-                if (this->_scheduled_mutex.lock() != FT_ERR_SUCCESS)
-                    return ;
                 if (expired_task._interval_ms > 0)
                 {
                     bool should_reschedule;
+                    int scheduled_mutex_lock_error;
 
+                    scheduled_mutex_lock_error = this->_scheduled_mutex.lock();
+                    if (scheduled_mutex_lock_error != FT_ERR_SUCCESS)
+                        return ;
                     should_reschedule = true;
                     if (expired_task._state)
                     {
@@ -1442,6 +1444,7 @@ void ft_task_scheduler::timer_loop()
                             this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
                                     new_trace_id, previous_trace_id, reschedule_label, true);
                     }
+                    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 }
                 continue;
             }
@@ -1458,12 +1461,14 @@ void ft_task_scheduler::timer_loop()
                     original_function();
                 if (!this->_running.load())
                     return ;
-                if (this->_scheduled_mutex.lock() != FT_ERR_SUCCESS)
-                    return ;
                 if (expired_task._interval_ms > 0)
                 {
                     bool should_reschedule;
+                    int scheduled_mutex_lock_error;
 
+                    scheduled_mutex_lock_error = this->_scheduled_mutex.lock();
+                    if (scheduled_mutex_lock_error != FT_ERR_SUCCESS)
+                        return ;
                     should_reschedule = true;
                     if (expired_task._state)
                     {
@@ -1483,6 +1488,7 @@ void ft_task_scheduler::timer_loop()
                         if (!this->scheduled_heap_push(ft_move(expired_task)))
                             (void)this->_scheduled.get_error();
                     }
+                    (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                 }
                 continue;
             }
@@ -1515,12 +1521,14 @@ void ft_task_scheduler::timer_loop()
             }
             if (!this->_running.load())
                 return ;
-            if (this->_scheduled_mutex.lock() != FT_ERR_SUCCESS)
-                return ;
             if (expired_task._interval_ms > 0)
             {
                 bool should_reschedule;
+                int scheduled_mutex_lock_error;
 
+                scheduled_mutex_lock_error = this->_scheduled_mutex.lock();
+                if (scheduled_mutex_lock_error != FT_ERR_SUCCESS)
+                    return ;
                 should_reschedule = true;
                 if (expired_task._state)
                 {
@@ -1552,6 +1560,7 @@ void ft_task_scheduler::timer_loop()
                         this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
                                 new_trace_id, previous_trace_id, reschedule_label, true);
                 }
+                (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
             }
             continue;
         }
@@ -1764,9 +1773,15 @@ int ft_task_scheduler::enable_thread_safety()
     if (this->_state_mutex != ft_nullptr)
     {
         if (this->_queue.enable_thread_safety() != 0)
+        {
+            this->teardown_thread_safety();
             return (-1);
+        }
         if (this->_scheduled_condition.enable_thread_safety() != 0)
+        {
+            this->teardown_thread_safety();
             return (-1);
+        }
         return (0);
     }
     state_mutex = new (std::nothrow) pt_recursive_mutex();
@@ -1862,8 +1877,6 @@ void ft_task_scheduler::teardown_thread_safety()
 {
     int destroy_error;
 
-    this->_queue.disable_thread_safety();
-    this->_scheduled_condition.disable_thread_safety();
     if (this->_state_mutex != ft_nullptr)
     {
         destroy_error = this->_state_mutex->destroy();
@@ -1871,5 +1884,7 @@ void ft_task_scheduler::teardown_thread_safety()
         delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
+    this->_queue.disable_thread_safety();
+    this->_scheduled_condition.disable_thread_safety();
     return ;
 }

@@ -19,29 +19,32 @@ FT_TEST(test_task_scheduler_cancel_after_handle)
 {
     ft_task_scheduler scheduler_instance(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
-    std::atomic<int> execution_count;
-
-    execution_count.store(0);
-    auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(100),
-        [&execution_count]()
     {
-        execution_count.fetch_add(1);
-        return ;
-    });
-    ft_future<void> delayed_future;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, delayed_future.move(schedule_result.key));
-    ft_scheduled_task_handle handle_value = schedule_result.get_value();
-    FT_ASSERT(handle_value.valid());
-    (void)delayed_future;
-    bool cancel_result;
+        std::atomic<int> execution_count;
 
-    cancel_result = handle_value.cancel();
-    FT_ASSERT(cancel_result);
-    usleep(150000);
-    int executed_times;
+        execution_count.store(0);
+        auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(100),
+            [&execution_count]()
+        {
+            execution_count.fetch_add(1);
+            return ;
+        });
+        ft_future<void> delayed_future;
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, delayed_future.move(schedule_result.key));
+        ft_scheduled_task_handle handle_value = schedule_result.get_value();
+        FT_ASSERT(handle_value.valid());
+        (void)delayed_future;
+        bool cancel_result;
 
-    executed_times = execution_count.load();
-    FT_ASSERT_EQ(0, executed_times);
+        cancel_result = handle_value.cancel();
+        FT_ASSERT(cancel_result);
+        usleep(150000);
+        int executed_times;
+
+        executed_times = execution_count.load();
+        FT_ASSERT_EQ(0, executed_times);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.destroy());
+    }
     return (1);
 }
 
@@ -49,24 +52,27 @@ FT_TEST(test_task_scheduler_cancel_periodic_handle)
 {
     ft_task_scheduler scheduler_instance(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
-    std::atomic<int> execution_count;
-
-    execution_count.store(0);
-    ft_scheduled_task_handle periodic_handle = scheduler_instance.schedule_every(std::chrono::milliseconds(120),
-        [&execution_count]()
     {
-        execution_count.fetch_add(1);
-        return ;
-    });
-    FT_ASSERT(periodic_handle.valid());
-    bool cancel_result;
+        std::atomic<int> execution_count;
 
-    cancel_result = periodic_handle.cancel();
-    FT_ASSERT(cancel_result);
-    usleep(200000);
-    int executed_times;
+        execution_count.store(0);
+        ft_scheduled_task_handle periodic_handle = scheduler_instance.schedule_every(std::chrono::milliseconds(120),
+            [&execution_count]()
+        {
+            execution_count.fetch_add(1);
+            return ;
+        });
+        FT_ASSERT(periodic_handle.valid());
+        bool cancel_result;
 
-    executed_times = execution_count.load();
-    FT_ASSERT_EQ(0, executed_times);
+        cancel_result = periodic_handle.cancel();
+        FT_ASSERT(cancel_result);
+        usleep(200000);
+        int executed_times;
+
+        executed_times = execution_count.load();
+        FT_ASSERT_EQ(0, executed_times);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.destroy());
+    }
     return (1);
 }

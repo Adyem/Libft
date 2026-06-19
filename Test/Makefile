@@ -128,8 +128,7 @@ $(OBJDIR)/%.o: %.cpp
 				$(MKDIR) $(dir $@); \
 			fi; \
 			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-			built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
-			printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+			printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then \
@@ -148,8 +147,7 @@ $(OBJDIR)/%.o: %.cpp
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-		built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
-		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
@@ -273,8 +271,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 				$(MKDIR) $(dir $@); \
 			fi; \
 			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-			built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
-			printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+			printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then \
@@ -293,8 +290,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-		built=$$(printf '%s\n' "$(SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
-		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS)
@@ -320,8 +316,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 				$(MKDIR) $(dir $@); \
 			fi; \
 			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
-			built=$$(printf '%s\n' "$(EFF_SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
-			printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+			printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(EFF_TOTAL_SRCS) $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then \
@@ -340,8 +335,7 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
-		built=$$(printf '%s\n' "$(EFF_SRCS)" | tr ' ' '\n' | nl -ba | awk -v target="$<" '$$2==target {print $$1}'); \
-		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(EFF_TOTAL_SRCS) $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(EFFICIENCY_LIBFT_ARCHIVE): FORCE

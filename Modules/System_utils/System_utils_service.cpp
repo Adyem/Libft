@@ -149,8 +149,6 @@ int32_t su_service_daemonize(const char *working_directory,
     }
     if (su_service_write_pid_file(pid_file_path, ft_nullptr) != 0)
         return (-1);
-    if (cmp_service_release_console() != 0)
-        return (-1);
     return (0);
 }
 

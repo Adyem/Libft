@@ -1,6 +1,6 @@
 # Debug
 
-The `Debug` module exposes stack trace capture/printing and address symbolization through the compatibility stack-trace helper. Crash-handler enable/disable calls are kept as portable module state toggles so the module builds on both Windows and POSIX.
+The `Debug` module exposes stack trace capture/printing and address symbolization through the compatibility stack-trace helper. On Windows, the stack printer resolves symbols and source locations through the platform debug helpers. Crash-handler enable/disable calls are kept as portable module state toggles so the module builds on both Windows and POSIX.
 
 ## Public API
 

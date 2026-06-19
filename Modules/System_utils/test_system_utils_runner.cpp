@@ -414,13 +414,6 @@ static int32_t execute_test_function(const s_test_case *test,
         report_runner_failure("runner failed to redirect stdout before test");
         return (0);
     }
-    if (dup2(null_descriptor, STDERR_FILENO) < 0)
-    {
-        report_runner_failure("runner failed to redirect stderr before test");
-        (void)restore_baseline_descriptors(baseline_stdin_descriptor,
-            baseline_stdout_descriptor, baseline_stderr_descriptor);
-        return (0);
-    }
     reset_error = cma_set_alloc_limit(0);
     if (reset_error != FT_ERR_SUCCESS)
     {
@@ -686,15 +679,16 @@ int32_t ft_run_registered_tests(void)
     if (socket_runtime_acquired == FT_TRUE)
         ft_socket_runtime_release();
 #endif
-    release_test_storage();
     if (selected_tests == 0)
     {
         printf("0/0 tests passed\n");
         fflush(stdout);
+        release_test_storage();
         return (1);
     }
     printf("%d/%d tests passed\n", passed, selected_tests);
     fflush(stdout);
+    release_test_storage();
 #ifdef LIBFT_TEST_BUILD
     report_allocator_leaks();
 #endif

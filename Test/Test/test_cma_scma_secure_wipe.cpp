@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
+#include <filesystem>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -47,27 +48,24 @@ struct s_runtime_file_guard
 
 static std::string runtime_project_root(void)
 {
-    char current_directory[4096];
-    std::string candidate_directory;
-    std::size_t slash_position;
+    std::filesystem::path candidate_directory;
 
-    if (getcwd(current_directory, sizeof(current_directory)) == ft_nullptr)
-        return (std::string());
-    candidate_directory = current_directory;
+    candidate_directory = std::filesystem::current_path();
     while (candidate_directory.empty() == FT_FALSE)
     {
-        if (access((candidate_directory + "/Test/Full_Libft_test.a").c_str(), F_OK) == 0
-            && access((candidate_directory + "/Modules").c_str(), F_OK) == 0)
-            return (candidate_directory);
-        if (candidate_directory == "/")
+        std::filesystem::path test_archive_path;
+        std::filesystem::path modules_path;
+        std::filesystem::path parent_directory;
+
+        test_archive_path = candidate_directory / "Test" / "Full_Libft_test.a";
+        modules_path = candidate_directory / "Modules";
+        if (std::filesystem::exists(test_archive_path)
+            && std::filesystem::exists(modules_path))
+            return (candidate_directory.string());
+        parent_directory = candidate_directory.parent_path();
+        if (parent_directory.empty() || parent_directory == candidate_directory)
             break ;
-        slash_position = candidate_directory.find_last_of('/');
-        if (slash_position == std::string::npos)
-            break ;
-        if (slash_position == 0)
-            candidate_directory = "/";
-        else
-            candidate_directory.erase(slash_position);
+        candidate_directory = parent_directory;
     }
     return (std::string());
 }

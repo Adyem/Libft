@@ -27,6 +27,12 @@
 
 static int  g_file_sink_hook_calls = 0;
 
+static int create_logger_temp_file(char *template_path, size_t template_path_size)
+{
+    return (test_create_temp_file_from_template(template_path,
+            template_path_size, ft_nullptr));
+}
+
 static int64_t    logger_partial_write_hook(int file_descriptor,
     const void *buffer, ft_size_t count)
 {
@@ -47,13 +53,12 @@ static int64_t    logger_partial_write_hook(int file_descriptor,
 
 FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex)
 {
-    char        template_path[] = "/tmp/libft_logger_file_sink_mutex_XXXXXX";
+    char        template_path[256];
     int         temp_fd;
     s_file_sink sink;
     ft_bool     lock_acquired;
 
-    temp_fd = test_create_temp_file_from_template(template_path,
-            sizeof(template_path), template_path);
+    temp_fd = create_logger_temp_file(template_path, sizeof(template_path));
     FT_ASSERT(temp_fd >= 0);
     sink.file_descriptor = temp_fd;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sink.path.initialize(template_path));
@@ -73,7 +78,7 @@ FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex)
 
 FT_TEST(test_logger_file_sink_lock_blocks_until_release)
 {
-    char                     template_path[] = "/tmp/libft_logger_file_sink_lock_XXXXXX";
+    char                     template_path[256];
     int                      temp_fd;
     s_file_sink              sink;
     ft_bool                  main_lock_acquired;
@@ -82,8 +87,7 @@ FT_TEST(test_logger_file_sink_lock_blocks_until_release)
     std::atomic<long long>   wait_duration_ms;
     std::thread              worker;
 
-    temp_fd = test_create_temp_file_from_template(template_path,
-            sizeof(template_path), template_path);
+    temp_fd = create_logger_temp_file(template_path, sizeof(template_path));
     FT_ASSERT(temp_fd >= 0);
     sink.file_descriptor = temp_fd;
     sink.max_size = 0;
@@ -133,14 +137,13 @@ FT_TEST(test_logger_file_sink_lock_blocks_until_release)
 
 FT_TEST(test_logger_file_sink_uses_system_utils_write)
 {
-    char    template_path[] = "/tmp/libft_logger_file_sink_XXXXXX";
+    char    template_path[256];
     int     temp_fd;
     char    read_buffer[512];
     ssize_t read_count;
     int     log_fd;
 
-    temp_fd = test_create_temp_file_from_template(template_path,
-            sizeof(template_path), template_path);
+    temp_fd = create_logger_temp_file(template_path, sizeof(template_path));
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();
@@ -193,14 +196,13 @@ FT_TEST(test_logger_rotate_fstat_failure_sets_errno)
 
 FT_TEST(test_logger_rotate_success_clears_errno)
 {
-    char        template_path[] = "/tmp/libft_logger_rotate_XXXXXX";
+    char        template_path[256];
     int         temp_fd;
     ssize_t     write_result;
     s_file_sink sink;
     ft_string   rotated_path;
 
-    temp_fd = test_create_temp_file_from_template(template_path,
-            sizeof(template_path), template_path);
+    temp_fd = create_logger_temp_file(template_path, sizeof(template_path));
     FT_ASSERT(temp_fd >= 0);
     write_result = write(temp_fd, "rotation-test", 13);
     FT_ASSERT_EQ(13, write_result);
@@ -306,7 +308,7 @@ FT_TEST(test_logger_set_rotation_without_file_sink)
 
 FT_TEST(test_logger_rotation_by_age)
 {
-    char            template_path[] = "/tmp/libft_logger_age_XXXXXX";
+    char            template_path[256];
     int             temp_fd;
     struct utimbuf  timestamps;
     time_t          current_time;
@@ -315,8 +317,7 @@ FT_TEST(test_logger_rotation_by_age)
     ssize_t         read_count;
     char            buffer[512];
 
-    temp_fd = test_create_temp_file_from_template(template_path,
-            sizeof(template_path), template_path);
+    temp_fd = create_logger_temp_file(template_path, sizeof(template_path));
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();
@@ -350,14 +351,13 @@ FT_TEST(test_logger_rotation_by_age)
 
 FT_TEST(test_logger_rotation_getter_reports_config)
 {
-    char            template_path[] = "/tmp/libft_logger_get_rotation_XXXXXX";
+    char            template_path[256];
     int             temp_fd;
     ft_size_t       max_size;
     ft_size_t       retention_count;
     unsigned int    max_age_seconds;
 
-    temp_fd = test_create_temp_file_from_template(template_path,
-            sizeof(template_path), template_path);
+    temp_fd = create_logger_temp_file(template_path, sizeof(template_path));
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();
@@ -377,7 +377,7 @@ FT_TEST(test_logger_rotation_getter_reports_config)
 
 FT_TEST(test_logger_rotation_retention_limit)
 {
-    char        template_path[] = "/tmp/libft_logger_retention_XXXXXX";
+    char        template_path[256];
     int         temp_fd;
     ft_string   rotated_one_path;
     ft_string   rotated_two_path;
@@ -386,8 +386,7 @@ FT_TEST(test_logger_rotation_retention_limit)
     ssize_t     read_count;
     char        buffer[512];
 
-    temp_fd = test_create_temp_file_from_template(template_path,
-            sizeof(template_path), template_path);
+    temp_fd = create_logger_temp_file(template_path, sizeof(template_path));
     FT_ASSERT(temp_fd >= 0);
     close(temp_fd);
     ft_log_close();
