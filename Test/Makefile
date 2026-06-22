@@ -20,10 +20,14 @@ $(TARGET): $(OBJS)
 	@# Rescan the archive so cross-module references inside the combined test library resolve.
 	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL)
-	@$(file >$@.rsp,$(OBJS) -Wl,--start-group $(LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(RM) $@
+ifeq ($(UNAME_S),Darwin)
+	@$(CXX) $(CFLAGS) -o $@ $(OBJS) $(LIBFT_ARCHIVE) $(LDFLAGS)
+else
+	@$(file >$@.rsp,$(OBJS) -Wl,--start-group $(LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
+endif
 	@printf '\033[1;35m[LIBFT BUILD] Test executable ready (%s)\033[0m\n' "$(TARGET)"
 
 Basic:
@@ -139,7 +143,8 @@ $(OBJDIR)/%.o: %.cpp
 			exit $$status; \
 		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		count=$$(find $(OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
+		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
 	else \
@@ -147,7 +152,8 @@ $(OBJDIR)/%.o: %.cpp
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		count=$$(find $(OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
+		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
@@ -253,10 +259,14 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
 	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL)
-	@$(file >$@.rsp,$(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE))
 	@$(RM) $@
+ifeq ($(UNAME_S),Darwin)
+	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE) $(LDFLAGS)
+else
+	@$(file >$@.rsp,$(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE))
 	@$(CXX) $(CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
+endif
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
 	@batch_output=0; \
@@ -282,7 +292,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 			exit $$status; \
 		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		count=$$(find $(DEBUG_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
+		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
 	else \
@@ -290,7 +301,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
-		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		count=$$(find $(DEBUG_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
+		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS)
@@ -298,10 +310,14 @@ $(EFFICIENCY_TARGET): $(EFFICIENCY_OBJS)
 	@echo "Linking final executable ($(EFFICIENCY_TARGET))"
 	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(EFFICIENCY_LIBFT_ARCHIVE) COMPILE_FLAGS="$(EFFICIENCY_COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL)
-	@$(file >$@.rsp,$(EFFICIENCY_OBJS) -Wl,--start-group $(EFFICIENCY_LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(RM) $@
+ifeq ($(UNAME_S),Darwin)
+	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ $(EFFICIENCY_OBJS) $(EFFICIENCY_LIBFT_ARCHIVE) $(LDFLAGS)
+else
+	@$(file >$@.rsp,$(EFFICIENCY_OBJS) -Wl,--start-group $(EFFICIENCY_LIBFT_ARCHIVE) -Wl,--end-group)
 	@$(CXX) $(EFFICIENCY_CFLAGS) -o $@ @$@.rsp $(LDFLAGS)
 	@$(RM) $@.rsp
+endif
 
 $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 	@batch_output=0; \
@@ -327,7 +343,8 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			exit $$status; \
 		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$built $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		count=$$(find $(EFFICIENCY_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
+		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
 	else \
@@ -335,7 +352,8 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			$(MKDIR) $(dir $@); \
 		fi; \
 		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
-		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(EFF_TOTAL_SRCS) $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
+		count=$$(find $(EFFICIENCY_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
+		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 	fi
 
 $(EFFICIENCY_LIBFT_ARCHIVE): FORCE

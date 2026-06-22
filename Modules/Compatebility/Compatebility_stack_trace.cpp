@@ -21,6 +21,7 @@
 # include <dlfcn.h>
 #endif
 
+#if defined(__linux__)
 static void    cmp_stack_trace_strip_line_ending(char *line)
 {
     ft_size_t    line_length;
@@ -37,8 +38,6 @@ static void    cmp_stack_trace_strip_line_ending(char *line)
     }
     return ;
 }
-
-#if defined(__linux__)
 static ft_size_t    cmp_shell_escape_double_quotes(char *destination,
         ft_size_t capacity, const char *source)
 {

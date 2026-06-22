@@ -38,7 +38,7 @@ template: $(CPP_CLASS_LIB)
 	$(MAKE) -C Modules/Template all $(SUBMAKE_OVERRIDES)
 
 tests:
-	need_build=0; \
+	@need_build=0; \
 	if $(MAKE) -C Test -q all $(SUBMAKE_OVERRIDES); then \
 		printf '\033[1;35m[LIBFT CHECK] Test suite is up to date\033[0m\n'; \
 	else \
