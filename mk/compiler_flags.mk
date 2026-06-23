@@ -3,14 +3,28 @@ COMPILER_FLAGS_INCLUDED := 1
 
 OPT_LEVEL ?= 0
 LIBFT_ROOT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/..)
+UNAME_S := $(shell uname -s 2>/dev/null)
+
 ifeq ($(OPT_LEVEL),0)
     OPT_FLAGS = -O0 -g
 else ifeq ($(OPT_LEVEL),1)
-    OPT_FLAGS = -O1 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    ifeq ($(UNAME_S),Darwin)
+        OPT_FLAGS = -O1 -flto -ffunction-sections -fdata-sections -Wl,-dead_strip
+    else
+        OPT_FLAGS = -O1 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    endif
 else ifeq ($(OPT_LEVEL),2)
-    OPT_FLAGS = -O2 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    ifeq ($(UNAME_S),Darwin)
+        OPT_FLAGS = -O2 -flto -ffunction-sections -fdata-sections -Wl,-dead_strip
+    else
+        OPT_FLAGS = -O2 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    endif
 else ifeq ($(OPT_LEVEL),3)
-    OPT_FLAGS = -O3 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    ifeq ($(UNAME_S),Darwin)
+        OPT_FLAGS = -O3 -flto -ffunction-sections -fdata-sections -Wl,-dead_strip
+    else
+        OPT_FLAGS = -O3 -flto=1 -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+    endif
 else
     $(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
@@ -44,11 +58,11 @@ COMPILE_FLAGS ?= -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations \
                 -DLIBFT_INTERNAL_HEADERS \
                 $(OPT_FLAGS) $(SANITIZER_FLAGS)
 
-ifneq ($(shell uname -s 2>/dev/null),Darwin)
+ifeq ($(UNAME_S),Darwin)
+    COMPILE_FLAGS += -Wno-format-nonliteral -Wno-tautological-compare
+else
     COMPILE_FLAGS += -Wold-style-cast -Wconversion -Wuseless-cast \
         -Wzero-as-null-pointer-constant -Wmaybe-uninitialized
-else
-    COMPILE_FLAGS += -Wno-format-nonliteral -Wno-tautological-compare
 endif
 
 export BUILD_OUTPUT_SUFFIX
