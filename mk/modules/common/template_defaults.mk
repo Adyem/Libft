@@ -42,7 +42,18 @@ OBJS ?= $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEPS ?= $(OBJS:.o=.d)
 DEBUG_DEPS ?=
 
-CFLAGS ?= -Wall -Wextra -Werror -std=c++17
+ifeq ($(shell uname -s 2>/dev/null),Darwin)
+CFLAGS ?= -Wall -Wextra -Werror -g -O0 -std=c++17 \
+          -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr \
+          -Wno-format-nonliteral -Wno-tautological-compare \
+          -DLIBFT_INTERNAL_HEADERS
+else
+CFLAGS ?= -Wall -Wextra -Werror -g -O0 -std=c++17 \
+          -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr \
+          -Wold-style-cast -Wconversion -Wuseless-cast \
+          -Wzero-as-null-pointer-constant -Wmaybe-uninitialized \
+          -DLIBFT_INTERNAL_HEADERS
+endif
 
 CLEAN_DIRS ?= $(wildcard objs*)
 CLEAN_FILES ?= $(TARGET) $(OBJS) $(DEPS)

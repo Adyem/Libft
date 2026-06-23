@@ -51,7 +51,18 @@ DEBUG_DEPS ?= $(DEBUG_OBJS:.o=.d)
 
 MODULE_CFLAGS_EXTRA ?=
 MODULE_MMFLAGS_EXTRA ?=
-CFLAGS ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast $(MODULE_CFLAGS_EXTRA)
+ifeq ($(shell uname -s 2>/dev/null),Darwin)
+CFLAGS ?= -Wall -Wextra -Werror -g -O0 -std=c++17 \
+          -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr \
+          -Wno-format-nonliteral -Wno-tautological-compare \
+          -DLIBFT_INTERNAL_HEADERS $(MODULE_CFLAGS_EXTRA)
+else
+CFLAGS ?= -Wall -Wextra -Werror -g -O0 -std=c++17 \
+          -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr \
+          -Wold-style-cast -Wconversion -Wuseless-cast \
+          -Wzero-as-null-pointer-constant -Wmaybe-uninitialized \
+          -DLIBFT_INTERNAL_HEADERS $(MODULE_CFLAGS_EXTRA)
+endif
 MMFLAGS ?= $(CFLAGS) $(MODULE_MMFLAGS_EXTRA)
 
 CLEAN_OBJS ?= $(shell find . -type f \( -name *.o -o -name *.d \
