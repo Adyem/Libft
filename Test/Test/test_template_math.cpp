@@ -1,4 +1,6 @@
 #include "../test_internal.hpp"
+
+#include <cmath>
 #include "../../Modules/Template/math.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 
@@ -35,7 +37,7 @@ FT_TEST(test_template_math_ft_max_basic)
     FT_ASSERT_EQ(7, ft_max(7, 3));
     FT_ASSERT_EQ(5, ft_max(2, 5));
     mixed_result = ft_max(3, 4.5);
-    FT_ASSERT(mixed_result == 4.5);
+    FT_ASSERT(std::fabs(mixed_result - 4.5) < 0.000001);
     return (1);
 }
 
@@ -46,7 +48,7 @@ FT_TEST(test_template_math_ft_min_basic)
     FT_ASSERT_EQ(3, ft_min(7, 3));
     FT_ASSERT_EQ(-2, ft_min(-2, 5));
     mixed_result = ft_min(3, 4.5);
-    FT_ASSERT(mixed_result == 3.0);
+    FT_ASSERT(std::fabs(mixed_result - 3.0) < 0.000001);
     return (1);
 }
 

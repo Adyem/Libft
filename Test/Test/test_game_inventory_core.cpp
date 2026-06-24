@@ -102,12 +102,12 @@ FT_TEST(test_game_inventory_remove_clears_usage)
     shield->set_width(2);
     shield->set_height(2);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(shield));
-    FT_ASSERT_EQ((size_t)4, inventory.get_used());
+    FT_ASSERT_EQ(static_cast<size_t>(4), inventory.get_used());
     FT_ASSERT_EQ(2, inventory.get_current_weight());
 
     inventory.remove_item(0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
-    FT_ASSERT_EQ((size_t)0, inventory.get_used());
+    FT_ASSERT_EQ(static_cast<size_t>(0), inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(0, inventory.count_item(7));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shield->get_error());
@@ -184,9 +184,9 @@ FT_TEST(test_game_inventory_resize_updates_capacity)
     game_inventory inventory;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
 
-    FT_ASSERT_EQ((size_t)1, inventory.get_capacity());
+    FT_ASSERT_EQ(static_cast<size_t>(1), inventory.get_capacity());
     inventory.resize(3);
-    FT_ASSERT_EQ((size_t)3, inventory.get_capacity());
+    FT_ASSERT_EQ(static_cast<size_t>(3), inventory.get_capacity());
     return (1);
 }
 
@@ -216,7 +216,7 @@ FT_TEST(test_game_inventory_rejects_null_item)
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, inventory.add_item(none));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, inventory.get_error());
-    FT_ASSERT_EQ((size_t)0, inventory.get_used());
+    FT_ASSERT_EQ(static_cast<size_t>(0), inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     return (1);
 }
@@ -236,7 +236,7 @@ FT_TEST(test_game_inventory_splits_large_stack)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(arrows));
     FT_ASSERT_EQ(7, inventory.count_item(9));
-    FT_ASSERT_EQ((size_t)2, inventory.get_used());
+    FT_ASSERT_EQ(static_cast<size_t>(2), inventory.get_used());
     FT_ASSERT_EQ(7, inventory.get_current_weight());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, arrows->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
@@ -266,7 +266,7 @@ FT_TEST(test_game_inventory_full_addition_preserves_items)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(potion));
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(elixir));
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
-    FT_ASSERT_EQ((size_t)1, inventory.get_used());
+    FT_ASSERT_EQ(static_cast<size_t>(1), inventory.get_used());
     FT_ASSERT_EQ(1, inventory.count_item(3));
     FT_ASSERT_EQ(0, inventory.count_item(4));
     FT_ASSERT_EQ(1, inventory.get_current_weight());

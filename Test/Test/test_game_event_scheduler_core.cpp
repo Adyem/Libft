@@ -175,7 +175,7 @@ FT_TEST(test_game_event_scheduler_processes_ready_events)
     scheduler.update_events(world, 1);
     scheduler.dump_events(remaining);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
-    FT_ASSERT_EQ((size_t)0, remaining.size());
+    FT_ASSERT_EQ(static_cast<size_t>(0), remaining.size());
     FT_ASSERT_EQ(1, callback_runs);
     return (1);
 }
@@ -198,7 +198,7 @@ FT_TEST(test_game_event_scheduler_reschedules_remaining_events)
     scheduler.update_events(world, 1);
     scheduler.dump_events(pending);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
-    FT_ASSERT_EQ((size_t)1, pending.size());
+    FT_ASSERT_EQ(static_cast<size_t>(1), pending.size());
     FT_ASSERT_EQ(22, pending[0]->get_id());
     FT_ASSERT_EQ(2, pending[0]->get_duration());
     return (1);
@@ -220,8 +220,8 @@ FT_TEST(test_game_event_scheduler_rejects_null_world)
     scheduler.update_events(world, 1);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, scheduler.get_error());
     scheduler.dump_events(queued);
-    FT_ASSERT_EQ((size_t)1, scheduler.size());
-    FT_ASSERT_EQ((size_t)1, queued.size());
+    FT_ASSERT_EQ(static_cast<size_t>(1), scheduler.size());
+    FT_ASSERT_EQ(static_cast<size_t>(1), queued.size());
     return (1);
 }
 
@@ -246,8 +246,8 @@ FT_TEST(test_game_event_scheduler_profiles_updates)
     FT_ASSERT_EQ(0, profile.update_count);
     FT_ASSERT_EQ(0, profile.events_processed);
     FT_ASSERT_EQ(0, profile.events_rescheduled);
-    FT_ASSERT_EQ((size_t)0, profile.max_queue_depth);
-    FT_ASSERT_EQ((size_t)0, profile.max_ready_batch);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_queue_depth);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_ready_batch);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.last_error_code);
     return (1);
 }
@@ -274,8 +274,8 @@ FT_TEST(test_game_event_scheduler_reset_profile_clears_metrics)
     FT_ASSERT_EQ(0, profile.update_count);
     FT_ASSERT_EQ(0, profile.events_processed);
     FT_ASSERT_EQ(0, profile.events_rescheduled);
-    FT_ASSERT_EQ((size_t)0, profile.max_queue_depth);
-    FT_ASSERT_EQ((size_t)0, profile.max_ready_batch);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_queue_depth);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_ready_batch);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.last_error_code);
     return (1);
 }
@@ -295,7 +295,7 @@ FT_TEST(test_game_event_scheduler_size_tracks_scheduled_events)
     second->set_duration(3);
     scheduler.schedule_event(first);
     scheduler.schedule_event(second);
-    FT_ASSERT_EQ((size_t)2, scheduler.size());
+    FT_ASSERT_EQ(static_cast<size_t>(2), scheduler.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
     return (1);
 }
@@ -314,7 +314,7 @@ FT_TEST(test_game_event_scheduler_cancel_existing_event_clears_queue)
     scheduler.schedule_event(quest);
     scheduler.cancel_event(33);
     scheduler.dump_events(events);
-    FT_ASSERT_EQ((size_t)0, events.size());
+    FT_ASSERT_EQ(static_cast<size_t>(0), events.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
     return (1);
 }
@@ -328,7 +328,7 @@ FT_TEST(test_game_event_scheduler_update_without_events_is_noop)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
 
     scheduler.update_events(world, 1);
-    FT_ASSERT_EQ((size_t)0, scheduler.size());
+    FT_ASSERT_EQ(static_cast<size_t>(0), scheduler.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.get_error());
     return (1);
 }
@@ -344,8 +344,8 @@ FT_TEST(test_game_event_scheduler_snapshot_without_profiling_is_zeroed)
     FT_ASSERT_EQ(0, profile.update_count);
     FT_ASSERT_EQ(0, profile.events_processed);
     FT_ASSERT_EQ(0, profile.events_rescheduled);
-    FT_ASSERT_EQ((size_t)0, profile.max_queue_depth);
-    FT_ASSERT_EQ((size_t)0, profile.max_ready_batch);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_queue_depth);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_ready_batch);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.last_error_code);
     return (1);
 }
@@ -384,8 +384,8 @@ FT_TEST(test_game_event_scheduler_profile_counts_reschedules)
     FT_ASSERT_EQ(0, profile.update_count);
     FT_ASSERT_EQ(0, profile.events_processed);
     FT_ASSERT_EQ(0, profile.events_rescheduled);
-    FT_ASSERT_EQ((size_t)0, profile.max_queue_depth);
-    FT_ASSERT_EQ((size_t)0, profile.max_ready_batch);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_queue_depth);
+    FT_ASSERT_EQ(static_cast<size_t>(0), profile.max_ready_batch);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.last_error_code);
     return (1);
 }

@@ -254,8 +254,9 @@ FT_TEST(test_pf_printf_writes_to_stdout)
 FT_TEST(test_pf_custom_specifier_formats_stream)
 {
     char    buffer[64];
+    char    context[] = "tag:";
 
-    FT_ASSERT_EQ(0, pf_register_custom_specifier('T', pf_test_custom_handler, (void *)"tag:"));
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('T', pf_test_custom_handler, context));
     t_pf_snprintf_plain plain_pf_snprintf = pf_snprintf;
     int length = plain_pf_snprintf(buffer, sizeof(buffer), "%T", "value");
     int unregister_status = pf_unregister_custom_specifier('T');
@@ -270,9 +271,10 @@ FT_TEST(test_pf_custom_specifier_formats_fd)
     int     pipe_fds[2];
     ssize_t bytes_read;
     char    buffer[64];
+    char    context[] = "fd:";
 
     FT_ASSERT(create_pipe(pipe_fds));
-    FT_ASSERT_EQ(0, pf_register_custom_specifier('Y', pf_test_custom_handler, (void *)"fd:"));
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('Y', pf_test_custom_handler, context));
     t_pf_printf_fd_plain plain_pf_printf_fd = pf_printf_fd;
     int printed = plain_pf_printf_fd(pipe_fds[1], "%Y!", "output");
     FT_ASSERT(close_pipe_end(pipe_fds[1]));

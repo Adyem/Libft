@@ -126,7 +126,7 @@ FT_TEST(test_scma_get_size_mutex_lock_failure)
     }
     pt_recursive_mutex_lock_override_error_code.store(FT_ERR_SYS_MUTEX_LOCK_FAILED,
         std::memory_order_release);
-    FT_ASSERT_EQ((ft_size_t)0, scma_get_size(handle));
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), scma_get_size(handle));
     scma_mutex_failure_cleanup();
     return (1);
 }

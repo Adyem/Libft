@@ -248,7 +248,7 @@ FT_TEST(test_data_buffer_move_constructor_preserves_state_and_thread_safety)
         FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_buffer._initialised_state);
         FT_ASSERT_EQ(FT_TRUE, moved_buffer.is_thread_safe());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_operation_error());
-        FT_ASSERT_EQ((ft_size_t)0, moved_buffer.tell());
+        FT_ASSERT_EQ(static_cast<ft_size_t>(0), moved_buffer.tell());
         moved_buffer >> read_value;
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_operation_error());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, read_value.get_error());
@@ -337,14 +337,14 @@ FT_TEST(test_ft_ofstream_move_constructor_preserves_open_file)
     (void)unlink(file_path);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_stream.open(file_path));
-    FT_ASSERT_EQ((ssize_t)3, source_stream.write("one"));
+    FT_ASSERT_EQ(static_cast<ssize_t>(3), source_stream.write("one"));
     {
         ft_ofstream moved_stream;
 
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.initialize());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.move(source_stream));
         FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, source_stream._initialised_state);
-        FT_ASSERT_EQ((ssize_t)3, moved_stream.write("two"));
+        FT_ASSERT_EQ(static_cast<ssize_t>(3), moved_stream.write("two"));
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.close());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_stream.destroy());
     }
@@ -354,7 +354,7 @@ FT_TEST(test_ft_ofstream_move_constructor_preserves_open_file)
     bytes_read = fread(read_buffer, 1, sizeof(read_buffer) - 1,
         file_pointer);
     ft_fclose(file_pointer);
-    FT_ASSERT_EQ((size_t)6, bytes_read);
+    FT_ASSERT_EQ(static_cast<size_t>(6), bytes_read);
     FT_ASSERT_EQ(0, ft_strcmp(read_buffer, "onetwo"));
     (void)unlink(file_path);
 #if defined(_WIN32) || defined(_WIN64)
@@ -369,8 +369,8 @@ FT_TEST(test_data_buffer_initialize_sets_empty_success_state)
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize());
     FT_ASSERT_EQ(FT_CLASS_STATE_INITIALISED, buffer_value._initialised_state);
-    FT_ASSERT_EQ((ft_size_t)0, buffer_value.size());
-    FT_ASSERT_EQ((ft_size_t)0, buffer_value.tell());
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), buffer_value.size());
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), buffer_value.tell());
     FT_ASSERT_EQ(FT_TRUE, buffer_value.good());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
     return (1);
@@ -400,8 +400,8 @@ FT_TEST(test_data_buffer_reinitialize_after_destroy_resets_cursor_and_size)
     FT_ASSERT(buffer_value.size() > 0U);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.initialize());
-    FT_ASSERT_EQ((ft_size_t)0, buffer_value.size());
-    FT_ASSERT_EQ((ft_size_t)0, buffer_value.tell());
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), buffer_value.size());
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), buffer_value.tell());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_value.destroy());
     return (1);
 }
@@ -418,7 +418,7 @@ FT_TEST(test_data_buffer_move_destroyed_source_marks_destination_destroyed)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_buffer.move(source_buffer));
     FT_ASSERT_EQ(FT_CLASS_STATE_DESTROYED, destination_buffer._initialised_state);
     FT_ASSERT_EQ(ft_nullptr, destination_buffer._mutex);
-    FT_ASSERT_EQ((ft_size_t)0, destination_buffer._read_pos);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), destination_buffer._read_pos);
     return (1);
 }
 

@@ -306,17 +306,23 @@ FT_TEST(test_pf_printf_fd_percent_escape)
     return (1);
 }
 
+#if defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+
 FT_TEST(test_pf_custom_specifier_register_and_format)
 {
     char buffer[64];
     char format[3];
+    char context[] = "pre:";
     int register_result;
 
     format[0] = '%';
     format[1] = 'Q';
     format[2] = '\0';
     pf_unregister_custom_specifier('Q');
-    register_result = pf_register_custom_specifier('Q', pf_custom_ok_handler, (void *)"pre:");
+    register_result = pf_register_custom_specifier('Q', pf_custom_ok_handler, context);
     FT_ASSERT_EQ(0, register_result);
     FT_ASSERT_EQ(9, pf_snprintf(buffer, sizeof(buffer), format, "value"));
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "pre:value"));
@@ -326,8 +332,9 @@ FT_TEST(test_pf_custom_specifier_register_and_format)
 
 FT_TEST(test_pf_custom_specifier_duplicate_register_fails)
 {
-    FT_ASSERT_EQ(0, pf_register_custom_specifier('R', pf_custom_ok_handler, (void *)"x:"));
-    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, pf_register_custom_specifier('R', pf_custom_ok_handler, (void *)"x:"));
+    char context[] = "x:";
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('R', pf_custom_ok_handler, context));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, pf_register_custom_specifier('R', pf_custom_ok_handler, context));
     FT_ASSERT_EQ(0, pf_unregister_custom_specifier('R'));
     return (1);
 }
@@ -352,6 +359,10 @@ FT_TEST(test_pf_custom_specifier_handler_failure_propagates)
     return (1);
 }
 
+#if defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif
+
 FT_TEST(test_pf_enable_thread_safety_idempotent)
 {
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pf_enable_thread_safety());
@@ -362,8 +373,9 @@ FT_TEST(test_pf_enable_thread_safety_idempotent)
 
 FT_TEST(test_pf_disable_thread_safety_without_enable_is_safe)
 {
+    char context[] = "a:";
     pf_disable_thread_safety();
-    FT_ASSERT_EQ(0, pf_register_custom_specifier('Z', pf_custom_ok_handler, (void *)"a:"));
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('Z', pf_custom_ok_handler, context));
     FT_ASSERT_EQ(0, pf_unregister_custom_specifier('Z'));
     return (1);
 }

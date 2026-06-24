@@ -33,7 +33,7 @@ FT_TEST(test_math_fabs_negative_zero_returns_positive_zero)
     double result;
 
     result = math_fabs(-0.0);
-    FT_ASSERT(result == 0.0);
+    FT_ASSERT(math_fabs(result) < 0.000001);
     FT_ASSERT(math_signbit(result) == 0);
     return (1);
 }

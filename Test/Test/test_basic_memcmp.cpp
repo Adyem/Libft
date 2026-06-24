@@ -68,7 +68,7 @@ FT_TEST(test_basic_memcmp_high_bit)
 {
     char a[1];
     char b[1];
-    a[0] = (char)0x80;
+    a[0] = static_cast<char>(0x80);
     b[0] = 0;
     FT_ASSERT(ft_memcmp(a, b, 1) > 0);
     return (1);

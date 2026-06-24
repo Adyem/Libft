@@ -5,7 +5,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-#if NETWORKING_HAS_OPENSSL
+#if defined(NETWORKING_HAS_OPENSSL) && NETWORKING_HAS_OPENSSL
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 #include <openssl/x509.h>

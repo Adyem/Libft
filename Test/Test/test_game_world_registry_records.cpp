@@ -68,7 +68,7 @@ FT_TEST(test_world_registry_register_and_fetch_records)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(2, fetched_world.get_world_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
-    FT_ASSERT_EQ((size_t)1, fetched_world.get_region_ids().size());
+    FT_ASSERT_EQ(static_cast<size_t>(1), fetched_world.get_region_ids().size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
     FT_ASSERT_EQ(4, fetched_world.get_region_ids()[0]);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());

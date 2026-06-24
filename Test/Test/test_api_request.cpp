@@ -1820,7 +1820,8 @@ FT_TEST(test_api_request_send_failure_sets_errno)
     api_request_small_delay();
     FT_ASSERT(api_request_send_failure_server_wait_until_ready());
     result = api_request_string("127.0.0.1",
-            g_api_request_send_failure_server_port.load(std::memory_order_acquire),
+            static_cast<uint16_t>(g_api_request_send_failure_server_port.load(
+                    std::memory_order_acquire)),
             "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     server_thread.join();
     FT_ASSERT(result == ft_nullptr);
@@ -1997,7 +1998,7 @@ FT_TEST(test_api_request_stream_large_response)
     FT_ASSERT(context.headers_received);
     FT_ASSERT_EQ(200, context.status_code);
     FT_ASSERT(context.final_received);
-    FT_ASSERT_EQ((size_t)(2 * 1024 * 1024), context.total_bytes);
+    FT_ASSERT_EQ(static_cast<size_t>(2 * 1024 * 1024), context.total_bytes);
     FT_ASSERT(context.chunk_count != 0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.destroy());
     return (1);
@@ -2031,7 +2032,7 @@ FT_TEST(test_api_request_stream_chunked_response)
     FT_ASSERT(context.headers_received);
     FT_ASSERT_EQ(200, context.status_code);
     FT_ASSERT(context.final_received);
-    FT_ASSERT_EQ((size_t)24, context.total_bytes);
+    FT_ASSERT_EQ(static_cast<size_t>(24), context.total_bytes);
     FT_ASSERT(context.chunk_count >= 1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.destroy());
     return (1);
@@ -2473,14 +2474,14 @@ FT_TEST(test_http2_stream_manager_flow_control)
     FT_ASSERT(manager.append_data(1, "ABCD", 4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
     window_value = manager.get_local_window(1);
-    FT_ASSERT_EQ((uint32_t)4, window_value);
+    FT_ASSERT_EQ(static_cast<uint32_t>(4), window_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
     FT_ASSERT(!manager.reserve_send_window(1, 16));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, manager.get_error());
     FT_ASSERT(manager.reserve_send_window(1, 6));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
     window_value = manager.get_remote_window(1);
-    FT_ASSERT_EQ((uint32_t)6, window_value);
+    FT_ASSERT_EQ(static_cast<uint32_t>(6), window_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
     FT_ASSERT(manager.append_data(1, "EFGH", 4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
@@ -2508,9 +2509,9 @@ FT_TEST(test_http2_stream_manager_priority_reassignment)
     FT_ASSERT(manager.update_priority(5, 0, 10, false));
     FT_ASSERT(manager.update_priority(3, 0, 25, true));
     FT_ASSERT(manager.get_priority(5, dependency_identifier, weight_value, exclusive_flag));
-    FT_ASSERT_EQ((uint32_t)3, dependency_identifier);
+    FT_ASSERT_EQ(static_cast<uint32_t>(3), dependency_identifier);
     FT_ASSERT(manager.get_priority(3, dependency_identifier, weight_value, exclusive_flag));
-    FT_ASSERT_EQ((uint32_t)0, dependency_identifier);
+    FT_ASSERT_EQ(static_cast<uint32_t>(0), dependency_identifier);
     FT_ASSERT(manager.close_stream(5));
     FT_ASSERT(manager.close_stream(3));
     FT_ASSERT(manager.close_stream(1));
@@ -2544,11 +2545,11 @@ FT_TEST(test_http2_frame_copy_move_preserve_state)
         FT_ASSERT_EQ(FT_TRUE, copied.is_thread_safe());
         FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, copied.get_error());
         FT_ASSERT(copied.get_type(type_value));
-        FT_ASSERT_EQ((uint8_t)0x5, type_value);
+        FT_ASSERT_EQ(static_cast<uint8_t>(0x5), type_value);
         FT_ASSERT(copied.get_flags(flags_value));
-        FT_ASSERT_EQ((uint8_t)0x3, flags_value);
+        FT_ASSERT_EQ(static_cast<uint8_t>(0x3), flags_value);
         FT_ASSERT(copied.get_stream_identifier(stream_identifier));
-        FT_ASSERT_EQ((uint32_t)11, stream_identifier);
+        FT_ASSERT_EQ(static_cast<uint32_t>(11), stream_identifier);
         FT_ASSERT(copied.copy_payload(copied_payload));
         FT_ASSERT(copied_payload == "abc");
     }
@@ -2666,9 +2667,10 @@ FT_TEST(test_http2_settings_apply_remote_settings)
     FT_ASSERT(settings.apply_remote_settings(frame, manager));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
     window_value = manager.get_remote_window(1);
-    FT_ASSERT_EQ((uint32_t)1024, window_value);
+    FT_ASSERT_EQ(static_cast<uint32_t>(1024), window_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
-    FT_ASSERT_EQ((uint32_t)1024, settings.get_initial_remote_window());
+    FT_ASSERT_EQ(static_cast<uint32_t>(1024),
+            settings.get_initial_remote_window());
     FT_ASSERT(manager.close_stream(1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, manager.get_error());
     return (1);

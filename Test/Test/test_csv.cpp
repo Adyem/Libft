@@ -1,4 +1,6 @@
 #include "../test_internal.hpp"
+
+#include <cmath>
 #include "../../Modules/CMA/CMA.hpp"
 #include "../../Modules/CSV/csv.hpp"
 #include "../../Modules/File/file_utils.hpp"
@@ -313,7 +315,7 @@ FT_TEST(test_csv_document_supports_header_lookup_typed_access_and_row_iteration)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_uint64(1, "count", &count_value));
     FT_ASSERT_EQ(static_cast<uint64_t>(9000), count_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_double(1, "ratio", &ratio_value));
-    FT_ASSERT(ratio_value == 3.5);
+    FT_ASSERT(std::fabs(ratio_value - 3.5) < 0.000001);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_bool(1, "enabled", &enabled_value));
     FT_ASSERT_EQ(FT_TRUE, enabled_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_int64(2, 1, &score_value));
@@ -321,9 +323,9 @@ FT_TEST(test_csv_document_supports_header_lookup_typed_access_and_row_iteration)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_uint64(2, 2, &count_value));
     FT_ASSERT_EQ(static_cast<uint64_t>(12), count_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_double(2, 2, &ratio_value));
-    FT_ASSERT(ratio_value == 12.0);
+    FT_ASSERT(std::fabs(ratio_value - 12.0) < 0.000001);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_double(2, 3, &ratio_value));
-    FT_ASSERT(ratio_value == 2.25);
+    FT_ASSERT(std::fabs(ratio_value - 2.25) < 0.000001);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_bool(2, "enabled", &enabled_value));
     FT_ASSERT_EQ(FT_FALSE, enabled_value);
     row_pointer = document.get_row(2, &column_count);

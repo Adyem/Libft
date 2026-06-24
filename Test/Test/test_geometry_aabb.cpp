@@ -423,11 +423,15 @@ static int aabb_move_destroyed_destination_succeeds_operation()
     move_error = destination.move(source);
     if (move_error != FT_ERR_SUCCESS)
         return (0);
-    if (destination.get_minimum_x() != 0.0 || destination.get_minimum_y() != 0.0
-        || destination.get_maximum_x() != 1.0 || destination.get_maximum_y() != 1.0)
+    if (std::fabs(destination.get_minimum_x()) > 0.000001
+        || std::fabs(destination.get_minimum_y()) > 0.000001
+        || std::fabs(destination.get_maximum_x() - 1.0) > 0.000001
+        || std::fabs(destination.get_maximum_y() - 1.0) > 0.000001)
         return (0);
-    if (source.get_minimum_x() != 0.0 || source.get_minimum_y() != 0.0
-        || source.get_maximum_x() != 0.0 || source.get_maximum_y() != 0.0)
+    if (std::fabs(source.get_minimum_x()) > 0.000001
+        || std::fabs(source.get_minimum_y()) > 0.000001
+        || std::fabs(source.get_maximum_x()) > 0.000001
+        || std::fabs(source.get_maximum_y()) > 0.000001)
         return (0);
     return (1);
 }

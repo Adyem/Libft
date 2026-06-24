@@ -64,7 +64,7 @@ FT_TEST(test_ft_trie_move_constructor_preserves_entries_and_thread_safety)
     FT_ASSERT(found_value != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_trie_pointer->get_error());
     FT_ASSERT_EQ(42, *found_value->_value_pointer);
-    FT_ASSERT_EQ((ft_size_t)6, found_value->_key_length);
+    FT_ASSERT_EQ(static_cast<ft_size_t>(6), found_value->_key_length);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_trie.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_trie.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_trie.destroy());

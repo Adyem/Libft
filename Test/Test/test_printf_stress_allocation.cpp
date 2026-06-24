@@ -142,13 +142,15 @@ static int pf_run_stress_snprintf_with_limit(ft_size_t limit, char specifier,
 {
     char format[3];
     char buffer[64];
+    t_pf_snprintf_plain plain_pf_snprintf;
     int result;
 
     format[0] = '%';
     format[1] = specifier;
     format[2] = '\0';
     cma_set_alloc_limit(limit);
-    result = pf_snprintf(buffer, sizeof(buffer), format, value);
+    plain_pf_snprintf = pf_snprintf;
+    result = plain_pf_snprintf(buffer, sizeof(buffer), format, value);
     cma_set_alloc_limit(0);
     return (result);
 }
@@ -290,15 +292,17 @@ FT_TEST(test_printf_stress_custom_echo_null_input)
 {
     char format[3];
     char output_buffer[64];
+    char context[] = "prefix:";
+    t_pf_snprintf_plain plain_pf_snprintf;
     int printed;
 
     format[0] = '%';
     format[1] = 'K';
     format[2] = '\0';
     pf_unregister_custom_specifier('K');
-    FT_ASSERT_EQ(0, pf_register_custom_specifier('K', pf_custom_echo_handler,
-            (void *)"prefix:"));
-    printed = pf_snprintf(output_buffer, sizeof(output_buffer), format,
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('K', pf_custom_echo_handler, context));
+    plain_pf_snprintf = pf_snprintf;
+    printed = plain_pf_snprintf(output_buffer, sizeof(output_buffer), format,
             static_cast<const char *>(ft_nullptr));
     FT_ASSERT_EQ(13, printed);
     FT_ASSERT_EQ(0, ft_strcmp(output_buffer, "prefix:(null)"));
@@ -310,6 +314,8 @@ FT_TEST(test_printf_stress_thread_safety_toggle_and_format)
 {
     char format[3];
     char output_buffer[64];
+    char context[] = "id:";
+    t_pf_snprintf_plain plain_pf_snprintf;
 
     format[0] = '%';
     format[1] = 'Q';
@@ -319,9 +325,10 @@ FT_TEST(test_printf_stress_thread_safety_toggle_and_format)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pf_enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, pf_enable_thread_safety());
     pf_unregister_custom_specifier('Q');
-    FT_ASSERT_EQ(0, pf_register_custom_specifier('Q', pf_custom_echo_handler,
-            (void *)"id:"));
-    FT_ASSERT_EQ(5, pf_snprintf(output_buffer, sizeof(output_buffer), format, "42"));
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('Q', pf_custom_echo_handler, context));
+    plain_pf_snprintf = pf_snprintf;
+    FT_ASSERT_EQ(5, plain_pf_snprintf(output_buffer, sizeof(output_buffer),
+            format, "42"));
     FT_ASSERT_EQ(0, ft_strcmp(output_buffer, "id:42"));
     FT_ASSERT_EQ(0, pf_unregister_custom_specifier('Q'));
     pf_disable_thread_safety();

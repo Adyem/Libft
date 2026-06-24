@@ -43,7 +43,9 @@ static void *scheduler_schedule_task(void *argument)
             arguments->result_code = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance->initialize());
+        arguments->result_code = event_instance->initialize();
+        if (arguments->result_code != FT_ERR_SUCCESS)
+            return (ft_nullptr);
         if (event_instance->get_error() != FT_ERR_SUCCESS)
         {
             arguments->result_code = event_instance->get_error();

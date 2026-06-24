@@ -22,10 +22,18 @@ static void *buff_increment_task(void *argument)
     if (args == ft_nullptr)
         return (ft_nullptr);
     game_buff shared_buff;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_buff.initialize());
+    if (shared_buff.initialize() != FT_ERR_SUCCESS)
+    {
+        ft_test_fail("shared_buff.initialize()", __FILE__, __LINE__);
+        return (ft_nullptr);
+    }
     for (int index = 0; index < args->iterations; ++index)
         shared_buff.add_modifier1(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_buff.destroy());
+    if (shared_buff.destroy() != FT_ERR_SUCCESS)
+    {
+        ft_test_fail("shared_buff.destroy()", __FILE__, __LINE__);
+        return (ft_nullptr);
+    }
     return (ft_nullptr);
 }
 
@@ -35,10 +43,18 @@ static void *skill_cooldown_task(void *argument)
     if (args == ft_nullptr)
         return (ft_nullptr);
     game_skill shared_skill;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_skill.initialize());
+    if (shared_skill.initialize() != FT_ERR_SUCCESS)
+    {
+        ft_test_fail("shared_skill.initialize()", __FILE__, __LINE__);
+        return (ft_nullptr);
+    }
     for (int index = 0; index < args->iterations; ++index)
         shared_skill.add_cooldown(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_skill.destroy());
+    if (shared_skill.destroy() != FT_ERR_SUCCESS)
+    {
+        ft_test_fail("shared_skill.destroy()", __FILE__, __LINE__);
+        return (ft_nullptr);
+    }
     return (ft_nullptr);
 }
 

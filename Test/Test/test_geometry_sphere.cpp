@@ -415,11 +415,15 @@ static int sphere_move_destroyed_destination_succeeds_operation()
     move_error = destination.move(source);
     if (move_error != FT_ERR_SUCCESS)
         return (0);
-    if (destination.get_center_x() != 0.0 || destination.get_center_y() != 0.0
-        || destination.get_center_z() != 0.0 || destination.get_radius() != 1.0)
+    if (std::fabs(destination.get_center_x()) > 0.000001
+        || std::fabs(destination.get_center_y()) > 0.000001
+        || std::fabs(destination.get_center_z()) > 0.000001
+        || std::fabs(destination.get_radius() - 1.0) > 0.000001)
         return (0);
-    if (source.get_center_x() != 0.0 || source.get_center_y() != 0.0
-        || source.get_center_z() != 0.0 || source.get_radius() != 0.0)
+    if (std::fabs(source.get_center_x()) > 0.000001
+        || std::fabs(source.get_center_y()) > 0.000001
+        || std::fabs(source.get_center_z()) > 0.000001
+        || std::fabs(source.get_radius()) > 0.000001)
         return (0);
     return (1);
 }

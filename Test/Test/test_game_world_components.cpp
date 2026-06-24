@@ -287,7 +287,7 @@ FT_TEST(test_game_world_copy_preserves_world_region_content)
 
     game_world &copy = world;
     FT_ASSERT_EQ(3, copy.get_world_region()->get_world_id());
-    FT_ASSERT_EQ((size_t)2, copy.get_world_region()->get_region_ids().size());
+    FT_ASSERT_EQ(static_cast<size_t>(2), copy.get_world_region()->get_region_ids().size());
     FT_ASSERT_EQ(5, copy.get_world_region()->get_region_ids()[0]);
     FT_ASSERT_EQ(9, copy.get_world_region()->get_region_ids()[1]);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
@@ -323,7 +323,7 @@ FT_TEST(test_game_world_copy_preserves_registered_regions)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_world_registry()->fetch_region(21, fetched_region));
     FT_ASSERT_STR_EQ("Shrine", fetched_region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_world_registry()->fetch_world(4, fetched_world));
-    FT_ASSERT_EQ((size_t)1, fetched_world.get_region_ids().size());
+    FT_ASSERT_EQ(static_cast<size_t>(1), fetched_world.get_region_ids().size());
     FT_ASSERT_EQ(21, fetched_world.get_region_ids()[0]);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
@@ -376,7 +376,7 @@ FT_TEST(test_game_world_move_transfers_world_region_data)
 
     game_world &moved = source;
     FT_ASSERT_EQ(8, moved.get_world_region()->get_world_id());
-    FT_ASSERT_EQ((size_t)2, moved.get_world_region()->get_region_ids().size());
+    FT_ASSERT_EQ(static_cast<size_t>(2), moved.get_world_region()->get_region_ids().size());
     FT_ASSERT_EQ(12, moved.get_world_region()->get_region_ids()[0]);
     FT_ASSERT_EQ(18, moved.get_world_region()->get_region_ids()[1]);
     source.get_world_region();
@@ -444,9 +444,9 @@ FT_TEST(test_game_world_exposes_economy_crafting_and_dialogue)
     game_world world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
 
-    FT_ASSERT_NE((void *)ft_nullptr, world.get_economy_table().get());
-    FT_ASSERT_NE((void *)ft_nullptr, world.get_crafting().get());
-    FT_ASSERT_NE((void *)ft_nullptr, world.get_dialogue_table().get());
+    FT_ASSERT(world.get_economy_table().get() != ft_nullptr);
+    FT_ASSERT(world.get_crafting().get() != ft_nullptr);
+    FT_ASSERT(world.get_dialogue_table().get() != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     return (1);
 }
