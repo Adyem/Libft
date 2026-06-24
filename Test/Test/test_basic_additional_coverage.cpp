@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "../../Modules/Basic/config.hpp"
 #include "../../Modules/Advanced/advanced.hpp"
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/CMA/CMA.hpp"

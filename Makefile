@@ -102,6 +102,11 @@ re:
 	$(MAKE) fclean
 	$(MAKE) all
 
+re-tests:
+	$(MAKE) fclean
+	$(MAKE) all
+	$(MAKE) tests
+
 $(TARGET): FORCE $(LIBS)
 	@mk/progress.sh finish
 	@$(RM) $@
@@ -279,7 +284,7 @@ fclean:
 			exit 1; \
 		fi
 
-.PHONY: all debug both template demo re clean fclean tests print-build-mode format sanitize-clean \
+.PHONY: all debug both template demo re re-tests clean fclean tests print-build-mode format sanitize-clean \
         asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests FORCE
 
 FORCE:

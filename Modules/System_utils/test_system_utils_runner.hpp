@@ -143,7 +143,19 @@ static bool ft_test_values_equal(const LeftType &left_value,
         right_numeric_value = static_cast<right_compare_type>(right_value);
         if constexpr (std::is_signed<left_compare_type>::value
             == std::is_signed<right_compare_type>::value)
-            return (left_numeric_value == right_numeric_value);
+        {
+            if constexpr (std::is_floating_point<left_compare_type>::value
+                || std::is_floating_point<right_compare_type>::value)
+            {
+                using common_t = std::common_type_t<
+                    left_compare_type, right_compare_type>;
+                const common_t lf = static_cast<common_t>(left_numeric_value);
+                const common_t rf = static_cast<common_t>(right_numeric_value);
+                return (std::memcmp(&lf, &rf, sizeof(common_t)) == 0);
+            }
+            else
+                return (left_numeric_value == right_numeric_value);
+        }
         else if constexpr (std::is_signed<left_compare_type>::value)
         {
             if (left_numeric_value < 0)

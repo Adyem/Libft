@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "../../Modules/Basic/config.hpp"
 #include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Advanced/advanced.hpp"
 #include "../../Modules/Errno/errno.hpp"
