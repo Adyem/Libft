@@ -35,6 +35,7 @@ For a broader architecture view grouped by layer, see [Docs/module_layering.md](
 | `File` | `Basic`, `CMA`, `CPP_class`, `Compatebility`, `Encryption`, `Errno`, `Observability`, `PThread`, `RNG`, `Template`, `Threading` |
 | `Filesystem` | `Basic`, `CMA`, `CPP_class`, `Compatebility`, `Errno`, `File`, `PThread`, `Time` |
 | `Game` | `Basic`, `Buffer`, `CMA`, `CPP_class`, `Errno`, `File`, `Geometry`, `JSon`, `Networking`, `Observability`, `PThread`, `Printf`, `Storage`, `System_utils`, `Template`, `Time` |
+| `GPGR` | `Basic`, `Compatebility`, `Printf` |
 | `Geometry` | `Errno`, `Math`, `PThread` |
 | `GetNextLine` | `Basic`, `CMA`, `CPP_class`, `Compatebility`, `Errno`, `PThread`, `Template` |
 | `HTML` | `Advanced`, `Basic`, `CMA`, `Compatebility`, `Errno`, `PThread`, `Printf`, `System_utils` |
@@ -223,6 +224,9 @@ graph TD
     Game --> System_utils
     Game --> Template
     Game --> Time
+    GPGR --> Basic
+    GPGR --> Compatebility
+    GPGR --> Printf
     Geometry --> Errno
     Geometry --> Math
     Geometry --> PThread

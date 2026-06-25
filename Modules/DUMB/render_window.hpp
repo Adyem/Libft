@@ -74,14 +74,15 @@ class ft_render_window
  #endif
 
         pt_recursive_mutex           *_mutex = ft_nullptr;
-        uint8_t                      _initialised_state;
+        uint8_t                      _initialised_state = FT_CLASS_STATE_UNINITIALISED;
 
         ft_render_framebuffer        _framebuffer;
         ft_render_depth_buffer       _depth_buffer;
-        ft_bool                      _is_initialised;
-        ft_bool                      _should_close;
+        ft_bool                      _is_initialised = FT_FALSE;
+        ft_bool                      _should_close = FT_FALSE;
 
-        void                         *_platform_state;
+        void                         *_platform_state = ft_nullptr;
+        void                         reset_render_window_runtime(void) noexcept;
         int32_t                      prepare_thread_safety(void) noexcept;
         uint32_t                     teardown_thread_safety(void) noexcept;
 

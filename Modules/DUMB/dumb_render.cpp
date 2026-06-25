@@ -137,17 +137,7 @@ ft_render_screen_size ft_render_get_primary_screen_size(void)
 
 ft_render_window::ft_render_window(void)
 {
-    this->_framebuffer.width = 0;
-    this->_framebuffer.height = 0;
-    this->_framebuffer.pixels = ft_nullptr;
-    this->_depth_buffer.width = 0;
-    this->_depth_buffer.height = 0;
-    this->_depth_buffer.values = ft_nullptr;
-
-    this->_is_initialised = FT_FALSE;
-    this->_should_close = FT_FALSE;
-    this->_platform_state = ft_nullptr;
-    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
+    this->reset_render_window_runtime();
     return ;
 }
 
@@ -155,6 +145,8 @@ ft_render_window::~ft_render_window(void)
 {
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
         (void)this->destroy();
+    this->reset_render_window_runtime();
+    this->_initialised_state = FT_CLASS_STATE_UNINITIALISED;
     return ;
 }
 
@@ -422,6 +414,9 @@ int32_t ft_render_window::initialize(const ft_render_window_desc &desc)
     if (platform_result.error_code != FT_ERR_SUCCESS)
     {
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)destroy_recursive_mutex(&this->_mutex);
+        this->reset_render_window_runtime();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (platform_result.error_code);
     }
     if (create_depth_buffer(&this->_depth_buffer, this->_framebuffer.width,
@@ -431,11 +426,10 @@ int32_t ft_render_window::initialize(const ft_render_window_desc &desc)
             &this->_platform_state,
             &this->_framebuffer
         );
-        this->_platform_state = ft_nullptr;
-        this->_framebuffer.width = 0;
-        this->_framebuffer.height = 0;
-        this->_framebuffer.pixels = ft_nullptr;
         (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        (void)destroy_recursive_mutex(&this->_mutex);
+        this->reset_render_window_runtime();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_NO_MEMORY);
     }
     this->_is_initialised = FT_TRUE;
@@ -711,6 +705,18 @@ ft_bool ft_render_window::should_close(void) const
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
         "ft_render_window::should_close");
     return (this->_should_close);
+}
+
+void ft_render_window::reset_render_window_runtime(void) noexcept
+{
+    this->_framebuffer.width = 0;
+    this->_framebuffer.height = 0;
+    this->_framebuffer.pixels = ft_nullptr;
+    destroy_depth_buffer(&this->_depth_buffer);
+    this->_is_initialised = FT_FALSE;
+    this->_should_close = FT_FALSE;
+    this->_platform_state = ft_nullptr;
+    return ;
 }
 
 int32_t ft_render_window::prepare_thread_safety(void) noexcept

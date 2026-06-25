@@ -110,6 +110,11 @@ Every module that allocates through this layer inherits the same mechanisms for 
   The module organizes rules, event queues, and validation routines so the flagship game projects have a stable foundation.
   Game/ exists to namespace game logic away from the engine utilities while still permitting reuse of general-purpose helpers.
 
+- `GPGR/`: Provides the OpenGL-backed renderer demo path with a minimal window abstraction, shader wrapper, and platform-specific GL loader.
+  It owns the cross-platform window creation flow while keeping platform quirks hidden behind one small API.
+  GPGR/ exists as the rendering surface for the demo path without pulling the rest of the library into a heavier graphics stack.
+  The module keeps backend-specific GL setup isolated from the code that consumes window and shader helpers.
+
 - `Voxel/`: Generates biome-aware voxel terrain and greedy chunk meshes when the voxel region backend is enabled.
   It owns the seeded heightmap logic, biome selection, tree templates, and frustum-aware mesh generation for chunked voxel worlds.
   Voxel/ sits beside Game/ so domain code can build on the same voxel primitives without carrying the implementation details everywhere.
