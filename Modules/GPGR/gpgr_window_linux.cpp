@@ -400,11 +400,11 @@ void ft_gpu_window_linux::poll_events() noexcept
             if (!this->_cursor_visible && this->_window != 0
                 && this->_invisible_cursor != 0 && !this->_grab_active)
             {
-                int32_t r = static_cast<int32_t>(XGrabPointer(this->_display,
+                int32_t r = XGrabPointer(this->_display,
                     this->_window, False,
                     PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
                     GrabModeAsync, GrabModeAsync,
-                    this->_window, this->_invisible_cursor, CurrentTime));
+                    this->_window, this->_invisible_cursor, CurrentTime);
                 if (r == GrabSuccess)
                     this->_grab_active = FT_TRUE;
                 else
@@ -431,11 +431,11 @@ void ft_gpu_window_linux::set_cursor_visible(ft_bool v) noexcept
         XFlush(this->_display);
         if (this->_grab_active == FT_FALSE)
         {
-            int32_t r = static_cast<int32_t>(XGrabPointer(this->_display, this->_window,
+            int32_t r = XGrabPointer(this->_display, this->_window,
                 False,
                 PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
                 GrabModeAsync, GrabModeAsync,
-                this->_window, this->_invisible_cursor, CurrentTime));
+                this->_window, this->_invisible_cursor, CurrentTime);
             if (r == GrabSuccess)
                 this->_grab_active = FT_TRUE;
             else

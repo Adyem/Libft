@@ -131,7 +131,8 @@ $(OBJDIR)/%.o: %.cpp
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
-			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(FIXDEP); \
 			printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
@@ -151,7 +152,8 @@ $(OBJDIR)/%.o: %.cpp
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
-		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(FIXDEP); \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 		count=$$(find $(OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
@@ -282,7 +284,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
-			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(FIXDEP); \
 			printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
@@ -302,7 +305,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
-		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@; \
+		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(FIXDEP); \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 		count=$$(find $(DEBUG_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
@@ -335,7 +339,8 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
-			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
+			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
+	$(FIXDEP); \
 			printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(EFF_TOTAL_SRCS) $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
@@ -355,7 +360,8 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
-		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@; \
+		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
+	$(FIXDEP); \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 		count=$$(find $(EFFICIENCY_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \

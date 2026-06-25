@@ -65,8 +65,23 @@ else
         -Wzero-as-null-pointer-constant -Wmaybe-uninitialized
 endif
 
+FIXDEP = dep_file="$(@:.o=.d)"; \
+         if [ -f "$$dep_file" ]; then \
+             dep_root="$(LIBFT_ROOT_DIR)"; \
+             case "$$dep_root" in \
+                 /mnt/[a-zA-Z]/*) \
+                     drive=$$(printf '%s' "$$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); \
+                     rest=$$(printf '%s' "$$dep_root" | sed "s|^/mnt/$$drive||"); \
+                     dep_root="$$drive:$$rest"; \
+                     ;; \
+             esac; \
+             dep_root="$${dep_root%/}/"; \
+             perl -0pi -e "s|\\Q$$dep_root\\E|./|g; s/\\r//g" "$$dep_file"; \
+         fi
+
 export BUILD_OUTPUT_SUFFIX
 export COMPILE_FLAGS
 export SANITIZER_FLAGS
 export SANITIZERS
+export FIXDEP
 endif

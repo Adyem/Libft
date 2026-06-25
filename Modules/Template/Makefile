@@ -17,11 +17,13 @@ all: $(TARGET)
 	fi
 
 $(TARGET): $(OBJS)
+	@$(RM) $@
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(FIXDEP)
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 		printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
