@@ -167,7 +167,7 @@ static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
 
 #if defined(_WIN32)
 void    dbg_print_stack_trace(void) noexcept;
-static INIT_ONCE    g_cmp_stack_trace_windows_symbols_once = INIT_ONCE_STATIC_INIT;
+static INIT_ONCE    g_cmp_stack_trace_windows_symbols_once = {};
 static ft_bool      g_cmp_stack_trace_windows_symbols_ready = FT_FALSE;
 
 static BOOL CALLBACK    cmp_stack_trace_initialize_windows_symbols(
