@@ -1,6 +1,6 @@
 # Debug
 
-The `Debug` module exposes stack trace capture/printing and address symbolization through the compatibility stack-trace helper. On Windows, the stack printer resolves symbols and source locations through the platform debug helpers. Crash-handler enable/disable calls are kept as portable module state toggles so the module builds on both Windows and POSIX.
+The `Debug` module exposes address symbolization and lightweight crash-trace toggles through the compatibility stack-trace helper. Crash-handler enable/disable calls are kept as portable module state toggles so the module builds on both Windows and POSIX.
 
 ## Public API
 
@@ -9,7 +9,7 @@ The `Debug` module exposes stack trace capture/printing and address symbolizatio
 - `dbg_disable_crash_stack_traces()` - Marks crash stack traces as disabled for the module.
 - `dbg_crash_stack_traces_enabled()` - Reports whether crash stack traces are currently enabled.
 - `dbg_trace_message(...)` - Writes a plain trace line to `stderr`.
-- `dbg_print_stack_trace()` - Prints the current thread's stack trace immediately.
+- `dbg_print_stack_trace()` - Compatibility no-op retained for symbol lookup and test coverage.
 - `dbg_symbolize_address(...)` - Resolves a code address into a symbol name and source location string.
 - `dbg_get_error()` - Returns the last debug-module error code.
 - `dbg_get_error_str()` - Returns readable text for the last debug-module error.

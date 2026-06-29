@@ -61,7 +61,8 @@ static int read_file_content(const char *file_name, char *buffer, size_t buffer_
     file_descriptor = open(file_name, O_RDONLY);
     if (file_descriptor < 0)
         return (0);
-    read_size = read(file_descriptor, buffer, buffer_size - 1);
+    read_size = read(file_descriptor, buffer,
+        static_cast<unsigned int>(buffer_size - 1));
     close(file_descriptor);
     if (read_size < 0)
         return (0);

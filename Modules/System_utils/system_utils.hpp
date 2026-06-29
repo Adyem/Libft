@@ -40,6 +40,7 @@ int32_t     su_close(int32_t file_descriptor);
 uint32_t    su_get_cpu_count(void);
 uint64_t su_get_total_memory(void);
 void    su_abort(void);
+void    su_exit(int32_t exit_code);
 void    su_sigabrt(void);
 void    su_sigfpe(void);
 void    su_sigill(void);

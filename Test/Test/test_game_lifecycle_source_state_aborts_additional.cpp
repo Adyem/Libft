@@ -85,6 +85,10 @@ static int expect_sigabrt_copy_from_uninitialised_source()
     int jump_result;
     TypeName *source_pointer;
     TypeName *destination_pointer;
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+    char output_buffer[8192];
 
     if (source_state_install_signal_handlers(old_action_abort, old_action_iot,
             iot_handler_installed) == 0)
@@ -100,10 +104,23 @@ static int expect_sigabrt_copy_from_uninitialised_source()
             return (0);
         return (0);
     }
+    if (test_capture_abort_output_begin(saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+    {
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
+        return (0);
+    }
     g_source_state_signal_caught = 0;
     jump_result = sigsetjmp(g_source_state_jump_buffer, 1);
     if (jump_result == 0)
         (void)destination_pointer->initialize(*source_pointer);
+    if (test_capture_abort_output_end(saved_stderr, pipe_read_descriptor,
+            pipe_write_descriptor, output_buffer, sizeof(output_buffer)) == 0)
+        return (0);
     if (source_state_restore_signal_handlers(old_action_abort, old_action_iot,
             iot_handler_installed) == 0)
     {
@@ -127,6 +144,10 @@ static int expect_sigabrt_move_from_uninitialised_source()
     int jump_result;
     TypeName *source_pointer;
     TypeName *destination_pointer;
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+    char output_buffer[8192];
 
     if (source_state_install_signal_handlers(old_action_abort, old_action_iot,
             iot_handler_installed) == 0)
@@ -142,11 +163,24 @@ static int expect_sigabrt_move_from_uninitialised_source()
             return (0);
         return (0);
     }
+    if (test_capture_abort_output_begin(saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+    {
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
+        return (0);
+    }
     g_source_state_signal_caught = 0;
     jump_result = sigsetjmp(g_source_state_jump_buffer, 1);
     if (jump_result == 0)
         (void)destination_pointer->initialize(
             static_cast<TypeName &&>(*source_pointer));
+    if (test_capture_abort_output_end(saved_stderr, pipe_read_descriptor,
+            pipe_write_descriptor, output_buffer, sizeof(output_buffer)) == 0)
+        return (0);
     if (source_state_restore_signal_handlers(old_action_abort, old_action_iot,
             iot_handler_installed) == 0)
     {

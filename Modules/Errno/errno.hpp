@@ -114,7 +114,7 @@ enum PTErrorCode : int32_t
 #define FT_ERR_IS_RECOVERABLE(error_code) ((error_code) > FT_ERR_SUCCESS)
 
 const char* ft_strerror(int32_t error_code);
-void        ft_perror(const char *error_msg, int32_t error_code);
+int32_t     ft_perror(const char *error_msg, int32_t error_code);
 void        ft_exit(const char *error_msg, int32_t exit_code);
 
 #endif

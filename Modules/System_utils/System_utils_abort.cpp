@@ -1,5 +1,4 @@
 #include "../Basic/class_nullptr.hpp"
-#include "../Compatebility/compatebility_stack_trace.hpp"
 #include "system_utils.hpp"
 #include <cstdlib>
 #include <cstdio>
@@ -10,28 +9,34 @@
 
 const char  *su_internal_take_abort_reason(void);
 
+static ft_bool su_abort_should_print_diagnostics(void) noexcept
+{
+#ifdef LIBFT_TEST_BUILD
+    return (FT_FALSE);
+#endif
+    return (FT_TRUE);
+}
+
 void    su_abort(void)
 {
-    void        *stack_frames[CMP_STACK_TRACE_MAX_FRAMES];
-    ft_size_t   frame_count;
     const char  *reason;
 
     reason = su_internal_take_abort_reason();
     if (reason == ft_nullptr)
         reason = "su_abort invoked";
-#ifndef LIBFT_TEST_BUILD
-    su_run_resource_tracers(reason);
-#endif
-    std::fprintf(stderr, "libft abort: %s\n", reason);
-    frame_count = cmp_stack_trace_capture(stack_frames,
-            CMP_STACK_TRACE_MAX_FRAMES, 1);
-    if (frame_count > 0)
+    if (su_abort_should_print_diagnostics() == FT_TRUE)
     {
-        std::fprintf(stderr, "libft abort: stack trace:\n");
-        cmp_stack_trace_print(stderr, stack_frames, frame_count);
+        su_run_resource_tracers(reason);
+        std::fprintf(stderr, "libft abort: %s\n", reason);
     }
     std::fflush(nullptr);
     (void)std::raise(SIGABRT);
     std::abort();
+    return ;
+}
+
+void    su_exit(int32_t exit_code)
+{
+    std::_Exit(exit_code);
     return ;
 }

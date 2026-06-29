@@ -114,9 +114,7 @@ static int32_t runtime_run_command(const std::string &command)
     int system_status;
     FILE *log_file;
 
-    ft_fprintf(stderr, "[secure_wipe] run: %s\n", command.c_str());
     system_status = system(command.c_str());
-    ft_fprintf(stderr, "[secure_wipe] status: %d\n", system_status);
 #if defined(_WIN32) || defined(_WIN64)
     if (system_status == 0 || system_status == 1)
         return (1);
@@ -360,6 +358,11 @@ static int32_t runtime_compile_and_run_helper(void)
 {
     s_runtime_file_guard file_guard;
     std::string project_root;
+    std::filesystem::path project_root_path;
+    std::filesystem::path source_path;
+    std::filesystem::path executable_path;
+    std::filesystem::path archive_path;
+    std::filesystem::path modules_path;
     const char *compiler;
     std::string compile_command;
     std::string run_command;
@@ -368,16 +371,22 @@ static int32_t runtime_compile_and_run_helper(void)
     project_root = runtime_project_root();
     if (project_root.empty())
         return (0);
+    project_root_path = std::filesystem::path(project_root);
+    source_path = project_root_path / "Test" / "secure_wipe_runtime_child.cpp";
+    executable_path = project_root_path / "Test" / "secure_wipe_runtime_child.exe";
+    archive_path = project_root_path / "Test" / "Full_Libft_test.a";
+    modules_path = project_root_path / "Modules";
     formatted_length = pf_snprintf(file_guard.source_path,
-        sizeof(file_guard.source_path), "%s/Test/secure_wipe_runtime_child.cpp",
-        project_root.c_str());
+        sizeof(file_guard.source_path), "%s",
+        source_path.string().c_str());
     if (formatted_length < 0
         || static_cast<ft_size_t>(formatted_length)
             >= sizeof(file_guard.source_path))
         return (0);
     file_guard.source_path_active = FT_TRUE;
     formatted_length = pf_snprintf(file_guard.executable_path,
-        sizeof(file_guard.executable_path), "%s.exe", file_guard.source_path);
+        sizeof(file_guard.executable_path), "%s",
+        executable_path.string().c_str());
     if (formatted_length < 0
         || static_cast<ft_size_t>(formatted_length)
             >= sizeof(file_guard.executable_path))
@@ -402,15 +411,14 @@ static int32_t runtime_compile_and_run_helper(void)
     compile_command += project_root;
     compile_command += "\"";
     compile_command += " -I\"";
-    compile_command += project_root;
-    compile_command += "/Modules\"";
+    compile_command += modules_path.string();
+    compile_command += "\"";
     compile_command += " \"";
     compile_command += file_guard.source_path;
     compile_command += "\"";
     compile_command += " -x none ";
     compile_command += "\"";
-    compile_command += project_root;
-    compile_command += "/Test/Full_Libft_test.a";
+    compile_command += archive_path.string();
     compile_command += "\"";
 #ifdef __APPLE__
     compile_command += " -pthread -lz";

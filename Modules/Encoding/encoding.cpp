@@ -474,6 +474,7 @@ static uint8_t *encoding_base32_decode_internal(const char *input,
     ft_size_t output_block_size;
     uint8_t block_values[8];
     ft_bool padding_started;
+    ft_size_t padding_count;
     int32_t value;
     int32_t block_error;
 
@@ -493,49 +494,66 @@ static uint8_t *encoding_base32_decode_internal(const char *input,
     }
     input_index = 0;
     output_index = 0;
+    block_index = 0;
+    padding_started = FT_FALSE;
+    padding_count = 0;
     while (input_index < input_size)
     {
-        block_index = 0;
-        padding_started = FT_FALSE;
-        while (block_index < 8 && input_index < input_size)
+        if (input[input_index] == '=')
         {
-            if (input[input_index] == '=')
-            {
-                padding_started = FT_TRUE;
-                input_index++;
-                break ;
-            }
-            value = encoding_base32_value(input[input_index]);
-            if (value < 0)
-            {
-                cma_free(output);
-                encoding_set_error(FT_ERR_INVALID_ARGUMENT);
-                return (ft_nullptr);
-            }
-            block_values[block_index] = static_cast<uint8_t>(value);
-            block_index++;
+            padding_started = FT_TRUE;
+            padding_count++;
             input_index++;
+            continue ;
         }
         if (padding_started == FT_TRUE)
         {
-            while (block_index < 8 && input_index < input_size)
-            {
-                if (input[input_index] != '=')
-                {
-                    cma_free(output);
-                    encoding_set_error(FT_ERR_INVALID_ARGUMENT);
-                    return (ft_nullptr);
-                }
-                block_index++;
-                input_index++;
-            }
-            if (block_index != 8 || input_index != input_size)
+            cma_free(output);
+            encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+            return (ft_nullptr);
+        }
+        value = encoding_base32_value(input[input_index]);
+        if (value < 0)
+        {
+            cma_free(output);
+            encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+            return (ft_nullptr);
+        }
+        block_values[block_index] = static_cast<uint8_t>(value);
+        block_index++;
+        input_index++;
+        if (block_index == 8)
+        {
+            block_error = encoding_base32_decode_block(block_values, 8,
+                    output + output_index, &output_block_size);
+            if (block_error != FT_ERR_SUCCESS)
             {
                 cma_free(output);
-                encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+                encoding_set_error(block_error);
                 return (ft_nullptr);
             }
+            output_index += output_block_size;
+            block_index = 0;
         }
+    }
+    if (padding_started == FT_TRUE)
+    {
+        if (block_index != 2 && block_index != 4 && block_index != 5
+            && block_index != 7)
+        {
+            cma_free(output);
+            encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+            return (ft_nullptr);
+        }
+        if (block_index + padding_count != 8)
+        {
+            cma_free(output);
+            encoding_set_error(FT_ERR_INVALID_ARGUMENT);
+            return (ft_nullptr);
+        }
+    }
+    if (block_index != 0)
+    {
         block_error = encoding_base32_decode_block(block_values, block_index,
                 output + output_index, &output_block_size);
         if (block_error != FT_ERR_SUCCESS)
@@ -545,14 +563,6 @@ static uint8_t *encoding_base32_decode_internal(const char *input,
             return (ft_nullptr);
         }
         output_index += output_block_size;
-        if (padding_started == FT_TRUE)
-            break ;
-        if (block_index < 8 && input_index != input_size)
-        {
-            cma_free(output);
-            encoding_set_error(FT_ERR_INVALID_ARGUMENT);
-            return (ft_nullptr);
-        }
     }
     if (output_size != ft_nullptr)
         *output_size = output_index;

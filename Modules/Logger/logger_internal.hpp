@@ -160,4 +160,9 @@ void network_sink_teardown_thread_safety(s_network_sink *sink);
 int32_t network_sink_lock(const s_network_sink *sink, ft_bool *lock_acquired);
 void network_sink_unlock(const s_network_sink *sink, ft_bool lock_acquired);
 
+#ifdef LIBFT_TEST_BUILD
+void ft_log_destroy_async_runtime_for_tests(void);
+void ft_log_destroy_remote_health_for_tests(void);
+#endif
+
 #endif

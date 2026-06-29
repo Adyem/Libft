@@ -8,7 +8,14 @@
 #include "../SCMA/SCMA.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Networking/socket_handle.hpp"
+#include "../Networking/networking.hpp"
+#include "../GetNextLine/get_next_line.hpp"
+#include "../Logger/logger.hpp"
+#include "../API/api.hpp"
+#include "../Observability/observability_task_scheduler_bridge.hpp"
+#include "../Threading/task_scheduler_tracing.hpp"
 #include <algorithm>
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -23,6 +30,17 @@
 #include "../Errno/errno.hpp"
 
 int32_t cmp_readline_terminal_width(int32_t *width_out);
+#ifdef LIBFT_TEST_BUILD
+void observability_task_scheduler_bridge_destroy_for_tests(void);
+void task_scheduler_trace_destroy_for_tests(void);
+void gnl_destroy_streams_for_tests(void);
+void networking_dns_destroy_cache_for_tests(void) noexcept;
+void api_retry_circuit_destroy_for_tests(void);
+void ft_log_destroy_async_runtime_for_tests(void);
+void ft_log_destroy_remote_health_for_tests(void);
+
+static std::atomic<const char *> g_current_test_name;
+#endif
 
 #ifndef FT_TEST_RUNNER_INITIAL_CAPACITY
 # define FT_TEST_RUNNER_INITIAL_CAPACITY 4096
@@ -143,21 +161,17 @@ static void set_last_failure_message(const char *message)
 }
 
 #ifdef LIBFT_TEST_BUILD
-static void report_allocator_leaks(void)
+static void cleanup_test_runtimes(void)
 {
-    cma_leak_summary cma_summary;
-    scma_leak_summary scma_summary;
-
-    if (cma_get_leak_summary(&cma_summary) == FT_ERR_SUCCESS)
-    {
-        if (cma_summary.live_block_count != 0 || cma_summary.ignored_block_count != 0)
-            (void)cma_report_leaks();
-    }
-    if (scma_get_leak_summary(&scma_summary) == FT_ERR_SUCCESS)
-    {
-        if (scma_summary.live_block_count != 0 || scma_summary.ignored_block_count != 0)
-            (void)scma_report_leaks();
-    }
+    ft_test_runner_set_current_test_name("suite_cleanup");
+    observability_task_scheduler_bridge_destroy_for_tests();
+    task_scheduler_trace_destroy_for_tests();
+    gnl_destroy_streams_for_tests();
+    networking_dns_destroy_cache_for_tests();
+    api_retry_circuit_destroy_for_tests();
+    ft_log_destroy_async_runtime_for_tests();
+    ft_log_destroy_remote_health_for_tests();
+    ft_test_runner_set_current_test_name(NULL);
     return ;
 }
 #endif
@@ -323,23 +337,6 @@ static void print_running_test_line(int32_t test_number,
     return ;
 }
 
-static void write_literal_to_stderr(const char *message)
-{
-    ssize_t    write_result;
-
-    if (message == NULL)
-        return ;
-#if defined(_WIN32) || defined(_WIN64)
-    write_result = write(STDERR_FILENO, message,
-            static_cast<unsigned int>(std::strlen(message)));
-#else
-    write_result = write(STDERR_FILENO, message, std::strlen(message));
-#endif
-    if (write_result < 0)
-        return ;
-    return ;
-}
-
 static void reset_mutex_failure_overrides(void)
 {
 #ifdef LIBFT_TEST_BUILD
@@ -357,16 +354,7 @@ static void reset_mutex_failure_overrides(void)
 
 static void report_runner_failure(const char *message)
 {
-    if (message == NULL)
-        return ;
-    if (std::fprintf(stderr, "\r\033[2K\033[31mFAIL\033[0m %s\n", message) < 0)
-    {
-        write_literal_to_stderr("\r\033[2KFAIL ");
-        write_literal_to_stderr(message);
-        write_literal_to_stderr("\n");
-    }
-    else
-        (void)std::fflush(stderr);
+    (void)message;
     return ;
 }
 
@@ -410,8 +398,12 @@ static int32_t execute_test_function(const s_test_case *test,
     int32_t reset_error;
     int32_t result;
     if (dup2(null_descriptor, STDOUT_FILENO) < 0)
+        return (0);
+    if (dup2(null_descriptor, STDERR_FILENO) < 0)
     {
-        report_runner_failure("runner failed to redirect stdout before test");
+        if (restore_baseline_descriptors(baseline_stdin_descriptor,
+                baseline_stdout_descriptor, baseline_stderr_descriptor) == 0)
+            return (0);
         return (0);
     }
     reset_error = cma_set_alloc_limit(0);
@@ -425,6 +417,9 @@ static int32_t execute_test_function(const s_test_case *test,
     sink_clear();
     reset_mutex_failure_overrides();
     clear_last_failure_message();
+#ifdef LIBFT_TEST_BUILD
+    ft_test_runner_set_current_test_name(test->name);
+#endif
     try
     {
         result = test->func();
@@ -462,7 +457,6 @@ static int32_t execute_test_function(const s_test_case *test,
     {
         (void)restore_baseline_descriptors(baseline_stdin_descriptor,
             baseline_stdout_descriptor, baseline_stderr_descriptor);
-        report_runner_failure("runner failed to reset CMA alloc limit after test");
         result = 0;
     }
     sink_clear();
@@ -488,6 +482,17 @@ int32_t ft_test_runner_registered_capacity(void)
 {
     return (*get_test_capacity());
 }
+
+void ft_test_runner_set_current_test_name(const char *name)
+{
+    g_current_test_name.store(name, std::memory_order_release);
+    return ;
+}
+
+const char *ft_test_runner_current_test_name(void)
+{
+    return (g_current_test_name.load(std::memory_order_acquire));
+}
 #endif
 
 int32_t ft_register_test(t_test_func func, const char *description, const char *module, const char *name)
@@ -505,8 +510,6 @@ int32_t ft_register_test(t_test_func func, const char *description, const char *
     error_code = ensure_test_capacity(*test_count + 1);
     if (error_code != FT_ERR_SUCCESS)
     {
-        (void)std::fprintf(stderr,
-            "failed to grow test registry while registering %s\n", name);
         return (error_code);
     }
     tests = get_tests();
@@ -571,8 +574,6 @@ int32_t ft_run_registered_tests(void)
     int32_t hide_successful_tests;
     int32_t terminal_width;
     int32_t show_running_line;
-    const char *failure_message;
-
     log_file = fopen("test_failures.log", "w");
     if (log_file)
         fclose(log_file);
@@ -596,6 +597,7 @@ int32_t ft_run_registered_tests(void)
             (void)close(baseline_stdout_descriptor);
         if (baseline_stderr_descriptor >= 0)
             (void)close(baseline_stderr_descriptor);
+        release_test_storage();
         return (1);
     }
     socket_runtime_acquired = FT_TRUE;
@@ -614,6 +616,7 @@ int32_t ft_run_registered_tests(void)
             (void)close(baseline_stdout_descriptor);
         if (baseline_stderr_descriptor >= 0)
             (void)close(baseline_stderr_descriptor);
+        release_test_storage();
         return (1);
     }
     total_tests = *test_count;
@@ -660,9 +663,6 @@ int32_t ft_run_registered_tests(void)
             if (show_running_line != 0)
                 printf("\r\033[2K");
             printf("\033[31mFAIL\033[0m %d %s\n", selected_tests, current_test.description);
-            failure_message = get_last_failure_message();
-            if (failure_message[0] != '\0')
-                printf("    %s\n", failure_message);
             fflush(stdout);
         }
         index++;
@@ -690,7 +690,7 @@ int32_t ft_run_registered_tests(void)
     fflush(stdout);
     release_test_storage();
 #ifdef LIBFT_TEST_BUILD
-    report_allocator_leaks();
+    cleanup_test_runtimes();
 #endif
     if (passed != selected_tests)
         return (1);

@@ -163,10 +163,10 @@ FT_TEST(test_basic_strtol_null_input)
 FT_TEST(test_basic_strtol_base_two_rejects_invalid_digit)
 {
     char *end_pointer;
-    long parsed_value;
+    int64_t parsed_value;
 
     parsed_value = ft_strtol("10102", &end_pointer, 2);
-    FT_ASSERT_EQ(10L, parsed_value);
+    FT_ASSERT_EQ(static_cast<int64_t>(10), parsed_value);
     FT_ASSERT_EQ('2', *end_pointer);
     return (1);
 }
@@ -174,10 +174,10 @@ FT_TEST(test_basic_strtol_base_two_rejects_invalid_digit)
 FT_TEST(test_basic_strtol_mixed_case_digits_custom_base)
 {
     char *end_pointer;
-    long parsed_value;
+    int64_t parsed_value;
 
     parsed_value = ft_strtol("aB19", &end_pointer, 20);
-    FT_ASSERT_EQ(84429L, parsed_value);
+    FT_ASSERT_EQ(static_cast<int64_t>(84429), parsed_value);
     FT_ASSERT_EQ('\0', *end_pointer);
     return (1);
 }
@@ -185,10 +185,10 @@ FT_TEST(test_basic_strtol_mixed_case_digits_custom_base)
 FT_TEST(test_basic_strtol_rejects_at_symbol_in_high_base)
 {
     char *end_pointer;
-    long parsed_value;
+    int64_t parsed_value;
 
     parsed_value = ft_strtol("@123", &end_pointer, 36);
-    FT_ASSERT_EQ(0L, parsed_value);
+    FT_ASSERT_EQ(static_cast<int64_t>(0), parsed_value);
     FT_ASSERT_EQ('@', *end_pointer);
     return (1);
 }
@@ -196,10 +196,10 @@ FT_TEST(test_basic_strtol_rejects_at_symbol_in_high_base)
 FT_TEST(test_basic_strtol_stops_before_brace_character)
 {
     char *end_pointer;
-    long parsed_value;
+    int64_t parsed_value;
 
     parsed_value = ft_strtol("Zz{", &end_pointer, 36);
-    FT_ASSERT_EQ(1295L, parsed_value);
+    FT_ASSERT_EQ(static_cast<int64_t>(1295), parsed_value);
     FT_ASSERT_EQ('{', *end_pointer);
     return (1);
 }

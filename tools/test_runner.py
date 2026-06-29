@@ -110,12 +110,12 @@ def find_test_file_for_name(test_name: str) -> Path:
 def make_relative_to_test_dir(paths: Iterable[Path]) -> List[str]:
     relatives: List[str] = []
     for path in paths:
-        relatives.append(str(path.relative_to(TEST_DIR)))
+        relatives.append(path.relative_to(TEST_DIR).as_posix())
     return relatives
 
 
 def format_relative(path: Path) -> str:
-    return str(path.relative_to(TEST_DIR))
+    return path.relative_to(TEST_DIR).as_posix()
 
 
 def run_make(selected_files: Sequence[str], debug: bool, opt_level: str | None) -> None:

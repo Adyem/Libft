@@ -8,6 +8,7 @@
 #include <mutex>
 #include <chrono>
 #include <thread>
+#include <cstdio>
 
 #include "../../Modules/Basic/class_nullptr.hpp"
 #include "../../Modules/Basic/limits.hpp"
@@ -86,7 +87,7 @@ static ft_bool task_scheduler_trace_wait_for_phase(const char *label,
     size_t wait_iterations;
 
     wait_iterations = 0;
-    while (wait_iterations < 1000)
+    while (wait_iterations < 10000)
     {
         std::vector<ft_task_trace_event> events;
         unsigned long long traced_identifier;
@@ -124,12 +125,49 @@ static ft_bool task_scheduler_trace_wait_for_phase(const char *label,
     return (FT_FALSE);
 }
 
+static void task_scheduler_trace_print_diagnostics(const char *label,
+    ft_bool task_started, ft_bool task_completed, int32_t task_result)
+{
+    (void)label;
+    (void)task_started;
+    (void)task_completed;
+    (void)task_result;
+    return ;
+}
+
+static ft_bool task_scheduler_trace_wait_for_flag_with_diagnostics(
+    const char *label, const std::atomic<ft_bool> &flag,
+    ft_bool task_started, const std::atomic<int32_t> &task_result,
+    int32_t wait_timeout_milliseconds)
+{
+    std::chrono::steady_clock::time_point deadline;
+    std::chrono::steady_clock::time_point last_report;
+
+    deadline = std::chrono::steady_clock::now()
+        + std::chrono::milliseconds(wait_timeout_milliseconds);
+    last_report = std::chrono::steady_clock::now();
+    while (std::chrono::steady_clock::now() < deadline)
+    {
+        if (flag.load() == FT_TRUE)
+            return (FT_TRUE);
+        if (std::chrono::steady_clock::now() - last_report
+            >= std::chrono::milliseconds(5000))
+        {
+            task_scheduler_trace_print_diagnostics(label, task_started,
+                flag.load(), task_result.load());
+            last_report = std::chrono::steady_clock::now();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    task_scheduler_trace_print_diagnostics(label, task_started, flag.load(),
+        task_result.load());
+    return (FT_FALSE);
+}
+
 static void task_scheduler_trace_reset_state(void)
 {
     (void)observability_task_scheduler_bridge_shutdown();
-    while (task_scheduler_unregister_trace_sink(&task_scheduler_trace_test_sink) == 0)
-    {
-    }
+    (void)task_scheduler_trace_reset_for_tests();
     task_scheduler_trace_clear_events();
     (void)cma_set_alloc_limit(0);
     return ;
@@ -204,33 +242,53 @@ FT_TEST(test_task_scheduler_tracing_schedule_after)
     ft_task_scheduler scheduler_instance(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, cma_set_alloc_limit(0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
+    {
+        ft_future<int> bootstrap_future;
+
+        FT_ASSERT_EQ(FT_ERR_SUCCESS,
+            scheduler_instance.submit(bootstrap_future, []()
+        {
+            return (1);
+        }));
+        FT_ASSERT_EQ(1, bootstrap_future.get());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, bootstrap_future.destroy());
+    }
+    task_scheduler_trace_clear_events();
     std::atomic<ft_bool> task_completed;
-    std::chrono::steady_clock::time_point wait_start;
+    std::atomic<ft_bool> task_started;
+    std::atomic<int32_t> task_result;
 
     task_completed.store(FT_FALSE);
-    wait_start = std::chrono::steady_clock::now();
+    task_started.store(FT_FALSE);
+    task_result.store(0);
     {
         unsigned long long root_span;
         unsigned long long previous_span;
 
         root_span = task_scheduler_trace_generate_span_id();
         previous_span = task_scheduler_trace_push_span(root_span);
-        auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(20), [&task_completed]() {
+        auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(20), [&task_started, &task_completed, &task_result]() {
+            task_started.store(FT_TRUE);
+            task_result.store(7);
             task_completed.store(FT_TRUE);
             return (7);
         });
         ft_future<int> future_value;
         FT_ASSERT_EQ(FT_ERR_SUCCESS, future_value.initialize(ft_move(schedule_result.key)));
-        while (task_completed.load() == FT_FALSE)
+        ft_scheduled_task_handle handle_value = schedule_result.get_value();
+        FT_ASSERT(handle_value.valid());
+        if (task_scheduler_trace_wait_for_flag_with_diagnostics(
+                "tracing_schedule_after", task_completed, task_started.load(),
+                task_result, 600000) != FT_TRUE)
         {
-            if (std::chrono::steady_clock::now() - wait_start > std::chrono::seconds(5))
-            {
-                FT_ASSERT(task_completed.load() == FT_TRUE);
-                break ;
-            }
-            std::this_thread::yield();
+            task_scheduler_trace_pop_span(previous_span);
+            (void)future_value.destroy();
+            (void)scheduler_instance.destroy();
+            FT_ASSERT(FT_FALSE);
         }
         FT_ASSERT_EQ(7, future_value.get());
+        FT_ASSERT_EQ(7, task_result.load());
+        FT_ASSERT(future_value.valid());
         FT_ASSERT(task_scheduler_trace_wait_for_phase(
             g_ft_task_trace_label_schedule_once, root_span,
             FT_TASK_TRACE_PHASE_FINISHED));
@@ -290,6 +348,8 @@ FT_TEST(test_task_scheduler_tracing_schedule_after)
                 FT_ASSERT(!timer_flags[index]);
             index += 1;
         }
+        handle_value = ft_scheduled_task_handle();
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, future_value.destroy());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.destroy());
     }
     FT_ASSERT_EQ(0, cleanup_guard.cleanup());

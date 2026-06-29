@@ -16,7 +16,7 @@ FT_TEST(test_cma_arena_small_malloc_uses_normal_cma_api)
     FT_ASSERT(first_pointer != ft_nullptr);
     FT_ASSERT(second_pointer != ft_nullptr);
     FT_ASSERT(first_pointer != second_pointer);
-    FT_ASSERT_EQ(24, cma_alloc_size(first_pointer));
+    FT_ASSERT_EQ(32, cma_alloc_size(first_pointer));
     FT_ASSERT_EQ(32, cma_alloc_size(second_pointer));
     cma_free(first_pointer);
     cma_free(second_pointer);

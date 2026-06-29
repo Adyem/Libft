@@ -19,6 +19,7 @@ struct scma_block
     ft_bool leak_ignored;
     ft_size_t leak_stack_frame_count;
     void *leak_stack_frames[CMP_STACK_TRACE_MAX_FRAMES];
+    const char *leak_test_name;
 #endif
 };
 

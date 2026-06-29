@@ -23,9 +23,11 @@ $(TARGET): $(OBJS)
 
 $(OBJDIR)/%.o: %.cpp | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
-	$(FIXDEP)
+	@$(FIXDEP)
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-		printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+		if [ "$(LIBFT_BATCH_OUTPUT)" != "1" ]; then \
+		    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS); \
+		fi
 
 $(OBJDIR):
 	@$(MKDIR) $@

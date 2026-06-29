@@ -167,7 +167,7 @@ Modules/%_test.a: | $(TEST_PROGRESS_INIT)
 		*"-j1"*) batch_output=0 ;; \
 		*"-j"*|*"--jobserver-auth="*) batch_output=1 ;; \
 	esac; \
-		LIBFT_BATCH_OUTPUT="$$batch_output" mk/run_module_build.sh "$(TOTAL_TEST_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" BUILD_OUTPUT_SUFFIX="$(BUILD_OUTPUT_SUFFIX)" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
+		LIBFT_BATCH_OUTPUT="$$batch_output" mk/run_module_build.sh "$(TOTAL_TEST_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env LIBFT_POSIX_SHELL=1 LIBFT_BATCH_OUTPUT="$$batch_output" $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" BUILD_OUTPUT_SUFFIX="$(BUILD_OUTPUT_SUFFIX)" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi
 
@@ -199,7 +199,7 @@ Modules/%.a: FORCE
 			*"-j1"*) batch_output=0 ;; \
 			*"-j"*|*"--jobserver-auth="*) batch_output=1 ;; \
 		esac; \
-		LIBFT_BATCH_OUTPUT="$$batch_output" mk/run_module_build.sh "$(TOTAL_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" BUILD_OUTPUT_SUFFIX="$(BUILD_OUTPUT_SUFFIX)" COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
+		LIBFT_BATCH_OUTPUT="$$batch_output" mk/run_module_build.sh "$(TOTAL_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env LIBFT_POSIX_SHELL=1 LIBFT_BATCH_OUTPUT="$$batch_output" $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" BUILD_OUTPUT_SUFFIX="$(BUILD_OUTPUT_SUFFIX)" COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	fi
@@ -227,7 +227,7 @@ Modules/%_debug.a: FORCE
 			*"-j1"*) batch_output=0 ;; \
 			*"-j"*|*"--jobserver-auth="*) batch_output=1 ;; \
 		esac; \
-		LIBFT_BATCH_OUTPUT="$$batch_output" mk/run_module_build.sh "$(TOTAL_DEBUG_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env MAKEFLAGS=--no-print-directory LIBFT_POSIX_SHELL=1 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) DEBUG_TARGET="$$module_target" BUILD_OUTPUT_SUFFIX="$(BUILD_OUTPUT_SUFFIX)" COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
+		LIBFT_BATCH_OUTPUT="$$batch_output" mk/run_module_build.sh "$(TOTAL_DEBUG_LIBS)" "$$progress_index" "$$module_path" "$$log_file" -- env LIBFT_POSIX_SHELL=1 LIBFT_BATCH_OUTPUT="$$batch_output" $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) DEBUG_TARGET="$$module_target" BUILD_OUTPUT_SUFFIX="$(BUILD_OUTPUT_SUFFIX)" COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
 	fi

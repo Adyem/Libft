@@ -127,14 +127,14 @@ FT_TEST(test_basic_strtoul_null_input)
 FT_TEST(test_basic_strtoul_recovers_after_null_input)
 {
     char *end_pointer;
-    unsigned long parsed_value;
+    uint64_t parsed_value;
 
     end_pointer = reinterpret_cast<char *>(0x1);
     FT_ASSERT_EQ(0UL, ft_strtoul(ft_nullptr, &end_pointer, 0));
     FT_ASSERT_EQ(ft_nullptr, end_pointer);
     end_pointer = reinterpret_cast<char *>(0x1);
     parsed_value = ft_strtoul("42", &end_pointer, 10);
-    FT_ASSERT_EQ(static_cast<unsigned long>(42), parsed_value);
+    FT_ASSERT_EQ(static_cast<uint64_t>(42), parsed_value);
     FT_ASSERT_EQ('\0', *end_pointer);
     return (1);
 }
@@ -142,10 +142,10 @@ FT_TEST(test_basic_strtoul_recovers_after_null_input)
 FT_TEST(test_basic_strtoul_base_eight_rejects_invalid_digit)
 {
     char *end_pointer;
-    unsigned long parsed_value;
+    uint64_t parsed_value;
 
     parsed_value = ft_strtoul("0778", &end_pointer, 8);
-    FT_ASSERT_EQ(static_cast<unsigned long>(63), parsed_value);
+    FT_ASSERT_EQ(static_cast<uint64_t>(63), parsed_value);
     FT_ASSERT_EQ('8', *end_pointer);
     return (1);
 }
@@ -153,10 +153,10 @@ FT_TEST(test_basic_strtoul_base_eight_rejects_invalid_digit)
 FT_TEST(test_basic_strtoul_mixed_case_digits_custom_base)
 {
     char *end_pointer;
-    unsigned long parsed_value;
+    uint64_t parsed_value;
 
     parsed_value = ft_strtoul("gF0", &end_pointer, 17);
-    FT_ASSERT_EQ(static_cast<unsigned long>(4879), parsed_value);
+    FT_ASSERT_EQ(static_cast<uint64_t>(4879), parsed_value);
     FT_ASSERT_EQ('\0', *end_pointer);
     return (1);
 }
@@ -164,10 +164,10 @@ FT_TEST(test_basic_strtoul_mixed_case_digits_custom_base)
 FT_TEST(test_basic_strtoul_rejects_at_symbol_in_high_base)
 {
     char *end_pointer;
-    unsigned long parsed_value;
+    uint64_t parsed_value;
 
     parsed_value = ft_strtoul("@777", &end_pointer, 36);
-    FT_ASSERT_EQ(0UL, parsed_value);
+    FT_ASSERT_EQ(static_cast<uint64_t>(0), parsed_value);
     FT_ASSERT_EQ('@', *end_pointer);
     return (1);
 }
@@ -175,10 +175,10 @@ FT_TEST(test_basic_strtoul_rejects_at_symbol_in_high_base)
 FT_TEST(test_basic_strtoul_stops_before_brace_character)
 {
     char *end_pointer;
-    unsigned long parsed_value;
+    uint64_t parsed_value;
 
     parsed_value = ft_strtoul("Zz{", &end_pointer, 36);
-    FT_ASSERT_EQ(static_cast<unsigned long>(1295), parsed_value);
+    FT_ASSERT_EQ(static_cast<uint64_t>(1295), parsed_value);
     FT_ASSERT_EQ('{', *end_pointer);
     return (1);
 }

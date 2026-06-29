@@ -40,6 +40,7 @@ extern const char *const g_ft_task_trace_label_schedule_repeat;
 
 int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink);
 int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink);
+int32_t task_scheduler_trace_reset_for_tests(void);
 void task_scheduler_trace_emit(const ft_task_trace_event &event);
 int32_t task_scheduler_trace_get_error(void);
 const char *task_scheduler_trace_get_error_str(void);
@@ -47,5 +48,9 @@ unsigned long long task_scheduler_trace_generate_span_id(void);
 unsigned long long task_scheduler_trace_current_span(void);
 unsigned long long task_scheduler_trace_push_span(unsigned long long span_id);
 void task_scheduler_trace_pop_span(unsigned long long previous_span);
+
+#ifdef LIBFT_TEST_BUILD
+void task_scheduler_trace_destroy_for_tests(void);
+#endif
 
 #endif

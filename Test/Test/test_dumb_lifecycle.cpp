@@ -99,6 +99,10 @@ static int32_t dumb_expect_sigabrt(void (*operation)())
     struct sigaction new_action;
     struct sigaction old_action;
     int32_t result;
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+    char output_buffer[8192];
 
     std::memset(&new_action, 0, sizeof(new_action));
     std::memset(&old_action, 0, sizeof(old_action));
@@ -107,6 +111,13 @@ static int32_t dumb_expect_sigabrt(void (*operation)())
     new_action.sa_flags = 0;
     if (sigaction(SIGABRT, &new_action, &old_action) != 0)
         return (0);
+    if (test_capture_abort_output_begin(saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+    {
+        if (sigaction(SIGABRT, &old_action, ft_nullptr) != 0)
+            return (0);
+        return (0);
+    }
 
     g_dumb_lifecycle_signal = 0;
     if (sigsetjmp(g_dumb_lifecycle_jump_buffer, 1) == 0)
@@ -118,8 +129,12 @@ static int32_t dumb_expect_sigabrt(void (*operation)())
     {
         result = (g_dumb_lifecycle_signal == SIGABRT);
     }
+    if (test_capture_abort_output_end(saved_stderr, pipe_read_descriptor,
+            pipe_write_descriptor, output_buffer, sizeof(output_buffer)) == 0)
+        return (0);
 
-    (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+    if (sigaction(SIGABRT, &old_action, ft_nullptr) != 0)
+        return (0);
     return (result);
 }
 

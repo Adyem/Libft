@@ -324,22 +324,6 @@ struct api_request_circuit_server_context
     int responses;
 };
 
-#ifdef DEBUG
-static void api_request_circuit_debug_log(const char *message)
-{
-    std::FILE *file_pointer;
-
-    file_pointer = std::fopen("api_request_circuit_debug.log", "a");
-    if (!file_pointer)
-        return ;
-    std::fprintf(file_pointer, "%s\n", message);
-    std::fclose(file_pointer);
-    return ;
-}
-#else
-#define api_request_circuit_debug_log(message) do { } while (0)
-#endif
-
 static void api_request_stream_headers_callback(int status_code,
     const char *headers, void *user_data)
 {
@@ -1377,11 +1361,9 @@ static void api_request_circuit_success_server(
                     &address_length);
             if (client_fd < 0)
             {
-                api_request_circuit_debug_log("accept_failed");
                 time_sleep_ms(1);
                 continue ;
             }
-            api_request_circuit_debug_log("accept_ok");
         }
         const char *response;
         size_t response_length;
@@ -1391,7 +1373,6 @@ static void api_request_circuit_success_server(
 
         if (request_buffer.initialize() != FT_ERR_SUCCESS)
         {
-            api_request_circuit_debug_log("request_buffer_init_failed");
             nw_close(client_fd);
             client_fd = -1;
             break ;
@@ -1404,30 +1385,25 @@ static void api_request_circuit_success_server(
                     sizeof(request_chunk) - 1, 0);
             if (bytes_received <= 0)
             {
-                api_request_circuit_debug_log("request_recv_stopped");
                 break ;
             }
             request_buffer.append(request_chunk,
                 static_cast<ft_size_t>(bytes_received));
             if (request_buffer.get_error() != FT_ERR_SUCCESS)
             {
-                api_request_circuit_debug_log("request_append_failed");
                 break ;
             }
             if (ft_strstr(request_buffer.c_str(), "\r\n\r\n"))
             {
-                api_request_circuit_debug_log("request_headers_complete");
                 break ;
             }
             if (request_buffer.size() >= 8192)
             {
-                api_request_circuit_debug_log("request_buffer_limit");
                 break ;
             }
         }
         if (request_buffer.size() == 0)
         {
-            api_request_circuit_debug_log("request_empty");
             nw_close(client_fd);
             client_fd = -1;
             continue ;
@@ -1443,19 +1419,16 @@ static void api_request_circuit_success_server(
                     response_length - total_sent, 0);
             if (bytes_sent <= 0)
             {
-                api_request_circuit_debug_log("response_send_stopped");
                 break ;
             }
             total_sent += static_cast<size_t>(bytes_sent);
         }
         if (total_sent >= response_length)
         {
-            api_request_circuit_debug_log("response_sent");
             time_sleep_ms(10);
         }
         nw_close(client_fd);
         client_fd = -1;
-        api_request_circuit_debug_log("client_closed");
         served_count++;
     }
     if (client_fd >= 0)

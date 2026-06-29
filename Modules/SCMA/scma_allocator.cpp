@@ -248,6 +248,7 @@ int32_t    scma_free(scma_handle handle)
 #ifdef LIBFT_TEST_BUILD
     block->leak_ignored = FT_FALSE;
     block->leak_stack_frame_count = 0;
+    block->leak_test_name = nullptr;
 #endif
     scma_compact();
     return (static_cast<uint32_t>(scma_unlock_and_return_int(FT_ERR_SUCCESS)));

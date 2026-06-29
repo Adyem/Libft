@@ -58,6 +58,7 @@ struct Block
     ft_bool            leak_ignored;
     ft_size_t           leak_stack_frame_count;
     void                *leak_stack_frames[CMP_STACK_TRACE_MAX_FRAMES];
+    const char          *leak_test_name;
 #endif
     Block               *next;
     Block               *prev;
@@ -175,6 +176,7 @@ inline void cma_debug_initialize_block(Block *block)
     {
         block->leak_ignored = FT_FALSE;
         block->leak_stack_frame_count = 0;
+        block->leak_test_name = nullptr;
     }
 #endif
     (void)block;

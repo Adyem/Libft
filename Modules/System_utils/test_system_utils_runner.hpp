@@ -26,6 +26,8 @@ int32_t ft_run_registered_tests(void);
 int32_t ft_test_runner_reserve_capacity(int32_t required_capacity);
 int32_t ft_test_runner_registered_count(void);
 int32_t ft_test_runner_registered_capacity(void);
+void ft_test_runner_set_current_test_name(const char *name);
+const char *ft_test_runner_current_test_name(void);
 #endif
 
 template <typename ValueType, typename = void>

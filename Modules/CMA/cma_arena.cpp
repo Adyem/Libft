@@ -326,24 +326,30 @@ static ft_bool cma_small_arena_prepare_locked(void)
 void *cma_small_arena_allocate_locked(ft_size_t size)
 {
     void *memory_pointer;
+    ft_size_t allocation_size;
 
     if (cma_small_arena_size_is_supported(size) == FT_FALSE)
         return (nullptr);
+    allocation_size = align16(size);
+    if (allocation_size < size)
+        return (nullptr);
     if (cma_small_arena_prepare_locked() == FT_FALSE)
         return (nullptr);
-    memory_pointer = cma_arena_alloc(&g_cma_small_arena, size);
+    memory_pointer = cma_arena_alloc(&g_cma_small_arena, allocation_size);
     if (memory_pointer == nullptr && g_cma_small_arena_live_count == 0)
     {
         if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
             return (nullptr);
-        memory_pointer = cma_arena_alloc(&g_cma_small_arena, size);
+        memory_pointer = cma_arena_alloc(&g_cma_small_arena,
+                allocation_size);
     }
     if (memory_pointer == nullptr
         && cma_small_arena_has_live_allocations() == FT_FALSE)
     {
         if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
             return (nullptr);
-        memory_pointer = cma_arena_alloc(&g_cma_small_arena, size);
+        memory_pointer = cma_arena_alloc(&g_cma_small_arena,
+                allocation_size);
     }
     if (memory_pointer == nullptr)
         return (nullptr);
@@ -355,21 +361,25 @@ void *cma_small_arena_aligned_allocate_locked(ft_size_t alignment,
         ft_size_t size)
 {
     void *memory_pointer;
+    ft_size_t allocation_size;
 
     if (cma_small_arena_size_is_supported(size) == FT_FALSE)
         return (nullptr);
     if (alignment > CMA_SMALL_ARENA_MAX_ALLOCATION)
         return (nullptr);
+    allocation_size = align16(size);
+    if (allocation_size < size)
+        return (nullptr);
     if (cma_small_arena_prepare_locked() == FT_FALSE)
         return (nullptr);
     memory_pointer = cma_arena_aligned_alloc(&g_cma_small_arena, alignment,
-            size);
+            allocation_size);
     if (memory_pointer == nullptr && g_cma_small_arena_live_count == 0)
     {
         if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
             return (nullptr);
         memory_pointer = cma_arena_aligned_alloc(&g_cma_small_arena,
-                alignment, size);
+                alignment, allocation_size);
     }
     if (memory_pointer == nullptr
         && cma_small_arena_has_live_allocations() == FT_FALSE)
@@ -377,7 +387,7 @@ void *cma_small_arena_aligned_allocate_locked(ft_size_t alignment,
         if (cma_arena_reset(&g_cma_small_arena) != FT_ERR_SUCCESS)
             return (nullptr);
         memory_pointer = cma_arena_aligned_alloc(&g_cma_small_arena,
-                alignment, size);
+                alignment, allocation_size);
     }
     if (memory_pointer == nullptr)
         return (nullptr);

@@ -10,6 +10,9 @@
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#ifdef LIBFT_TEST_BUILD
+# include "../System_utils/test_system_utils_runner.hpp"
+#endif
 #if DEBUG
 
 static const unsigned char g_cma_guard_pattern = 0xA5;
@@ -39,6 +42,7 @@ void cma_debug_initialize_block(Block *block)
 #ifdef LIBFT_TEST_BUILD
     block->leak_ignored = FT_FALSE;
     block->leak_stack_frame_count = 0;
+    block->leak_test_name = nullptr;
 #endif
     block->debug_base_pointer = block->payload;
     block->debug_user_size = 0;
@@ -183,6 +187,7 @@ void    cma_capture_leak_stack(Block *block, ft_size_t skip_count)
 {
     if (block == nullptr)
         return ;
+    block->leak_test_name = ft_test_runner_current_test_name();
     block->leak_stack_frame_count = cmp_stack_trace_capture(
             block->leak_stack_frames,
             CMP_STACK_TRACE_MAX_FRAMES,
@@ -351,8 +356,14 @@ int32_t cma_report_leaks(void)
         {
             if (block->leak_ignored == FT_FALSE)
             {
-                std::printf("  [leak] pointer=%p size=%" PRIu64 "\n",
-                    cma_block_user_pointer(block), cma_block_user_size(block));
+                const char *test_name;
+
+                test_name = block->leak_test_name;
+                if (test_name == nullptr)
+                    test_name = "<unknown>";
+                std::printf("  [leak] test=%s pointer=%p size=%" PRIu64 "\n",
+                    test_name, cma_block_user_pointer(block),
+                    cma_block_user_size(block));
                 cmp_stack_trace_print(stdout, block->leak_stack_frames,
                     block->leak_stack_frame_count);
             }

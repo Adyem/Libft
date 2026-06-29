@@ -197,7 +197,6 @@ ft_bool filesystem_is_reserved_name(const char *path) noexcept
     char *basename;
     ft_size_t basename_length;
     ft_size_t trimmed_length;
-    ft_size_t stem_length;
     ft_bool result;
 
     basename = file_path_basename(path);
@@ -213,33 +212,36 @@ ft_bool filesystem_is_reserved_name(const char *path) noexcept
     {
         trimmed_length--;
     }
-    stem_length = 0;
-    while (stem_length < trimmed_length && basename[stem_length] != '.')
-        stem_length++;
     result = FT_FALSE;
-    if (stem_length == 3 && filesystem_ascii_case_equal_span(basename, 3,
-            "CON") == FT_TRUE)
+    if (trimmed_length >= 3
+        && filesystem_ascii_case_equal_span(basename, 3, "CON") == FT_TRUE
+        && (trimmed_length == 3 || basename[3] == '.'))
         result = FT_TRUE;
-    else if (stem_length == 3 && filesystem_ascii_case_equal_span(basename, 3,
-            "PRN") == FT_TRUE)
+    else if (trimmed_length >= 3
+        && filesystem_ascii_case_equal_span(basename, 3, "PRN") == FT_TRUE
+        && (trimmed_length == 3 || basename[3] == '.'))
         result = FT_TRUE;
-    else if (stem_length == 3 && filesystem_ascii_case_equal_span(basename, 3,
-            "AUX") == FT_TRUE)
+    else if (trimmed_length >= 3
+        && filesystem_ascii_case_equal_span(basename, 3, "AUX") == FT_TRUE
+        && (trimmed_length == 3 || basename[3] == '.'))
         result = FT_TRUE;
-    else if (stem_length == 3 && filesystem_ascii_case_equal_span(basename, 3,
-            "NUL") == FT_TRUE)
+    else if (trimmed_length >= 3
+        && filesystem_ascii_case_equal_span(basename, 3, "NUL") == FT_TRUE
+        && (trimmed_length == 3 || basename[3] == '.'))
         result = FT_TRUE;
-    else if (stem_length == 4 && basename[0] == 'C'
+    else if (trimmed_length >= 4 && (basename[0] == 'C' || basename[0] == 'c')
         && (basename[1] == 'O' || basename[1] == 'o')
         && (basename[2] == 'M' || basename[2] == 'm')
-        && basename[3] >= '1' && basename[3] <= '9')
+        && basename[3] >= '1' && basename[3] <= '9'
+        && (trimmed_length == 4 || basename[4] == '.'))
     {
         result = FT_TRUE;
     }
-    else if (stem_length == 4 && basename[0] == 'L'
+    else if (trimmed_length >= 4 && (basename[0] == 'L' || basename[0] == 'l')
         && (basename[1] == 'P' || basename[1] == 'p')
         && (basename[2] == 'T' || basename[2] == 't')
-        && basename[3] >= '1' && basename[3] <= '9')
+        && basename[3] >= '1' && basename[3] <= '9'
+        && (trimmed_length == 4 || basename[4] == '.'))
     {
         result = FT_TRUE;
     }

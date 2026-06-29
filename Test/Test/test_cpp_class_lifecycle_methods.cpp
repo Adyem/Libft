@@ -40,6 +40,10 @@ static int lifecycle_expect_sigabrt_signal_handler(void (*operation)(void))
     struct sigaction action;
     struct sigaction backup;
     int result;
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+    char output_buffer[8192];
 
     ft_memset(&action, 0, sizeof(action));
     action.sa_handler = lifecycle_abort_handler;
@@ -47,6 +51,13 @@ static int lifecycle_expect_sigabrt_signal_handler(void (*operation)(void))
     result = 0;
     if (sigaction(SIGABRT, &action, &backup) != 0)
         return (0);
+    if (test_capture_abort_output_begin(saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+    {
+        if (sigaction(SIGABRT, &backup, ft_nullptr) != 0)
+            return (0);
+        return (0);
+    }
     if (sigsetjmp(g_lifecycle_abort_jump, 1) == 0)
     {
         operation();
@@ -54,7 +65,11 @@ static int lifecycle_expect_sigabrt_signal_handler(void (*operation)(void))
     }
     else
         result = 1;
-    (void)sigaction(SIGABRT, &backup, ft_nullptr);
+    if (test_capture_abort_output_end(saved_stderr, pipe_read_descriptor,
+            pipe_write_descriptor, output_buffer, sizeof(output_buffer)) == 0)
+        return (0);
+    if (sigaction(SIGABRT, &backup, ft_nullptr) != 0)
+        return (0);
     return (result);
 }
 

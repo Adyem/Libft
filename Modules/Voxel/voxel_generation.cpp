@@ -156,15 +156,49 @@ static int32_t terrain_sample_height(uint64_t seed_value, int32_t world_block_x,
 {
     terrain_biome biome;
     terrain_biome_profile biome_profile;
+    int32_t minimum_height;
+    int32_t maximum_height;
+    int32_t height;
 
     biome = terrain_pick_biome(seed_value, world_block_x, world_block_z);
     biome_profile = terrain_get_biome_profile(biome);
-    return (terrain_smooth_biome_height(seed_value, world_block_x,
-        world_block_z, biome, biome_profile));
+    height = terrain_smooth_biome_height(seed_value, world_block_x,
+        world_block_z, biome, biome_profile);
+    minimum_height = biome_profile.surface_height
+        - biome_profile.height_variation
+        - (biome_profile.height_variation / 2);
+    maximum_height = biome_profile.surface_height
+        + biome_profile.height_variation
+        + (biome_profile.height_variation / 2);
+    if (height < minimum_height)
+        return (minimum_height);
+    if (height > maximum_height)
+        return (maximum_height);
+    return (height);
+}
+
+static int32_t terrain_clamp_height_to_profile(int32_t height,
+    const terrain_biome_profile &biome_profile) noexcept
+{
+    int32_t minimum_height;
+    int32_t maximum_height;
+
+    minimum_height = biome_profile.surface_height
+        - biome_profile.height_variation
+        - (biome_profile.height_variation / 2);
+    maximum_height = biome_profile.surface_height
+        + biome_profile.height_variation
+        + (biome_profile.height_variation / 2);
+    if (height < minimum_height)
+        return (minimum_height);
+    if (height > maximum_height)
+        return (maximum_height);
+    return (height);
 }
 
 static int32_t terrain_smooth_heightfield(uint64_t seed_value,
-    int32_t world_block_x, int32_t world_block_z) noexcept
+    int32_t world_block_x, int32_t world_block_z,
+    const terrain_biome_profile &biome_profile) noexcept
 {
     int32_t offset_x;
     int32_t offset_z;
@@ -196,8 +230,10 @@ static int32_t terrain_smooth_heightfield(uint64_t seed_value,
         offset_z += 1;
     }
     if (sample_count <= 0)
-        return (terrain_sample_height(seed_value, world_block_x, world_block_z));
-    return (weighted_height / sample_count);
+        return (terrain_clamp_height_to_profile(terrain_sample_height(
+            seed_value, world_block_x, world_block_z), biome_profile));
+    return (terrain_clamp_height_to_profile(weighted_height / sample_count,
+        biome_profile));
 }
 
 static ft_bool terrain_should_place_feature(uint64_t seed_value,
@@ -333,7 +369,7 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             surface_block_id = column_cache[column_index].surface_block_id;
             place_shrub = column_cache[column_index].can_place_shrubs;
             column_height = terrain_smooth_heightfield(seed_value,
-                world_block_x, world_block_z);
+                world_block_x, world_block_z, biome_profile);
             column_cache[column_index].column_height = column_height;
             if (column_height < 0)
                 column_height = 0;

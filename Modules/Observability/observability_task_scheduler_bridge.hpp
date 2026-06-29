@@ -31,4 +31,8 @@ typedef void (*ft_otel_span_exporter)(const ft_otel_span_metrics &span);
 int32_t observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporter);
 int32_t observability_task_scheduler_bridge_shutdown(void);
 
+#ifdef LIBFT_TEST_BUILD
+void observability_task_scheduler_bridge_destroy_for_tests(void);
+#endif
+
 #endif

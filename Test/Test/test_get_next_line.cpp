@@ -33,7 +33,7 @@ static int  create_temp_fd_with_content(const char *content)
     while (total_written < content_length)
     {
         write_result = write(file_descriptor, content + total_written,
-                content_length - total_written);
+                static_cast<unsigned int>(content_length - total_written));
         if (write_result <= 0)
         {
             close(file_descriptor);

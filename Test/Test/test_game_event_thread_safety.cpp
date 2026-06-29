@@ -92,7 +92,7 @@ FT_TEST(test_game_event_add_duration_thread_safe)
     {
         timeout_ms = 5000;
         join_result = pt_thread_timed_join(threads[index], ft_nullptr,
-                timeout_ms);
+                static_cast<long>(timeout_ms));
         if (join_result != 0 && test_failed == 0)
         {
             (void)pt_thread_detach(threads[index]);
@@ -201,7 +201,7 @@ FT_TEST(test_game_event_setters_thread_safe)
     {
         timeout_ms = 5000;
         join_result = pt_thread_timed_join(threads[index], ft_nullptr,
-                timeout_ms);
+                static_cast<long>(timeout_ms));
         if (join_result != 0 && test_failed == 0)
         {
             (void)pt_thread_detach(threads[index]);

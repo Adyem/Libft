@@ -34,10 +34,7 @@ static std::vector<std::string> read_includes(const std::string &path, const std
 {
     std::ifstream file(path.c_str());
     if (!file.is_open())
-    {
-        std::cerr << "Failed to open " << path << '\n';
         return (std::vector<std::string>());
-    }
     std::vector<std::string> includes;
     std::string line_content;
     while (std::getline(file, line_content))
@@ -47,10 +44,7 @@ static std::vector<std::string> read_includes(const std::string &path, const std
             std::size_t begin = prefix.length();
             std::size_t end_position = line_content.find('"', begin);
             if (end_position == std::string::npos)
-            {
-                std::cerr << "Malformed include in " << path << ": " << line_content << '\n';
                 return (std::vector<std::string>());
-            }
             includes.push_back(line_content.substr(begin, end_position - begin));
         }
     }
@@ -61,10 +55,7 @@ static std::vector<std::string> read_manifest(const std::string &path)
 {
     std::ifstream file(path.c_str());
     if (!file.is_open())
-    {
-        std::cerr << "Failed to open " << path << '\n';
         return (std::vector<std::string>());
-    }
     std::vector<std::string> entries;
     std::string line_content;
     while (std::getline(file, line_content))

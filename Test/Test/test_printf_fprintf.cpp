@@ -40,7 +40,8 @@ static int read_pipe_into_buffer(int read_fd, char *buffer, size_t buffer_size, 
 {
     if (buffer == ft_nullptr || bytes_read == ft_nullptr)
         return (0);
-    *bytes_read = read(read_fd, buffer, buffer_size);
+    *bytes_read = read(read_fd, buffer,
+        static_cast<unsigned int>(buffer_size));
     if (*bytes_read < 0)
         return (0);
     return (1);

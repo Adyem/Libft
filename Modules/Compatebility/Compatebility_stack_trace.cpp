@@ -143,6 +143,9 @@ static int32_t    cmp_stack_trace_symbolize_linux(const void *address,
         return (FT_ERR_OUT_OF_RANGE);
     }
     pclose(pipe_file);
+    if (std::strcmp(symbol_buffer, "??") == 0
+        && std::strcmp(location_buffer, "??:0") == 0)
+        return (FT_ERR_NOT_FOUND);
     return (FT_ERR_SUCCESS);
 }
 
@@ -169,6 +172,95 @@ static void    cmp_stack_trace_print_linux_addr2line(FILE *output_file,
 void    dbg_print_stack_trace(void) noexcept;
 static INIT_ONCE    g_cmp_stack_trace_windows_symbols_once = {};
 static ft_bool      g_cmp_stack_trace_windows_symbols_ready = FT_FALSE;
+
+static int32_t    cmp_stack_trace_symbolize_windows_addr2line(const void *address,
+        char *symbol_buffer, ft_size_t symbol_buffer_size,
+        char *location_buffer, ft_size_t location_buffer_size)
+{
+    char    executable_path[MAX_PATH];
+    char    command[1280];
+    char    line_buffer[1024];
+    DWORD64 module_base;
+    DWORD64 preferred_base;
+    DWORD64 frame_address;
+    DWORD64 relative_address;
+    FILE    *pipe_file;
+    ft_size_t line_length;
+    int32_t formatted_length;
+
+    if (address == NULL || symbol_buffer == NULL || location_buffer == NULL
+        || symbol_buffer_size == 0 || location_buffer_size == 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    symbol_buffer[0] = '\0';
+    location_buffer[0] = '\0';
+    executable_path[0] = '\0';
+    if (GetModuleFileNameA(NULL, executable_path, MAX_PATH) == 0)
+        return (FT_ERR_NOT_FOUND);
+    module_base = reinterpret_cast<DWORD64>(GetModuleHandleA(NULL));
+#if defined(_WIN64)
+    preferred_base = 0x0000000140000000ULL;
+#else
+    preferred_base = 0x00400000ULL;
+#endif
+    frame_address = reinterpret_cast<DWORD64>(address);
+    relative_address = frame_address;
+    if (module_base != 0 && frame_address >= module_base)
+        relative_address = frame_address - module_base + preferred_base;
+    formatted_length = pf_snprintf(command, sizeof(command),
+        "addr2line -f -C -e \"%s\" 0x%" PRIx64 " 2>NUL",
+        executable_path, static_cast<uint64_t>(relative_address));
+    if (formatted_length < 0)
+        return (FT_ERR_SYSTEM);
+    if (ft_strlen_size_t(command) >= sizeof(command))
+        return (FT_ERR_SYSTEM);
+    pipe_file = popen(command, "r");
+    if (pipe_file == NULL)
+        return (FT_ERR_NOT_FOUND);
+    if (ft_fgets(line_buffer, sizeof(line_buffer), pipe_file) == NULL)
+    {
+        pclose(pipe_file);
+        return (FT_ERR_NOT_FOUND);
+    }
+    line_length = ft_strlen_size_t(line_buffer);
+    while (line_length > 0
+        && (line_buffer[line_length - 1] == '\n'
+            || line_buffer[line_length - 1] == '\r'))
+    {
+        line_buffer[line_length - 1] = '\0';
+        line_length -= 1;
+    }
+    formatted_length = pf_snprintf(symbol_buffer, symbol_buffer_size, "%s",
+            line_buffer);
+    if (formatted_length < 0
+        || static_cast<ft_size_t>(formatted_length) >= symbol_buffer_size)
+    {
+        pclose(pipe_file);
+        return (FT_ERR_OUT_OF_RANGE);
+    }
+    if (ft_fgets(line_buffer, sizeof(line_buffer), pipe_file) == NULL)
+    {
+        pclose(pipe_file);
+        return (FT_ERR_NOT_FOUND);
+    }
+    line_length = ft_strlen_size_t(line_buffer);
+    while (line_length > 0
+        && (line_buffer[line_length - 1] == '\n'
+            || line_buffer[line_length - 1] == '\r'))
+    {
+        line_buffer[line_length - 1] = '\0';
+        line_length -= 1;
+    }
+    formatted_length = pf_snprintf(location_buffer, location_buffer_size, "%s",
+            line_buffer);
+    if (formatted_length < 0
+        || static_cast<ft_size_t>(formatted_length) >= location_buffer_size)
+    {
+        pclose(pipe_file);
+        return (FT_ERR_OUT_OF_RANGE);
+    }
+    pclose(pipe_file);
+    return (FT_ERR_SUCCESS);
+}
 
 static BOOL CALLBACK    cmp_stack_trace_initialize_windows_symbols(
         PINIT_ONCE, PVOID, PVOID *)
@@ -230,6 +322,10 @@ static int32_t    cmp_stack_trace_symbolize_windows(const void *address,
         return (FT_ERR_INVALID_ARGUMENT);
     symbol_buffer[0] = '\0';
     location_buffer[0] = '\0';
+    if (cmp_stack_trace_symbolize_windows_addr2line(address, symbol_buffer,
+            symbol_buffer_size, location_buffer, location_buffer_size)
+        == FT_ERR_SUCCESS)
+        return (FT_ERR_SUCCESS);
     if (cmp_stack_trace_windows_symbols_are_ready() == FT_FALSE)
         return (FT_ERR_NOT_FOUND);
     process_handle = GetCurrentProcess();

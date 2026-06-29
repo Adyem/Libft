@@ -1771,19 +1771,8 @@ int ft_task_scheduler::enable_thread_safety()
 
     this->abort_if_not_initialised("ft_task_scheduler::enable_thread_safety");
     if (this->_state_mutex != ft_nullptr)
-    {
-        if (this->_queue.enable_thread_safety() != 0)
-        {
-            this->teardown_thread_safety();
-            return (-1);
-        }
-        if (this->_scheduled_condition.enable_thread_safety() != 0)
-        {
-            this->teardown_thread_safety();
-            return (-1);
-        }
         return (0);
-    }
+    
     state_mutex = new (std::nothrow) pt_recursive_mutex();
     if (state_mutex == ft_nullptr)
         return (-1);
@@ -1794,23 +1783,23 @@ int ft_task_scheduler::enable_thread_safety()
         return (-1);
     }
     this->_state_mutex = state_mutex;
-    if (this->_queue.enable_thread_safety() != 0)
-    {
-        this->teardown_thread_safety();
-        return (-1);
-    }
-    if (this->_scheduled_condition.enable_thread_safety() != 0)
-    {
-        this->teardown_thread_safety();
-        return (-1);
-    }
     return (0);
 }
 
 int ft_task_scheduler::disable_thread_safety()
 {
+    pt_recursive_mutex *state_mutex;
+    int destroy_error;
+
     this->abort_if_not_initialised("ft_task_scheduler::disable_thread_safety");
-    this->teardown_thread_safety();
+    state_mutex = this->_state_mutex;
+    if (state_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    this->_state_mutex = ft_nullptr;
+    destroy_error = state_mutex->destroy();
+    delete state_mutex;
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -1884,7 +1873,5 @@ void ft_task_scheduler::teardown_thread_safety()
         delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
-    this->_queue.disable_thread_safety();
-    this->_scheduled_condition.disable_thread_safety();
     return ;
 }

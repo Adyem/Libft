@@ -20,6 +20,8 @@
 # include <winsock2.h>
 # include <ws2tcpip.h>
 # define CLOSE_SOCKET closesocket
+typedef SOCKET socket_file_descriptor_type;
+static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = INVALID_SOCKET;
 #else
 # if defined(_WIN32) || defined(_WIN64)
 #  include <winsock2.h>
@@ -32,17 +34,31 @@
 # include <sys/time.h>
 # include <unistd.h>
 # define CLOSE_SOCKET close
+typedef int socket_file_descriptor_type;
+static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = static_cast<socket_file_descriptor_type>(-1);
 #endif
 
-static int networking_socket_create_server(uint16_t &port)
+static ft_bool networking_socket_is_valid_file_descriptor(socket_file_descriptor_type file_descriptor)
 {
-    int server_fd;
+#ifdef _WIN32
+    if (file_descriptor == INVALID_SOCKET)
+        return (FT_FALSE);
+#else
+    if (file_descriptor < 0)
+        return (FT_FALSE);
+#endif
+    return (FT_TRUE);
+}
+
+static socket_file_descriptor_type networking_socket_create_server(uint16_t &port)
+{
+    socket_file_descriptor_type server_fd;
     struct sockaddr_in address;
     socklen_t length;
 
     server_fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0)
-        return (-1);
+    if (networking_socket_is_valid_file_descriptor(server_fd) == FT_FALSE)
+        return (NETWORKING_INVALID_SOCKET_DESCRIPTOR);
     std::memset(&address, 0, sizeof(address));
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
@@ -50,18 +66,18 @@ static int networking_socket_create_server(uint16_t &port)
     if (::bind(server_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address)) != 0)
     {
         CLOSE_SOCKET(server_fd);
-        return (-1);
+        return (NETWORKING_INVALID_SOCKET_DESCRIPTOR);
     }
     if (::listen(server_fd, 4) != 0)
     {
         CLOSE_SOCKET(server_fd);
-        return (-1);
+        return (NETWORKING_INVALID_SOCKET_DESCRIPTOR);
     }
     length = sizeof(address);
     if (::getsockname(server_fd, reinterpret_cast<struct sockaddr*>(&address), &length) != 0)
     {
         CLOSE_SOCKET(server_fd);
-        return (-1);
+        return (NETWORKING_INVALID_SOCKET_DESCRIPTOR);
     }
     port = ntohs(address.sin_port);
     return (server_fd);
@@ -80,7 +96,7 @@ static void networking_socket_configure_client(SocketConfig &config, uint16_t po
     return ;
 }
 
-static void networking_socket_set_receive_timeout(int file_descriptor, int milliseconds)
+static void networking_socket_set_receive_timeout(socket_file_descriptor_type file_descriptor, int milliseconds)
 {
 #ifdef _WIN32
     DWORD timeout_value;
@@ -124,11 +140,11 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
     if (networking_test_local_ipv4_available() == FT_FALSE)
         return (1);
     uint16_t server_port;
-    int server_fd;
+    socket_file_descriptor_type server_fd;
     SocketConfig client_config;
     ft_socket client_socket;
     std::thread accept_thread;
-    int accepted_fd;
+    socket_file_descriptor_type accepted_fd;
     std::atomic<bool> inspector_running;
     std::thread inspector_thread;
     std::thread send_thread;
@@ -143,10 +159,10 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
     int wait_iterations;
 
     server_fd = networking_socket_create_server(server_port);
-    FT_ASSERT(server_fd >= 0);
+    FT_ASSERT(networking_socket_is_valid_file_descriptor(server_fd) == FT_TRUE);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, client_config.initialize());
     networking_socket_configure_client(client_config, server_port);
-    accepted_fd = -1;
+    accepted_fd = NETWORKING_INVALID_SOCKET_DESCRIPTOR;
     accept_thread = std::thread([server_fd, &accepted_fd]() {
         struct sockaddr_in client_addr;
         socklen_t length;
@@ -158,7 +174,7 @@ FT_TEST(test_networking_socket_send_all_thread_safety)
     });
     FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.initialize(client_config));
     accept_thread.join();
-    FT_ASSERT(accepted_fd >= 0);
+    FT_ASSERT(networking_socket_is_valid_file_descriptor(accepted_fd) == FT_TRUE);
     networking_socket_set_receive_timeout(accepted_fd, 200);
     message_length = static_cast<int>(sizeof(message) - 1);
     send_iterations = 60;
@@ -278,11 +294,11 @@ FT_TEST(test_networking_socket_receive_close_thread_safety)
     if (networking_test_local_ipv4_available() == FT_FALSE)
         return (1);
     uint16_t server_port;
-    int server_fd;
+    socket_file_descriptor_type server_fd;
     SocketConfig client_config;
     ft_socket client_socket;
     std::thread accept_thread;
-    int accepted_fd;
+    socket_file_descriptor_type accepted_fd;
     std::thread sender_thread;
     std::thread receiver_thread;
     std::atomic<bool> received_once;
@@ -290,10 +306,10 @@ FT_TEST(test_networking_socket_receive_close_thread_safety)
     std::thread closer_thread;
 
     server_fd = networking_socket_create_server(server_port);
-    FT_ASSERT(server_fd >= 0);
+    FT_ASSERT(networking_socket_is_valid_file_descriptor(server_fd) == FT_TRUE);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, client_config.initialize());
     networking_socket_configure_client(client_config, server_port);
-    accepted_fd = -1;
+    accepted_fd = NETWORKING_INVALID_SOCKET_DESCRIPTOR;
     accept_thread = std::thread([server_fd, &accepted_fd]() {
         struct sockaddr_in client_addr;
         socklen_t length;
@@ -305,7 +321,7 @@ FT_TEST(test_networking_socket_receive_close_thread_safety)
     });
     FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.initialize(client_config));
     accept_thread.join();
-    FT_ASSERT(accepted_fd >= 0);
+    FT_ASSERT(networking_socket_is_valid_file_descriptor(accepted_fd) == FT_TRUE);
     received_once.store(false);
     close_requested.store(false);
     sender_thread = std::thread([accepted_fd, &close_requested]() {

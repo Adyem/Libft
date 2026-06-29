@@ -1,5 +1,18 @@
 MODULE_NAME ?= $(notdir $(CURDIR))
 TOTAL_SRCS ?= $(words $(SRCS) $(MM_SRCS))
+LIBFT_BATCH_OUTPUT ?= 0
+LIBFT_PARALLEL_JOBS = $(filter -j% j%,$(MAKEFLAGS))
+LIBFT_EXPLICIT_J1 = $(filter -j1 j1,$(MAKEFLAGS))
+LIBFT_JOBSERVER = $(findstring --jobserver-auth,$(MAKEFLAGS))
+ifneq ($(LIBFT_JOBSERVER),)
+    ifeq ($(LIBFT_EXPLICIT_J1),)
+        LIBFT_BATCH_OUTPUT = 1
+    endif
+else ifneq ($(LIBFT_PARALLEL_JOBS),)
+    ifeq ($(LIBFT_EXPLICIT_J1),)
+        LIBFT_BATCH_OUTPUT = 1
+    endif
+endif
 
 ifeq ($(OS),Windows_NT)
     SHELL := C:/Progra~1/Git/bin/bash.exe
@@ -48,6 +61,7 @@ DEBUG_MM_OBJS ?= $(patsubst %.mm,$(DEBUG_OBJDIR)/%.o,$(MM_SRCS))
 DEBUG_OBJS ?= $(DEBUG_CPP_OBJS) $(DEBUG_MM_OBJS)
 DEPS ?= $(OBJS:.o=.d)
 DEBUG_DEPS ?= $(DEBUG_OBJS:.o=.d)
+.SILENT: $(OBJS) $(DEBUG_OBJS)
 
 MODULE_CFLAGS_EXTRA ?=
 MODULE_MMFLAGS_EXTRA ?=

@@ -16,7 +16,7 @@ all: $(TARGET)
 .PHONY: FORCE
 FORCE:
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(LIBFT_ARCHIVE)
 	@# Rescan the archive so cross-module references inside the combined test library resolve.
 	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
 		OPT_LEVEL=$(OPT_LEVEL)
@@ -131,9 +131,8 @@ $(OBJDIR)/%.o: %.cpp
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
-			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@ && \
 	$(FIXDEP); \
-			printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then \
@@ -144,15 +143,13 @@ $(OBJDIR)/%.o: %.cpp
 			exit $$status; \
 		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		count=$$(find $(OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
-		printf '%b        [Test] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
 	else \
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
-		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@ && \
 	$(FIXDEP); \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
@@ -212,6 +209,11 @@ $(OBJDIR)/Test/test_cli_get_string.o $(OBJDIR)/Test/test_cli_get_uint64.o \
 $(OBJDIR)/Test/test_cli_help.o $(OBJDIR)/Test/test_cli_tree.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"CLI\"
 $(OBJDIR)/Test/test_storage_kv_store.o $(OBJDIR)/Test/test_storage_kv_store_entry.o \
 $(OBJDIR)/Test/test_storage_kv_store_block_cipher_metadata.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Storage\"
+$(OBJDIR)/Test/test_voxel_block_metadata.o $(OBJDIR)/Test/test_voxel_generator.o \
+$(OBJDIR)/Test/test_voxel_mesh.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Voxel\" \
+	-DGAME_USE_VOXEL_REGION_BACKEND=1
+$(OBJDIR)/Test/test_voxel_block_metadata.o $(OBJDIR)/Test/test_voxel_generator.o \
+$(OBJDIR)/Test/test_voxel_mesh.o: Makefile
 $(OBJDIR)/Test/test_application_auth_service.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Application\"
 $(OBJDIR)/Test/test_yaml.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"YAML\"
 $(OBJDIR)/Test/test_rng.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"RNG\"
@@ -258,7 +260,7 @@ $(OBJDIR)/Test/test_xml_copy_move_deleted.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_M
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
-$(DEBUG_TARGET): $(DEBUG_OBJS)
+$(DEBUG_TARGET): $(DEBUG_OBJS) $(LIBFT_DEBUG_ARCHIVE)
 	@printf "Compiled debug test files (%d files)\n" $(TOTAL_SRCS)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
 	@$(MAKE) -C $(LIBFT_ROOT_DIR) $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)" \
@@ -284,9 +286,8 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
-			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+			$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@ && \
 	$(FIXDEP); \
-			printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(TOTAL_SRCS) $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then \
@@ -297,15 +298,13 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 			exit $$status; \
 		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		count=$$(find $(DEBUG_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
-		printf '%b        [Test Debug] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
 	else \
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
-		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+		$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@ && \
 	$(FIXDEP); \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \
@@ -339,9 +338,8 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			if [ ! -d "$(dir $@)" ]; then \
 				$(MKDIR) $(dir $@); \
 			fi; \
-			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
+			$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@ && \
 	$(FIXDEP); \
-			printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $(EFF_TOTAL_SRCS) $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		} > "$$log_file" 2>&1; \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then \
@@ -352,15 +350,13 @@ $(EFFICIENCY_OBJDIR)/%.o: %.cpp
 			exit $$status; \
 		fi; \
 		while ! mkdir $(LIBFT_TEST_OUTPUT_LOCK) 2>/dev/null; do sleep 0.02; done; \
-		count=$$(find $(EFFICIENCY_OBJDIR) -name '*.o' 2>/dev/null | wc -l | tr -d ' '); \
-		printf '%b        [Test Efficiency] Building file %s (%d/%d)%b\n' "$(LIBFT_TEST_LIGHT_BLUE)" "$<" $$count $(EFF_TOTAL_SRCS) "$(LIBFT_TEST_COLOR_OFF)"; \
 		rmdir $(LIBFT_TEST_OUTPUT_LOCK); \
 		$(RM) "$$log_file"; \
 	else \
 		if [ ! -d "$(dir $@)" ]; then \
 			$(MKDIR) $(dir $@); \
 		fi; \
-		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@
+		$(CXX) $(EFFICIENCY_CFLAGS) -MMD -MP -c $< -o $@ && \
 	$(FIXDEP); \
 		status=$$?; \
 		if [ $$status -ne 0 ]; then exit $$status; fi; \

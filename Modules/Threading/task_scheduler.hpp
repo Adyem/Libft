@@ -511,19 +511,22 @@ int ft_blocking_queue<ElementType>::push(ElementType &&value)
         this->unlock_internal(state_lock_acquired);
         return (storage_error);
     }
+    if (was_empty)
+    {
+        if (this->_condition.signal() != 0)
+        {
+            mutex_error = this->_mutex.unlock();
+            this->unlock_internal(state_lock_acquired);
+            if (mutex_error != FT_ERR_SUCCESS)
+                return (mutex_error);
+            return (FT_ERR_SYSTEM);
+        }
+    }
     mutex_error = this->_mutex.unlock();
     if (mutex_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(state_lock_acquired);
         return (mutex_error);
-    }
-    if (was_empty)
-    {
-        if (this->_condition.signal() != 0)
-        {
-            this->unlock_internal(state_lock_acquired);
-            return (FT_ERR_SYSTEM);
-        }
     }
     this->unlock_internal(state_lock_acquired);
     return (FT_ERR_SUCCESS);
@@ -670,13 +673,16 @@ void ft_blocking_queue<ElementType>::shutdown()
         return ;
     }
     this->_shutdown = true;
-    mutex_error = this->_mutex.unlock();
-    if (mutex_error != FT_ERR_SUCCESS)
+    if (this->_condition.broadcast() != 0)
     {
+        mutex_error = this->_mutex.unlock();
         this->unlock_internal(state_lock_acquired);
+        if (mutex_error != FT_ERR_SUCCESS)
+            return ;
         return ;
     }
-    if (this->_condition.broadcast() != 0)
+    mutex_error = this->_mutex.unlock();
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(state_lock_acquired);
         return ;
@@ -786,16 +792,12 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     Pair<ft_future<return_type>, ft_scheduled_task_handle> result_pair;
     promise_type *promise_raw;
     ft_sharedptr<promise_type> promise_shared;
-    ft_future<return_type> future_value;
     ft_scheduled_task_state *state_raw;
     ft_sharedptr<ft_scheduled_task_state> state_shared;
     int shared_initialize_error;
     int state_shared_initialize_error;
     int result_future_initialize_error;
 
-    result_future_initialize_error = result_pair.key.initialize();
-    if (result_future_initialize_error != FT_ERR_SUCCESS)
-        return (result_pair);
     shared_initialize_error = promise_shared.initialize();
     if (shared_initialize_error != FT_ERR_SUCCESS)
         return (result_pair);
@@ -811,8 +813,8 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         return (result_pair);
     }
-    int future_initialize_error = future_value.initialize(promise_shared);
-    if (future_initialize_error != FT_ERR_SUCCESS)
+    result_future_initialize_error = result_pair.key.initialize(promise_shared);
+    if (result_future_initialize_error != FT_ERR_SUCCESS)
     {
         return (result_pair);
     }
@@ -893,8 +895,6 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     if (!task_entry._function)
     {
         task_body();
-        if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
-            return (result_pair);
         return (result_pair);
     }
     unsigned long long parent_span;
@@ -925,8 +925,6 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
             if (this->_scheduled.lock(&scheduled_lock_acquired) == FT_ERR_SUCCESS)
                 this->_scheduled.unlock(scheduled_lock_acquired);
         }
-        if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
-            return (result_pair);
         this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
                 g_ft_task_trace_label_schedule_once, false);
         return (result_pair);
@@ -940,8 +938,6 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED, trace_id, parent_span,
             g_ft_task_trace_label_schedule_once, false);
-    if (result_pair.key.move(future_value) != FT_ERR_SUCCESS)
-        return (result_pair);
     return (result_pair);
 }
 

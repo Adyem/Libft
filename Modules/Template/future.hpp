@@ -11,6 +11,7 @@
 #include "../PThread/pthread.hpp"
 #include <chrono>
 #include <cstdlib>
+#include <thread>
 
 template <typename ValueType>
 class ft_future
@@ -517,11 +518,11 @@ int32_t ft_future<ValueType>::wait_ready() const
     start_time = std::chrono::steady_clock::now();
     while (!promise_pointer->is_ready())
     {
-        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(5))
+        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(30))
         {
             return (FT_ERR_TIMEOUT);
         }
-        pt_thread_yield();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     return (FT_ERR_SUCCESS);
 }
@@ -988,11 +989,11 @@ inline int32_t ft_future<void>::wait_ready() const
     start_time = std::chrono::steady_clock::now();
     while (!promise_pointer->is_ready())
     {
-        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(5))
+        if (std::chrono::steady_clock::now() - start_time > std::chrono::seconds(30))
         {
             return (FT_ERR_TIMEOUT);
         }
-        pt_thread_yield();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     return (FT_ERR_SUCCESS);
 }

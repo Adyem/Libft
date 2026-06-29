@@ -21,10 +21,10 @@ FT_TEST(test_math_factorial_int_basic)
 
 FT_TEST(test_math_factorial_zero_is_one)
 {
-    long result;
+    int64_t result;
 
     result = math_factorial(static_cast<int64_t>(0));
-    FT_ASSERT_EQ(1L, result);
+    FT_ASSERT_EQ(static_cast<int64_t>(1), result);
     return (1);
 }
 
@@ -57,10 +57,10 @@ FT_TEST(test_math_factorial_long_large_value)
 
 FT_TEST(test_math_factorial_long_overflow)
 {
-    long result;
+    int64_t result;
 
     result = math_factorial(static_cast<int64_t>(21));
-    FT_ASSERT_EQ(0L, result);
+    FT_ASSERT_EQ(static_cast<int64_t>(0), result);
     return (1);
 }
 
@@ -84,11 +84,11 @@ FT_TEST(test_math_factorial_long_long_overflow)
 
 FT_TEST(test_math_factorial_recovers_after_invalid_input)
 {
-    long result;
+    int64_t result;
 
     result = math_factorial(static_cast<int64_t>(-5));
-    FT_ASSERT_EQ(0L, result);
+    FT_ASSERT_EQ(static_cast<int64_t>(0), result);
     result = math_factorial(static_cast<int64_t>(6));
-    FT_ASSERT_EQ(720L, result);
+    FT_ASSERT_EQ(static_cast<int64_t>(720), result);
     return (1);
 }

@@ -110,6 +110,10 @@ ft_size_t api_debug_get_last_async_bytes_received(void);
 int32_t api_debug_get_last_async_receive_state(void);
 int32_t api_debug_get_last_async_receive_timeout(void);
 
+#ifdef LIBFT_TEST_BUILD
+void api_retry_circuit_destroy_for_tests(void);
+#endif
+
 ft_bool api_is_configuration_socket_error(int32_t error_code);
 
 #endif

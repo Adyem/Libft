@@ -24,7 +24,8 @@ The `System_utils` module wraps environment variables, low-level file descriptor
 ## Process, Signals, and Resource Tracing
 
 - `su_get_cpu_count()` / `su_get_total_memory()` - Return basic system capacity information.
-- `su_abort()` and signal helpers `su_sigabrt`, `su_sigfpe`, `su_sigill`, `su_sigint`, `su_sigsegv`, `su_sigterm` - Abort/signal handling entry points. `su_abort()` prints the abort reason and a stack trace before terminating, including in test builds.
+- `su_abort()` and signal helpers `su_sigabrt`, `su_sigfpe`, `su_sigill`, `su_sigint`, `su_sigsegv`, `su_sigterm` - Abort/signal handling entry points. `su_abort()` prints the abort reason before terminating in normal builds; test builds suppress that diagnostic output so the runner stays limited to status lines.
+- `su_exit(int32_t exit_code)` - Terminates the process immediately through the shared `System_utils` exit wrapper.
 - `su_assert(ft_bool condition, const char *message)` - Aborts with a message when a condition is false.
 - `t_su_resource_tracer` - Callback invoked before abort/resource diagnostics.
 - `su_register_resource_tracer(...)`, `su_unregister_resource_tracer(...)`, `su_clear_resource_tracers()`, and `su_run_resource_tracers(...)` - Manage resource tracer callbacks.

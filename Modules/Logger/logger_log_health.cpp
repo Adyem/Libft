@@ -625,6 +625,14 @@ void ft_log_enable_remote_health(ft_bool enable)
     return ;
 }
 
+#ifdef LIBFT_TEST_BUILD
+void ft_log_destroy_remote_health_for_tests(void)
+{
+    (void)g_health_states.destroy();
+    return ;
+}
+#endif
+
 void ft_log_set_remote_health_interval(uint32_t interval_seconds)
 {
     int32_t lock_status;

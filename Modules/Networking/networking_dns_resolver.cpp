@@ -629,15 +629,19 @@ void networking_dns_clear_cache(void) noexcept
         return ;
     }
     g_networking_dns_cache.clear();
+    cache_lock_error = networking_dns_cache_unlock(cache_lock_acquired);
+    if (cache_lock_error != FT_ERR_SUCCESS)
     {
-        int32_t cache_unlock_error = networking_dns_cache_unlock(cache_lock_acquired);
-
-        if (cache_unlock_error != FT_ERR_SUCCESS)
-        {
-            networking_push_failure(cache_unlock_error);
-            return ;
-        }
+        networking_push_failure(cache_lock_error);
+        return ;
     }
-    (void)(FT_ERR_SUCCESS);
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+void networking_dns_destroy_cache_for_tests(void) noexcept
+{
+    (void)g_networking_dns_cache.destroy();
+    return ;
+}
+#endif

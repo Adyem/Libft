@@ -2720,8 +2720,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_global_error_stack_error_str_at(ft_size_t index)`
   - `const char *ft_global_error_stack_peek_last_error_str(void)`
   - `const char* ft_strerror(int error_code)`
-  - `void ft_perror(const char *error_msg)`
-  - `void ft_exit(const char *error_msg, int exit_code)`
+  - `int32_t ft_perror(const char *error_msg, int32_t error_code)`
+  - `void ft_exit(const char *error_msg, int32_t exit_code)`
 - Defines: _None_
 
 ### Errno/errno_code.cpp
@@ -2799,7 +2799,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `void ft_exit(const char *error_msg, int exit_code)`
+  - `void ft_exit(const char *error_msg, int32_t exit_code)`
 
 ### Errno/errno_internal.hpp
 
@@ -2843,7 +2843,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `void ft_perror(const char *error_msg)`
+  - `int32_t ft_perror(const char *error_msg, int32_t error_code)`
 
 ### Errno/errno_strerror.cpp
 
@@ -11341,6 +11341,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *su_internal_take_abort_reason(void)`
 - Defines:
   - `void su_abort(void)`
+  - `void su_exit(int32_t exit_code)`
 
 ### System_utils/System_utils_assert.cpp
 
@@ -11547,6 +11548,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `unsigned int su_get_cpu_count(void)`
   - `unsigned long long su_get_total_memory(void)`
   - `void su_abort(void)`
+  - `void su_exit(int32_t exit_code)`
   - `void su_sigabrt(void)`
   - `void su_sigfpe(void)`
   - `void su_sigill(void)`

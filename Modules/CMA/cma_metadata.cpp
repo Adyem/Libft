@@ -281,6 +281,11 @@ void    cma_metadata_release_block(Block *block)
     block->prev = nullptr;
     block->size = 0;
     block->payload = nullptr;
+#ifdef LIBFT_TEST_BUILD
+    block->leak_ignored = FT_FALSE;
+    block->leak_stack_frame_count = 0;
+    block->leak_test_name = nullptr;
+#endif
 #if DEBUG
     block->debug_base_pointer = nullptr;
     block->debug_user_size = 0;

@@ -10,9 +10,13 @@ $(TARGET): $(OBJS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) Makefile ../../mk/compiler_flags.mk ../../mk/modules/Voxel.mk | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
-	$(FIXDEP)
+	@$(FIXDEP)
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+	    if [ "$(LIBFT_BATCH_OUTPUT)" != "1" ]; then \
+	        printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS); \
+	    fi
+
+$(OBJDIR)/%.o: CFLAGS += -DGAME_USE_VOXEL_REGION_BACKEND=1
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
@@ -24,9 +28,13 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) Makefile ../../mk/compiler_flags.mk ../../mk/modules/Voxel.mk | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
-	$(FIXDEP)
+	@$(FIXDEP)
 	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+	    if [ "$(LIBFT_BATCH_OUTPUT)" != "1" ]; then \
+	        printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS); \
+	    fi
+
+$(DEBUG_OBJDIR)/%.o: CFLAGS += -DGAME_USE_VOXEL_REGION_BACKEND=1
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@

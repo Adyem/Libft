@@ -15,13 +15,33 @@ static void terrain_abort_unknown_block_id(uint32_t block_id,
 {
     char decimal_buffer[10];
     ft_size_t digit_count;
+    int32_t write_error;
 
-    errno_write_stderr("terrain error: method=");
-    errno_write_stderr(method_name);
-    errno_write_stderr(" unknown block id=");
+    write_error = errno_write_stderr("terrain error: method=");
+    if (write_error != FT_ERR_SUCCESS)
+    {
+        su_abort();
+        return ;
+    }
+    write_error = errno_write_stderr(method_name);
+    if (write_error != FT_ERR_SUCCESS)
+    {
+        su_abort();
+        return ;
+    }
+    write_error = errno_write_stderr(" unknown block id=");
+    if (write_error != FT_ERR_SUCCESS)
+    {
+        su_abort();
+        return ;
+    }
     if (block_id == 0U)
     {
-        errno_write_stderr("0");
+        if (errno_write_stderr("0") != FT_ERR_SUCCESS)
+        {
+            su_abort();
+            return ;
+        }
     }
     else
     {
@@ -36,10 +56,18 @@ static void terrain_abort_unknown_block_id(uint32_t block_id,
         while (digit_count > 0U)
         {
             digit_count--;
-            (void)su_write(2, &decimal_buffer[digit_count], 1U);
+            if (su_write(2, &decimal_buffer[digit_count], 1U) != 1)
+            {
+                su_abort();
+                return ;
+            }
         }
     }
-    errno_write_stderr("\n");
+    if (errno_write_stderr("\n") != FT_ERR_SUCCESS)
+    {
+        su_abort();
+        return ;
+    }
     su_abort();
     return ;
 }
@@ -548,7 +576,7 @@ uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept
     if (biome == TERRAIN_BIOME_DESERT)
         return (TERRAIN_GENERATOR_DIRT_BLOCK);
     if (biome == TERRAIN_BIOME_SNOW)
-        return (TERRAIN_GENERATOR_STONE_BLOCK);
+        return (TERRAIN_GENERATOR_GRASS_BLOCK);
     if (biome == TERRAIN_BIOME_MOUNTAINS)
         return (TERRAIN_GENERATOR_STONE_BLOCK);
     return (TERRAIN_GENERATOR_GRASS_BLOCK);

@@ -91,6 +91,11 @@ static void economy_table_signal_handler(int signal_value)
 
 static int economy_table_expect_sigabrt_uninitialised(void (*operation)(game_economy_table &))
 {
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+    char output_buffer[8192];
+
     std::memset(&g_economy_table_old_action_abort, 0,
         sizeof(g_economy_table_old_action_abort));
     std::memset(&g_economy_table_old_action_iot, 0,
@@ -114,24 +119,42 @@ static int economy_table_expect_sigabrt_uninitialised(void (*operation)(game_eco
     if (sigaction(SIGABRT, &g_economy_table_new_action_abort,
             &g_economy_table_old_action_abort) != 0)
     {
-        perror("sigaction SIGABRT failed");
         return (0);
     }
     if (SIGIOT != SIGABRT
         && sigaction(SIGIOT, &g_economy_table_new_action_iot,
             &g_economy_table_old_action_iot) != 0)
     {
-        perror("sigaction SIGIOT failed");
-        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+        if (sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr) != 0)
+            return (0);
+        return (0);
+    }
+    if (test_capture_abort_output_begin(saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+    {
+        if (sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr) != 0)
+            return (0);
+        if (SIGIOT != SIGABRT)
+        {
+            if (sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr) != 0)
+                return (0);
+        }
         return (0);
     }
 
     g_economy_table_uninitialised_storage = std::malloc(sizeof(game_economy_table));
     if (g_economy_table_uninitialised_storage == ft_nullptr)
     {
-        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+        if (test_capture_abort_output_end(saved_stderr, pipe_read_descriptor,
+                pipe_write_descriptor, output_buffer, sizeof(output_buffer)) == 0)
+            return (0);
+        if (sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr) != 0)
+            return (0);
         if (SIGIOT != SIGABRT)
-            (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
+        {
+            if (sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr) != 0)
+                return (0);
+        }
         return (0);
     }
     g_economy_table_signal_caught = 0;
@@ -150,9 +173,16 @@ static int economy_table_expect_sigabrt_uninitialised(void (*operation)(game_eco
         std::free(g_economy_table_uninitialised_storage);
         g_economy_table_uninitialised_storage = ft_nullptr;
     }
-    (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+    if (test_capture_abort_output_end(saved_stderr, pipe_read_descriptor,
+            pipe_write_descriptor, output_buffer, sizeof(output_buffer)) == 0)
+        return (0);
+    if (sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr) != 0)
+        return (0);
     if (SIGIOT != SIGABRT)
-        (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
+    {
+        if (sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr) != 0)
+            return (0);
+    }
 
     if (g_economy_table_signal_caught == SIGABRT)
         return (1);

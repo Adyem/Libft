@@ -4,19 +4,11 @@
 #ifdef GAME_USE_VOXEL_REGION_BACKEND
 
 #include "../../Modules/Voxel/voxel_mesh.hpp"
+#include "../../Modules/Geometry/geometry_3d.hpp"
 #include "../../Modules/Voxel/voxel.hpp"
 
 static int32_t initialize_unit_cube_frustum_or_fail(geometry_frustum &frustum)
 {
-    int32_t plane_index;
-
-    plane_index = 0;
-    while (plane_index < 6)
-    {
-        if (frustum.planes[plane_index].normal.initialize() != FT_ERR_SUCCESS)
-            return (FT_ERR_INITIALIZATION_FAILED);
-        plane_index += 1;
-    }
     if (frustum.planes[0].normal.initialize(1.0, 0.0, 0.0) != FT_ERR_SUCCESS)
         return (FT_ERR_INITIALIZATION_FAILED);
     frustum.planes[0].distance = 1.0;

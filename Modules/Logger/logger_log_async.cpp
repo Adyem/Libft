@@ -223,6 +223,7 @@ void ft_log_enable_async(ft_bool enable)
                 return ;
             }
             g_async_running = FT_FALSE;
+            g_async_pending_messages = 0;
             pthread_mutex_unlock(&g_condition_mutex);
         }
     }
@@ -495,3 +496,11 @@ void ft_log_reset_async_metrics()
     }
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+void ft_log_destroy_async_runtime_for_tests(void)
+{
+    (void)g_log_queue.destroy();
+    return ;
+}
+#endif

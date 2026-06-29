@@ -1876,10 +1876,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `unsigned long long ft_global_error_stack_get_id_at(ft_size_t index);`
 - `unsigned long long ft_global_error_stack_push_entry(int error_code);`
 - `unsigned long long ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id);`
-- `void ft_exit(const char *error_msg, int exit_code);`
+- `void ft_exit(const char *error_msg, int32_t exit_code);`
 - `void ft_global_error_stack_pop_all(void);`
 - `void ft_global_error_stack_push(int error_code);`
-- `void ft_perror(const char *error_msg);`
+- `int32_t ft_perror(const char *error_msg, int32_t error_code);`
 
 ### Errno/errno_code.cpp
 
@@ -7502,6 +7502,7 @@ The catalog lists the function declarations and definitions that appear in the C
 ### System_utils/System_utils_abort.cpp
 
 - `void su_abort(void)`
+- `void su_exit(int32_t exit_code)`
 
 ### System_utils/System_utils_assert.cpp
 
@@ -7653,6 +7654,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `unsigned int su_get_cpu_count(void);`
 - `unsigned long long su_get_total_memory(void);`
 - `void su_abort(void);`
+- `void su_exit(int32_t exit_code);`
 - `void su_assert(bool condition, const char *message);`
 - `void su_clear_forced_fread_failure(void);`
 - `void su_clear_resource_tracers(void);`

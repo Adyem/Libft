@@ -4,12 +4,17 @@
 # include "../Errno/errno.hpp"
 
 # define DBG_STACK_TRACE_MAX_FRAMES 64
+#if defined(_WIN32)
+# define DBG_EXPORT __declspec(dllexport)
+#else
+# define DBG_EXPORT
+#endif
 
 int32_t dbg_enable_crash_stack_traces(void) noexcept;
 void    dbg_disable_crash_stack_traces(void) noexcept;
 ft_bool dbg_crash_stack_traces_enabled(void) noexcept;
 void    dbg_trace_message(const char *message) noexcept;
-void    dbg_print_stack_trace(void) noexcept;
+DBG_EXPORT void    dbg_print_stack_trace(void) noexcept;
 int32_t dbg_symbolize_address(const void *address,
             char *symbol_buffer, ft_size_t symbol_buffer_size,
             char *location_buffer, ft_size_t location_buffer_size) noexcept;

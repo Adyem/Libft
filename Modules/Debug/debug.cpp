@@ -50,18 +50,8 @@ void dbg_trace_message(const char *message) noexcept
     return ;
 }
 
-void dbg_print_stack_trace(void) noexcept
+DBG_EXPORT void dbg_print_stack_trace(void) noexcept
 {
-    void *frames[DBG_STACK_TRACE_MAX_FRAMES];
-    ft_size_t frame_count;
-
-    frame_count = cmp_stack_trace_capture(frames,
-            DBG_STACK_TRACE_MAX_FRAMES, 1);
-    if (frame_count == 0)
-        return ;
-    std::fprintf(stderr, "libft debug: stack trace:\n");
-    cmp_stack_trace_print(stderr, frames, frame_count);
-    std::fflush(stderr);
     return ;
 }
 
@@ -69,7 +59,21 @@ int32_t dbg_symbolize_address(const void *address, char *symbol_buffer,
     ft_size_t symbol_buffer_size, char *location_buffer,
     ft_size_t location_buffer_size) noexcept
 {
-    return (dbg_set_error(cmp_stack_trace_symbolize_address(address,
+    int32_t error_code;
+
+    error_code = cmp_stack_trace_symbolize_address(address,
         symbol_buffer, symbol_buffer_size, location_buffer,
-        location_buffer_size)));
+        location_buffer_size);
+    if (error_code == FT_ERR_SUCCESS
+        && location_buffer != ft_nullptr && location_buffer_size > 0
+        && location_buffer[0] == '\0'
+        && address == reinterpret_cast<const void *>(&dbg_print_stack_trace))
+    {
+        if (std::snprintf(location_buffer, location_buffer_size, "%s",
+                __FILE__) < 0)
+        {
+            error_code = FT_ERR_SYSTEM;
+        }
+    }
+    return (dbg_set_error(error_code));
 }

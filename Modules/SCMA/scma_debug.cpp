@@ -5,6 +5,9 @@
 #include "../Errno/errno.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
+#ifdef LIBFT_TEST_BUILD
+# include "../System_utils/test_system_utils_runner.hpp"
+#endif
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
@@ -89,6 +92,7 @@ void    scma_capture_leak_stack(scma_block *block, ft_size_t skip_count)
 {
     if (block == ft_nullptr)
         return ;
+    block->leak_test_name = ft_test_runner_current_test_name();
     block->leak_stack_frame_count = cmp_stack_trace_capture(
             block->leak_stack_frames,
             CMP_STACK_TRACE_MAX_FRAMES,
@@ -238,9 +242,15 @@ int32_t scma_report_leaks(void)
         block = &span.data[entry_index];
         if (block->in_use && block->leak_ignored == FT_FALSE)
         {
+            const char *test_name;
+
+            test_name = block->leak_test_name;
+            if (test_name == nullptr)
+                test_name = "<unknown>";
             std::printf("  [leak] handle={index=%" PRIu64 ",generation=%" PRIu64
-                "} offset=%" PRIu64 " size=%" PRIu64 "\n",
-                entry_index, block->generation, block->offset, block->size);
+                "} test=%s offset=%" PRIu64 " size=%" PRIu64 "\n",
+                entry_index, block->generation, test_name,
+                block->offset, block->size);
             cmp_stack_trace_print(stdout, block->leak_stack_frames,
                 block->leak_stack_frame_count);
         }

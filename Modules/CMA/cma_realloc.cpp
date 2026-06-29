@@ -94,6 +94,7 @@ static void release_block_locked(Block *block)
 #ifdef LIBFT_TEST_BUILD
     block->leak_ignored = FT_FALSE;
     block->leak_stack_frame_count = 0;
+    block->leak_test_name = nullptr;
 #endif
     block = merge_block(block);
     cma_debug_initialize_block(block);

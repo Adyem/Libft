@@ -253,6 +253,15 @@ void    gnl_reset_all_streams(void)
     return ;
 }
 
+#ifdef LIBFT_TEST_BUILD
+void    gnl_destroy_streams_for_tests(void)
+{
+    (void)g_gnl_leftovers.destroy();
+    (void)g_gnl_streams.destroy();
+    return ;
+}
+#endif
+
 char* ft_strjoin_gnl(char* string_one, char* string_two)
 {
     char* result;

@@ -28,9 +28,20 @@ static int scma_expect_sigabrt_uninitialised(void (*operation)(scma_handle_acces
     action.sa_handler = scma_accessor_uninitialised_handler;
     sigemptyset(&action.sa_mask);
     int result = 0;
+    int32_t saved_stderr;
+    int32_t pipe_read_descriptor;
+    int32_t pipe_write_descriptor;
+    char output_buffer[8192];
 
     if (sigaction(SIGABRT, &action, &backup) != 0)
         return (0);
+    if (test_capture_abort_output_begin(saved_stderr,
+            pipe_read_descriptor, pipe_write_descriptor) == 0)
+    {
+        if (sigaction(SIGABRT, &backup, ft_nullptr) != 0)
+            return (0);
+        return (0);
+    }
     if (sigsetjmp(g_scma_accessor_uninitialised_jump, 1) == 0)
     {
         alignas(scma_handle_accessor<int>) unsigned char storage[
@@ -46,7 +57,11 @@ static int scma_expect_sigabrt_uninitialised(void (*operation)(scma_handle_acces
     {
         result = 1;
     }
-    sigaction(SIGABRT, &backup, ft_nullptr);
+    if (test_capture_abort_output_end(saved_stderr, pipe_read_descriptor,
+            pipe_write_descriptor, output_buffer, sizeof(output_buffer)) == 0)
+        return (0);
+    if (sigaction(SIGABRT, &backup, ft_nullptr) != 0)
+        return (0);
     return (result);
 }
 

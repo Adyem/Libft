@@ -19,5 +19,5 @@ The `Errno` module defines shared error codes, lifecycle-state constants, and ba
 ## Public API
 
 - `ft_strerror(int32_t error_code)` - Returns a readable string for a project error code.
-- `ft_perror(const char *error_msg, int32_t error_code)` - Prints a caller-provided message and readable error text.
-- `ft_exit(const char *error_msg, int32_t exit_code)` - Prints an error message and exits the process.
+- `ft_perror(const char *error_msg, int32_t error_code)` - Prints a caller-provided message and readable error text, returning `FT_ERR_SUCCESS` or `FT_ERR_*` on write failure.
+- `ft_exit(const char *error_msg, int32_t exit_code)` - Prints an error message and exits the process through the shared `System_utils` exit wrapper.

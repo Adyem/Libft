@@ -376,3 +376,13 @@ void api_retry_circuit_reset(void)
     api_connection_pool_flush();
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+void api_retry_circuit_destroy_for_tests(void)
+{
+    ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
+
+    (void)states.destroy();
+    return ;
+}
+#endif

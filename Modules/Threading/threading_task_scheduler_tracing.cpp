@@ -138,6 +138,45 @@ int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
     return (-1);
 }
 
+int32_t task_scheduler_trace_reset_for_tests(void)
+{
+    int32_t runtime_error;
+    int32_t clear_error;
+    bool lock_acquired;
+
+    runtime_error = task_scheduler_trace_ensure_runtime();
+    if (runtime_error != FT_ERR_SUCCESS)
+    {
+        task_scheduler_trace_set_error(static_cast<uint32_t>(runtime_error));
+        return (runtime_error);
+    }
+    lock_acquired = false;
+    g_task_scheduler_trace_mutex.lock();
+    lock_acquired = true;
+    g_task_scheduler_trace_sinks.clear();
+    clear_error = g_task_scheduler_trace_sinks.get_error();
+    if (lock_acquired)
+        g_task_scheduler_trace_mutex.unlock();
+    g_task_scheduler_trace_current = 0;
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
+    if (clear_error != FT_ERR_SUCCESS)
+    {
+        task_scheduler_trace_set_error(static_cast<uint32_t>(clear_error));
+        return (clear_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+#ifdef LIBFT_TEST_BUILD
+void task_scheduler_trace_destroy_for_tests(void)
+{
+    (void)g_task_scheduler_trace_sinks.destroy();
+    g_task_scheduler_trace_current = 0;
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
+    return ;
+}
+#endif
+
 int32_t task_scheduler_trace_get_error(void)
 {
     return (static_cast<int32_t>(g_task_scheduler_trace_last_error));

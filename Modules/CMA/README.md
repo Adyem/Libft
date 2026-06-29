@@ -29,7 +29,7 @@ The `CMA` module is the project allocator layer. It wraps allocation, reallocati
 - `cma_free_double(char **content)` - Releases a null-terminated array of strings and the array itself.
 - `cma_block_size(const void *memory_pointer)` - Returns the tracked block size or zero when unavailable.
 - `cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)` - Writes the tracked block size and returns an error code.
-- `cma_alloc_size(const void *memory_pointer)` - Returns the usable allocation size known to the allocator.
+- `cma_alloc_size(const void *memory_pointer)` - Returns the rounded usable allocation size known to the allocator.
 
 ## Limits, Thread Safety, and Stats
 

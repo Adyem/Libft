@@ -341,3 +341,11 @@ int32_t observability_task_scheduler_bridge_shutdown(void)
         return (FT_ERR_INTERNAL);
     return (FT_ERR_SUCCESS);
 }
+
+#ifdef LIBFT_TEST_BUILD
+void observability_task_scheduler_bridge_destroy_for_tests(void)
+{
+    (void)g_observability_span_states.destroy();
+    return ;
+}
+#endif

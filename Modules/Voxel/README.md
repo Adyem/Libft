@@ -62,7 +62,7 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - Biomes are selected in world-space zones so adjacent chunks line up cleanly across region boundaries.
 - Height is driven by smooth noise instead of a flat cutoff, which produces hills and terrain variation within each biome.
 - Biome profiles control baseline elevation, height variation, and topsoil depth, which makes it easy to tune different terrain regions independently.
-- Surface blocks now vary by biome, and post-passes place shrubs plus reusable tree templates on suitable surfaces.
+- Surface blocks now vary by biome, with snow using grass and mountains using stone, and post-passes place shrubs plus reusable tree templates on suitable surfaces.
 - The block registry records collision, transparency, replaceability, face occlusion, and hardness so terrain code can make local decisions without hardcoding block ids everywhere.
 - Unknown block ids are rejected at chunk write and deserialization boundaries so corrupted palette data does not silently degrade into air-like behavior.
 - Small oak trees are used for plains and hills, small pine trees are used for snow and mountains, and small cactus templates are used for desert regions.

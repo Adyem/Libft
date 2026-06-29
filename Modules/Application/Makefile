@@ -17,9 +17,11 @@ $(TARGET): $(OBJS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
-	$(FIXDEP)
+	@$(FIXDEP)
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-		printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+		if [ "$(LIBFT_BATCH_OUTPUT)" != "1" ]; then \
+		    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS); \
+		fi
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
@@ -31,9 +33,11 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
-	$(FIXDEP)
+	@$(FIXDEP)
 	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-		printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+		if [ "$(LIBFT_BATCH_OUTPUT)" != "1" ]; then \
+		    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS); \
+		fi
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@

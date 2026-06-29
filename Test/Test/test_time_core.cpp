@@ -21,7 +21,7 @@ static std::chrono::system_clock::time_point    test_time_now_hook(void)
 
 FT_TEST(test_time_now_ms_returns_hooked_value)
 {
-    long                        result;
+    int64_t                     result;
     std::chrono::milliseconds   expected_duration(123456);
 
     g_mock_time_now = std::chrono::system_clock::time_point(expected_duration);
@@ -30,12 +30,12 @@ FT_TEST(test_time_now_ms_returns_hooked_value)
     time_reset_clock_now_hook();
     {
         const auto expected_count = expected_duration.count();
-        long expected_value;
+        int64_t expected_value;
 
-        if constexpr (std::is_same_v<decltype(expected_count), long>)
+        if constexpr (std::is_same_v<decltype(expected_count), int64_t>)
             expected_value = expected_count;
         else
-            expected_value = static_cast<long>(expected_count);
+            expected_value = static_cast<int64_t>(expected_count);
         FT_ASSERT_EQ(expected_value, result);
     }
     return (1);
@@ -44,7 +44,7 @@ FT_TEST(test_time_now_ms_returns_hooked_value)
 #if LONG_MAX < LLONG_MAX
 FT_TEST(test_time_now_ms_detects_overflow)
 {
-    long                                        result;
+    int64_t                                     result;
     std::chrono::milliseconds::rep             overflow_count;
 
     overflow_count = static_cast<std::chrono::milliseconds::rep>(LONG_MAX) + 1;
@@ -52,7 +52,7 @@ FT_TEST(test_time_now_ms_detects_overflow)
     time_set_clock_now_hook(test_time_now_hook);
     result = time_now_ms();
     time_reset_clock_now_hook();
-    FT_ASSERT_EQ(LONG_MAX, result);
+    FT_ASSERT_EQ(static_cast<int64_t>(LONG_MAX), result);
     return (1);
 }
 #endif
