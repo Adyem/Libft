@@ -25,10 +25,20 @@ c++ --version
 
    ```bash
    sudo apt update
-   sudo apt install build-essential clang cmake pkg-config python3 python3-pip git
+   sudo apt install build-essential clang cmake pkg-config python3 python3-pip git \
+       zlib1g-dev libx11-dev libxext-dev libxi-dev libasound2-dev \
+       libgl1-mesa-dev
    ```
 
-2. Clone the repository and initialise submodules if present:
+2. The Linux DUMB/GPGR window backends need X11 development headers when the
+   real X11 backend is built. On Debian/Ubuntu, `X11/Xatom.h` is provided by
+   `libx11-dev`; `X11/extensions/Xdbe.h` is provided by `libxext-dev`.
+   `GL/gl.h` is provided by `libgl1-mesa-dev`.
+   If these packages are not installed, the Libft test build uses the Linux
+   DUMB stub backend where available and omits GPGR where needed, but
+   graphical/window tests and demos need the development packages above.
+
+3. Clone the repository and initialise submodules if present:
 
    ```bash
    git clone https://example.com/Libft.git
@@ -36,7 +46,7 @@ c++ --version
    git submodule update --init --recursive
    ```
 
-3. Build the library and run the tests:
+4. Build the library and run the tests:
 
    ```bash
    make
