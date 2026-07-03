@@ -481,7 +481,7 @@ ft_bool networking_dns_resolve(const char *host, const char *service,
         if (current->ai_addrlen <= sizeof(resolved.address))
         {
             ft_memcpy(&resolved.address, current->ai_addr, current->ai_addrlen);
-            resolved.length = static_cast<socklen_t>(current->ai_addrlen);
+            resolved.length = FT_CONDITIONAL_STATIC_CAST(socklen_t, current->ai_addrlen);
             out_addresses.push_back(resolved);
         }
         current = current->ai_next;
@@ -599,8 +599,8 @@ ft_bool networking_resolved_address_to_string(
         networking_push_failure(FT_ERR_SOCKET_RESOLVE_FAMILY);
         return (FT_FALSE);
     }
-    if (!inet_ntop(family, source_address, buffer,
-            static_cast<socklen_t>(buffer_size)))
+        if (!inet_ntop(family, source_address, buffer,
+            FT_CONDITIONAL_STATIC_CAST(socklen_t, buffer_size)))
     {
         networking_push_failure(FT_ERR_SOCKET_RESOLVE_FAILED);
         return (FT_FALSE);
