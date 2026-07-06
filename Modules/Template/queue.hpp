@@ -199,7 +199,11 @@ ft_queue<ElementType>::ft_queue()
 template <typename ElementType>
 ft_queue<ElementType>::~ft_queue()
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = ft_queue<ElementType>::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

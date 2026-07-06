@@ -237,7 +237,11 @@ ft_variant<Types...>::ft_variant(const TypeToStore& value)
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     (void)this->initialize(value);
@@ -253,7 +257,11 @@ ft_variant<Types...>::ft_variant(TypeToStore&& value)
     , _mutex(ft_nullptr)
     , _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     (void)this->initialize(ft_move(value));
@@ -264,7 +272,11 @@ ft_variant<Types...>::ft_variant(TypeToStore&& value)
 template <typename... Types>
 ft_variant<Types...>::~ft_variant()
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

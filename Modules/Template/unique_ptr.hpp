@@ -239,7 +239,11 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(ManagedType *pointer, ft_bool array_type
     : _managed_pointer(pointer), _array_size(array_size), _is_array_type(array_type),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_INITIALISED)
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     (void)this->initialize(pointer, array_type, array_size);
@@ -252,7 +256,11 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_size_t size) noexcept
     : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     (void)this->initialize(size);
@@ -266,7 +274,11 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(std::in_place_t, Args&&... args)
     : _managed_pointer(ft_nullptr), _array_size(0), _is_array_type(FT_FALSE),
       _mutex(ft_nullptr), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     (void)this->initialize_value(std::forward<Args>(args)...);
@@ -287,7 +299,11 @@ ft_uniqueptr<ManagedType> &ft_uniqueptr<ManagedType>::operator=(
 template <typename ManagedType>
 ft_uniqueptr<ManagedType>::~ft_uniqueptr()
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

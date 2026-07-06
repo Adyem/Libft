@@ -133,7 +133,11 @@ ft_map<Key, MappedType>::ft_map(ft_size_t initial_capacity)
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::~ft_map()
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = ft_map<Key, MappedType>::_last_error;
     if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)

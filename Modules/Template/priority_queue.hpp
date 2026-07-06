@@ -196,7 +196,11 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_size_t initial_cap
 template <typename ElementType, typename Compare>
 ft_priority_queue<ElementType, Compare>::~ft_priority_queue()
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = ft_priority_queue<ElementType, Compare>::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
