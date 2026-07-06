@@ -221,7 +221,11 @@ ft_optional<ElementType>::ft_optional(const ElementType& value)
     : _value(ft_nullptr), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     (void)this->initialize(value);
@@ -234,7 +238,11 @@ ft_optional<ElementType>::ft_optional(ElementType&& value)
     : _value(ft_nullptr), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     (void)this->initialize(ft_move(value));
@@ -245,7 +253,11 @@ ft_optional<ElementType>::ft_optional(ElementType&& value)
 template <typename ElementType>
 ft_optional<ElementType>::~ft_optional()
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

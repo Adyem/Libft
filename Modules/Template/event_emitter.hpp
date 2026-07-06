@@ -208,7 +208,11 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_size_t initial_capacit
 template <typename EventType, typename... Args>
 ft_event_emitter<EventType, Args...>::~ft_event_emitter()
 {
+    #if defined(__APPLE__)
+    int32_t previous_error;
+    #else
     uint32_t previous_error;
+    #endif
 
     previous_error = ft_event_emitter<EventType, Args...>::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

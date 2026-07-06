@@ -2,6 +2,23 @@
 # define LIBFT_HPP
 
 #include <cstdint>
+#include <type_traits>
+
+template <typename TargetType, typename ValueType>
+constexpr TargetType ft_conditional_static_cast(ValueType value)
+{
+# if defined(__linux__)
+    if constexpr (std::is_same_v<TargetType, ValueType>)
+        return (value);
+    return (static_cast<TargetType>(value));
+# else
+    return (static_cast<TargetType>(value));
+# endif
+}
+
+#ifndef FT_CONDITIONAL_STATIC_CAST
+# define FT_CONDITIONAL_STATIC_CAST(TargetType, value) ft_conditional_static_cast<TargetType>(value)
+#endif
 
 #ifndef FT_TYPES_HPP
 # define FT_TYPES_HPP

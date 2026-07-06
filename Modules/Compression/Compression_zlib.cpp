@@ -1,7 +1,7 @@
 #include <zlib.h>
 #include <limits>
 #include "compression.hpp"
-#include "../Basic/limits.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Template/pair.hpp"
@@ -101,7 +101,7 @@ unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t
     }
     if (compression_size_fits_zlib_uLong(input_size) == FT_FALSE)
         return (ft_nullptr);
-    zlib_input_size = static_cast<uLong>(input_size);
+    zlib_input_size = FT_CONDITIONAL_STATIC_CAST(uLong, input_size);
     zlib_bound = compressBound(zlib_input_size);
     result_buffer = static_cast<unsigned char *>(cma_malloc(zlib_bound + sizeof(uint32_t)));
     if (!result_buffer)
@@ -153,11 +153,7 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
     }
     if (compression_size_fits_zlib_uLong(input_size - sizeof(uint32_t)) == FT_FALSE)
         return (ft_nullptr);
-#ifdef __linux__
-    zlib_input_size = input_size - sizeof(uint32_t);
-#else
-    zlib_input_size = static_cast<uLong>(input_size - sizeof(uint32_t));
-#endif
+    zlib_input_size = FT_CONDITIONAL_STATIC_CAST(uLong, input_size - sizeof(uint32_t));
     result_buffer = static_cast<unsigned char *>(cma_malloc(expected_size));
     if (!result_buffer)
     {

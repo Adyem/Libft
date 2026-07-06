@@ -82,10 +82,18 @@ class ft_gpu_window_windows : public ft_gpu_window
             if (this->_cursor_visible == visible)
                 return ;
             if (visible == FT_TRUE)
+            {
+                ft_dumb_controls_win32_unregister_capture_window();
                 ShowCursor(TRUE);
+            }
             else
+            {
                 ShowCursor(FALSE);
+                if (this->_hwnd != nullptr)
+                    ft_dumb_controls_win32_register_capture_window(this->_hwnd);
+            }
             this->_cursor_visible = visible;
+            return ;
         }
         ft_bool was_settings_key_pressed() const noexcept override
         {
@@ -112,6 +120,11 @@ class ft_gpu_window_windows : public ft_gpu_window
         void set_settings_key_pressed(ft_bool pressed) noexcept
         {
             this->_settings_key_pressed = pressed;
+            return ;
+        }
+        ft_bool is_cursor_visible() const noexcept
+        {
+            return (this->_cursor_visible);
         }
 };
 
@@ -138,7 +151,7 @@ static LRESULT CALLBACK gpgr_window_proc(HWND hwnd, UINT msg, WPARAM wparam,
         case WM_ACTIVATE:
             if (LOWORD(wparam) == WA_INACTIVE)
                 ft_dumb_controls_win32_unregister_capture_window();
-            else
+            else if (window != nullptr && window->is_cursor_visible() == FT_FALSE)
                 ft_dumb_controls_win32_register_capture_window(hwnd);
             return (0);
         case WM_KEYDOWN:
@@ -198,6 +211,14 @@ ft_bool ft_gpu_window_windows::initialize(const char *title, int32_t width,
         return (FT_FALSE);
 
     DWORD style;
+    int32_t window_x;
+    int32_t window_y;
+
+    if (fullscreen == FT_TRUE)
+    {
+        width = GetSystemMetrics(SM_CXSCREEN);
+        height = GetSystemMetrics(SM_CYSCREEN);
+    }
 
     if (fullscreen == FT_TRUE)
         style = WS_POPUP;
@@ -214,9 +235,16 @@ ft_bool ft_gpu_window_windows::initialize(const char *title, int32_t width,
     this->_mouse_clicked = FT_FALSE;
     this->_settings_key_pressed = FT_FALSE;
     this->_cursor_visible = FT_TRUE;
+    window_x = CW_USEDEFAULT;
+    window_y = CW_USEDEFAULT;
+    if (fullscreen == FT_TRUE)
+    {
+        window_x = 0;
+        window_y = 0;
+    }
 
     this->_hwnd = CreateWindowExA(0, class_name, title, style,
-        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left,
+        window_x, window_y, rect.right - rect.left,
         rect.bottom - rect.top, nullptr, nullptr, instance, this);
     if (this->_hwnd == nullptr)
     {
@@ -266,7 +294,6 @@ ft_bool ft_gpu_window_windows::initialize(const char *title, int32_t width,
         return (FT_FALSE);
     }
 
-    ft_dumb_controls_win32_register_capture_window(this->_hwnd);
     ShowWindow(this->_hwnd, SW_SHOW);
     UpdateWindow(this->_hwnd);
     this->_initialised_state = FT_CLASS_STATE_INITIALISED;

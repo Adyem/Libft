@@ -118,6 +118,9 @@ ft_render_platform_result ft_render_platform_create_window(
     DWORD                  style;
     RECT                   rect;
     HWND                   hwnd;
+    ft_bool                fullscreen;
+    int32_t                window_x;
+    int32_t                window_y;
 
     if (out_platform_state == NULL || out_framebuffer == NULL)
     {
@@ -131,9 +134,20 @@ ft_render_platform_result ft_render_platform_create_window(
     }
 
     state->instance_handle = GetModuleHandle(NULL);
-    state->width = desc.width;
-    state->height = desc.height;
-    state->is_fullscreen = FT_FALSE;
+    fullscreen = FT_FALSE;
+    if ((desc.flags & FT_RENDER_WINDOW_FLAG_FULLSCREEN) != 0)
+        fullscreen = FT_TRUE;
+    if (fullscreen == FT_TRUE)
+    {
+        state->width = GetSystemMetrics(SM_CXSCREEN);
+        state->height = GetSystemMetrics(SM_CYSCREEN);
+    }
+    else
+    {
+        state->width = desc.width;
+        state->height = desc.height;
+    }
+    state->is_fullscreen = fullscreen;
     state->dib_section = NULL;
     state->dib_pixels = NULL;
 
@@ -143,7 +157,7 @@ ft_render_platform_result ft_render_platform_create_window(
     window_class.hInstance = state->instance_handle;
     window_class.lpszClassName = "ft_render_window_class";
 
-    if (RegisterClass(&window_class) == 0)
+    if (RegisterClass(&window_class) == 0 && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
     {
         ft_render_platform_result result;
 
@@ -153,25 +167,35 @@ ft_render_platform_result ft_render_platform_create_window(
         return (result);
     }
 
-    style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    if ((desc.flags & FT_RENDER_WINDOW_FLAG_RESIZABLE) != 0)
+    if (fullscreen == FT_TRUE)
+        style = WS_POPUP;
+    else
+        style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+    if (fullscreen == FT_FALSE && (desc.flags & FT_RENDER_WINDOW_FLAG_RESIZABLE) != 0)
     {
         style = style | WS_SIZEBOX | WS_MAXIMIZEBOX;
     }
 
     rect.left = 0;
     rect.top = 0;
-    rect.right = desc.width;
-    rect.bottom = desc.height;
+    rect.right = state->width;
+    rect.bottom = state->height;
     AdjustWindowRect(&rect, style, FALSE);
+    window_x = CW_USEDEFAULT;
+    window_y = CW_USEDEFAULT;
+    if (fullscreen == FT_TRUE)
+    {
+        window_x = 0;
+        window_y = 0;
+    }
 
     hwnd = CreateWindowEx(
         0,
         window_class.lpszClassName,
         desc.title,
         style,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
+        window_x,
+        window_y,
         rect.right - rect.left,
         rect.bottom - rect.top,
         NULL,
@@ -192,6 +216,7 @@ ft_render_platform_result ft_render_platform_create_window(
 
     state->window_handle = hwnd;
     state->window_style = style;
+    SetRect(&state->windowed_rect, 0, 0, rect.right - rect.left, rect.bottom - rect.top);
 
     SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(state));
 
@@ -313,6 +338,7 @@ ft_render_platform_result ft_render_platform_present(
     ft_render_win32_state  *state;
     HDC                    memory_dc;
     HBITMAP                old_bitmap;
+    RECT                   client_rect;
 
     (void)depth_buffer;
 
@@ -330,15 +356,19 @@ ft_render_platform_result ft_render_platform_present(
     }
 
     old_bitmap = static_cast<HBITMAP>(SelectObject(memory_dc, state->dib_section));
-    BitBlt(
+    GetClientRect(state->window_handle, &client_rect);
+    SetStretchBltMode(state->window_device_context, COLORONCOLOR);
+    StretchBlt(
         state->window_device_context,
+        0,
+        0,
+        client_rect.right - client_rect.left,
+        client_rect.bottom - client_rect.top,
+        memory_dc,
         0,
         0,
         framebuffer->width,
         framebuffer->height,
-        memory_dc,
-        0,
-        0,
         SRCCOPY
     );
     SelectObject(memory_dc, old_bitmap);

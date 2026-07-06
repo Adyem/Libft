@@ -768,7 +768,7 @@ static int32_t http_client_establish_connection(const char *host, const char *po
         if (socket_fd >= 0)
         {
             result = nw_connect(socket_fd, current_info->ai_addr,
-                static_cast<socklen_t>(current_info->ai_addrlen));
+                FT_CONDITIONAL_STATIC_CAST(socklen_t, current_info->ai_addrlen));
             if (result >= 0)
                 break ;
             nw_close(socket_fd);
