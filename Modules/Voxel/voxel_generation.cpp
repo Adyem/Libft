@@ -378,13 +378,15 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             local_y = 0;
             while (local_y <= column_height)
             {
-                if (terrain_should_carve_cave(seed_value, world_block_x,
+                if (local_y == 0)
+                    block_id = TERRAIN_GENERATOR_BEDROCK_BLOCK;
+                else if (terrain_should_carve_cave(seed_value, world_block_x,
                         local_y, world_block_z, column_height) == FT_TRUE)
                 {
                     local_y += 1;
                     continue ;
                 }
-                if (local_y == column_height)
+                else if (local_y == column_height)
                     block_id = surface_block_id;
                 else if (local_y >= column_height - biome_profile.topsoil_depth)
                     block_id = TERRAIN_GENERATOR_DIRT_BLOCK;

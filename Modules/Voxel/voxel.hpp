@@ -18,6 +18,7 @@
 # define TERRAIN_GENERATOR_OAK_LEAVES_BLOCK 6U
 # define TERRAIN_GENERATOR_CACTUS_BLOCK 7U
 # define TERRAIN_GENERATOR_WATER_BLOCK 8U
+# define TERRAIN_GENERATOR_BEDROCK_BLOCK 9U
 # define TERRAIN_BIOME_ZONE_WIDTH 128
 
 enum terrain_biome
@@ -45,6 +46,7 @@ struct terrain_block_metadata
     ft_bool light_emitting;
     ft_bool occludes_faces;
     uint32_t hardness;
+    ft_bool breakable;
 };
 
 struct terrain_tree_template_block
@@ -74,6 +76,7 @@ ft_bool terrain_block_is_replaceable(uint32_t block_id) noexcept;
 ft_bool terrain_block_emits_light(uint32_t block_id) noexcept;
 ft_bool terrain_block_occludes_faces(uint32_t block_id) noexcept;
 uint32_t terrain_block_hardness(uint32_t block_id) noexcept;
+ft_bool terrain_block_is_breakable(uint32_t block_id) noexcept;
 uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept;
 ft_bool terrain_biome_has_shrubs(terrain_biome biome) noexcept;
 ft_bool terrain_biome_has_trees(terrain_biome biome) noexcept;
