@@ -20,14 +20,8 @@ MM_SRCS += Compatebility_dumb_controls_platform_macos.mm
 MODULE_MMFLAGS_EXTRA += -x objective-c++
 SRCS += Compatebility_dumb_sound_macos_coreaudio.cpp
 else
-HAS_X11_HEADERS := $(shell printf "\#include <X11/Xatom.h>\n\#include <X11/Xlib.h>\n\#include <X11/Xutil.h>\n\#include <X11/keysym.h>\n\#include <X11/extensions/Xdbe.h>\n" | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
-ifeq ($(HAS_X11_HEADERS),1)
 SRCS += Compatebility_dumb_render_linux_x11.cpp
 SRCS += Compatebility_dumb_controls_linux_x11.cpp
-else
-SRCS += Compatebility_dumb_render_linux_stub.cpp
-SRCS += Compatebility_dumb_controls_linux_stub.cpp
-endif
 SRCS += Compatebility_dumb_sound_linux_alsa.cpp
 endif
 endif

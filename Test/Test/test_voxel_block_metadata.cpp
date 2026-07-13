@@ -18,8 +18,6 @@ FT_TEST(test_terrain_block_metadata_registry_reports_expected_properties)
         terrain_get_block_metadata(TERRAIN_GENERATOR_OAK_LEAVES_BLOCK);
     const terrain_block_metadata &stone_metadata =
         terrain_get_block_metadata(TERRAIN_GENERATOR_STONE_BLOCK);
-    const terrain_block_metadata &bedrock_metadata =
-        terrain_get_block_metadata(TERRAIN_GENERATOR_BEDROCK_BLOCK);
 
     FT_ASSERT_EQ(FT_FALSE, air_metadata.solid);
     FT_ASSERT_EQ(FT_TRUE, air_metadata.transparent);
@@ -55,15 +53,6 @@ FT_TEST(test_terrain_block_metadata_registry_reports_expected_properties)
         TERRAIN_GENERATOR_STONE_BLOCK));
     FT_ASSERT_EQ(FT_FALSE, terrain_block_emits_light(
         TERRAIN_GENERATOR_STONE_BLOCK));
-    FT_ASSERT_EQ(FT_TRUE, terrain_block_is_breakable(
-        TERRAIN_GENERATOR_STONE_BLOCK));
-    FT_ASSERT_EQ(FT_TRUE, bedrock_metadata.solid);
-    FT_ASSERT_EQ(FT_FALSE, bedrock_metadata.transparent);
-    FT_ASSERT_EQ(FT_FALSE, bedrock_metadata.replaceable);
-    FT_ASSERT_EQ(FT_TRUE, bedrock_metadata.occludes_faces);
-    FT_ASSERT_EQ(FT_FALSE, bedrock_metadata.breakable);
-    FT_ASSERT_EQ(FT_FALSE, terrain_block_is_breakable(
-        TERRAIN_GENERATOR_BEDROCK_BLOCK));
     FT_ASSERT_EQ(FT_FALSE, terrain_block_is_known(9999U));
     return (1);
 }

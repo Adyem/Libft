@@ -153,11 +153,7 @@ ft_tuple<Types...>::ft_tuple(Args&&... args)
 template <typename... Types>
 ft_tuple<Types...>::~ft_tuple()
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

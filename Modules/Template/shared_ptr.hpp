@@ -263,11 +263,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType *pointer, ft_bool array_type
       _array_size(0), _is_array_type(FT_FALSE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     (void)this->initialize(pointer, array_type, array_size);
@@ -281,11 +277,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_size_t size) noexcept
       _array_size(0), _is_array_type(FT_FALSE), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     (void)this->initialize(size);
@@ -327,11 +319,7 @@ ft_sharedptr<ManagedType> &ft_sharedptr<ManagedType>::operator=(
 template <typename ManagedType>
 ft_sharedptr<ManagedType>::~ft_sharedptr()
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

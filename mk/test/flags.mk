@@ -42,14 +42,14 @@ EFFICIENCY_COMPILE_FLAGS := $(filter-out -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)) -D
 EFFICIENCY_CFLAGS := $(EFFICIENCY_COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
 
 ifeq ($(UNAME_S),Darwin)
-LDFLAGS := $(ZLIB_LIBS) -framework Cocoa -framework CoreGraphics -framework QuartzCore \
+LDFLAGS := -lz -framework Cocoa -framework CoreGraphics -framework QuartzCore \
            -framework AudioToolbox -lobjc -lpthread $(OPENSSL_LIBS) $(SQLITE_LIBS)
 else ifeq ($(OS),Windows_NT)
-LDFLAGS := -Wl,--allow-multiple-definition $(ZLIB_LIBS) -lws2_32 -lgdi32 -lwinmm -ldbghelp \
+    LDFLAGS := -Wl,--allow-multiple-definition -lz -lws2_32 -lgdi32 -lwinmm -ldbghelp -lopengl32 \
            $(OPENSSL_LIBS) $(SQLITE_LIBS)
 else
-LDFLAGS := -Wl,--allow-multiple-definition -rdynamic $(ZLIB_LIBS) -ldl \
-           $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(XI_LIBS) $(GL_LIBS) $(ASOUND_LIBS)
+LDFLAGS := -Wl,--allow-multiple-definition -rdynamic -lz -ldl \
+           $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(XEXT_LIBS) $(XI_LIBS) $(ASOUND_LIBS)
 endif
 
 export COMPILE_FLAGS

@@ -102,7 +102,7 @@ ft_bool ft_gpu_window_linux::initialize(const char *title, int32_t width,
     if (this->_display == nullptr)
         return (FT_FALSE);
 
-    int32_t screen = DefaultScreen(this->_display);
+    int32_t screen = static_cast<int32_t>(DefaultScreen(this->_display));
 
     int32_t fb_attribs[] = {
         GLX_X_RENDERABLE,  True,

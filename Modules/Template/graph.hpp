@@ -257,11 +257,7 @@ ft_graph<VertexType>::ft_graph(ft_size_t initial_capacity)
 template <typename VertexType>
 ft_graph<VertexType>::~ft_graph()
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = ft_graph<VertexType>::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

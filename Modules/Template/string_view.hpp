@@ -138,11 +138,7 @@ ft_string_view<CharType>::ft_string_view(const CharType* string)
     : _data(ft_nullptr), _size(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     (void)this->initialize(string);
@@ -155,11 +151,7 @@ ft_string_view<CharType>::ft_string_view(const CharType* string, ft_size_t size)
     : _data(ft_nullptr), _size(0), _mutex(ft_nullptr),
       _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     (void)this->initialize(string, size);
@@ -170,11 +162,7 @@ ft_string_view<CharType>::ft_string_view(const CharType* string, ft_size_t size)
 template <typename CharType>
 ft_string_view<CharType>::~ft_string_view()
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

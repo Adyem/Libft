@@ -12,17 +12,7 @@
 #include <cstdio>
 #include <cerrno>
 #include <new>
-#if defined(__has_include)
-# if __has_include(<zlib.h>)
-#  include <zlib.h>
-#  define FT_WEBSOCKET_HAS_ZLIB 1
-# else
-#  define FT_WEBSOCKET_HAS_ZLIB 0
-# endif
-#else
-# include <zlib.h>
-# define FT_WEBSOCKET_HAS_ZLIB 1
-#endif
+#include <zlib.h>
 #include "../Basic/limits.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/recursive_mutex.hpp"
@@ -179,7 +169,6 @@ static int32_t websocket_append_bytes(ft_vector<unsigned char> &buffer,
     return (FT_ERR_SUCCESS);
 }
 
-#if FT_WEBSOCKET_HAS_ZLIB
 static int32_t websocket_permessage_deflate_inflate(const unsigned char *payload,
     ft_size_t payload_length, ft_string &message)
 {
@@ -324,26 +313,6 @@ static int32_t websocket_permessage_deflate_deflate(const ft_string &message,
     }
     return (FT_ERR_SUCCESS);
 }
-
-#else
-static int32_t websocket_permessage_deflate_inflate(const unsigned char *payload,
-    ft_size_t payload_length, ft_string &message)
-{
-    (void)payload;
-    (void)payload_length;
-    (void)message;
-    return (FT_ERR_INVALID_OPERATION);
-}
-
-static int32_t websocket_permessage_deflate_deflate(const ft_string &message,
-    ft_vector<unsigned char> &compressed)
-{
-    (void)message;
-    (void)compressed;
-    return (FT_ERR_INVALID_OPERATION);
-}
-
-#endif
 
 static void compute_accept_key(const ft_string &key, ft_string &accept)
 {
@@ -658,12 +627,8 @@ int32_t ft_websocket_server::perform_handshake_locked(int32_t client_fd)
         }
     }
     compute_accept_key(key, accept);
-#if FT_WEBSOCKET_HAS_ZLIB
     permessage_deflate_enabled = websocket_header_contains_token(request,
         "Sec-WebSocket-Extensions:", "permessage-deflate");
-#else
-    permessage_deflate_enabled = FT_FALSE;
-#endif
     response.clear();
     response.append("HTTP/1.1 101 Switching Protocols\r\n");
     response.append("Upgrade: websocket\r\n");

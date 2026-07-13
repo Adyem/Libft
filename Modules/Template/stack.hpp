@@ -125,11 +125,7 @@ ft_stack<ElementType>::ft_stack()
 template <typename ElementType>
 ft_stack<ElementType>::~ft_stack()
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = ft_stack<ElementType>::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

@@ -9,7 +9,8 @@
 #ifndef _WIN32
     #include <pthread.h>
 #endif
-#include "../Basic/basic.hpp"
+#include "../Basic/class_nullptr.hpp"
+#include "../Basic/limits.hpp"
 #include <atomic>
 #include <cstddef>
 #ifdef _WIN32

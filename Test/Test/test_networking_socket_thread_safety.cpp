@@ -35,7 +35,7 @@ static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = 
 # include <unistd.h>
 # define CLOSE_SOCKET close
 typedef int socket_file_descriptor_type;
-static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = -1;
+static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = static_cast<socket_file_descriptor_type>(-1);
 #endif
 
 static ft_bool networking_socket_is_valid_file_descriptor(socket_file_descriptor_type file_descriptor)

@@ -187,11 +187,7 @@ ft_set<ElementType>::ft_set(ft_size_t initial_capacity)
 template <typename ElementType>
 ft_set<ElementType>::~ft_set()
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = ft_set<ElementType>::_last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

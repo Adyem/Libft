@@ -3,21 +3,6 @@
 FullLibft collects the project's reusable C and C++ helper modules under a single build.
 Each module below has a short purpose statement to clarify its role in the tree.
 
-## Linux development packages
-
-On Debian/Ubuntu, install the development packages used by optional compression,
-windowing, input, and sound backends before running the full test build:
-
-```bash
-sudo apt install zlib1g-dev libx11-dev libxext-dev libxi-dev libasound2-dev \
-    libgl1-mesa-dev
-```
-
-`X11/Xatom.h` comes from `libx11-dev`; without it, the Linux X11 DUMB render
-backend cannot compile and the build must use the Linux stub backend instead.
-`GL/gl.h` comes from `libgl1-mesa-dev`; without it, the GPGR OpenGL backend is
-omitted from Linux test builds.
-
 ## Modules
 
 - `API/`: Provides the glue between networking protocols, serialization formats, and business logic so clients and servers expose cohesive endpoints.

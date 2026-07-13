@@ -137,3 +137,7 @@ LOGGER_TEST_FILES := \
 
 SINK_TEST_FILES := \
 	Test/test_sink.cpp
+
+GPGR_TEST_FILES := \
+	Test/test_gpgr_shader.cpp \
+	Test/test_gpgr_window.cpp

@@ -224,11 +224,7 @@ Pool<T>::Object::Object(Pool<T>* pool, ft_size_t index, T* pointer) noexcept
 template<typename T>
 Pool<T>::Object::~Object() noexcept
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state != 2)
@@ -404,11 +400,7 @@ Pool<T>::Pool()
 template<typename T>
 Pool<T>::~Pool()
 {
-    #if defined(__APPLE__)
-    int32_t previous_error;
-    #else
     uint32_t previous_error;
-    #endif
 
     previous_error = _last_error;
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)

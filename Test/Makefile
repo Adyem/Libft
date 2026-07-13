@@ -96,6 +96,10 @@ Sink:
 	@echo "Building Sink test executable ($(TARGET))"
 	@$(MAKE) FILES="$(SINK_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
 
+GPGR:
+	@echo "Building GPGR test executable ($(TARGET))"
+	@$(MAKE) FILES="$(GPGR_TEST_FILES)" all LIBFT_TEST_BATCH_OUTPUT="$(LIBFT_TEST_BATCH_OUTPUT)"
+
 re_get_next_line: fclean get_next_line
 
 re_Basic: fclean Basic
@@ -111,6 +115,8 @@ re_Logger: fclean Logger
 re_Storage: fclean Storage
 
 re_Sink: fclean Sink
+
+re_GPGR: fclean GPGR
 
 re_Voxel: fclean Voxel
 
@@ -474,7 +480,7 @@ both: all debug
 
 -include $(DEPS) $(DEBUG_DEPS) $(EFFICIENCY_DEPS)
 
-.PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA Efficiency run_Efficiency get_next_line re_get_next_line FORCE
+.PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA Efficiency run_Efficiency get_next_line re_get_next_line GPGR re_GPGR FORCE
 
 print_test_compile_flags:
 	@printf '%s\n' "$(COMPILE_FLAGS)"

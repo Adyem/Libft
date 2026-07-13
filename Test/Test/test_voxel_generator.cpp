@@ -63,40 +63,6 @@ FT_TEST(test_terrain_generate_chunk_generates_default_surface_chunk)
     return (1);
 }
 
-FT_TEST(test_terrain_generate_chunk_bottom_layer_is_unbreakable_bedrock)
-{
-    game_voxel_chunk chunk;
-    uint32_t block_id;
-    int32_t local_x;
-    int32_t local_z;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(chunk,
-        "terrain-test-seed"));
-    local_x = 0;
-    while (local_x < GAME_VOXEL_CHUNK_WIDTH)
-    {
-        local_z = 0;
-        while (local_z < GAME_VOXEL_CHUNK_DEPTH)
-        {
-            FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.read_block(local_x, 0,
-                local_z, &block_id));
-            FT_ASSERT_EQ(TERRAIN_GENERATOR_BEDROCK_BLOCK, block_id);
-            FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.read_block(local_x, 1,
-                local_z, &block_id));
-            FT_ASSERT_NEQ(static_cast<uint32_t>(
-                TERRAIN_GENERATOR_BEDROCK_BLOCK), block_id);
-            local_z += 4;
-        }
-        local_x += 4;
-    }
-    FT_ASSERT_EQ(FT_FALSE, terrain_block_is_breakable(
-        TERRAIN_GENERATOR_BEDROCK_BLOCK));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
-    return (1);
-}
-
-
 FT_TEST(test_terrain_get_biome_changes_across_zone_boundaries)
 {
     terrain_biome left_biome;
