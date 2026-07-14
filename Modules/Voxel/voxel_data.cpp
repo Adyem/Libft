@@ -701,6 +701,11 @@ uint32_t terrain_block_hardness(uint32_t block_id) noexcept
     return (terrain_get_block_metadata(block_id).hardness);
 }
 
+ft_bool terrain_block_is_breakable(uint32_t block_id) noexcept
+{
+    return (terrain_get_block_metadata(block_id).breakable);
+}
+
 const terrain_tree_template &terrain_small_oak_tree_template_variant(
     uint32_t variant_index) noexcept
 {

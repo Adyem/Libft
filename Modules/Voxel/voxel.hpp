@@ -52,6 +52,7 @@ struct terrain_block_metadata
     ft_bool light_emitting;
     ft_bool occludes_faces;
     uint32_t hardness;
+    ft_bool breakable;
 };
 
 struct terrain_tree_template_block
@@ -81,6 +82,7 @@ ft_bool terrain_block_is_replaceable(uint32_t block_id) noexcept;
 ft_bool terrain_block_emits_light(uint32_t block_id) noexcept;
 ft_bool terrain_block_occludes_faces(uint32_t block_id) noexcept;
 uint32_t terrain_block_hardness(uint32_t block_id) noexcept;
+ft_bool terrain_block_is_breakable(uint32_t block_id) noexcept;
 uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept;
 uint32_t terrain_subsurface_block_for_biome(terrain_biome biome) noexcept;
 uint32_t terrain_deep_block_for_biome(terrain_biome biome) noexcept;
