@@ -424,7 +424,7 @@ static int32_t runtime_compile_and_run_helper(void)
     compile_command += " -pthread -lz";
 #elif defined(_WIN32) || defined(_WIN64)
     compile_command += " -pthread -Wl,--allow-multiple-definition";
-    compile_command += " -lz -lws2_32 -lgdi32 -lwinmm";
+    compile_command += " -lz -lws2_32 -lgdi32 -lwinmm -lopengl32";
 #else
     compile_command += " -pthread -Wl,--allow-multiple-definition -rdynamic";
     compile_command += " -lz -ldl";

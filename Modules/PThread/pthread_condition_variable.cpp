@@ -24,11 +24,7 @@ static bool compute_wait_deadline(const struct timespec &relative_time, struct t
         *error_code = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
-#if defined(CLOCK_MONOTONIC) && !defined(__APPLE__)
-    if (clock_gettime(CLOCK_MONOTONIC, &current_time) != 0)
-#else
     if (clock_gettime(CLOCK_REALTIME, &current_time) != 0)
-#endif
     {
         *error_code = cmp_map_system_error_to_ft(errno);
         return (false);
@@ -86,35 +82,7 @@ int pt_condition_variable::ensure_native_sync_objects()
         this->_mutex_initialised = true;
         mutex_created = true;
     }
-#if defined(CLOCK_MONOTONIC) && !defined(__APPLE__)
-    pthread_condattr_t condition_attributes;
-    bool use_condition_attributes;
-
-    use_condition_attributes = false;
-    native_error = pthread_condattr_init(&condition_attributes);
-    if (native_error != 0)
-    {
-        native_error = 0;
-    }
-    else
-    {
-        native_error = pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC);
-        if (native_error == 0)
-        {
-            use_condition_attributes = true;
-            native_error = pt_cond_init(&this->_condition, &condition_attributes);
-        }
-        (void)pthread_condattr_destroy(&condition_attributes);
-        if (native_error != 0)
-        {
-            native_error = 0;
-        }
-    }
-    if (!use_condition_attributes)
-        native_error = pt_cond_init(&this->_condition, ft_nullptr);
-#else
     native_error = pt_cond_init(&this->_condition, ft_nullptr);
-#endif
     if (native_error != 0)
     {
         if (mutex_created)

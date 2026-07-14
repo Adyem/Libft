@@ -139,5 +139,7 @@ SINK_TEST_FILES := \
 	Test/test_sink.cpp
 
 GPGR_TEST_FILES := \
+	Test/test_gpgr_loader.cpp \
+	Test/test_gpgr_platform.cpp \
 	Test/test_gpgr_shader.cpp \
 	Test/test_gpgr_window.cpp

@@ -38,6 +38,45 @@ PFNGLUNIFORM1FPROC               glUniform1f_ptr               = nullptr;
 PFNGLGENERATEMIPMAPPROC          glGenerateMipmap_ptr          = nullptr;
 PFNGLACTIVETEXTUREPROC           glActiveTexture_ptr           = nullptr;
 
+static void gpgr_clear_gl_functions() noexcept
+{
+    glGenVertexArrays_ptr = nullptr;
+    glBindVertexArray_ptr = nullptr;
+    glDeleteVertexArrays_ptr = nullptr;
+    glGenBuffers_ptr = nullptr;
+    glBindBuffer_ptr = nullptr;
+    glBufferData_ptr = nullptr;
+    glBufferSubData_ptr = nullptr;
+    glDeleteBuffers_ptr = nullptr;
+    glVertexAttribIPointer_ptr = nullptr;
+    glVertexAttribPointer_ptr = nullptr;
+    glEnableVertexAttribArray_ptr = nullptr;
+    glCreateShader_ptr = nullptr;
+    glShaderSource_ptr = nullptr;
+    glCompileShader_ptr = nullptr;
+    glGetShaderiv_ptr = nullptr;
+    glGetShaderInfoLog_ptr = nullptr;
+    glDeleteShader_ptr = nullptr;
+    glCreateProgram_ptr = nullptr;
+    glAttachShader_ptr = nullptr;
+    glLinkProgram_ptr = nullptr;
+    glGetProgramiv_ptr = nullptr;
+    glGetProgramInfoLog_ptr = nullptr;
+    glUseProgram_ptr = nullptr;
+    glDeleteProgram_ptr = nullptr;
+    glGetUniformLocation_ptr = nullptr;
+    glUniformMatrix4fv_ptr = nullptr;
+    glUniform1i_ptr = nullptr;
+    glUniform3fv_ptr = nullptr;
+    glUniform4fv_ptr = nullptr;
+    glUniform4f_ptr = nullptr;
+    glUniform2f_ptr = nullptr;
+    glUniform1f_ptr = nullptr;
+    glGenerateMipmap_ptr = nullptr;
+    glActiveTexture_ptr = nullptr;
+    return ;
+}
+
 #if defined(_WIN32)
 static void *gpgr_get_proc_address(const char *name)
 {
@@ -73,6 +112,7 @@ static ft_bool gpgr_load_symbol(Fn &symbol, const char *name)
 
 ft_bool gpgr_load_gl_functions() noexcept
 {
+    gpgr_clear_gl_functions();
     GPGR_LOAD(glGenVertexArrays);
     GPGR_LOAD(glBindVertexArray);
     GPGR_LOAD(glDeleteVertexArrays);

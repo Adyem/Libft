@@ -1320,11 +1320,7 @@ void ft_task_scheduler::timer_loop()
                 long long nanoseconds;
                 int wait_result;
 
-#if defined(CLOCK_MONOTONIC)
-                if (clock_gettime(CLOCK_MONOTONIC, &wake_time) != 0)
-#else
                 if (clock_gettime(CLOCK_REALTIME, &wake_time) != 0)
-#endif
                 {
                     (void)pt_mutex_unlock_if_not_null(&this->_scheduled_mutex);
                     return ;

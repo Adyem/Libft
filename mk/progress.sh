@@ -51,6 +51,9 @@ short_name() {
 
 init_progress() {
     local total="$1"
+
+    rm -f Test/.libft_build_status_* Test/.libft_build_*.raw.*
+    rmdir "$lock_dir" 2>/dev/null || true
     mkdir -p "$state_dir"
     lock_progress
     if [ ! -f "$state_dir/initialized" ]; then

@@ -290,6 +290,35 @@ static int32_t gpgr_fake_shader_initialize(ft_gpu_shader &shader)
     return (shader.initialize(vertex_source, fragment_source));
 }
 
+static void gpgr_shader_use_uninitialised(ft_gpu_shader &shader)
+{
+    shader.use();
+    return ;
+}
+
+static void gpgr_shader_uniform_uninitialised(ft_gpu_shader &shader)
+{
+    (void)shader.uniform("u_model");
+    return ;
+}
+
+static ft_gpu_shader *g_gpgr_shader_abort_target = nullptr;
+
+static void gpgr_shader_initialize_already_initialised(void)
+{
+    (void)g_gpgr_shader_abort_target->initialize(
+        "void main() { }", "void main() { }");
+    return ;
+}
+
+static void gpgr_shader_move_uninitialised_source(void)
+{
+    ft_gpu_shader destination_shader;
+
+    (void)destination_shader.move(*g_gpgr_shader_abort_target);
+    return ;
+}
+
 FT_TEST(test_gpgr_shader_default_state)
 {
     ft_gpu_shader shader;
@@ -300,6 +329,34 @@ FT_TEST(test_gpgr_shader_default_state)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shader.destroy());
     FT_ASSERT_EQ(FT_FALSE, shader.ready());
     FT_ASSERT_EQ(0U, g_gpgr_fake_gl_state.delete_program_calls);
+    return (1);
+}
+
+FT_TEST(test_gpgr_shader_uninitialised_access_aborts)
+{
+    FT_ASSERT_EQ(1, test_expect_sigabrt_signal_uninitialised<ft_gpu_shader>(
+        gpgr_shader_use_uninitialised));
+    FT_ASSERT_EQ(1, test_expect_sigabrt_signal_uninitialised<ft_gpu_shader>(
+        gpgr_shader_uniform_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_gpgr_shader_lifecycle_source_guards_abort)
+{
+    ft_gpu_shader shader;
+    ft_gpu_shader uninitialised_shader;
+
+    gpgr_fake_gl_reset();
+    gpgr_fake_gl_install();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, gpgr_fake_shader_initialize(shader));
+    g_gpgr_shader_abort_target = &shader;
+    FT_ASSERT_EQ(1, test_expect_sigabrt_signal(
+        gpgr_shader_initialize_already_initialised));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shader.destroy());
+    g_gpgr_shader_abort_target = &uninitialised_shader;
+    FT_ASSERT_EQ(1, test_expect_sigabrt_signal(
+        gpgr_shader_move_uninitialised_source));
+    g_gpgr_shader_abort_target = nullptr;
     return (1);
 }
 

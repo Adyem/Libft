@@ -1,5 +1,5 @@
 ifeq ($(OS),Windows_NT)
-SHELL := C:/Progra~1/Git/bin/bash.exe
+SHELL := C:/Progra~1/Git/usr/bin/bash.exe
 .SHELLFLAGS := -lc
 export SHELL
 export LIBFT_POSIX_SHELL := 1
@@ -37,7 +37,7 @@ template: $(CPP_CLASS_LIB)
 	printf '\033[1;35m[LIBFT BUILD] Running Template verification\033[0m\n'
 	$(MAKE) -C Modules/Template all $(SUBMAKE_OVERRIDES)
 
-tests:
+tests: $(TEST_TARGET)
 	@need_build=0; \
 	if $(MAKE) -C Test -q all $(SUBMAKE_OVERRIDES); then \
 		printf '\033[1;35m[LIBFT CHECK] Test suite is up to date\033[0m\n'; \

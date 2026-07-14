@@ -24,13 +24,24 @@ status_file="Test/.libft_build_status_$$_${progress_index}"
 progress_state_dir="Test/.libft_progress"
 completion_count_file="$progress_state_dir/completion_count"
 progress_lock_dir="Test/.libft_progress.lock"
+raw_log_file="${log_file}.raw.$$"
+child_pid=""
 
 cleanup_status_file() {
     rm -f "$status_file"
 }
 
 cleanup_all_files() {
+    if [ -n "$child_pid" ]; then
+        if command -v taskkill.exe >/dev/null 2>&1; then
+            taskkill.exe /T /F /PID "$child_pid" >/dev/null 2>&1 || true
+        else
+            kill "$child_pid" 2>/dev/null || true
+        fi
+        wait "$child_pid" 2>/dev/null || true
+    fi
     rm -f "$status_file" "$log_file"
+    rm -f "$raw_log_file"
     rmdir "$progress_lock_dir" 2>/dev/null || true
 }
 
@@ -39,6 +50,7 @@ trap 'cleanup_all_files; exit 130' INT TERM
 
 : > "$log_file"
 rm -f "$status_file"
+rm -f "$raw_log_file"
 
 module_name=$(basename "$module_path")
 module_name=${module_name%.a}
@@ -48,6 +60,14 @@ module_name=${module_name%_test}
 last_count=0
 last_total=1
 last_file=""
+
+"$@" > "$raw_log_file" 2>&1 &
+child_pid=$!
+wait "$child_pid"
+status=$?
+child_pid=""
+printf '%s\n' "$status" > "$status_file"
+
 while IFS= read -r line; do
     printf '%s\n' "$line" >> "$log_file"
     case "$line" in
@@ -77,12 +97,9 @@ while IFS= read -r line; do
             fi
             ;;
     esac
-done < <( "$@" 2>&1; printf '%s\n' "$?" > "$status_file" )
+done < "$raw_log_file"
+rm -f "$raw_log_file"
 
-status=1
-if [ -f "$status_file" ]; then
-    status=$(cat "$status_file")
-fi
 cleanup_status_file
 
 if [ "$status" -eq 0 ]; then

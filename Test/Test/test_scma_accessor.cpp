@@ -278,19 +278,21 @@ FT_TEST(test_scma_accessor_detects_stale_handle)
 
 FT_TEST(test_scma_accessor_get_count_matches_capacity)
 {
-    scma_handle handle;
-    scma_handle_accessor<int> accessor;
-
     FT_ASSERT_EQ(0, scma_test_initialize(sizeof(int) * 4));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
-    handle = scma_allocate(sizeof(int) * 4);
-    FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
-    FT_ASSERT_EQ(1, accessor.bind(handle));
-    accessor[0] = 3;
-    accessor[1] = 6;
-    accessor[2] = 9;
-    accessor[3] = 12;
-    FT_ASSERT_EQ(4, accessor.get_count());
+    {
+        scma_handle handle;
+        scma_handle_accessor<int> accessor;
+
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
+        handle = scma_allocate(sizeof(int) * 4);
+        FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
+        FT_ASSERT_EQ(1, accessor.bind(handle));
+        accessor[0] = 3;
+        accessor[1] = 6;
+        accessor[2] = 9;
+        accessor[3] = 12;
+        FT_ASSERT_EQ(4, accessor.get_count());
+    }
     scma_shutdown();
     return (1);
 }

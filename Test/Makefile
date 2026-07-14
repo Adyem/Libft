@@ -1,5 +1,5 @@
 ifeq ($(OS),Windows_NT)
-SHELL := C:/Progra~1/Git/bin/bash.exe
+SHELL := C:/Progra~1/Git/usr/bin/bash.exe
 .SHELLFLAGS := -lc
 export SHELL
 export LIBFT_POSIX_SHELL := 1
