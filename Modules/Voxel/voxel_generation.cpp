@@ -30,6 +30,8 @@ struct terrain_column_cache
     terrain_biome_profile biome_profile;
     int32_t column_height;
     uint32_t surface_block_id;
+    uint32_t subsurface_block_id;
+    uint32_t deep_block_id;
     ft_bool can_place_shrubs;
     ft_bool can_place_trees;
 };
@@ -320,6 +322,8 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     terrain_biome biome;
     terrain_biome_profile biome_profile;
     uint32_t surface_block_id;
+    uint32_t subsurface_block_id;
+    uint32_t deep_block_id;
     uint64_t seed_value;
     ft_bool place_shrub;
     const terrain_tree_template *tree_template;
@@ -347,6 +351,12 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             column_cache[column_index].surface_block_id
                 = terrain_surface_block_for_biome(
                     column_cache[column_index].biome);
+            column_cache[column_index].subsurface_block_id
+                = terrain_subsurface_block_for_biome(
+                    column_cache[column_index].biome);
+            column_cache[column_index].deep_block_id
+                = terrain_deep_block_for_biome(
+                    column_cache[column_index].biome);
             column_cache[column_index].can_place_shrubs
                 = terrain_biome_has_shrubs(column_cache[column_index].biome);
             column_cache[column_index].can_place_trees
@@ -367,6 +377,8 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             biome = column_cache[column_index].biome;
             biome_profile = column_cache[column_index].biome_profile;
             surface_block_id = column_cache[column_index].surface_block_id;
+            subsurface_block_id = column_cache[column_index].subsurface_block_id;
+            deep_block_id = column_cache[column_index].deep_block_id;
             place_shrub = column_cache[column_index].can_place_shrubs;
             column_height = terrain_smooth_heightfield(seed_value,
                 world_block_x, world_block_z, biome_profile);
@@ -387,9 +399,9 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
                 if (local_y == column_height)
                     block_id = surface_block_id;
                 else if (local_y >= column_height - biome_profile.topsoil_depth)
-                    block_id = TERRAIN_GENERATOR_DIRT_BLOCK;
+                    block_id = subsurface_block_id;
                 else
-                    block_id = TERRAIN_GENERATOR_STONE_BLOCK;
+                    block_id = deep_block_id;
                 error_code = chunk.write_block(local_x, local_y, local_z,
                     block_id);
                 if (error_code != FT_ERR_SUCCESS)

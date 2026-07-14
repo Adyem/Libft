@@ -74,15 +74,22 @@ static void terrain_abort_unknown_block_id(uint32_t block_id,
 
 static const terrain_block_metadata TERRAIN_BLOCK_REGISTRY[] =
 {
-    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_FALSE, 0U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 1U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 4U},
-    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U},
-    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U},
-    {FT_FALSE, FT_TRUE, FT_TRUE, FT_TRUE, FT_FALSE, FT_FALSE, 0U}
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_FALSE, 0U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 1U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 4U, FT_TRUE},
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
+    {FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, FT_FALSE, FT_TRUE, 1U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 2U, FT_TRUE},
+    {FT_FALSE, FT_TRUE, FT_TRUE, FT_TRUE, FT_FALSE, FT_FALSE, 0U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 255U, FT_FALSE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 1U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 1U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE}
 };
 
 static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS[] =
@@ -573,13 +580,35 @@ terrain_biome terrain_pick_biome(uint64_t seed_value,
 
 uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept
 {
+    if (biome == TERRAIN_BIOME_HILLS)
+        return (TERRAIN_GENERATOR_MOSS_ROCK_BLOCK);
     if (biome == TERRAIN_BIOME_DESERT)
-        return (TERRAIN_GENERATOR_DIRT_BLOCK);
+        return (TERRAIN_GENERATOR_SAND_BLOCK);
     if (biome == TERRAIN_BIOME_SNOW)
-        return (TERRAIN_GENERATOR_GRASS_BLOCK);
+        return (TERRAIN_GENERATOR_SNOW_BLOCK);
+    if (biome == TERRAIN_BIOME_MOUNTAINS)
+        return (TERRAIN_GENERATOR_SLATE_BLOCK);
+    return (TERRAIN_GENERATOR_GRASS_BLOCK);
+}
+
+uint32_t terrain_subsurface_block_for_biome(terrain_biome biome) noexcept
+{
+    if (biome == TERRAIN_BIOME_HILLS)
+        return (TERRAIN_GENERATOR_MOSS_ROCK_BLOCK);
+    if (biome == TERRAIN_BIOME_DESERT)
+        return (TERRAIN_GENERATOR_CANYON_ROCK_BLOCK);
+    if (biome == TERRAIN_BIOME_SNOW)
+        return (TERRAIN_GENERATOR_PERMAFROST_BLOCK);
     if (biome == TERRAIN_BIOME_MOUNTAINS)
         return (TERRAIN_GENERATOR_STONE_BLOCK);
-    return (TERRAIN_GENERATOR_GRASS_BLOCK);
+    return (TERRAIN_GENERATOR_DIRT_BLOCK);
+}
+
+uint32_t terrain_deep_block_for_biome(terrain_biome biome) noexcept
+{
+    if (biome == TERRAIN_BIOME_MOUNTAINS)
+        return (TERRAIN_GENERATOR_CANYON_ROCK_BLOCK);
+    return (TERRAIN_GENERATOR_STONE_BLOCK);
 }
 
 ft_bool terrain_biome_has_shrubs(terrain_biome biome) noexcept

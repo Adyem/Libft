@@ -79,14 +79,28 @@ FT_TEST(test_terrain_surface_helpers_match_biome_rules)
 {
     FT_ASSERT_EQ(TERRAIN_GENERATOR_GRASS_BLOCK,
         terrain_surface_block_for_biome(TERRAIN_BIOME_PLAINS));
-    FT_ASSERT_EQ(TERRAIN_GENERATOR_GRASS_BLOCK,
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_MOSS_ROCK_BLOCK,
         terrain_surface_block_for_biome(TERRAIN_BIOME_HILLS));
-    FT_ASSERT_EQ(TERRAIN_GENERATOR_DIRT_BLOCK,
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_SAND_BLOCK,
         terrain_surface_block_for_biome(TERRAIN_BIOME_DESERT));
-    FT_ASSERT_EQ(TERRAIN_GENERATOR_GRASS_BLOCK,
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_SNOW_BLOCK,
         terrain_surface_block_for_biome(TERRAIN_BIOME_SNOW));
-    FT_ASSERT_EQ(TERRAIN_GENERATOR_STONE_BLOCK,
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_SLATE_BLOCK,
         terrain_surface_block_for_biome(TERRAIN_BIOME_MOUNTAINS));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_DIRT_BLOCK,
+        terrain_subsurface_block_for_biome(TERRAIN_BIOME_PLAINS));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_MOSS_ROCK_BLOCK,
+        terrain_subsurface_block_for_biome(TERRAIN_BIOME_HILLS));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_CANYON_ROCK_BLOCK,
+        terrain_subsurface_block_for_biome(TERRAIN_BIOME_DESERT));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_PERMAFROST_BLOCK,
+        terrain_subsurface_block_for_biome(TERRAIN_BIOME_SNOW));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_STONE_BLOCK,
+        terrain_subsurface_block_for_biome(TERRAIN_BIOME_MOUNTAINS));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_STONE_BLOCK,
+        terrain_deep_block_for_biome(TERRAIN_BIOME_PLAINS));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_CANYON_ROCK_BLOCK,
+        terrain_deep_block_for_biome(TERRAIN_BIOME_MOUNTAINS));
     FT_ASSERT_EQ(FT_TRUE, terrain_biome_has_shrubs(TERRAIN_BIOME_PLAINS));
     FT_ASSERT_EQ(FT_TRUE, terrain_biome_has_shrubs(TERRAIN_BIOME_HILLS));
     FT_ASSERT_EQ(FT_TRUE, terrain_biome_has_shrubs(TERRAIN_BIOME_DESERT));

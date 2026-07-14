@@ -18,6 +18,13 @@
 # define TERRAIN_GENERATOR_OAK_LEAVES_BLOCK 6U
 # define TERRAIN_GENERATOR_CACTUS_BLOCK 7U
 # define TERRAIN_GENERATOR_WATER_BLOCK 8U
+# define TERRAIN_GENERATOR_BEDROCK_BLOCK 9U
+# define TERRAIN_GENERATOR_SAND_BLOCK 10U
+# define TERRAIN_GENERATOR_SNOW_BLOCK 11U
+# define TERRAIN_GENERATOR_PERMAFROST_BLOCK 12U
+# define TERRAIN_GENERATOR_CANYON_ROCK_BLOCK 13U
+# define TERRAIN_GENERATOR_SLATE_BLOCK 14U
+# define TERRAIN_GENERATOR_MOSS_ROCK_BLOCK 15U
 # define TERRAIN_BIOME_ZONE_WIDTH 128
 
 enum terrain_biome
@@ -75,6 +82,8 @@ ft_bool terrain_block_emits_light(uint32_t block_id) noexcept;
 ft_bool terrain_block_occludes_faces(uint32_t block_id) noexcept;
 uint32_t terrain_block_hardness(uint32_t block_id) noexcept;
 uint32_t terrain_surface_block_for_biome(terrain_biome biome) noexcept;
+uint32_t terrain_subsurface_block_for_biome(terrain_biome biome) noexcept;
+uint32_t terrain_deep_block_for_biome(terrain_biome biome) noexcept;
 ft_bool terrain_biome_has_shrubs(terrain_biome biome) noexcept;
 ft_bool terrain_biome_has_trees(terrain_biome biome) noexcept;
 const terrain_tree_template &terrain_small_oak_tree_template(
