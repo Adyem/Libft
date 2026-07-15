@@ -58,6 +58,8 @@ endif
 CLEAN_DIRS ?= $(wildcard objs*)
 CLEAN_FILES ?= $(TARGET) $(OBJS) $(DEPS)
 ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_FILES))
-    CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
+    ifeq ($(LIBFT_POSIX_SHELL),)
+        CLEAN_FILES := $(subst /,\\,$(CLEAN_FILES))
+        CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
+    endif
 endif

@@ -19,7 +19,8 @@
 - `ft_gpu_window::get_width()` / `get_height()` - Return the current drawable size.
 - `ft_gpu_window::get_mouse_x()` / `get_mouse_y()` - Return the latest mouse coordinates.
 - `ft_gpu_window::was_mouse_clicked()` - Reports whether the primary mouse button was clicked since the last poll.
-- `ft_gpu_window::set_cursor_visible(...)` - Toggles cursor visibility.
+- `ft_gpu_window::set_cursor_visible(...)` - Toggles cursor visibility; aborts
+  when called before initialization or after destruction.
 - `ft_gpu_window::was_settings_key_pressed()` - Reports whether the module-specific settings key was pressed.
 
 - `ft_gpu_shader::initialize(...)` - Compiles and links a vertex/fragment shader pair.

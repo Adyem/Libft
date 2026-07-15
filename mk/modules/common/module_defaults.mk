@@ -89,8 +89,12 @@ GENERATED_FILES ?= compile_commands.json
 FORCE:
 
 ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-    CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
+    ifeq ($(LIBFT_POSIX_SHELL),)
+        CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
+        CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
+    else
+        CLEAN_FILES := $(CLEAN_OBJS)
+    endif
     FCLEAN_FILES := $(CLEAN_FILES) $(TARGET) $(DEBUG_TARGET) $(TEST_ARCHIVES) $(GENERATED_FILES)
 else
     CLEAN_FILES := $(CLEAN_OBJS)

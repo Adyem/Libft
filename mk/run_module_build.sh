@@ -27,10 +27,6 @@ progress_lock_dir="Test/.libft_progress.lock"
 raw_log_file="${log_file}.raw.$$"
 child_pid=""
 
-cleanup_status_file() {
-    rm -f "$status_file"
-}
-
 cleanup_all_files() {
     if [ -n "$child_pid" ]; then
         if command -v taskkill.exe >/dev/null 2>&1; then
@@ -39,14 +35,15 @@ cleanup_all_files() {
             kill "$child_pid" 2>/dev/null || true
         fi
         wait "$child_pid" 2>/dev/null || true
+        child_pid=""
     fi
     rm -f "$status_file" "$log_file"
     rm -f "$raw_log_file"
     rmdir "$progress_lock_dir" 2>/dev/null || true
 }
 
-trap cleanup_status_file EXIT
-trap 'cleanup_all_files; exit 130' INT TERM
+trap cleanup_all_files EXIT
+trap 'cleanup_all_files; exit 130' HUP INT TERM
 
 : > "$log_file"
 rm -f "$status_file"
@@ -99,8 +96,6 @@ while IFS= read -r line; do
     esac
 done < "$raw_log_file"
 rm -f "$raw_log_file"
-
-cleanup_status_file
 
 if [ "$status" -eq 0 ]; then
     while ! mkdir "$progress_lock_dir" 2>/dev/null; do

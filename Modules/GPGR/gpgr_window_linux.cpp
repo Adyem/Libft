@@ -81,7 +81,7 @@ class ft_gpu_window_linux : public ft_gpu_window
                 "ft_gpu_window_linux::was_mouse_clicked");
             return (this->_mouse_clicked);
         }
-        void set_cursor_visible(ft_bool v) noexcept override;
+        void set_cursor_visible(ft_bool visible) noexcept override;
         ft_bool was_settings_key_pressed() const noexcept override
         {
             errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
@@ -419,11 +419,11 @@ void ft_gpu_window_linux::swap_buffers() noexcept
     glXSwapBuffers(this->_display, this->_window);
 }
 
-void ft_gpu_window_linux::set_cursor_visible(ft_bool v) noexcept
+void ft_gpu_window_linux::set_cursor_visible(ft_bool visible) noexcept
 {
-    if (this->_display == nullptr || this->_window == 0)
-        return ;
-    if (v == FT_FALSE)
+    errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+        "ft_gpu_window_linux::set_cursor_visible");
+    if (visible == FT_FALSE)
     {
         XDefineCursor(this->_display, this->_window, this->_invisible_cursor);
         XWarpPointer(this->_display, None, this->_window,
@@ -451,8 +451,9 @@ void ft_gpu_window_linux::set_cursor_visible(ft_bool v) noexcept
         }
         XUndefineCursor(this->_display, this->_window);
     }
-    this->_cursor_visible = v;
+    this->_cursor_visible = visible;
     XFlush(this->_display);
+    return ;
 }
 
 ft_gpu_window *ft_gpu_window::create() noexcept

@@ -3,8 +3,12 @@ CLEAN_OBJS := $(shell find . -type f \( -name *.o -o -name *.d \
 CLEAN_DIRS := $(wildcard objs*)
 
 ifeq ($(OS),Windows_NT)
-    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
-    CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
+    ifeq ($(LIBFT_POSIX_SHELL),)
+        CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
+        CLEAN_DIRS := $(subst /,\\,$(CLEAN_DIRS))
+    else
+        CLEAN_FILES := $(CLEAN_OBJS)
+    endif
 else
     CLEAN_FILES := $(CLEAN_OBJS)
 endif

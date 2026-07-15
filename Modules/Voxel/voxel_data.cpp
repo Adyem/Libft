@@ -831,6 +831,129 @@ terrain_biome terrain_get_biome(int32_t world_block_x, int32_t world_block_z,
         world_block_z));
 }
 
+uint32_t terrain_select_biome(const terrain_generation_config &config,
+    uint64_t seed_value, int32_t world_block_x, int32_t world_block_z) noexcept
+{
+    uint32_t selected;
+
+    if (config.biome_count == 0U)
+        return (0U);
+    if (config.biome_selector != ft_nullptr)
+        selected = config.biome_selector(seed_value, world_block_x,
+            world_block_z, config.biome_count, config.biome_selector_user_data);
+    else
+        selected = static_cast<uint32_t>(terrain_pick_biome(seed_value,
+            world_block_x, world_block_z));
+    return (selected % config.biome_count);
+}
+
+uint32_t terrain_get_biome_index(const terrain_generation_config &config,
+    int32_t world_block_x, int32_t world_block_z,
+    const char *seed_string) noexcept
+{
+    return (terrain_select_biome(config, terrain_seed_value(seed_string),
+        world_block_x, world_block_z));
+}
+
+terrain_generation_config terrain_default_generation_config() noexcept
+{
+    terrain_generation_config config = {};
+    uint32_t index;
+
+    config.sea_level = TERRAIN_GENERATOR_SEA_LEVEL;
+    config.large_noise_scale = 32;
+    config.detail_noise_scale = 8;
+    config.detail_noise_percent = 50;
+    config.water_chance_percent = 100U;
+    config.biome_count = 5U;
+    config.biome_selector = ft_nullptr;
+    config.biome_selector_user_data = ft_nullptr;
+    index = 0U;
+    while (index < config.biome_count)
+    {
+        terrain_biome biome = static_cast<terrain_biome>(index);
+        config.biomes[index].profile = terrain_get_biome_profile(biome);
+        config.biomes[index].surface_block_id = terrain_surface_block_for_biome(biome);
+        config.biomes[index].subsurface_block_id = terrain_subsurface_block_for_biome(biome);
+        config.biomes[index].deep_block_id = terrain_deep_block_for_biome(biome);
+        config.biomes[index].allow_shrubs = terrain_biome_has_shrubs(biome);
+        config.biomes[index].allow_trees = terrain_biome_has_trees(biome);
+        config.biomes[index].shrub_chance_percent = 6U;
+        config.biomes[index].tree_chance_percent = 18U;
+        /* A null template keeps the built-in seeded variant selection.  A
+         * caller can assign a template to override it for that biome. */
+        config.biomes[index].tree_template = ft_nullptr;
+        index += 1U;
+    }
+    return (config);
+}
+
+static ft_bool terrain_template_is_valid(
+    const terrain_tree_template *tree_template) noexcept
+{
+    uint32_t index;
+
+    if (tree_template == ft_nullptr)
+        return (FT_TRUE);
+    if (tree_template->blocks == ft_nullptr && tree_template->block_count != 0U)
+        return (FT_FALSE);
+    index = 0U;
+    while (index < tree_template->block_count)
+    {
+        if (terrain_block_is_known(tree_template->blocks[index].block_id)
+            == FT_FALSE)
+            return (FT_FALSE);
+        index += 1U;
+    }
+    return (FT_TRUE);
+}
+
+ft_bool terrain_generation_config_is_valid(
+    const terrain_generation_config &config) noexcept
+{
+    uint32_t index;
+
+    if (config.biome_count == 0U || config.biome_count > TERRAIN_MAX_CUSTOM_BIOMES
+        || config.feature_count > TERRAIN_MAX_FEATURE_RULES
+        || config.large_noise_scale <= 0 || config.detail_noise_scale <= 0
+        || config.detail_noise_percent < 0 || config.detail_noise_percent > 100
+        || config.water_chance_percent > 100)
+        return (FT_FALSE);
+    index = 0U;
+    while (index < config.biome_count)
+    {
+        if (config.biomes[index].profile.height_variation < 0
+            || config.biomes[index].profile.topsoil_depth < 0
+            || config.biomes[index].shrub_chance_percent > 100
+            || config.biomes[index].tree_chance_percent > 100
+            || terrain_block_is_known(config.biomes[index].surface_block_id)
+                == FT_FALSE
+            || terrain_block_is_known(config.biomes[index].subsurface_block_id)
+                == FT_FALSE
+            || terrain_block_is_known(config.biomes[index].deep_block_id)
+                == FT_FALSE
+            || terrain_template_is_valid(config.biomes[index].tree_template)
+                == FT_FALSE)
+            return (FT_FALSE);
+        index += 1U;
+    }
+    index = 0U;
+    while (index < config.feature_count)
+    {
+        if (config.features[index].chance_percent > 100
+            || config.features[index].biome_index < -1
+            || config.features[index].biome_index >=
+                static_cast<int32_t>(config.biome_count)
+            || config.features[index].minimum_height
+                > config.features[index].maximum_height
+            || terrain_template_is_valid(config.features[index].template_data)
+                == FT_FALSE)
+            return (FT_FALSE);
+        index += 1U;
+    }
+    return (FT_TRUE);
+}
+
 terrain_biome_profile terrain_get_biome_profile(terrain_biome biome) noexcept
 {
     terrain_biome_profile biome_profile;

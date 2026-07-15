@@ -31,6 +31,12 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - `terrain_block_metadata` - Registry entry that describes whether a block is solid, transparent, liquid, replaceable, light-emitting, whether it occludes mesh faces, and how hard it is.
 - `terrain_tree_template_block` - Relative block entry used by tree templates.
 - `terrain_tree_template` - Block list wrapper for reusable tree presets.
+- `terrain_generation_config` - Runtime generation policy containing noise,
+  water, biome, and feature-rule settings.
+- `terrain_biome_definition` - Customizable profile, block palette, and
+  decoration policy for one biome slot.
+- `terrain_feature_rule` - Seeded placement rule for caller-provided tree or
+  object templates, with biome, height, water, and chance constraints.
 - `terrain_get_block_metadata(block_id)` - Looks up the metadata entry for a known block id.
 - `terrain_block_is_known(block_id)` - Returns whether a block id exists in the registry and should be accepted by chunk storage.
 - `terrain_block_is_solid(block_id)` - Returns whether a block is treated as a solid collision block.
@@ -56,6 +62,16 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - `terrain_place_tree_template(chunk, local_origin_x, local_origin_y, local_origin_z, tree_template)` - Places a tree preset into a chunk.
 - `terrain_generate_chunk(game_voxel_chunk &chunk, const char *seed_string)` - Fills a voxel chunk with biome-aware heightmap terrain based on an optional seed.
 - `terrain_generate_chunk(game_voxel_chunk &chunk, int32_t world_block_origin_x, int32_t world_block_origin_z, const char *seed_string)` - Fills a voxel chunk with biome-aware heightmap terrain using a world-space chunk origin and optional seed.
+- `terrain_default_generation_config()` - Returns a copy of the built-in
+  generation policy that callers can modify safely.
+- `terrain_generation_config_is_valid(...)` - Checks biome counts, noise and
+  chance ranges, block palettes, and feature templates before generation.
+- `terrain_generate_chunk(..., const terrain_generation_config &config)` -
+  Generates using caller-owned runtime settings without changing libft data.
+- `terrain_select_biome(...)` - Applies the configured biome selector and
+  safely clamps custom selector results to the configured biome slots.
+- `terrain_get_biome_index(...)` - Queries the active configured biome index
+  for runtime HUD/debug integration, including custom slots.
 
 ## Voxel Behavior
 

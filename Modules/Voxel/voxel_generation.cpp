@@ -15,6 +15,7 @@ static const uint64_t TERRAIN_FEATURE_SHRUB_SALT = UINT64_C(0x2D9C1F4E8B3A6071);
 static const int32_t TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET = 1;
 static const uint64_t TERRAIN_FEATURE_SHRUB_THRESHOLD = 6U;
 static const uint64_t TERRAIN_FEATURE_TREE_SALT = UINT64_C(0x4F1E2D3C5B6A7980);
+static const uint64_t TERRAIN_FEATURE_WATER_SALT = UINT64_C(0x9182736455463728);
 static const uint64_t TERRAIN_CAVE_PRIMARY_SALT = UINT64_C(0x7C3A91E2D4B8560F);
 static const uint64_t TERRAIN_CAVE_DETAIL_SALT = UINT64_C(0x1D6F80B3C9274A55);
 static const int32_t TERRAIN_CAVE_PRIMARY_SCALE = 24;
@@ -26,7 +27,7 @@ static const int32_t TERRAIN_COLUMN_CACHE_COUNT =
 
 struct terrain_column_cache
 {
-    terrain_biome biome;
+    uint32_t biome;
     terrain_biome_profile biome_profile;
     int32_t column_height;
     uint32_t surface_block_id;
@@ -38,7 +39,8 @@ struct terrain_column_cache
 
 static int32_t terrain_column_height(uint64_t seed_value,
     int32_t world_block_x, int32_t world_block_z,
-    const terrain_biome_profile &biome_profile) noexcept
+    const terrain_biome_profile &biome_profile,
+    const terrain_generation_config &config) noexcept
 {
     double large_noise;
     double detail_noise;
@@ -47,12 +49,14 @@ static int32_t terrain_column_height(uint64_t seed_value,
     int32_t variation;
 
     large_noise = terrain_value_noise(seed_value, world_block_x, world_block_z,
-        TERRAIN_HEIGHTMAP_LARGE_SCALE);
+        config.large_noise_scale > 0 ? config.large_noise_scale : TERRAIN_HEIGHTMAP_LARGE_SCALE);
     detail_noise = terrain_value_noise(seed_value ^ UINT64_C(0xA5A5A5A5A5A5A5A5),
-        world_block_x, world_block_z, TERRAIN_HEIGHTMAP_DETAIL_SCALE);
+        world_block_x, world_block_z,
+        config.detail_noise_scale > 0 ? config.detail_noise_scale : TERRAIN_HEIGHTMAP_DETAIL_SCALE);
     variation = biome_profile.height_variation;
     total_noise = (large_noise * static_cast<double>(variation))
-        + (detail_noise * static_cast<double>(variation / 2));
+        + (detail_noise * static_cast<double>(variation)
+            * static_cast<double>(config.detail_noise_percent) / 100.0);
     surface_height = biome_profile.surface_height
         + static_cast<int32_t>(total_noise);
     return (surface_height);
@@ -80,8 +84,9 @@ static int32_t terrain_blend_height(int32_t left_height, int32_t right_height,
 }
 
 static int32_t terrain_smooth_biome_height(uint64_t seed_value,
-    int32_t world_block_x, int32_t world_block_z, terrain_biome biome,
-    const terrain_biome_profile &biome_profile) noexcept
+    int32_t world_block_x, int32_t world_block_z,
+    const terrain_biome_profile &biome_profile,
+    const terrain_generation_config &config) noexcept
 {
     int32_t biome_zone_x;
     int32_t biome_zone_z;
@@ -90,7 +95,7 @@ static int32_t terrain_smooth_biome_height(uint64_t seed_value,
     int32_t height;
     int32_t neighbor_x;
     int32_t neighbor_z;
-    terrain_biome neighbor_biome;
+    uint32_t neighbor_biome;
     terrain_biome_profile neighbor_profile;
     int32_t neighbor_height;
     double blend_factor;
@@ -100,15 +105,15 @@ static int32_t terrain_smooth_biome_height(uint64_t seed_value,
     zone_local_x = world_block_x - (biome_zone_x * TERRAIN_BIOME_ZONE_WIDTH);
     zone_local_z = world_block_z - (biome_zone_z * TERRAIN_BIOME_ZONE_WIDTH);
     height = terrain_column_height(seed_value, world_block_x, world_block_z,
-        biome_profile);
+        biome_profile, config);
     if (zone_local_x < TERRAIN_BIOME_ZONE_BLEND_WIDTH)
     {
         neighbor_x = world_block_x - TERRAIN_BIOME_ZONE_WIDTH;
-        neighbor_biome = terrain_pick_biome(seed_value, neighbor_x,
+        neighbor_biome = terrain_select_biome(config, seed_value, neighbor_x,
             world_block_z);
-        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_profile = config.biomes[neighbor_biome].profile;
         neighbor_height = terrain_column_height(seed_value, neighbor_x,
-            world_block_z, neighbor_profile);
+            world_block_z, neighbor_profile, config);
         blend_factor = terrain_zone_blend_factor(zone_local_x);
         height = terrain_blend_height(neighbor_height, height, blend_factor);
     }
@@ -116,11 +121,11 @@ static int32_t terrain_smooth_biome_height(uint64_t seed_value,
             - TERRAIN_BIOME_ZONE_BLEND_WIDTH))
     {
         neighbor_x = world_block_x + TERRAIN_BIOME_ZONE_WIDTH;
-        neighbor_biome = terrain_pick_biome(seed_value, neighbor_x,
+        neighbor_biome = terrain_select_biome(config, seed_value, neighbor_x,
             world_block_z);
-        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_profile = config.biomes[neighbor_biome].profile;
         neighbor_height = terrain_column_height(seed_value, neighbor_x,
-            world_block_z, neighbor_profile);
+            world_block_z, neighbor_profile, config);
         blend_factor = terrain_zone_blend_factor(
             (TERRAIN_BIOME_ZONE_WIDTH - 1) - zone_local_x);
         height = terrain_blend_height(height, neighbor_height, blend_factor);
@@ -128,11 +133,11 @@ static int32_t terrain_smooth_biome_height(uint64_t seed_value,
     if (zone_local_z < TERRAIN_BIOME_ZONE_BLEND_WIDTH)
     {
         neighbor_z = world_block_z - TERRAIN_BIOME_ZONE_WIDTH;
-        neighbor_biome = terrain_pick_biome(seed_value, world_block_x,
+        neighbor_biome = terrain_select_biome(config, seed_value, world_block_x,
             neighbor_z);
-        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_profile = config.biomes[neighbor_biome].profile;
         neighbor_height = terrain_column_height(seed_value, world_block_x,
-            neighbor_z, neighbor_profile);
+            neighbor_z, neighbor_profile, config);
         blend_factor = terrain_zone_blend_factor(zone_local_z);
         height = terrain_blend_height(neighbor_height, height, blend_factor);
     }
@@ -140,32 +145,31 @@ static int32_t terrain_smooth_biome_height(uint64_t seed_value,
             - TERRAIN_BIOME_ZONE_BLEND_WIDTH))
     {
         neighbor_z = world_block_z + TERRAIN_BIOME_ZONE_WIDTH;
-        neighbor_biome = terrain_pick_biome(seed_value, world_block_x,
+        neighbor_biome = terrain_select_biome(config, seed_value, world_block_x,
             neighbor_z);
-        neighbor_profile = terrain_get_biome_profile(neighbor_biome);
+        neighbor_profile = config.biomes[neighbor_biome].profile;
         neighbor_height = terrain_column_height(seed_value, world_block_x,
-            neighbor_z, neighbor_profile);
+            neighbor_z, neighbor_profile, config);
         blend_factor = terrain_zone_blend_factor(
             (TERRAIN_BIOME_ZONE_WIDTH - 1) - zone_local_z);
         height = terrain_blend_height(height, neighbor_height, blend_factor);
     }
-    (void)biome;
     return (height);
 }
 
 static int32_t terrain_sample_height(uint64_t seed_value, int32_t world_block_x,
-    int32_t world_block_z) noexcept
+    int32_t world_block_z, const terrain_generation_config &config) noexcept
 {
-    terrain_biome biome;
+    uint32_t biome;
     terrain_biome_profile biome_profile;
     int32_t minimum_height;
     int32_t maximum_height;
     int32_t height;
 
-    biome = terrain_pick_biome(seed_value, world_block_x, world_block_z);
-    biome_profile = terrain_get_biome_profile(biome);
+    biome = terrain_select_biome(config, seed_value, world_block_x, world_block_z);
+    biome_profile = config.biomes[biome].profile;
     height = terrain_smooth_biome_height(seed_value, world_block_x,
-        world_block_z, biome, biome_profile);
+        world_block_z, biome_profile, config);
     minimum_height = biome_profile.surface_height
         - biome_profile.height_variation
         - (biome_profile.height_variation / 2);
@@ -200,7 +204,8 @@ static int32_t terrain_clamp_height_to_profile(int32_t height,
 
 static int32_t terrain_smooth_heightfield(uint64_t seed_value,
     int32_t world_block_x, int32_t world_block_z,
-    const terrain_biome_profile &biome_profile) noexcept
+    const terrain_biome_profile &biome_profile,
+    const terrain_generation_config &config) noexcept
 {
     int32_t offset_x;
     int32_t offset_z;
@@ -218,7 +223,7 @@ static int32_t terrain_smooth_heightfield(uint64_t seed_value,
         while (offset_x <= TERRAIN_HEIGHTMAP_SMOOTH_RADIUS)
         {
             sample_height = terrain_sample_height(seed_value,
-                world_block_x + offset_x, world_block_z + offset_z);
+                world_block_x + offset_x, world_block_z + offset_z, config);
             if (offset_x == 0 && offset_z == 0)
                 sample_weight = 4;
             else if (offset_x == 0 || offset_z == 0)
@@ -233,7 +238,7 @@ static int32_t terrain_smooth_heightfield(uint64_t seed_value,
     }
     if (sample_count <= 0)
         return (terrain_clamp_height_to_profile(terrain_sample_height(
-            seed_value, world_block_x, world_block_z), biome_profile));
+            seed_value, world_block_x, world_block_z, config), biome_profile));
     return (terrain_clamp_height_to_profile(weighted_height / sample_count,
         biome_profile));
 }
@@ -288,19 +293,6 @@ static ft_bool terrain_should_carve_cave(uint64_t seed_value,
     return (FT_FALSE);
 }
 
-static uint64_t terrain_tree_threshold(terrain_biome biome) noexcept
-{
-    if (biome == TERRAIN_BIOME_DESERT)
-        return (18U);
-    if (biome == TERRAIN_BIOME_SNOW)
-        return (14U);
-    if (biome == TERRAIN_BIOME_MOUNTAINS)
-        return (12U);
-    if (biome == TERRAIN_BIOME_HILLS)
-        return (20U);
-    return (18U);
-}
-
 int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     const char *seed_string) noexcept
 {
@@ -311,6 +303,15 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     int32_t world_block_origin_x, int32_t world_block_origin_z,
     const char *seed_string) noexcept
 {
+    terrain_generation_config config = terrain_default_generation_config();
+    return (terrain_generate_chunk(chunk, world_block_origin_x,
+        world_block_origin_z, seed_string, config));
+}
+
+int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
+    int32_t world_block_origin_x, int32_t world_block_origin_z,
+    const char *seed_string, const terrain_generation_config &config) noexcept
+{
     int32_t local_x;
     int32_t local_y;
     int32_t local_z;
@@ -319,7 +320,7 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     int32_t column_height;
     int32_t world_block_x;
     int32_t world_block_z;
-    terrain_biome biome;
+    uint32_t biome;
     terrain_biome_profile biome_profile;
     uint32_t surface_block_id;
     uint32_t subsurface_block_id;
@@ -328,8 +329,14 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     ft_bool place_shrub;
     const terrain_tree_template *tree_template;
     uint64_t tree_feature_seed;
+    uint32_t feature_index;
+    uint64_t feature_seed;
+    const terrain_feature_rule *feature_rule;
     terrain_column_cache column_cache[TERRAIN_COLUMN_CACHE_COUNT];
     int32_t column_index;
+
+    if (terrain_generation_config_is_valid(config) == FT_FALSE)
+        return (FT_ERR_INVALID_ARGUMENT);
 
     seed_value = terrain_seed_value(seed_string);
     local_z = 0;
@@ -341,26 +348,23 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
         {
             column_index = (local_z * GAME_VOXEL_CHUNK_WIDTH) + local_x;
             world_block_x = world_block_origin_x + local_x;
-            column_cache[column_index].biome = terrain_pick_biome(seed_value,
-                world_block_x, world_block_z);
+            column_cache[column_index].biome = terrain_select_biome(config,
+                seed_value, world_block_x, world_block_z);
             column_cache[column_index].biome_profile
-                = terrain_get_biome_profile(column_cache[column_index].biome);
+                = config.biomes[column_cache[column_index].biome].profile;
             column_cache[column_index].column_height
                 = terrain_sample_height(seed_value, world_block_x,
-                    world_block_z);
-            column_cache[column_index].surface_block_id
-                = terrain_surface_block_for_biome(
-                    column_cache[column_index].biome);
-            column_cache[column_index].subsurface_block_id
-                = terrain_subsurface_block_for_biome(
-                    column_cache[column_index].biome);
-            column_cache[column_index].deep_block_id
-                = terrain_deep_block_for_biome(
-                    column_cache[column_index].biome);
+                    world_block_z, config);
+            column_cache[column_index].surface_block_id =
+                config.biomes[column_cache[column_index].biome].surface_block_id;
+            column_cache[column_index].subsurface_block_id =
+                config.biomes[column_cache[column_index].biome].subsurface_block_id;
+            column_cache[column_index].deep_block_id =
+                config.biomes[column_cache[column_index].biome].deep_block_id;
             column_cache[column_index].can_place_shrubs
-                = terrain_biome_has_shrubs(column_cache[column_index].biome);
+                = config.biomes[column_cache[column_index].biome].allow_shrubs;
             column_cache[column_index].can_place_trees
-                = terrain_biome_has_trees(column_cache[column_index].biome);
+                = config.biomes[column_cache[column_index].biome].allow_trees;
             local_x += 1;
         }
         local_z += 1;
@@ -381,7 +385,7 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             deep_block_id = column_cache[column_index].deep_block_id;
             place_shrub = column_cache[column_index].can_place_shrubs;
             column_height = terrain_smooth_heightfield(seed_value,
-                world_block_x, world_block_z, biome_profile);
+                world_block_x, world_block_z, biome_profile, config);
             column_cache[column_index].column_height = column_height;
             if (column_height < 0)
                 column_height = 0;
@@ -413,7 +417,7 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
                 && place_shrub == FT_TRUE
                 && terrain_should_place_feature(seed_value, world_block_x,
                     world_block_z, TERRAIN_FEATURE_SHRUB_SALT,
-                    TERRAIN_FEATURE_SHRUB_THRESHOLD) == FT_TRUE)
+                    config.biomes[biome].shrub_chance_percent) == FT_TRUE)
             {
                 error_code = chunk.write_block(local_x,
                     column_height + TERRAIN_FEATURE_SHRUB_HEIGHT_OFFSET,
@@ -421,10 +425,13 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
                 if (error_code != FT_ERR_SUCCESS)
                     return (error_code);
             }
-            if (column_height < TERRAIN_GENERATOR_SEA_LEVEL)
+            if (column_height < config.sea_level
+                && terrain_should_place_feature(seed_value, world_block_x,
+                    world_block_z, TERRAIN_FEATURE_WATER_SALT,
+                    config.water_chance_percent) == FT_TRUE)
             {
                 local_y = column_height + 1;
-                while (local_y <= TERRAIN_GENERATOR_SEA_LEVEL
+                while (local_y <= config.sea_level
                     && local_y < GAME_VOXEL_CHUNK_HEIGHT)
                 {
                     error_code = chunk.write_block(local_x, local_y, local_z,
@@ -452,10 +459,13 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             {
                 tree_feature_seed = terrain_feature_seed(seed_value,
                     world_block_x, world_block_z, TERRAIN_FEATURE_TREE_SALT);
-                if ((tree_feature_seed % 100U) < terrain_tree_threshold(biome))
+                if ((tree_feature_seed % 100U)
+                    < config.biomes[biome].tree_chance_percent)
                 {
-                    tree_template = &terrain_tree_template_for_biome(biome,
-                        tree_feature_seed);
+                    tree_template = config.biomes[biome].tree_template;
+                    if (tree_template == ft_nullptr)
+                        tree_template = &terrain_tree_template_for_biome(
+                            static_cast<terrain_biome>(biome), tree_feature_seed);
                     column_height = column_cache[column_index].column_height;
                     if (terrain_can_place_tree_template(chunk, local_x,
                             column_height + 1, local_z, *tree_template)
@@ -472,6 +482,55 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
             local_x += 4;
         }
         local_z += 4;
+    }
+    feature_index = 0U;
+    while (feature_index < config.feature_count
+        && feature_index < TERRAIN_MAX_FEATURE_RULES)
+    {
+        feature_rule = &config.features[feature_index];
+        if (feature_rule->template_data != ft_nullptr)
+        {
+            local_z = 2;
+            while (local_z + 2 < GAME_VOXEL_CHUNK_DEPTH)
+            {
+                local_x = 2;
+                while (local_x + 2 < GAME_VOXEL_CHUNK_WIDTH)
+                {
+                    column_index = (local_z * GAME_VOXEL_CHUNK_WIDTH) + local_x;
+                    biome = column_cache[column_index].biome;
+                    column_height = column_cache[column_index].column_height;
+                    if ((feature_rule->biome_index < 0
+                            || feature_rule->biome_index
+                                == static_cast<int32_t>(biome))
+                        && column_height >= feature_rule->minimum_height
+                        && column_height <= feature_rule->maximum_height
+                        && (feature_rule->requires_dry_land == FT_FALSE
+                            || column_height >= config.sea_level))
+                    {
+                        feature_seed = terrain_feature_seed(seed_value,
+                            world_block_origin_x + local_x,
+                            world_block_origin_z + local_z,
+                            TERRAIN_FEATURE_TREE_SALT
+                                ^ static_cast<uint64_t>(feature_index + 1U));
+                        if ((feature_seed % 100U)
+                            < feature_rule->chance_percent
+                            && terrain_can_place_tree_template(chunk, local_x,
+                                column_height + 1, local_z,
+                                *feature_rule->template_data) == FT_TRUE)
+                        {
+                            error_code = terrain_place_tree_template(chunk,
+                                local_x, column_height + 1, local_z,
+                                *feature_rule->template_data);
+                            if (error_code != FT_ERR_SUCCESS)
+                                return (error_code);
+                        }
+                    }
+                    local_x += 4;
+                }
+                local_z += 4;
+            }
+        }
+        feature_index += 1U;
     }
     chunk.clear_dirty();
     return (FT_ERR_SUCCESS);

@@ -348,6 +348,7 @@ void ft_gpu_window_macos::set_cursor_visible(ft_bool visible) noexcept
     else if (visible == FT_FALSE && this->_state->cursor_visible == FT_TRUE)
         [NSCursor hide];
     this->_state->cursor_visible = visible;
+    return ;
 }
 
 ft_bool ft_gpu_window_macos::was_settings_key_pressed() const noexcept

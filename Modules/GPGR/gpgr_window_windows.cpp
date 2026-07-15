@@ -79,6 +79,8 @@ class ft_gpu_window_windows : public ft_gpu_window
         }
         void set_cursor_visible(ft_bool visible) noexcept override
         {
+            errno_abort_if_uninitialised_or_destroyed(this->_initialised_state,
+                "ft_gpu_window_windows::set_cursor_visible");
             if (this->_cursor_visible == visible)
                 return ;
             if (visible == FT_TRUE)

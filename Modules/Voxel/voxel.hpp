@@ -26,6 +26,8 @@
 # define TERRAIN_GENERATOR_SLATE_BLOCK 14U
 # define TERRAIN_GENERATOR_MOSS_ROCK_BLOCK 15U
 # define TERRAIN_BIOME_ZONE_WIDTH 128
+# define TERRAIN_MAX_CUSTOM_BIOMES 16U
+# define TERRAIN_MAX_FEATURE_RULES 16U
 
 enum terrain_biome
 {
@@ -68,6 +70,57 @@ struct terrain_tree_template
     const terrain_tree_template_block *blocks;
     uint32_t block_count;
 };
+
+struct terrain_biome_definition
+{
+    terrain_biome_profile profile;
+    uint32_t surface_block_id;
+    uint32_t subsurface_block_id;
+    uint32_t deep_block_id;
+    ft_bool allow_shrubs;
+    ft_bool allow_trees;
+    uint32_t shrub_chance_percent;
+    uint32_t tree_chance_percent;
+    const terrain_tree_template *tree_template;
+};
+
+struct terrain_feature_rule
+{
+    const terrain_tree_template *template_data;
+    int32_t biome_index;
+    uint32_t chance_percent;
+    int32_t minimum_height;
+    int32_t maximum_height;
+    ft_bool requires_dry_land;
+};
+
+typedef uint32_t (*terrain_biome_selector)(uint64_t seed_value,
+    int32_t world_block_x, int32_t world_block_z, uint32_t biome_count,
+    void *user_data) noexcept;
+
+struct terrain_generation_config
+{
+    int32_t sea_level;
+    int32_t large_noise_scale;
+    int32_t detail_noise_scale;
+    int32_t detail_noise_percent;
+    uint32_t water_chance_percent;
+    uint32_t biome_count;
+    terrain_biome_definition biomes[TERRAIN_MAX_CUSTOM_BIOMES];
+    terrain_biome_selector biome_selector;
+    void *biome_selector_user_data;
+    uint32_t feature_count;
+    terrain_feature_rule features[TERRAIN_MAX_FEATURE_RULES];
+};
+
+terrain_generation_config terrain_default_generation_config() noexcept;
+ft_bool terrain_generation_config_is_valid(
+    const terrain_generation_config &config) noexcept;
+uint32_t terrain_select_biome(const terrain_generation_config &config,
+    uint64_t seed_value, int32_t world_block_x, int32_t world_block_z) noexcept;
+uint32_t terrain_get_biome_index(const terrain_generation_config &config,
+    int32_t world_block_x, int32_t world_block_z,
+    const char *seed_string = ft_nullptr) noexcept;
 
 terrain_biome terrain_get_biome(int32_t world_block_x, int32_t world_block_z,
     const char *seed_string = ft_nullptr) noexcept;
@@ -124,6 +177,9 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
 int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     int32_t world_block_origin_x, int32_t world_block_origin_z,
     const char *seed_string = ft_nullptr) noexcept;
+int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
+    int32_t world_block_origin_x, int32_t world_block_origin_z,
+    const char *seed_string, const terrain_generation_config &config) noexcept;
 
 #endif
 

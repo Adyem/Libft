@@ -304,6 +304,18 @@ static void gpgr_shader_uniform_uninitialised(ft_gpu_shader &shader)
 
 static ft_gpu_shader *g_gpgr_shader_abort_target = nullptr;
 
+static void gpgr_shader_use_destroyed(void)
+{
+    g_gpgr_shader_abort_target->use();
+    return ;
+}
+
+static void gpgr_shader_uniform_destroyed(void)
+{
+    (void)g_gpgr_shader_abort_target->uniform("u_model");
+    return ;
+}
+
 static void gpgr_shader_initialize_already_initialised(void)
 {
     (void)g_gpgr_shader_abort_target->initialize(
@@ -338,6 +350,23 @@ FT_TEST(test_gpgr_shader_uninitialised_access_aborts)
         gpgr_shader_use_uninitialised));
     FT_ASSERT_EQ(1, test_expect_sigabrt_signal_uninitialised<ft_gpu_shader>(
         gpgr_shader_uniform_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_gpgr_shader_destroyed_access_aborts)
+{
+    ft_gpu_shader shader;
+
+    gpgr_fake_gl_reset();
+    gpgr_fake_gl_install();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, gpgr_fake_shader_initialize(shader));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shader.destroy());
+    g_gpgr_shader_abort_target = &shader;
+    FT_ASSERT_EQ(1, test_expect_sigabrt_signal(
+        gpgr_shader_use_destroyed));
+    FT_ASSERT_EQ(1, test_expect_sigabrt_signal(
+        gpgr_shader_uniform_destroyed));
+    g_gpgr_shader_abort_target = nullptr;
     return (1);
 }
 
@@ -444,6 +473,22 @@ FT_TEST(test_gpgr_shader_vertex_compile_failure_cleans_up)
     FT_ASSERT_EQ(1U, g_gpgr_fake_gl_state.create_shader_calls);
     FT_ASSERT_EQ(1U, g_gpgr_fake_gl_state.delete_shader_calls);
     FT_ASSERT_EQ(0U, g_gpgr_fake_gl_state.create_program_calls);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shader.destroy());
+    return (1);
+}
+
+FT_TEST(test_gpgr_shader_retries_after_failed_initialization)
+{
+    ft_gpu_shader shader;
+
+    gpgr_fake_gl_reset();
+    g_gpgr_fake_gl_state.fail_vertex_compile = FT_TRUE;
+    gpgr_fake_gl_install();
+    FT_ASSERT_EQ(FT_ERR_INITIALIZATION_FAILED,
+        gpgr_fake_shader_initialize(shader));
+    g_gpgr_fake_gl_state.fail_vertex_compile = FT_FALSE;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, gpgr_fake_shader_initialize(shader));
+    FT_ASSERT_EQ(FT_TRUE, shader.ready());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shader.destroy());
     return (1);
 }
@@ -600,6 +645,23 @@ FT_TEST(test_gpgr_shader_move_destroyed_source_keeps_destination_destroyed)
     FT_ASSERT_EQ(FT_FALSE, destination_shader.ready());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_shader.destroy());
     FT_ASSERT_EQ(1U, g_gpgr_fake_gl_state.delete_program_calls);
+    return (1);
+}
+
+FT_TEST(test_gpgr_shader_move_destroyed_source_replaces_destination)
+{
+    ft_gpu_shader source_shader;
+    ft_gpu_shader destination_shader;
+
+    gpgr_fake_gl_reset();
+    gpgr_fake_gl_install();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, gpgr_fake_shader_initialize(source_shader));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, gpgr_fake_shader_initialize(destination_shader));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_shader.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_shader.move(source_shader));
+    FT_ASSERT_EQ(FT_FALSE, destination_shader.ready());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_shader.destroy());
+    FT_ASSERT_EQ(2U, g_gpgr_fake_gl_state.delete_program_calls);
     return (1);
 }
 
