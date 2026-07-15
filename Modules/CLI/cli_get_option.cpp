@@ -29,3 +29,21 @@ const cli_option *cli_get_present_option(const cli_command *command,
     }
     return (option);
 }
+
+cli_option *cli_find_option_short(cli_command *command, char short_name)
+{
+    ft_size_t index;
+
+    if (command == ft_nullptr || short_name == '\0')
+        return (ft_nullptr);
+    index = 0;
+    while (index < command->option_count)
+    {
+        if (command->options[index].short_name == short_name)
+            return (command->options + index);
+        index++;
+    }
+    if (command->selected_subcommand != ft_nullptr)
+        return (cli_find_option_short(command->selected_subcommand, short_name));
+    return (ft_nullptr);
+}

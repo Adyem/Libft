@@ -8,7 +8,8 @@ SRCS := uri_internal.cpp \
         uri_normalize.cpp \
         uri_percent_encode_component.cpp \
         uri_percent_decode_component.cpp \
-        uri_query_get_value.cpp
+        uri_query_get_value.cpp \
+        uri_query_has_key.cpp
 
 HEADERS := uri.hpp uri_internal.hpp
 

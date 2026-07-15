@@ -53,3 +53,6 @@ Formatted messages are also recorded into the separate `Sink` module so log hist
 - Context methods: `push_context`, `pop_context`, and `make_context_guard`.
 - Emission methods: `debug`, `info`, `warn`, `error`, `structured`, and level-specific structured variants.
 - Error methods: `get_error()` and `get_error_str()`.
+## Additional API
+
+- `ft_log_context_push_field(const char *key, const char *value)` - Adds one valued field to the current logging context.

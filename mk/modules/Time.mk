@@ -18,6 +18,7 @@ SRCS := time_now.cpp \
         time_strftime.cpp \
         time_format.cpp \
         time_relative.cpp \
+        time_relative_format.cpp \
         time_interval.cpp \
         time_parse.cpp \
         time_high_resolution.cpp \

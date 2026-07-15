@@ -72,6 +72,7 @@ int32_t       file_hash_sha1(const char *path, uint8_t digest[20]);
 int32_t       file_hash_sha256(const char *path, uint8_t digest[32]);
 int32_t       file_metadata_diff(const char *left_path, const char *right_path, uint32_t *difference_out);
 ft_string *file_path_join(const char *path_left, const char *path_right);
+ft_string *file_path_relative(const char *from_path, const char *to_path);
 ft_string *file_path_normalize(const char *path);
 ft_bool   file_path_is_absolute(const char *path) noexcept;
 ft_bool   file_path_is_relative(const char *path) noexcept;

@@ -24,3 +24,4 @@ Config text uses dot-separated command paths for nested options, and string valu
 - `cli_generate_completion_script(const cli_command *command, const char *program_name, char *buffer, ft_size_t buffer_size)` - Emits a Bash completion script for the command tree.
 - `cli_merge_config_text(cli_command *command, const char *config_text)` - Applies `key=value` configuration lines to a command tree.
 - `cli_merge_config_file(cli_command *command, const char *path)` - Reads a config file and merges it into a command tree.
+- `cli_find_option_short(cli_command *command, char short_name)` - Finds a mutable option by short name, including the selected subcommand.

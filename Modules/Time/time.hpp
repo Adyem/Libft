@@ -106,6 +106,7 @@ ft_size_t   time_format_timezone_offset(char *buffer, ft_size_t size, int32_t of
 ft_string   *time_format_rfc3339(t_time time_value);
 ft_string   *time_format_rfc3339_with_offset(t_time time_value, int32_t offset_minutes);
 ft_string   *time_format_duration(t_duration_milliseconds duration_value);
+ft_string   *time_format_relative(t_duration_milliseconds duration_value);
 ft_string   *time_format_interval(t_time start_time, t_time end_time);
 t_time      time_add_seconds(t_time time_value, int64_t seconds);
 t_time      time_add_minutes(t_time time_value, int64_t minutes);

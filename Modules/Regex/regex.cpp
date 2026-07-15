@@ -96,6 +96,44 @@ int32_t regex_search(const char *pattern, const char *text,
     return (FT_ERR_SUCCESS);
 }
 
+int32_t regex_count_matches(const char *pattern, const char *text,
+    ft_size_t *match_count) noexcept
+{
+    std::regex compiled_regex;
+    std::string text_storage;
+    std::sregex_iterator match_iterator;
+    std::sregex_iterator match_end;
+    int32_t compile_error;
+
+    if (pattern == ft_nullptr || text == ft_nullptr
+        || match_count == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    compile_error = regex_compile_pattern(pattern, &compiled_regex);
+    if (compile_error != FT_ERR_SUCCESS)
+        return (compile_error);
+    try
+    {
+        text_storage = text;
+        match_iterator = std::sregex_iterator(text_storage.begin(),
+                text_storage.end(), compiled_regex);
+        *match_count = 0U;
+        while (match_iterator != match_end)
+        {
+            *match_count += 1U;
+            ++match_iterator;
+        }
+    }
+    catch (const std::bad_alloc &)
+    {
+        return (FT_ERR_NO_MEMORY);
+    }
+    catch (...)
+    {
+        return (FT_ERR_INTERNAL);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
 int32_t regex_replace_all(const char *pattern, const char *replacement,
     const char *text, ft_string *output) noexcept
 {

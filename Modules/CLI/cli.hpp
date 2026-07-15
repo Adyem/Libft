@@ -52,6 +52,7 @@ int32_t         cli_parse(cli_command *command, ft_size_t argument_count,
                     const char *const *argument_values);
 int32_t         cli_validate(const cli_command *command);
 cli_option   *cli_find_option(cli_command *command, const char *long_name);
+cli_option   *cli_find_option_short(cli_command *command, char short_name);
 const cli_option *cli_find_option_const(const cli_command *command,
                     const char *long_name);
 int32_t         cli_get_bool(const cli_command *command, const char *long_name,

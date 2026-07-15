@@ -676,6 +676,9 @@ int32_t game_pathfinding::astar_grid(const game_map3d &grid,
         || start_z >= grid.get_depth() || goal_x >= grid.get_width()
         || goal_y >= grid.get_height() || goal_z >= grid.get_depth())
         return (FT_ERR_GAME_INVALID_MOVE);
+    if (grid.get(start_x, start_y, start_z) != 0
+        || grid.get(goal_x, goal_y, goal_z) != 0)
+        return (FT_ERR_GAME_INVALID_MOVE);
 
     initialize_error = nodes.initialize();
     if (initialize_error != FT_ERR_SUCCESS)

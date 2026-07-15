@@ -17,6 +17,8 @@ int32_t     regex_is_match(const char *pattern, const char *text,
                 ft_bool *is_match) noexcept;
 int32_t     regex_search(const char *pattern, const char *text,
                 ft_bool *is_found) noexcept;
+int32_t     regex_count_matches(const char *pattern, const char *text,
+                ft_size_t *match_count) noexcept;
 int32_t     regex_replace_all(const char *pattern, const char *replacement,
                 const char *text, ft_string *output) noexcept;
 int32_t     regex_capture_count(const char *pattern,

@@ -72,3 +72,6 @@ The `File` module provides filesystem operations, directory iteration, path help
 - `watch_directory(...)` - Starts watching a directory with either legacy or typed callback.
 - `set_debounce_milliseconds(...)` / `get_debounce_milliseconds()` - Configure or read event debounce timing.
 - `stop()` - Stops the watcher thread.
+## Additional API
+
+- `file_path_relative(const char *from_path, const char *to_path)` - Returns a normalized relative path from one path to another.

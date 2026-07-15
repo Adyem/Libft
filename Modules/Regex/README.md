@@ -14,3 +14,4 @@ The `Regex` module provides ECMAScript-style pattern validation, full-match and 
 ## Types
 
 - `regex_capture_group` - Span description for one regex result entry. `matched` reports whether the group participated, `start_index` is the byte offset in the input text, and `length` is the matched span length.
+- `regex_count_matches(...)` - Counts non-overlapping matches without requiring capture storage.

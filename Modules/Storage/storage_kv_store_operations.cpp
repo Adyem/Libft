@@ -2304,32 +2304,48 @@ const char *kv_store::kv_get(const char *key_string) const
     }
     mutable_this = const_cast<kv_store *>(this);
     if (mutable_this->prune_expired_locked() != 0)
+    {
+        this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
         return (ft_nullptr);
+    }
     map_pair = this->_data.find(key_storage);
     map_error = FT_ERR_SUCCESS;
     if (map_error != FT_ERR_SUCCESS)
     {
+        this->unlock_store_guard(lock_acquired, map_error);
         return (ft_nullptr);
     }
     map_end = this->_data.end();
     map_error = FT_ERR_SUCCESS;
     if (map_error != FT_ERR_SUCCESS)
     {
+        this->unlock_store_guard(lock_acquired, map_error);
         return (ft_nullptr);
     }
     if (map_pair == map_end)
     {
         mutable_this->record_get_miss();
+        this->unlock_store_guard(lock_acquired, FT_ERR_NOT_FOUND);
         return (ft_nullptr);
     }
     value_pointer = ft_nullptr;
     if (map_pair->value.get_value_pointer(&value_pointer) != 0)
     {
+        this->unlock_store_guard(lock_acquired, FT_ERR_INVALID_OPERATION);
         return (ft_nullptr);
     }
     mutable_this->record_get_hit();
     this->unlock_store_guard(lock_acquired, FT_ERR_SUCCESS);
     return (value_pointer);
+}
+
+ft_bool kv_store::kv_contains(const char *key_string) const
+{
+    if (key_string == ft_nullptr)
+        return (FT_FALSE);
+    if (this->kv_get(key_string) == ft_nullptr)
+        return (FT_FALSE);
+    return (FT_TRUE);
 }
 
 int32_t kv_store::kv_delete(const char *key_string)

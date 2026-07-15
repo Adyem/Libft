@@ -554,6 +554,17 @@ int32_t ft_log_context_push(const s_log_field *fields, ft_size_t field_count)
     return (FT_ERR_SUCCESS);
 }
 
+int32_t ft_log_context_push_field(const char *key, const char *value)
+{
+    s_log_field field;
+
+    if (key == ft_nullptr || value == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    field.key = key;
+    field.value = value;
+    return (ft_log_context_push(&field, 1U));
+}
+
 void ft_log_context_pop(ft_size_t field_count)
 {
     logger_context_pop(field_count);

@@ -131,6 +131,7 @@ int32_t     ft_log_probe_remote_health();
 int32_t     ft_log_get_remote_health(s_log_remote_health *statuses,
             ft_size_t capacity, ft_size_t *entry_count);
 int32_t     ft_log_context_push(const s_log_field *fields, ft_size_t field_count);
+int32_t     ft_log_context_push_field(const char *key, const char *value);
 void    ft_log_context_pop(ft_size_t field_count);
 void    ft_log_context_clear();
 

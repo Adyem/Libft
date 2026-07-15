@@ -214,6 +214,7 @@ class kv_store
         int32_t prune_expired();
         int32_t kv_set(const char *key_string, const char *value_string, int64_t ttl_seconds = -1);
         const char *kv_get(const char *key_string) const;
+        ft_bool kv_contains(const char *key_string) const;
         int32_t kv_delete(const char *key_string);
         int32_t kv_flush() const;
         int32_t configure_encryption(const char *encryption_key, ft_bool enable_encryption, const char *encryption_algorithm_name = ft_nullptr);

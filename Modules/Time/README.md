@@ -86,3 +86,6 @@ The `Time` module provides wall-clock time, monotonic time, duration structs, ti
 - `add_time(...)` / `remove_time(...)` - Adjust remaining timer duration.
 - `sleep_remaining()` - Sleeps until the timer expires.
 - `enable_thread_safety()` / `disable_thread_safety()` / `is_thread_safe()` - Manage optional locking.
+## Additional API
+
+- `time_format_relative(t_duration_milliseconds duration_value)` - Formats future durations with an `in ` prefix while preserving signed duration text for past values.

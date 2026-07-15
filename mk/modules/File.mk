@@ -9,6 +9,7 @@ SRCS := file_opendir.cpp \
         file_exists.cpp \
         file_delete.cpp \
         file_path_join.cpp \
+        file_path_relative.cpp \
         file_path_normalize.cpp \
         file_path_parts.cpp \
         file_watch.cpp \

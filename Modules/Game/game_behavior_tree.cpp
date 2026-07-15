@@ -161,6 +161,7 @@ int32_t game_behavior_tree_action::tick(game_behavior_context &context) noexcept
 game_behavior_composite::game_behavior_composite() noexcept
     : game_behavior_node(), _children()
 {
+    (void)this->_children.initialize();
     return ;
 }
 
@@ -313,6 +314,7 @@ int32_t game_behavior_sequence::tick(game_behavior_context &context) noexcept
 game_behavior_tree::game_behavior_tree() noexcept
     : _root()
 {
+    (void)this->_root.initialize();
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }

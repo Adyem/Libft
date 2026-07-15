@@ -26,6 +26,8 @@ uint8_t     *uri_percent_decode_component(const char *input,
                 ft_size_t input_size, ft_size_t *output_size);
 char        *uri_query_get_value(const char *query, ft_size_t query_size,
                 const char *key, ft_size_t key_size);
+ft_bool     uri_query_has_key(const char *query, ft_size_t query_size,
+                const char *key, ft_size_t key_size);
 int32_t     uri_get_error(void) noexcept;
 const char  *uri_get_error_str(void) noexcept;
 

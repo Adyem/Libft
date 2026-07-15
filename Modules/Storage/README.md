@@ -49,3 +49,6 @@ The `Storage` module provides `kv_store`, a lifecycle key/value database with JS
 
 - `kv_store_init_set_operation(...)` - Initializes a set operation.
 - `kv_store_init_delete_operation(...)` - Initializes a delete operation.
+## Additional API
+
+- `kv_store::kv_contains(const char *key_string)` - Tests key existence without treating a stored empty string as missing.
