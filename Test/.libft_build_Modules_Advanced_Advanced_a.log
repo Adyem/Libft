@@ -1,0 +1,124 @@
+mkdir -p objs_opt0
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_to_string.cpp -o objs_opt0/advanced_to_string.o
+dep_file="objs_opt0/advanced_to_string.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_to_string.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_string.cpp -o objs_opt0/advanced_string.o
+dep_file="objs_opt0/advanced_string.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_string.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_utf8.cpp -o objs_opt0/advanced_utf8.o
+dep_file="objs_opt0/advanced_utf8.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_utf8.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_wide.cpp -o objs_opt0/advanced_wide.o
+dep_file="objs_opt0/advanced_wide.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_wide.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_locale_casefold.cpp -o objs_opt0/advanced_locale_casefold.o
+dep_file="objs_opt0/advanced_locale_casefold.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_locale_casefold.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_span_to_string.cpp -o objs_opt0/advanced_span_to_string.o
+dep_file="objs_opt0/advanced_span_to_string.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_span_to_string.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_calloc.cpp -o objs_opt0/advanced_calloc.o
+dep_file="objs_opt0/advanced_calloc.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_calloc.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_atoi.cpp -o objs_opt0/advanced_atoi.o
+dep_file="objs_opt0/advanced_atoi.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_atoi.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_strdup.cpp -o objs_opt0/advanced_strdup.o
+dep_file="objs_opt0/advanced_strdup.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_strdup.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_strndup.cpp -o objs_opt0/advanced_strndup.o
+dep_file="objs_opt0/advanced_strndup.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_strndup.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_memdup.cpp -o objs_opt0/advanced_memdup.o
+dep_file="objs_opt0/advanced_memdup.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_memdup.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_itoa.cpp -o objs_opt0/advanced_itoa.o
+dep_file="objs_opt0/advanced_itoa.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_itoa.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_itoa_base.cpp -o objs_opt0/advanced_itoa_base.o
+dep_file="objs_opt0/advanced_itoa_base.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_itoa_base.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_strjoin.cpp -o objs_opt0/advanced_strjoin.o
+dep_file="objs_opt0/advanced_strjoin.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_strjoin.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_strjoin_multiple.cpp -o objs_opt0/advanced_strjoin_multiple.o
+dep_file="objs_opt0/advanced_strjoin_multiple.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_strjoin_multiple.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_join_format.cpp -o objs_opt0/advanced_join_format.o
+dep_file="objs_opt0/advanced_join_format.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_join_format.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_substr.cpp -o objs_opt0/advanced_substr.o
+dep_file="objs_opt0/advanced_substr.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_substr.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_strtrim.cpp -o objs_opt0/advanced_strtrim.o
+dep_file="objs_opt0/advanced_strtrim.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_strtrim.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_text_transform.cpp -o objs_opt0/advanced_text_transform.o
+dep_file="objs_opt0/advanced_text_transform.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_text_transform.cpp" $count 20; \
+	fi
+g++ -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations -Wshadow -Wformat=2 -Wundef -Wfloat-equal -Wodr -DLIBFT_INTERNAL_HEADERS -O0 -g  -Wold-style-cast -Wconversion -Wuseless-cast -Wzero-as-null-pointer-constant -Wmaybe-uninitialized -I../.. -MMD -MP -c advanced_split.cpp -o objs_opt0/advanced_split.o
+dep_file="objs_opt0/advanced_split.d"; if [ -f "$dep_file" ]; then dep_root="C:/Users/Adyem/Documents/Game_development/Minecraft/Libft"; case "$dep_root" in /mnt/[a-zA-Z]/*) drive=$(printf '%s' "$dep_root" | cut -d/ -f3 | tr '[:lower:]' '[:upper:]'); rest=$(printf '%s' "$dep_root" | sed "s|^/mnt/$drive||"); dep_root="$drive:$rest"; ;; esac; dep_root="${dep_root%/}/"; perl -0pi -e "s|\\Q$dep_root\\E|./|g; s/\\r//g" "$dep_file"; fi
+count=$(find objs_opt0 -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	if [ "0" != "1" ]; then \
+	    printf '        [%s] Building file %s (%d/%d)\n' "Advanced" "advanced_split.cpp" $count 20; \
+	fi
+rm -f Advanced.a
+ar rcs Advanced.a objs_opt0/advanced_to_string.o objs_opt0/advanced_string.o objs_opt0/advanced_utf8.o objs_opt0/advanced_wide.o objs_opt0/advanced_locale_casefold.o objs_opt0/advanced_span_to_string.o objs_opt0/advanced_calloc.o objs_opt0/advanced_atoi.o objs_opt0/advanced_strdup.o objs_opt0/advanced_strndup.o objs_opt0/advanced_memdup.o objs_opt0/advanced_itoa.o objs_opt0/advanced_itoa_base.o objs_opt0/advanced_strjoin.o objs_opt0/advanced_strjoin_multiple.o objs_opt0/advanced_join_format.o objs_opt0/advanced_substr.o objs_opt0/advanced_strtrim.o objs_opt0/advanced_text_transform.o objs_opt0/advanced_split.o
+printf '        [%s] Module archive ready (%d files)\n' "Advanced" 20

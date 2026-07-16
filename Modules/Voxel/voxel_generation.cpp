@@ -342,6 +342,25 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
     local_z = 0;
     while (local_z < GAME_VOXEL_CHUNK_DEPTH)
     {
+        local_x = 0;
+        while (local_x < GAME_VOXEL_CHUNK_WIDTH)
+        {
+            local_y = 0;
+            while (local_y < GAME_VOXEL_CHUNK_HEIGHT)
+            {
+                error_code = chunk.write_block(local_x, local_y, local_z,
+                    GAME_VOXEL_AIR_BLOCK);
+                if (error_code != FT_ERR_SUCCESS)
+                    return (error_code);
+                local_y += 1;
+            }
+            local_x += 1;
+        }
+        local_z += 1;
+    }
+    local_z = 0;
+    while (local_z < GAME_VOXEL_CHUNK_DEPTH)
+    {
         world_block_z = world_block_origin_z + local_z;
         local_x = 0;
         while (local_x < GAME_VOXEL_CHUNK_WIDTH)
@@ -463,11 +482,14 @@ int32_t terrain_generate_chunk(game_voxel_chunk &chunk,
                     < config.biomes[biome].tree_chance_percent)
                 {
                     tree_template = config.biomes[biome].tree_template;
-                    if (tree_template == ft_nullptr)
+                    if (tree_template == ft_nullptr
+                        && biome <= static_cast<uint32_t>(
+                            TERRAIN_BIOME_MOUNTAINS))
                         tree_template = &terrain_tree_template_for_biome(
                             static_cast<terrain_biome>(biome), tree_feature_seed);
                     column_height = column_cache[column_index].column_height;
-                    if (terrain_can_place_tree_template(chunk, local_x,
+                    if (tree_template != ft_nullptr
+                        && terrain_can_place_tree_template(chunk, local_x,
                             column_height + 1, local_z, *tree_template)
                         == FT_TRUE)
                     {

@@ -1,6 +1,95 @@
 #include "file_utils.hpp"
+#include <stdint.h>
 #include <new>
 #include <string>
+
+struct file_path_root_info
+{
+    uint8_t root_kind;
+    char drive_letter;
+    std::string unc_server;
+    std::string unc_share;
+};
+
+static ft_bool file_path_is_drive_letter(char character)
+{
+    if ((character >= 'A' && character <= 'Z')
+        || (character >= 'a' && character <= 'z'))
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+static char file_path_lower_character(char character)
+{
+    if (character >= 'A' && character <= 'Z')
+        return (static_cast<char>(character - 'A' + 'a'));
+    return (character);
+}
+
+static file_path_root_info file_path_get_root_info(
+    const std::string &path)
+{
+    file_path_root_info root_info;
+    ft_size_t separator_index;
+    ft_size_t share_end;
+
+    root_info.root_kind = 0U;
+    root_info.drive_letter = '\0';
+    if (path.size() >= 2 && file_path_is_drive_letter(path[0]) == FT_TRUE
+        && path[1] == ':')
+    {
+        root_info.drive_letter = file_path_lower_character(path[0]);
+        if (path.size() >= 3 && path[2] == '/')
+            root_info.root_kind = 2U;
+        else
+            root_info.root_kind = 3U;
+        return (root_info);
+    }
+    if (path.size() >= 2 && path[0] == '/' && path[1] == '/')
+    {
+        root_info.root_kind = 4U;
+        separator_index = path.find('/', 2);
+        if (separator_index == std::string::npos)
+            return (root_info);
+        root_info.unc_server = path.substr(2, separator_index - 2);
+        share_end = path.find('/', separator_index + 1);
+        if (share_end == std::string::npos)
+            root_info.unc_share = path.substr(separator_index + 1);
+        else
+            root_info.unc_share = path.substr(separator_index + 1,
+                share_end - separator_index - 1);
+        return (root_info);
+    }
+    if (!path.empty() && path[0] == '/')
+        root_info.root_kind = 1U;
+    return (root_info);
+}
+
+static ft_bool file_path_roots_are_compatible(const std::string &from_path,
+    const std::string &to_path)
+{
+    file_path_root_info from_root;
+    file_path_root_info to_root;
+
+    from_root = file_path_get_root_info(from_path);
+    to_root = file_path_get_root_info(to_path);
+    if (from_root.root_kind != to_root.root_kind)
+        return (FT_FALSE);
+    if (from_root.root_kind == 2U || from_root.root_kind == 3U)
+    {
+        if (from_root.drive_letter == to_root.drive_letter)
+            return (FT_TRUE);
+        return (FT_FALSE);
+    }
+    if (from_root.root_kind == 4U)
+    {
+        if (from_root.unc_server == to_root.unc_server
+            && from_root.unc_share == to_root.unc_share)
+            return (FT_TRUE);
+        return (FT_FALSE);
+    }
+    return (FT_TRUE);
+}
 
 ft_string *file_path_relative(const char *from_path, const char *to_path)
 {
@@ -43,6 +132,10 @@ ft_string *file_path_relative(const char *from_path, const char *to_path)
         if (to_text[to_index] == '\\')
             to_text[to_index] = '/';
         to_index++;
+    }
+    if (file_path_roots_are_compatible(from_text, to_text) == FT_FALSE)
+    {
+        return (ft_nullptr);
     }
     if (from_text == to_text)
     {

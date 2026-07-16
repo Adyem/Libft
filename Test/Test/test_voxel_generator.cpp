@@ -515,6 +515,77 @@ FT_TEST(test_terrain_generation_config_can_select_custom_biome_slot)
     return (1);
 }
 
+FT_TEST(test_terrain_generation_rejects_custom_tree_without_template)
+{
+    terrain_generation_config config = terrain_default_generation_config();
+
+    config.biome_count = 6U;
+    config.biomes[5].allow_trees = FT_TRUE;
+    config.biomes[5].tree_template = ft_nullptr;
+    FT_ASSERT_EQ(FT_FALSE, terrain_generation_config_is_valid(config));
+    return (1);
+}
+
+FT_TEST(test_terrain_generate_chunk_clears_previous_voxel_data)
+{
+    game_voxel_chunk regenerated_chunk;
+    game_voxel_chunk fresh_chunk;
+    terrain_generation_config high_config =
+        terrain_default_generation_config();
+    terrain_generation_config low_config = high_config;
+    uint32_t regenerated_block_id;
+    uint32_t fresh_block_id;
+    int32_t local_x;
+    int32_t local_y;
+    int32_t local_z;
+
+    high_config.biome_count = 1U;
+    high_config.sea_level = 0;
+    high_config.water_chance_percent = 0U;
+    high_config.biomes[0].profile.surface_height = 120;
+    high_config.biomes[0].profile.height_variation = 0;
+    high_config.biomes[0].profile.topsoil_depth = 0;
+    high_config.biomes[0].allow_shrubs = FT_FALSE;
+    high_config.biomes[0].allow_trees = FT_FALSE;
+    low_config.biomes[0].profile.surface_height = 20;
+    low_config.biomes[0].profile.height_variation = 0;
+    low_config.biomes[0].profile.topsoil_depth = 0;
+    low_config.biomes[0].allow_shrubs = FT_FALSE;
+    low_config.biomes[0].allow_trees = FT_FALSE;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, regenerated_chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fresh_chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(regenerated_chunk,
+        0, 0, "regeneration-test", high_config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(regenerated_chunk,
+        0, 0, "regeneration-test", low_config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(fresh_chunk,
+        0, 0, "regeneration-test", low_config));
+    local_z = 0;
+    while (local_z < GAME_VOXEL_CHUNK_DEPTH)
+    {
+        local_y = 0;
+        while (local_y < GAME_VOXEL_CHUNK_HEIGHT)
+        {
+            local_x = 0;
+            while (local_x < GAME_VOXEL_CHUNK_WIDTH)
+            {
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, regenerated_chunk.read_block(
+                    local_x, local_y, local_z, &regenerated_block_id));
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, fresh_chunk.read_block(local_x,
+                    local_y, local_z, &fresh_block_id));
+                FT_ASSERT_EQ(fresh_block_id, regenerated_block_id);
+                local_x += 1;
+            }
+            local_y += 1;
+        }
+        local_z += 1;
+    }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fresh_chunk.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, regenerated_chunk.destroy());
+    return (1);
+}
+
 FT_TEST(test_terrain_generation_config_can_make_plains_uneven)
 {
     game_voxel_chunk chunk;

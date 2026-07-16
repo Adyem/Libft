@@ -926,6 +926,9 @@ ft_bool terrain_generation_config_is_valid(
             || config.biomes[index].profile.topsoil_depth < 0
             || config.biomes[index].shrub_chance_percent > 100
             || config.biomes[index].tree_chance_percent > 100
+            || (config.biomes[index].allow_trees == FT_TRUE
+                && index > static_cast<uint32_t>(TERRAIN_BIOME_MOUNTAINS)
+                && config.biomes[index].tree_template == ft_nullptr)
             || terrain_block_is_known(config.biomes[index].surface_block_id)
                 == FT_FALSE
             || terrain_block_is_known(config.biomes[index].subsurface_block_id)

@@ -44,3 +44,24 @@ FT_TEST(test_file_path_relative_rejects_null_inputs)
     FT_ASSERT(file_path_relative("/workspace", ft_nullptr) == ft_nullptr);
     return (1);
 }
+
+FT_TEST(test_file_path_relative_rejects_different_drive_roots)
+{
+    FT_ASSERT(file_path_relative("C:/project/src", "D:/assets/file.png")
+        == ft_nullptr);
+    return (1);
+}
+
+FT_TEST(test_file_path_relative_rejects_absolute_relative_mix)
+{
+    FT_ASSERT(file_path_relative("/workspace/src", "assets/file.png")
+        == ft_nullptr);
+    return (1);
+}
+
+FT_TEST(test_file_path_relative_rejects_different_unc_roots)
+{
+    FT_ASSERT(file_path_relative("//server_a/share/src",
+            "//server_b/share/assets/file.png") == ft_nullptr);
+    return (1);
+}
