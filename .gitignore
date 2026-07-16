@@ -37,6 +37,7 @@ Demo/demo_dumb_game
 test_*.txt
 
 test_failures.log
+Test/.libft_build_*.log.raw.*
 
 # Core dumps
 core
