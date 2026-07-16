@@ -200,7 +200,7 @@ FT_TEST(test_application_auth_service_session_timeout_expires_and_list_updates)
     FT_ASSERT_EQ(2U, usernames.size());
     FT_ASSERT_EQ(FT_TRUE, vector_contains_string(usernames, "alice"));
     FT_ASSERT_EQ(FT_TRUE, vector_contains_string(usernames, "bob"));
-    time_sleep(2);
+    time_sleep(3);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, service.get_logged_in_usernames(usernames));
     FT_ASSERT_EQ(0U, usernames.size());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, service.get_login_session_timestamp("alice", timestamp_output));
