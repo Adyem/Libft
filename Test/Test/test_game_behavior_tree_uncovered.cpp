@@ -123,6 +123,7 @@ FT_TEST(test_game_behavior_action_callback_getter)
 FT_TEST(test_game_behavior_selector_empty)
 {
     game_behavior_selector selector;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, selector.initialize());
     game_behavior_context context;
     FT_ASSERT_EQ(FT_BEHAVIOR_STATUS_FAILURE, selector.tick(context));
     return (1);
@@ -131,6 +132,7 @@ FT_TEST(test_game_behavior_selector_empty)
 FT_TEST(test_game_behavior_sequence_empty)
 {
     game_behavior_sequence sequence;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
     game_behavior_context context;
     FT_ASSERT_EQ(FT_BEHAVIOR_STATUS_SUCCESS, sequence.tick(context));
     return (1);
@@ -139,6 +141,7 @@ FT_TEST(test_game_behavior_sequence_empty)
 FT_TEST(test_game_behavior_composite_null_child)
 {
     game_behavior_sequence sequence;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
     ft_sharedptr<game_behavior_node> child;
     sequence.add_child(child);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, sequence.get_error());
@@ -149,6 +152,7 @@ FT_TEST(test_game_behavior_composite_null_child)
 FT_TEST(test_game_behavior_composite_add_and_clear)
 {
     game_behavior_sequence sequence;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
     ft_sharedptr<game_behavior_node> child;
     make_behavior_action(child, FT_BEHAVIOR_STATUS_SUCCESS);
     sequence.add_child(child);
@@ -161,6 +165,7 @@ FT_TEST(test_game_behavior_composite_add_and_clear)
 FT_TEST(test_game_behavior_selector_success)
 {
     game_behavior_selector selector;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, selector.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> child;
     make_behavior_action(child, FT_BEHAVIOR_STATUS_SUCCESS);
@@ -172,6 +177,7 @@ FT_TEST(test_game_behavior_selector_success)
 FT_TEST(test_game_behavior_selector_failure_then_success)
 {
     game_behavior_selector selector;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, selector.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> first;
     ft_sharedptr<game_behavior_node> second;
@@ -186,6 +192,7 @@ FT_TEST(test_game_behavior_selector_failure_then_success)
 FT_TEST(test_game_behavior_selector_running_stops)
 {
     game_behavior_selector selector;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, selector.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> first;
     ft_sharedptr<game_behavior_node> second;
@@ -200,6 +207,7 @@ FT_TEST(test_game_behavior_selector_running_stops)
 FT_TEST(test_game_behavior_selector_all_failure)
 {
     game_behavior_selector selector;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, selector.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> first;
     ft_sharedptr<game_behavior_node> second;
@@ -214,6 +222,7 @@ FT_TEST(test_game_behavior_selector_all_failure)
 FT_TEST(test_game_behavior_sequence_success)
 {
     game_behavior_sequence sequence;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> child;
     make_behavior_action(child, FT_BEHAVIOR_STATUS_SUCCESS);
@@ -225,6 +234,7 @@ FT_TEST(test_game_behavior_sequence_success)
 FT_TEST(test_game_behavior_sequence_failure_stops)
 {
     game_behavior_sequence sequence;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> first;
     ft_sharedptr<game_behavior_node> second;
@@ -239,6 +249,7 @@ FT_TEST(test_game_behavior_sequence_failure_stops)
 FT_TEST(test_game_behavior_sequence_running_stops)
 {
     game_behavior_sequence sequence;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> first;
     ft_sharedptr<game_behavior_node> second;
@@ -253,6 +264,7 @@ FT_TEST(test_game_behavior_sequence_running_stops)
 FT_TEST(test_game_behavior_sequence_all_success)
 {
     game_behavior_sequence sequence;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> first;
     ft_sharedptr<game_behavior_node> second;
@@ -267,6 +279,7 @@ FT_TEST(test_game_behavior_sequence_all_success)
 FT_TEST(test_game_behavior_tree_without_root)
 {
     game_behavior_tree tree;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.initialize());
     game_behavior_context context;
     FT_ASSERT_EQ(FT_BEHAVIOR_STATUS_FAILURE, tree.tick(context));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, tree.get_error());
@@ -276,6 +289,7 @@ FT_TEST(test_game_behavior_tree_without_root)
 FT_TEST(test_game_behavior_tree_root_round_trip)
 {
     game_behavior_tree tree;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.initialize());
     ft_sharedptr<game_behavior_node> root;
     make_behavior_action(root, FT_BEHAVIOR_STATUS_SUCCESS);
     tree.set_root(root);
@@ -286,6 +300,7 @@ FT_TEST(test_game_behavior_tree_root_round_trip)
 FT_TEST(test_game_behavior_tree_success)
 {
     game_behavior_tree tree;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> root;
     make_behavior_action(root, FT_BEHAVIOR_STATUS_SUCCESS);
@@ -297,6 +312,7 @@ FT_TEST(test_game_behavior_tree_success)
 FT_TEST(test_game_behavior_tree_running)
 {
     game_behavior_tree tree;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> root;
     make_behavior_action(root, FT_BEHAVIOR_STATUS_RUNNING);
@@ -308,11 +324,36 @@ FT_TEST(test_game_behavior_tree_running)
 FT_TEST(test_game_behavior_tree_failure)
 {
     game_behavior_tree tree;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.initialize());
     game_behavior_context context;
     ft_sharedptr<game_behavior_node> root;
     make_behavior_action(root, FT_BEHAVIOR_STATUS_FAILURE);
     tree.set_root(root);
     FT_ASSERT_EQ(FT_BEHAVIOR_STATUS_FAILURE, tree.tick(context));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.get_error());
+    return (1);
+}
+
+FT_TEST(test_game_behavior_tree_lifecycle)
+{
+    game_behavior_tree tree;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.initialize());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, tree.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tree.destroy());
+    return (1);
+}
+
+FT_TEST(test_game_behavior_composite_requires_initialization)
+{
+    game_behavior_sequence sequence;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sequence.destroy());
+    sequence.clear_children();
+    FT_ASSERT_EQ(FT_ERR_NOT_INITIALISED, sequence.get_error());
     return (1);
 }

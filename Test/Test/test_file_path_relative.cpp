@@ -65,3 +65,46 @@ FT_TEST(test_file_path_relative_rejects_different_unc_roots)
             "//server_b/share/assets/file.png") == ft_nullptr);
     return (1);
 }
+
+FT_TEST(test_file_path_relative_compares_complete_components)
+{
+    ft_string *relative_path;
+
+    relative_path = file_path_relative("/home/user/game",
+            "/home/user/games/assets");
+    FT_ASSERT(relative_path != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, *relative_path == "../games/assets");
+    relative_path->destroy();
+    delete relative_path;
+    relative_path = file_path_relative("/foo/bar", "/foo/barn/file");
+    FT_ASSERT(relative_path != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, *relative_path == "../barn/file");
+    relative_path->destroy();
+    delete relative_path;
+    return (1);
+}
+
+FT_TEST(test_file_path_relative_windows_drive_root_is_case_insensitive)
+{
+    ft_string *relative_path;
+
+    relative_path = file_path_relative("C:/Project/Src", "c:/project/assets");
+    FT_ASSERT(relative_path != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, *relative_path == "../assets");
+    relative_path->destroy();
+    delete relative_path;
+    return (1);
+}
+
+FT_TEST(test_file_path_relative_windows_unc_root_is_case_insensitive)
+{
+    ft_string *relative_path;
+
+    relative_path = file_path_relative("//Server/Share/Src",
+            "//server/share/assets/file.txt");
+    FT_ASSERT(relative_path != ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, *relative_path == "../assets/file.txt");
+    relative_path->destroy();
+    delete relative_path;
+    return (1);
+}

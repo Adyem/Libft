@@ -7,6 +7,7 @@
 #include "../Template/shared_ptr.hpp"
 #include "../Template/vector.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 
 thread_local int32_t game_behavior_node::_last_error = FT_ERR_SUCCESS;
 thread_local int32_t game_behavior_tree::_last_error = FT_ERR_SUCCESS;
@@ -159,19 +160,102 @@ int32_t game_behavior_tree_action::tick(game_behavior_context &context) noexcept
 }
 
 game_behavior_composite::game_behavior_composite() noexcept
-    : game_behavior_node(), _children()
+    : game_behavior_node(), _children(),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    (void)this->_children.initialize();
     return ;
+}
+
+int32_t game_behavior_composite::initialize() noexcept
+{
+    int32_t error_code;
+
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (this->set_error(FT_ERR_INVALID_STATE));
+    error_code = this->_children.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->_children.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(error_code));
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (this->set_error(FT_ERR_SUCCESS));
+}
+
+int32_t game_behavior_composite::destroy() noexcept
+{
+    int32_t error_code;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    error_code = this->_children.destroy();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (this->set_error(error_code));
+}
+
+int32_t game_behavior_composite::get_error() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "game_behavior_composite::get_error");
+    return (game_behavior_node::get_error());
+}
+
+const char *game_behavior_composite::get_error_str() const noexcept
+{
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "game_behavior_composite::get_error_str");
+    return (ft_strerror(this->get_error()));
+}
+
+int32_t game_behavior_composite::move(game_behavior_composite &other) noexcept
+{
+    int32_t error_code;
+
+    if (this == &other)
+        return (this->set_error(FT_ERR_SUCCESS));
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "game_behavior_composite::move", "source is uninitialised");
+        return (this->set_error(FT_ERR_INVALID_STATE));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        error_code = this->destroy();
+        if (error_code != FT_ERR_SUCCESS)
+            return (this->set_error(error_code));
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(FT_ERR_SUCCESS));
+    }
+    error_code = this->_children.move(other._children);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(error_code));
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (this->set_error(FT_ERR_SUCCESS));
 }
 
 game_behavior_composite::~game_behavior_composite() noexcept
 {
+    (void)this->destroy();
     return ;
 }
 
 ft_bool game_behavior_composite::validate_child(const ft_sharedptr<game_behavior_node> &child) const noexcept
 {
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        const_cast<game_behavior_composite *>(this)->set_error(
+            FT_ERR_NOT_INITIALISED);
+        return (FT_FALSE);
+    }
     if (!child)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -187,6 +271,11 @@ ft_bool game_behavior_composite::validate_child(const ft_sharedptr<game_behavior
 
 void game_behavior_composite::add_child(const ft_sharedptr<game_behavior_node> &child) noexcept
 {
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_NOT_INITIALISED);
+        return ;
+    }
     if (!child)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -199,6 +288,11 @@ void game_behavior_composite::add_child(const ft_sharedptr<game_behavior_node> &
 
 void game_behavior_composite::clear_children() noexcept
 {
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_NOT_INITIALISED);
+        return ;
+    }
     this->_children.clear();
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -312,15 +406,76 @@ int32_t game_behavior_sequence::tick(game_behavior_context &context) noexcept
 }
 
 game_behavior_tree::game_behavior_tree() noexcept
-    : _root()
+    : _root(), _initialised_state(FT_CLASS_STATE_UNINITIALISED)
 {
-    (void)this->_root.initialize();
-    this->set_error(FT_ERR_SUCCESS);
     return ;
+}
+
+int32_t game_behavior_tree::initialize() noexcept
+{
+    int32_t error_code;
+
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (this->set_error(FT_ERR_INVALID_STATE));
+    error_code = this->_root.initialize();
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        (void)this->_root.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(error_code));
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (this->set_error(FT_ERR_SUCCESS));
+}
+
+int32_t game_behavior_tree::destroy() noexcept
+{
+    int32_t error_code;
+
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_SUCCESS);
+    error_code = this->_root.destroy();
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (this->set_error(error_code));
+}
+
+int32_t game_behavior_tree::move(game_behavior_tree &other) noexcept
+{
+    int32_t error_code;
+
+    if (this == &other)
+        return (this->set_error(FT_ERR_SUCCESS));
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+    {
+        errno_abort_lifecycle(other._initialised_state,
+            "game_behavior_tree::move", "source is uninitialised");
+        return (this->set_error(FT_ERR_INVALID_STATE));
+    }
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+    {
+        error_code = this->destroy();
+        if (error_code != FT_ERR_SUCCESS)
+            return (this->set_error(error_code));
+    }
+    if (other._initialised_state == FT_CLASS_STATE_DESTROYED)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(FT_ERR_SUCCESS));
+    }
+    error_code = this->_root.move(other._root);
+    if (error_code != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (this->set_error(error_code));
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    other._initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (this->set_error(FT_ERR_SUCCESS));
 }
 
 game_behavior_tree::~game_behavior_tree() noexcept
 {
+    (void)this->destroy();
     return ;
 }
 
@@ -332,6 +487,11 @@ int32_t game_behavior_tree::set_error(int32_t error_code) noexcept
 
 void game_behavior_tree::set_root(const ft_sharedptr<game_behavior_node> &root) noexcept
 {
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_NOT_INITIALISED);
+        return ;
+    }
     this->_root = root;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -351,6 +511,11 @@ const ft_sharedptr<game_behavior_node> &game_behavior_tree::get_root() const noe
 
 int32_t game_behavior_tree::tick(game_behavior_context &context) noexcept
 {
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_NOT_INITIALISED);
+        return (FT_BEHAVIOR_STATUS_FAILURE);
+    }
     if (!this->_root)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -364,10 +529,14 @@ int32_t game_behavior_tree::tick(game_behavior_context &context) noexcept
 
 int32_t game_behavior_tree::get_error() const noexcept
 {
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "game_behavior_tree::get_error");
     return (game_behavior_tree::_last_error);
 }
 
 const char *game_behavior_tree::get_error_str() const noexcept
 {
+    errno_abort_if_uninitialised(this->_initialised_state,
+        "game_behavior_tree::get_error_str");
     return (ft_strerror(game_behavior_tree::_last_error));
 }

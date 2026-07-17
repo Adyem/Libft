@@ -61,9 +61,13 @@ General rules for these orchestration classes:
 - `game_behavior_context` - Runtime context carrying a character pointer and user data.
 - `game_behavior_node` - Abstract behavior-tree node with `tick`.
 - `game_behavior_composite` - Base composite node with child management.
+- `game_behavior_composite::initialize()` / `destroy()` - Explicitly initialize
+  and release composite child storage.
 - `game_behavior_selector` and `game_behavior_sequence` - Standard behavior-tree composites.
 - `game_behavior_tree_action` - Leaf node wrapping an action callback.
 - `game_behavior_tree` - Owns and ticks a behavior-tree root.
+- `game_behavior_tree::initialize()` / `destroy()` - Explicitly initialize and
+  release root storage; construction alone does not make the tree usable.
 
 ## World, Map, Regions, and Voxels
 

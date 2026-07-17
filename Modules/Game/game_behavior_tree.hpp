@@ -85,6 +85,7 @@ class game_behavior_composite : public game_behavior_node
 {
     protected:
         ft_vector<ft_sharedptr<game_behavior_node> > _children;
+        uint8_t _initialised_state;
 
         ft_bool validate_child(const ft_sharedptr<game_behavior_node> &child) const noexcept;
 
@@ -95,6 +96,12 @@ class game_behavior_composite : public game_behavior_node
         virtual ~game_behavior_composite() noexcept;
         game_behavior_composite &operator=(const game_behavior_composite &other) noexcept = delete;
         game_behavior_composite &operator=(game_behavior_composite &&other) noexcept = delete;
+
+        int32_t initialize() noexcept;
+        int32_t destroy() noexcept;
+        int32_t move(game_behavior_composite &other) noexcept;
+        int32_t get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         void add_child(const ft_sharedptr<game_behavior_node> &child) noexcept;
         void clear_children() noexcept;
@@ -136,6 +143,7 @@ class game_behavior_tree
         private:
     #endif
         ft_sharedptr<game_behavior_node> _root;
+        uint8_t _initialised_state;
         static thread_local int32_t _last_error;
 
         static int32_t set_error(int32_t error_code) noexcept;
@@ -147,6 +155,10 @@ class game_behavior_tree
         ~game_behavior_tree() noexcept;
         game_behavior_tree &operator=(const game_behavior_tree &other) noexcept = delete;
         game_behavior_tree &operator=(game_behavior_tree &&other) noexcept = delete;
+
+        int32_t initialize() noexcept;
+        int32_t destroy() noexcept;
+        int32_t move(game_behavior_tree &other) noexcept;
 
         void set_root(const ft_sharedptr<game_behavior_node> &root) noexcept;
         ft_sharedptr<game_behavior_node> &get_root() noexcept;
