@@ -341,3 +341,278 @@ FT_TEST(test_economy_lifecycle_unlock_uninitialised_aborts)
     FT_ASSERT_EQ(1, expect_sigabrt_on_uninitialised_table(operation_unlock));
     return (1);
 }
+
+#include "../../Modules/Game/game_economy_table.hpp"
+#include "../../Modules/System_utils/test_system_utils_runner.hpp"
+#include "test_game_lifecycle_helpers.hpp"
+
+static void economy_initialize_twice(game_economy_table &value)
+{
+    (void)value.initialize();
+    (void)value.initialize();
+    return ;
+}
+
+static void economy_copy_initialize_uninitialised(game_economy_table &value)
+{
+    game_economy_table source;
+
+    (void)value.initialize(source);
+    return ;
+}
+
+static void economy_move_initialize_uninitialised(game_economy_table &value)
+{
+    game_economy_table source;
+
+    (void)value.initialize(static_cast<game_economy_table &&>(source));
+    return ;
+}
+
+static void economy_move_uninitialised(game_economy_table &value)
+{
+    game_economy_table source;
+
+    (void)value.move(source);
+    return ;
+}
+
+FT_TEST(test_game_economy_table_initialize_twice_aborts)
+{
+    FT_ASSERT_EQ(1, expect_game_lifecycle_sigabrt<game_economy_table>(
+                        economy_initialize_twice));
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_copy_initialize_uninitialised_aborts)
+{
+    FT_ASSERT_EQ(1, expect_game_lifecycle_sigabrt<game_economy_table>(
+                        economy_copy_initialize_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_move_initialize_uninitialised_aborts)
+{
+    FT_ASSERT_EQ(1, expect_game_lifecycle_sigabrt<game_economy_table>(
+                        economy_move_initialize_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_move_uninitialised_aborts)
+{
+    FT_ASSERT_EQ(1, expect_game_lifecycle_sigabrt<game_economy_table>(
+                        economy_move_uninitialised));
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_default_maps_are_empty)
+{
+    game_economy_table value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(0, value.get_price_definitions().size());
+    FT_ASSERT_EQ(0, value.get_rarity_bands().size());
+    FT_ASSERT_EQ(0, value.get_vendor_profiles().size());
+    FT_ASSERT_EQ(0, value.get_currency_rates().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_const_price_definitions_are_empty)
+{
+    game_economy_table value;
+    const game_economy_table &const_value = value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(0, const_value.get_price_definitions().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_const_rarity_bands_are_empty)
+{
+    game_economy_table value;
+    const game_economy_table &const_value = value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(0, const_value.get_rarity_bands().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_const_vendor_profiles_are_empty)
+{
+    game_economy_table value;
+    const game_economy_table &const_value = value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(0, const_value.get_vendor_profiles().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_const_currency_rates_are_empty)
+{
+    game_economy_table value;
+    const game_economy_table &const_value = value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(0, const_value.get_currency_rates().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_set_empty_price_definitions)
+{
+    game_economy_table value;
+    ft_map<int32_t, game_price_definition> definitions;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definitions.initialize());
+    value.set_price_definitions(definitions);
+    FT_ASSERT_EQ(0, value.get_price_definitions().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_set_empty_rarity_bands)
+{
+    game_economy_table value;
+    ft_map<int32_t, game_rarity_band> bands;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bands.initialize());
+    value.set_rarity_bands(bands);
+    FT_ASSERT_EQ(0, value.get_rarity_bands().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_set_empty_vendor_profiles)
+{
+    game_economy_table value;
+    ft_map<int32_t, game_vendor_profile> profiles;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profiles.initialize());
+    value.set_vendor_profiles(profiles);
+    FT_ASSERT_EQ(0, value.get_vendor_profiles().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_set_empty_currency_rates)
+{
+    game_economy_table value;
+    ft_map<int32_t, game_currency_rate> rates;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rates.initialize());
+    value.set_currency_rates(rates);
+    FT_ASSERT_EQ(0, value.get_currency_rates().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_thread_safety_enable_disable_cycle)
+{
+    game_economy_table value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.enable_thread_safety());
+    FT_ASSERT_EQ(FT_TRUE, value.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.disable_thread_safety());
+    FT_ASSERT_EQ(FT_FALSE, value.is_thread_safe());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_lock_unlock_cycle)
+{
+    game_economy_table value;
+    ft_bool lock_acquired;
+
+    lock_acquired = FT_FALSE;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.lock(&lock_acquired));
+    FT_ASSERT_EQ(FT_TRUE, lock_acquired);
+    value.unlock(lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.disable_thread_safety());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_error_after_success)
+{
+    game_economy_table value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.get_error());
+    FT_ASSERT_NEQ(ft_nullptr, value.get_error_str());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_destroy_twice_is_safe)
+{
+    game_economy_table value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.destroy());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_reinitialize_after_destroy)
+{
+    game_economy_table value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(0, value.get_currency_rates().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_self_move_is_safe)
+{
+    game_economy_table value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.move(value));
+    FT_ASSERT_EQ(0, value.get_vendor_profiles().size());
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_empty_price_fetch_returns_not_found)
+{
+    game_economy_table value;
+    game_price_definition definition;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, value.fetch_price_definition(1, definition));
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_empty_rarity_fetch_returns_not_found)
+{
+    game_economy_table value;
+    game_rarity_band band;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, value.fetch_rarity_band(1, band));
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_empty_vendor_fetch_returns_not_found)
+{
+    game_economy_table value;
+    game_vendor_profile profile;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, value.fetch_vendor_profile(1, profile));
+    return (1);
+}
+
+FT_TEST(test_game_economy_table_empty_currency_fetch_returns_not_found)
+{
+    game_economy_table value;
+    game_currency_rate rate;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, value.fetch_currency_rate(1, rate));
+    return (1);
+}

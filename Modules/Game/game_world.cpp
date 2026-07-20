@@ -830,6 +830,13 @@ int32_t game_world::plan_route(const game_map3d &grid,
 {
     game_pathfinding finder;
     errno_abort_if_uninitialised_or_destroyed(this->_initialised_state, "game_world::plan_route");
+    if (start_x >= grid.get_width() || start_y >= grid.get_height()
+        || start_z >= grid.get_depth() || goal_x >= grid.get_width()
+        || goal_y >= grid.get_height() || goal_z >= grid.get_depth())
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
     if (finder.astar_grid(grid, start_x, start_y, start_z,
             goal_x, goal_y, goal_z, path) != FT_ERR_SUCCESS)
     {

@@ -86,6 +86,8 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
     int32_t server_initialize_error;
     int32_t world_error;
     int32_t clients_error;
+    int32_t auth_token_destroy_error;
+    int32_t clients_destroy_error;
 
     if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
     {
@@ -93,14 +95,29 @@ int32_t game_server::initialize(const ft_sharedptr<game_world> &world,
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    world_error = this->_world.initialize();
+    world_error = this->_world.initialize(world);
     if (world_error != FT_ERR_SUCCESS)
     {
         this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         this->set_error(world_error);
         return (world_error);
     }
-    this->_world = world;
+    auth_token_destroy_error = this->_auth_token.destroy();
+    if (auth_token_destroy_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_world.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(auth_token_destroy_error);
+        return (auth_token_destroy_error);
+    }
+    clients_destroy_error = this->_clients.destroy();
+    if (clients_destroy_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_world.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        this->set_error(clients_destroy_error);
+        return (clients_destroy_error);
+    }
     if (this->_auth_token.initialize() != FT_ERR_SUCCESS)
     {
         (void)this->_world.destroy();

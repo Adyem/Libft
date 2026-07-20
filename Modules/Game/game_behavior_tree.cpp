@@ -326,6 +326,11 @@ int32_t game_behavior_selector::tick(game_behavior_context &context) noexcept
     ft_size_t index;
     ft_size_t child_count;
 
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_NOT_INITIALISED);
+        return (FT_BEHAVIOR_STATUS_FAILURE);
+    }
     index = 0;
     child_count = this->_children.size();
     while (index < child_count)
@@ -371,6 +376,11 @@ int32_t game_behavior_sequence::tick(game_behavior_context &context) noexcept
     ft_size_t index;
     ft_size_t child_count;
 
+    if (this->_initialised_state != FT_CLASS_STATE_INITIALISED)
+    {
+        this->set_error(FT_ERR_NOT_INITIALISED);
+        return (FT_BEHAVIOR_STATUS_FAILURE);
+    }
     index = 0;
     child_count = this->_children.size();
     if (child_count == 0)
