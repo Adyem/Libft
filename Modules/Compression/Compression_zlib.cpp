@@ -153,7 +153,11 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
     }
     if (compression_size_fits_zlib_uLong(input_size - sizeof(uint32_t)) == FT_FALSE)
         return (ft_nullptr);
+#if defined(__linux__)
+    zlib_input_size = input_size - sizeof(uint32_t);
+#else
     zlib_input_size = static_cast<uLong>(input_size - sizeof(uint32_t));
+#endif
     result_buffer = static_cast<unsigned char *>(cma_malloc(expected_size));
     if (!result_buffer)
     {
