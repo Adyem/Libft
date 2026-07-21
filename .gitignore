@@ -23,6 +23,8 @@
 **/objs_test_opt3/**/*.d
 Modules/**/objs_ft_vox_opt*/
 Test/single_tests/
+Test/tmp/
+Test/tmp_json_stream_reader.json
 Test/objs_efficiency_opt0/
 Test/objs_efficiency_opt3/
 Test/objs_efficiency_test_opt0/

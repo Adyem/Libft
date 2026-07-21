@@ -46,6 +46,8 @@ namespace
         test_remove_path(root_path / "test_file_io.txt");
         test_remove_path(root_path / "test_cmp_system_io.txt");
         test_remove_path(root_path / "test_su_file_stream.txt");
+        test_remove_path(root_path / "Test" / "tmp_json_stream_reader.json");
+        test_remove_path(root_path / "Test" / "tmp");
         return ;
     }
 
