@@ -102,7 +102,7 @@ ft_bool ft_gpu_window_linux::initialize(const char *title, int32_t width,
     if (this->_display == nullptr)
         return (FT_FALSE);
 
-    int32_t screen = static_cast<int32_t>(DefaultScreen(this->_display));
+    int32_t screen = DefaultScreen(this->_display);
 
     int32_t fb_attribs[] = {
         GLX_X_RENDERABLE,  True,
@@ -256,7 +256,10 @@ ft_bool ft_gpu_window_linux::initialize(const char *title, int32_t width,
 int32_t ft_gpu_window_linux::destroy() noexcept
 {
     if (this->_display == nullptr)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_SUCCESS);
+    }
     if (this->_window != 0)
         ft_dumb_controls_linux_unregister_window(
             this->_window);

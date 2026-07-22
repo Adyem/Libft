@@ -18,7 +18,7 @@ typedef ft_sound_clip sound_clip_type;
 static sigjmp_buf g_sound_clip_jump_buffer;
 static volatile sig_atomic_t g_sound_clip_signal;
 
-static void sound_clip_sigabrt_handler(int32_t signal_number)
+static void __attribute__((unused)) sound_clip_sigabrt_handler(int32_t signal_number)
 {
     g_sound_clip_signal = signal_number;
     siglongjmp(g_sound_clip_jump_buffer, 1);

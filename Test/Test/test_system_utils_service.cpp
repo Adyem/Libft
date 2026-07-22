@@ -20,24 +20,11 @@
 # include <unistd.h>
 #endif
 
-/*
- * Kept enabled while diagnosing the Windows runner termination
- * around this case.
- */
 static void remove_file_if_exists(const char *path)
 {
     if (!path)
         return ;
     std::remove(path);
-    return ;
-}
-
-static void print_service_daemonize_diagnostics(const char *label,
-    const char *pid_path, const char *stage)
-{
-    (void)label;
-    (void)pid_path;
-    (void)stage;
     return ;
 }
 
@@ -57,13 +44,9 @@ FT_TEST(test_su_service_daemonize_creates_pid_file)
         static_cast<long>(getpid()));
 #endif
     remove_file_if_exists(pid_path);
-    print_service_daemonize_diagnostics("daemonize", pid_path, "before_force_no_fork");
     su_service_force_no_fork(true);
-    print_service_daemonize_diagnostics("daemonize", pid_path, "before_daemonize_call");
     FT_ASSERT_EQ(0, su_service_daemonize(".", pid_path, false));
-    print_service_daemonize_diagnostics("daemonize", pid_path, "after_daemonize_call");
     su_service_force_no_fork(false);
-    print_service_daemonize_diagnostics("daemonize", pid_path, "before_pid_file_open");
     pid_file = std::fopen(pid_path, "r");
     FT_ASSERT(pid_file != ft_nullptr);
     std::memset(buffer, 0, sizeof(buffer));
@@ -76,7 +59,6 @@ FT_TEST(test_su_service_daemonize_creates_pid_file)
 #else
     FT_ASSERT_EQ(static_cast<long>(getpid()), file_pid);
 #endif
-    print_service_daemonize_diagnostics("daemonize", pid_path, "before_cleanup");
     remove_file_if_exists(pid_path);
     return (1);
 }

@@ -36,7 +36,7 @@ static int32_t open_file_backing(const cross_process_message &message)
     if (file_descriptor < 0)
     {
         errno = ENOENT;
-        return (cmp_file_error_to_errno(errno));
+        return (-1);
     }
     return (file_descriptor);
 }

@@ -15,7 +15,7 @@
 
 static sigjmp_buf g_scma_accessor_abort_jump;
 
-static void scma_accessor_abort_handler(int /*signal*/)
+static void __attribute__((unused)) scma_accessor_abort_handler(int /*signal*/)
 {
     siglongjmp(g_scma_accessor_abort_jump, 1);
 }

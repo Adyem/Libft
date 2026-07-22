@@ -4,6 +4,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "openssl_support.hpp"
+#include "../Basic/basic.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>

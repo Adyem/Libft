@@ -10,6 +10,7 @@
     #include <pthread.h>
 #endif
 #include "../Basic/class_nullptr.hpp"
+#include "../Basic/basic.hpp"
 #include "../Basic/limits.hpp"
 #include <atomic>
 #include <cstddef>

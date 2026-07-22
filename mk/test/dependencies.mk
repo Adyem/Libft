@@ -31,6 +31,7 @@ endif
 
 HAS_XEXT_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXext.so" && echo 1 || echo 0)
 HAS_XI_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libXi.so" && echo 1 || echo 0)
+HAS_GL_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libGL.so" && echo 1 || echo 0)
 ifeq ($(HAS_ASOUND_LIB),1)
 ASOUND_LIBS := -lasound
 else
@@ -47,4 +48,10 @@ ifeq ($(HAS_XI_LIB),1)
 XI_LIBS := -lXi
 else
 XI_LIBS :=
+endif
+
+ifeq ($(HAS_GL_LIB),1)
+GL_LIBS := -lGL
+else
+GL_LIBS :=
 endif
