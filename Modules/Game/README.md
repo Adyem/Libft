@@ -83,6 +83,13 @@ General rules for these orchestration classes:
 - `game_map3d` - 3D map/grid helper.
 - `game_path_step` and `game_pathfinding` - Path step record and pathfinding system. `game_path_step_test_helper` exposes test-oriented construction/access.
 - `game_voxel_chunk_section`, `game_voxel_chunk`, and `game_voxel_region` - Voxel storage for chunks, sections, and regions when the voxel backend is enabled.
+- `game_voxel_generation_metadata` - Persisted seed, world origin, generator
+  version, configuration signature, and completed-stage mask for validating
+  cached generated chunks.
+- `game_voxel_chunk::set_generation_metadata(...)`,
+  `get_generation_metadata()`, `has_generation_metadata()`, and
+  `generation_metadata_matches(...)` - Manage and query generation cache
+  identity.
 - `game_voxel_region::is_chunk_visible(...)` - Tests whether a loaded voxel chunk intersects a camera frustum.
 
 ## Hooks, Scripting, and Catalogs

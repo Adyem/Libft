@@ -14,6 +14,17 @@
 #define GAME_VOXEL_CHUNK_SECTION_COUNT 16
 #define GAME_VOXEL_AIR_BLOCK 0U
 
+struct game_voxel_generation_metadata
+{
+    uint64_t seed_value;
+    int32_t world_block_origin_x;
+    int32_t world_block_origin_z;
+    uint32_t configuration_signature;
+    uint32_t completed_stage_mask;
+    uint32_t generator_version;
+    ft_bool valid;
+};
+
 class game_voxel_chunk_section
 {
 #ifdef LIBFT_TEST_BUILD
@@ -72,6 +83,7 @@ class game_voxel_chunk
 #endif
         game_voxel_chunk_section _sections[GAME_VOXEL_CHUNK_SECTION_COUNT];
         ft_bool     _dirty;
+        game_voxel_generation_metadata _generation_metadata;
         uint8_t     _initialised_state;
         static thread_local int32_t _last_error;
 
@@ -97,6 +109,15 @@ class game_voxel_chunk
             uint32_t block_id) noexcept;
         ft_bool is_dirty() const noexcept;
         void clear_dirty() noexcept;
+        void clear_generation_metadata() noexcept;
+        int32_t set_generation_metadata(
+            const game_voxel_generation_metadata &metadata) noexcept;
+        const game_voxel_generation_metadata &get_generation_metadata()
+            const noexcept;
+        ft_bool has_generation_metadata() const noexcept;
+        ft_bool generation_metadata_matches(uint64_t seed_value,
+            int32_t world_block_origin_x, int32_t world_block_origin_z,
+            uint32_t configuration_signature) const noexcept;
         game_voxel_chunk_section &get_section(uint8_t section_index) noexcept;
         const game_voxel_chunk_section &get_section(
             uint8_t section_index) const noexcept;

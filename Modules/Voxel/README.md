@@ -31,12 +31,26 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - `terrain_block_metadata` - Registry entry that describes whether a block is solid, transparent, liquid, replaceable, light-emitting, whether it occludes mesh faces, and how hard it is.
 - `terrain_tree_template_block` - Relative block entry used by tree templates.
 - `terrain_tree_template` - Block list wrapper for reusable tree presets.
-- `terrain_generation_config` - Runtime generation policy containing noise,
-  water, biome, and feature-rule settings.
-- `terrain_biome_definition` - Customizable profile, block palette, and
-  decoration policy for one biome slot.
-- `terrain_feature_rule` - Seeded placement rule for caller-provided tree or
+- `terrain_generation_config` - Lifecycle-managed runtime generation policy
+  containing noise, water, biome, and feature-rule settings.
+- `terrain_biome_definition` - Lifecycle-managed customizable profile, block
+  palette, template policy, and decoration/ridge/snow-cap policy for one biome
+  slot. Use its `set_*` methods after `initialize()`.
+- `terrain_feature_rule` - Lifecycle-managed seeded placement rule for caller-provided tree or
   object templates, with biome, height, water, and chance constraints.
+- `terrain_ore_rule` - Lifecycle-managed optional deterministic ore policy with block, depth,
+  vein, chance, and enabled settings. Coal, iron, and gold are disabled by
+  default.
+- `terrain_underground_structure_config` - Lifecycle-managed caves, cave
+  rooms, and ravine generation ranges and densities.
+- `terrain_fluid_config` - Lifecycle-managed deterministic rivers and lakes.
+- `terrain_layer_config` - Lifecycle-managed beaches, underwater sediment,
+  and a broad height-based snowline for snow caps across compatible terrain.
+- `terrain_generation_context` - Holds one validated, immutable generation
+  snapshot for a Minecraft world. The world/save owner should initialize it
+  once after loading its terrain policy and reuse it for every chunk.
+- `terrain_generation_config_signature(...)` - Produces a stable signature for
+  generation cache validation.
 - `terrain_get_block_metadata(block_id)` - Looks up the metadata entry for a known block id.
 - `terrain_block_is_known(block_id)` - Returns whether a block id exists in the registry and should be accepted by chunk storage.
 - `terrain_block_is_solid(block_id)` - Returns whether a block is treated as a solid collision block.
@@ -56,18 +70,51 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - `terrain_small_cactus_tree_template(variant_index)` - Returns one of the reusable small cactus presets.
 - `terrain_large_oak_tree_template(variant_index)` - Returns one of the reusable large oak presets.
 - `terrain_large_pine_tree_template(variant_index)` - Returns one of the reusable large pine presets.
+- `terrain_generation_config_add_tree_template(...)` - Adds a reusable tree
+  descriptor to a config-owned template registry.
+- `terrain_generation_config_remove_tree_template(...)` and
+  `terrain_generation_config_clear_tree_templates(...)` - Remove individual
+  templates or reset the registry.
+- `terrain_generation_config_assign_tree_template_to_biome(...)` and
+  `terrain_generation_config_remove_tree_template_from_biome(...)` - Modify
+  the template choices available to a biome.
 - `terrain_tree_template_for_biome(biome)` - Returns the default tree preset for a biome.
 - `terrain_tree_template_for_biome(biome, seed_value)` - Returns a seed-selected tree preset for a biome.
 - `terrain_can_place_tree_template(chunk, local_origin_x, local_origin_y, local_origin_z, tree_template)` - Checks that a tree footprint fits in empty space before placement.
 - `terrain_place_tree_template(chunk, local_origin_x, local_origin_y, local_origin_z, tree_template)` - Places a tree preset into a chunk.
 - `terrain_generate_chunk(game_voxel_chunk &chunk, const char *seed_string)` - Fills a voxel chunk with biome-aware heightmap terrain based on an optional seed.
 - `terrain_generate_chunk(game_voxel_chunk &chunk, int32_t world_block_origin_x, int32_t world_block_origin_z, const char *seed_string)` - Fills a voxel chunk with biome-aware heightmap terrain using a world-space chunk origin and optional seed.
-- `terrain_default_generation_config()` - Returns a copy of the built-in
-  generation policy that callers can modify safely.
+- `terrain_generation_config` - Lifecycle-managed terrain policy object. Call
+  `terrain_default_generation_config(config)` to initialize the built-in
+  defaults, then use its setter methods and tree-template APIs to modify it.
+  Call `destroy()` when the policy is no longer needed; copy and move use the
+  explicit `initialize(other)` and `move(other)` methods.
+- `terrain_default_generation_config(config)` - Initializes a config object
+  with the built-in generation policy.
+- `terrain_generation_config::set_*` - Validated mutation methods for scalar
+  terrain policy values, callbacks, biome slots, feature rules, ore rules,
+  underground structures, fluids, and terrain layers.
 - `terrain_generation_config_is_valid(...)` - Checks biome counts, noise and
   chance ranges, block palettes, and feature templates before generation.
+- `terrain_generation_context_initialize(...)` - Copies and validates a
+  Minecraft-owned policy once, producing a generation context.
+- `terrain_generation_config_serialize(...)` and
+  `terrain_generation_config_deserialize(...)` - Encode/decode the versioned
+  terrain-policy save payload using Libft buffers.
+- `terrain_generation_config_save_file(...)` and
+  `terrain_generation_config_load_file(...)` - Libft-owned binary file I/O for
+  the terrain policy used by a world save.
+- `terrain_generate_chunk_with_context(...)` - Generates from a previously
+  initialized context without revalidating the policy for every chunk.
 - `terrain_generate_chunk(..., const terrain_generation_config &config)` -
   Generates using caller-owned runtime settings without changing libft data.
+- `terrain_generate_chunk_in_region(...)` - Generates a chunk through a
+  `game_voxel_region` and routes feature blocks crossing chunk boundaries into
+  neighboring region chunks.
+- `terrain_generate_chunk_in_region_with_context(...)` - Region equivalent
+  that consumes a previously initialized generation context.
+- `terrain_cross_chunk_block_writer` - Optional callback used to route feature
+  blocks outside the current chunk into neighboring chunks.
 - `terrain_select_biome(...)` - Applies the configured biome selector and
   safely clamps custom selector results to the configured biome slots.
 - `terrain_get_biome_index(...)` - Queries the active configured biome index
@@ -89,3 +136,21 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - Mesh generation now uses a block's face-occlusion flag instead of raw transparency, so transparent foliage can still suppress hidden internal faces.
 - Chunk rendering can now frustum-cull whole chunk bounds before drawing, which is the next layer above greedy meshing.
 - The mesh container now caches occupied bounds separately from the full chunk bounds, which lets render code cull sparse chunks more tightly when it has the generated mesh available.
+- Generated chunks persist metadata and are regenerated only when their seed,
+  origin, configuration signature, or generator version changes. Direct block
+  edits invalidate that cache.
+- The Minecraft world/save layer owns the terrain policy values. It should initialize
+  one `terrain_generation_context` after loading the world and pass that
+  context to chunk generation; Libft owns the encoding and persistence logic.
+- Libft owns the versioned binary encoding and file I/O for the saved terrain
+  policy. The Minecraft layer chooses the world-save path and supplies the
+  loaded policy, but does not define the on-disk format.
+- The compatibility config API takes an immutable local snapshot per call, so
+  later caller-side edits cannot alter an in-progress generation. The context
+  API avoids repeating validation for every new chunk.
+- Snow caps use a configurable height snowline and each biome's
+  `allow_snow_caps` flag; no biome enum is hardcoded as snow-cap eligible.
+- Mountain ridges use each biome's `allow_mountain_ridges` flag instead of a
+  hardcoded surface-height/biome threshold.
+- Terrain generation now supports configurable ore, underground-structure,
+  fluid, mountain-ridge, erosion, biome-transition, and terrain-layer policies.

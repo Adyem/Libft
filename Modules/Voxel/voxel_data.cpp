@@ -10,6 +10,803 @@
 #include "../Game/game_voxel_chunk.hpp"
 #include "voxel_internal.hpp"
 
+static int32_t terrain_apply_default_generation_config(
+    terrain_generation_config &config) noexcept;
+
+terrain_biome_definition::terrain_biome_definition() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), profile(),
+      surface_block_id(0U), subsurface_block_id(0U), deep_block_id(0U),
+      allow_shrubs(FT_FALSE), allow_trees(FT_FALSE),
+      allow_snow_caps(FT_FALSE), allow_mountain_ridges(FT_FALSE),
+      shrub_chance_percent(0U), tree_chance_percent(0U),
+      tree_template_count(0U), tree_template_indices(), tree_template(ft_nullptr)
+{
+    return ;
+}
+
+terrain_biome_definition::~terrain_biome_definition() noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_biome_definition::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    this->profile.surface_height = 0;
+    this->profile.height_variation = 0;
+    this->profile.topsoil_depth = 0;
+    this->surface_block_id = 0U;
+    this->subsurface_block_id = 0U;
+    this->deep_block_id = 0U;
+    this->allow_shrubs = FT_FALSE;
+    this->allow_trees = FT_FALSE;
+    this->allow_snow_caps = FT_FALSE;
+    this->allow_mountain_ridges = FT_FALSE;
+    this->shrub_chance_percent = 0U;
+    this->tree_chance_percent = 0U;
+    this->tree_template_count = 0U;
+    ft_memset(this->tree_template_indices, 0,
+        sizeof(this->tree_template_indices));
+    this->tree_template = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_biome_definition::initialize(
+    const terrain_biome_definition &other) noexcept
+{
+    uint32_t index;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    this->profile = other.profile;
+    this->surface_block_id = other.surface_block_id;
+    this->subsurface_block_id = other.subsurface_block_id;
+    this->deep_block_id = other.deep_block_id;
+    this->allow_shrubs = other.allow_shrubs;
+    this->allow_trees = other.allow_trees;
+    this->allow_snow_caps = other.allow_snow_caps;
+    this->allow_mountain_ridges = other.allow_mountain_ridges;
+    this->shrub_chance_percent = other.shrub_chance_percent;
+    this->tree_chance_percent = other.tree_chance_percent;
+    this->tree_template_count = other.tree_template_count;
+    index = 0U;
+    while (index < TERRAIN_MAX_BIOME_TREE_TEMPLATES)
+    {
+        this->tree_template_indices[index]
+            = other.tree_template_indices[index];
+        index += 1U;
+    }
+    this->tree_template = other.tree_template;
+    this->_initialised_state = other._initialised_state;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_biome_definition::destroy() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    this->profile.surface_height = 0;
+    this->profile.height_variation = 0;
+    this->profile.topsoil_depth = 0;
+    this->surface_block_id = 0U;
+    this->subsurface_block_id = 0U;
+    this->deep_block_id = 0U;
+    this->allow_shrubs = FT_FALSE;
+    this->allow_trees = FT_FALSE;
+    this->allow_snow_caps = FT_FALSE;
+    this->allow_mountain_ridges = FT_FALSE;
+    this->shrub_chance_percent = 0U;
+    this->tree_chance_percent = 0U;
+    this->tree_template_count = 0U;
+    ft_memset(this->tree_template_indices, 0,
+        sizeof(this->tree_template_indices));
+    this->tree_template = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_biome_definition::move(
+    terrain_biome_definition &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->initialize(other);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_biome_definition::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+int32_t terrain_biome_definition::set_profile(
+    const terrain_biome_profile &value) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (value.height_variation < 0 || value.topsoil_depth < 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->profile = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_biome_definition::set_block_palette(uint32_t surface_block,
+    uint32_t subsurface_block, uint32_t deep_block) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->surface_block_id = surface_block;
+    this->subsurface_block_id = subsurface_block;
+    this->deep_block_id = deep_block;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_biome_definition::set_decoration_policy(ft_bool shrubs,
+    ft_bool trees, uint32_t shrub_chance, uint32_t tree_chance) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (shrub_chance > 100U || tree_chance > 100U)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->allow_shrubs = shrubs;
+    this->allow_trees = trees;
+    this->shrub_chance_percent = shrub_chance;
+    this->tree_chance_percent = tree_chance;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_biome_definition::set_snow_cap_policy(
+    ft_bool enabled) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->allow_snow_caps = enabled;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_biome_definition::set_mountain_ridge_policy(
+    ft_bool enabled) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->allow_mountain_ridges = enabled;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_biome_definition::set_tree_template_override(
+    const terrain_tree_template *value) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->tree_template = value;
+    return (FT_ERR_SUCCESS);
+}
+
+terrain_feature_rule::terrain_feature_rule() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      template_data(ft_nullptr), biome_index(-1), chance_percent(0U),
+      minimum_height(0), maximum_height(0), requires_dry_land(FT_FALSE)
+{
+    return ;
+}
+
+terrain_feature_rule::~terrain_feature_rule() noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_feature_rule::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    this->template_data = ft_nullptr;
+    this->biome_index = -1;
+    this->chance_percent = 0U;
+    this->minimum_height = 0;
+    this->maximum_height = 0;
+    this->requires_dry_land = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_feature_rule::initialize(
+    const terrain_feature_rule &other) noexcept
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    this->template_data = other.template_data;
+    this->biome_index = other.biome_index;
+    this->chance_percent = other.chance_percent;
+    this->minimum_height = other.minimum_height;
+    this->maximum_height = other.maximum_height;
+    this->requires_dry_land = other.requires_dry_land;
+    this->_initialised_state = other._initialised_state;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_feature_rule::destroy() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    this->template_data = ft_nullptr;
+    this->biome_index = -1;
+    this->chance_percent = 0U;
+    this->minimum_height = 0;
+    this->maximum_height = 0;
+    this->requires_dry_land = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_feature_rule::move(terrain_feature_rule &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->initialize(other);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_feature_rule::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+int32_t terrain_feature_rule::set_template(
+    const terrain_tree_template *value) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->template_data = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_feature_rule::set_biome_range(int32_t biome,
+    int32_t minimum, int32_t maximum) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome < -1 || minimum > maximum)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->biome_index = biome;
+    this->minimum_height = minimum;
+    this->maximum_height = maximum;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_feature_rule::set_chance(uint32_t value) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (value > 100U)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->chance_percent = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_feature_rule::set_requires_dry_land(ft_bool value) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->requires_dry_land = value;
+    return (FT_ERR_SUCCESS);
+}
+
+terrain_ore_rule::terrain_ore_rule() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), block_id(0U),
+      minimum_height(0), maximum_height(0), vein_size(0U),
+      chance_percent(0U), enabled(FT_FALSE)
+{
+    return ;
+}
+
+terrain_ore_rule::~terrain_ore_rule() noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_ore_rule::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    this->block_id = 0U;
+    this->minimum_height = 0;
+    this->maximum_height = 0;
+    this->vein_size = 0U;
+    this->chance_percent = 0U;
+    this->enabled = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_ore_rule::initialize(const terrain_ore_rule &other) noexcept
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    this->block_id = other.block_id;
+    this->minimum_height = other.minimum_height;
+    this->maximum_height = other.maximum_height;
+    this->vein_size = other.vein_size;
+    this->chance_percent = other.chance_percent;
+    this->enabled = other.enabled;
+    this->_initialised_state = other._initialised_state;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_ore_rule::destroy() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    this->block_id = 0U;
+    this->minimum_height = 0;
+    this->maximum_height = 0;
+    this->vein_size = 0U;
+    this->chance_percent = 0U;
+    this->enabled = FT_FALSE;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_ore_rule::move(terrain_ore_rule &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->initialize(other);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_ore_rule::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+int32_t terrain_ore_rule::set_range(int32_t minimum,
+    int32_t maximum) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (minimum > maximum)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->minimum_height = minimum;
+    this->maximum_height = maximum;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_ore_rule::set_vein(uint32_t size,
+    uint32_t chance) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (chance > 100U || (size == 0U && chance != 0U))
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->vein_size = size;
+    this->chance_percent = chance;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_ore_rule::set_enabled(ft_bool value) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->enabled = value;
+    return (FT_ERR_SUCCESS);
+}
+
+terrain_underground_structure_config::terrain_underground_structure_config()
+    noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      enable_ravines(FT_FALSE), enable_cave_rooms(FT_FALSE),
+      ravine_chance_percent(0U), cave_room_chance_percent(0U),
+      minimum_height(0), maximum_height(0), ravine_width(0U), ravine_depth(0U)
+{
+    return ;
+}
+
+terrain_underground_structure_config::~terrain_underground_structure_config()
+    noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_underground_structure_config::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    this->enable_ravines = FT_FALSE;
+    this->enable_cave_rooms = FT_FALSE;
+    this->ravine_chance_percent = 0U;
+    this->cave_room_chance_percent = 0U;
+    this->minimum_height = 0;
+    this->maximum_height = 0;
+    this->ravine_width = 0U;
+    this->ravine_depth = 0U;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_underground_structure_config::initialize(
+    const terrain_underground_structure_config &other) noexcept
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    this->enable_ravines = other.enable_ravines;
+    this->enable_cave_rooms = other.enable_cave_rooms;
+    this->ravine_chance_percent = other.ravine_chance_percent;
+    this->cave_room_chance_percent = other.cave_room_chance_percent;
+    this->minimum_height = other.minimum_height;
+    this->maximum_height = other.maximum_height;
+    this->ravine_width = other.ravine_width;
+    this->ravine_depth = other.ravine_depth;
+    this->_initialised_state = other._initialised_state;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_underground_structure_config::destroy() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    this->enable_ravines = FT_FALSE;
+    this->enable_cave_rooms = FT_FALSE;
+    this->ravine_chance_percent = 0U;
+    this->cave_room_chance_percent = 0U;
+    this->minimum_height = 0;
+    this->maximum_height = 0;
+    this->ravine_width = 0U;
+    this->ravine_depth = 0U;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_underground_structure_config::move(
+    terrain_underground_structure_config &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->initialize(other);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_underground_structure_config::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+int32_t terrain_underground_structure_config::set_enabled(
+    ft_bool ravines, ft_bool cave_rooms) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->enable_ravines = ravines;
+    this->enable_cave_rooms = cave_rooms;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_underground_structure_config::set_chances(uint32_t ravine,
+    uint32_t cave_room) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (ravine > 100U || cave_room > 100U)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->ravine_chance_percent = ravine;
+    this->cave_room_chance_percent = cave_room;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_underground_structure_config::set_height_range(
+    int32_t minimum, int32_t maximum) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (minimum > maximum)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->minimum_height = minimum;
+    this->maximum_height = maximum;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_underground_structure_config::set_shape(uint32_t width,
+    uint32_t depth) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->ravine_width = width;
+    this->ravine_depth = depth;
+    return (FT_ERR_SUCCESS);
+}
+
+terrain_fluid_config::terrain_fluid_config() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      enable_rivers(FT_FALSE), enable_lakes(FT_FALSE), river_noise_scale(0),
+      river_width(0), lake_noise_scale(0), lake_chance_percent(0U)
+{
+    return ;
+}
+
+terrain_fluid_config::~terrain_fluid_config() noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_fluid_config::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    this->enable_rivers = FT_FALSE;
+    this->enable_lakes = FT_FALSE;
+    this->river_noise_scale = 0;
+    this->river_width = 0;
+    this->lake_noise_scale = 0;
+    this->lake_chance_percent = 0U;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_fluid_config::initialize(
+    const terrain_fluid_config &other) noexcept
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    this->enable_rivers = other.enable_rivers;
+    this->enable_lakes = other.enable_lakes;
+    this->river_noise_scale = other.river_noise_scale;
+    this->river_width = other.river_width;
+    this->lake_noise_scale = other.lake_noise_scale;
+    this->lake_chance_percent = other.lake_chance_percent;
+    this->_initialised_state = other._initialised_state;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_fluid_config::destroy() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    this->enable_rivers = FT_FALSE;
+    this->enable_lakes = FT_FALSE;
+    this->river_noise_scale = 0;
+    this->river_width = 0;
+    this->lake_noise_scale = 0;
+    this->lake_chance_percent = 0U;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_fluid_config::move(terrain_fluid_config &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->initialize(other);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_fluid_config::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+int32_t terrain_fluid_config::set_enabled(ft_bool rivers,
+    ft_bool lakes) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->enable_rivers = rivers;
+    this->enable_lakes = lakes;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_fluid_config::set_river_settings(int32_t scale,
+    int32_t width) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (scale <= 0 || width < 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->river_noise_scale = scale;
+    this->river_width = width;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_fluid_config::set_lake_settings(int32_t scale,
+    uint32_t chance) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (scale <= 0 || chance > 100U)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->lake_noise_scale = scale;
+    this->lake_chance_percent = chance;
+    return (FT_ERR_SUCCESS);
+}
+
+terrain_layer_config::terrain_layer_config() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED),
+      enable_beaches(FT_FALSE), enable_snow_caps(FT_FALSE), beach_depth(0U),
+      underwater_depth(0U), snow_cap_depth(0U), snow_cap_minimum_height(0),
+      beach_block_id(0U), underwater_block_id(0U), snow_cap_block_id(0U)
+{
+    return ;
+}
+
+terrain_layer_config::~terrain_layer_config() noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_layer_config::initialize() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    this->enable_beaches = FT_FALSE;
+    this->enable_snow_caps = FT_FALSE;
+    this->beach_depth = 0U;
+    this->underwater_depth = 0U;
+    this->snow_cap_depth = 0U;
+    this->snow_cap_minimum_height = 0;
+    this->beach_block_id = 0U;
+    this->underwater_block_id = 0U;
+    this->snow_cap_block_id = 0U;
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_layer_config::initialize(
+    const terrain_layer_config &other) noexcept
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    this->enable_beaches = other.enable_beaches;
+    this->enable_snow_caps = other.enable_snow_caps;
+    this->beach_depth = other.beach_depth;
+    this->underwater_depth = other.underwater_depth;
+    this->snow_cap_depth = other.snow_cap_depth;
+    this->snow_cap_minimum_height = other.snow_cap_minimum_height;
+    this->beach_block_id = other.beach_block_id;
+    this->underwater_block_id = other.underwater_block_id;
+    this->snow_cap_block_id = other.snow_cap_block_id;
+    this->_initialised_state = other._initialised_state;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_layer_config::destroy() noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    this->enable_beaches = FT_FALSE;
+    this->enable_snow_caps = FT_FALSE;
+    this->beach_depth = 0U;
+    this->underwater_depth = 0U;
+    this->snow_cap_depth = 0U;
+    this->snow_cap_minimum_height = 0;
+    this->beach_block_id = 0U;
+    this->underwater_block_id = 0U;
+    this->snow_cap_block_id = 0U;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_layer_config::move(terrain_layer_config &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->initialize(other);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_layer_config::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+int32_t terrain_layer_config::set_enabled(ft_bool beaches,
+    ft_bool snow_caps) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->enable_beaches = beaches;
+    this->enable_snow_caps = snow_caps;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_layer_config::set_depths(uint32_t beach,
+    uint32_t underwater, uint32_t snow) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->beach_depth = beach;
+    this->underwater_depth = underwater;
+    this->snow_cap_depth = snow;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_layer_config::set_snowline(
+    int32_t minimum_height_value) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    if (minimum_height_value < 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->snow_cap_minimum_height = minimum_height_value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_layer_config::set_block_palette(uint32_t beach,
+    uint32_t underwater, uint32_t snow) noexcept
+{
+    if (this->is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    this->beach_block_id = beach;
+    this->underwater_block_id = underwater;
+    this->snow_cap_block_id = snow;
+    return (FT_ERR_SUCCESS);
+}
+
 static void terrain_abort_unknown_block_id(uint32_t block_id,
     const char *method_name) noexcept
 {
@@ -89,7 +886,10 @@ static const terrain_block_metadata TERRAIN_BLOCK_REGISTRY[] =
     {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
     {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
     {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
-    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE}
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 3U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 5U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 6U, FT_TRUE},
+    {FT_TRUE, FT_FALSE, FT_FALSE, FT_FALSE, FT_FALSE, FT_TRUE, 8U, FT_TRUE}
 };
 
 static const terrain_tree_template_block TERRAIN_SMALL_OAK_TREE_BLOCKS[] =
@@ -855,19 +1655,259 @@ uint32_t terrain_get_biome_index(const terrain_generation_config &config,
         world_block_x, world_block_z));
 }
 
-terrain_generation_config terrain_default_generation_config() noexcept
+terrain_generation_config::terrain_generation_config() noexcept
+    : _initialised_state(FT_CLASS_STATE_UNINITIALISED), sea_level(0),
+      large_noise_scale(0), detail_noise_scale(0), detail_noise_percent(0),
+      water_chance_percent(0U), biome_count(0U), biomes(),
+      tree_template_count(0U), tree_templates(), biome_selector(ft_nullptr),
+      biome_selector_user_data(ft_nullptr), feature_count(0U), features(),
+      ore_rule_count(0U), ores(), underground_structures(), fluids(), layers(),
+      enable_biome_transitions(FT_FALSE), enable_mountain_ridges(FT_FALSE),
+      enable_erosion(FT_FALSE), mountain_ridge_scale(0),
+      mountain_ridge_strength(0U), erosion_noise_scale(0), erosion_strength(0U),
+      allow_cross_chunk_features(FT_FALSE), cross_chunk_block_writer(ft_nullptr),
+      cross_chunk_block_writer_user_data(ft_nullptr)
 {
-    terrain_generation_config config = {};
+    return ;
+}
+
+terrain_generation_config::~terrain_generation_config() noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_generation_config::initialize() noexcept
+{
+    uint32_t index;
+
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    index = 0U;
+    while (index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        this->biomes[index].initialize();
+        index += 1U;
+    }
+    index = 0U;
+    while (index < TERRAIN_MAX_FEATURE_RULES)
+    {
+        this->features[index].initialize();
+        index += 1U;
+    }
+    index = 0U;
+    while (index < TERRAIN_MAX_ORE_RULES)
+    {
+        this->ores[index].initialize();
+        index += 1U;
+    }
+    this->underground_structures.initialize();
+    this->fluids.initialize();
+    this->layers.initialize();
+    if (terrain_apply_default_generation_config(*this)
+        != FT_ERR_SUCCESS)
+    {
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::initialize(
+    const terrain_generation_config &other) noexcept
+{
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    this->sea_level = other.sea_level;
+    this->large_noise_scale = other.large_noise_scale;
+    this->detail_noise_scale = other.detail_noise_scale;
+    this->detail_noise_percent = other.detail_noise_percent;
+    this->water_chance_percent = other.water_chance_percent;
+    this->biome_count = other.biome_count;
+    this->tree_template_count = other.tree_template_count;
+    this->biome_selector = other.biome_selector;
+    this->biome_selector_user_data = other.biome_selector_user_data;
+    this->feature_count = other.feature_count;
+    this->ore_rule_count = other.ore_rule_count;
+    this->underground_structures.initialize(other.underground_structures);
+    this->fluids.initialize(other.fluids);
+    this->layers.initialize(other.layers);
+    this->enable_biome_transitions = other.enable_biome_transitions;
+    this->enable_mountain_ridges = other.enable_mountain_ridges;
+    this->enable_erosion = other.enable_erosion;
+    this->mountain_ridge_scale = other.mountain_ridge_scale;
+    this->mountain_ridge_strength = other.mountain_ridge_strength;
+    this->erosion_noise_scale = other.erosion_noise_scale;
+    this->erosion_strength = other.erosion_strength;
+    this->allow_cross_chunk_features = other.allow_cross_chunk_features;
+    this->cross_chunk_block_writer = other.cross_chunk_block_writer;
+    this->cross_chunk_block_writer_user_data = other.cross_chunk_block_writer_user_data;
+    uint32_t index;
+
+    index = 0U;
+    while (index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        this->biomes[index].initialize(other.biomes[index]);
+        index += 1U;
+    }
+    ft_memcpy(this->tree_templates, other.tree_templates,
+        sizeof(this->tree_templates));
+    index = 0U;
+    while (index < TERRAIN_MAX_FEATURE_RULES)
+    {
+        this->features[index].initialize(other.features[index]);
+        index += 1U;
+    }
+    index = 0U;
+    while (index < TERRAIN_MAX_ORE_RULES)
+    {
+        this->ores[index].initialize(other.ores[index]);
+        index += 1U;
+    }
+    this->_initialised_state = other._initialised_state;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_generation_config::destroy() noexcept
+{
+    uint32_t index;
+
+    if (this->_initialised_state == FT_CLASS_STATE_UNINITIALISED
+        || this->_initialised_state == FT_CLASS_STATE_DESTROYED)
+        return (FT_ERR_SUCCESS);
+    index = 0U;
+    while (index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        this->biomes[index].destroy();
+        index += 1U;
+    }
+    ft_memset(this->tree_templates, 0, sizeof(this->tree_templates));
+    index = 0U;
+    while (index < TERRAIN_MAX_FEATURE_RULES)
+    {
+        this->features[index].destroy();
+        index += 1U;
+    }
+    index = 0U;
+    while (index < TERRAIN_MAX_ORE_RULES)
+    {
+        this->ores[index].destroy();
+        index += 1U;
+    }
+    this->sea_level = 0;
+    this->large_noise_scale = 0;
+    this->detail_noise_scale = 0;
+    this->detail_noise_percent = 0;
+    this->water_chance_percent = 0U;
+    this->biome_count = 0U;
+    this->tree_template_count = 0U;
+    this->biome_selector = ft_nullptr;
+    this->biome_selector_user_data = ft_nullptr;
+    this->feature_count = 0U;
+    this->ore_rule_count = 0U;
+    this->underground_structures.destroy();
+    this->fluids.destroy();
+    this->layers.destroy();
+    this->enable_biome_transitions = FT_FALSE;
+    this->enable_mountain_ridges = FT_FALSE;
+    this->enable_erosion = FT_FALSE;
+    this->mountain_ridge_scale = 0;
+    this->mountain_ridge_strength = 0U;
+    this->erosion_noise_scale = 0;
+    this->erosion_strength = 0U;
+    this->allow_cross_chunk_features = FT_FALSE;
+    this->cross_chunk_block_writer = ft_nullptr;
+    this->cross_chunk_block_writer_user_data = ft_nullptr;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_generation_config::move(
+    terrain_generation_config &other) noexcept
+{
+    int32_t error_code;
+
+    error_code = this->initialize(other);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_generation_config::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+static int32_t terrain_apply_default_generation_config(
+    terrain_generation_config &config) noexcept
+{
     uint32_t index;
 
     config.sea_level = TERRAIN_GENERATOR_SEA_LEVEL;
     config.large_noise_scale = 32;
     config.detail_noise_scale = 8;
     config.detail_noise_percent = 50;
-    config.water_chance_percent = 100U;
+    config.water_chance_percent = 0U;
     config.biome_count = 5U;
+    config.tree_template_count = 13U;
+    config.tree_templates[0] = terrain_small_oak_tree_template_variant(0U);
+    config.tree_templates[1] = terrain_small_oak_tree_template_variant(1U);
+    config.tree_templates[2] = terrain_small_oak_tree_template_variant(2U);
+    config.tree_templates[3] = terrain_small_pine_tree_template_variant(0U);
+    config.tree_templates[4] = terrain_small_pine_tree_template_variant(1U);
+    config.tree_templates[5] = terrain_small_pine_tree_template_variant(2U);
+    config.tree_templates[6] = terrain_small_cactus_tree_template_variant(0U);
+    config.tree_templates[7] = terrain_small_cactus_tree_template_variant(1U);
+    config.tree_templates[8] = terrain_small_cactus_tree_template_variant(2U);
+    config.tree_templates[9] = terrain_large_oak_tree_template_variant(0U);
+    config.tree_templates[10] = terrain_large_oak_tree_template_variant(1U);
+    config.tree_templates[11] = terrain_large_pine_tree_template_variant(0U);
+    config.tree_templates[12] = terrain_large_pine_tree_template_variant(1U);
     config.biome_selector = ft_nullptr;
     config.biome_selector_user_data = ft_nullptr;
+    config.ore_rule_count = 3U;
+    config.ores[0].block_id = TERRAIN_GENERATOR_COAL_ORE_BLOCK;
+    config.ores[0].set_range(8, 120);
+    config.ores[0].set_vein(8U, 12U);
+    config.ores[0].set_enabled(FT_FALSE);
+    config.ores[1].block_id = TERRAIN_GENERATOR_IRON_ORE_BLOCK;
+    config.ores[1].set_range(4, 80);
+    config.ores[1].set_vein(6U, 8U);
+    config.ores[1].set_enabled(FT_FALSE);
+    config.ores[2].block_id = TERRAIN_GENERATOR_GOLD_ORE_BLOCK;
+    config.ores[2].set_range(4, 48);
+    config.ores[2].set_vein(4U, 4U);
+    config.ores[2].set_enabled(FT_FALSE);
+    config.underground_structures.set_enabled(FT_TRUE, FT_TRUE);
+    config.underground_structures.set_chances(4U, 3U);
+    config.underground_structures.set_height_range(8, 120);
+    config.underground_structures.set_shape(2U, 20U);
+    config.fluids.set_enabled(FT_TRUE, FT_TRUE);
+    config.fluids.set_river_settings(96, 3);
+    config.fluids.set_lake_settings(48, 4U);
+    config.layers.set_enabled(FT_TRUE, FT_TRUE);
+    config.layers.set_depths(3U, 2U, 2U);
+    config.layers.set_snowline(84);
+    config.layers.set_block_palette(TERRAIN_GENERATOR_SAND_BLOCK,
+        TERRAIN_GENERATOR_SAND_BLOCK, TERRAIN_GENERATOR_SNOW_BLOCK);
+    config.enable_biome_transitions = FT_TRUE;
+    config.enable_mountain_ridges = FT_TRUE;
+    config.enable_erosion = FT_TRUE;
+    config.mountain_ridge_scale = 48;
+    config.mountain_ridge_strength = 8U;
+    config.erosion_noise_scale = 24;
+    config.erosion_strength = 3U;
+    config.allow_cross_chunk_features = FT_TRUE;
+    config.cross_chunk_block_writer = ft_nullptr;
+    config.cross_chunk_block_writer_user_data = ft_nullptr;
     index = 0U;
     while (index < config.biome_count)
     {
@@ -878,14 +1918,532 @@ terrain_generation_config terrain_default_generation_config() noexcept
         config.biomes[index].deep_block_id = terrain_deep_block_for_biome(biome);
         config.biomes[index].allow_shrubs = terrain_biome_has_shrubs(biome);
         config.biomes[index].allow_trees = terrain_biome_has_trees(biome);
+        config.biomes[index].allow_snow_caps = FT_TRUE;
+        config.biomes[index].allow_mountain_ridges = FT_TRUE;
         config.biomes[index].shrub_chance_percent = 6U;
         config.biomes[index].tree_chance_percent = 18U;
-        /* A null template keeps the built-in seeded variant selection.  A
-         * caller can assign a template to override it for that biome. */
+        config.biomes[index].tree_template_count = 0U;
+        while (config.biomes[index].tree_template_count
+            < TERRAIN_MAX_BIOME_TREE_TEMPLATES)
+        {
+            config.biomes[index].tree_template_indices[
+                config.biomes[index].tree_template_count] = 0U;
+            config.biomes[index].tree_template_count += 1U;
+        }
         config.biomes[index].tree_template = ft_nullptr;
         index += 1U;
     }
-    return (config);
+    config.biomes[TERRAIN_BIOME_PLAINS].tree_template_count = 5U;
+    config.biomes[TERRAIN_BIOME_HILLS].tree_template_count = 5U;
+    config.biomes[TERRAIN_BIOME_DESERT].tree_template_count = 3U;
+    config.biomes[TERRAIN_BIOME_SNOW].tree_template_count = 5U;
+    config.biomes[TERRAIN_BIOME_MOUNTAINS].tree_template_count = 5U;
+    index = 0U;
+    while (index < 5U)
+    {
+        config.biomes[TERRAIN_BIOME_PLAINS].tree_template_indices[index] = index;
+        config.biomes[TERRAIN_BIOME_HILLS].tree_template_indices[index] = index;
+        index += 1U;
+    }
+    config.biomes[TERRAIN_BIOME_SNOW].tree_template_indices[0] = 3U;
+    config.biomes[TERRAIN_BIOME_SNOW].tree_template_indices[1] = 4U;
+    config.biomes[TERRAIN_BIOME_SNOW].tree_template_indices[2] = 5U;
+    config.biomes[TERRAIN_BIOME_SNOW].tree_template_indices[3] = 11U;
+    config.biomes[TERRAIN_BIOME_SNOW].tree_template_indices[4] = 12U;
+    config.biomes[TERRAIN_BIOME_MOUNTAINS].tree_template_indices[0] = 3U;
+    config.biomes[TERRAIN_BIOME_MOUNTAINS].tree_template_indices[1] = 4U;
+    config.biomes[TERRAIN_BIOME_MOUNTAINS].tree_template_indices[2] = 5U;
+    config.biomes[TERRAIN_BIOME_MOUNTAINS].tree_template_indices[3] = 11U;
+    config.biomes[TERRAIN_BIOME_MOUNTAINS].tree_template_indices[4] = 12U;
+    index = 0U;
+    while (index < 3U)
+    {
+        config.biomes[TERRAIN_BIOME_DESERT].tree_template_indices[index]
+            = index + 6U;
+        index += 1U;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_default_generation_config(
+    terrain_generation_config &config) noexcept
+{
+    return (config.initialize());
+}
+
+static int32_t terrain_config_require_initialised(
+    const terrain_generation_config &config) noexcept
+{
+    if (config.is_initialised() == FT_FALSE)
+        return (FT_ERR_NOT_INITIALISED);
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_sea_level(int32_t value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    this->sea_level = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_noise_scales(int32_t large_scale,
+    int32_t detail_scale, int32_t detail_percent) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (large_scale <= 0 || detail_scale <= 0 || detail_percent < 0
+        || detail_percent > 100)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->large_noise_scale = large_scale;
+    this->detail_noise_scale = detail_scale;
+    this->detail_noise_percent = detail_percent;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_water_chance_percent(
+    uint32_t value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (value > 100U)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->water_chance_percent = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_biome_count(uint32_t value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (value == 0U || value > TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    this->biome_count = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_biome_selector(
+    terrain_biome_selector selector, void *user_data) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    this->biome_selector = selector;
+    this->biome_selector_user_data = user_data;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_cross_chunk_writer(
+    terrain_cross_chunk_block_writer writer, void *user_data) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    this->cross_chunk_block_writer = writer;
+    this->cross_chunk_block_writer_user_data = user_data;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_biome(uint32_t biome_index,
+    const terrain_biome_definition &biome) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->biomes[biome_index].initialize(biome));
+}
+
+int32_t terrain_generation_config::set_biome_profile(uint32_t biome_index,
+    const terrain_biome_profile &profile) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->biomes[biome_index].set_profile(profile));
+}
+
+int32_t terrain_generation_config::set_biome_height_profile(
+    uint32_t biome_index, int32_t surface_height, int32_t height_variation,
+    int32_t topsoil_depth) noexcept
+{
+    terrain_biome_profile profile;
+
+    profile.surface_height = surface_height;
+    profile.height_variation = height_variation;
+    profile.topsoil_depth = topsoil_depth;
+    return (this->set_biome_profile(biome_index, profile));
+}
+
+int32_t terrain_generation_config::set_biome_block_palette(
+    uint32_t biome_index, uint32_t surface_block, uint32_t subsurface_block,
+    uint32_t deep_block) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->biomes[biome_index].set_block_palette(surface_block,
+        subsurface_block, deep_block));
+}
+
+int32_t terrain_generation_config::set_biome_decoration_policy(
+    uint32_t biome_index, ft_bool shrubs, ft_bool trees,
+    uint32_t shrub_chance, uint32_t tree_chance) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->biomes[biome_index].set_decoration_policy(shrubs, trees,
+        shrub_chance, tree_chance));
+}
+
+int32_t terrain_generation_config::set_biome_snow_caps_enabled(
+    uint32_t biome_index, ft_bool enabled) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->biomes[biome_index].set_snow_cap_policy(enabled));
+}
+
+int32_t terrain_generation_config::set_biome_mountain_ridges_enabled(
+    uint32_t biome_index, ft_bool enabled) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->biomes[biome_index].set_mountain_ridge_policy(enabled));
+}
+
+int32_t terrain_generation_config::set_biome_tree_template_override(
+    uint32_t biome_index, const terrain_tree_template *value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->biomes[biome_index].set_tree_template_override(value));
+}
+
+int32_t terrain_generation_config::set_feature(uint32_t feature_index,
+    const terrain_feature_rule &feature) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (feature_index >= TERRAIN_MAX_FEATURE_RULES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->features[feature_index].initialize(feature));
+}
+
+int32_t terrain_generation_config::set_ore_rule(uint32_t ore_index,
+    const terrain_ore_rule &ore) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (ore_index >= TERRAIN_MAX_ORE_RULES)
+        return (FT_ERR_OUT_OF_RANGE);
+    return (this->ores[ore_index].initialize(ore));
+}
+
+int32_t terrain_generation_config::set_underground_structures(
+    const terrain_underground_structure_config &value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    return (this->underground_structures.initialize(value));
+}
+
+int32_t terrain_generation_config::set_fluids(
+    const terrain_fluid_config &value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    return (this->fluids.initialize(value));
+}
+
+int32_t terrain_generation_config::set_layers(
+    const terrain_layer_config &value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    return (this->layers.initialize(value));
+}
+
+int32_t terrain_generation_config::set_feature_count(uint32_t value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (value > TERRAIN_MAX_FEATURE_RULES)
+        return (FT_ERR_OUT_OF_RANGE);
+    this->feature_count = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_ore_rule_count(uint32_t value) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (value > TERRAIN_MAX_ORE_RULES)
+        return (FT_ERR_OUT_OF_RANGE);
+    this->ore_rule_count = value;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_biome_transitions_enabled(
+    ft_bool enabled) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    this->enable_biome_transitions = enabled;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_mountain_ridges_enabled(
+    ft_bool enabled) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    this->enable_mountain_ridges = enabled;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_erosion_enabled(
+    ft_bool enabled) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    this->enable_erosion = enabled;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_mountain_ridge_settings(
+    int32_t scale, uint32_t strength) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (scale <= 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->mountain_ridge_scale = scale;
+    this->mountain_ridge_strength = strength;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_erosion_settings(
+    int32_t scale, uint32_t strength) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (scale <= 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->erosion_noise_scale = scale;
+    this->erosion_strength = strength;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config::set_cross_chunk_features_enabled(
+    ft_bool enabled) noexcept
+{
+    if (terrain_config_require_initialised(*this) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    this->allow_cross_chunk_features = enabled;
+    return (FT_ERR_SUCCESS);
+}
+
+static void terrain_signature_add(uint64_t &signature,
+    uint64_t value) noexcept
+{
+    signature ^= value;
+    signature = terrain_mix_u64(signature);
+    return ;
+}
+
+uint32_t terrain_generation_config_signature(
+    const terrain_generation_config &config) noexcept
+{
+    uint64_t signature;
+    uint32_t index;
+    uint32_t biome_template_index;
+
+    signature = UINT64_C(0x5445525241494E31);
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(config.sea_level));
+    signature = terrain_mix_u64(signature);
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+        config.large_noise_scale));
+    signature = terrain_mix_u64(signature);
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+        config.detail_noise_scale));
+    signature = terrain_mix_u64(signature);
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+        config.detail_noise_percent));
+    signature = terrain_mix_u64(signature);
+    signature ^= static_cast<uint64_t>(config.water_chance_percent);
+    signature = terrain_mix_u64(signature);
+    signature ^= static_cast<uint64_t>(config.biome_count);
+    index = 0U;
+    while (index < config.biome_count && index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+            config.biomes[index].profile.surface_height));
+        signature = terrain_mix_u64(signature);
+        signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+            config.biomes[index].profile.height_variation));
+        signature = terrain_mix_u64(signature);
+        signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+            config.biomes[index].profile.topsoil_depth));
+        signature = terrain_mix_u64(signature);
+        signature ^= static_cast<uint64_t>(config.biomes[index].surface_block_id);
+        signature ^= static_cast<uint64_t>(config.biomes[index].subsurface_block_id)
+            << 8;
+        signature ^= static_cast<uint64_t>(config.biomes[index].deep_block_id)
+            << 16;
+        signature ^= static_cast<uint64_t>(config.biomes[index].shrub_chance_percent)
+            << 24;
+        signature ^= static_cast<uint64_t>(config.biomes[index].tree_chance_percent)
+            << 32;
+        signature = terrain_mix_u64(signature);
+        index += 1U;
+    }
+    signature ^= static_cast<uint64_t>(config.ore_rule_count) << 7;
+    index = 0U;
+    while (index < config.ore_rule_count && index < TERRAIN_MAX_ORE_RULES)
+    {
+        signature ^= static_cast<uint64_t>(config.ores[index].block_id)
+            + static_cast<uint64_t>(config.ores[index].enabled) * 17U
+            + static_cast<uint64_t>(config.ores[index].chance_percent) * 31U;
+        signature = terrain_mix_u64(signature);
+        index += 1U;
+    }
+    signature ^= static_cast<uint64_t>(config.enable_biome_transitions);
+    signature ^= static_cast<uint64_t>(config.enable_mountain_ridges) << 1;
+    signature ^= static_cast<uint64_t>(config.enable_erosion) << 2;
+    signature ^= static_cast<uint64_t>(config.fluids.enable_rivers) << 3;
+    signature ^= static_cast<uint64_t>(config.fluids.enable_lakes) << 4;
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+        config.fluids.river_noise_scale)) << 9;
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+        config.fluids.river_width)) << 13;
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+        config.fluids.lake_noise_scale)) << 17;
+    signature ^= static_cast<uint64_t>(config.fluids.lake_chance_percent)
+        << 21;
+    signature ^= static_cast<uint64_t>(config.underground_structures
+        .enable_ravines) << 5;
+    signature ^= static_cast<uint64_t>(config.underground_structures
+        .enable_cave_rooms) << 6;
+    signature ^= static_cast<uint64_t>(config.underground_structures
+        .ravine_chance_percent) << 22;
+    signature ^= static_cast<uint64_t>(config.underground_structures
+        .cave_room_chance_percent) << 26;
+    signature ^= static_cast<uint64_t>(config.underground_structures
+        .ravine_width) << 30;
+    signature ^= static_cast<uint64_t>(config.underground_structures
+        .ravine_depth) << 34;
+    signature ^= static_cast<uint64_t>(config.layers.enable_beaches) << 38;
+    signature ^= static_cast<uint64_t>(config.layers.enable_snow_caps) << 39;
+    signature ^= static_cast<uint64_t>(config.layers.beach_depth) << 40;
+    signature ^= static_cast<uint64_t>(config.layers.underwater_depth) << 44;
+    signature ^= static_cast<uint64_t>(config.layers.snow_cap_depth) << 48;
+    signature ^= static_cast<uint64_t>(static_cast<uint32_t>(
+        config.layers.snow_cap_minimum_height)) << 52;
+    signature ^= static_cast<uint64_t>(config.allow_cross_chunk_features)
+        << 7;
+    signature ^= static_cast<uint64_t>(config.cross_chunk_block_writer
+        != ft_nullptr) << 8;
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        config.biome_selector != ft_nullptr));
+    terrain_signature_add(signature,
+        reinterpret_cast<uintptr_t>(config.biome_selector_user_data));
+    index = 0U;
+    while (index < config.biome_count && index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.biomes[index].allow_shrubs));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.biomes[index].allow_trees));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.biomes[index].allow_snow_caps));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.biomes[index].allow_mountain_ridges));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.biomes[index].tree_template_count));
+        biome_template_index = 0U;
+        while (biome_template_index
+            < config.biomes[index].tree_template_count)
+        {
+            terrain_signature_add(signature, static_cast<uint64_t>(
+                config.biomes[index].tree_template_indices[
+                    biome_template_index]));
+            biome_template_index += 1U;
+        }
+        terrain_signature_add(signature,
+            reinterpret_cast<uintptr_t>(config.biomes[index].tree_template));
+        index += 1U;
+    }
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        config.tree_template_count));
+    index = 0U;
+    while (index < config.tree_template_count)
+    {
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.tree_templates[index].block_count));
+        terrain_signature_add(signature, reinterpret_cast<uintptr_t>(
+            config.tree_templates[index].blocks));
+        index += 1U;
+    }
+    index = 0U;
+    while (index < config.ore_rule_count && index < TERRAIN_MAX_ORE_RULES)
+    {
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            static_cast<uint32_t>(config.ores[index].minimum_height)));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            static_cast<uint32_t>(config.ores[index].maximum_height)));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.ores[index].vein_size));
+        index += 1U;
+    }
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        static_cast<uint32_t>(config.underground_structures.minimum_height)));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        static_cast<uint32_t>(config.underground_structures.maximum_height)));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        static_cast<uint32_t>(config.layers.beach_block_id)));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        static_cast<uint32_t>(config.layers.underwater_block_id)));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        static_cast<uint32_t>(config.layers.snow_cap_block_id)));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        static_cast<uint32_t>(config.mountain_ridge_scale)));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        config.mountain_ridge_strength));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        static_cast<uint32_t>(config.erosion_noise_scale)));
+    terrain_signature_add(signature, static_cast<uint64_t>(
+        config.erosion_strength));
+    terrain_signature_add(signature, static_cast<uint64_t>(config.feature_count));
+    index = 0U;
+    while (index < config.feature_count && index < TERRAIN_MAX_FEATURE_RULES)
+    {
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            static_cast<uint32_t>(config.features[index].biome_index)));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.features[index].chance_percent));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            static_cast<uint32_t>(config.features[index].minimum_height)));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            static_cast<uint32_t>(config.features[index].maximum_height)));
+        terrain_signature_add(signature, static_cast<uint64_t>(
+            config.features[index].requires_dry_land));
+        terrain_signature_add(signature,
+            reinterpret_cast<uintptr_t>(config.features[index].template_data));
+        index += 1U;
+    }
+    terrain_signature_add(signature,
+        reinterpret_cast<uintptr_t>(config.cross_chunk_block_writer_user_data));
+    signature = terrain_mix_u64(signature);
+    return (static_cast<uint32_t>(signature ^ (signature >> 32)));
 }
 
 static ft_bool terrain_template_is_valid(
@@ -908,27 +2466,216 @@ static ft_bool terrain_template_is_valid(
     return (FT_TRUE);
 }
 
+int32_t terrain_generation_config_add_tree_template(
+    terrain_generation_config &config,
+    const terrain_tree_template &tree_template,
+    uint32_t *template_index_out) noexcept
+{
+    uint32_t template_index;
+
+    if (terrain_config_require_initialised(config) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (template_index_out == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (terrain_template_is_valid(&tree_template) == FT_FALSE)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (config.tree_template_count >= TERRAIN_MAX_TREE_TEMPLATES)
+        return (FT_ERR_FULL);
+    template_index = config.tree_template_count;
+    config.tree_templates[template_index] = tree_template;
+    config.tree_template_count += 1U;
+    *template_index_out = template_index;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config_remove_tree_template(
+    terrain_generation_config &config, uint32_t template_index) noexcept
+{
+    uint32_t index;
+    uint32_t biome_index;
+    uint32_t biome_template_index;
+    uint32_t kept_count;
+    uint32_t old_template_index;
+
+    if (terrain_config_require_initialised(config) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (template_index >= config.tree_template_count)
+        return (FT_ERR_OUT_OF_RANGE);
+    biome_index = 0U;
+    while (biome_index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        if (config.biomes[biome_index].tree_template
+            == &config.tree_templates[template_index])
+            config.biomes[biome_index].tree_template = ft_nullptr;
+        kept_count = 0U;
+        biome_template_index = 0U;
+        while (biome_template_index
+            < config.biomes[biome_index].tree_template_count)
+        {
+            old_template_index = config.biomes[biome_index]
+                .tree_template_indices[biome_template_index];
+            if (old_template_index != template_index)
+            {
+                if (old_template_index > template_index)
+                    old_template_index -= 1U;
+                config.biomes[biome_index]
+                    .tree_template_indices[kept_count] = old_template_index;
+                kept_count += 1U;
+            }
+            biome_template_index += 1U;
+        }
+        config.biomes[biome_index].tree_template_count = kept_count;
+        biome_index += 1U;
+    }
+    index = template_index;
+    while (index + 1U < config.tree_template_count)
+    {
+        config.tree_templates[index] = config.tree_templates[index + 1U];
+        index += 1U;
+    }
+    config.tree_template_count -= 1U;
+    config.tree_templates[config.tree_template_count].blocks = ft_nullptr;
+    config.tree_templates[config.tree_template_count].block_count = 0U;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config_clear_tree_templates(
+    terrain_generation_config &config) noexcept
+{
+    uint32_t index;
+
+    if (terrain_config_require_initialised(config) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    config.tree_template_count = 0U;
+    index = 0U;
+    while (index < TERRAIN_MAX_TREE_TEMPLATES)
+    {
+        config.tree_templates[index].blocks = ft_nullptr;
+        config.tree_templates[index].block_count = 0U;
+        index += 1U;
+    }
+    index = 0U;
+    while (index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        config.biomes[index].tree_template_count = 0U;
+        config.biomes[index].tree_template = ft_nullptr;
+        index += 1U;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config_assign_tree_template_to_biome(
+    terrain_generation_config &config, uint32_t biome_index,
+    uint32_t template_index) noexcept
+{
+    uint32_t index;
+
+    if (terrain_config_require_initialised(config) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES
+        || template_index >= config.tree_template_count)
+        return (FT_ERR_OUT_OF_RANGE);
+    index = 0U;
+    while (index < config.biomes[biome_index].tree_template_count)
+    {
+        if (config.biomes[biome_index].tree_template_indices[index]
+            == template_index)
+            return (FT_ERR_ALREADY_EXISTS);
+        index += 1U;
+    }
+    if (index >= TERRAIN_MAX_BIOME_TREE_TEMPLATES)
+        return (FT_ERR_FULL);
+    config.biomes[biome_index].tree_template_indices[index] = template_index;
+    config.biomes[biome_index].tree_template_count += 1U;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_config_remove_tree_template_from_biome(
+    terrain_generation_config &config, uint32_t biome_index,
+    uint32_t template_index) noexcept
+{
+    uint32_t index;
+    uint32_t kept_count;
+
+    if (terrain_config_require_initialised(config) != FT_ERR_SUCCESS)
+        return (FT_ERR_NOT_INITIALISED);
+    if (biome_index >= TERRAIN_MAX_CUSTOM_BIOMES)
+        return (FT_ERR_OUT_OF_RANGE);
+    kept_count = 0U;
+    index = 0U;
+    while (index < config.biomes[biome_index].tree_template_count)
+    {
+        if (config.biomes[biome_index].tree_template_indices[index]
+            != template_index)
+        {
+            config.biomes[biome_index].tree_template_indices[kept_count]
+                = config.biomes[biome_index].tree_template_indices[index];
+            kept_count += 1U;
+        }
+        index += 1U;
+    }
+    if (kept_count == config.biomes[biome_index].tree_template_count)
+        return (FT_ERR_NOT_FOUND);
+    config.biomes[biome_index].tree_template_count = kept_count;
+    return (FT_ERR_SUCCESS);
+}
+
+const terrain_tree_template *terrain_generation_config_get_tree_template(
+    const terrain_generation_config &config, uint32_t template_index) noexcept
+{
+    if (terrain_config_require_initialised(config) != FT_ERR_SUCCESS)
+        return (ft_nullptr);
+    if (template_index >= config.tree_template_count)
+        return (ft_nullptr);
+    return (&config.tree_templates[template_index]);
+}
+
 ft_bool terrain_generation_config_is_valid(
     const terrain_generation_config &config) noexcept
 {
     uint32_t index;
+    uint32_t biome_template_index;
 
+    if (config.is_initialised() == FT_FALSE)
+        return (FT_FALSE);
     if (config.biome_count == 0U || config.biome_count > TERRAIN_MAX_CUSTOM_BIOMES
+        || config.tree_template_count > TERRAIN_MAX_TREE_TEMPLATES
         || config.feature_count > TERRAIN_MAX_FEATURE_RULES
+        || config.ore_rule_count > TERRAIN_MAX_ORE_RULES
         || config.large_noise_scale <= 0 || config.detail_noise_scale <= 0
         || config.detail_noise_percent < 0 || config.detail_noise_percent > 100
-        || config.water_chance_percent > 100)
+        || config.water_chance_percent > 100
+        || config.fluids.river_noise_scale <= 0
+        || config.fluids.lake_noise_scale <= 0
+        || config.fluids.river_width < 0
+        || config.fluids.lake_chance_percent > 100
+        || config.underground_structures.ravine_chance_percent > 100
+        || config.underground_structures.cave_room_chance_percent > 100
+        || config.underground_structures.minimum_height
+            > config.underground_structures.maximum_height
+        || config.mountain_ridge_scale <= 0
+        || config.erosion_noise_scale <= 0)
+        return (FT_FALSE);
+    index = 0U;
+    while (index < config.tree_template_count)
+    {
+        if (terrain_template_is_valid(&config.tree_templates[index])
+            == FT_FALSE)
+            return (FT_FALSE);
+        index += 1U;
+    }
+    if (config.layers.snow_cap_minimum_height < 0)
         return (FT_FALSE);
     index = 0U;
     while (index < config.biome_count)
     {
-        if (config.biomes[index].profile.height_variation < 0
+        if (config.biomes[index].is_initialised() == FT_FALSE
+            || config.biomes[index].profile.height_variation < 0
             || config.biomes[index].profile.topsoil_depth < 0
             || config.biomes[index].shrub_chance_percent > 100
             || config.biomes[index].tree_chance_percent > 100
-            || (config.biomes[index].allow_trees == FT_TRUE
-                && index > static_cast<uint32_t>(TERRAIN_BIOME_MOUNTAINS)
-                && config.biomes[index].tree_template == ft_nullptr)
+            || config.biomes[index].tree_template_count
+                > TERRAIN_MAX_BIOME_TREE_TEMPLATES
             || terrain_block_is_known(config.biomes[index].surface_block_id)
                 == FT_FALSE
             || terrain_block_is_known(config.biomes[index].subsurface_block_id)
@@ -938,12 +2685,40 @@ ft_bool terrain_generation_config_is_valid(
             || terrain_template_is_valid(config.biomes[index].tree_template)
                 == FT_FALSE)
             return (FT_FALSE);
+        biome_template_index = 0U;
+        while (biome_template_index
+            < config.biomes[index].tree_template_count)
+        {
+            if (config.biomes[index].tree_template_indices[
+                    biome_template_index] >= config.tree_template_count)
+                return (FT_FALSE);
+            biome_template_index += 1U;
+        }
         index += 1U;
     }
     index = 0U;
+    while (index < config.ore_rule_count)
+    {
+        if (config.ores[index].is_initialised() == FT_FALSE
+            || terrain_block_is_known(config.ores[index].block_id) == FT_FALSE
+            || config.ores[index].minimum_height
+                > config.ores[index].maximum_height
+            || config.ores[index].vein_size == 0U
+            || config.ores[index].chance_percent > 100U)
+            return (FT_FALSE);
+        index += 1U;
+    }
+    if (terrain_block_is_known(config.layers.beach_block_id) == FT_FALSE
+        || terrain_block_is_known(config.layers.underwater_block_id)
+            == FT_FALSE
+        || terrain_block_is_known(config.layers.snow_cap_block_id)
+            == FT_FALSE)
+        return (FT_FALSE);
+    index = 0U;
     while (index < config.feature_count)
     {
-        if (config.features[index].chance_percent > 100
+        if (config.features[index].is_initialised() == FT_FALSE
+            || config.features[index].chance_percent > 100
             || config.features[index].biome_index < -1
             || config.features[index].biome_index >=
                 static_cast<int32_t>(config.biome_count)
@@ -954,7 +2729,95 @@ ft_bool terrain_generation_config_is_valid(
             return (FT_FALSE);
         index += 1U;
     }
+    if (config.underground_structures.is_initialised() == FT_FALSE
+        || config.fluids.is_initialised() == FT_FALSE
+        || config.layers.is_initialised() == FT_FALSE)
+        return (FT_FALSE);
     return (FT_TRUE);
+}
+
+terrain_generation_context::terrain_generation_context() noexcept
+    : _config(), _configuration_signature(0U),
+      _initialised_state(FT_CLASS_STATE_UNINITIALISED)
+{
+    return ;
+}
+
+terrain_generation_context::~terrain_generation_context() noexcept
+{
+    this->destroy();
+    return ;
+}
+
+int32_t terrain_generation_context::initialize(
+    const terrain_generation_config &config) noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_ERR_INVALID_OPERATION);
+    if (terrain_generation_config_is_valid(config) == FT_FALSE)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (this->_config.initialize(config) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_ARGUMENT);
+    this->_configuration_signature = terrain_generation_config_signature(
+        this->_config);
+    this->_initialised_state = FT_CLASS_STATE_INITIALISED;
+    return (FT_ERR_SUCCESS);
+}
+
+int32_t terrain_generation_context::destroy() noexcept
+{
+    this->_config.destroy();
+    this->_configuration_signature = 0U;
+    this->_initialised_state = FT_CLASS_STATE_DESTROYED;
+    return (FT_ERR_SUCCESS);
+}
+
+uint32_t terrain_generation_context::move(
+    terrain_generation_context &other) noexcept
+{
+    int32_t error_code;
+
+    if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
+        return (FT_ERR_NOT_INITIALISED);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        this->destroy();
+    error_code = this->initialize(other._config);
+    if (error_code != FT_ERR_SUCCESS)
+        return (static_cast<uint32_t>(error_code));
+    other.destroy();
+    return (FT_ERR_SUCCESS);
+}
+
+ft_bool terrain_generation_context::is_initialised() const noexcept
+{
+    if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+        return (FT_TRUE);
+    return (FT_FALSE);
+}
+
+const terrain_generation_config &terrain_generation_context::config() const noexcept
+{
+    return (this->_config);
+}
+
+uint32_t terrain_generation_context::configuration_signature() const noexcept
+{
+    return (this->_configuration_signature);
+}
+
+int32_t terrain_generation_context_initialize(
+    terrain_generation_context &context,
+    const terrain_generation_config &config) noexcept
+{
+    return (context.initialize(config));
+}
+
+ft_bool terrain_generation_context_is_initialised(
+    const terrain_generation_context &context) noexcept
+{
+    return (context.is_initialised());
 }
 
 terrain_biome_profile terrain_get_biome_profile(terrain_biome biome) noexcept

@@ -4,6 +4,8 @@
 #ifdef GAME_USE_VOXEL_REGION_BACKEND
 
 #include "../../Modules/Voxel/voxel.hpp"
+#include "../../Modules/Game/game_voxel_region.hpp"
+#include <stdio.h>
 
 static int32_t test_terrain_surface_height(game_voxel_chunk &chunk,
     int32_t local_x, int32_t local_z) noexcept
@@ -279,7 +281,6 @@ FT_TEST(test_terrain_generate_chunk_uses_biome_profile)
     ft_bool left_height_in_range;
     ft_bool right_height_in_range;
     uint32_t block_id;
-
     FT_ASSERT_EQ(FT_ERR_SUCCESS, left_chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, right_chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(left_chunk, 0, 0,
@@ -401,6 +402,97 @@ FT_TEST(test_terrain_generate_chunk_accepts_random_seed_placeholder)
     return (1);
 }
 
+FT_TEST(test_terrain_generation_metadata_identifies_cached_chunk)
+{
+    game_voxel_chunk chunk;
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+    uint64_t seed_value;
+    uint32_t configuration_signature;
+    const game_voxel_generation_metadata *metadata;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
+    FT_ASSERT_EQ(FT_FALSE, chunk.has_generation_metadata());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(chunk, 32, 64,
+        "metadata-seed", config));
+    metadata = &chunk.get_generation_metadata();
+    seed_value = metadata->seed_value;
+    configuration_signature = terrain_generation_config_signature(config);
+    FT_ASSERT_EQ(FT_TRUE, chunk.has_generation_metadata());
+    FT_ASSERT_EQ(seed_value, metadata->seed_value);
+    FT_ASSERT_EQ(32, metadata->world_block_origin_x);
+    FT_ASSERT_EQ(64, metadata->world_block_origin_z);
+    FT_ASSERT_EQ(configuration_signature, metadata->configuration_signature);
+    FT_ASSERT_EQ(TERRAIN_STAGE_BASE_TERRAIN | TERRAIN_STAGE_CAVES
+        | TERRAIN_STAGE_FLUIDS | TERRAIN_STAGE_DECORATION
+        | TERRAIN_STAGE_STRUCTURES | TERRAIN_STAGE_ORES,
+        metadata->completed_stage_mask);
+    FT_ASSERT_EQ(FT_TRUE, chunk.generation_metadata_matches(seed_value, 32,
+        64, configuration_signature));
+    FT_ASSERT_EQ(FT_FALSE, chunk.generation_metadata_matches(seed_value, 33,
+        64, configuration_signature));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.write_block(0, 0, 0,
+        GAME_VOXEL_AIR_BLOCK));
+    FT_ASSERT_EQ(FT_FALSE, chunk.has_generation_metadata());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_terrain_generation_metadata_survives_chunk_serialization)
+{
+    game_voxel_chunk source_chunk;
+    game_voxel_chunk restored_chunk;
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+    ft_byte_buffer buffer;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, restored_chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(source_chunk, 48, 80,
+        "metadata-serialization", config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_chunk.serialize(buffer));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, restored_chunk.deserialize(buffer));
+    FT_ASSERT_EQ(FT_TRUE, restored_chunk.has_generation_metadata());
+    FT_ASSERT_EQ(source_chunk.get_generation_metadata().seed_value,
+        restored_chunk.get_generation_metadata().seed_value);
+    FT_ASSERT_EQ(source_chunk.get_generation_metadata().configuration_signature,
+        restored_chunk.get_generation_metadata().configuration_signature);
+    FT_ASSERT_EQ(source_chunk.get_generation_metadata().completed_stage_mask,
+        restored_chunk.get_generation_metadata().completed_stage_mask);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, restored_chunk.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_terrain_generation_routes_edge_features_into_neighbor_chunks)
+{
+    game_voxel_region region;
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+    const terrain_tree_template &tree_template =
+        terrain_small_oak_tree_template();
+    uint32_t block_id;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 40, 0, 0);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_TRUE, 6U, 100U);
+    config.set_biome_tree_template_override(0U, &tree_template);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(0, 0, "."));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk_in_region(region,
+        GAME_VOXEL_CHUNK_WIDTH, GAME_VOXEL_CHUNK_DEPTH, "edge-feature",
+        config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.read_block(
+        GAME_VOXEL_CHUNK_WIDTH - 1, 43,
+        GAME_VOXEL_CHUNK_DEPTH - 1, &block_id));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_OAK_LEAVES_BLOCK, block_id);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.destroy());
+    return (1);
+}
+
 static uint32_t test_custom_biome_selector(uint64_t, int32_t, int32_t,
     uint32_t biome_count, void *) noexcept
 {
@@ -410,23 +502,18 @@ static uint32_t test_custom_biome_selector(uint64_t, int32_t, int32_t,
 FT_TEST(test_terrain_generation_config_controls_custom_flat_biome_and_water)
 {
     game_voxel_chunk chunk;
-    terrain_generation_config config = terrain_default_generation_config();
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
     uint32_t block_id;
 
-    config.biome_count = 1U;
-    config.large_noise_scale = 1;
-    config.detail_noise_scale = 1;
-    config.detail_noise_percent = 0;
-    config.sea_level = 20;
-    config.water_chance_percent = 0U;
-    config.biomes[0].profile.surface_height = 40;
-    config.biomes[0].profile.height_variation = 0;
-    config.biomes[0].profile.topsoil_depth = 0;
-    config.biomes[0].surface_block_id = TERRAIN_GENERATOR_SAND_BLOCK;
-    config.biomes[0].subsurface_block_id = TERRAIN_GENERATOR_SAND_BLOCK;
-    config.biomes[0].deep_block_id = TERRAIN_GENERATOR_STONE_BLOCK;
-    config.biomes[0].allow_shrubs = FT_FALSE;
-    config.biomes[0].allow_trees = FT_FALSE;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    config.set_noise_scales(1, 1, 0);
+    config.set_sea_level(20);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 40, 0, 0);
+    config.set_biome_block_palette(0U, TERRAIN_GENERATOR_SAND_BLOCK,
+        TERRAIN_GENERATOR_SAND_BLOCK, TERRAIN_GENERATOR_STONE_BLOCK);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(chunk, 0, 0,
@@ -442,7 +529,8 @@ FT_TEST(test_terrain_generation_config_controls_custom_flat_biome_and_water)
 FT_TEST(test_terrain_generation_config_accepts_custom_feature_rule)
 {
     game_voxel_chunk chunk;
-    terrain_generation_config config = terrain_default_generation_config();
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
     const terrain_tree_template &cactus = terrain_small_cactus_tree_template();
     uint32_t block_id;
     int32_t cactus_count = 0;
@@ -450,15 +538,12 @@ FT_TEST(test_terrain_generation_config_accepts_custom_feature_rule)
     int32_t y;
     int32_t z;
 
-    config.feature_count = 1U;
-    config.features[0].template_data = &cactus;
-    config.features[0].biome_index = -1;
-    config.features[0].chance_percent = 100U;
-    config.features[0].minimum_height = 0;
-    config.features[0].maximum_height = GAME_VOXEL_CHUNK_HEIGHT;
-    config.features[0].requires_dry_land = FT_TRUE;
-    config.biomes[0].allow_trees = FT_FALSE;
-    config.biomes[0].allow_shrubs = FT_FALSE;
+    config.set_feature_count(1U);
+    config.features[0].set_template(&cactus);
+    config.features[0].set_biome_range(-1, 0, GAME_VOXEL_CHUNK_HEIGHT);
+    config.features[0].set_chance(100U);
+    config.features[0].set_requires_dry_land(FT_TRUE);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(chunk, 0, 0,
@@ -489,21 +574,18 @@ FT_TEST(test_terrain_generation_config_accepts_custom_feature_rule)
 FT_TEST(test_terrain_generation_config_can_select_custom_biome_slot)
 {
     game_voxel_chunk chunk;
-    terrain_generation_config config = terrain_default_generation_config();
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
     uint32_t block_id;
 
-    config.biome_count = 6U;
-    config.biome_selector = &test_custom_biome_selector;
-    config.biomes[5].profile.surface_height = 50;
-    config.biomes[5].profile.height_variation = 0;
-    config.biomes[5].profile.topsoil_depth = 0;
-    config.biomes[5].surface_block_id = TERRAIN_GENERATOR_CANYON_ROCK_BLOCK;
-    config.biomes[5].subsurface_block_id = TERRAIN_GENERATOR_CANYON_ROCK_BLOCK;
-    config.biomes[5].deep_block_id = TERRAIN_GENERATOR_SLATE_BLOCK;
-    config.biomes[5].allow_shrubs = FT_FALSE;
-    config.biomes[5].allow_trees = FT_FALSE;
-    config.sea_level = 0;
-    config.water_chance_percent = 0U;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(6U));
+    config.set_biome_selector(&test_custom_biome_selector, ft_nullptr);
+    config.set_biome_height_profile(5U, 50, 0, 0);
+    config.set_biome_block_palette(5U, TERRAIN_GENERATOR_CANYON_ROCK_BLOCK,
+        TERRAIN_GENERATOR_CANYON_ROCK_BLOCK, TERRAIN_GENERATOR_SLATE_BLOCK);
+    config.set_biome_decoration_policy(5U, FT_FALSE, FT_FALSE, 6U, 18U);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
     FT_ASSERT_EQ(5U, terrain_get_biome_index(config, 0, 0, "custom-biome"));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
@@ -515,14 +597,90 @@ FT_TEST(test_terrain_generation_config_can_select_custom_biome_slot)
     return (1);
 }
 
-FT_TEST(test_terrain_generation_rejects_custom_tree_without_template)
+FT_TEST(test_terrain_snow_caps_follow_height_not_biome_identity)
 {
-    terrain_generation_config config = terrain_default_generation_config();
+    game_voxel_chunk chunk;
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+    uint32_t block_id;
+    int32_t local_y;
+    ft_bool found_snow_cap;
 
-    config.biome_count = 6U;
-    config.biomes[5].allow_trees = FT_TRUE;
-    config.biomes[5].tree_template = ft_nullptr;
-    FT_ASSERT_EQ(FT_FALSE, terrain_generation_config_is_valid(config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 90, 0, 0);
+    config.set_biome_block_palette(0U, TERRAIN_GENERATOR_STONE_BLOCK,
+        TERRAIN_GENERATOR_STONE_BLOCK, TERRAIN_GENERATOR_STONE_BLOCK);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
+    config.layers.set_enabled(FT_TRUE, FT_TRUE);
+    config.layers.set_snowline(84);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(chunk, 0, 0,
+        "high-plains-snow", config));
+    found_snow_cap = FT_FALSE;
+    local_y = GAME_VOXEL_CHUNK_HEIGHT - 1;
+    while (local_y >= 0)
+    {
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.read_block(0, local_y, 0,
+            &block_id));
+        if (block_id != GAME_VOXEL_AIR_BLOCK)
+        {
+            if (block_id == TERRAIN_GENERATOR_SNOW_BLOCK)
+                found_snow_cap = FT_TRUE;
+            break ;
+        }
+        local_y -= 1;
+    }
+    FT_ASSERT_EQ(FT_TRUE, found_snow_cap);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_terrain_snow_caps_are_biome_configurable)
+{
+    game_voxel_chunk chunk;
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+    uint32_t block_id;
+    int32_t local_y;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 90, 0, 0);
+    config.set_biome_block_palette(0U, TERRAIN_GENERATOR_STONE_BLOCK,
+        TERRAIN_GENERATOR_STONE_BLOCK, TERRAIN_GENERATOR_STONE_BLOCK);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
+    config.set_biome_snow_caps_enabled(0U, FT_FALSE);
+    config.layers.set_enabled(FT_TRUE, FT_TRUE);
+    config.layers.set_snowline(84);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(chunk, 0, 0,
+        "no-biome-snow", config));
+    local_y = GAME_VOXEL_CHUNK_HEIGHT - 1;
+    while (local_y >= 0)
+    {
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.read_block(0, local_y, 0,
+            &block_id));
+        if (block_id != GAME_VOXEL_AIR_BLOCK)
+            break ;
+        local_y -= 1;
+    }
+    FT_ASSERT_NEQ(TERRAIN_GENERATOR_SNOW_BLOCK, block_id);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_terrain_generation_accepts_custom_biome_without_tree_template)
+{
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(6U));
+    config.biomes[5].set_decoration_policy(FT_FALSE, FT_TRUE, 6U, 18U);
+    config.set_biome_tree_template_override(5U, ft_nullptr);
+    FT_ASSERT_EQ(FT_TRUE, terrain_generation_config_is_valid(config));
     return (1);
 }
 
@@ -530,28 +688,23 @@ FT_TEST(test_terrain_generate_chunk_clears_previous_voxel_data)
 {
     game_voxel_chunk regenerated_chunk;
     game_voxel_chunk fresh_chunk;
-    terrain_generation_config high_config =
-        terrain_default_generation_config();
-    terrain_generation_config low_config = high_config;
+    terrain_generation_config high_config;
+    terrain_generation_config low_config;
+    terrain_default_generation_config(high_config);
+    low_config.initialize(high_config);
     uint32_t regenerated_block_id;
     uint32_t fresh_block_id;
     int32_t local_x;
     int32_t local_y;
     int32_t local_z;
 
-    high_config.biome_count = 1U;
-    high_config.sea_level = 0;
-    high_config.water_chance_percent = 0U;
-    high_config.biomes[0].profile.surface_height = 120;
-    high_config.biomes[0].profile.height_variation = 0;
-    high_config.biomes[0].profile.topsoil_depth = 0;
-    high_config.biomes[0].allow_shrubs = FT_FALSE;
-    high_config.biomes[0].allow_trees = FT_FALSE;
-    low_config.biomes[0].profile.surface_height = 20;
-    low_config.biomes[0].profile.height_variation = 0;
-    low_config.biomes[0].profile.topsoil_depth = 0;
-    low_config.biomes[0].allow_shrubs = FT_FALSE;
-    low_config.biomes[0].allow_trees = FT_FALSE;
+    high_config.set_biome_count(1U);
+    high_config.set_sea_level(0);
+    high_config.set_water_chance_percent(0U);
+    high_config.set_biome_height_profile(0U, 120, 0, 0);
+    high_config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
+    low_config.set_biome_height_profile(0U, 20, 0, 0);
+    low_config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, regenerated_chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fresh_chunk.initialize());
@@ -589,21 +742,19 @@ FT_TEST(test_terrain_generate_chunk_clears_previous_voxel_data)
 FT_TEST(test_terrain_generation_config_can_make_plains_uneven)
 {
     game_voxel_chunk chunk;
-    terrain_generation_config config = terrain_default_generation_config();
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
     int32_t x;
     int32_t z;
     int32_t surface_height;
     int32_t minimum_height = GAME_VOXEL_CHUNK_HEIGHT;
     int32_t maximum_height = 0;
 
-    config.biome_count = 1U;
-    config.sea_level = 0;
-    config.water_chance_percent = 0U;
-    config.biomes[0].profile.surface_height = 40;
-    config.biomes[0].profile.height_variation = 12;
-    config.biomes[0].profile.topsoil_depth = 0;
-    config.biomes[0].allow_shrubs = FT_FALSE;
-    config.biomes[0].allow_trees = FT_FALSE;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 40, 12, 0);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(chunk, 0, 0,
         "uneven-plains", config));
@@ -631,7 +782,8 @@ FT_TEST(test_terrain_generation_config_can_make_plains_uneven)
 FT_TEST(test_terrain_generation_config_rejects_invalid_ranges)
 {
     game_voxel_chunk chunk;
-    terrain_generation_config config = terrain_default_generation_config();
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
 
     config.biome_count = 0U;
     FT_ASSERT_EQ(FT_FALSE, terrain_generation_config_is_valid(config));
@@ -642,11 +794,194 @@ FT_TEST(test_terrain_generation_config_rejects_invalid_ranges)
     return (1);
 }
 
+FT_TEST(test_terrain_generation_config_lifecycle_and_mutator_methods)
+{
+    terrain_generation_config config;
+
+    FT_ASSERT_EQ(FT_FALSE, config.is_initialised());
+    FT_ASSERT_EQ(FT_ERR_NOT_INITIALISED, config.set_sea_level(68));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_default_generation_config(config));
+    FT_ASSERT_EQ(FT_TRUE, config.is_initialised());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(68));
+    FT_ASSERT_EQ(68, config.sea_level);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(55U));
+    FT_ASSERT_EQ(55U, config.water_chance_percent);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.destroy());
+    FT_ASSERT_EQ(FT_FALSE, config.is_initialised());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.destroy());
+    return (1);
+}
+
+FT_TEST(test_terrain_nested_config_classes_have_lifecycle_contracts)
+{
+    terrain_biome_definition biome;
+    terrain_feature_rule feature;
+    terrain_ore_rule ore;
+    terrain_underground_structure_config underground;
+    terrain_fluid_config fluids;
+    terrain_layer_config layers;
+    terrain_biome_profile profile;
+
+    profile.surface_height = 80;
+    profile.height_variation = 4;
+    profile.topsoil_depth = 3;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, biome.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, biome.set_profile(profile));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, biome.set_decoration_policy(
+        FT_TRUE, FT_TRUE, 5U, 10U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, feature.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, feature.set_chance(50U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ore.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ore.set_range(4, 80));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ore.set_vein(4U, 5U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, underground.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, underground.set_chances(3U, 2U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fluids.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fluids.set_lake_settings(48, 4U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, layers.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, layers.set_snowline(84));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, biome.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, feature.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ore.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, underground.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fluids.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, layers.destroy());
+    return (1);
+}
+
+FT_TEST(test_terrain_generation_context_freezes_world_policy)
+{
+    game_voxel_chunk chunk;
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+    terrain_generation_context context;
+    uint32_t block_id;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 90, 0, 0);
+    config.set_biome_block_palette(0U, TERRAIN_GENERATOR_STONE_BLOCK,
+        TERRAIN_GENERATOR_STONE_BLOCK, TERRAIN_GENERATOR_STONE_BLOCK);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
+    config.layers.enable_snow_caps = FT_TRUE;
+    config.layers.snow_cap_minimum_height = 84;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generation_context_initialize(
+        context, config));
+    config.set_biome_height_profile(0U, 20, 0, 0);
+    config.layers.set_enabled(FT_TRUE, FT_FALSE);
+    FT_ASSERT_EQ(FT_TRUE, terrain_generation_context_is_initialised(context));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk_with_context(chunk,
+        0, 0, "frozen-policy", context));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.read_block(0, 90, 0, &block_id));
+    FT_ASSERT_EQ(TERRAIN_GENERATOR_SNOW_BLOCK, block_id);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, chunk.destroy());
+    return (1);
+}
+
+FT_TEST(test_terrain_generation_config_file_round_trip)
+{
+    const char *file_path = "terrain_generation_config_test.bin";
+    terrain_generation_config source_config;
+    terrain_generation_config loaded_config;
+    terrain_default_generation_config(source_config);
+
+    source_config.set_sea_level(64);
+    source_config.set_noise_scales(48, source_config.detail_noise_scale,
+        source_config.detail_noise_percent);
+    source_config.layers.set_snowline(78);
+    source_config.underground_structures.ravine_width = 6U;
+    source_config.fluids.enable_lakes = FT_FALSE;
+    source_config.ores[0].set_enabled(FT_TRUE);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generation_config_save_file(
+        file_path, source_config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generation_config_load_file(
+        file_path, loaded_config));
+    FT_ASSERT_EQ(source_config.sea_level, loaded_config.sea_level);
+    FT_ASSERT_EQ(source_config.large_noise_scale,
+        loaded_config.large_noise_scale);
+    FT_ASSERT_EQ(source_config.layers.snow_cap_minimum_height,
+        loaded_config.layers.snow_cap_minimum_height);
+    FT_ASSERT_EQ(source_config.biomes[0].allow_snow_caps,
+        loaded_config.biomes[0].allow_snow_caps);
+    FT_ASSERT_EQ(source_config.biomes[0].allow_mountain_ridges,
+        loaded_config.biomes[0].allow_mountain_ridges);
+    FT_ASSERT_EQ(source_config.underground_structures.ravine_width,
+        loaded_config.underground_structures.ravine_width);
+    FT_ASSERT_EQ(source_config.fluids.enable_lakes,
+        loaded_config.fluids.enable_lakes);
+    FT_ASSERT_EQ(source_config.ores[0].enabled,
+        loaded_config.ores[0].enabled);
+    FT_ASSERT_EQ(source_config.biome_count, loaded_config.biome_count);
+    FT_ASSERT_EQ(source_config.biomes[0].profile.surface_height,
+        loaded_config.biomes[0].profile.surface_height);
+    FT_ASSERT_EQ(0, std::remove(file_path));
+    return (1);
+}
+
+FT_TEST(test_terrain_ore_rules_are_disabled_by_default_and_configurable)
+{
+    game_voxel_chunk disabled_chunk;
+    game_voxel_chunk enabled_chunk;
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
+    uint32_t block_id;
+    int32_t coal_count;
+    int32_t x;
+    int32_t y;
+    int32_t z;
+
+    FT_ASSERT_EQ(FT_FALSE, config.ores[0].enabled);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_sea_level(0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 100, 0, 0);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_FALSE, 6U, 18U);
+    config.set_ore_rule_count(1U);
+    config.ores[0].set_range(8, 90);
+    config.ores[0].set_vein(config.ores[0].vein_size, 100U);
+    config.ores[0].set_enabled(FT_TRUE);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, disabled_chunk.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, enabled_chunk.initialize());
+    config.ores[0].set_enabled(FT_FALSE);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(disabled_chunk, 0, 0,
+        "ore-config", config));
+    config.ores[0].set_enabled(FT_TRUE);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(enabled_chunk, 0, 0,
+        "ore-config", config));
+    coal_count = 0;
+    z = 0;
+    while (z < GAME_VOXEL_CHUNK_DEPTH)
+    {
+        y = 0;
+        while (y < GAME_VOXEL_CHUNK_HEIGHT)
+        {
+            x = 0;
+            while (x < GAME_VOXEL_CHUNK_WIDTH)
+            {
+                FT_ASSERT_EQ(FT_ERR_SUCCESS, enabled_chunk.read_block(x, y, z,
+                    &block_id));
+                if (block_id == TERRAIN_GENERATOR_COAL_ORE_BLOCK)
+                    coal_count += 1;
+                x += 1;
+            }
+            y += 1;
+        }
+        z += 1;
+    }
+    FT_ASSERT_NEQ(0, coal_count);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, enabled_chunk.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, disabled_chunk.destroy());
+    return (1);
+}
+
 FT_TEST(test_terrain_generation_config_controls_tree_and_water_density)
 {
     game_voxel_chunk dry_chunk;
     game_voxel_chunk wet_chunk;
-    terrain_generation_config config = terrain_default_generation_config();
+    terrain_generation_config config;
+    terrain_default_generation_config(config);
     const terrain_tree_template &oak = terrain_small_oak_tree_template();
     uint32_t block_id;
     int32_t tree_count = 0;
@@ -656,21 +991,17 @@ FT_TEST(test_terrain_generation_config_controls_tree_and_water_density)
     int32_t y;
     int32_t z;
 
-    config.biome_count = 1U;
-    config.sea_level = 50;
-    config.water_chance_percent = 0U;
-    config.biomes[0].profile.surface_height = 40;
-    config.biomes[0].profile.height_variation = 0;
-    config.biomes[0].profile.topsoil_depth = 0;
-    config.biomes[0].allow_shrubs = FT_FALSE;
-    config.biomes[0].allow_trees = FT_TRUE;
-    config.biomes[0].tree_chance_percent = 0U;
-    config.biomes[0].tree_template = &oak;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_biome_count(1U));
+    config.set_sea_level(50);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, config.set_water_chance_percent(0U));
+    config.set_biome_height_profile(0U, 40, 0, 0);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_TRUE, 6U, 0U);
+    config.set_biome_tree_template_override(0U, &oak);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dry_chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(dry_chunk, 0, 0,
         "density-config", config));
-    config.water_chance_percent = 100U;
-    config.biomes[0].tree_chance_percent = 100U;
+    config.set_water_chance_percent(100U);
+    config.set_biome_decoration_policy(0U, FT_FALSE, FT_TRUE, 6U, 100U);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, wet_chunk.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generate_chunk(wet_chunk, 0, 0,
         "density-config", config));
