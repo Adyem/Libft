@@ -85,7 +85,7 @@ void test_sound_device_impl::stop(void)
 static sigjmp_buf g_sound_device_jump_buffer;
 static volatile sig_atomic_t g_sound_device_signal;
 
-static void sound_device_sigabrt_handler(int32_t signal_number)
+static void __attribute__((unused)) sound_device_sigabrt_handler(int32_t signal_number)
 {
     g_sound_device_signal = signal_number;
     siglongjmp(g_sound_device_jump_buffer, 1);

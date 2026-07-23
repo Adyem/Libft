@@ -419,8 +419,11 @@ int32_t ft_future<ValueType>::move(ft_future<ValueType> &other)
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_future::move",
-            "source object is uninitialised");
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+            (void)this->destroy();
+        this->_promise = ft_nullptr;
+        (void)this->_shared_promise.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
@@ -892,8 +895,11 @@ inline int32_t ft_future<void>::move(ft_future<void> &other)
 
     if (other._initialised_state == FT_CLASS_STATE_UNINITIALISED)
     {
-        errno_abort_lifecycle(other._initialised_state, "ft_future<void>::move",
-            "source object is uninitialised");
+        if (this->_initialised_state == FT_CLASS_STATE_INITIALISED)
+            (void)this->destroy();
+        this->_promise = ft_nullptr;
+        (void)this->_shared_promise.destroy();
+        this->_initialised_state = FT_CLASS_STATE_DESTROYED;
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)

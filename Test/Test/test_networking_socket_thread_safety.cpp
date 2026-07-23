@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "../../Modules/Basic/class_nullptr.hpp"
+#include "../../Modules/Basic/basic.hpp"
 #include "../../Modules/Basic/limits.hpp"
 #include "../../Modules/Errno/errno.hpp"
 #include "../../Modules/PThread/mutex.hpp"
@@ -35,7 +36,7 @@ static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = 
 # include <unistd.h>
 # define CLOSE_SOCKET close
 typedef int socket_file_descriptor_type;
-static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = static_cast<socket_file_descriptor_type>(-1);
+static const socket_file_descriptor_type NETWORKING_INVALID_SOCKET_DESCRIPTOR = FT_SOCKET_DESCRIPTOR_CAST(-1);
 #endif
 
 static ft_bool networking_socket_is_valid_file_descriptor(socket_file_descriptor_type file_descriptor)

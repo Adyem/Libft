@@ -362,7 +362,7 @@ int32_t ft_websocket_client::connect(const char *host, uint16_t port, const char
         return (FT_ERR_INVALID_OPERATION);
     }
     result = nw_connect(this->_socket.get(), address_info->ai_addr,
-            static_cast<socklen_t>(address_info->ai_addrlen));
+            FT_NETWORKING_SOCKLEN_CAST(address_info->ai_addrlen));
     freeaddrinfo(address_info);
     if (result < 0)
     {

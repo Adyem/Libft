@@ -3,6 +3,7 @@
 #include "../../Modules/PThread/pthread.hpp"
 #include "../../Modules/System_utils/test_system_utils_runner.hpp"
 #include "../../Modules/Errno/errno.hpp"
+#include "../../Modules/Basic/basic.hpp"
 #include <chrono>
 
 #include "../../Modules/Basic/class_nullptr.hpp"
@@ -92,7 +93,7 @@ FT_TEST(test_game_event_add_duration_thread_safe)
     {
         timeout_ms = 5000;
         join_result = pt_thread_timed_join(threads[index], ft_nullptr,
-                static_cast<long>(timeout_ms));
+                FT_TIMEOUT_LONG_CAST(timeout_ms));
         if (join_result != 0 && test_failed == 0)
         {
             (void)pt_thread_detach(threads[index]);
@@ -201,7 +202,7 @@ FT_TEST(test_game_event_setters_thread_safe)
     {
         timeout_ms = 5000;
         join_result = pt_thread_timed_join(threads[index], ft_nullptr,
-                static_cast<long>(timeout_ms));
+                FT_TIMEOUT_LONG_CAST(timeout_ms));
         if (join_result != 0 && test_failed == 0)
         {
             (void)pt_thread_detach(threads[index]);

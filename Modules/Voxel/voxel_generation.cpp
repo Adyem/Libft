@@ -21,6 +21,7 @@ static const uint64_t TERRAIN_CAVE_PRIMARY_SALT = UINT64_C(0x7C3A91E2D4B8560F);
 static const uint64_t TERRAIN_CAVE_DETAIL_SALT = UINT64_C(0x1D6F80B3C9274A55);
 static const int32_t TERRAIN_CAVE_PRIMARY_SCALE = 24;
 static const int32_t TERRAIN_CAVE_DETAIL_SCALE = 9;
+static const int32_t TERRAIN_BEDROCK_FLOOR_Y = 0;
 static const int32_t TERRAIN_CAVE_SURFACE_MARGIN = 7;
 static const int32_t TERRAIN_COLUMN_CACHE_COUNT =
     GAME_VOXEL_CHUNK_WIDTH * GAME_VOXEL_CHUNK_DEPTH;
@@ -777,14 +778,17 @@ static int32_t terrain_generate_chunk_snapshot(game_voxel_chunk &chunk,
             local_y = 0;
             while (local_y <= column_height)
             {
-                if (terrain_should_carve_cave(seed_value, world_block_x,
+                if (local_y > TERRAIN_BEDROCK_FLOOR_Y
+                    && terrain_should_carve_cave(seed_value, world_block_x,
                         local_y, world_block_z, column_height, config)
                     == FT_TRUE)
                 {
                     local_y += 1;
                     continue ;
                 }
-                if (local_y == column_height)
+                if (local_y <= TERRAIN_BEDROCK_FLOOR_Y)
+                    block_id = TERRAIN_GENERATOR_BEDROCK_BLOCK;
+                else if (local_y == column_height)
                     block_id = surface_block_id;
                 else if (local_y >= column_height - biome_profile.topsoil_depth)
                     block_id = subsurface_block_id;

@@ -10,7 +10,7 @@
 static volatile sig_atomic_t g_game_destroyed_signal_caught = 0;
 static sigjmp_buf g_game_destroyed_jump_buffer;
 
-static void game_destroyed_signal_handler(int signal_value)
+static void __attribute__((unused)) game_destroyed_signal_handler(int signal_value)
 {
     g_game_destroyed_signal_caught = signal_value;
     siglongjmp(g_game_destroyed_jump_buffer, 1);

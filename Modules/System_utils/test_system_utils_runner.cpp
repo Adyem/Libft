@@ -14,12 +14,14 @@
 #include "../API/api.hpp"
 #include "../Observability/observability_task_scheduler_bridge.hpp"
 #include "../Threading/task_scheduler_tracing.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <exception>
+#include <csignal>
 #include <fcntl.h>
 #if !defined(_WIN32) && !defined(_WIN64)
 # include <sys/ioctl.h>
@@ -397,6 +399,44 @@ static int32_t execute_test_function(const s_test_case *test,
 {
     int32_t reset_error;
     int32_t result;
+
+    /*
+     * Tests which exercise abort behaviour install temporary signal handlers.
+     * Reset the process-wide signal state before each test so an incomplete
+     * handler cleanup cannot make a later expected abort terminate the runner.
+     */
+    std::signal(SIGABRT, SIG_DFL);
+#if defined(SIGINT)
+    std::signal(SIGINT, SIG_DFL);
+#endif
+#if defined(SIGTERM)
+    std::signal(SIGTERM, SIG_DFL);
+#endif
+#if defined(SIGHUP)
+    std::signal(SIGHUP, SIG_DFL);
+#endif
+#if defined(SIGIOT) && SIGIOT != SIGABRT
+    std::signal(SIGIOT, SIG_DFL);
+#endif
+    sigset_t unblocked_signals;
+    sigemptyset(&unblocked_signals);
+    sigaddset(&unblocked_signals, SIGABRT);
+#if defined(SIGINT)
+    sigaddset(&unblocked_signals, SIGINT);
+#endif
+#if defined(SIGTERM)
+    sigaddset(&unblocked_signals, SIGTERM);
+#endif
+#if defined(SIGHUP)
+    sigaddset(&unblocked_signals, SIGHUP);
+#endif
+#if defined(SIGIOT) && SIGIOT != SIGABRT
+    sigaddset(&unblocked_signals, SIGIOT);
+#endif
+    (void)pthread_sigmask(SIG_UNBLOCK, &unblocked_signals, nullptr);
+    su_service_clear_signal_handlers();
+    su_service_force_no_fork(FT_FALSE);
+
     if (dup2(null_descriptor, STDOUT_FILENO) < 0)
         return (0);
     if (dup2(null_descriptor, STDERR_FILENO) < 0)

@@ -9,7 +9,6 @@
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <cstring>
-#include <cstdio>
 #include <cerrno>
 #include <new>
 #include <zlib.h>

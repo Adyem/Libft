@@ -57,7 +57,15 @@ int32_t cp_receive_memory(int32_t socket_file_descriptor,
         return (operation_error);
     operation_error = cmp_cross_process_open_mapping(message, &mapping);
     if (operation_error != FT_ERR_SUCCESS)
+    {
+        if (errno == ENOENT || operation_error == FT_ERR_FILE_OPEN_FAILED
+            || operation_error == FT_ERR_IO)
+        {
+            errno = ENOENT;
+            return (FT_ERR_IO);
+        }
         return (operation_error);
+    }
     operation_error = cmp_cross_process_lock_mutex(message, &mapping,
             &mutex_state);
     if (operation_error != FT_ERR_SUCCESS)

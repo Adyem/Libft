@@ -766,7 +766,7 @@ FT_TEST(test_ft_decompress_stream_uses_finish_flush_at_end)
     compressed_size = sizeof(compressed_buffer);
     zlib_status = compress2(compressed_buffer, &compressed_size,
             reinterpret_cast<const Bytef *>(payload),
-            static_cast<uLong>(ft_strlen_size_t(payload)), Z_BEST_COMPRESSION);
+            FT_ZLIB_ULONG_CAST(ft_strlen_size_t(payload)), Z_BEST_COMPRESSION);
     FT_ASSERT_EQ(Z_OK, zlib_status);
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
@@ -833,7 +833,7 @@ FT_TEST(test_ft_decompress_stream_reports_truncated_input)
     compressed_size = sizeof(compressed_buffer);
     zlib_status = compress2(compressed_buffer, &compressed_size,
             reinterpret_cast<const Bytef *>(payload),
-            static_cast<uLong>(ft_strlen_size_t(payload)), Z_BEST_COMPRESSION);
+            FT_ZLIB_ULONG_CAST(ft_strlen_size_t(payload)), Z_BEST_COMPRESSION);
     FT_ASSERT_EQ(Z_OK, zlib_status);
     FT_ASSERT(compressed_size > 1);
     FT_ASSERT_EQ(0, pipe(input_pipe));

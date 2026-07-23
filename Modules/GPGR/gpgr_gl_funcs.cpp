@@ -113,6 +113,13 @@ static ft_bool gpgr_load_symbol(Fn &symbol, const char *name)
 ft_bool gpgr_load_gl_functions() noexcept
 {
     gpgr_clear_gl_functions();
+#if defined(_WIN32)
+    if (wglGetCurrentContext() == nullptr)
+        return (FT_FALSE);
+#elif !defined(__APPLE__)
+    if (glXGetCurrentContext() == nullptr)
+        return (FT_FALSE);
+#endif
     GPGR_LOAD(glGenVertexArrays);
     GPGR_LOAD(glBindVertexArray);
     GPGR_LOAD(glDeleteVertexArrays);

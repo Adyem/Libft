@@ -35,6 +35,8 @@ namespace
     {
         char fallback_shared_memory_name[256];
 
+        if (::shm_unlink(shared_memory_name) == 0)
+            return (0);
         if (::unlink(shared_memory_name) == 0)
             return (0);
         if (errno == ENOENT || errno == EROFS)
