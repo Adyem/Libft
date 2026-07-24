@@ -466,6 +466,44 @@ FT_TEST(test_terrain_generation_metadata_survives_chunk_serialization)
     return (1);
 }
 
+FT_TEST(test_terrain_templates_are_owned_and_signature_is_content_based)
+{
+    terrain_generation_config first_config;
+    terrain_generation_config *loaded_config;
+    ft_byte_buffer buffer;
+    uint32_t first_signature;
+    terrain_tree_template_block first_blocks[2];
+    terrain_tree_template first_template;
+
+    first_blocks[0] = {0, 0, 0, TERRAIN_GENERATOR_OAK_LOG_BLOCK};
+    first_blocks[1] = {0, 1, 0, TERRAIN_GENERATOR_OAK_LEAVES_BLOCK};
+    first_template.blocks = first_blocks;
+    first_template.block_count = 2U;
+    loaded_config = new terrain_generation_config();
+    FT_ASSERT_NEQ(ft_nullptr, loaded_config);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_default_generation_config(
+        first_config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_config
+        .set_biome_tree_template_override(0U, &first_template));
+    first_signature = terrain_generation_config_signature(first_config);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generation_config_serialize(
+        first_config, buffer));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, terrain_generation_config_deserialize(
+        *loaded_config, buffer));
+    FT_ASSERT_EQ(first_config.tree_template_count,
+        loaded_config->tree_template_count);
+    FT_ASSERT_EQ(first_config.biomes[0].tree_template->block_count,
+        loaded_config->biomes[0].tree_template->block_count);
+    FT_ASSERT_EQ(first_config.biomes[0].tree_template->blocks[0].block_id,
+        loaded_config->biomes[0].tree_template->blocks[0].block_id);
+    FT_ASSERT_EQ(first_signature,
+        terrain_generation_config_signature(*loaded_config));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.destroy());
+    delete loaded_config;
+    return (1);
+}
+
 FT_TEST(test_terrain_generation_routes_edge_features_into_neighbor_chunks)
 {
     game_voxel_region region;

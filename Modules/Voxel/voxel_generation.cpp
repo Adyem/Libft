@@ -598,7 +598,8 @@ static int32_t terrain_place_ore_vein(game_voxel_chunk &chunk,
                 &block_id);
             if (error_code != FT_ERR_SUCCESS)
                 return (error_code);
-            if (block_id == TERRAIN_GENERATOR_STONE_BLOCK)
+            if (terrain_block_is_solid(block_id) == FT_TRUE
+                && block_id != TERRAIN_GENERATOR_BEDROCK_BLOCK)
             {
                 error_code = chunk.write_block(target_x, target_y, target_z,
                     ore_rule.block_id);
@@ -643,7 +644,8 @@ static int32_t terrain_generate_ores(game_voxel_chunk &chunk,
                             local_z, &block_id);
                         if (error_code != FT_ERR_SUCCESS)
                             return (error_code);
-                        if (block_id == TERRAIN_GENERATOR_STONE_BLOCK
+                        if (terrain_block_is_solid(block_id) == FT_TRUE
+                            && block_id != TERRAIN_GENERATOR_BEDROCK_BLOCK
                             && terrain_should_place_ore(seed_value,
                                 world_block_origin_x + local_x, local_y,
                                 world_block_origin_z + local_z,
@@ -1044,9 +1046,9 @@ int32_t terrain_generate_chunk_in_region_with_context(
 
     if (context.is_initialised() == FT_FALSE)
         return (FT_ERR_INVALID_OPERATION);
-    error_code = region.load_chunk(world_block_origin_x
-        / GAME_VOXEL_CHUNK_WIDTH, world_block_origin_z
-        / GAME_VOXEL_CHUNK_DEPTH, &chunk);
+    error_code = region.load_chunk(terrain_floor_div(world_block_origin_x,
+            GAME_VOXEL_CHUNK_WIDTH), terrain_floor_div(world_block_origin_z,
+            GAME_VOXEL_CHUNK_DEPTH), &chunk);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     if (region_config.initialize(context.config()) != FT_ERR_SUCCESS)
@@ -1059,8 +1061,8 @@ int32_t terrain_generate_chunk_in_region_with_context(
         != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_ARGUMENT);
     return (terrain_generate_chunk_snapshot(*chunk, world_block_origin_x,
-        world_block_origin_z, seed_string, region_config, FT_TRUE, FT_TRUE,
-        context.configuration_signature()));
+        world_block_origin_z, seed_string, region_config, FT_TRUE, FT_FALSE,
+        0U));
 }
 
 #endif

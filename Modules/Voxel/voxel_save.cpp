@@ -7,7 +7,7 @@
 #include "../Errno/errno.hpp"
 
 static const uint32_t TERRAIN_SAVE_MAGIC = UINT32_C(0x54434F4E);
-static const uint32_t TERRAIN_SAVE_VERSION = 2U;
+static const uint32_t TERRAIN_SAVE_VERSION = 3U;
 
 static int32_t terrain_save_append_i32(ft_byte_buffer &buffer,
     int32_t value) noexcept
@@ -27,6 +27,81 @@ static int32_t terrain_save_read_i32(ft_byte_buffer &buffer,
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     *value_out = static_cast<int32_t>(value);
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t terrain_save_append_template(ft_byte_buffer &buffer,
+    const terrain_tree_template *tree_template) noexcept
+{
+    uint32_t index;
+    int32_t error_code;
+
+    if (tree_template == ft_nullptr
+        || tree_template->block_count > TERRAIN_MAX_TREE_TEMPLATE_BLOCKS
+        || (tree_template->block_count != 0U
+            && tree_template->blocks == ft_nullptr))
+        return (FT_ERR_INVALID_ARGUMENT);
+    error_code = buffer.append_u32_le(tree_template->block_count);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    index = 0U;
+    while (index < tree_template->block_count)
+    {
+        error_code = terrain_save_append_i32(buffer,
+            tree_template->blocks[index].offset_x);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_append_i32(buffer,
+            tree_template->blocks[index].offset_y);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_append_i32(buffer,
+            tree_template->blocks[index].offset_z);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.append_u32_le(
+            tree_template->blocks[index].block_id);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        index += 1U;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+static int32_t terrain_save_read_template(ft_byte_buffer &buffer,
+    terrain_tree_template_block *blocks,
+    terrain_tree_template *tree_template) noexcept
+{
+    uint32_t block_count;
+    uint32_t index;
+    int32_t error_code;
+
+    if (blocks == ft_nullptr || tree_template == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    error_code = buffer.read_u32_le(&block_count);
+    if (error_code != FT_ERR_SUCCESS
+        || block_count > TERRAIN_MAX_TREE_TEMPLATE_BLOCKS)
+        return (FT_ERR_INVALID_ARGUMENT);
+    index = 0U;
+    while (index < block_count)
+    {
+        error_code = terrain_save_read_i32(buffer, &blocks[index].offset_x);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_read_i32(buffer, &blocks[index].offset_y);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_read_i32(buffer, &blocks[index].offset_z);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.read_u32_le(&blocks[index].block_id);
+        if (error_code != FT_ERR_SUCCESS
+            || terrain_block_is_known(blocks[index].block_id) == FT_FALSE)
+            return (FT_ERR_INVALID_ARGUMENT);
+        index += 1U;
+    }
+    tree_template->blocks = blocks;
+    tree_template->block_count = block_count;
     return (FT_ERR_SUCCESS);
 }
 
@@ -255,6 +330,102 @@ int32_t terrain_generation_config_serialize(
             return (error_code);
         index += 1U;
     }
+    error_code = buffer.append_u32_le(config.tree_template_count);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    index = 0U;
+    while (index < config.tree_template_count)
+    {
+        error_code = terrain_save_append_template(buffer,
+            &config.tree_templates[index]);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        index += 1U;
+    }
+    index = 0U;
+    while (index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        uint32_t override_index;
+
+        error_code = buffer.append_u32_le(
+            config.biomes[index].tree_template_count);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        uint32_t template_index;
+        template_index = 0U;
+        while (template_index < config.biomes[index].tree_template_count)
+        {
+            error_code = buffer.append_u32_le(config.biomes[index]
+                .tree_template_indices[template_index]);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            template_index += 1U;
+        }
+        override_index = TERRAIN_MAX_TREE_TEMPLATES + 1U;
+        template_index = 0U;
+        while (template_index < config.tree_template_count)
+        {
+            if (config.biomes[index].tree_template
+                == &config.tree_templates[template_index])
+            {
+                override_index = template_index;
+                break ;
+            }
+            template_index += 1U;
+        }
+        if (config.biomes[index].tree_template != ft_nullptr
+            && override_index == TERRAIN_MAX_TREE_TEMPLATES + 1U)
+            override_index = TERRAIN_MAX_TREE_TEMPLATES;
+        error_code = buffer.append_u32_le(override_index);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        if (config.biomes[index].tree_template != ft_nullptr
+            && override_index == TERRAIN_MAX_TREE_TEMPLATES)
+        {
+            error_code = terrain_save_append_template(buffer,
+                config.biomes[index].tree_template);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+        }
+        index += 1U;
+    }
+    error_code = buffer.append_u32_le(config.feature_count);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    index = 0U;
+    while (index < config.feature_count)
+    {
+        error_code = terrain_save_append_i32(buffer,
+            config.features[index].biome_index);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_append_i32(buffer,
+            config.features[index].minimum_height);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_append_i32(buffer,
+            config.features[index].maximum_height);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.append_u32_le(config.features[index].chance_percent);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.append_u8(config.features[index].requires_dry_land);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.append_u8(config.features[index].template_data
+            != ft_nullptr);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        if (config.features[index].template_data != ft_nullptr)
+        {
+            error_code = terrain_save_append_template(buffer,
+                config.features[index].template_data);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+        }
+        index += 1U;
+    }
     error_code = buffer.append_u32_le(config.ore_rule_count);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
@@ -436,15 +607,134 @@ int32_t terrain_generation_config_deserialize(
             return (error_code);
         index += 1U;
     }
-    index = static_cast<uint32_t>(TERRAIN_BIOME_MOUNTAINS) + 1U;
-    while (index < loaded_config.biome_count)
+    error_code = terrain_generation_config_clear_tree_templates(loaded_config);
+    if (error_code != FT_ERR_SUCCESS)
+        return (error_code);
+    error_code = buffer.read_u32_le(&loaded_config.tree_template_count);
+    if (error_code != FT_ERR_SUCCESS
+        || loaded_config.tree_template_count > TERRAIN_MAX_TREE_TEMPLATES)
+        return (FT_ERR_INVALID_ARGUMENT);
+    index = 0U;
+    while (index < loaded_config.tree_template_count)
     {
-        /* Custom decoration templates are runtime bindings, not addresses
-         * that can be restored from a world file. */
-        loaded_config.biomes[index].set_decoration_policy(
-            loaded_config.biomes[index].allow_shrubs, FT_FALSE,
-            loaded_config.biomes[index].shrub_chance_percent,
-            loaded_config.biomes[index].tree_chance_percent);
+        error_code = terrain_save_read_template(buffer,
+            loaded_config.tree_template_blocks[index],
+            &loaded_config.tree_templates[index]);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        index += 1U;
+    }
+    index = 0U;
+    while (index < TERRAIN_MAX_CUSTOM_BIOMES)
+    {
+        uint32_t template_count;
+        uint32_t template_index;
+        uint32_t override_index;
+        terrain_tree_template_block override_blocks[
+            TERRAIN_MAX_TREE_TEMPLATE_BLOCKS];
+        terrain_tree_template override_template;
+
+        error_code = buffer.read_u32_le(&template_count);
+        if (error_code != FT_ERR_SUCCESS
+            || template_count > TERRAIN_MAX_BIOME_TREE_TEMPLATES)
+            return (FT_ERR_INVALID_ARGUMENT);
+        loaded_config.biomes[index].tree_template_count = template_count;
+        template_index = 0U;
+        while (template_index < template_count)
+        {
+            error_code = buffer.read_u32_le(&loaded_config.biomes[index]
+                .tree_template_indices[template_index]);
+            if (error_code != FT_ERR_SUCCESS
+                || loaded_config.biomes[index].tree_template_indices[
+                    template_index] >= loaded_config.tree_template_count)
+                return (FT_ERR_INVALID_ARGUMENT);
+            template_index += 1U;
+        }
+        error_code = buffer.read_u32_le(&override_index);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        loaded_config.biomes[index].tree_template = ft_nullptr;
+        if (override_index < loaded_config.tree_template_count)
+            loaded_config.biomes[index].tree_template =
+                &loaded_config.tree_templates[override_index];
+        else if (override_index == TERRAIN_MAX_TREE_TEMPLATES)
+        {
+            error_code = terrain_save_read_template(buffer, override_blocks,
+                &override_template);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            error_code = loaded_config.biomes[index]
+                .set_tree_template_override(&override_template);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+        }
+        index += 1U;
+    }
+    error_code = buffer.read_u32_le(&loaded_config.feature_count);
+    if (error_code != FT_ERR_SUCCESS
+        || loaded_config.feature_count > TERRAIN_MAX_FEATURE_RULES)
+        return (FT_ERR_INVALID_ARGUMENT);
+    index = 0U;
+    while (index < loaded_config.feature_count)
+    {
+        int32_t feature_biome;
+        int32_t feature_minimum;
+        int32_t feature_maximum;
+        uint32_t feature_chance;
+        uint8_t feature_dry_land;
+        uint8_t has_template;
+        terrain_tree_template_block feature_blocks[
+            TERRAIN_MAX_TREE_TEMPLATE_BLOCKS];
+        terrain_tree_template feature_template;
+        terrain_feature_rule loaded_feature;
+
+        error_code = loaded_feature.initialize();
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+
+        error_code = terrain_save_read_i32(buffer, &feature_biome);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_read_i32(buffer, &feature_minimum);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = terrain_save_read_i32(buffer, &feature_maximum);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.read_u32_le(&feature_chance);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.read_u8(&feature_dry_land);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = buffer.read_u8(&has_template);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = loaded_feature.set_biome_range(
+            feature_biome, feature_minimum, feature_maximum);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = loaded_feature.set_chance(feature_chance);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        error_code = loaded_feature.set_requires_dry_land(
+            static_cast<ft_bool>(feature_dry_land));
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
+        if (has_template != 0U)
+        {
+            error_code = terrain_save_read_template(buffer, feature_blocks,
+                &feature_template);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+            error_code = loaded_feature.set_template(
+                &feature_template);
+            if (error_code != FT_ERR_SUCCESS)
+                return (error_code);
+        }
+        error_code = loaded_config.set_feature(index, loaded_feature);
+        if (error_code != FT_ERR_SUCCESS)
+            return (error_code);
         index += 1U;
     }
     error_code = buffer.read_u32_le(&loaded_config.ore_rule_count);
@@ -611,9 +901,6 @@ int32_t terrain_generation_config_deserialize(
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     error_code = loaded_config.set_biome_selector(ft_nullptr, ft_nullptr);
-    if (error_code != FT_ERR_SUCCESS)
-        return (error_code);
-    error_code = loaded_config.set_feature_count(0U);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     error_code = loaded_config.set_cross_chunk_writer(ft_nullptr, ft_nullptr);

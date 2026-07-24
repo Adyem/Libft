@@ -36,6 +36,7 @@ class game_voxel_region;
 # define TERRAIN_MAX_ORE_RULES 16U
 # define TERRAIN_MAX_TREE_TEMPLATES 64U
 # define TERRAIN_MAX_BIOME_TREE_TEMPLATES 16U
+# define TERRAIN_MAX_TREE_TEMPLATE_BLOCKS 32U
 # define TERRAIN_GENERATOR_VERSION 3U
 # define TERRAIN_STAGE_BASE_TERRAIN 1U
 # define TERRAIN_STAGE_CAVES 2U
@@ -390,6 +391,8 @@ class terrain_generation_config
         terrain_biome_definition biomes[TERRAIN_MAX_CUSTOM_BIOMES];
         uint32_t tree_template_count;
         terrain_tree_template tree_templates[TERRAIN_MAX_TREE_TEMPLATES];
+        terrain_tree_template_block tree_template_blocks[
+            TERRAIN_MAX_TREE_TEMPLATES][TERRAIN_MAX_TREE_TEMPLATE_BLOCKS];
         terrain_biome_selector biome_selector;
         void *biome_selector_user_data;
         uint32_t feature_count;

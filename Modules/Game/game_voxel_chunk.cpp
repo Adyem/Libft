@@ -727,10 +727,15 @@ int32_t game_voxel_chunk::deserialize(ft_byte_buffer &buffer) noexcept
     if (error_code == FT_ERR_SUCCESS)
         error_code = buffer.read_u32_le(
             &this->_generation_metadata.generator_version);
-    if (error_code != FT_ERR_SUCCESS || metadata_valid > 1U)
+    if (error_code != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
         return (this->set_error(FT_ERR_IO));
+    }
+    if (metadata_valid > 1U)
+    {
+        (void)this->destroy();
+        return (this->set_error(FT_ERR_INVALID_ARGUMENT));
     }
     this->_generation_metadata.valid = static_cast<ft_bool>(metadata_valid);
     this->_generation_metadata.seed_value = metadata_seed_value;

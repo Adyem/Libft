@@ -100,7 +100,8 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
   Minecraft-owned policy once, producing a generation context.
 - `terrain_generation_config_serialize(...)` and
   `terrain_generation_config_deserialize(...)` - Encode/decode the versioned
-  terrain-policy save payload using Libft buffers.
+  terrain-policy save payload using Libft buffers, including registered tree
+  templates, biome template assignments, and feature rules.
 - `terrain_generation_config_save_file(...)` and
   `terrain_generation_config_load_file(...)` - Libft-owned binary file I/O for
   the terrain policy used by a world save.
@@ -148,6 +149,9 @@ The `Voxel` module is compiled when `GAME_USE_VOXEL_REGION_BACKEND` is enabled. 
 - The compatibility config API takes an immutable local snapshot per call, so
   later caller-side edits cannot alter an in-progress generation. The context
   API avoids repeating validation for every new chunk.
+- Config-registered tree templates are copied into config-owned storage, so
+  callers may release their source block arrays after registration. Template
+  signatures are content-based rather than pointer-address-based.
 - Snow caps use a configurable height snowline and each biome's
   `allow_snow_caps` flag; no biome enum is hardcoded as snow-cap eligible.
 - Mountain ridges use each biome's `allow_mountain_ridges` flag instead of a
